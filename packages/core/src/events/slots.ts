@@ -76,18 +76,19 @@ export function resolveSlots(
 
     if (spec.castBy === 'player') {
       /**
-       * A PARTY THE PLAYER CANNOT FIELD IS A DOCKET THAT NEVER CLEARS.
+       * A CAST THE PLAYER CANNOT FIELD IS A DOCKET THAT NEVER CLEARS.
        *
        * The cast is deferred, so nothing else here would notice that the house
        * has two men for a slot asking three — the event fires, `resolveChoice`
        * refuses every answer the player can give, and the decision sits on
        * `pendingDecisions` blocking the clock (invariant 9) for the rest of the
-       * run. So the pool is measured now, for a counted slot, and the event
+       * run. A singular slot with no eligible candidate has the same problem
+       * (#1796's adult bridge rescuer). So the pool is measured now, and the event
        * simply does not fire. This is also what makes `gate:slot-fillability`
        * ask the right question about a party the player names: it asks through
        * `resolveSlots(...).ok`, and the answer is now honest for both castBy.
        */
-      if (spec.count && candidatesFor(spec, ctx, fill).length < spec.count.min) {
+      if (candidatesFor(spec, ctx, fill).length < (spec.count?.min ?? 1)) {
         if (spec.optional) continue;
         return { ok: false, fill, playerCast, missing: sid };
       }

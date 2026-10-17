@@ -494,6 +494,18 @@ describe('family-challenges regressions (#1796)', () => {
       }
     });
 
+    it('does not offer the bridge rescue when nobody can fill its required player cast', () => {
+      const ctx = fixture();
+      for (const person of ctx.world.people.all()) person.status = 'dead';
+      const child = place(ctx, { sex: 'female', age: 12 });
+      set(ctx, child, 'strength', 100);
+      const event = content.event('the_wick_bridge_load')!;
+      expect(poolScore(ctx, { kind: 'family_any', attr: 'strength', atLeast: 40 }, {})).toBe(1);
+      expect(resolveSlots(event, ctx, makeRng(5))).toMatchObject({ ok: false, missing: 'SENT' });
+      place(ctx, { sex: 'female', age: 30 });
+      expect(resolveSlots(event, ctx, makeRng(5))).toMatchObject({ ok: true, playerCast: ['SENT'] });
+    });
+
     it('pays for a physical Darkness copy, begins real study, and schedules the later inspection', () => {
       const ctx = fixture();
       const novice = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
