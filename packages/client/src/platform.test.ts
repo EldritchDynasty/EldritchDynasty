@@ -690,6 +690,51 @@ describe('the platform seam', () => {
     }
   });
 
+  it('distinguishes denied browser storage from truly absent save slots (#1792)', async () => {
+    const records = new Map<string, string>([
+      ['ed:save:autosave', JSON.stringify({ format: 31, year: 1242 })],
+    ]);
+    const storage = {
+      get length() { return records.size; },
+      key: (index: number) => [...records.keys()][index] ?? null,
+      getItem: (key: string) => records.get(key) ?? null,
+    } as Storage;
+    let accessDenied = false;
+    const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', {
+      configurable: true,
+      value: {
+        get localStorage(): Storage {
+          if (accessDenied) throw new Error('site storage blocked');
+          return storage;
+        },
+      },
+    });
+    try {
+      const host = browserPlatform();
+      await expect(host.listSaves()).resolves.toEqual([
+        { slot: 'autosave', year: 1242, format: 31, savedAt: undefined },
+      ]);
+      await expect(host.readSave('autosave')).resolves.toEqual({ format: 31, year: 1242 });
+      await expect(host.readSave('missing')).resolves.toBeNull();
+
+      // Revoking access must not turn a real save into a false empty list or
+      // missing-slot result. A higher-level retry can keep the previous list.
+      accessDenied = true;
+      await expect(host.listSaves()).rejects.toThrow('this browser does not permit saved data');
+      await expect(host.readSave('autosave')).rejects.toThrow('this browser does not permit saved data');
+
+      // An accessible empty store and an absent slot retain their sentinels.
+      accessDenied = false;
+      records.clear();
+      await expect(host.listSaves()).resolves.toEqual([]);
+      await expect(host.readSave('autosave')).resolves.toBeNull();
+    } finally {
+      if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
+      else Reflect.deleteProperty(globalThis, 'window');
+    }
+  });
+
   it('deletes only the named browser slot and propagates removeItem failures (#899)', async () => {
     const values = new Map([
       ['ed:save:autosave', 'old run'],
