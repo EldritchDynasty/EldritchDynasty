@@ -56,6 +56,7 @@ events:
           outcomes:
             - id: left_up
               weight: 100
+              tags: [self_expression]
               text: >-
                 Every house in the province does do this, and he knows it, and
                 he walks under it and does his office and takes his dinner and
