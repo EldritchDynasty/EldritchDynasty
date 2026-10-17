@@ -12,6 +12,12 @@ the RBNZ series before you rely on any converted figure.
 Dynasty* succeeds commercially as a premium game **without turning it into a
 different game**.
 
+> **Reading order (17 Oct 2026):** the owner's priority is improving the game,
+> not launching it. Release accounts are months away anyway
+> (`issuesneedingowneraction`). For game work, read §4 (product-truth risks)
+> and §§5–6 (comparator lessons). §§7–14 are launch evidence, kept for when
+> launch comes back into focus. `Suggestions.md` turns §4 into game priorities.
+>
 > Commercial success cannot be guaranteed by design work. This document names
 > product risks, market evidence and priorities that can improve the odds. It
 > does not estimate break-even, because no development or marketing budget is in
