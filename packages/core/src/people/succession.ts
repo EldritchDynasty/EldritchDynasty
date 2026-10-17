@@ -62,26 +62,46 @@ function successionSeniority(ctx: SimCtx, a: Person, b: Person): number {
   return ab - bb || a.born - b.born;
 }
 
+/**
+ * Whether this person is of the player's line this year: a CURRENT blood or
+ * cadet membership of the player house. The succession rule and the Table's
+ * mundane declaration (`table.ts`) ask the same question, so it lives once.
+ */
+export function ofTheLine(ctx: SimCtx, p: Person): boolean {
+  const w = ctx.world;
+  return p.membership.some((m) =>
+    m.house === w.playerHouse
+    && (m.kind === 'blood' || m.kind === 'cadet')
+    && m.from <= w.year
+    && (m.to === undefined || m.to > w.year));
+}
+
 function successionCandidates(ctx: SimCtx, excluding?: string, minAge = 16): Person[] {
   const w = ctx.world;
   return w.people.household(w.playerHouse, w.year)
-    .filter(
-      (p) => p.id !== excluding
-        && p.membership.some((m) =>
-          m.house === w.playerHouse
-          && (m.kind === 'blood' || m.kind === 'cadet')
-          && m.from <= w.year
-          && (m.to === undefined || m.to > w.year))
-        && w.year - p.born >= minAge,
-    )
+    .filter((p) => p.id !== excluding && ofTheLine(ctx, p) && w.year - p.born >= minAge)
     .sort((a, b) => successionSeniority(ctx, a, b));
+}
+
+/**
+ * Whether the succession may treat him as a man who carries the Power.
+ *
+ * A man the house has DECLARED MUNDANE (§11, issue #1794) is not, whatever his
+ * blood holds: that is what the declaration frees. He falls to the last tier
+ * below, "a mundane man is better than nobody", and the seal passes over him
+ * to a brother or cousin who may still express, or to a Regent. That is the
+ * price the declaration asks, and the reason it is a decision.
+ */
+function inheritsAsExpresser(ctx: SimCtx, p: Person): boolean {
+  return p.sex === 'male'
+    && !p.awakening.declaredMundane
+    && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress;
 }
 
 export function heirApparent(ctx: SimCtx, excluding?: string, minAge = 16): Person | undefined {
   const blood = successionCandidates(ctx, excluding, minAge);
 
-  const expressing = blood
-    .filter((p) => p.sex === 'male' && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress);
+  const expressing = blood.filter((p) => inheritsAsExpresser(ctx, p));
   if (expressing.length) return expressing[0];
 
   // No expressing son. The house enters Regency, and the Ledger keeps counting.
@@ -117,11 +137,7 @@ export function knownSuccession(ctx: SimCtx): SuccessionView {
   const sitting = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
     .find((p) => p.castSlots.includes('head') && p.status === 'alive');
   const blood = successionCandidates(ctx, sitting?.id);
-  const knownExpressers = blood.filter(
-    (p) => p.sex === 'male'
-      && p.awakening.awakened
-      && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress,
-  );
+  const knownExpressers = blood.filter((p) => p.awakening.awakened && inheritsAsExpresser(ctx, p));
   const firstKnown = knownExpressers[0];
 
   // The sorted candidate list is the succession rule's exact authority,
@@ -131,9 +147,12 @@ export function knownSuccession(ctx: SimCtx): SuccessionView {
   const firstKnownIndex = firstKnown
     ? blood.findIndex((p) => p.id === firstKnown.id)
     : -1;
+  // A declared man is not an unknown: the house has already decided what it
+  // will treat him as, and `heirApparent` passes over him the same way.
   const unknown = blood.filter(
     (p, index) => p.sex === 'male'
       && !p.awakening.awakened
+      && !p.awakening.declaredMundane
       && (!firstKnown || index < firstKnownIndex),
   );
 

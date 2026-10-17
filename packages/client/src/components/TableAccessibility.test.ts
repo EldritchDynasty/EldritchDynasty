@@ -17,7 +17,7 @@ function fixture(boughtBack = false): TableView {
     shelf: [], studying: [], missingPrimers: [], pupils: [], teachable: [],
     canTutor: false, tutoring: [], posts: [], marriagePolicy: 'in',
     programmeCandidates: [], scion: null, scionHeir: null,
-    scionVacant: false, scionHeirVacant: false, market: [],
+    scionVacant: false, scionHeirVacant: false, market: [], longWait: [],
     papers: [], pedigreePrices: [], servants: [], maxBond: 20,
   } as unknown as TableView;
 }
@@ -438,6 +438,53 @@ describe('Table career, programme and bond controls in Plain English (#1689–#1
       expect(servants().get('.fold').text()).toBe("The house's people");
       expect((w.get('input[aria-label="Marks to advance to Ada"]').element as HTMLInputElement).value).toBe('7');
       expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+});
+
+describe('the Long Wait asks twice before it gives up on a man (#1794)', () => {
+  it('confirms, cancels without an order, and names each choice for a screen reader in both modes', async () => {
+    const table = { ...fixture(),
+      longWait: [{ person: 'oren', name: 'Oren', age: 27 }, { person: 'tam', name: 'Tam', age: 21 }],
+    } as unknown as TableView;
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table, land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null, proseMode: 'original',
+    } });
+    const button = (label: string) => w.findAll('button').find((b) => b.text() === label);
+    try {
+      expect(button('The long wait')?.attributes('aria-expanded')).toBe('true');
+      const oren = w.findAll('button').find((b) => b.attributes('aria-label') === 'Stop waiting for Oren, 27 years old')!;
+      expect(oren.text()).toBe('Oren, 27');
+
+      await oren.trigger('click');
+      expect(w.text()).toContain('This cannot be taken back.');
+      await button('Keep waiting')!.trigger('click');
+      expect(order).not.toHaveBeenCalled();
+
+      await oren.trigger('click');
+      await button('Stop waiting for him')!.trigger('click');
+      expect(order).toHaveBeenCalledTimes(1);
+      expect(order).toHaveBeenCalledWith({ kind: 'declareMundane', person: 'oren' });
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(button('Men who have not awakened')).toBeDefined();
+      expect(w.findAll('button').some((b) => b.attributes('aria-label') === 'Declare Tam, 21 years old, mundane')).toBe(true);
+    } finally { w.unmount(); }
+  });
+
+  it('refuses in place, beside the control that asked', () => {
+    const w = mount(GameTable, { props: {
+      table: fixture(), land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order: vi.fn() } as unknown as GameActions,
+      refusal: { kind: 'declareMundane', reason: 'he has already woken' }, receipt: null, proseMode: 'original',
+    } });
+    try {
+      const panel = w.findAll('.panel').find((p) => p.text().includes('The long wait'))!;
+      expect(panel.text()).toContain('Nobody of the line is old enough to be given up on.');
+      expect(panel.text()).toContain('he has already woken');
     } finally { w.unmount(); }
   });
 });

@@ -3287,6 +3287,35 @@ proseVariants:
     of: "1b54cc3a8a8c540e"
     plainenglish: >-
       no person in this house has that name
+  # The Long Wait (#1794).
+  - address: "core:messages#table.order.mundane.unknown"
+    of: "1b54cc3a8a8c540e"
+    plainenglish: >-
+      no person in this house has that name
+  - address: "core:messages#table.order.mundane.chronicle"
+    of: "94c82999b3dca26d"
+    plainenglish: >-
+      The house stopped waiting for {PERSON} to awaken. He was {AGE} and had never awakened. From then on the family treated him as someone to give a post, marry or send away, and no longer watched him for signs of the power.
+  - address: "core:messages#table.order.mundane.not_a_son"
+    of: "7a19ac613e30b06d"
+    plainenglish: >-
+      only a man of the family line can be declared mundane
+  - address: "core:messages#table.order.mundane.woken"
+    of: "7978d4caf1f68f8e"
+    plainenglish: >-
+      he has already awakened
+  - address: "core:messages#table.order.mundane.already"
+    of: "5234616b1a5ba3df"
+    plainenglish: >-
+      he has already been declared mundane
+  - address: "core:messages#table.order.mundane.head"
+    of: "a2db12263074ba2a"
+    plainenglish: >-
+      the current Head of the house cannot be declared mundane
+  - address: "core:messages#table.order.mundane.young"
+    of: "0252aeefe47af893"
+    plainenglish: >-
+      he is still young enough that he might awaken
   - address: "core:messages#table.assembly.title_unmaking"
     of: "0472776efde3bf8a"
     plainenglish: >-

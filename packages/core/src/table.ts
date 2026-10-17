@@ -2,7 +2,7 @@ import type { EventTemplate, Person, RentPolicy, Year } from '@ed/schema';
 import { assertNever, canBeTaught } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
-import { attr } from './people/factory.js';
+import { attr, declareMundane } from './people/factory.js';
 import { beginStudy, canStudySpellbook, conditionDrag, effectiveStudyYears, heldBooks, restorationQuote, spellbookDef } from './people/library.js';
 import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type PedigreeGrade } from './people/papers.js';
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
@@ -20,7 +20,7 @@ import { noteBearing } from './bearing.js';
 import {
   beginImprovement, buyParcel, endowParcel, landIncome, recallParcel, sellParcel, setRentsPolicy,
 } from './land.js';
-import { buyBackWardship, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
+import { buyBackWardship, ofTheLine, WARDSHIP_BUYBACK_YEARS } from './people/succession.js';
 import { ageCareerFactor } from './ages/strategy.js';
 import { proseForClause, proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 import { msg } from './messages.js';
@@ -215,7 +215,13 @@ export type TableOrder =
    * and `boughtBack` is false; ends the land-income diversion, not the
    * minority — see `people/succession.ts`'s `buyBackWardship`.
    */
-  | { kind: 'buyBackWardship' };
+  | { kind: 'buyBackWardship' }
+  /**
+   * THE LONG WAIT (§11, issue #1794). Stop waiting for a grown man of the line
+   * who has never woken. He will not wake now, and the succession passes over
+   * him as it would a mundane man (`people/succession.ts`). Permanent.
+   */
+  | { kind: 'declareMundane'; person: string };
 
 export interface OrderResult {
   ok: boolean;
@@ -803,6 +809,24 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
     case 'buyBackWardship':
       return buyBackWardship(ctx);
 
+    case 'declareMundane': {
+      const p = ours(ctx, o.person);
+      if (!p) return { ok: false, reason: msg(ctx, 'table.order.mundane.unknown', 'nobody of this house by that name') };
+      const refused = mundaneRefusal(ctx, p);
+      if (refused) return { ok: false, reason: refused };
+      if (!declareMundane(p)) return { ok: false };
+      w.chronicle.push({
+        year: w.year,
+        weight: 'paragraph',
+        named: false,
+        people: [p.id],
+        text: msg(ctx, 'table.order.mundane.chronicle',
+          'The house stopped waiting for {PERSON}. He was {AGE}, and he had never woken. From that year he was a man to be placed, married or sent, and nobody watched him for the blood again.',
+          { PERSON: p.name, AGE: String(w.year - p.born) }),
+      });
+      return { ok: true };
+    }
+
     default:
       return assertNever(o);
   }
@@ -810,6 +834,39 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
 
 const TUTOR_AGE_LIMIT = 22;
 const CAREER_AGE = 16;
+
+/**
+ * THE YOUNGEST MAN THE HOUSE MAY STOP WAITING FOR (§11, issue #1794).
+ *
+ * Above every forcing rite's age window, on purpose. The Drowning, the Vigil
+ * and the Dark Year cast boys of eighteen and under; a man declared mundane
+ * must never be cast in a scene whose outcome wakes him, or the book would say
+ * he woke while the house had sworn he never would. `table.test.ts` reads
+ * the authored windows and fails the build if one ever reaches this age.
+ * It also sits past §11's common window (5–20 is when most wake), which is
+ * what makes declaring him a judgement and not a shortcut.
+ */
+export const MUNDANE_AGE = 19;
+
+/**
+ * Why this man cannot be declared mundane, or `undefined` if he can. One rule
+ * for the order and for the Table's list, as `canStudySpellbook` is for books.
+ */
+export function mundaneRefusal(ctx: SimCtx, p: Person): string | undefined {
+  const w = ctx.world;
+  if (p.sex !== 'male' || !ofTheLine(ctx, p)) {
+    return msg(ctx, 'table.order.mundane.not_a_son', 'only a man of the line can be declared mundane');
+  }
+  if (p.awakening.awakened) return msg(ctx, 'table.order.mundane.woken', 'he has already woken');
+  if (p.awakening.declaredMundane) return msg(ctx, 'table.order.mundane.already', 'the house has already stopped waiting for him');
+  if (p.castSlots.includes('head')) {
+    return msg(ctx, 'table.order.mundane.head', 'the house does not declare its own Head');
+  }
+  if (w.year - p.born < MUNDANE_AGE) {
+    return msg(ctx, 'table.order.mundane.young', 'he is young enough that he may still wake');
+  }
+  return undefined;
+}
 
 /** Everyone of the house, alive, this year — the people orders may name. */
 function ours(ctx: SimCtx, id: string): Person | undefined {
@@ -914,6 +971,13 @@ export interface TableView {
    * miss a widow.
    */
   market: { person: string; name: string; age: Year; held: boolean; since?: Year }[];
+  /**
+   * THE LONG WAIT (§11, issue #1794). Grown men of the line who have never
+   * woken and whom the house may now stop waiting for — exactly the men the
+   * `declareMundane` order accepts (`mundaneRefusal`). Says nothing about
+   * whether the blood is in them: the house does not know, which is the point.
+   */
+  longWait: { person: string; name: string; age: Year }[];
   /** What a full term of tutoring costs today, and whether it can be paid. */
   tutorFee: number;
   canTutor: boolean;
@@ -1163,6 +1227,10 @@ export function tableView(ctx: SimCtx): TableView {
     })(),
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
+    longWait: household
+      .filter((p) => p.status === 'alive' && mundaneRefusal(ctx, p) === undefined)
+      .map((p) => ({ person: p.id, name: p.name, age: w.year - p.born }))
+      .sort((a, b) => b.age - a.age),
     market: household
       .filter((p) => eligibleToMarry(ctx, p))
       .map((p) => {

@@ -169,10 +169,13 @@ closes it.
 ### Direction, in this order
 
 1. **Give the Long Wait the verbs §11 already wrote.**
-   - A Table order to **declare a man mundane**: he stops waking for good and
-     becomes the "expendable hands" §11 describes, free to be married out,
-     placed or sent. It is a real decision between hope and use, and it writes
-     the field that exists.
+   - **Built (#1794):** a Table order to **declare a man mundane**. A grown
+     man of the line (19+, never woken, not the Head) stops waking for good.
+     The succession passes over him, as over a mundane man, to a brother or
+     cousin who may still express, or to a Regent. He stays free to be placed,
+     married or sent. Both the upside and the risk are real. No bot policy
+     uses it yet, so the frozen-ladder numbers above are unchanged until
+     somebody plays it, or a policy is taught to.
    - **The Late Waking**: a scripted scene for a man past 30. Rare, unforced,
      and a turn in the story when it comes.
    - **Let the player call a forcing rite** for an eligible boy, the way the

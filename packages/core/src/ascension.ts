@@ -1109,6 +1109,11 @@ function rankedExpressers(ctx: SimCtx): { person: Person; standing: Standing }[]
   const ranked: { person: Person; standing: Standing }[] = [];
   for (const p of w.people.household(w.playerHouse, w.year)) {
     if (!phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress) continue;
+    // A man declared mundane (§11, issue #1794) can never wake, so he can
+    // never stand on a rung. Ranking him would leave the ladder reading
+    // "keep him in view for an Awakening" about a man the house has stopped
+    // watching. The Madness gate is unaffected: that is `canExpress` alone.
+    if (p.awakening.declaredMundane && !p.awakening.awakened) continue;
     ranked.push({ person: p, standing: standingOf(ctx, p) });
   }
   // `outranks` is a strict better-than, so a stable sort leaves ties in
