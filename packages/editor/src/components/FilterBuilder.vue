@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { CompareOp, Filter } from '@ed/schema';
-import { ALL_AFFINITIES } from '@ed/schema';
+import { ALL_AFFINITIES, assertNever } from '@ed/schema';
 
 /**
  * WHO A SLOT MAY CAST.
@@ -47,7 +47,9 @@ const LEAF_SHAPES: Record<string, Shape> = {
 const LEAF_KINDS = Object.keys(LEAF_SHAPES);
 
 function defaultOf(kind: string): Filter {
-  switch (LEAF_SHAPES[kind]!.kind) {
+  const shape = LEAF_SHAPES[kind];
+  if (!shape) throw new Error(`Unknown filter editor shape: ${kind}`);
+  switch (shape.kind) {
     case 'affinity': return { knows: { affinity: 'life' } };
     case 'attr': return { attr: '', op: 'gte', value: 0 } as never;
     case 'has': return { [kind]: '', has: true } as never;
@@ -56,7 +58,7 @@ function defaultOf(kind: string): Filter {
     case 'stringSet': return { [kind]: [] } as never;
     case 'sex': return { sex: 'male' } as never;
     case 'relation': return { relation: 'not', of: props.slotNames?.[0] ?? '' } as never;
-    default: return { [kind]: {} } as never;
+    default: return assertNever(shape, 'filter editor shape');
   }
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Check, EventTemplate, PoolSpec } from '@ed/schema';
-import { ALL_AFFINITIES, PoolSpecS } from '@ed/schema';
+import { ALL_AFFINITIES, PoolSpecS, assertNever } from '@ed/schema';
 
 /**
  * CHECKS, and the one thing about them that is easy to get wrong.
@@ -71,24 +71,28 @@ function remove(i: number) {
 }
 
 /** A pool of `kind`, with the fields that kind needs and none of the others. */
-function setPoolKind(check: Check, kind: string) {
-  if (kind === 'family_knows') {
-    check.pool = { kind: 'family_knows', affinity: 'life' };
-    check.variance = 'none';
-    check.difficulty = 1;
-    touch();
-    return;
-  }
+function setPoolKind(check: Check, value: string) {
+  const kind = POOL_KINDS.find((kind) => kind === value);
+  if (!kind) return;
   const attr = 'attr' in check.pool ? check.pool.attr : 'strength';
-  check.pool = kind === 'slot'
-    ? { kind: 'slot', slot: slotNames.value[0] ?? '', attrs: [{ attr, weight: 1 }] }
-    : kind === 'party_sum'
-      ? { kind: 'party_sum', slots: slotNames.value.filter((s) => props.event.slots[s]?.castBy === 'player'), attr }
-      : kind === 'family_any'
-        ? { kind: 'family_any', attr, atLeast: 40 }
-        : kind === 'record'
-          ? { kind: 'record', against: { measure: 'count' } }
-          : { kind: kind as 'family_sum', attr };
+  switch (kind) {
+    case 'family_knows':
+      check.pool = { kind, affinity: 'life' };
+      check.variance = 'none';
+      check.difficulty = 1;
+      break;
+    case 'slot':
+      check.pool = { kind, slot: slotNames.value[0] ?? '', attrs: [{ attr, weight: 1 }] };
+      break;
+    case 'party_sum':
+      check.pool = { kind, slots: slotNames.value.filter((s) => props.event.slots[s]?.castBy === 'player'), attr };
+      break;
+    case 'family_any': check.pool = { kind, attr, atLeast: 40 }; break;
+    case 'record': check.pool = { kind, against: { measure: 'count' } }; break;
+    case 'family_sum':
+    case 'family_max': check.pool = { kind, attr }; break;
+    default: assertNever(kind, 'pool editor');
+  }
   touch();
 }
 
