@@ -229,6 +229,53 @@ describe('authored physical-copy exits (#1748)', () => {
     const saved = saveGame(ctx);
     expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
   });
+  it.each(['original', 'plainenglish'] as const)('Bramme road theft removes the physical Life book in %s', (mode) => {
+    const ctx = bootstrap(bundle, 1205, 1042);
+    ctx.world.library.clear();
+    const stolen = ctx.content.mustSpellbook('lesser_workings_of_life');
+    const retained = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    acquireLibraryCopy(ctx, stolen.id);
+    acquireLibraryCopy(ctx, retained.id);
+    const learned = place(ctx, { sex: 'male', age: 30, awakened: true });
+    learned.acquired['life'] = 100;
+    expect(gainSpellbook(ctx, learned, stolen)).toBe(true);
+    const student = place(ctx, { sex: 'male', age: 30, awakened: true });
+    student.acquired['life'] = 100;
+    expect(beginStudy(ctx, student, stolen)).toBe(true);
+    const learnedSpells = [...learned.spellsKnown];
+    const studyCount = ctx.world.studies.length;
+    expect(studyCount).toBeGreaterThan(0);
+    ctx.world.treasury = 100;
+    setProseVariants(ctx, bundle.proseVariants);
+    setProseMode(ctx, mode);
+
+    const event = ctx.content.mustEvent('the_fair_copy');
+    if (event.interaction.kind === 'narration') throw new Error('expected a copy choice');
+    const choice = event.interaction.choices.find((entry) => entry.id === 'send_it_to_bramme')!;
+    const outcome = choice.outcomes.find((entry) => entry.id === 'read_before_returned')!;
+    commitOutcome(ctx, event, outcome,
+      { HEAD: ctx.world.narrator!, COPYIST: student.id }, choice.id, testRng('Bramme-road-theft'));
+
+    expect(ctx.world.library.has(stolen.id)).toBe(false);
+    expect(ctx.world.library.has(retained.id)).toBe(true);
+    expect(ctx.world.studies.some((study) => study.book === stolen.id)).toBe(false);
+    expect(learned.spellsKnown).toEqual(learnedSpells);
+    expect(ctx.world.treasury).toBe(86);
+    const page = ctx.world.chronicle.at(-1)!;
+    const address = `content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].outcomes[id=read_before_returned].text`;
+    const counterpart = bundle.proseVariants.find((entry) => entry.address === address)!;
+    expect(counterpart).toBeDefined();
+    expect(page.text).toBe(mode === 'plainenglish' ? counterpart.plainenglish : outcome.text);
+    expect(page.text).toMatch(/(?:took|lost|gone).*?(?:book|first)|book.*?(?:took|lost|gone)/i);
+
+    const saved = saveGame(ctx);
+    setProseMode(ctx, mode === 'original' ? 'plainenglish' : 'original');
+    expect(ctx.world.chronicle.at(-1)!.text).toBe(page.text);
+    const resumed = loadGame(saved, bundle);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saved));
+    expect(resumed.world.chronicle.at(-1)?.text).toBe(page.text);
+  });
+
   it.each(['original', 'plainenglish'] as const)('Crusade tribute charges and records a partial shelf in %s', (mode) => {
     const ctx = bootstrap(bundle, 1777, 1042);
     ctx.world.library.clear();
