@@ -53,6 +53,10 @@ describe('the #334 choice-debt worklist', () => {
       expect(choice?.outcomes.length).toBeGreaterThan(0);
       expect(choice?.outcomes.every((outcome) => outcome.tags.includes('self_expression')))
         .toBe(true);
+      // If a real effect is authored later, remove this declaration and its
+      // no-consequence classification instead of silently masking the change.
+      expect(choice?.outcomes.every((outcome) => outcome.effects.length === 0))
+        .toBe(true);
     }
   });
 
