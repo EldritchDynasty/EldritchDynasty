@@ -1,17 +1,58 @@
 # Eldritch Dynasty — Market Research and Commercial Design Implications
 
-**Research updated:** 3 October 2026  
-**Repository context:** current `main` plus every Markdown file in the repository root  
-**Original research issue:** #184  
-**Purpose:** identify the strongest evidence-backed ways to improve the probability that *Eldritch Dynasty* becomes a commercially successful premium game **without turning it into a different game**.
+**Research updated:** 17 October 2026 (previous revision: 3 October 2026)  
+**Repository context:** `main` at `e5ab83c`, the issue tracker on 17 October,
+`docs/BALANCE-LOG.md`, `store/steam/README.md` and `issuesneedingowneraction`  
+**Original research issue:** #184; consolidation #402  
+**Currency:** all prices are in **New Zealand dollars (NZD)** unless marked
+otherwise. USD figures are converted at **NZD 1.70 per USD 1**, from a 31 July
+2026 market close of USD/NZD 1.7056. That is the latest rate found. Re-check
+the RBNZ series before you rely on any converted figure.  
+**Purpose:** find the evidence-backed ways to raise the odds that *Eldritch
+Dynasty* succeeds commercially as a premium game **without turning it into a
+different game**.
 
-> Commercial success cannot be guaranteed by design work. This document identifies product risks, market evidence, and design priorities that can improve the odds. Financial break-even cannot be estimated from this repository because a complete development/marketing budget is not present.
+> Commercial success cannot be guaranteed by design work. This document names
+> product risks, market evidence and priorities that can improve the odds. It
+> does not estimate break-even, because no development or marketing budget is in
+> the repository.
 
 ---
 
-## 1. What the root documents say the product actually is
+## 0. What changed since the 3 October revision
 
-The root documents are unusually consistent about the part of the game that should be protected.
+The product moved faster than this document did. Read these first.
+
+1. **The commercial pass is finished.** #277 closed on 17 October with all
+   fourteen children done. The choice audit (#334) reached zero write-only and
+   zero prose-only choices. The Examination (#343), skip-seen prose, tree
+   planning, Chronicle backlinks, the Afterimage, graduated help, reading
+   comfort and localisation readiness all shipped. Plain English mode shipped
+   and is launch-required. The 33-year demo campaign shipped. §3 and §17 of the
+   old version recommended work that is now done.
+2. **Release accounts are months away.** On 16 October the owner confirmed that
+   Windows signing, the Play account and upload key, Apple enrolment and **a
+   Steam App ID will not be available for at least several months**
+   (`issuesneedingowneraction`). No Steam store page can go live without an App
+   ID. Every wishlist day before launch depends on that page. See §9.
+3. **Steam changed its storefront in June 2026.** Popular Upcoming now needs
+   roughly **80,000–100,000 wishlists** (reported; not Valve's published
+   number). A new **Personal Calendar** recommends launches to players based on
+   their own wishlists, follows and play history. For a niche game, wishlists
+   from the *right* players now matter more than raw totals. See §8.
+4. **Steam's AI-content disclosure was rewritten in January 2026.** Disclosure
+   now covers player-facing content, including narrative text. This repository's
+   prose is written in an AI-agent workflow. That is an owner decision with
+   market consequences. See §12.
+5. **The evidence on the summit got sharper.** Apotheosis is **1 in 512** runs
+   for a bot playing only to climb, and **0 in 512** in ordinary play. The Steam
+   copy and an achievement both promise it. See §4.
+6. **No human playtest has been run.** Every human acceptance test was waived on
+   28 September (`docs/PLAYTEST.md`). See §4.
+
+---
+
+## 1. What the product actually is
 
 *Eldritch Dynasty* is **not** primarily:
 
@@ -21,659 +62,673 @@ The root documents are unusually consistent about the part of the game that shou
 - a conventional visual novel;
 - a genetics sandbox with a story attached.
 
-Its strongest product identity is the intersection of three things:
+Its identity is where three things meet:
 
-1. **A bloodline is the player character.** The player makes decisions across generations rather than inhabiting one protagonist.
-2. **Marriage and inheritance are strategic verbs.** Blood, fertility, affinities, branch depth and succession turn people into long-horizon plans.
-3. **The Chronicle is both memory and evidence.** The player decides what the family writes, and the final reckoning reads that record back.
+1. **A bloodline is the player character.** The player decides across
+   generations rather than living as one protagonist.
+2. **Marriage and inheritance are strategic verbs.** Blood, fertility,
+   affinities, branches and succession turn people into long-horizon plans.
+3. **The Chronicle is both memory and evidence.** The player decides what the
+   family writes, and the last night reads that record back.
 
-The root prose documents add two critical quality requirements:
-
-- a long campaign must keep accumulating **meaning**, not merely events;
-- the player must be able to trace important consequences back to choices they remember.
-
-That is also the commercial thesis. The game has a plausible niche because its combination is unusual. The main commercial risk is therefore **not insufficient feature breadth**. It is that the unique combination becomes hard to read, repetitive, or emotionally flat over a complete campaign.
+The commercial thesis follows from that. The niche is plausible because the
+combination is unusual. The main risk is **not too few features**. The risk is
+that the combination is hard to read, repetitive, emotionally flat over a full
+campaign, or **promises something the game rarely delivers**.
 
 ---
 
-# 2. Research method and evidence quality
+# 2. Method and evidence quality
 
-This update uses four evidence classes.
+Five evidence classes. Each figure in this document is labelled with one.
 
-## A. Direct store evidence
+| Class | Used for | How much to trust it |
+|---|---|---|
+| **A. Official platform documentation** | Steam, Google and Apple rules, dates and fees; NZ government schemes | High. Rules change, so the check date is given. |
+| **B. Published first-party figures** | Sales or players stated by a developer or publisher | High for what they state. *Players* are not *copies*. |
+| **C. Store and review snapshots** | Review counts, scores, tags, prices | Medium. They drift. A review count is **not** a sales figure. |
+| **D. Analyst and secondary reporting** | GameDiscoverCo, How To Market A Game, Sensor Tower, AppMagic, Alinea and VG Insights estimates, press summaries | Medium to low. Estimates and samples differ. Several are vendor blogs. |
+| **E. Repository evidence** | What the game does and what it measures | High for this codebase on the date checked. |
 
-Steam store pages are used for:
+**Limits of this revision.** In this research session the page fetcher could not
+resolve any external host, and direct requests to Steam's store API were refused
+by the network policy. New figures here therefore come from **search-engine
+summaries of the named pages**, not from reading the pages directly. Wherever a
+figure matters to a decision, the source is listed in §21 so it can be opened
+and checked. Comparator review counts are kept from the **27 September 2026**
+snapshot rather than refreshed by guesswork.
 
-- review count and score;
-- current tags;
-- list price where visible;
-- supported languages;
-- demo availability;
-- feature positioning.
-
-Review count is **not treated as unit sales**. It is useful as a scale/sentiment signal only.
-
-## B. Published commercial evidence
-
-Where a developer or publisher has published a sales figure, it is called out separately. The strongest new example in this update is *The King is Watching*, for which GameMaker's July 2026 interview with tinyBuild reports **more than 600,000 Steam copies sold**.
-
-## C. Player-review/community evidence
-
-Community reviews are used to identify repeated experience risks such as:
-
-- choices feeling cosmetic or railroaded;
-- resource systems feeling detached from outcomes;
-- replay friction;
-- information overload;
-- confusing rules.
-
-A single review is not treated as a market truth. It is used when it illustrates a risk that also appears in the design of comparable games or in Eldritch Dynasty's own diagnostics.
-
-## D. Repository evidence
-
-The current root documents, current issue tracker, and closed work are used to avoid recommending work that has already landed.
-
-This matters because the project moved materially between the earlier market report and this update. In particular, the recommendations that became #210–#218 are now closed, as are #85, #133, #139, #174, #184 and #185.
+The user brief for this document asks for official sources and for skepticism
+toward marketing. Several hits in this research were vendor blogs selling
+localisation, testing or "Steam page analysis" services. Those are used only
+where they agree with a stronger source, and they are labelled **D**.
 
 ---
 
 # 3. Executive conclusion
 
-There is still no close one-to-one competitor.
+There is still no close one-to-one competitor. That is good, but it carries a
+marketing burden: nobody arrives knowing what "a five-century unreliable-record
+bloodline strategy game" feels like. The game must teach that identity through
+play, fast.
 
-That is encouraging, but it creates a marketing burden: players will not arrive already knowing what “a five-century unreliable-record bloodline strategy game” feels like. The game must teach its identity through play quickly.
+1. **Protect the narrow hook. Do not broaden the genre.** *The King is Watching*
+   shows a clear, consistent interaction scaling commercially: more than
+   600,000 Steam copies by July 2026 (B). Its publisher credits the clarity of
+   the hook.
 
-The most important conclusions from the expanded research are:
+2. **The product promise must be true in measured play.** This is new and it is
+   the largest risk the repository can fix by itself. The Long Line is sold on
+   its summit. The summit is reached in 0.2% of runs by a bot built to reach it
+   (E). *Yes, Your Grace 2: Snowfall* (about 76% positive, C) shows what
+   reviewers do when promised agency feels hollow.
 
-1. **Protect the narrow hook instead of broadening the genre.** Games with a clear, consistent interaction can outperform much broader designs. *The King is Watching* is the strongest current case: a simple royal-gaze idea remained visible throughout the design and the finished game went on to sell more than 600,000 Steam copies. Its publisher explicitly says the clarity and consistency of the hook mattered.
+3. **No real player has been observed.** Bots prove reachability, not fun. The
+   cheapest high-value research left is five first-time players on the beta.3
+   Windows build (E).
 
-2. **“Choices Matter” creates a credibility obligation.** *Yes, Your Grace 2: Snowfall* currently sits around 76% positive on Steam despite a known predecessor and a public 100,000-wishlist milestone before launch. Prominent negative reviews complain that major decisions feel railroaded or ineffective. For Eldritch Dynasty, a choice may converge narratively, but it must leave a remembered difference in the house, record, relationship, cost, or player self-expression.
+4. **The store page is now the long pole, not the code.** Steam's June 2026
+   storefront rewards wishlists collected from matched players over time. An App
+   ID that is "months away" means wishlist runway that is months shorter. The
+   Steam Direct fee is **USD 100 (about NZD 170)** (A). It is the cheapest
+   high-leverage owner action on the list.
 
-3. **Genealogy itself can be a compelling primary surface.** *The Roottrees are Dead* has more than 5,000 English Steam reviews at roughly 96% positive. It is not a strategy game, but it strongly validates that a family tree can be the object players willingly stare at for hours when relationships are readable and discoveries change what the tree means.
+5. **February 2027 Next Fest is effectively out. June 2027 is the realistic
+   target.** Registration for June 2027 closes 25 April 2027 (A). Working back
+   from that needs a live Coming Soon page by early 2027. See §9.
 
-4. **More systems can reduce perceived agency if they do not change outcomes.** *The Pale Beyond* and *Snowfall* both show the danger of asking the player to optimise resources while the story appears to ignore that work. Eldritch Dynasty should prefer fewer systems whose consequences recur over more systems that decorate the same narrative path.
+6. **AI disclosure is a live market question for this game.** Steam now asks
+   about AI-generated narrative content. Player sentiment ranges from mildly to
+   strongly negative depending on who is asked (D). A game *about* falsified
+   records cannot afford to be caught misrepresenting its own. Disclose
+   accurately. See §12.
 
-5. **Long-form appeal has to be proven beyond the first clever hour.** tinyBuild says *The King is Watching* changed structure after later-stage playtesting showed the original design did not stay enjoyable enough beyond its opening hours. The lesson is not “make Eldritch a roguelite.” The lesson is that a strong premise is only the beginning; the complete campaign needs an equally strong reason to continue and replay.
+7. **Genealogy can be the fun.** *The Roottrees are Dead* has about 96% positive
+   on more than 5,000 English reviews (C). The tree and Chronicle tools that
+   shipped in #268 and #269 are the right bet. Prove them with players.
 
-6. **Replay friction is now one of the largest remaining design risks.** The project has built House Ambitions, echoes, generation questions, richer Match decisions, advisers, recognisable Ages, recurring rivals and stronger rites. Once players understand those systems, the next commercial question becomes: does a second run make them reread too much known material before new context appears?
+8. **Mobile is a second wave, not a co-lead.** Premium mobile ports are growing
+   from a tiny base, and the revenue goes to a few hits (D). Steam should lead.
+   Mobile follows when its accounts exist, using the client that is already
+   shared.
 
-7. **The Chronicle is still the strongest defensible differentiator.** Other games have dynasties, bloodlines, difficult choices, event systems and occult tone. Very few make the player's historical record itself both a strategic instrument and ending evidence. The store page, demo, trailer and first session should all make that legible.
-
-8. **The current NZD $28–35 target remains plausible for a polished premium release**, but price is not the problem to optimise first. The comparable set supports premium text/system games; review sentiment and clarity of value matter more than squeezing another few dollars out of launch price.
+9. **The NZD 28–35 target is still plausible**, but recent Steam launch prices
+   have drifted down (D). Price follows proven campaign quality, not the other
+   way round.
 
 ---
 
-# 4. Comparable market
+# 4. Product-truth risks visible from the repository
 
-Review counts and scores below were checked on or immediately before 27 September 2026. They will drift.
+These are not market data, but they decide how the market will receive the
+game. All figures are class **E**.
 
-| Game | Why it matters | Current Steam signal | Main lesson for Eldritch Dynasty |
+## 4.1 The summit
+
+| 512 × 500-year runs (BALANCE-LOG, 10–11 Oct) | Apotheosis |
+|---|---:|
+| ordinary (chronicler) play | 0 / 512 |
+| `ascendant` policy, playing only to climb | 1 / 512 (0.2%) |
+| owner target band (#332) | 8–29%, floor reported, not enforced |
+
+Meanwhile:
+
+- `store/steam/README.md` sells the Long Line with *"the complete Ascension
+  Ladder"*.
+- Achievement `ending_all_long` needs **all five** Long Line endings. The v1
+  rate table measured `ending_apotheosis` at **0/100** in every column.
+
+**Market reading:** achievement hunters and completionists read Steam's global
+unlock percentages. An achievement at roughly 0% beside the store promise is a
+public, quantified version of "the choices don't matter". Pick a route before
+the store page goes live: make the summit reachable for a committed player,
+make it honestly mythic, or change the target on the record. `Suggestions.md`
+P0-1 has the options.
+
+## 4.2 The Long Line has no content of its own
+
+The #274 baseline (2 October) found **no authored event or arc exclusive to the
+Long Line**, and **0/12** chronicler runs reaching a Long-exclusive ending. The
+500-year mode is the flagship and the longest-sell feature. If its distinct
+promise comes down to "more years", players will reasonably ask why it takes so
+long. The good news: 35.8% of late-Long choices had interaction shapes never
+seen in the paired Short run, so the raw material is there.
+
+## 4.3 No human evidence
+
+`docs/PLAYTEST.md`: *"Waived means not owed, not passed. Nothing here is
+evidence that any of these held."* Every commercially decisive question is in
+that waived list: can a first-timer finish a Short Line unaided, do they
+remember people rather than numbers, do they blame a decision rather than a
+number.
+
+## 4.4 What is already in good shape
+
+These are commercial strengths. Say so in marketing.
+
+- **Choices are audited.** A choice that changes nothing fails validation (#334).
+- **Run two is measured.** New-event, familiar-shape choices are at 27.1%, and
+  the top shape takes 4.7% (#341).
+- **Plain English mode** with full counterpart coverage: an accessibility
+  feature few text-heavy strategy games have.
+- **Three hosts built from one client.** Windows passed fresh-VM install and
+  cold resume. The Android AAB was proven. iOS save/resume was proven on the
+  simulator.
+
+---
+
+# 5. Comparable market
+
+Snapshot of **27 September 2026** (C) unless marked. This is not a ranking, and
+review count is not a sales estimate.
+
+| Game | Why it matters | Steam signal | Lesson for Eldritch Dynasty |
 |---|---|---:|---|
-| **Crusader Kings III** | Dynasty fantasy at mass-market scale | ~50,000 English reviews, ~90% positive | Generational strategy is a proven fantasy; recurring named people turn systems into stories |
-| **Wildermyth** | Procedural people + authored event structure | ~11,688 English reviews, Overwhelmingly Positive | Recurrence and transformation make procedural characters memorable |
-| **Suzerain** | Text-heavy decisions, institutions, consequences | ~7,200 English reviews, ~93% positive | Dense reading can sell when choices create coherent political identity |
-| **The Roottrees are Dead** | Family tree as central interaction | ~5,071 English reviews, ~96% positive | Genealogy can itself be a compelling screen if relationships are legible |
-| **Yes, Your Grace** | Medieval decisions + resource pressure | ~5,260 English reviews, ~85% positive | Small cast + visible trade-offs can carry a compact management narrative |
-| **Yes, Your Grace 2: Snowfall** | Broader sequel, more systems | ~1,490 reviews, ~76% positive | Feature expansion does not compensate for perceived loss of agency |
-| **Long Live The Queen** | Repeated strategic runs through text/events | ~4,719 English reviews, ~94% positive | Failure becomes replay fuel when the next run supports a different plan |
-| **Old World** | Dynasty + recurring events inside strategy | ~3,950 English reviews, ~84% positive | Characters are strongest when the strategic layer remembers relationships |
-| **The King is Watching** | One clear kingdom-management hook + replay | ~3,300 English reviews, ~90% positive; **600k+ published Steam sales** | A legible core hook plus long-term replay can scale commercially |
-| **The Life and Suffering of Sir Brante** | Text-heavy dark fantasy + consequential choice | ~2,770 English reviews, ~89% positive | Premium text-first presentation can work when consequences are severe and readable |
-| **BOOK OF HOURS** | Dense occult text/system play | ~2,704 English reviews, ~89% positive | A patient audience exists for occult inference and text-heavy systems |
-| **The Pale Beyond** | Narrative + resource management | ~1,859 reviews, ~90% positive | Management must visibly matter to outcomes or it risks feeling bolted on |
-| **Reigns** | Extremely compressed recurring decisions | ~2,624 English reviews, ~84% positive | Fast repeated choice works when state feedback stays immediate |
-| **Six Ages: Ride Like the Wind** | Storybook strategy / myth / clan management | ~460 reviews, ~81% positive | Biased advisers and culturally situated advice make opaque worlds learnable |
-| **Great Houses of Calderia** | Direct family/dynasty strategy comparison | ~409 reviews, ~60% positive | “Family grand strategy” is not enough on its own; execution and focus matter |
-| **Norland** | Family-centred simulation / systemic medieval drama | ~2,900 English reviews, ~82% positive | Emergent family drama is attractive but broader simulation raises complexity expectations |
+| **Crusader Kings III** | Dynasty fantasy at mass scale | ~50,000 English reviews, ~90% | Recurring named people turn systems into stories |
+| **Wildermyth** | Procedural people plus authored events | ~11,688 English reviews, Overwhelmingly Positive | Recurrence and transformation make procedural characters memorable |
+| **Pentiment** *(new)* | Medieval, manuscript look, history told by unreliable people | ~95% of ~9,300–9,600 reviews (C, third-party trackers, Oct 2026); USD 19.99 (≈ NZD 34) | Illuminated-manuscript presentation sells text-first play. Unit estimates of 189k–275k are tracker guesses (D), not sales evidence |
+| **Suzerain** | Text-heavy decisions, institutions, consequences | ~7,200 English reviews, ~93% | Dense reading sells when choices build a political identity. Mobile versions shipped Dec 2022 |
+| **The Roottrees are Dead** | Family tree as the central interaction | ~5,071 English reviews, ~96% | Genealogy can be the fun if relationships are readable |
+| **Yes, Your Grace** | Medieval decisions plus resource pressure | ~5,260 English reviews, ~85% | A small cast and visible trade-offs carry a compact management story |
+| **Yes, Your Grace 2: Snowfall** | Broader sequel, more systems | ~1,490 reviews, ~76% | More features do not make up for a perceived loss of agency |
+| **Long Live The Queen** | Repeated strategic runs through text | ~4,719 English reviews, ~94% | Failure fuels replay when the next run allows a different plan |
+| **Old World** | Dynasty plus events inside strategy | ~3,950 English reviews, ~84% | Characters are strongest when the strategy layer remembers relationships |
+| **The King is Watching** | One clear hook plus replay | ~3,300 English reviews, ~90%; **600k+ Steam copies (B)** | A legible hook plus long-term replay can scale |
+| **The Life and Suffering of Sir Brante** | Dark text-first fantasy, consequential choice | ~2,770 English reviews, ~89% | Premium text works when consequences are severe and readable |
+| **BOOK OF HOURS** | Dense occult text and systems | ~2,704 English reviews, ~89% | A patient audience exists for occult inference |
+| **The Pale Beyond** | Narrative plus resource management | ~1,859 reviews, ~90% | Management must visibly change outcomes |
+| **Reigns** | Very compressed recurring decisions | ~2,624 English reviews, ~84%; **600k+ sales, mostly iOS/Android (B, 2017)** | Fast repeated choice works on phones when feedback is immediate |
+| **The Shrouded Isle** *(new)* | Sacrificing members of named families to an eldritch god | Mostly Positive, ~1,167 reviews (C, third-party listing) | The closest thematic neighbour. Critics said it *"drops you into its system without much explanation"*. Onboarding was its tax |
+| **Darkest Dungeon** *(new)* | Lovecraftian; a culpable Ancestor narrates the family's ruin | **6 million units by Dec 2022 (B, Red Hook)** | A narrator who caused the ruin can become the brand. Daveed is that narrator |
+| **Six Ages: Ride Like the Wind** | Storybook clan strategy and myth | ~460 reviews, ~81% | Biased advisers make opaque worlds learnable. Mobile-first studio |
+| **Great Houses of Calderia** | Direct family-strategy comparison | ~409 reviews, ~60% | "Family grand strategy" alone is not enough. Execution and focus matter |
+| **Norland** | Family-centred systemic medieval drama | ~2,900 English reviews, ~82% | A broader simulation raises expectations about complexity |
 
-### Important interpretation
-
-This table is **not a ranking** and review count is not a sales estimate.
-
-The useful pattern is the spread:
-
-- narrow, readable games can earn exceptional sentiment;
-- “dynasty” and “medieval management” are not automatically attractive enough to overcome confusion;
-- text-heavy games are commercially viable when the interaction is coherent;
-- the player must understand why their decisions matter.
+**The useful pattern:** narrow, readable games earn exceptional sentiment.
+"Dynasty" and "medieval management" do not sell themselves past confusion. Text
+games sell when the interaction is coherent. The player must understand why a
+decision mattered.
 
 ---
 
-# 5. New comparator: The Roottrees are Dead
+# 6. Comparator lessons that still apply
 
-This is the most useful addition to the previous report because it validates a surface Eldritch Dynasty depends on more heavily than almost any strategy comparison does.
+## 6.1 *The Roottrees are Dead* — the tree can be the fun
 
-*The Roottrees are Dead* asks the player to reconstruct a complicated family tree from documents and clues. It is not mechanically similar to Eldritch Dynasty, but its reception suggests several important things.
+The tree is not a database screen. It is the thing the player is trying to
+understand. Players praise its **graduated hint system**: a broad nudge first,
+then more detail on request. Community feedback also says that a much larger
+search space can overwhelm even when the deduction underneath is good.
 
-## What it validates
+*Eldritch Dynasty* shipped the matching tools: search, hall filters,
+direct-line rooting, relevance, kinship paths (#268), and graduated in-world help
+(#273). The remaining question is whether players **use** them at 50–80 living
+relatives. Only a playtest answers that.
 
-### A family tree can be the fun
+## 6.2 *The King is Watching* — the hook has to survive hour five
 
-The tree is not merely a database screen. It is the thing the player is trying to understand.
+GameMaker's July 2026 interview with tinyBuild (B) reports a Ludum Dare origin,
+more than two million browser plays, **more than 600,000 Steam copies**, about
+twenty hours of average play, and a structural pivot after later-stage
+playtesting showed limited appeal beyond the first hours. The publisher also
+tailored localisation after strong organic interest from China.
 
-Eldritch Dynasty should hold itself to the same standard. If the tree is the primary UI, opening it should answer questions such as:
+The wrong lesson is "add roguelite progression". The right one is: **a strong
+hook must survive contact with hour five, and that was discovered by playtesting
+humans, not bots.**
 
-- Where did this blood come from?
-- Who is carrying the line?
-- Which branch is becoming dangerous?
-- How are these two people related?
-- What changed because of the last Match?
-- Who matters to my current House Ambition?
+## 6.3 *Yes, Your Grace 2* — promised agency must be acknowledged
 
-A tree that only proves parentage is not enough.
+Prominent negative reviews say big events happen whatever the player chose (C).
+A choice may converge. It must still leave a remembered difference. #334 now
+enforces that at the build level, which is a real competitive advantage. The
+summit (§4.1) is the place where the same complaint could still land.
 
-### Graduated help protects discovery
+## 6.4 *The Pale Beyond* — every management system needs a story job
 
-Positive Roottrees reviews specifically praise its graduated hint system: a stuck player can ask for a broad nudge and progressively request more detail.
+Some reviewers describe the resource layer as work that does not change the
+story (C). Land, careers, books, Muster, standing, branches and rites must keep
+creating different descendants, options, debts or records. The concept brief's
+test still applies: *if a feature does not touch blood, the Ledger, or the
+record, it is not in this game.*
 
-That is a strong model for Eldritch Dynasty's complexity:
+## 6.5 *The Shrouded Isle* and *Darkest Dungeon* — the eldritch-family niche
 
-- first show an in-world diagnosis;
-- then show the rule the family could reasonably know;
-- keep exact hidden future rolls hidden.
+*The Shrouded Isle* is the nearest thematic neighbour: houses, sacrifice, an
+eldritch god. It was received as stylish but opaque. *Darkest Dungeon* sold
+millions with a narrator who is the cause of the family's ruin. Together they
+suggest:
 
-The closed #212 work on ladder blockers is already aligned with this. The remaining opportunity is broader contextual help for genealogy, the Chronicle, branches, and strategy.
-
-### Complexity can become overload
-
-Community feedback on the larger Roottrees mystery also notes that a much wider search space can become overwhelming even when the underlying deduction remains good.
-
-That maps directly onto Eldritch Dynasty's 50–80 living relatives and centuries of Chronicle material.
-
-**Commercial implication:** information architecture is gameplay. Search, filters, relationship paths, collapse/focus controls and “why this person matters” are not admin features in this game.
-
----
-
-# 6. New comparator: The King is Watching
-
-This is not a structural competitor. It is a commercial-design comparator.
-
-GameMaker's July 2026 interview with tinyBuild reports:
-
-- the game began as a Ludum Dare project;
-- its browser version reached more than two million plays;
-- the full Steam version sold more than 600,000 copies;
-- the publisher was attracted by a very clear idea — buildings only work while the king looks at them;
-- later playtesting showed the original structure had limited appeal beyond the first few hours;
-- the project pivoted to a roguelite structure to strengthen progression and replay;
-- tinyBuild says the finished game averages around twenty hours of play;
-- the publisher also tailored localization/marketing after seeing strong organic interest in China.
-
-## The Eldritch lesson
-
-The wrong lesson would be:
-
-> Add roguelite progression.
-
-The right lesson is:
-
-> **A commercially promising hook must survive contact with hour five.**
-
-Eldritch Dynasty already has a stronger long-form thematic architecture than a game-jam prototype. It should still prove the same questions:
-
-1. Is the hook obvious after one session?
-2. Does the same hook keep producing different decisions later?
-3. Does a second run create new context quickly enough?
-4. Is there a reason to return tomorrow besides unfinished content?
-
-The Library of Houses (#70) is an excellent thematic replay mechanism because it changes what the next world remembers rather than making the next house stronger. The remaining risk is how quickly the player feels that difference.
+- the eldritch-family fantasy has an audience;
+- **onboarding is the tax** on that fantasy. The Examination and the progressive
+  reveal are the right investments;
+- **a guilty narrator is marketable.** Daveed — first Head, guardian spirit, the
+  player all along, and not neutral — is a trailer voice and a store hook, not
+  just a lore detail.
 
 ---
 
-# 7. New caution: Yes, Your Grace 2 — more systems, weaker agency signal
+# 7. The Steam market in 2026
 
-*Yes, Your Grace 2: Snowfall* is useful because it is unusually close in presentation space:
+## 7.1 Size and odds
 
-- medieval;
-- story rich;
-- choices matter;
-- management/resource systems;
-- multiple endings;
-- repeated petitions/decisions;
-- a known predecessor.
+- About **19,000–20,300 games released on Steam in 2025** (D; estimates differ
+  by source).
+- Sensor Tower's *State of Gaming 2026* reports **USD 12 billion premium revenue
+  on Steam** (≈ NZD 20.4 billion), and **+13%** growth for PC and console against
+  **+1%** for mobile in-app revenue (D, analyst press release).
+- Reported estimates put **about 3%** of releases ever reaching 1,000 user
+  reviews (D). Median revenue figures range from about **USD 250 to USD 1,000**
+  depending on method (D). Treat these as orientation, not forecasts.
 
-It also publicly passed 100,000 Steam wishlists in April 2024.
+**Implication:** the median Steam game makes almost nothing. Polish alone does
+not move a game out of the median. Discoverability by the right players does.
 
-As of this update it is around **76% positive** on Steam. Prominent negative reviews repeatedly describe a mismatch between being offered choices and feeling that important story events happen regardless. Even a positive review notes that choices can sometimes feel ineffective.
+## 7.2 Price drift
 
-## Why this matters more than the raw score
+GameDiscoverCo found the median price of the top 50 new Steam releases fell
+**from USD 19.50 to USD 15.64** between February 2023 and October 2025 (D,
+reported). At NZD 1.70 that is roughly **NZD 33 → NZD 27**. Secondary reports
+say Valve refreshed its regional price matrix in March 2026, the first update
+since October 2022 (D).
 
-A game can be structurally linear and still provide satisfying self-expression. The problem is not convergence by itself.
+## 7.3 Wishlists and conversion
 
-The problem is **promising strategic agency and then failing to acknowledge it**.
+- GameDiscoverCo (2024 sample) found a **median first-week wishlist-to-sales
+  ratio of about 10.5%** for new Steam games (D). Others report 20%. Plan on
+  **10–20%**.
+- How To Market A Game archived its long-standing "about 7,000 wishlists at
+  launch" benchmark after Steam's June 2026 change. Secondary summaries of its
+  new guidance list tiers of about **5,000 / 8,000 / 50,000 / 90,000** (D).
+- The owner's recorded checkpoints are **5,000 wishlists before the demo and
+  15,000 at launch**, with the date moved if below 5,000 four weeks out
+  (`issuesneedingowneraction`). Those sit sensibly between the published tiers.
 
-For Eldritch Dynasty, a choice can legitimately converge on the same historical Age or creditor arrival. It should still do at least one of these:
-
-- alter a future option;
-- alter the family, a person, branch, standing, land, record, or knowledge;
-- alter what somebody later says;
-- alter the Chronicle;
-- alter the cost of a later decision;
-- become evidence at the last night;
-- reveal something about the player's chosen philosophy and receive a later callback.
-
-If two options only swap prose and are never remembered, the game should question whether they need to be options.
-
----
-
-# 8. New caution: The Pale Beyond — systems must change the story players think they are controlling
-
-*The Pale Beyond* is currently about 90% positive on Steam, so it is not a failure case.
-
-It is useful because the positive and negative reviews expose the exact tension Eldritch Dynasty needs to manage:
-
-- positive players praise characters, atmosphere and weighty decisions;
-- some negative players describe the resource system as work that does not sufficiently alter the linear story;
-- some community discussion describes replay as losing value once the optimal resource approach is understood.
-
-The lesson is not “avoid resources.” It is:
-
-> **Every maintenance system needs a story job.**
-
-Land, careers, books, Muster, standing, branches and rites should exist because they create different descendants, different options, different debts or different records — not because a strategy game is expected to have management screens.
-
-The root concept brief already gives the correct test:
-
-> If a feature does not touch blood, the Ledger, or the record, it is not in this game.
-
-Keep applying it.
+**Illustration, not a forecast:** 15,000 launch wishlists × 10.5% ≈ **1,575
+first-week units**. At an average realised price of about USD 15 after regional
+pricing and discounts, minus Steam's 30%, that is about USD 16,500 to the
+developer, roughly **NZD 28,000 before tax and refunds**. The point is scale. A
+launch at the checkpoint funds a small team for weeks, not years. The long tail
+of sales, discounts, the demo and a second platform carry the rest.
 
 ---
 
-# 9. Choice design — the commercial obligation behind the “Choices Matter” tag
+# 8. Steam discoverability after June 2026
 
-The project now has much better immediate outcomes and delayed echoes than it did when earlier root documents were written.
+Steam overhauled its store home in June 2026 (D, multiple outlets). Two changes
+matter here.
 
-The next useful step is not simply “more consequence.” It is **consequence credibility**.
+1. **Popular Upcoming got much harder.** Reported thresholds rose from about
+   7,000 to **80,000–100,000 wishlists** for new entries (D; not published by
+   Valve). A niche text strategy game should not plan around that list.
+2. **The Personal Calendar.** Valve describes it as recently released and
+   upcoming games *"filtered down to the set of games we think you are most
+   likely to be interested in"*, based on each user's wishlists, follows and
+   play history. Early developer reports describe large single-day wishlist
+   jumps and visibility that lasts about a month after launch (D, early data).
 
-## A choice does not need a unique ending
+**Implications for this game:**
 
-Massive branching trees are not economically necessary.
-
-A good choice may instead change:
-
-- who the player is protecting;
-- what the house believes;
-- which cost they accepted;
-- who remembers the insult;
-- what a later character thinks is true;
-- which family line remains available;
-- which fact survives in the Chronicle.
-
-That is compatible with a fixed 1542 reckoning.
-
-## What must be avoided
-
-- two buttons with effectively identical future state;
-- choices where one is obviously dominant in almost every context;
-- “hard choices” that only change a resource by a tiny amount and are never recalled;
-- a maintenance action presented as a dramatic decision;
-- a story scene that explicitly offers refusal and then proceeds identically without acknowledging the refusal.
-
-## Recommended audit
-
-Add a report over authored decisions that classifies each option by what it can change:
-
-- persistent simulation state;
-- person/relationship state;
-- Chronicle/claim state;
-- future eligibility;
-- immediate outcome only;
-- self-expression only.
-
-“Self-expression only” is valid when the game later remembers or reflects it. “Immediate outcome only” should be deliberately rare.
+- **Matched wishlists beat raw wishlists.** The calendar uses play history, so a
+  wishlist from someone who plays *Crusader Kings III*, *Pentiment*, *Suzerain*
+  or *The Roottrees are Dead* is worth more than a generic one. Spend marketing
+  effort where those players are.
+- **Tags matter more.** Choose Steam tags that put the game next to those
+  players' libraries: Strategy, Choices Matter, Text-Based, Dynasty,
+  Lovecraftian, Medieval, Story Rich, Multiple Endings, Replay Value, Singleplayer.
+  Avoid "Grand Strategy" (§15).
+- **Followers count.** Ask for follows as well as wishlists in every devlog and
+  demo exit screen.
+- **Time on the page compounds.** Every month without a Coming Soon page is a
+  month in which no matched player can wishlist the game.
 
 ---
 
-# 10. The family tree must become a decision surface, not a genealogy archive
+# 9. Launch calendar and Steam lead times
 
-The project has already fixed several major tree problems:
+## 9.1 Official Steam requirements (A)
 
-- marriages are represented;
-- ancestry is recoverable;
-- a small situational cast is foregrounded;
-- Match choices are richer;
-- the full Chronicle is readable/exportable.
+- **Steam Direct fee:** USD 100 per app (≈ NZD 170), recoupable after USD 1,000
+  adjusted gross revenue.
+- **Waiting period:** first-time publishers wait **30 days** between paying the
+  fee and releasing. Some third-party guides say 21; the Steamworks page says 30.
+- **Coming Soon:** the store page must be public for **at least two weeks**
+  before release.
+- **Reviews:** store-page review typically takes 3–5 business days. Submit at
+  least 7 days before you want it live. The build is reviewed separately.
 
-The commercial risk now moves up one level.
+## 9.2 Next Fest
 
-At Long-Line scale, a player must be able to answer strategic questions without manually scanning dozens of people.
+| Edition | Registration | Required items in | Press preview | Festival |
+|---|---|---|---|---|
+| Oct 2026 | — | passed (28 Sep) | 8 Oct | **19–26 Oct 2026** (running now) |
+| Feb 2027 | **10 Jan 2027** | 8 Feb | 11 Feb | 22 Feb – 1 Mar 2027 |
+| **Jun 2027** | **25 Apr 2027** | 31 May | 3 Jun | **14–21 Jun 2027** |
 
-## Recommended tree capabilities
+A title can take part in **one** Next Fest only (A). Dates are from the
+Steamworks pages, read through search summaries this session.
 
-- search by name;
-- collapse/expand halls;
-- filter by living/dead where appropriate;
-- highlight direct lineage to current Head;
-- highlight active House Ambition relevance;
-- show the relationship path between any two selected people;
-- filter to people relevant to a rite, affinity, branch grievance, or succession decision without exposing hidden genomes;
-- jump from a person to Chronicle mentions;
-- jump from a Chronicle entry back to the people/branch involved;
-- preserve the no-faces / sigil identity.
+## 9.3 What the owner timeline implies
 
-This is not “make a genealogy app.” It is making the primary strategic board playable at its designed population.
-
----
-
-# 11. Replay: the next major commercial design problem
-
-A first run can tolerate discovery cost. A second run cannot demand the same discovery cost again.
-
-The repository already has unusually strong replay foundations:
-
-- Short and Long campaign profiles;
-- different House Ambitions;
-- different family philosophies;
-- a persistent Library of Houses;
-- varying Ages/events/relationships;
-- multiple endings;
-- a large state-dependent content pool.
-
-The missing commercial layer is **replay compression**.
-
-## Recommended replay rule
-
-> Compress what the player already knows; never compress the decision that became different.
-
-Examples:
-
-- permit fast reveal / skip of prose the player has already seen verbatim;
-- never auto-skip a changed variant, new outcome, rare/mythic scene, decision, Record block, rite, interlude or callback;
-- mark previously seen event text unobtrusively;
-- provide a fast restart path from an ending to a new founding;
-- let experienced players reduce explanatory scaffolding;
-- keep the Chronicle complete even when presentation was skipped.
-
-The purpose is not to make the game faster for its own sake. It is to move the second-run player to **new context** faster.
+- With no App ID for "at least several months" from 16 October 2026, **February
+  2027 is not realistic**. Registration closes 10 January and needs a live store
+  page and a reviewed demo.
+- **June 2027 works backwards like this:**
+  - App ID and fee paid by **about February 2027**;
+  - Coming Soon page live by **March 2027** (one or two weeks of review);
+  - demo build reviewed **well before 31 May**;
+  - register by **25 April**;
+  - press preview from **3 June**;
+  - festival **14–21 June**.
+- **Why the App ID should come before signing:** Windows Authenticode, the Play
+  upload key and Apple distribution are needed at *release*. The App ID is needed
+  to *start the wishlist clock*. On Steam's June 2026 storefront, that clock is
+  the strongest predictor this project can influence. If the owner can move one
+  account forward, it should be this one.
 
 ---
 
-# 12. Second-run freshness should be measured from the start, not at the ending
+# 10. Platform strategy: Windows, Android and iPhone
 
-A replay system that diverges only in year 1400 will not make the opening feel replayable.
+The owner has committed to three hosts (#277, 29 Sep). This revision adds the
+market evidence the earlier version lacked.
 
-The Library of Houses is thematically excellent, but its commercial value depends on whether the player notices the previous world soon enough.
+## 10.1 What the evidence says about premium mobile
 
-## Recommended measurement
+- **Premium PC-to-mobile ports are growing from a very small base:** 7 in 2024,
+  23 in 2025, still about 3% of premium mobile releases (D, AppMagic via
+  GameDev News).
+- **Revenue goes to a few hits.** *Balatro* alone is estimated at USD 21.3
+  million on mobile (D). Port publishers say known IP and awards help smaller
+  games (D).
+- **Text-first strategy has worked on phones:** *Reigns* sold more than 600,000,
+  mostly on iOS and Android (B, 2017). *Suzerain* added mobile in 2022. *Six
+  Ages* comes from a mobile-first studio.
+- **Mobile overall is flat:** Sensor Tower reports mobile in-app revenue up only
+  1% (D). Premium sits outside that free-to-play economy.
 
-For a completed run followed by another run:
+**Reading:** Steam leads. Mobile is a second wave that rides Steam's reviews and
+any press the game earns. It is cheap here because the client is already shared
+(`packages/mobile`). But it is unlikely to *find* the audience on its own.
 
-- compare the first 3 generations;
-- compare the first 30 player prompts;
-- report repeated event IDs and repeated verb shapes;
-- report when the first inherited Library/tale/relationship consequence becomes visible;
-- report when the first materially different strategic plan becomes available.
+## 10.2 Store fees and terms
 
-Do not set an arbitrary pass/fail threshold before measuring the current game.
+| Store | Account cost | Commission (long-standing published terms; re-verify at signup) | Gate |
+|---|---|---|---|
+| Steam | USD 100 per app ≈ **NZD 170** | 30%, falling to 25% above USD 10M and 20% above USD 50M per title | 30-day first-release wait; two weeks Coming Soon |
+| Google Play | USD 25 once ≈ **NZD 43** | 15% on the first USD 1M per year | **Personal accounts created after 13 Nov 2023 need a closed test with ≥12 opted-in testers for 14 continuous days** before production access (A; third-party guides add that dropping below 12 resets the clock) |
+| Apple App Store | USD 99 per year ≈ **NZD 168** (Apple bills a local price; confirm at enrolment) | 15% under the Small Business Program, below USD 1M | Review; TestFlight for physical-device proof |
 
-The desired qualitative shape is simple:
+The owner chose a **personal** Play account on 14 October and plans to invite
+20 or more testers as a buffer. That is the right call given the reset risk.
+Treat the 14-day test as a **minimum** of three weeks on the calendar.
 
-> By the time a returning player has finished the opening chapter, they should have encountered at least one reason this house cannot be played exactly like the last one.
+## 10.3 What text on phones needs
 
----
-
-# 13. Strategic waiting must be treated as a distinct failure mode
-
-The old endgame calibration work fixed important reachability problems, but “reachable” is not the same as “playable.”
-
-A long-form strategy game can become boring when the player:
-
-- knows what they need;
-- has only one blocker left;
-- has no deliberate action that can improve it;
-- continues processing routine years waiting for the simulation to cooperate.
-
-This is particularly dangerous in a game whose fiction makes patience feel thematically appropriate. The player can mistake a dead decision space for “slow burn.”
-
-## Recommended general stall detector
-
-Measure, for named long-horizon goals:
-
-- years with the same dominant blocker;
-- years since a player-actionable path existed;
-- longest interaction-shape streak;
-- longest spine gap;
-- generations with no change in the active House Ambition's state;
-- repeated attempts at an action that cannot yet succeed.
-
-The answer should **not** be a generic progress bar or a universal difficulty ramp.
-
-If a stall is found, fix the existing system that owns the blocker.
+Reading on a phone is the risk, and this project has better tools for it than
+most: text scale, reading font, Plain English mode, keyboard-free navigation
+work. Before mobile launch, test the **tree** and the **Match** at phone width
+with real players. Those are the screens most likely to collapse at that size.
 
 ---
 
-# 14. The Chronicle should close the causal loop
+# 11. Price
 
-The Chronicle is already readable and exportable.
+The concept brief's **NZD 28–35** band is still defensible as a working range.
 
-Its next high-value usability improvement is to make remembered causality inspectable.
+- In USD terms at NZD 1.70 it is roughly **USD 16.50–20.60**, which brackets
+  the USD 15.64 median of recent top launches (§7.2) and the USD 19.99 of
+  comparators such as *Pentiment* and *Sir Brante*.
+- Steam's NZD store prices are set per currency in Steamworks. **Read Valve's
+  current NZD recommendation in the pricing tool on the day.** Do not convert by
+  hand. The matrix was reportedly refreshed in March 2026.
+- **Choose price by evidence, not by averaging competitors:** demonstrated
+  campaign quality, *measured* human session length (none exists yet; §4.3),
+  replay value, polish, localisation scope and content breadth.
+- **Mobile is usually priced lower than Steam.** Plan a separate phone price
+  rather than copying the Steam figure. Use the platform's own price tiers.
 
-When a delayed consequence says, for example, that House Marrow remembers a refusal from two generations ago, the player should be able to move naturally from:
-
-**bill → old page → original act**
-
-without exposing hidden formulas.
-
-This can be a small interface affordance:
-
-- “from the winter of 1218”;
-- jump to related Chronicle entry;
-- show the named person/house involved;
-- no numeric Bearing or probability explanation.
-
-This turns the Chronicle from archive into strategic memory and strengthens the game's single most distinctive system.
+Do not infer competitor revenue from review counts unless a published sales
+figure exists.
 
 ---
 
-# 15. Post-run shareability: add the House Afterimage
+# 12. AI-content disclosure and player sentiment
 
-The full Chronicle export is valuable, but a complete run is too large to be the default object players share.
+## 12.1 The rule
 
-A compact generated post-run page can create a better social artefact.
+In **January 2026** Valve rewrote the AI section of the Steam content survey
+(D, multiple outlets reporting Valve's form; Valve's own text was not opened
+this session):
 
-## It should contain facts, not grades
+- **Efficiency tools are out of scope.** Valve's wording is reported as
+  *"Efficiency gains through the use of AI powered tools is not the focus of
+  this section."* That covers AI coding assistants and workflow tools.
+- **Player-facing content is in scope:** artwork, audio, **narrative elements**,
+  **localisation**, marketing assets and the store page.
+- There are two tiers: **pre-generated** content shipped with the game, and
+  **live-generated** content made while the game runs.
 
-Possible items:
+## 12.2 Why it applies here
 
-- the house name and sigil;
-- the ending;
-- three people most central to the house's ascent;
-- one person sacrificed;
-- the oldest surviving embellishment;
-- the oldest blank;
-- the largest holding and worst loss;
-- the generation where the line came closest to ending;
-- the longest-running external relationship;
-- one rejected Match that later mattered;
-- one sentence drawn from the Chronicle.
+This repository is developed with AI coding agents. Its authoring skills
+(`rothfuss-prose`, `lovecraftian-prose`, `eldritch-story`) exist to direct how
+event bodies, interludes and frame prose are written, and the Plain English
+counterparts were authored the same way. If shipped prose was generated or
+substantially drafted by AI tools, the **pre-generated narrative** tier
+applies. The engine generates no text live, so the live tier does not.
 
-No score.
-No letter grade.
-No “good ending.”
-No moral verdict.
+That determination is the owner's to make on the real authorship history. This
+document does not make it.
 
-The page answers:
+## 12.3 How players react
 
-> **What was this house?**
+The evidence is mixed and depends heavily on how the question is asked (D):
 
-This is more useful for screenshots, Discord, Steam discussions and word of mouth than a generic victory screen.
+- **Quantic Foundry** panel (1,799 gamers, Oct–Dec 2025): **85%** negative, 62%
+  "very negative".
+- **BCG 2026** global gaming survey: much milder, with 5% negative toward
+  AI-generated NPCs and dialogue. BCG attributes the gap to question wording.
+- **PlayerPulse** tracking: the share saying they would refuse or be less likely
+  to buy rose from about 22% (Mar 2024) to over 25% (Dec 2025).
+- **An arXiv analysis of 508,192 Steam reviews** found recommendation rates of
+  **68.4%** for generative-AI games against **86.3%** for procedurally generated
+  ones. Some reviewers explicitly withheld recommendations in protest.
+- Reported disclosure prevalence: more than 7,300 games by March 2026; about
+  31% of 2026 releases.
 
----
+## 12.4 Recommendation
 
-# 16. Demo strategy — update the previous recommendation
-
-The earlier market report was too confident about a specific demo duration.
-
-Current Next Fest analysis is a reason to soften that.
-
-How To Market A Game's June 2026 survey reports demo-player-to-wishlist conversion around:
-
-- 30th percentile: 15.9%;
-- median: 19.3%;
-- 70th percentile: 23.2%.
-
-The same analysis explicitly warns developers **not to over-interpret the conversion percentage**. Some games with lower conversion still generated far more absolute wishlists because they reached many more players.
-
-## Revised recommendation
-
-Do not optimise the demo to a fixed minute count.
-
-Optimise it to prove one complete Eldritch Dynasty shape:
-
-1. the debt;
-2. a Match;
-3. a person the player can care about;
-4. a meaningful choice;
-5. Record / Omit / Embellish;
-6. an echo proving the game remembered;
-7. the 1542 frame or equivalent promise;
-8. a forward-looking problem that makes continuation desirable.
-
-Then measure actual completion time and drop-off.
-
-The demo should end because the **shape is complete**, not because a clock says 25, 45 or 90 minutes.
-
-## Save transfer
-
-For Eldritch Dynasty, demo save transfer still makes thematic sense because the product is a continuous family history. If the demo campaign is intentionally compressed or non-canonical, do not force transfer merely because other games do it.
+- **Disclose accurately and specifically.** This game's whole thesis is that a
+  falsified record gets proven centuries later. An undisclosed AI-prose
+  discovery after launch would be the worst possible story for *this* product.
+- **Say what humans did.** If the owner directed, curated, edited and rejected
+  the prose, and designed the systems, the disclosure text can say so plainly.
+  Specific, honest disclosures read better than vague ones.
+- **Expect a review-score cost and plan for it.** Players who care will filter.
+  The audience in §5 is reading-heavy and may be more sensitive than average.
+  Strong craft and honesty limit the damage. Concealment multiplies it.
+- **Translation:** machine or AI translation of the narrative also counts as
+  disclosed content. Factor that into the localisation decision (§13).
 
 ---
 
-# 17. Steam positioning
+# 13. Localisation
 
-## Do not lead with “grand strategy”
+## 13.1 How big the job is (measured, E)
 
-That label creates expectations for:
+A word count over `packages/content/**/*.yaml` this session, counting strings of
+four words or more and excluding generated `loci.yaml`:
 
-- maps;
-- conquest;
-- diplomacy breadth;
-- military systems;
-- large economic models;
-- faction-level political simulation.
+| Register | Words |
+|---|---:|
+| **Original** prose | **~142,000** |
+| **Plain English** counterparts | **~147,000** |
 
-The game intentionally does not provide several of those.
+UI strings in the client and core `messages.ts` come on top.
+
+## 13.2 What it costs
+
+Vendor rate cards put game translation at about **USD 0.10–0.14 per source
+word**, with editing and QA billed separately (D, vendor sources). That is about
+**NZD 0.17–0.24 per word**.
+
+- Translating the **Original** prose alone: about **NZD 24,000–34,000 per
+  language**, before editing, LQA and UI.
+- The literary register (Rothfuss plain, Dunsany elevated) is harder than
+  typical game text. Budget toward the top of the range, or above it.
+- Translating **both** registers roughly doubles the cost. Decide per language
+  whether Plain English is offered in translation at all.
+
+## 13.3 Which language first
+
+- *The King is Watching* and most comparators support Simplified Chinese. Its
+  publisher reacted to organic Chinese interest (B).
+- Steam Hardware Survey language shares are **volatile**. In February 2026
+  Simplified Chinese reportedly jumped to 54.6% and English fell to 22.3%, which
+  observers treated as a sampling anomaly (D). Do not plan around one month.
+- **Use the game's own wishlist geography.** Steamworks reports wishlists by
+  country once the Coming Soon page is live. One more reason the App ID
+  matters (§9).
+
+## 13.4 Readiness that has already shipped
+
+#276 and `docs/LOCALISATION.md` settled the hard architectural question: **the
+saved Chronicle keeps the words the player saw.** Pseudo-localisation exists.
+Plain English proves the runtime can switch prose per reader. What remains is a
+**decision** — language, vendor, and whether to translate both registers — not
+an engineering gap.
+
+---
+
+# 14. New Zealand context
+
+## 14.1 The industry (B/D)
+
+- The NZGDA's 2025 survey reports NZ games-industry income of **NZD 759.57
+  million** for 2024/25, up 38.6%, with about **95% from international sales**,
+  and full-time-equivalent jobs up 29.2% to 1,418.
+- NZ On Air rebate data reportedly shows **NZD 829 million** across rebate
+  studios in 2025/26 (D; secondary report, not opened directly).
+
+NZ games are an export industry. Plan the launch for a global audience, with
+NZ as one small market among many.
+
+## 14.2 The Game Development Sector Rebate (A)
+
+| | |
+|---|---|
+| Rate | **20%** of qualifying NZ expenditure |
+| Minimum | **NZD 250,000** qualifying expenditure per year. Below that, nothing is paid. |
+| Cap | **NZD 3 million** per firm per year |
+| Year | 1 April – 31 March. One application per year. |
+| Administered by | **NZ On Air** (policy: MBIE) |
+
+**Implication:** the scheme targets mid-sized and larger studios. A team
+spending under NZD 250,000 a year on qualifying NZ costs receives nothing. At
+exactly the threshold, the rebate would be about NZD 50,000. Check eligibility
+rules (entity type, what counts as qualifying expenditure, whether pre-release
+development qualifies) directly with NZ On Air before budgeting for it.
+
+## 14.3 Smaller programmes
+
+The Kiwi Game Starter competition and the NZ Film Commission's Interactive
+Development Fund (grants of NZD 5,000–25,000 per project in its pilot) have run
+in past years. **No current 2026 rounds were confirmed** in this research. Check
+NZGDA and NZFC directly.
+
+---
+
+# 15. Positioning
+
+## Do not lead with "grand strategy"
+
+That label promises maps, conquest, diplomatic breadth, military systems and
+faction simulation. This game deliberately leaves most of those out.
 
 ## Better category language
-
-Use combinations such as:
 
 - **generational strategy**
 - **narrative simulation**
 - **choices-matter dynasty game**
 - **dark-fantasy bloodline strategy**
 - **text-based strategy**
-- **story-rich simulation**
-- **multiple endings**
-- **replay value**
+- **story rich**, **multiple endings**, **replay value**
 
-Candidate store line:
+Store line:
 
-> **Breed a bloodline for five centuries, decide what the family writes about what it did, and face the creditor who kept the other copy.**
+> **Breed a bloodline for five centuries, decide what the family writes about
+> what it did, and face the creditor who kept the other copy.**
 
-That line expresses the three systems the concept says everything should touch: blood, Ledger/debt, record.
+## Claims the evidence supports today
 
----
+- "Every choice leaves a trace": the #334 audit enforces it at build time.
+- "Your family is a genome, not a stat block": invariant-backed.
+- "The record you falsify is read back at the end": #45, the Reckoning.
+- "Plain English mode": shipped, full coverage.
 
-# 18. Trailer priorities
+## Claims to hold back until measured
 
-A trailer for this game should not spend most of its time on prose cards.
-
-Show the interaction that proves the prose is a game.
-
-Recommended sequence:
-
-1. family tree grows across generations;
-2. three Match candidates imply different futures;
-3. player chooses one;
-4. child/branch consequence appears;
-5. Record / Omit / Embellish changes the page;
-6. old wording returns later as a consequence;
-7. a named relative is spent in a rite;
-8. the last-night frame reads the Chronicle;
-9. several visually different house outcomes/afterimages.
-
-The trailer should answer:
-
-> “What do I *do*?”
-
-before it tries to answer:
-
-> “How beautifully is it written?”
+- "Ascend to godhood" or "the complete Ascension Ladder" (§4.1).
+- Any session-length claim. No human session has been timed.
+- Any claim about the Long Line's distinct content (§4.2).
 
 ---
 
-## 18A. Visual merchandising: the store page has to prove this is a game
+# 16. Visual merchandising: the store page has to prove this is a game
 
-This is a more important production constraint than the previous version of this report made it.
+Steam's trailer guidance (A) says a Discovery Queue impression may get **less
+than ten seconds**, that the trailer should work **without audio**, and that the
+**first trailer should be primarily gameplay**. The first two trailers appear
+before screenshots on the store page.
 
-Steam's current trailer guidance says the first trailer is often one of the first things a potential customer sees, that a Discovery Queue impression may have **less than ten seconds**, and that the trailer should still communicate without audio. Valve explicitly recommends making the **first trailer primarily gameplay**. The first two trailers appear before screenshots on the store page.
+> **The player must be able to see state changing before they have read a
+> paragraph.**
 
-That pushes Eldritch Dynasty toward a very specific visual requirement:
+## 16.1 The strongest surfaces
 
-> **the player must be able to recognise state changing before they have read a paragraph.**
-
-The current product already has the right raw material. It needs to be staged as visual proof.
-
-### The six strongest screenshot / trailer surfaces
-
-1. **The family tree as change over time.**
-   Show marriages, branches, deaths, sacrifices and one highlighted line of continuity. The tree should look different after a decision, not merely contain more names.
-
+1. **The family tree as change over time**: marriages, branches, deaths,
+   sacrifices, one highlighted line.
 2. **The Match as three futures.**
-   A screenshot should make it obvious that the player is comparing people and consequences, not choosing between three differently worded buttons.
+3. **Record / Omit / Embellish** shown next to the page it writes.
+4. **A delayed callback**: an old page beside the later consequence that cites
+   it. The most distinctive proof that choices matter.
+5. **A rite**: before, decision, after, and a named person spent.
+6. **The House Afterimage.** Today it is seven counts and a quote. A version
+   that names people (`Suggestions.md` P1-1) makes a far better press and social
+   image.
 
-3. **Record / Omit / Embellish.**
-   Show the act and the book together: what happened, what the house chose to say, and the visual treatment of the resulting page.
+## 16.2 Visual language should carry information
 
-4. **A delayed callback.**
-   A strong marketing image can pair an old Chronicle page with the later consequence that cites it. This is the product's most distinctive proof of “choices matter”.
+Each element answers **who matters? what changed? what did this cost? what is
+the house trying to do? what is remembered?**
 
-5. **A deliberate rite.**
-   Rites should have a before / decision / after visual rhythm that looks unlike an ordinary event. The important image is not spectacle by itself; it is a named person being spent and the house state changing because of it.
+- **blood / lineage:** branching lines, seals, silhouettes, inherited marks (the
+  game has no faces; keep it that way);
+- **debt / Ledger:** ruled pages, clauses, countersigns;
+- **record:** ink, blanks, overwritten lines, marginalia, conflicting copies;
+- **Ages:** typography, page material, illumination and wear that make a new Age
+  readable before a label explains it;
+- **rites:** changes in framing, spacing and motion.
 
-6. **The House Afterimage.**
-   A compact end-of-run composition — line, people, ending, one lie, one loss, one achievement — gives the product a visual object that can serve the ending, screenshots, social sharing and press material at once.
+*Pentiment* is the commercial proof that a manuscript look can carry a
+text-first game (§5).
 
-### Visual language should carry information
+## 16.3 Steam asset rules (A, as of 3 Oct)
 
-The strongest visual additions are not decorative illustrations between paragraphs. They answer one of five questions:
+- Screenshots **1920×1080 or larger, 16:9**, showing actual gameplay.
+- Base capsules carry **artwork and the logo only**. No taglines, scores,
+  awards or discount text.
+- About-section images around **1170 px wide** for high-DPI screens. Text baked
+  into images means extra localisation work.
 
-- **who matters?**
-- **what changed?**
-- **what did this cost?**
-- **what is the house trying to do?**
-- **what is remembered?**
+`store/steam/README.md` lists every capsule as **TODO**. The Play listing
+already has real played-run screenshots (#1743). Reuse the *method*, not the
+images: Steam's base capsules forbid the Play feature graphic's tagline.
 
-This suggests a restrained visual system:
+## 16.4 The seven-image proof set
 
-- **blood / lineage:** branching lines, seals, portraits or silhouettes, inherited marks;
-- **debt / Ledger:** ruled pages, clauses, marginal countersigns, an object accumulating completion without becoming a generic progress bar;
-- **record:** ink, blanks, overwritten lines, marginal annotations, conflicting copies;
-- **Ages:** typography, page material, illumination, wear and framing that make a new Age legible before a label explains it;
-- **rites:** deliberate changes in framing, spacing and motion so the player knows the interaction has exceptional weight.
-
-The concept does not need a conventional strategic world map to become more visual. The **tree, Chronicle, plat/holdings, Match comparison and ending artefact** are more distinctive visual surfaces.
-
-### Steam asset implications
-
-Steam currently requires store screenshots at **1920×1080 or larger in 16:9**, and its required store capsules are artwork plus the game logo rather than miniature feature lists. Base capsules cannot carry review scores, awards, discount copy or similar marketing text.
-
-That means the capsule art has to communicate the tone of **a dynasty under a centuries-long debt** without explanatory copy. Feature explanation belongs in gameplay screenshots, trailers and the written About section.
-
-Steam's About section can embed screenshots and short animations. Valve recommends roughly **1170 px wide** assets for high-DPI presentation and notes that text embedded inside images creates extra localization work. For this game, that argues for:
-
-- textless or minimally textual feature GIFs where possible;
-- real in-game UI text localized by the game rather than baked into marketing art;
-- one visual motif that survives every capsule crop;
-- screenshots captured from actual gameplay states rather than bespoke mock-ups that cannot be reproduced in the product.
-
-### A practical visual proof set
-
-Before a public marketing push, assemble one clean 16:9 capture for each:
-
-| Proof | The player should understand without a caption |
+| Proof | The viewer should understand, without a caption |
 |---|---|
 | Bloodline | this family has changed over generations |
 | Match | these candidates lead to different futures |
@@ -683,433 +738,304 @@ Before a public marketing push, assemble one clean 16:9 capture for each:
 | Rite | a named person is being deliberately spent |
 | Ending | this completed house has a specific story |
 
-If those seven images all look like “a paragraph in a parchment panel”, the visual design still has a commercial problem even if the underlying systems are excellent.
-
-Sources:
-- Steamworks, **Trailers**: https://partner.steamgames.com/doc/store/trailer
-- Steamworks, **Graphical Assets - Overview**: https://partner.steamgames.com/doc/store/assets
-- Steamworks, **Graphical Asset Rules**: https://partner.steamgames.com/doc/store/assets/rules
-- Steamworks, **Store Page Written Description**: https://partner.steamgames.com/doc/store/page/description
-- Steamworks, **Store Page Extra Asset Management**: https://partner.steamgames.com/doc/store/page/assets
+If all seven look like "a paragraph in a parchment panel", the visual design
+still has a commercial problem, however good the systems are.
 
 ---
 
-## 18B. Near-term Steam timing: October 2026 Next Fest is now a readiness decision
+# 17. Trailer
 
-Steam's official schedule for the October 2026 Next Fest is:
+Show the interaction that proves the prose is a game:
 
-- **28 September 2026:** deadline for required items to be submitted for review;
-- **8 October:** press preview begins;
-- **19 October:** Next Fest begins;
-- **26 October:** Next Fest ends and the wrap-up launches.
+1. the family tree grows across generations;
+2. three Match candidates imply different futures;
+3. the player chooses one;
+4. a child or branch consequence appears;
+5. Record / Omit / Embellish changes the page;
+6. the old wording returns later as a consequence;
+7. a named relative is spent in a rite;
+8. Daveed's voice on the last night reads the Chronicle;
+9. several visibly different Afterimages.
 
-As of **3 October 2026**, the review-submission deadline has already passed. A project that did not make that submission should not distort the demo or marketing build to chase the October event. Steam says a title can participate in only **one** Next Fest.
-
-The next edition is now scheduled for **22 February–1 March 2027**. Its key planning dates are:
-
-- **10 January 2027:** registration deadline;
-- **25 January:** review submission deadline for a demo intended for the press preview;
-- **8 February:** all required items must be submitted for review;
-- **11 February:** press preview begins;
-- **22 February:** Next Fest begins.
-
-That makes the right question:
-
-> **Is the current demo strong enough that this is the one Next Fest we want to spend?**
-
-If the project is already registered and review-ready for October, the priority is not adding another feature. It is making the demo prove the loop quickly, capturing representative gameplay, and making the store page communicate without audio or long reading.
-
-If it is not already through the September review milestone, February 2027 is the cleaner planning target. Use the extra time to make sure the demo reaches a complete Eldritch shape — debt, person, Match, choice, Record, callback, frame, forward problem — instead of merely being longer.
-
-Sources:
-- Steamworks, **Steam Next Fest: October 2026**: https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
-- Steamworks, **Steam Next Fest: February 2027**: https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/feb_2027
+Answer *"What do I do?"* before *"How well is it written?"* Capture from the real
+client only. No mock UI.
 
 ---
 
-# 19. Price
+# 18. Demo strategy
 
-The concept brief's **NZD $28–35** target remains defensible as a working band.
+## 18.1 What exists (E)
 
-Comparable premium prices range widely:
+The `demo` campaign (`core/src/campaign.ts`) is a **33-year** miniature,
+1042–1075. It opens with the existing Insurrection Age, Daveed crosses to
+guardian in 1043, a forced Record decision comes in 1044, an interlude reads that
+page in 1045, and the verdict comes by 1075. It is verified on 64 seeds in both
+prose modes. **It is not yet offered by any build.** A Steam demo is a separate
+app under the main App ID, so it waits on that too.
 
-- compact text/choice games can succeed below USD $20;
-- narrative-management games commonly sit around the USD $20 area;
-- larger systemic strategy games charge substantially more.
+## 18.2 Conversion evidence (D)
 
-The game should not choose price by averaging competitors.
+How To Market A Game's June 2026 Next Fest analysis put demo-player-to-wishlist
+conversion at a **median of about 19.3%** (30th percentile 15.9%, 70th 23.2%),
+and warned **against over-reading the percentage**. Reach matters more.
 
-Price should follow:
+## 18.3 Recommendations
 
-- demonstrated campaign quality;
-- actual measured session length;
-- replay value;
-- presentation polish;
-- localization scope;
-- content breadth at release.
-
-Do not use review count to infer competitor revenue unless a published sales figure exists.
-
----
-
-# 20. International market and localization
-
-This is more important than the previous report made it.
-
-Many successful or relevant strategy/narrative comparables support Simplified Chinese, including:
-
-- Crusader Kings III;
-- Wildermyth;
-- Old World;
-- The Life and Suffering of Sir Brante;
-- Yes, Your Grace;
-- Yes, Your Grace 2;
-- Reigns;
-- The King is Watching.
-
-tinyBuild's 2026 discussion of *The King is Watching* says the publisher observed strong organic interest from China and then tailored localization, content and local promotion accordingly.
-
-## Recommendation
-
-Do **not** assume Eldritch Dynasty must launch in a particular language solely from this comparison.
-
-Instead:
-
-1. make the UI and content pipeline localization-ready now;
-2. avoid baking English text into images;
-3. maintain a terminology/glossary layer for blood, rites, ranks and Chronicle terms;
-4. test layout expansion;
-5. preserve speaker/register metadata so literary voice survives translation;
-6. use wishlist/demo geography to decide launch languages.
-
-For this game, localization is not a late string-table job. The changing chronicler voices and deliberately precise wording make it a product-design constraint.
+- Optimise the demo to prove **one complete Eldritch shape**: debt, a person, a
+  Match, a choice, Record, an echo, the frame, and a forward problem. Do not aim
+  for a fixed minute count.
+- The demo guarantees the signing, the Record and the interlude by design. Check
+  that a **person**, a **Match** and an **echo** land, with humans.
+- **End on an ask:** wishlist *and* follow (the Personal Calendar reads both).
+- **Do not transfer the save.** The miniature compresses an Age and fixes
+  Daveed's death date, so it is not a canonical opening. Consider entering the
+  finished demo house into the **Library of Houses**, so the full game remembers
+  it without a head start.
 
 ---
 
-# 21. Accessibility and reading comfort are commercial design
+# 19. Accessibility and reading comfort
 
-This is a text-heavy game. Reading comfort determines how much of the product a player can enjoy.
+Text is the interface. Reading comfort is to this game what input latency is to
+an action game. Shipped: text scale, reading font, reduced motion, keyboard
+paths, focus styles, skip-seen prose, ARIA naming across tree, Chronicle, Plat
+and Muster (dozens of closed issues in October), and **Plain English**.
 
-The repository has already done substantial accessibility work, including ARIA and platform text scaling fixes. The remaining commercial standard should include:
-
-- readable line length;
-- user-controlled font scale;
-- high-contrast text option if the vellum treatment reduces clarity;
-- reduced-motion/text-animation controls;
-- instant text reveal;
-- keyboard navigation for every recurring decision;
-- clear focus states;
-- consistent “seen” treatment for replay;
-- no essential information available only on hover.
-
-These are not cosmetic polish. In a game where most meaning arrives through text, they are equivalent to input responsiveness in an action game.
+Still unproven: the waived **full screen-reader run with the display off, by a
+non-team tester** (`docs/PLAYTEST.md`). Accessibility is also a marketing claim
+on Steam and the mobile stores. Run that test before making the claim.
 
 ---
 
-# 22. What not to add
+# 20. What should be measured before launch
 
-The expanded market research makes the existing “do not add” list stronger.
+**Run once, with humans (none so far):** five first-timers on a Short Line; one
+screen-reader run; one mobile session per platform at phone width.
 
-## Do not add tactical combat
+**First session:** time to the first Match, the first Record and the first echo;
+the point where the player can name their next move; the three people they
+remember.
 
-War already matters through Muster, family cost and consequences. A combat layer would consume production while moving the product toward much better-funded competitors.
+**Agency (instruments):** the #334 audit holds at zero; option divergence;
+callback rate; recoverable-source rate.
 
-## Do not add a conventional world map as the strategic centre
+**Pacing (instruments):** spine gap, shape streak, stall duration.
 
-The family tree, Chronicle and plat are more distinctive and more coherent with the thesis.
+**Replay (instruments):** `gate:replay` familiarity ≤ 27.1%; top shape ≤ 4.7%;
+time to first unseen context.
 
-## Do not add relationship bars for everyone
+**Endgame (instruments):** Apotheosis and Unmade under chronicler *and*
+ascendant play; Long-exclusive reach under chronicler play.
 
-Recurring named relationships and remembered grievances are more legible and less generic.
-
-## Do not add a generic roguelite upgrade tree
-
-The success of *The King is Watching* does not imply that Eldritch Dynasty should copy its progression structure. The Library of Houses is a better replay mechanism because it changes history, not starting power.
-
-## Do not add currencies because strategy games “need depth”
-
-Every additional meter competes for attention with blood, record and debt.
-
-## Do not hide every rule in the name of mystery
-
-Mystery is not the same as incomprehension. The player must be able to form an actionable model.
-
-## Do not make “more event templates” the default answer to repetition
-
-The current game already has a large content pool and low same-Age repeat rates. Improve context, callbacks and interaction shape first.
+**Steam (aggregate platform data, once a page exists):** wishlists by country;
+follows; Next Fest demo players and median playtime; demo-to-wishlist conversion
+as **context**, not a pass/fail score.
 
 ---
 
-# 23. Current project status changes the priority list
+# 21. What not to add
 
-Several recommendations in the previous market report are no longer future recommendations.
-
-They have already been tracked and closed:
-
-- **#210** — visible multi-generation House Ambition;
-- **#211** — delayed consequence echoes;
-- **#212** — legible next Ascension obstacle;
-- **#213** — generation question/answer arc;
-- **#214** — Match as different futures;
-- **#215** — biased living advisers;
-- **#216** — mechanically recognisable Ages;
-- **#217** — recurring rival/institution threads;
-- **#218** — deliberate rite presentation.
-
-Major older commercial/design risks also closed:
-
-- **#85** — long-horizon accumulation;
-- **#133** — 500-year Long Line;
-- **#139** — thin tail content;
-- **#174** — engagement review;
-- **#177** — Short Line signing term mismatch;
-- **#185** — ending/gate correctness;
-- **#201** — early ladder/empty-late-game issue.
-
-Those four historical follow-ons are also now closed: **#219** (delegation), **#205** (tools/measurement), **#75** (the post-launch mod-editor issue), and **#36** (Bearing).
-
-The fresh Short-vs-Long evidence is also complete: **#274** closed on 3 October after PR #401 recorded the post-#379 shared-seed baseline. Any future differentiation threshold is a new product decision, not unfinished #274 work.
-
-Current open product work most relevant to this report is instead:
-
-- **#334** — remove or justify write-only and prose-only choice memory;
-- **#341** — reduce recurring-event and money-axis replay sameness;
-- **#343** — the Examination / founder-shaping opening;
-- **#356** — owner-playtest UI and progressive-reveal follow-ups;
-- **#378** — restore a real but rare God-Madness tail.
-
-**#277** remains the authoritative commercial-pass tracker and should be preferred over duplicating its execution order here.
-
-Therefore the next market-driven work should focus on the gaps that remain **after** the closed systems above, rather than restating them.
+- **Tactical combat.** War already matters through Muster, family cost and
+  consequences.
+- **A conventional world map as the centre.** The tree, Chronicle and Plat are
+  more distinctive.
+- **Relationship bars for everyone.** Named relationships and remembered
+  grievances instead.
+- **A generic roguelite upgrade tree.** The Library of Houses changes history,
+  not starting power.
+- **Currencies for "depth".** Every meter competes with blood, record and debt.
+- **Hiding every rule in the name of mystery.** Mystery is not incomprehension.
+- **More ordinary event templates as the default repetition fix.** Content
+  breadth is already large (487 non-frame events). Improve context, callbacks
+  and shape.
 
 ---
 
-# 24. Highest-value remaining commercial design priorities
+# 22. Product decision rule
 
-## P0 — consequence credibility
-
-Audit choices for whether the game can remember what the player selected.
-
-The “Choices Matter” promise is fragile. A choice may converge structurally, but the game should acknowledge its meaning.
-
-## P0 — second-run speed
-
-Build replay compression and measure how quickly a returning player reaches new context.
-
-A twenty-generation game cannot expect the player to reread every known scene on every run.
-
-## P0 — family information navigation
-
-Make the full-size tree answer strategic questions quickly.
-
-Genealogy is a marketable surface only if it remains legible at the population the simulation actually produces.
-
-## P1 — causal Chronicle navigation
-
-Let a delayed consequence lead back to the old act that caused it.
-
-This directly strengthens the game's unique moat.
-
-## P1 — strategic-stall detector
-
-Measure waiting with no actionable move across all long-horizon goals.
-
-## P1 — House Afterimage
-
-Turn one completed run into a compact, attractive, factual story object players can share.
-
-## P1 — contextual help without omniscience
-
-Extend the “next obstacle” philosophy to other complex surfaces through in-world, graduated help.
-
-## P2 — localization readiness
-
-Make prose, UI and layout structurally translatable now; decide actual launch languages from audience evidence later.
-
-## P2 — post-launch mod support, only if deliberately reopened
-
-The old mod-editor issue **#75 is closed**. If mod support is deliberately reopened later, keep it post-launch: it can extend the content tail, but it should not displace core-game polish now.
-
----
-
-# 25. What should be measured before launch
-
-Automated simulation remains excellent for reachability and balance, but commercial quality also needs player-behaviour evidence.
-
-Do not make external play sessions a blocking engineering acceptance criterion unless the project owner chooses to. They are still a valuable research instrument.
-
-Useful measures:
-
-### First-session
-
-- time to first meaningful Match;
-- time to first Record/Omit/Embellish decision;
-- time to first consequence echo;
-- prompts before the active House Ambition affects a choice;
-- first point at which the player is expected to understand the next strategic move.
-
-### Pacing
-
-- spine gap;
-- same interaction-shape streak;
-- strategic-stall duration;
-- repeated identical policy choices;
-- years with one blocker and no actionable route.
-
-### Replay
-
-- exact prose repeated in first 30 prompts;
-- time to first new Library-of-Houses callback;
-- first strategic divergence from prior run;
-- amount of seen text skipped;
-- decisions that must remain manual.
-
-### Agency
-
-- option-to-option persistent-state divergence;
-- choices with only immediate prose difference;
-- later callback rate;
-- percentage of delayed consequences with a recoverable source.
-
-### Chronicle
-
-- voluntary opens;
-- search/filter use;
-- jumps from consequence back to source;
-- export/share actions where platform analytics/privacy policy permits.
-
-### Demo / Steam
-
-Use Steamworks and other aggregate platform data where possible rather than inventing bespoke tracking:
-
-- demo players;
-- demo median playtime;
-- demo completion proxy;
-- wishlist additions;
-- Steam Next Fest reach;
-- player-to-wishlist conversion as **context**, not a standalone pass/fail score.
-
----
-
-# 26. Product decision rule
-
-When considering a new gameplay feature, ask in order:
-
-1. Does this make **blood**, **the debt/Ledger**, or **the record** more interesting?
-2. Does it create a decision the player can recognise as different from an existing decision?
+1. Does this make **blood**, **the debt/Ledger** or **the record** more
+   interesting?
+2. Does it create a decision the player can tell apart from an existing one?
 3. Can the consequence be remembered later?
-4. Does it help one of the five desired player feelings already named in the root documents?
-   - I have a plan.
-   - This person matters.
-   - That happened because of me.
-   - This generation is different.
-   - I want to see how this ends.
+4. Does it help one of the five feelings — *I have a plan; this person matters;
+   that happened because of me; this generation is different; I want to see how
+   this ends*?
 5. Will it make a second run meaningfully different?
 6. Can the player understand it without an external wiki?
-7. Is it worth the additional cognitive load?
+7. Is it worth the extra cognitive load?
+8. **Is every store or achievement claim it supports true in measured play?**
 
-If the answer to the first three is no, it is unlikely to improve the commercial product.
+If the first three answers are no, it is unlikely to improve the commercial
+product.
 
 ---
 
-# 27. Bottom line
+# 23. Bottom line
 
-The market evidence does **not** suggest Eldritch Dynasty needs to become broader.
+The market evidence does **not** say Eldritch Dynasty needs to be broader. It
+says the opposite. The games with the strongest lessons succeed because players
+can describe what they do:
 
-It suggests the opposite.
-
-The games with the strongest lessons here succeed because players can describe the thing they do:
-
-- *Crusader Kings III*: create dynastic stories from people and succession.
-- *Wildermyth*: watch procedural heroes become specific legends.
+- *Crusader Kings III*: dynastic stories from people and succession.
+- *Wildermyth*: procedural heroes become specific legends.
 - *The Roottrees are Dead*: reconstruct a family through a tree.
-- *Suzerain*: make political decisions and live with them.
+- *Suzerain*: political decisions you live with.
 - *The King is Watching*: only what the king watches works.
-- *Long Live The Queen*: prepare differently, fail differently, try again.
+- *Darkest Dungeon*: your ancestor ruined the family, and he narrates it.
 
-The sentence Eldritch Dynasty should earn is:
+The sentence Eldritch Dynasty should earn:
 
-> **I bred this family, lied about what it did, and centuries later the lie came back when the debt was read.**
+> **I bred this family, lied about what it did, and centuries later the lie came
+> back when the debt was read.**
 
-That is commercially clearer and harder to copy than “medieval dynasty strategy.”
+October 2026 changed the *order* of the work. The systems are largely built.
+What is left is:
 
-The next work should make that sentence **faster to understand, harder to doubt, easier to replay, and easier to share**.
+1. **make the claims true** (the summit, the Long Line);
+2. **watch people play it**;
+3. **open the store page early enough** for Steam's new storefront to find the
+   right players;
+4. **be honest about how it was made.**
 
 ---
 
-# Sources checked in this update
+# 24. Sources
 
-Comparable/store/community sources were checked 25–27 September 2026; the Steamworks platform/merchandising sources added in §18A–B were checked 3 October 2026.
+Checked **25–27 September 2026** (comparators), **3 October 2026** (Steamworks
+merchandising), and **17 October 2026** (everything marked *new*). The
+17 October checks used search-engine summaries of the pages below because the
+page fetcher could not reach external hosts. Open them before acting on a figure.
 
-## Direct Steam/store evidence
+## Repository (E)
 
-- Crusader Kings III — https://store.steampowered.com/app/1158310/Crusader_Kings_III/
-- Wildermyth — https://store.steampowered.com/app/763890/Wildermyth/
-- Suzerain — https://store.steampowered.com/app/1207650/Suzerain/
-- The Roottrees are Dead — https://store.steampowered.com/app/2754380/The_Roottrees_are_Dead/
-- Yes, Your Grace — https://store.steampowered.com/app/1115690/Yes_Your_Grace/
-- Yes, Your Grace 2: Snowfall — https://store.steampowered.com/app/1373090/Yes_Your_Grace_2_Snowfall/
-- Long Live The Queen — https://store.steampowered.com/app/251990/Long_Live_The_Queen/
-- Old World — https://store.steampowered.com/app/597180/Old_World/
-- The King is Watching — https://store.steampowered.com/app/2753900/The_King_is_Watching/
-- The Life and Suffering of Sir Brante — https://store.steampowered.com/app/1272160/The_Life_and_Suffering_of_Sir_Brante/
-- BOOK OF HOURS — https://store.steampowered.com/app/1028310/BOOK_OF_HOURS/
-- The Pale Beyond — https://store.steampowered.com/app/1266030/The_Pale_Beyond/
-- Reigns — https://store.steampowered.com/app/474750/Reigns/
-- Six Ages: Ride Like the Wind — https://store.steampowered.com/app/881420/Six_Ages_Ride_Like_the_Wind/
-- Great Houses of Calderia — https://store.steampowered.com/app/1812910/Great_Houses_of_Calderia/
-- Norland — https://store.steampowered.com/app/1857090/Norland/
+- `docs/BALANCE-LOG.md`: 2026-10-02 (#274 Short vs Long), 2026-10-06 (#341
+  closeout), 2026-10-07 (#540 achievement rates), 2026-10-10 and 2026-10-11
+  (#332, #378), 2026-10-17 (commercial-pass completion)
+- `docs/PLAYTEST.md`: the waived human tests
+- `store/steam/README.md`: store copy and asset checklist
+- `issuesneedingowneraction`: owner-only release steps and commercial checkpoints
+- `packages/core/src/campaign.ts`, `packages/core/src/achievements.ts`,
+  `packages/client/src/lib/book.ts`, `packages/client/src/lib/game.ts`
+- Issues #277, #323, #332, #334, #341, #378 (all closed by 17 Oct 2026)
 
-## Published commercial / market evidence
+## Official platform and government (A)
 
-- GameMaker, **“The King Is Watching From Game Jam to 600k Sales”**, 9 July 2026  
-  https://gamemaker.io/en/blog/the-king-is-watching-tinybuild
-- Yes, Your Grace / Brave At Night Steam announcement, **100,000 Snowfall wishlists**, 4 April 2024  
-  https://store.steampowered.com/news/posts/?enddate=1712250352&feed=steam_community_announcements
-- How To Market A Game, **June 2026 Steam Next Fest demo/wishlist analysis**, 30 June 2026  
-  https://howtomarketagame.com/2026/06/30/nobody-plays-demos-and-that-is-ok/
-- How To Market A Game, **June 2026 Next Fest tracker / benchmark page**  
-  https://howtomarketagame.com/snf/
-
-## Community/review evidence used directionally
-
-- Yes, Your Grace 2: Snowfall Steam reviews  
-  https://steamcommunity.com/app/1373090/reviews/
-- The Pale Beyond Steam reviews/discussions  
-  https://steamcommunity.com/app/1266030/reviews/
-- The Roottrees are Dead Steam reviews/discussions  
-  https://steamcommunity.com/app/2754380/reviews/
-- The King is Watching Steam reviews/discussions  
-  https://steamcommunity.com/app/2753900/reviews/
-
-## Steam platform / merchandising guidance
-
-- Steamworks, **Trailers** — gameplay-first trailer guidance and store ordering  
-  https://partner.steamgames.com/doc/store/trailer
-- Steamworks, **Graphical Assets - Overview** — current capsule and screenshot dimensions  
-  https://partner.steamgames.com/doc/store/assets
-- Steamworks, **Graphical Asset Rules** — capsule-content restrictions  
-  https://partner.steamgames.com/doc/store/assets/rules
-- Steamworks, **Store Page Written Description** — embedded visual and localization guidance  
-  https://partner.steamgames.com/doc/store/page/description
-- Steamworks, **Store Page Extra Asset Management** — high-DPI image/animation guidance  
-  https://partner.steamgames.com/doc/store/page/assets
-- Steamworks, **Steam Next Fest: October 2026** — October dates, submission milestone, one-Fest eligibility and February 2027 next edition  
+- Steamworks, **Steam Next Fest: February 2027** —
+  https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/feb_2027 *(new)*
+- Steamworks, **Steam Next Fest: June 2027** —
+  https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/june_2027 *(new)*
+- Steamworks, **Steam Next Fest: October 2026** —
   https://partner.steamgames.com/doc/marketing/upcoming_events/nextfest/2026october
+- Steamworks, **Steam Direct** — https://partner.steamgames.com/steamdirect *(new)*
+- Steamworks, **Releasing your game** — https://partner.steamgames.com/doc/store/releasing *(new)*
+- Steamworks, **App fee** — https://partner.steamgames.com/doc/gettingstarted/appfee
+- Steamworks, **Trailers** — https://partner.steamgames.com/doc/store/trailer
+- Steamworks, **Graphical Assets – Overview** — https://partner.steamgames.com/doc/store/assets
+- Steamworks, **Graphical Asset Rules** — https://partner.steamgames.com/doc/store/assets/rules
+- Steamworks, **Store Page Written Description** — https://partner.steamgames.com/doc/store/page/description
+- Steamworks, **Store Page Extra Asset Management** — https://partner.steamgames.com/doc/store/page/assets
+- Google Play Console Help, **testing requirements for new personal accounts** —
+  https://support.google.com/googleplay/android-developer/answer/14151465 *(new)*
+- Apple Developer, **membership and fee waiver** — https://developer.apple.com/support/fee-waiver *(new)*
+- NZ On Air, **Game Development Sector Rebate** —
+  https://www.nzonair.govt.nz/funding/game-development-sector-rebate-scheme-gdsr/ *(new)*
+- MBIE / NZ On Air, **GDSR design features** —
+  https://www.nzonair.govt.nz/documents/1031/FINAL_Game_Development_Sector_Rebate__Design_Features.pdf *(new)*
 
-## Narrative/game-design background
+## Published first-party figures (B)
 
-- Game Developer, **“From let's play to let's pay: on designing financially successful narrative games”**  
+- GameMaker, **"The King Is Watching From Game Jam to 600k Sales"**, 9 July 2026 —
+  https://gamemaker.io/en/blog/the-king-is-watching-tinybuild
+- Yes, Your Grace, **100,000 Snowfall wishlists**, 4 April 2024 —
+  https://store.steampowered.com/news/posts/?enddate=1712250352&feed=steam_community_announcements
+- Red Hook Studios, **Darkest Dungeon 6 million units (Dec 2022)**, as reported —
+  https://wnhub.io/news/investment/item-45054 *(new)*
+- Nerial, **Reigns 600,000+ sales, mostly mobile** —
+  https://www.gamedeveloper.com/business/-i-reigns-i-sells-big-on-mobile-proves-premium-games-can-still-be-king *(new)*
+- NZGDA, **NZ game development industry breaks records (2025 survey)** —
+  https://www.nzgda.com/blog/new-zealand-game-development-industry-breaks-records *(new)*
+
+## Store snapshots (C)
+
+- Crusader Kings III — https://store.steampowered.com/app/1158310/
+- Wildermyth — https://store.steampowered.com/app/763890/
+- Pentiment — https://store.steampowered.com/app/1205520/ *(new)*
+- Suzerain — https://store.steampowered.com/app/1207650/
+- The Roottrees are Dead — https://store.steampowered.com/app/2754380/
+- Yes, Your Grace — https://store.steampowered.com/app/1115690/
+- Yes, Your Grace 2: Snowfall — https://store.steampowered.com/app/1373090/
+- Long Live The Queen — https://store.steampowered.com/app/251990/
+- Old World — https://store.steampowered.com/app/597180/
+- The King is Watching — https://store.steampowered.com/app/2753900/
+- The Life and Suffering of Sir Brante — https://store.steampowered.com/app/1272160/
+- BOOK OF HOURS — https://store.steampowered.com/app/1028310/
+- The Pale Beyond — https://store.steampowered.com/app/1266030/
+- Reigns — https://store.steampowered.com/app/474750/
+- The Shrouded Isle — https://store.steampowered.com/app/501320/ *(new)*
+- Six Ages: Ride Like the Wind — https://store.steampowered.com/app/881420/
+- Great Houses of Calderia — https://store.steampowered.com/app/1812910/
+- Norland — https://store.steampowered.com/app/1857090/
+- Community reviews used directionally: Snowfall
+  (https://steamcommunity.com/app/1373090/reviews/), The Pale Beyond
+  (https://steamcommunity.com/app/1266030/reviews/), The Roottrees are Dead
+  (https://steamcommunity.com/app/2754380/reviews/), The King is Watching
+  (https://steamcommunity.com/app/2753900/reviews/)
+
+## Analyst and secondary (D)
+
+- How To Market A Game, **How the Steam Personal Calendar affects your launch**,
+  25 June 2026 — https://howtomarketagame.com/2026/06/25/how-the-steam-personal-calendar-affects-your-launch/ *(new)*
+- How To Market A Game, **ARCHIVE: how many wishlists should I have at launch** —
+  https://howtomarketagame.com/2026/06/25/archive-how-many-wishlists-should-i-have-when-i-launch-my-game/ *(new)*
+- How To Market A Game, **June 2026 Next Fest demo analysis**, 30 June 2026 —
+  https://howtomarketagame.com/2026/06/30/nobody-plays-demos-and-that-is-ok/
+- GamesRadar, **Popular Upcoming now ~15× harder** —
+  https://www.gamesradar.com/games/valve-made-it-roughly-15-times-harder-for-indie-games-to-reach-a-coveted-steam-ranking-but-one-expert-says-an-understated-new-steam-feature-is-doing-gods-work/ *(new)*
+- KitGuru, **Valve announces Steam Personal Calendar** —
+  https://www.kitguru.net/desktop-pc/mustafa-mahmoud/valve-announces-new-steam-personal-calendar-recommendations-system/ *(new)*
+- GameDiscoverCo via GameDev Reports, **wishlist conversion benchmarks** —
+  https://gamedevreports.substack.com/p/gamediscoverco-conversion-benchmarks *(new)*
+- GameDiscoverCo via GameDev Reports, **spending and price trends** —
+  https://gamedevreports.substack.com/p/gamediscoverco-people-are-spending *(new)*
+- Sensor Tower, **State of Gaming 2026** —
+  https://sensortower.com/press/press-release-sensor-tower-state-of-gaming-gaming-drove-52-billion-downloads-82b-iap-revenue-on-mobile-and-12b-premium-revenue-on-steam *(new)*
+- GameDev News (AppMagic data), **Premium mobile releases up 77% in 2025** —
+  https://gamedev.net/news/premium-mobile-games-are-back-with-releases-up-77-in-2025-r4367/ *(new)*
+- Notebookcheck, **Steam AI disclosure form update** —
+  https://www.notebookcheck.net/Steam-updates-AI-disclosure-form-requiring-developers-to-report-visible-and-in-game-AI-but-not-background-tools.1206103.0.html *(new)*
+- Digital Watch, **New Steam rules redefine when AI use must be disclosed** —
+  https://dig.watch/updates/new-steam-rules-redefine-when-ai-use-must-be-disclosed *(new)*
+- arXiv, **Player Perceptions of Generative AI in Games: A Steam Review Analysis** —
+  https://arxiv.org/html/2608.11539 *(new)*
+- GameSpot, **GenAI in games? Most players just don't care, study finds** (BCG) —
+  https://www.gamespot.com/articles/genai-in-games-most-players-just-dont-care-study-finds/1100-6538972/ *(new)*
+- Boing Boing, **Survey finds "very negative" attitude toward generative AI** (Quantic Foundry) —
+  https://boingboing.net/2025/12/20/survey-finds-very-negative-attitude-toward-gen-ai-in-games.html *(new)*
+- GamingOnLinux, **Steam survey Feb 2026 swing to Simplified Chinese** —
+  https://gamingonlinux.com/2026/03/steam-survey-for-february-2026-shows-a-big-swing-to-simplified-chinese *(new)*
+- Pentiment review and estimate trackers (conflicting; estimates only) —
+  https://raijin.gg/app/1205520/Pentiment and https://steampulse.org/game/1205520 *(new)*
+- Localisation rates (vendor rate cards; quote several vendors) —
+  https://allcorrectgames.com/localization-pricing/ and https://alconost.com/en/blog/localization-cost *(new)*
+- Exchange rate, USD/NZD history 2026 —
+  https://www.poundsterlinglive.com/history/USD-NZD-2026 *(new; re-check against RBNZ)*
+
+## Design background
+
+- Game Developer, **"From let's play to let's pay"** —
   https://www.gamedeveloper.com/business/from-let-s-play-to-let-s-pay-on-designing-financially-successful-narrative-games
-- Game Developer, **“Deep Dive: Curating meaningful multiplayer narrative choices in Doomsday Paradise”**  
-  https://www.gamedeveloper.com/design/deep-dive-multiplayer-narrative-in-doomsday-paradise
-- Game Developer, **“In narrative games, self-expression doesn't mean 'empowerment'”**  
+- Game Developer, **"In narrative games, self-expression doesn't mean 'empowerment'"** —
   https://www.gamedeveloper.com/design/in-narrative-games-self-expression-doesn-t-mean-empowerment-
-- GDC Vault, **“Level Design Workshop: The Illusion of Choice”**  
+- GDC Vault, **"Level Design Workshop: The Illusion of Choice"** —
   https://gdcvault.com/play/1023552/Level-Design-Workshop-The-Illusion
 
 ---
 
 ## Evidence caution
 
-Store scores and counts are snapshots and will change. Published sales figures are only treated as sales evidence where the developer/publisher has stated them. Third-party owner/revenue estimators were reviewed during research but intentionally **not** used as primary commercial evidence in this revision.
+Store scores and counts are snapshots and will change. A sales figure is
+treated as sales evidence only where the developer or publisher stated it.
+**Players are not copies:** subscription launches inflate player counts, as
+*Blue Prince*'s "2 million players" did through Game Pass and PS Plus. Tracker
+estimates of owners or revenue (VG Insights, Gamalytic, SteamSpy derivatives)
+are labelled as estimates and never used as the basis of a decision here.
