@@ -26,7 +26,7 @@ describe('the #334 choice-debt worklist', () => {
     expect(first).not.toMatch(/generatedAt|timestamp|Date\(/);
   });
 
-  it('keeps deliberate non-intervention choices explicitly classified as self-expression (#1783)', () => {
+  it('keeps deliberate non-intervention choices explicitly classified as self-expression (#1783, #1785)', () => {
     // These are decisions to preserve the status quo, not promises of a new
     // mechanic. Their authored outcome and Chronicle prose remain unchanged.
     const reviewed = [
@@ -35,6 +35,9 @@ describe('the #334 choice-debt worklist', () => {
       ['the_marker_stays_moved', 'walk_it_back'],
       ['the_iron_over_the_door', 'leave_the_iron'],
       ['the_grandmother_who_remembers', 'leave_her_alone'],
+      ['the_match_that_never_comes', 'decline'],
+      ['the_house_has_one_name_left', 'leave_it'],
+      ['the_marriage_that_cannot_answer', 'let_it_stand'],
     ] as const;
     const audit = auditChoices(content);
     const work = choiceWorklist(content);
