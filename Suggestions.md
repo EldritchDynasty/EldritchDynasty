@@ -104,54 +104,101 @@ from a measurement.
 `docs/GAME-LOOP.md` calls the Ascension Ladder *"the main progress track"*: six
 rungs. Measured play rarely gets past the second or third.
 
-**Evidence:**
+- **Ordinary play** peaks around **Adept** (mean best rung 2.05–2.39 on the 0–6
+  index; BALANCE-LOG, #36 remeasurement).
+- **Bots built to climb:** 29 of 30 ladder-gate runs (16 Oct) topped out at
+  Hierophant or Adept.
+- **The summit:** Apotheosis is **0/512** in ordinary play and **1/512** for the
+  `ascendant` policy (#332/#378), against the owner's 8–29% band. The
+  `ending_all_long` achievement needs it, and `ending_apotheosis` measured
+  0/100 in every column.
 
-- **Ordinary play.** In the Bearing gate's 80-seed batches, the mean best rung is
-  about **2.05–2.39** on the 0–6 index (`none`=0 … `adept`=2,
-  `hierophant`=3). The typical house peaks around **Adept**. (BALANCE-LOG, #36
-  remeasurement, 26 Sep.)
-- **Bots built to climb.** In the 16 Oct ladder gate (6 runs × 5 policies × 500
-  years), **29 of 30 runs topped out at Hierophant or Adept. One run reached the
-  Vessel.** None reached Demigod or God.
-- **The named blockers are mundane:**
-  - *"he has read 1 book; the next step asks 3 books"*;
-  - *"the blood comes through him at 65 / 67 / 69; the next step asks 70"*.
-- **The summit.** Apotheosis is **0/512** in ordinary play and **1/512 (0.2%)**
-  for the `ascendant` policy (BALANCE-LOG, #332/#378, 10–11 Oct), against the
-  owner's 8–29% band. The achievement `ending_all_long` needs it. It measured
-  `ending_apotheosis` at 0/100 in every column.
+### What actually stops the climb (diagnosed 17 Oct 2026)
 
-**Why it matters:** Vessel, Demigod and God — the rite that spends a named
-relative, the reunited Regalia, the family outgrowing its own god — are where
-the brief's best ideas live (§22). If almost nobody gets there, half of the
-progression design is content the player never meets. "I have a plan" decays
-into "I am waiting for numbers".
+A read-only diagnostic played **72 Long Lines**: 24 seeds (5100–5123) × three
+policies. The policies were ordinary play (`chronicler`), ordinary play plus a
+600-crown auction ceiling (`bid`), and the composite `ascendant`. Each year it
+recorded the first unmet gate of the house's foremost expressing man, using the
+engine's own `standingOf`. It changed no game code. Share of years in each
+blocker:
 
-**Direction, in this order:**
+| Blocker of the foremost man | chronicler | bid | ascendant |
+|---|---:|---:|---:|
+| **power** below the next rung's floor | **42%** | **47%** | **44%** |
+| **awakening**: no expresser in the house has woken | **29%** | **27%** | **27%** |
+| no expressing man alive at all | 12% | 10% | 11% |
+| books | 11% | 10% | 6% |
+| everything else (Madness floor, Respect, …) | 6% | 6% | 12% |
 
-1. **Books first.** A human player is meant to be able to *act* on "1 book of 3".
-   Library study, the auction and careers are real verbs. Find out whether the
-   bot policies under-use them or the world under-supplies books, before
-   touching any blood constant. If supply is the problem, add sources through
-   the existing Library and auction, not a new system.
-2. **The power threshold (65–69 against 70)** belongs to the genome. Treat it as
-   the *intended* hard part. Make sure the player can see *which marriage* moves
-   it (the Match card's word about the line, #28; the three futures, #214;
-   TreeCounsel) rather than lowering it.
-3. **Then the top.** Work the joint gates that bind after the Unmaking —
-   Mind-over-Madness containment, the Ledger overlap, Exalted after the rite
-   spends two tiers — one mechanism at a time, on paired seeds.
-4. **If the owner decides the summit should stay mythic, say so in the game.**
-   Make the God rung something the record *tells about other houses*. Rewrite
-   `ending_all_long`. Stop the Long Line's ending list from presenting it as an
-   ordinary destination.
+**Books were the wrong first guess.** They cost 6–11% of blocked years. When a
+book does block, the ascendant house has the supply: its shelf peaks at about
+11 of 21 books, and its best reader holds about 8. Its blocked years are reading
+time or idle readers. Ordinary play is thinner: a shelf of about 6, because
+`bidCeiling` defaults to 0 and an untouched Table never bids. Even there, books
+are a minor wall.
+
+**Wall 1 — the frozen ladder (the Long Wait).**
+
+- For **30–34% of all years** (117–145 years per run) the house has no
+  awakened expresser, so no rung can move.
+- That time comes in about three stretches per run. The median longest stretch
+  is 56–82 years; the worst is about 250.
+- In **55%** of those years a **grown man (20+) who can express has simply not
+  woken**. In 35% there is no expressing man at all. Only about 10% are boys
+  still in the normal waking window.
+- §11 designed three answers to exactly this. **The player can use none of
+  them:**
+  - **Declaring a man mundane** (§11, *"The Long Wait"*):
+    `Person.awakening.declaredMundane` is in the schema, saved, and read by
+    `rollAwakening`, but **written by nothing**. There is no verb (invariant
+    11's shape, reversed).
+  - **The Late Waking** (§11: after 30, *"always a scripted moment"*): no
+    content exists.
+  - **Forcing it.** The Drowning, the Vigil and the Dark Year cast only boys
+    aged 7–15 (Dark Year 10–18), so none can reach the grown men who make up
+    most of the wait. They are rare ambient draws the player cannot call. Over
+    800 Long Lines they appeared in about **9%, 5.5%, 4.4% and 3.6%** of
+    campaigns. Forcing happened in only 2–3 of 24 runs in any column.
+
+**Wall 2 — the Hierophant power floor.** Most power-blocked years sit below
+Hierophant's floor of 50. The median shortfall is **13 points** in ordinary
+play and **9** for the ascendant house, which marries in. That is the breeding
+game doing its job. The question is whether the player can *see* which marriage
+closes it.
+
+### Direction, in this order
+
+1. **Give the Long Wait the verbs §11 already wrote.**
+   - A Table order to **declare a man mundane**: he stops waking for good and
+     becomes the "expendable hands" §11 describes, free to be married out,
+     placed or sent. It is a real decision between hope and use, and it writes
+     the field that exists.
+   - **The Late Waking**: a scripted scene for a man past 30. Rare, unforced,
+     and a turn in the story when it comes.
+   - **Let the player call a forcing rite** for an eligible boy, the way the
+     Vessel rite is already callable from the Table, with the Madness and death
+     risk unchanged. *Invariant check:* the call is the player's; the outcome
+     must stay a gamble. Forcing must never become reliable, or Eldritch Power
+     schedulable (invariants 4 and "Do not"). Settle this with the owner before
+     building it.
+2. **Make the power gap legible, not smaller.** Hierophant's 50 is the intended
+   hard part. Use the Match card's word about the line (#28), the three
+   futures (#214) and TreeCounsel to show *which marriage* closes a 9–13-point
+   gap. No floor changes.
+3. **Books, only after 1 and 2.** For ordinary play, consider making the auction
+   ceiling visible at the first auction rather than leaving it at 0.
+4. **Then the top.** Work the joint gates after the Unmaking — Mind over
+   Madness, the Ledger overlap, Exalted after the rite spends two tiers — one
+   mechanism at a time, on paired seeds. If the owner decides the summit stays
+   mythic, say so in the game, rewrite `ending_all_long`, and stop presenting
+   Apotheosis as an ordinary destination.
 
 **Never:** make Eldritch Power reliable or schedulable, or quietly lower the
 God-Madness floor (invariant 4; #378).
 
-**Measure:** best-rung distribution under chronicler *and* climbing policies.
-Per-blocker dwell time (years stuck on "books" versus "blood"). Vessel and
-Demigod reach, not only God.
+**Measure:** frozen-ladder share and longest stretch; blocker shares as in the
+table; Vessel, Demigod and God reach, not only God. Re-run the same 72-run
+diagnostic before and after each change, on the same seeds.
 
 ## G2 — Watch five people play it
 
@@ -269,7 +316,7 @@ only this game has:
 - a branch's grievance;
 - a person's availability for the Match;
 - a Discrepancy someone can prove;
-- a book on the shelf (which also feeds G1).
+- a book on the shelf.
 
 Measure with `gate:replay` before and after. Do not lower the docket budget to
 flatter the figure.
@@ -308,8 +355,10 @@ keep.
   breeding focus. If the answer is "rarely", the breeding game has no downside
   for specialising.
 - **The Regency** (§7, *"most runs lose 30–80 years this way at least once"*).
-  Measure decision density and spine gap *during* regencies. Those are the
-  stretches most at risk of feeling like waiting.
+  G1's diagnostic found the ladder frozen for 117–145 years per Long Line, in
+  about three stretches; 35% of that time has no expressing man at all. Measure
+  decision density and spine gap *during* those stretches. They are the most at
+  risk of feeling like waiting, and G1's verbs should give them decisions.
 
 ## G9 — Visuals that make the system legible in play
 
@@ -396,7 +445,8 @@ The failure is not disliking someone. It is remembering roles and numbers but no
 people.
 
 **Progression (G1):** best-rung distribution; Vessel, Demigod and God reach;
-years per blocker; book acquisitions per run.
+blocker shares; frozen-ladder share and longest stretch; forcing rites offered
+and taken; mundane declarations.
 
 **Campaign identity (G3):** Long-exclusive reach under chronicler play.
 
@@ -440,11 +490,14 @@ coordination.
 1. **G2: watch five people play.** It is cheap, it uses a build that exists,
    and it can reorder everything else. Run it first, or in parallel with
    step 2.
-2. **G1: the ladder.** Diagnose books before blood, then the top.
+2. **G1: the ladder.** First the Long Wait's verbs (declare mundane, the Late
+   Waking, a callable forcing rite, the last after an owner ruling). Then the
+   power gap's legibility. Then the top.
 3. **G3: the Long Line's late centuries.**
 4. **G5: the Afterimage with people in it.**
 5. **G4: pride's late bites.**
-6. **G6: the money-shape content pass.** It can feed G1's book supply.
+6. **G6: the money-shape content pass.** Long Wait decisions (G1) are good
+   non-money trade-offs to write into it.
 7. **G7 and G8: the tail and the brief's corners.**
 8. **G9: visuals**, alongside whichever item they illustrate.
 
