@@ -1,5 +1,5 @@
 import type { Check, Content, ContentBundle, EventTemplate } from '@ed/schema';
-import { indexContent } from '@ed/schema';
+import { eventInCampaign, indexContent } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
@@ -71,7 +71,10 @@ export interface DeclaredOutcome {
  * omitting one — a choice named `''` is not authorable, so the two can never
  * collide.
  */
-export function declaredOutcomes(source: ContentBundle | Content): Map<string, DeclaredOutcome> {
+export function declaredOutcomes(
+  source: ContentBundle | Content,
+  include: (event: EventTemplate) => boolean = () => true,
+): Map<string, DeclaredOutcome> {
   const content = indexContent(source);
   const out = new Map<string, DeclaredOutcome>();
 
@@ -97,6 +100,7 @@ export function declaredOutcomes(source: ContentBundle | Content): Map<string, D
   };
 
   for (const e of content.events) {
+    if (!include(e)) continue;
     if (e.interaction.kind === 'narration') add(e, undefined, e.interaction.outcomes);
     else for (const c of e.interaction.choices) add(e, c.id, c.outcomes);
   }
@@ -332,6 +336,7 @@ function targetCheckBandOnceRng(
 export interface FrameOutcomeWitnessRequest {
   expectedOutcomeId: string;
   rng: Rng;
+  arcStep?: ArcStep;
 }
 
 /**
@@ -354,7 +359,11 @@ export function executeFrameOutcomeWitness(
   if (e.interaction.kind !== 'narration') {
     return { ok: false, reason: 'frame witness currently supports narration only' };
   }
-  if (!framePool(ctx).some((candidate) => candidate.id === e.id)) {
+  if (request.arcStep && (
+    e.arc?.of !== request.arcStep.instance.arc || e.arc.node !== request.arcStep.node.id
+    || request.arcStep.node.event !== e.id
+  )) return { ok: false, reason: 'frame arc step does not match the event' };
+  if (!request.arcStep && !framePool(ctx).some((candidate) => candidate.id === e.id)) {
     return { ok: false, reason: 'frame reads are not satisfied by this witness world' };
   }
 
@@ -363,6 +372,7 @@ export function executeFrameOutcomeWitness(
     ctx,
     e,
     targetWeightedIdRng(request.rng, request.expectedOutcomeId),
+    request.arcStep,
   );
   if (!entry) {
     return { ok: false, reason: 'frame cast could not be resolved' };
@@ -394,6 +404,9 @@ export function executeOutcomeWitness(
   e: EventTemplate,
   request: OutcomeWitnessRequest,
 ): OutcomeWitnessResult {
+  if (!eventInCampaign(e, ctx.world.campaign)) {
+    return { ok: false, reason: 'event is outside this campaign' };
+  }
   const arcStep = request.arcStep;
   if (e.arc) {
     if (!arcStep) return { ok: false, reason: 'arc event requires an arc-step witness' };

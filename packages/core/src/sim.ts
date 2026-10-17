@@ -27,6 +27,8 @@ import { pedigreeF, realizedHomozygosityOf, visibleRecordView } from './record.j
 import { seedLibraryMemories } from './run-library.js';
 import { createProseRuntime, type ProseRuntime } from './prose.js';
 import { msg } from './messages.js';
+import { campaignDef } from './campaign.js';
+import { startArc } from './events/arcs.js';
 
 export function makeGeneticsCtx(content: Content, seed: number): GeneticsCtx {
   const pools = new Map<string, GenePool>();
@@ -405,6 +407,14 @@ export function bootstrap(
   // after the whole founding household and shelf exist.
   const firstReign = world.succession[0];
   if (firstReign) firstReign.question = chooseGenerationQuestion(ctx);
+
+  const opening = campaignDef(campaign).openingArc;
+  if (opening) {
+    const arc = content.mustArc(opening.arc, 'campaign introduction');
+    const bindings = opening.narratorSlot && world.narrator
+      ? { [opening.narratorSlot]: world.narrator } : {};
+    startArc(arc, ctx, makeRng(hashSeed(seed, 'campaign-opening')), bindings);
+  }
 
   return ctx;
 }

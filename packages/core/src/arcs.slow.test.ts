@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import { END_YEAR, expectRate, bootstrap, candidatesFor, framePool, presentFrame, runYears,
   expectMean, testRng,
 } from '@ed/core';
-import { CAMPAIGN_YEARS } from './campaign.js';
+import { CAMPAIGN_YEARS, isFullCampaignEvent } from './campaign.js';
 import { TEST_FAMILIES } from './tools/testFamilies.js';
 
 const bundle = loadContent();
@@ -202,6 +202,7 @@ describe('every authored event can actually happen', () => {
 
   it('fires every event at least once across the batch', () => {
     const dead = bundle.events
+      .filter(isFullCampaignEvent)
       .filter((e) => (fires.get(e.id) ?? 0) === 0)
       .map((e) => e.id);
     expect(dead.filter((id) => (

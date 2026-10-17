@@ -5,7 +5,7 @@ import { loadContent } from '@ed/content';
 import { asId, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
 import { makeRng, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
-import { marry, place, testWorld } from '../testing.js';
+import { marry, phase, place, testWorld } from '../testing.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
@@ -19,6 +19,7 @@ import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
 import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
+import { bootstrap } from '../sim.js';
 
 const content = indexContent(loadContent());
 
@@ -5797,7 +5798,7 @@ describe('authored frame narration outcome witnesses', () => {
     if (!family) throw new Error('storybook TEST_FAMILY fixture is missing');
 
     const events = content.events.filter((event) => (
-      event.tier === 'frame' && event.interaction.kind === 'narration'
+      event.tier === 'frame' && !event.arc && event.interaction.kind === 'narration'
     ));
     expect(events.length).toBeGreaterThan(0);
 
@@ -6795,5 +6796,34 @@ describe('#334 reserved account execution witnesses', () => {
       ctx.world.year = year;
       expect(evalCondition(content.mustEvent(id).conditions, ctx)).toBe(true);
     }
+  });
+});
+
+describe('#323 introduction execution witnesses', () => {
+  it('commits both tale appointments and its own frame appointment through their production paths', () => {
+    const ctx = bootstrap(content, 323, 1042, 'demo');
+    const instance = [...ctx.world.arcs.values()][0]!;
+    for (const [year, eventId, outcomeId] of [
+      [1043, 'demo_the_empty_chair', 'the_hand_remains'],
+      [1044, 'demo_the_last_page', 'the_page_is_offered'],
+      [1045, 'demo_the_margin_keeps_its_colour', 'the_page_is_not_turned'],
+    ] as const) {
+      ctx.world.year = year;
+      // The next year's normal succession phase refills the head after the
+      // founder's authored crossing. No second death or succession model.
+      if (year === 1044) phase('succession', ctx);
+      const step = dueArcSteps(ctx, makeRng(year)).find((candidate) => candidate.instance.id === instance.id);
+      expect(step?.node.event).toBe(eventId);
+      if (!step) throw new Error('the introduction missed a dated appointment');
+      const event = content.mustEvent(eventId);
+      const request = { expectedOutcomeId: outcomeId, rng: makeRng(year + 1), arcStep: step };
+      const result = event.tier === 'frame'
+        ? executeFrameOutcomeWitness(ctx, event, request)
+        : executeOutcomeWitness(ctx, event, request);
+      expect(result.ok, result.reason).toBe(true);
+    }
+    expect(instance.status).toBe('ended');
+    expect(ctx.world.people.get(ctx.world.narrator!)?.status).toBe('guardian');
+    expect(ctx.world.frame.entries.at(-1)?.eventId).toBe('demo_the_margin_keeps_its_colour');
   });
 });
