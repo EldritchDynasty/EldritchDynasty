@@ -266,7 +266,10 @@ it exceeds the recorded tolerance. #333 records the current per-gate
 attribution and repack evidence in `docs/BALANCE-LOG.md` instead of copying
 another stopwatch table here. Each lane also retains the JSON produced by
 `npm run gates -- --lane <lane> --timings-json <file>`, so a drift can be
-attributed gate by gate without transcribing timestamps. A faster build starts
+attributed gate by gate without transcribing timestamps. Since #1641 that JSON
+also names its `host` (CPU model, logical CPUs, Node), because a hosted timing
+that cannot say which machine it ran on cannot separate a code regression from
+a slower runner. A faster build starts
 by looking at whichever checked lane the data says is longest.
 
 The shards are not level on the runners (10m05s against 5m27s) while the

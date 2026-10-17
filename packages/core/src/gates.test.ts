@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { SlotSpecS, type ContentBundle } from '@ed/schema';
 import {
-  COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
+  COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateHost, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
   gateVocabularyReach, gateVocabularyReachTelemetry,
   gatePostFillability, gateSlotFillability, judgeZeroReach, madnessHolderRow, judgeLadderFloor,
@@ -269,15 +269,27 @@ describe('the CI gate lanes cover every gate exactly once', () => {
     'utf8',
   );
 
-  it('emits machine-readable per-gate timing evidence', () => {
+  it('emits machine-readable per-gate timing evidence, with the host it ran on', () => {
+    const host = {
+      cpuModel: 'AMD EPYC 7763 64-Core Processor', logicalCpus: 4,
+      node: 'v22.23.3', platform: 'linux', arch: 'x64',
+    };
     expect(JSON.parse(gateTimingJson('blood', [
       { gate: 'blood', seconds: 12.345, ok: true },
-    ], 12.5))).toEqual({
-      version: 1,
+    ], 12.5, host))).toEqual({
+      version: 2,
       lane: 'blood',
       totalSeconds: 12.5,
+      host,
       gates: [{ gate: 'blood', seconds: 12.345, ok: true }],
     });
+  });
+
+  it('names a real host — a timing without its machine cannot be attributed (#1641)', () => {
+    const host = gateHost();
+    expect(host.cpuModel).not.toBe('');
+    expect(Number.isInteger(host.logicalCpus) && host.logicalCpus >= 1).toBe(true);
+    expect(host.node).toBe(process.version);
   });
 
   it('partitions GATES — nothing missed, nothing run twice', () => {

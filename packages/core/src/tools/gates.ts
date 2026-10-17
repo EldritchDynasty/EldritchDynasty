@@ -20,6 +20,7 @@
  */
 import { loadContent } from '@ed/content';
 import { writeFileSync } from 'node:fs';
+import { availableParallelism, cpus } from 'node:os';
 import {
   indexContent, validateBundle, vocabulary,
   type Condition, type Content, type ContentBundle, type EventTemplate, type Person,
@@ -1379,16 +1380,45 @@ export interface GateTimingSample {
   ok: boolean;
 }
 
+/**
+ * The machine a timing was taken on.
+ *
+ * #1641 spent four days unable to say whether an 11.4m → 23.1m nightly was
+ * the code or the runner: the same SHAs replayed on fixed hardware moved 16%,
+ * the hosted image and Node version were identical, and the one thing that
+ * could separate the two — which CPU each job landed on — was in no log. A
+ * timing without its host is half a measurement.
+ */
+export interface GateHost {
+  cpuModel: string;
+  logicalCpus: number;
+  node: string;
+  platform: string;
+  arch: string;
+}
+
+export function gateHost(): GateHost {
+  return {
+    cpuModel: cpus()[0]?.model.trim() || 'unknown',
+    logicalCpus: availableParallelism(),
+    node: process.version,
+    platform: process.platform,
+    arch: process.arch,
+  };
+}
+
 /** Structured timing output for attribution when a checked lane grows. */
 export function gateTimingJson(
   lane: string | undefined,
   gates: readonly GateTimingSample[],
   totalSeconds: number,
+  host: GateHost,
 ): string {
   return `${JSON.stringify({
-    version: 1,
+    version: 2,
     lane: lane ?? null,
     totalSeconds,
+    host,
     gates,
   }, null, 2)}\n`;
 }
@@ -1519,8 +1549,10 @@ if (isMain) {
   }
   if (timingsPath) {
     const totalSeconds = Number(((Date.now() - runStarted) / 1000).toFixed(3));
-    writeFileSync(timingsPath, gateTimingJson(lane, timings, totalSeconds));
-    console.log(`\ngate timings written — ${timingsPath}`);
+    const host = gateHost();
+    writeFileSync(timingsPath, gateTimingJson(lane, timings, totalSeconds, host));
+    console.log(`\ngate host: ${host.cpuModel} × ${host.logicalCpus}, node ${host.node}`);
+    console.log(`gate timings written — ${timingsPath}`);
   }
   if (named) {
     const where = lane ? ` in lane ${lane}` : '';
