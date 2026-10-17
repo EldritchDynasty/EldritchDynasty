@@ -133,14 +133,16 @@ events:
             - id: read_before_returned
               weight: 32
               text: >-
-                Fourteen crowns and eleven weeks and a handsome copy, and a
-                letter with it, courteous, asking whether the house holds
-                anything else of that kind and whether it might be seen. The
-                letter does not say who wants to see it. It is the chapter
-                house asking, and the chapter house never asks for itself.
+                Fourteen crowns and eleven weeks, and no copy. The chapter house
+                says the cart was stopped on the Bramme road by two men who knew
+                which crate to open. They took the family's Life book. A courier
+                returns with a receipt and a courteous letter asking whether the
+                house holds anything else of that kind and whether it might be
+                seen. The letter names neither man. The house paid to make a
+                second copy, and has lost the first.
               effects:
                 - { kind: treasury, delta: -14 }
-                - { kind: spellbook, op: gain, target: { slot: COPYIST }, book: lesser_workings_of_life }
+                - { kind: spellbook, op: remove_copy, target: { slot: COPYIST }, book: lesser_workings_of_life }
                 - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.6 }
     rumour: { id: rumour_the_window_in_the_long_room, accuracy: 0.35, spread: 1 }
 
@@ -396,9 +398,9 @@ proseVariants:
     plainenglish: >-
       After eleven weeks and a payment of fourteen crowns, the copy arrives. Its binding is better than the original's. In the margin of the fourth quire is a small, neatly written note in handwriting nobody at Ardwen recognises. The note corrects an error. The correction is right.
   - address: "content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].outcomes[id=read_before_returned].text"
-    of: cb6f14b7e60cd923
+    of: 0bbb745759ed21b3
     plainenglish: >-
-      After eleven weeks and a payment of fourteen crowns, the house receives a fine copy and a polite letter. The letter asks whether the house owns other books of this kind and whether someone could see them. It does not name the person who wants to see the books. The chapter house is asking on someone else's behalf; it never asks for itself.
+      After eleven weeks and paying fourteen crowns, no book is returned. Two thieves stopped the cart on its way to Bramme and took the family's Life book. The chapter house sends back a courier's receipt and asks if the family owns other books like it. The letter does not say who requested them. The house paid for a copy, but its original book is gone.
   - address: "content:events/library.yaml#events[id=the_fourth_shelf].title"
     of: 85825470a7336e8c
     plainenglish: >-
