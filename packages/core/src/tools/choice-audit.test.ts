@@ -26,6 +26,36 @@ describe('the #334 choice-debt worklist', () => {
     expect(first).not.toMatch(/generatedAt|timestamp|Date\(/);
   });
 
+  it('keeps deliberate non-intervention choices explicitly classified as self-expression (#1783)', () => {
+    // These are decisions to preserve the status quo, not promises of a new
+    // mechanic. Their authored outcome and Chronicle prose remain unchanged.
+    const reviewed = [
+      ['the_letter_nobody_answered', 'let_it_close'],
+      ['a_neighbour_short_before_michaelmas', 'let_it_go'],
+      ['the_marker_stays_moved', 'walk_it_back'],
+      ['the_iron_over_the_door', 'leave_the_iron'],
+      ['the_grandmother_who_remembers', 'leave_her_alone'],
+    ] as const;
+    const audit = auditChoices(content);
+    const work = choiceWorklist(content);
+
+    for (const [eventId, choiceId] of reviewed) {
+      const row = audit.rows.find((r) => r.event === eventId && r.choice === choiceId);
+      expect(row?.categories, `${eventId}/${choiceId} must declare self-expression`)
+        .toContain('self_expression');
+      expect(work.proseOnly.some((r) => r.event === eventId && r.choice === choiceId))
+        .toBe(false);
+
+      const event = content.events.find((e) => e.id === eventId);
+      expect(event?.interaction.kind).toBe('choice');
+      if (event?.interaction.kind !== 'choice') continue;
+      const choice = event.interaction.choices.find((c) => c.id === choiceId);
+      expect(choice?.outcomes.length).toBeGreaterThan(0);
+      expect(choice?.outcomes.every((outcome) => outcome.tags.includes('self_expression')))
+        .toBe(true);
+    }
+  });
+
   it('accounts for every current write-only key, writer and prose-only choice', () => {
     const audit = auditChoices(content);
     const work = choiceWorklist(content);
