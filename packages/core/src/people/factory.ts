@@ -434,6 +434,23 @@ export function forceAwakening(p: Person, year: Year): boolean {
 }
 
 /**
+ * THE LONG WAIT ENDS (§11, issue #1794). The house stops waiting for him.
+ *
+ * `declaredMundane` was saved, read by `rollAwakening` below and written by
+ * nothing, so §11's "the Head must declare them mundane" had no verb. This is
+ * the one writer. Like an Awakening it is history: it cannot be taken back,
+ * and it refuses anyone already woken or already declared.
+ *
+ * Eligibility (whose son, how old, not the Head) is the Table's question
+ * (`table.ts`, `mundaneRefusal`); this owns only the state change.
+ */
+export function declareMundane(p: Person): boolean {
+  if (p.awakening.awakened || p.awakening.declaredMundane) return false;
+  p.awakening = { ...p.awakening, declaredMundane: true };
+  return true;
+}
+
+/**
  * Awakening. Timing is driven by carried font in BOTH sexes, even though only
  * one of them will ever use it — which makes an early-waking daughter the one
  * honest signal in a market built on forged documents.

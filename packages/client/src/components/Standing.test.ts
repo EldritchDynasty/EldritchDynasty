@@ -876,6 +876,7 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
       scionVacant: false,
       scionHeirVacant: false,
       market: [],
+      longWait: [],
       papers: [],
       pedigreePrices: [],
       servants: [],

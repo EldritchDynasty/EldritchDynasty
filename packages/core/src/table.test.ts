@@ -10,7 +10,9 @@ import {
   resolveSlots, TUTOR_FEE, TUTOR_GAIN, TUTOR_YEARS, loadGame, newGame, onTheMarket, order, phase, place,
   resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   MAX_BOND, type SimCtx, type TableOrder,
+  bootstrap, foremostOf, heirApparent, knownSuccession, MUNDANE_AGE, phenotypeOf, rollAwakening,
 } from '@ed/core';
+import type { Person } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
 import { plainEnglishWorklist } from './tools/string-audit.js';
 import * as library from './people/library.js';
@@ -1594,6 +1596,13 @@ const ORDER_ORIGINALS: Record<string, string> = {
   'table.order.scionHeir.self': 'the Scion cannot be his own heir',
   'table.order.scionHeir.unknown': 'nobody of this house by that name',
   'table.order.withhold.unknown': 'nobody of this house by that name',
+  'table.order.mundane.unknown': 'nobody of this house by that name',
+  'table.order.mundane.not_a_son': 'only a man of the line can be declared mundane',
+  'table.order.mundane.woken': 'he has already woken',
+  'table.order.mundane.already': 'the house has already stopped waiting for him',
+  'table.order.mundane.head': 'the house does not declare its own Head',
+  'table.order.mundane.young': 'he is young enough that he may still wake',
+  'table.order.mundane.chronicle': 'The house stopped waiting for {PERSON}. He was {AGE}, and he had never woken. From that year he was a man to be placed, married or sent, and nobody watched him for the blood again.',
 };
 
 describe('table order refusals in Plain English (#811)', () => {
@@ -1782,3 +1791,175 @@ describe('the table and muster views read in the reader\'s wording (#877)', () =
     expect(missingPlainEnglish(ctx).filter(ours)).toEqual(owed);
   });
 });
+
+/**
+ * THE LONG WAIT (§11, issue #1794).
+ *
+ * `declaredMundane` was saved and read by `rollAwakening` and written by
+ * nothing. These tests hold the one verb that writes it to what §11 says it
+ * is for: the house stops waiting for a grown man, he never wakes, and the
+ * succession passes over him, which is both what it frees and what it risks.
+ */
+
+/** A house with nobody in it but the people a test places. */
+function emptyMundaneHouse(seed = 1794): SimCtx {
+  const ctx = bootstrap(bundle, seed, 1042);
+  for (const p of ctx.world.people.living()) ctx.world.people.kill(p.id, ctx.world.year, 'before the test began');
+  for (const p of ctx.world.people.all()) p.castSlots = [];
+  ctx.world.headSince = undefined;
+  ctx.world.chronicle = [];
+  return ctx;
+}
+
+/**
+ * A son of the house who carries the Power. Genomes are lazy and derived from
+ * the name, so the first name that expresses is the same one every run.
+ */
+function expresser(ctx: SimCtx, age: number, stem: string): Person {
+  for (let i = 0; i < 200; i++) {
+    const p = place(ctx, { sex: 'male', age, name: `${stem}${i}` });
+    if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return p;
+    ctx.world.people.kill(p.id, ctx.world.year, 'not the son this test needs');
+  }
+  throw new Error(`no expressing ${stem} in 200 names`);
+}
+
+describe('declaring a man mundane (#1794)', () => {
+  it('refuses anyone the order is not for, and says why', () => {
+    const ctx = emptyMundaneHouse();
+    const head = place(ctx, { sex: 'male', age: 50, name: 'Holder', castSlots: ['head'] });
+    const daughter = place(ctx, { sex: 'female', age: 30, name: 'Ada' });
+    const woken = place(ctx, { sex: 'male', age: 30, name: 'Bram', awakened: true });
+    const boy = place(ctx, { sex: 'male', age: MUNDANE_AGE - 1, name: 'Cole' });
+    const outsider = place(ctx, { sex: 'male', age: 30, name: 'Dace' });
+    outsider.membership = [{ ...outsider.membership[0]!, kind: 'married_in' }];
+
+    for (const p of [head, daughter, woken, boy, outsider]) {
+      const result = order(ctx, { kind: 'declareMundane', person: p.id });
+      expect(result.ok, p.name).toBe(false);
+      expect(result.reason, p.name).toBeTruthy();
+      expect(p.awakening.declaredMundane, p.name).toBe(false);
+    }
+    expect(order(ctx, { kind: 'declareMundane', person: 'nobody' }).ok).toBe(false);
+    expect(tableView(ctx).longWait).toEqual([]);
+    expect(ctx.world.chronicle).toEqual([]);
+  });
+
+  it('ends the wait for good, writes it down, and cannot be repeated', () => {
+    const ctx = emptyMundaneHouse();
+    const son = expresser(ctx, 26, 'Oren');
+    expect(tableView(ctx).longWait.map((row) => row.person)).toEqual([son.id]);
+
+    expect(order(ctx, { kind: 'declareMundane', person: son.id }).ok).toBe(true);
+    expect(son.awakening).toMatchObject({ awakened: false, declaredMundane: true });
+    const page = ctx.world.chronicle.at(-1)!;
+    expect(page).toMatchObject({ weight: 'paragraph', people: [son.id] });
+    expect(page.text).toContain(son.name);
+
+    // §11: "Permanent." No roll ever wakes him, at any age.
+    const rng = testRng('mundane', son.id);
+    for (let age = 26; age < 70; age++) {
+      expect(rollAwakening(son, son.born + age, ctx.genetics, rng)).toBe(false);
+    }
+    expect(son.awakening.awakened).toBe(false);
+
+    const again = order(ctx, { kind: 'declareMundane', person: son.id });
+    expect(again.ok).toBe(false);
+    expect(tableView(ctx).longWait).toEqual([]);
+  });
+
+  it('frees the succession: the seal passes over him to a brother who may still express', () => {
+    const ctx = emptyMundaneHouse();
+    const elder = expresser(ctx, 30, 'Elder');
+    const younger = expresser(ctx, 24, 'Younger');
+    younger.awakening = { ...younger.awakening, awakened: true, year: ctx.world.year, age: 24 };
+
+    // Before: the unwoken elder is the rule's heir, and the house cannot know it.
+    expect(heirApparent(ctx)?.id).toBe(elder.id);
+    expect(knownSuccession(ctx).heir).toBeUndefined();
+    expect(knownSuccession(ctx).possible).toEqual([elder.id, younger.id]);
+
+    expect(order(ctx, { kind: 'declareMundane', person: elder.id }).ok).toBe(true);
+
+    expect(heirApparent(ctx)?.id).toBe(younger.id);
+    expect(knownSuccession(ctx)).toEqual({ heir: younger.id, possible: [younger.id] });
+  });
+
+  it('risks the disaster too: an only son given up on yields the seal to a Regent', () => {
+    const ctx = emptyMundaneHouse();
+    const son = expresser(ctx, 28, 'Only');
+    const sister = place(ctx, { sex: 'female', age: 32, name: 'Sister' });
+
+    expect(heirApparent(ctx)?.id).toBe(son.id);
+    expect(order(ctx, { kind: 'declareMundane', person: son.id }).ok).toBe(true);
+    expect(heirApparent(ctx)?.id).toBe(sister.id);
+  });
+
+  it('takes him off the ladder, which can no longer tell the house to wait for him', () => {
+    const ctx = emptyMundaneHouse();
+    const son = expresser(ctx, 27, 'Ladder');
+    expect(foremostOf(ctx)?.person.id).toBe(son.id);
+    expect(foremostOf(ctx)?.standing.blocker).toBe('awakening');
+
+    order(ctx, { kind: 'declareMundane', person: son.id });
+    expect(foremostOf(ctx)).toBeUndefined();
+  });
+
+  it('survives a save and a load', () => {
+    const ctx = emptyMundaneHouse();
+    const son = expresser(ctx, 33, 'Saved');
+    order(ctx, { kind: 'declareMundane', person: son.id });
+    const back = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(back.world.people.get(son.id)?.awakening.declaredMundane).toBe(true);
+    expect(heirApparent(back)?.id).toBe(heirApparent(ctx)?.id);
+  });
+
+  it('writes the Chronicle in the reader\'s mode, from the reviewed counterpart in messages.yaml', () => {
+    const ctx = emptyMundaneHouse();
+    setProseVariants(ctx, bundle.proseVariants ?? []);
+    setProseMode(ctx, 'plainenglish');
+    const son = expresser(ctx, 40, 'Plain');
+    order(ctx, { kind: 'declareMundane', person: son.id });
+    expect(ctx.world.chronicle.at(-1)?.text).toBe(
+      `The house stopped waiting for ${son.name} to awaken. He was 40 and had never awakened. `
+      + 'From then on the family treated him as someone to give a post, marry or send away, '
+      + 'and no longer watched him for signs of the power.',
+    );
+    expect(missingPlainEnglish(ctx).filter((a) => a.includes('mundane'))).toEqual([]);
+  });
+});
+
+/**
+ * The age floor is a promise about CONTENT: no authored scene that wakes
+ * somebody may cast a man the house has declared mundane, or the book would
+ * say he woke after the house swore he never would. Read the windows from the
+ * events themselves, so a new forcing rite with a wider window fails here.
+ */
+describe('MUNDANE_AGE sits above every authored awakening window', () => {
+  it('holds for every slot an `awakening` effect targets', () => {
+    const windows: { event: string; slot: string; max?: number }[] = [];
+    const visit = (node: unknown, event: { id: string; slots?: Record<string, { filters?: unknown[] }> }): void => {
+      if (Array.isArray(node)) { for (const item of node) visit(item, event); return; }
+      if (!node || typeof node !== 'object') return;
+      const o = node as Record<string, unknown>;
+      const target = o.target as { slot?: string } | undefined;
+      if (o.kind === 'awakening' && target?.slot) {
+        const filters = event.slots?.[target.slot]?.filters ?? [];
+        const caps = filters
+          .map((f) => (f as { age?: { op: string; value: number } }).age)
+          .filter((a): a is { op: string; value: number } => a !== undefined && (a.op === 'lte' || a.op === 'lt'))
+          .map((a) => (a.op === 'lt' ? a.value - 1 : a.value));
+        windows.push({ event: event.id, slot: target.slot, ...(caps.length ? { max: Math.min(...caps) } : {}) });
+      }
+      for (const value of Object.values(o)) visit(value, event);
+    };
+    for (const event of bundle.events) visit(event, event as never);
+
+    expect(windows.length).toBeGreaterThan(0);
+    for (const w of windows) {
+      expect(w.max, `${w.event}/${w.slot} wakes someone with no upper age`).toBeDefined();
+      expect(w.max!, `${w.event}/${w.slot}`).toBeLessThan(MUNDANE_AGE);
+    }
+  });
+});
+

@@ -207,6 +207,19 @@ function confirmRite(): void {
 const riteAssembly = computed(() => pendingRite.value ? props.table[pendingRite.value].assembly : undefined);
 
 /**
+ * THE LONG WAIT (§11, issue #1794). Declaring a man mundane cannot be undone,
+ * so it is asked twice: choose him, then confirm. Cancelling mutates nothing;
+ * confirming sends the one `declareMundane` order.
+ */
+const pendingMundane = ref<{ person: string; name: string } | null>(null);
+function confirmMundane(): void {
+  const chosen = pendingMundane.value;
+  if (!chosen) return;
+  pendingMundane.value = null;
+  props.actions.order({ kind: 'declareMundane', person: chosen.person });
+}
+
+/**
  * WHAT THE HOUSE COULD DO THIS YEAR, and what it is only being shown.
  *
  * The table was a 2,300px scroll because every panel drew whether or not it
@@ -748,6 +761,47 @@ const MARRIAGE_ORDERS = [
         </button>
       </div>
       <p v-if="refusedIn('withhold')" class="small rubric">{{ refusedIn('withhold') }}</p>
+    </div>
+
+    <!-- §11, THE LONG WAIT (#1794): "At some point the Head must declare them
+         mundane and put them to use — freeing the succession, risking
+         disaster." The panel never says whether the blood is in him; the house
+         does not know, and that is the decision. -->
+    <div class="panel" :class="{ idle: idle('longWait', table.longWait.length > 0) }">
+      <h3 class="label">
+        <button class="fold" :aria-expanded="!idle('longWait', table.longWait.length > 0)" @click="shut['longWait'] = !shut['longWait']">{{ local('The long wait', 'Men who have not awakened') }}</button>
+      </h3>
+      <p v-if="!table.longWait.length" class="small dim">
+        {{ local('Nobody of the line is old enough to be given up on.', 'No adult man of the family is waiting to awaken.') }}
+      </p>
+      <p v-else class="small dim blurb">
+        {{ local(
+          'Grown men of the line who have never woken. Stop waiting for one and he never will: the seal passes over him to a brother, a cousin, or a Regent, and he is free to be placed, married or sent.',
+          'These adult men of the family have never awakened. If you declare one mundane, he can never awaken. He is skipped in the succession, so the seal goes to a brother, a cousin or a Regent instead. He can still be given a post, married or sent away.',
+        ) }}
+      </p>
+      <div v-if="pendingMundane" class="line" role="group" :aria-label="local('Confirm the declaration', 'Confirm declaring this man mundane')">
+        <p class="small">
+          <strong>{{ pendingMundane.name }}</strong>
+          {{ local('— the house stops waiting. This cannot be taken back.', '— declare him mundane. This cannot be undone.') }}
+        </p>
+        <div class="row">
+          <button class="primary small" @click="confirmMundane">{{ local('Stop waiting for him', 'Confirm: declare him mundane') }}</button>
+          <button class="small" @click="pendingMundane = null">{{ local('Keep waiting', 'Cancel') }}</button>
+        </div>
+      </div>
+      <div v-else class="wrap">
+        <button
+          v-for="p in table.longWait"
+          :key="p.person"
+          class="small"
+          :aria-label="local(`Stop waiting for ${p.name}, ${p.age} years old`, `Declare ${p.name}, ${p.age} years old, mundane`)"
+          @click="pendingMundane = { person: p.person, name: p.name }"
+        >
+          {{ p.name }}, {{ p.age }}
+        </button>
+      </div>
+      <p v-if="refusedIn('declareMundane')" class="small rubric">{{ refusedIn('declareMundane') }}</p>
     </div>
 
     <!-- §7: "A dowry is not money. Great houses negotiate in lineage
