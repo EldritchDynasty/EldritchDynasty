@@ -178,14 +178,14 @@ describe('pickOutcome: outcome_weight reweights matching outcomes', () => {
     const baseline = testWorld(content);
     let watchfulBase = 0;
     for (let i = 0; i < N; i++) {
-      if (pickOutcome(outcomes, testRng('base', i), baseline).id === 'watchful') watchfulBase += 1;
+      if (pickOutcome(outcomes, testRng('base', i), baseline, {}).id === 'watchful') watchfulBase += 1;
     }
 
     const withTrait = testWorld(content);
     place(withTrait, { sex: 'male', age: 40, traits: ['keeps_a_night_watch'] });
     let watchfulWith = 0;
     for (let i = 0; i < N; i++) {
-      if (pickOutcome(outcomes, testRng('with', i), withTrait).id === 'watchful') watchfulWith += 1;
+      if (pickOutcome(outcomes, testRng('with', i), withTrait, {}).id === 'watchful') watchfulWith += 1;
     }
 
     // Even weights draw roughly 50/50 unmodified; the trait's 1.8x should push

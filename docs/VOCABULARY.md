@@ -269,6 +269,8 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `arcs/flags` | arc_flag effects and arcFlag/arcVisited conditions only mean anything inside a substory. |
 | `decider/wiring` | A state ladder must name real branches and end in an unguarded rung; a party decider needs a check and a party. |
 | `outcomes/weights` | A group of outcomes whose weights sum to zero can never resolve. |
+| `outcomes/guard` | An outcome's onlyIf names one required, engine-cast slot, sits under no check, and never guards an effect it makes inert. |
+| `outcomes/cover` | Every cast must leave at least one outcome to draw: an unguarded one, or a complementary pair of guards on one slot. |
 | `event/shape` | A choice with one option is narration; a body of twenty words is a stub. |
 | `checks/wiring` | A Check must be declared to be named, its bands ordered highest-first, every band must name a real outcome or branch, and every checked outcome or party-decided branch must be named by a band. |
 | `ages/coverage` | An Age with no content of its own is a modifier wearing a name. |

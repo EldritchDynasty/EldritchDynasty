@@ -1,5 +1,5 @@
-import type { Check, Content, ContentBundle, EventTemplate } from '@ed/schema';
-import { eventInCampaign, indexContent } from '@ed/schema';
+import type { Check, Content, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
+import { eventInCampaign, indexContent, outcomeDrawSets } from '@ed/schema';
 import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
@@ -81,20 +81,28 @@ export function declaredOutcomes(
   const add = (
     e: EventTemplate,
     choiceId: string | undefined,
-    outcomes: readonly { id: string; weight: number }[],
+    outcomes: readonly Outcome[],
   ) => {
     // `weight` is authored per outcome and the roll is over their sum, so a
     // choice whose weights are 80/20 and one whose weights are 8/2 are the
     // same choice. Normalising here is what makes the two comparable.
-    const total = outcomes.reduce((a, o) => a + o.weight, 0);
+    //
+    // A guarded group (#1817) rolls over one draw set per kind of cast, so an
+    // outcome's share is taken inside its set. An unguarded outcome sits in
+    // every set; it is credited with the best of them.
+    const sets = outcomeDrawSets(outcomes);
     for (const o of outcomes) {
+      // A total of zero is not authorable — `outcomes/weights` rejects it —
+      // but a share of NaN would silently become an unfailable outcome, and
+      // this file is the last place that should invent one.
+      const share = Math.max(0, ...sets.filter((set) => set.includes(o)).map((set) => {
+        const total = set.reduce((a, x) => a + x.weight, 0);
+        return total > 0 ? o.weight / total : 0;
+      }));
       out.set(outcomeKey(String(e.id), choiceId, o.id), {
         label: outcomeLabel(String(e.id), choiceId, o.id),
         choice: choiceKey(String(e.id), choiceId),
-        // A total of zero is not authorable — `outcomes/weights` rejects it —
-        // but a share of NaN would silently become an unfailable outcome, and
-        // this file is the last place that should invent one.
-        share: total > 0 ? o.weight / total : 0,
+        share,
       });
     }
   };
@@ -575,7 +583,7 @@ export function executeOutcomeWitness(
     if (request.targetCheckedOutcome) {
       return { ok: false, reason: 'narration has no checked choice to target' };
     }
-    outcome = pickOutcome(e.interaction.outcomes, outcomeRng, ctx, e);
+    outcome = pickOutcome(e.interaction.outcomes, outcomeRng, ctx, fill, e);
   } else {
     let choice;
     if (e.interaction.decidedBy === 'player') {

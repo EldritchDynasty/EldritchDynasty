@@ -553,9 +553,51 @@ export const CheckS = z.object({
 });
 export type Check = z.infer<typeof CheckS>;
 
+/**
+ * WHAT AN OUTCOME ASKS OF THE CAST (#1817).
+ *
+ * Without it, every outcome in a group can land on every cast, so a scene that
+ * casts any boy could tell a boy who cannot express that he "wakes on the ninth
+ * day" while the awakening effect did nothing. `onlyIf` removes an outcome from
+ * the draw when the named slot's person fails these filters, and the others
+ * share its weight. It is still one draw on one stream, and a group without it
+ * draws exactly as it always did.
+ *
+ * The filters are the slot vocabulary (`Filter`), read against the person
+ * already cast, so the player is never shown which side of it he was on — only
+ * what happened. `outcomes/cover` refuses a group that some cast could empty,
+ * because an empty draw is a decision that never resolves (invariant 9).
+ */
+export const OutcomeGuardS = z.object({
+  slot: z.string(),
+  filters: z.array(FilterS).min(1),
+}).strict();
+export type OutcomeGuard = z.infer<typeof OutcomeGuardS>;
+
+/**
+ * The sets one group of outcomes can actually be drawn from: for each distinct
+ * `onlyIf`, the unguarded outcomes plus the outcomes under it. A group with no
+ * guard is one set, itself. The weight rule and the reach gate both measure an
+ * outcome's share inside these, because a guarded pair that is 70/30 for one
+ * kind of boy and 70/30 for the other is two draws that each sum to 100, not
+ * one draw that sums to 200.
+ */
+export function outcomeDrawSets<O extends { onlyIf?: OutcomeGuard }>(outcomes: readonly O[]): O[][] {
+  const open = outcomes.filter((o) => !o.onlyIf);
+  const guarded = new Map<string, O[]>();
+  for (const o of outcomes) {
+    if (!o.onlyIf) continue;
+    const key = JSON.stringify(o.onlyIf);
+    guarded.set(key, [...(guarded.get(key) ?? []), o]);
+  }
+  if (!guarded.size) return [[...outcomes]];
+  return [...guarded.values()].map((under) => [...open, ...under]);
+}
+
 export const OutcomeS = z.object({
   id: z.string(),
   weight: z.number().default(100),
+  onlyIf: OutcomeGuardS.optional(),
   text: z.string(),
   tags: z.array(z.string()).default([]),
   effects: z.array(EffectS).default([]),
