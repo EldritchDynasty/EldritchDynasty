@@ -12225,3 +12225,40 @@ The broader first-exclusive-material report includes a fourth recovered clause, 
 | Long / ascendant | Devoured8, Forgotten3, Broken Line1 | Devoured7, Forgotten4, Broken Line1 |
 
 **Verification.** The full **800 × 500-year fire-rate and outcome-reach gates both pass**, with 497 non-frame events and 1,135 authored outcomes; all 29 authored effect kinds execute. The Unmaking's failed branch remains too rare for this batch to judge under the unchanged rule (~0.4 expected). Fever/held resolves once in 800 houses; the same scale without this content resolves none, so that reroll is not a mechanism repair. The existing witness suite covers all eight new outcomes. Forty-eight deterministic full-arc paths cross both prose modes, share/withhold, publish/seal, living/absent cousin and all three Record answers, plus an admission test: four clauses versus three, 1343 versus 1342, adult cadet versus none, and all four events unavailable in Short/demo. They assert consequences, later flag readers, original binding and save/resume equality. Latest reach/string-audit checks pass 377 tests, and the existing prose suite passes 45; validation reports zero errors and the three existing warnings. Landing preflight and exact-head CI are recorded on the PR.
+
+---
+
+## #1812 — the second signature: replacing a rival without killing one (19 October 2026)
+
+**Authored change, not a measured fire-rate improvement.** The Cawdry
+settlement `the_second_signature` adds one **common ambient** head scene at
+template weight **75**. Its three-to-six-year consequence
+`the_name_under_the_second_signature` is an inline-arc node, **not** a
+second ambient competitor. No tier weight, event frequency profile, RNG seed
+stream or annual refill chance is changed.
+
+The house can pay eight crowns and one Respect to end a grievance in front of
+the Warden, or leave the grievance alive. The paid route's `recast` releases
+only the former opponent's `rival` cast slot; that person lives, keeps their
+household record, and is still named in the delayed callback. The annual
+`maintainCast` path can then mint another rival, whose new claim is named
+alongside the former settlement. The refillable cast roles and their original
+chances (**rival 0.5; the_match 0.25**) now have one shared schema declaration;
+a new `recast/role` validation rule rejects recasting the Head or any other
+unrefillable role. The separate arc `onMissing: recast` policy is untouched.
+
+**Deterministic instrument:** `packages/core/src/events/reach.test.ts`
+executes the two settlement outcomes and the delayed callback through
+`executeOutcomeWitness`, including the actual inline-arc step. The checked
+`tools/outcome-witnesses.json` inventory gains **three** corresponding
+outcome keys. Additional built-state tests check that the former rival
+remains alive, the Head retains the seal, the new rival takes the freed
+slot, and saving/reloading preserves the old cast binding.
+
+**Measurement boundary:** those are mechanism and outcome-reach witnesses,
+not a 500-year sample or a before/after encounter-rate estimate. No paired
+fire-rate run has been executed in the connector-only authoring session, so
+no change in run incidence, selection share or confidence margin is asserted.
+The full hosted PR/merge-group CI must still judge the actual integration
+with the repository's gate and slow-test lanes. Evidence and failures are
+tracked at [PR #1847](https://github.com/EldritchDynasty/EldritchDynasty/pull/1847).
