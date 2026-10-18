@@ -168,7 +168,8 @@ const DRIVES_A_BATCH: Record<string, string> = {
   'packages/core/src/tools/replay-divergence.test.ts':
     'the run-two comparator and report rows over hand-built decision streams; plays nothing — 0.0s',
   'packages/core/src/tools/stall.test.ts':
-    'one 3-year density run proving table-order failure wiring; the rest is hand-built — 0.2s',
+    'one 3-year density run proving table-order failure wiring; the rest, gate:stall\'s readings '
+    + 'included, is hand-built — 0.2s',
 };
 
 function batchDrivingModules(): Set<string> {

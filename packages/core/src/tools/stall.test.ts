@@ -18,6 +18,9 @@ import {
   blockerActionability, blockerLevers, makeFailureTracker, makeStallClock,
   noteOrderAttempt, observeOrderAttempt, sampleStallClock,
 } from './stall.js';
+import {
+  countNever, emptyStallRun, foldStallYear, readStallYear, type StallYear,
+} from './ladder-stall.js';
 
 const bundle = loadContent();
 
@@ -188,5 +191,82 @@ describe('#270 strategic-stall actionability', () => {
     sampleStallClock(ctx, clock, 'power', him.id);
     sampleStallClock(ctx, clock, 'power', him.id);
     expect(clock.actionableGap.power).toBe(2);
+  });
+});
+
+/**
+ * `gate:stall`'s readings (#1801). The batch is a measurement, not a test; what
+ * is tested is that each year lands in the bucket its fix lives in, because a
+ * grown man waiting and a house with no expresser at all want different levers.
+ */
+describe('the ladder-stall instrument', () => {
+  /** A house with nobody in it but the people a test places. */
+  function emptyHouse(seed = 1801): SimCtx {
+    const ctx = testWorld(bundle, seed);
+    for (const p of ctx.world.people.living()) ctx.world.people.kill(p.id, ctx.world.year, 'before the test began');
+    for (const p of ctx.world.people.all()) {
+      p.castSlots = [];
+      p.awakening = { ...p.awakening, awakened: false };
+    }
+    return ctx;
+  }
+
+  function expresser(ctx: SimCtx, age: number, stem: string, awakened: boolean) {
+    for (let i = 0; i < 200; i++) {
+      const p = place(ctx, { sex: 'male', age, name: `${stem}${i}`, awakened });
+      if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return p;
+      ctx.world.people.kill(p.id, ctx.world.year, 'not the son this test needs');
+      p.awakening = { ...p.awakening, awakened: false };
+    }
+    throw new Error(`no expressing ${stem} in 200 names`);
+  }
+
+  it('splits frozen years by what the house is waiting on, and counts each stretch once', () => {
+    const run = emptyStallRun(1, 'chronicler');
+    const year = (y: Partial<StallYear>): StallYear =>
+      ({ expressers: 0, awake: 0, grownWaiting: 0, inWindow: 0, blocker: 'no-expresser', ...y });
+    let streak = 0;
+    for (const y of [
+      year({ expressers: 1, grownWaiting: 1, inWindow: 1, blocker: 'awakening' }),
+      year({ expressers: 1, grownWaiting: 1, blocker: 'awakening' }),
+      year({}),
+      year({ expressers: 1, blocker: 'awakening' }),
+      year({ expressers: 1, awake: 1, blocker: 'power', rung: 'adept' }),
+      year({}),
+    ]) streak = foldStallYear(run, y, streak);
+
+    expect(run).toMatchObject({
+      years: 6, frozen: 5, grownWaiting: 2, pastWindow: 1, noExpresser: 2, onlyBoys: 1,
+      stretches: 2, longest: 4, best: 'adept', expresserYears: 4, awakeYears: 1,
+    });
+    expect(run.blockers).toEqual({ awakening: 3, 'no-expresser': 2, power: 1 });
+  });
+
+  it('reads a grown man who has not woken as waiting, and a mundane declaration as not', () => {
+    const ctx = emptyHouse();
+    const him = expresser(ctx, 26, 'Waiting', false);
+    expect(readStallYear(ctx)).toMatchObject({ expressers: 1, awake: 0, grownWaiting: 1, inWindow: 1, blocker: 'awakening' });
+
+    him.awakening = { ...him.awakening, declaredMundane: true };
+    expect(readStallYear(ctx)).toMatchObject({ expressers: 1, awake: 0, grownWaiting: 0 });
+
+    expresser(ctx, 30, 'Woken', true);
+    expect(readStallYear(ctx)).toMatchObject({ expressers: 2, awake: 1 });
+  });
+
+  it('counts a man dead past thirty who never woke as Never, and a young death as neither', () => {
+    const ctx = emptyHouse();
+    // The founding cast died in `emptyHouse`; only what this test adds is read.
+    const before = emptyStallRun(1, 'chronicler');
+    countNever(ctx, before);
+    const old = expresser(ctx, 44, 'Never', false);
+    const young = expresser(ctx, 24, 'Young', false);
+    const woke = expresser(ctx, 50, 'Woke', true);
+    for (const p of [old, young, woke]) ctx.world.people.kill(p.id, ctx.world.year, 'his time');
+
+    const run = emptyStallRun(1, 'chronicler');
+    countNever(ctx, run);
+    expect(run.diedGrown - before.diedGrown).toBe(2);
+    expect(run.diedNeverWoke - before.diedNeverWoke).toBe(1);
   });
 });
