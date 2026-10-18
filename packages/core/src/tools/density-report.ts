@@ -354,6 +354,9 @@ export type DiagnosticPeriod = 'regency' | 'unwoken';
 
 export interface DiagnosticYear {
   year: number;
+  /** The actual seal holder; a succession ends an interval even within the same category. */
+  head?: string;
+  headName?: string;
   period?: DiagnosticPeriod;
   blocker: LadderBlocker;
   actionable: boolean;
@@ -366,10 +369,16 @@ export interface DiagnosticYear {
   orders: number;
   /** Non-consequential choice/record presentations, including predetermined ones. */
   routine: number;
+  /** Resolutions with no separately answered docket; never naming forms. */
+  automatic?: number;
+  /** Exact same template/verb/targets/answer and unchanged material situation. */
+  maintenance?: number;
 }
 
 export interface DiagnosticInterval {
   period: DiagnosticPeriod;
+  head?: string;
+  headName?: string;
   from: number;
   to: number;
   years: number;
@@ -380,6 +389,8 @@ export interface DiagnosticInterval {
   auctions: number;
   orders: number;
   routine: number;
+  automatic: number;
+  maintenance: number;
   actionableYears: number;
   blockedYears: number;
   blockers: Partial<Record<LadderBlocker, number>>;
@@ -396,11 +407,12 @@ export function traceDiagnosticIntervals(samples: readonly DiagnosticYear[]): Di
       quiet = 0;
       continue;
     }
-    if (!current || current.period !== sample.period || sample.year !== current.to + 1) {
+    if (!current || current.period !== sample.period || current.head !== sample.head || sample.year !== current.to + 1) {
       current = {
+        head: sample.head, headName: sample.headName,
         period: sample.period, from: sample.year, to: sample.year, years: 0,
         longestQuiet: 0, choices: 0, matches: 0, records: 0,
-        auctions: 0, orders: 0, routine: 0,
+        auctions: 0, orders: 0, routine: 0, automatic: 0, maintenance: 0,
         actionableYears: 0, blockedYears: 0, blockers: {},
       };
       intervals.push(current);
@@ -414,6 +426,8 @@ export function traceDiagnosticIntervals(samples: readonly DiagnosticYear[]): Di
     current.auctions += sample.auctions;
     current.orders += sample.orders;
     current.routine += sample.routine;
+    current.automatic += sample.automatic ?? 0;
+    current.maintenance += sample.maintenance ?? 0;
     current.blockers[sample.blocker] = (current.blockers[sample.blocker] ?? 0) + 1;
     if (sample.actionable) current.actionableYears += 1;
     else current.blockedYears += 1;
@@ -423,16 +437,18 @@ export function traceDiagnosticIntervals(samples: readonly DiagnosticYear[]): Di
   return intervals;
 }
 
-export function diagnosticIntervalLines(rows: { term: number; runs: DensityRun[] }[]): string[] {
+export function diagnosticIntervalLines(rows: { term: number; policy?: string; runs: Pick<DensityRun, 'seed' | 'diagnosticIntervals'>[] }[]): string[] {
   const output = ['', 'REGENCY / UNWOKEN PACING (diagnostic; not a gate)'];
   output.push('regency = woman holding the seal; unwoken = seated non-regent Head, no WITNESSED awake expresser in the house');
   output.push('only blocking choice/Record counts as meaningful; forms and automatic resolutions excluded');
+  output.push('automatic resolutions are reported separately; routine is not exact maintenance; succession splits intervals');
+  output.push('spine = meaningful choice/Record, Match, successful deliberate order, Age boundary, or changed seal/awakening/clause/rung/rite/Regalia/land');
   output.push('Table orders and bid decisions count only when the supplied policy actually sends a successful order; default policy sends none');
-  const header = ['term', 'scope', 'seed', 'year range', 'years', 'quiet max', 'choice (per y)', 'match (per y)', 'record (per y)', 'auction (per y)', 'orders (per y)', 'routine (per y)', 'actionable', 'no route', 'blocker years'];
+  const header = ['term', 'policy', 'scope', 'seed', 'Head', 'year range', 'years', 'quiet max', 'choice (per y)', 'match (per y)', 'record (per y)', 'auction (per y)', 'orders (per y)', 'routine (per y)', 'automatic (per y)', 'maintenance (per y)', 'actionable', 'no route', 'blocker years'];
   const data: string[][] = [];
-  const sums = (rs: DiagnosticInterval[], key: 'choices' | 'matches' | 'records' | 'auctions' | 'orders' | 'routine' | 'actionableYears' | 'blockedYears') =>
+  const sums = (rs: DiagnosticInterval[], key: 'choices' | 'matches' | 'records' | 'auctions' | 'orders' | 'routine' | 'automatic' | 'maintenance' | 'actionableYears' | 'blockedYears') =>
     rs.reduce((total, r) => total + r[key], 0);
-  for (const { term, runs } of rows) {
+  for (const { term, policy, runs } of rows) {
     for (const period of ['regency', 'unwoken'] as const) {
       const readings = runs.flatMap((r) => (r.diagnosticIntervals ?? [])
         .filter((interval) => interval.period === period)
@@ -449,19 +465,19 @@ export function diagnosticIntervalLines(rows: { term: number; runs: DensityRun[]
       }
       const topBlockers = Object.entries(blockerCounts).sort((a, b) => b[1] - a[1])
         .slice(0, 3).map(([name, years]) => `${name}:${years}`).join(',');
-      const row = (seed: string, range: string, n: number, quiet: number, subset: DiagnosticInterval[], blockers: string) => [
-        String(term), period, seed, range, String(n), String(quiet),
-        ...(['choices', 'matches', 'records', 'auctions', 'orders', 'routine'] as const)
+      const row = (seed: string, holder: string, range: string, n: number, quiet: number, subset: DiagnosticInterval[], blockers: string) => [
+        String(term), policy ?? 'first-choice', period, seed, holder, range, String(n), String(quiet),
+        ...(['choices', 'matches', 'records', 'auctions', 'orders', 'routine', 'automatic', 'maintenance'] as const)
           .map((key) => `${sums(subset, key)} (${(sums(subset, key) / (n || 1)).toFixed(2)}/y)`),
         String(sums(subset, 'actionableYears')), String(sums(subset, 'blockedYears')),
         blockers,
       ];
-      data.push(row('ALL', `${intervals.length} intervals / ${runs.length} runs`, totalYears,
+      data.push(row('ALL', 'ALL', `${intervals.length} intervals / ${runs.length} runs`, totalYears,
         Math.max(0, ...intervals.map((r) => r.longestQuiet)), intervals, topBlockers));
       for (const { seed, interval } of readings) {
         const blockers = Object.entries(interval.blockers).filter(([, years]) => years > 0)
           .sort((a, b) => b[1] - a[1]).map(([name, years]) => `${name}:${years}`).join(',');
-        data.push(row(String(seed), `${interval.from}–${interval.to}`, interval.years,
+        data.push(row(String(seed), interval.headName ?? interval.head ?? 'unspecified', `${interval.from}–${interval.to}`, interval.years,
           interval.longestQuiet, [interval], blockers));
       }
     }

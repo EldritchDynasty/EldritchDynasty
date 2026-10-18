@@ -92,7 +92,7 @@ import { nameScion, nameScionHeir, resolveYear, unmakingReadyForAscendant, type 
 import { candidatesFor, resolveSlots } from '../events/slots.js';
 import { ascendantFunnelVerdict } from './ascendant-verdict.js';
 import { heldBooks } from '../people/library.js';
-import { order } from '../table.js';
+import { order, type TableOrder } from '../table.js';
 import {
   CHILDBEARING, completedFertility, conceptionChance, crowding, pairFecundity, thinBloodFertility,
 } from '../people/demography.js';
@@ -145,7 +145,20 @@ export function configureAscendant(ctx: SimCtx): void {
   ctx.world.bidCeiling = ASCENDANT_BID;
 }
 
-export function prepareAscendantYear(ctx: SimCtx): void {
+export interface PolicyOrderVisit {
+  year: number;
+  command: TableOrder;
+  ok: boolean;
+}
+export type PolicyOrderObserver = (visit: PolicyOrderVisit) => void;
+
+function policyOrder(ctx: SimCtx, command: TableOrder, observe?: PolicyOrderObserver) {
+  const result = order(ctx, command);
+  observe?.({ year: ctx.world.year, command: structuredClone(command), ok: result.ok });
+  return result;
+}
+
+export function prepareAscendantYear(ctx: SimCtx, observe?: PolicyOrderObserver): void {
   const w = ctx.world;
   nameScion(ctx);
   nameScionHeir(ctx, true);
@@ -154,23 +167,24 @@ export function prepareAscendantYear(ctx: SimCtx): void {
   const missing = ctx.content.spellbooks.find((b) => b.tier === 'minor'
     && !onShelf.has(b.affinity)
     && !w.auction.upcoming.some((lot) => lot.kind === 'spellbook' && lot.refId === b.id));
-  if (missing) order(ctx, { kind: 'seekBook', book: missing.id });
+  if (missing) policyOrder(ctx, { kind: 'seekBook', book: missing.id }, observe);
 }
 
 export function resolveAscendantYear(
   ctx: SimCtx,
   seed: number,
   tally: { asked: number; paid: number },
+  observe?: PolicyOrderObserver,
 ): { ledgerSearches: number } {
   const w = ctx.world;
   resolveYear(ctx, seed, 'ascendant', tally);
   for (const kind of ['vesselRite', 'greatRite', 'unmaking'] as const) {
     if (kind === 'unmaking' && (w.ascension.best === 'god' || !unmakingReadyForAscendant(ctx))) continue;
-    if (!order(ctx, { kind }).ok) continue;
+    if (!policyOrder(ctx, { kind }, observe).ok) continue;
     resolveYear(ctx, seed, 'ascendant', tally);
     break;
   }
-  return { ledgerSearches: order(ctx, { kind: 'seekClause' }).ok ? 1 : 0 };
+  return { ledgerSearches: policyOrder(ctx, { kind: 'seekClause' }, observe).ok ? 1 : 0 };
 }
 
 /** The three that are catastrophes. `forgotten` is a loss and is not one of these. */
