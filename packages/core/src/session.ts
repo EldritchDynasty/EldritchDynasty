@@ -31,7 +31,7 @@ import {
   activeCommitment, maxMen, musterOrder, positionOptions, type MusterOrder, type MusterOrderResult,
   type PositionOption,
 } from './muster.js';
-import { diagnoseHouseAscension, measureAscension, rungTitle, type AscensionBlockerKind } from './ascension.js';
+import { diagnoseHouseAscension, frozenLadder, measureAscension, rungTitle, type AscensionBlockerKind, type FrozenLadder } from './ascension.js';
 import { castOf, type CastMember } from './cast.js';
 import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
@@ -1020,6 +1020,12 @@ export interface SessionView {
     bestTitle: string;
     bestAt?: number;
     /**
+     * THE LADDER IS FROZEN (issue #1803): no man of the house has woken to the
+     * Power, so no rung can move. Present only then. Derived from public facts
+     * (`frozenLadder`), so a client may say so and offer to wait for the blood.
+     */
+    frozen?: FrozenLadder;
+    /**
      * The next rung in the language of the world, not as a threshold list.
      * Absent only when the house has already reached God.
      */
@@ -1498,6 +1504,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       ...(w.ascension.reachedAt[w.ascension.best] !== undefined
         ? { bestAt: w.ascension.reachedAt[w.ascension.best]! }
         : {}),
+      ...(() => {
+        const frozen = frozenLadder(ctx);
+        return frozen ? { frozen } : {};
+      })(),
       ...(() => {
         const measured = measureAscension(ctx);
         const f = measured.foremost;

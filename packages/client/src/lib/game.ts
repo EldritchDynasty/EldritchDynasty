@@ -321,7 +321,11 @@ export interface GameActions {
   /** Return to the front door without discarding the current autosave. */
   leave(): void;
   restart(): void;
-  advance(years: number): void;
+  /**
+   * Turn up to `years` years. `untilThawed` (issue #1803) also stops the
+   * moment the ladder is no longer frozen: "wait for the blood".
+   */
+  advance(years: number, opts?: { untilThawed?: boolean }): void;
   /**
    * `said` is the label off the control that was pressed, and it is passed in
    * rather than looked up because the store does not know what the panel drew
@@ -757,7 +761,7 @@ export function createGame(
      * player does to a person rather than to a bloodline, and it should be
      * able to interrupt a century.
      */
-    advance(years) {
+    advance(years, opts) {
       const g = session.value;
       if (!g) return;
       // Turning the clock is moving on. An outcome held from the last answer
@@ -787,6 +791,9 @@ export function createGame(
         const before = g.view();
         if (before.ending) break;
         if (g.pending.length || before.namesWanted.length) break;
+        // WAIT FOR THE BLOOD (issue #1803): the same years, turned the same
+        // way, with one more reason to stop. Nothing here changes the world.
+        if (opts?.untilThawed && !before.ascension.frozen) break;
         const turned = g.advance(1);
         moved = foldStanding(moved, turned.changed);
         said.push(...rememberCast(turned.passages, before.cast));

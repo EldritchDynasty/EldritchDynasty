@@ -7,6 +7,7 @@ import type { LocusTable } from './genetics/loci.js';
 import { hall } from './people/branches.js';
 import { heirloomDef, heldHeirlooms } from './people/heirlooms.js';
 import { msg } from './messages.js';
+import { campaignDef } from './campaign.js';
 
 /**
  * THE ASCENSION LADDER (concept §22).
@@ -1137,6 +1138,50 @@ export interface HouseAscension {
  * writes `world.ascension` — so a client, an authored condition and the year
  * that acted all read one number rather than three recomputations of it.
  */
+/**
+ * THE FROZEN LADDER (§7, §11, issue #1803).
+ *
+ * No rung can move while no man of the household has woken to the Power:
+ * `touched`, the first rung, asks for an Awakening. Measured over 72 Long
+ * Lines that is 30-34% of all years, in about three stretches a run, and some
+ * of it is the design (§7's Barren Generation, §11's Long Wait). This names
+ * the state so a client can say so and let the dead decades pass quickly.
+ *
+ * Read only from what the house KNOWS. Before Awakening nobody can tell
+ * whether a man carries the Power (`knownSuccession`); after it, the answer is
+ * public. So a stretch is "no awakened man who carries it", never "an
+ * expresser who has not woken", and `since` is the year the last such man
+ * died or left the house, read off records the world already keeps. Derived:
+ * no save field, no die, nothing written.
+ */
+export interface FrozenLadder {
+  /** The year the last awakened man of the blood died or left; the campaign start if there never was one. */
+  since: number;
+  years: number;
+}
+
+export function frozenLadder(ctx: SimCtx): FrozenLadder | undefined {
+  const w = ctx.world;
+  const known = (p: Person): boolean => p.sex === 'male'
+    && p.awakening.awakened
+    && phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress;
+  const household = w.people.household(w.playerHouse, w.year);
+  if (household.some((p) => p.status === 'alive' && known(p))) return undefined;
+
+  let since: number | undefined;
+  for (const p of w.people.all()) {
+    // Cheap fields first: only awakened men of the house are ever candidates.
+    if (p.sex !== 'male' || !p.awakening.awakened) continue;
+    const records = p.membership.filter((m) => m.house === w.playerHouse);
+    if (!records.length || !known(p)) continue;
+    const left = Math.max(...records.map((m) => m.to ?? w.year));
+    const ended = p.died !== undefined ? Math.min(p.died, left) : left;
+    since = since === undefined ? ended : Math.max(since, ended);
+  }
+  const start = since ?? campaignDef(w.campaign).startYear;
+  return { since: start, years: Math.max(0, w.year - start) };
+}
+
 export function measureAscension(ctx: SimCtx): HouseAscension {
   const w = ctx.world;
   const top = foremostOf(ctx);

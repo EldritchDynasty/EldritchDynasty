@@ -18,6 +18,7 @@ const COPY = {
     advanceGeneration: 'A generation',
     advanceToYear: 'On, to',
     waitingSuffix: 'the year does not turn until it is answered.',
+    waitForBlood: 'Wait for the blood',
     helpToggleOpen: 'Reading, marks and keys',
     helpToggleClose: 'Hide reading help',
     startLink: 'Saves & new game',
@@ -42,6 +43,7 @@ const COPY = {
     advanceGeneration: 'Advance 25 years',
     advanceToYear: 'Advance to',
     waitingSuffix: 'answer these before advancing time.',
+    waitForBlood: 'Advance until a man awakens (up to 25 years)',
     helpToggleOpen: 'Reading settings, symbols and keyboard shortcuts',
     helpToggleClose: 'Hide reading settings and help',
     startLink: 'Saved games and new game',
@@ -70,4 +72,30 @@ export function clockBlockers(mode: ProseMode, decisions: number, children: numb
     if (children) parts.push(children + ' ' + (children === 1 ? 'child' : 'children') + ' waiting');
   }
   return parts.join(' · ');
+}
+
+/**
+ * A stretch earns its notice once it has lasted this long (issue #1803). A new
+ * house begins frozen (the founding generation has not woken yet), and a
+ * notice about dead decades in its first year would be noise, not news.
+ */
+export const FROZEN_NOTICE_YEARS = 10;
+
+export function frozenNoticeShown(frozen: { years: number } | undefined): boolean {
+  return frozen !== undefined && frozen.years >= FROZEN_NOTICE_YEARS;
+}
+
+/**
+ * THE FROZEN LADDER, IN WORDS (issue #1803). Says only what the house knows:
+ * no man of the blood has woken, since when, and for how long.
+ */
+export function frozenLine(mode: ProseMode, since: number, years: number): string {
+  if (mode === 'plainenglish') {
+    return years > 0
+      ? `No man of the family has awakened since ${since} (${years} ${years === 1 ? 'year' : 'years'}). The Ascension Ladder cannot advance until one does.`
+      : 'No man of the family has awakened. The Ascension Ladder cannot advance until one does.';
+  }
+  return years > 0
+    ? `No man of the blood has woken since ${since}. The ladder has stood still for ${years} ${years === 1 ? 'year' : 'years'}.`
+    : 'No man of the blood has woken. The ladder stands still until one does.';
 }

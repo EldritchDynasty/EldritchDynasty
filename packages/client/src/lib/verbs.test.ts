@@ -220,6 +220,47 @@ describe('the store drives a game', () => {
   });
 
   /**
+   * WAIT FOR THE BLOOD (issue #1803). The same years turned the same way, with
+   * one more reason to stop: the ladder thaws, a decision arrives, or the cap.
+   * A new house begins frozen, because the founding generation has not woken.
+   */
+  it('waits for the blood: stops at the thaw, a decision, or twenty-five years', () => {
+    const game = createGame(loadContent());
+    game.actions.begin(1042);
+    const start = game.view.value!;
+    expect(start.ascension.frozen).toEqual({ since: start.year, years: 0 });
+
+    game.actions.advance(25, { untilThawed: true });
+    const after = game.view.value!;
+    const turned = after.year - start.year;
+    expect(turned).toBeGreaterThanOrEqual(0);
+    expect(turned).toBeLessThanOrEqual(25);
+    const stoppedFor = [
+      after.ascension.frozen === undefined,
+      turned === 25,
+      game.docket.value.length > 0,
+      after.namesWanted.length > 0,
+      after.ending !== undefined,
+    ];
+    expect(stoppedFor.some(Boolean), `stopped at ${after.year} for no reason`).toBe(true);
+  });
+
+  it('turns no year when asked to wait while the ladder is not frozen', () => {
+    const game = createGame(loadContent());
+    game.actions.begin(1042);
+    // Play on until somebody has woken, answering what stops the clock.
+    for (let i = 0; i < 120 && game.view.value!.ascension.frozen; i++) {
+      game.actions.advance(1);
+      if (game.docket.value.length) game.actions.letHimDecide();
+      if (game.view.value?.namesWanted.length) game.actions.keepSuggestedNames();
+    }
+    const thawed = game.view.value!;
+    if (thawed.ascension.frozen) return; // this seed never woke anybody in 120 years; the test above covers that case
+    game.actions.advance(25, { untilThawed: true });
+    expect(game.view.value!.year).toBe(thawed.year);
+  });
+
+  /**
    * The reason, AND which panel asked for it (issue #55). One shared string was
    * drawn in one panel while refusals came from nine, so an order refused from
    * The Papers printed its reason about 1,500px above the button just pressed
@@ -348,5 +389,19 @@ describe('a failed Library load is not an empty profile (#1238)', () => {
     expect(game.libraryReady.value).toBe(true);
     expect(host.writes).toHaveLength(1);
     expect(host.writes[0]).toMatchObject({ format: 1, runs: [] });
+  });
+});
+
+describe('the frozen-ladder notice (#1803)', () => {
+  it('waits for dead decades before it speaks', async () => {
+    const { frozenNoticeShown, FROZEN_NOTICE_YEARS, frozenLine } = await import('./app-shell-copy.js');
+    expect(frozenNoticeShown(undefined)).toBe(false);
+    expect(frozenNoticeShown({ years: 0 })).toBe(false);
+    expect(frozenNoticeShown({ years: FROZEN_NOTICE_YEARS - 1 })).toBe(false);
+    expect(frozenNoticeShown({ years: FROZEN_NOTICE_YEARS })).toBe(true);
+    expect(frozenLine('original', 1210, 34)).toBe('No man of the blood has woken since 1210. The ladder has stood still for 34 years.');
+    expect(frozenLine('plainenglish', 1210, 1)).toBe(
+      'No man of the family has awakened since 1210 (1 year). The Ascension Ladder cannot advance until one does.',
+    );
   });
 });
