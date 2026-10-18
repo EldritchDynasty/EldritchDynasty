@@ -59,8 +59,11 @@ export function hardSizes(css: string): string[] {
       // A shorthand resets font-size as well as font family. Relative lengths
       // and percentages are raw sizes too: they scale with the root but evade
       // the role-token ladder just as px does. Unitless line-height is fine.
-      // `font: inherit` and `font: 500 var(--t-body)/1.3 serif` stay valid.
-      if (/(?:\d+(?:\.\d+)?|\.\d+)\s*(?:(?:px|pt|cm|mm|in|pc|rem|em|ch|ex|vw|vh|vmin|vmax)\b|%)/i.test(m[1]!)) {
+      // `font: inherit` and `font: 500 var(--t-body)/120% serif` stay valid.
+      // The part after "/" is line-height, not font-size; a percentage there
+      // is allowed when the size itself comes from a role token.
+      const sizeAndStyle = m[1]!.split('/')[0]!;
+      if (/(?:\d+(?:\.\d+)?|\.\d+)\s*(?:(?:px|pt|cm|mm|in|pc|rem|em|ch|ex|vw|vh|vmin|vmax)\b|%)/i.test(sizeAndStyle)) {
         found.push(m[0].trim());
       }
     }
@@ -115,6 +118,7 @@ describe('the type scale', () => {
     expect(hardSizes('.name { font-size: var(--t-card); }')).toEqual([]);
     expect(hardSizes('button { font: inherit; }')).toEqual([]);
     expect(hardSizes('p { font: 500 var(--t-body)/1.3 serif; }')).toEqual([]);
+    expect(hardSizes('p { font: 500 var(--t-body)/120% serif; }')).toEqual([]);
     expect(hardSizes('  --t-display: clamp(2.25rem, 7vw, 3rem);')).toEqual([]);
   });
 
