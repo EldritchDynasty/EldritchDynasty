@@ -52,6 +52,8 @@
     "gate:drag": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/drag-gate.ts",
     "//5": "Issue #41's measured session: does the marriage decision move carried font? Plays the Match by policy instead of leaving it to the chronicler.",
     "gate:blood": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/blood-gate.ts",
+    "//challenges": "Paired narrow/broad family-challenge measurement at both shipped terms; reports evidence, not a new threshold.",
+    "gate:challenges": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/challenge-report.ts",
     "gate:density": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/density-gate.ts",
     "//6": "Issue #41's second half: does the ladder charge the man climbing it? Two played columns, one verb apart.",
     "gate:ladder": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-gate.ts",

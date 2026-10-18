@@ -11978,3 +11978,108 @@ Measured locally on a four-core container.
     once each in 800 runs (0.125%), and in 1 of its first 400 seeds; this
     branch lost the coin.
   The merge-blocking `outcome-reach-blocking` witness gate passes.
+
+## 2026-10-18 — family challenges: specialization cost is not yet established (#1813)
+
+This measures the post-#1801 population, before #1802 recalibrates the ladder. No check, event, weight, genetic rule, learning rule or gate threshold changes. It does **not** establish an ordinary-play penalty for generations of narrow breeding: exposure is sparse and the visible record supplied no affinity evidence that changed a Match choice.
+
+```bash
+npm run gate:challenges -- 64 181300 challenge-report.json
+```
+
+**384 houses:** seeds **181300–181363**, chronicler/narrow/broad at both actual campaign terms (Short 300 years, Long 500). A run stops at its real ending; early broken lines remain in the denominator. The chronicler answers actual branches and parties using the session chronicler stream. Both deliberate policies use the same inward marriage order and at most one extra Table order per year. Narrow favours Death/Darkness; broad rotates all eight affinities. Normal automatic study continues in all columns.
+
+**Every policy uses visible evidence only.** Match rankings read explicitly claimed attributes and recorded kin, never unclaimed fallback numbers, true parentage, outsider recipes or a genome. Inherited affinity is a diagnostic reading of private copies at the committed check; it never informs a choice. Paid searches and real auction bids bring books to the shelf: bid 1.5 reserves only when two reserves fit current treasury. A study started is not a completed working; a bid placed is not a book acquired.
+
+### Exposure and causes
+
+Exposures include unchecked purchased preparation; checks exclude it. “Years exposed” counts actual years with a committed tagged scene, including preparation, and “runs exposed” counts houses with at least one. Ability and knowledge percentages are shares of **all checks**, including successes. No failure was classified as no eligible relative, missing affinity breadth, variance or other.
+
+| Term / policy | Played years | Runs exposed / 64 | Years exposed | Exposures / checks | Failed | Ability | Missing working |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| short / chronicler | 17,173 | 31 | 67 | 67 / 66 | 39 (59.1%) | 15 (22.7%) | 24 (36.4%) |
+| short / narrow | 17,384 | 42 | 67 | 67 / 66 | 41 (62.1%) | 23 (34.8%) | 18 (27.3%) |
+| short / broad | 17,549 | 40 | 70 | 70 / 70 | 30 (42.9%) | 19 (27.1%) | 11 (15.7%) |
+| long / chronicler | 27,822 | 49 | 111 | 111 / 107 | 62 (57.9%) | 35 (32.7%) | 27 (25.2%) |
+| long / narrow | 27,411 | 50 | 108 | 108 / 104 | 60 (57.7%) | 26 (25.0%) | 34 (32.7%) |
+| long / broad | 28,491 | 49 | 105 | 105 / 104 | 61 (58.7%) | 31 (29.8%) | 30 (28.8%) |
+
+A basic primer has threshold zero: an eligible relative can learn the working without a positive inherited affinity. Missing that working is **missing learned knowledge**, not proof that breeding lost an affinity. A learned reader’s weighted affinity/Mind check may instead fail on ability. The diagnosis does not rename a generic compound shortfall “missing breadth,” or infer its cause from a later death, injury or unaffordable decision.
+
+Inherited positive affinity, current book-threshold capability, awakened capability and completed knowledge are separate inputs. The following totals count eligible people at affinity-check exposures, so one person may appear at several checks; they are not unique people or learned-book counts:
+
+| Term / policy | Inherited positive | Current threshold-capable | Awake and capable | Completed matching knowledge |
+|---|---:|---:|---:|---:|
+| short / chronicler | 831 | 1159 | 132 | 32 |
+| short / narrow | 597 | 834 | 100 | 23 |
+| short / broad | 713 | 1062 | 137 | 65 |
+| long / chronicler | 1234 | 1705 | 169 | 42 |
+| long / narrow | 1489 | 2139 | 334 | 67 |
+| long / broad | 1375 | 1968 | 241 | 90 |
+
+### Consequences of each cause
+
+These are authored signed challenge-outcome totals across each 64-house column, **not** all strategy spending. Every Respect delta was zero. Health losses belong to the actual bridge participant. Broker fees and auction prices are policy costs, not retrospectively labelled challenge failures. Each sample retains the actual participant ids/names and rendered Chronicle line.
+
+| Term / policy | Ability: crowns / Health | Knowledge: crowns / Health | All failures: crowns / Health |
+|---|---:|---:|---:|
+| short / chronicler | -490 / -15 | -840 / 0 | -1330 / -15 |
+| short / narrow | -777 / -12 | -630 / 0 | -1407 / -12 |
+| short / broad | -651 / -6 | -385 / 0 | -1036 / -6 |
+| long / chronicler | -1197 / -12 | -945 / 0 | -2142 / -12 |
+| long / narrow | -875 / -15 | -1190 / 0 | -2065 / -15 |
+| long / broad | -1029 / -24 | -1050 / 0 | -2079 / -24 |
+
+Paired extra narrow failures per house, narrow minus broad (mean ± two standard errors across 64 seed pairs):
+
+| Short | Long |
+|---:|---:|
+| +0.172 ± 0.301 | -0.016 ± 0.387 |
+
+Both intervals include zero. In Long Lines, narrow had 60 failures and broad 61, with failed-outcome crown totals of −2,065 and −2,079. This supplies no demonstrated narrow-breeding penalty. The Short difference is larger but also uncertain. No new statistical acceptance floor is adopted.
+
+### Treatment and upstream limits
+
+| Term / policy | Extra studies started | Searches / bids | Evidence hands / seen | Cards changed |
+|---|---:|---:|---:|---:|
+| short / narrow | 65 | 861 / 957 | 0 / 1000 | 0 |
+| short / broad | 5601 | 883 / 1163 | 0 / 997 | 0 |
+| long / narrow | 204 | 1414 / 1557 | 0 / 1539 | 0 |
+| long / broad | 8263 | 1497 / 1945 | 0 / 1430 | 0 |
+
+There were **zero affinity-evidence hands** supporting a different card: the public information needed for this particular genetic strategy never materialised. Study curricula did differ: Long narrow started 74 Death and 130 Darkness studies, while broad started 8,263 studies across its available shelf (71 Death, 19 Darkness). In the narrow column, at least **21,465/27,411** year starts (78.3%) had neither focus book; years used for successful searches/bids are excluded from that empty-shelf tally. “No new idle reader” includes already-known books and ongoing study, so it is not a waking-only diagnosis.
+
+The instrument therefore does not claim it created a genetically narrow house. Its null result identifies an information/stock-supply limit on attempting that strategy through ordinary verbs. It keeps that separate from observed missing workings and weak pools.
+
+### Responsible authored checks
+
+These counts pool the six columns to identify branches, not to estimate an independent-sample treatment effect. All other failure causes were zero.
+
+| Event / check | Checked | Passed | Ability failures | Knowledge failures |
+|---|---:|---:|---:|---:|
+| `the_cawdry_copy/family_work` | 7 | 4 | 3 | 0 |
+| `the_cawdry_copy/known_working` | 9 | 8 | 0 | 1 |
+| `the_cawdry_copy/practised_working` | 8 | 1 | 0 | 7 |
+| `the_cawdry_copy/specialist_work` | 22 | 9 | 13 | 0 |
+| `the_fever_and_the_vigil/family_work` | 34 | 18 | 16 | 0 |
+| `the_fever_and_the_vigil/known_working` | 36 | 28 | 0 | 8 |
+| `the_fever_and_the_vigil/practised_working` | 34 | 3 | 0 | 31 |
+| `the_fever_and_the_vigil/specialist_work` | 31 | 25 | 6 | 0 |
+| `the_smoke_above_the_store/family_work` | 28 | 20 | 8 | 0 |
+| `the_smoke_above_the_store/known_working` | 37 | 10 | 0 | 27 |
+| `the_smoke_above_the_store/practised_working` | 36 | 10 | 10 | 16 |
+| `the_smoke_above_the_store/specialist_work` | 36 | 36 | 0 | 0 |
+| `the_wick_bridge_load/lift` | 33 | 5 | 28 | 0 |
+| `the_wind_under_the_slates/family_work` | 51 | 19 | 32 | 0 |
+| `the_wind_under_the_slates/known_working` | 25 | 11 | 0 | 14 |
+| `the_wind_under_the_slates/practised_working` | 43 | 3 | 0 | 40 |
+| `the_wind_under_the_slates/specialist_work` | 47 | 14 | 33 | 0 |
+
+Exposure is about **one check per Short Line and 1.6 per Long Line**. Four scenes have no world-state premise; their main casting constraint is a living adult specialist. The bridge additionally needs family Strength ≥40 and an eligible player-sent adult. Those common/uncommon scenes compete in the whole ambient tier pool, and known/compound/core branches split already sparse exposure. A focused follow-up should diagnose this admission/selection funnel and Death/Darkness book acquisition/retention, rather than raise check difficulty or call missing knowledge a genetic breadth loss. Existing #1811 supplies the funnel work; no event weight, rarity floor or reach assertion changes here.
+
+### Verification
+
+- Eight built-state cases in the existing checks suite isolate completed knowledge at unchanged inheritance, Elemental sex eligibility, a compound reader whose affinity alone changes, family-any core ability, the actual sent person’s injury, role-specific check bonuses, unchecked preparation and recorded-only Match evidence.
+- The observer runs only on committed outcomes before effects. Score/bonus/difficulty use the engine’s canonical reading. Diagnostic genome/cache work uses copies and draws no die. A listener receives a private cast; it cannot redirect the committed injury through that copy.
+- The injury case compares saved state and the next RNG draw with/without observation. Six complete campaign/policy fingerprints matched with observation enabled/disabled; eight standard `digest -- 8 400` fingerprints matched across the check-input refactor. Preparation-year replays also match their original full-save fingerprints.
+- Focused checks/lane suites passed 431 tests before the final affinity-only case adjustment. Final preflight results are recorded on the PR. No new played batch enters the fast lane and no duration baseline is hand-edited.
