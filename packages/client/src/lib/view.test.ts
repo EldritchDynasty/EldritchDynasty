@@ -3,7 +3,9 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { loadContent } from '@ed/content';
-import { autoResolveAll, bootstrap, resolveChoice, resolveRecord, stepYear, testRng, viewOf } from '@ed/core';
+import {
+  autoResolveAll, bootstrap, phenotypeOf, place, resolveChoice, resolveRecord, stepYear, testRng, viewOf,
+} from '@ed/core';
 import type { SimCtx, TableView } from '@ed/core';
 import { loadRevealed, revealStorageKey, revealTransition, saveRevealed, type RevealElement } from './reveal';
 
@@ -145,11 +147,31 @@ function play(ctx: SimCtx, years: number): void {
 }
 
 function agedViews(): Record<string, unknown>[] {
-  return VIEW_SEEDS.map((seed) => {
-    const ctx = bootstrap(loadContent(), seed, 1042);
-    play(ctx, 400);
-    return viewOf(ctx) as unknown as Record<string, unknown>;
-  });
+  return [
+    ...VIEW_SEEDS.map((seed) => {
+      const ctx = bootstrap(loadContent(), seed, 1042);
+      play(ctx, 400);
+      return viewOf(ctx) as unknown as Record<string, unknown>;
+    }),
+    climbingView(),
+  ];
+}
+
+/**
+ * A house with a woken man on the ladder, BUILT rather than played (#1801).
+ * `ascension.foremost` names only a man known to express, and both played
+ * seeds can reach the term — or the end of the line — with nobody woken: when
+ * #1801 lifted the men's waking odds, both did, and `blocked` left the walk.
+ * A field the ladder panel exists for is reached by construction, not dice.
+ */
+function climbingView(): Record<string, unknown> {
+  const ctx = bootstrap(loadContent(), VIEW_SEEDS[0]!, 1042);
+  for (let i = 0; i < 200; i++) {
+    const p = place(ctx, { sex: 'male', age: 24, name: `Ladder Witness ${i}`, awakened: true });
+    if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) break;
+    ctx.world.people.kill(p.id, ctx.world.year, 'not the man this fixture needs');
+  }
+  return viewOf(ctx) as unknown as Record<string, unknown>;
 }
 
 /** Every key name the read model actually carries, nested fields included. */
@@ -208,7 +230,7 @@ const NOT_DRAWN: Record<string, string> = {
  */
 const REACHED = [
   'guardian', 'ascension', 'assize', 'chronicle', 'halls',
-  'outcomeId', 'discrepancyId', 'claims', 'record',
+  'outcomeId', 'discrepancyId', 'claims', 'record', 'foremost', 'blocked',
 ];
 
 describe('Vue source reachability comment filtering (#1573)', () => {
