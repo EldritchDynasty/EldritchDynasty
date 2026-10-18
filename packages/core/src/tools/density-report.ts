@@ -97,6 +97,8 @@ export interface DensityRun {
   meaningfulChoices: number;
   /** Surfaced Record questions the interruption guard classified as consequential. */
   meaningfulRecords: number;
+  /** Diagnostic-only Regency and unwoken spans; absent from older fixtures. */
+  diagnosticIntervals?: DiagnosticInterval[];
 }
 
 /** Before/after rows for #219, paired on the same seeds and answer policy. */
@@ -304,6 +306,9 @@ export function densityLines(rows: { term: number; runs: DensityRun[] }[]): stri
     out.push(failureLine(failureHead), failureLine(failureWidths.map((w) => '-'.repeat(w))), ...failureBody.map(failureLine));
   }
 
+  // These are diagnostic readings, not an additional balance threshold.
+  out.push(...diagnosticIntervalLines(rows));
+
   out.push('');
   const topHead = ['term', 'scope', 'share', 'category shape'];
   const topBody: string[][] = [];
@@ -342,4 +347,128 @@ function aggregateTopShapes(runs: DensityRun[]): [string, ShapeFrequency[]][] {
       const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
       return [scope, shapeFrequencies(counts, total).slice(0, 10)];
     });
+}
+
+/** #1814: only witnessed awakening is used; no hidden genetic capacity is reported. */
+export type DiagnosticPeriod = 'regency' | 'unwoken';
+
+export interface DiagnosticYear {
+  year: number;
+  period?: DiagnosticPeriod;
+  blocker: LadderBlocker;
+  actionable: boolean;
+  /** A player-visible decision that changes the direction of the house. */
+  spine: boolean;
+  choices: number;
+  matches: number;
+  records: number;
+  auctions: number;
+  orders: number;
+  /** Non-consequential choice/record presentations, including predetermined ones. */
+  routine: number;
+}
+
+export interface DiagnosticInterval {
+  period: DiagnosticPeriod;
+  from: number;
+  to: number;
+  years: number;
+  longestQuiet: number;
+  choices: number;
+  matches: number;
+  records: number;
+  auctions: number;
+  orders: number;
+  routine: number;
+  actionableYears: number;
+  blockedYears: number;
+  blockers: Partial<Record<LadderBlocker, number>>;
+}
+
+/** A pure reader of the session's observed years; no RNG or simulation mutations. */
+export function traceDiagnosticIntervals(samples: readonly DiagnosticYear[]): DiagnosticInterval[] {
+  const intervals: DiagnosticInterval[] = [];
+  let current: DiagnosticInterval | undefined;
+  let quiet = 0;
+  for (const sample of samples) {
+    if (!sample.period) {
+      current = undefined;
+      quiet = 0;
+      continue;
+    }
+    if (!current || current.period !== sample.period || sample.year !== current.to + 1) {
+      current = {
+        period: sample.period, from: sample.year, to: sample.year, years: 0,
+        longestQuiet: 0, choices: 0, matches: 0, records: 0,
+        auctions: 0, orders: 0, routine: 0,
+        actionableYears: 0, blockedYears: 0, blockers: {},
+      };
+      intervals.push(current);
+      quiet = 0;
+    }
+    current.to = sample.year;
+    current.years += 1;
+    current.choices += sample.choices;
+    current.matches += sample.matches;
+    current.records += sample.records;
+    current.auctions += sample.auctions;
+    current.orders += sample.orders;
+    current.routine += sample.routine;
+    current.blockers[sample.blocker] = (current.blockers[sample.blocker] ?? 0) + 1;
+    if (sample.actionable) current.actionableYears += 1;
+    else current.blockedYears += 1;
+    quiet = sample.spine ? 0 : quiet + 1;
+    current.longestQuiet = Math.max(current.longestQuiet, quiet);
+  }
+  return intervals;
+}
+
+export function diagnosticIntervalLines(rows: { term: number; runs: DensityRun[] }[]): string[] {
+  const output = ['', 'REGENCY / UNWOKEN PACING (diagnostic; not a gate)'];
+  output.push('regency = woman holding the seal; unwoken = seated non-regent Head, no WITNESSED awake expresser in the house');
+  output.push('only blocking choice/Record counts as meaningful; forms and automatic resolutions excluded');
+  output.push('Table orders and bid decisions count only when the supplied policy actually sends a successful order; default policy sends none');
+  const header = ['term', 'scope', 'seed', 'year range', 'years', 'quiet max', 'meaningful choice', 'match', 'record', 'auction', 'orders', 'routine', 'actionable', 'no route', 'blocker years'];
+  const data: string[][] = [];
+  const sums = (rs: DiagnosticInterval[], key: 'choices' | 'matches' | 'records' | 'auctions' | 'orders' | 'routine' | 'actionableYears' | 'blockedYears') =>
+    rs.reduce((total, r) => total + r[key], 0);
+  for (const { term, runs } of rows) {
+    for (const period of ['regency', 'unwoken'] as const) {
+      const readings = runs.flatMap((r) => (r.diagnosticIntervals ?? [])
+        .filter((interval) => interval.period === period)
+        .map((interval) => ({ seed: r.seed, interval })))
+        .sort((a, b) => a.seed - b.seed || a.interval.from - b.interval.from);
+      const intervals = readings.map((r) => r.interval);
+      const totalYears = intervals.reduce((total, r) => total + r.years, 0);
+      const blockerCounts: Partial<Record<LadderBlocker, number>> = {};
+      for (const interval of intervals) {
+        for (const [blocker, years] of Object.entries(interval.blockers)) {
+          const key = blocker as LadderBlocker;
+          blockerCounts[key] = (blockerCounts[key] ?? 0) + years;
+        }
+      }
+      const topBlockers = Object.entries(blockerCounts).sort((a, b) => b[1] - a[1])
+        .slice(0, 3).map(([name, years]) => `${name}:${years}`).join(',');
+      const row = (seed: string, range: string, n: number, quiet: number, subset: DiagnosticInterval[], blockers: string) => [
+        String(term), period, seed, range, String(n), String(quiet),
+        String(sums(subset, 'choices')), String(sums(subset, 'matches')),
+        String(sums(subset, 'records')), String(sums(subset, 'auctions')),
+        String(sums(subset, 'orders')), String(sums(subset, 'routine')),
+        String(sums(subset, 'actionableYears')), String(sums(subset, 'blockedYears')),
+        blockers,
+      ];
+      data.push(row('ALL', `${intervals.length} intervals / ${runs.length} runs`, totalYears,
+        Math.max(0, ...intervals.map((r) => r.longestQuiet)), intervals, topBlockers));
+      for (const { seed, interval } of readings) {
+        const blockers = Object.entries(interval.blockers).filter(([, years]) => years > 0)
+          .sort((a, b) => b[1] - a[1]).map(([name, years]) => `${name}:${years}`).join(',');
+        data.push(row(String(seed), `${interval.from}–${interval.to}`, interval.years,
+          interval.longestQuiet, [interval], blockers));
+      }
+    }
+  }
+  const widths = header.map((h, i) => Math.max(h.length, ...data.map((r) => (r[i] ?? '').length)));
+  const line = (cells: string[]) => cells.map((cell, i) => cell.padEnd(widths[i]!)).join('  ');
+  output.push(line(header), line(widths.map((width) => '-'.repeat(width))), ...data.map(line));
+  return output;
 }
