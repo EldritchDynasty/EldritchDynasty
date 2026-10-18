@@ -111,6 +111,13 @@ describe('power blockers lead to public family and Match evidence (#1805)', () =
     daughter.claimedParents.father = hidden.id;
     expect(g.view().ascension.diagnosis!.route!.daughters.some((row) => row.person === daughter.id)).toBe(false);
   });
+
+  it('uses the existing marriage eligibility rule for family routes', () => {
+    const { g, daughter } = powerEvidenceFixture('original');
+    expect(g.view().ascension.diagnosis!.route!.daughters.some((row) => row.person === daughter.id)).toBe(true);
+    daughter.born = g.year - 60;
+    expect(g.view().ascension.diagnosis!.route!.daughters.some((row) => row.person === daughter.id)).toBe(false);
+  });
 });
 
 function signingBundle() {
