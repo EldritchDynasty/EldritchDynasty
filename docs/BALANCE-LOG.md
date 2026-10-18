@@ -11880,3 +11880,101 @@ No sample, assertion, baseline, `maxFactor` or limit changes. The 25.5m
 baseline now sits at about 1.7× the latest nightly, so it would let a large
 regression through; it should be re-measured down once three post-#1791
 scheduled nightlies exist, citing their `host` blocks.
+
+## 2026-10-18 — #1801: men who can express wake three times as often
+
+`rollAwakening` (`people/factory.ts`) multiplies its yearly chance by
+`EXPRESSER_WAKING_LIFT = 3` for a man who can express. The die is still cast
+once per eligible person-year (invariant 8; a counting die in `reach.test.ts`
+asserts it), `LATE_WAKING_AGE` (30) and `MUNDANE_AGE` (19) are unchanged, and
+women keep their old clock: a daughter's waking is the Match's honest signal
+(§11), so the owner scoped this to expressing men (ruling on #1801).
+
+### The instrument
+
+`npm run gate:stall -- [runs] [years] [policies]` (`tools/ladder-stall.ts`)
+commits the 17 Oct scratch diagnostic. It plays the `gate:endings` houses
+(chronicler with the `'ending-batch'` salt, ascendant, and chronicler with a
+600-crown bid ceiling) on seeds `5100 + i` and reports frozen-ladder years (no
+living, woken man of the house who can express), split by what the house was
+waiting on, the longest stretch, the foremost man's blocker, best rung,
+endings, and §11's Never. On `main` (`4a6809ea`), 24 runs reproduce the
+published figures within noise: frozen 31.3% / 29.7%, grown man waiting
+50.4% / 53.7%, median longest stretch 63 / 70.
+
+### The sweep
+
+24 runs per policy first, then 96 (seeds 5100-5195, 500 years), chronicler /
+ascendant. Every candidate applies only when `canExpress`.
+
+| lever (24 runs) | frozen | longest (median) | never woke by 30 |
+|---|---:|---:|---:|
+| none | 31.3 / 29.7% | 63 / 70 | 37.7 / 36.2% |
+| base 0.03 → 0.045 | 31.4 / 26.6% | 72 / 65 | 26.7 / 27.6% |
+| slope 0.004 → 0.006 | 31.2 / 36.4% | 83 / 83 | 31.9 / 33.5% |
+| spread 7+0.2f → 9+0.25f | 31.7 / 25.8% | 74 / 56 | 32.0 / 31.6% |
+
+None moved the frozen share past the run-to-run noise, so the whole curve was
+scaled instead:
+
+| lift (96 runs) | frozen | longest (median) | grown man waiting (all past 30) | never woke by 30 |
+|---|---:|---:|---:|---:|
+| ×1 | 28.7 / 33.0% | 52 / 58 | 50.6 (42.2) / 48.1 (40.4)% | 34.9 / 33.7% |
+| ×2 | 21.9 / 30.7% | 35 / 63 | 46.7 (42.2) / 37.4 (32.9)% | 18.5 / 19.3% |
+| ×2.5 | 19.8 / 24.2% | 28 / 30 | 43.2 (39.0) / 42.5 (38.4)% | 13.2 / 12.7% |
+| **×3** | **19.4 / 23.0%** | **34 / 43** | 41.4 (37.4) / 37.7 (34.5)% | **10.9 / 10.7%** |
+
+The owner chose ×3: both houses improve, the median longest stretch sits
+inside §7's 30-80 years, and about one expressing man in nine who reaches
+thirty still never wakes, so "Never" stays a real outcome.
+
+**The second target is missed, and why.** The owner's target was "a grown man
+waiting" below a third of frozen years. It stays near 40% at every lift,
+because nearly all of it is the "all past 30" column: men whom the odds failed
+before thirty, who now wait for the Late Waking alone and live on for decades.
+The lift cuts how many such men exist (Never 35% → 11%) and with them the
+frozen years (chronicler 112 → 76 per run), but it shrinks the numerator and
+the denominator together. A grown man still inside the window is 4-8% of
+frozen years at every lift — that is the only part a yearly die can reach.
+
+### What else moved (96 runs, ×1 → ×3)
+
+- **Foremost blocker.** Awakening 24.5 → 13.7% (chronicler), 25.1 → 14.0%
+  (ascendant). Power is now the wall: 42.6 → 54.4%, 38.2 → 49.1%. That is
+  #1802's work, and why it was ordered after this.
+- **Best rung.** Chronicler: hierophant 17 → 19, vessel 1 → 2 of 96.
+  Ascendant: demigod 6 → 9, vessel 26 → 28, god 0 → 1.
+- **Endings.** Chronicler forgotten 53 → 48, devoured 15 → 19, broken line
+  28 → 29. Ascendant forgotten 30 → 23, devoured 35 → 39, unmade 3 → 6,
+  apotheosis 0 → 1.
+
+### Demography (harness, 64 Long Lines, before → after)
+
+People per run 486.6 → 485.0; living at the end 57.5 → 56.8; mean household
+49.0 → 49.7; completed family 1.4 → 1.4; regencies 1.3 → 1.5 per run;
+mundane sons 78.4 → 81.6%. Awakening a man changes what he can read and risk,
+not whom he marries or how many children he has, and the family-size and
+population figures agree.
+
+### Gates on the change
+
+Measured locally on a four-core container.
+
+- **Batch lane** (merge-blocking): 12/12 pass, 7.3 min.
+- **Endings** (512 pairs): pass. Chronicler broken line 30.3%, devoured
+  18.0%. Ascendant apotheosis 2/512 (0.4%), still under the 8% floor
+  (reported, not judged) and far under the 29% ceiling; unmade 23/512.
+- **Fire rate** (gate 4, 800 runs): pass; gate 10 reaches 29 of 29 authored
+  Effect kinds.
+- **Outcome reach** (gate 8, 800 runs): **red on three tail outcomes**, each
+  checked against `main` on the same seeds:
+  - `the_fever_and_the_vigil/use_death -> held`. The check is
+    `variance: none`, the KEEPER's death×0.7 + mind×0.3 against 25. `main`
+    resolved `use_death` 58 times in its first 400 seeds and held none, so
+    the outcome is a thin tail of #1796's content on both sides, not a
+    change this makes.
+  - `the_unmaking/go_through_with_it -> taken` and `-> failed_at_the_last_step`.
+    A chronicler house reaching the Unmaking is a coin: `main` resolved it
+    once each in 800 runs (0.125%), and in 1 of its first 400 seeds; this
+    branch lost the coin.
+  The merge-blocking `outcome-reach-blocking` witness gate passes.
