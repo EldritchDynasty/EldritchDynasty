@@ -3653,3 +3653,19 @@ proseVariants:
     of: "c1ea82052ae511f1"
     plainenglish: >-
       Use each of the five returned names in a run you finish.
+
+  - address: "core:messages#ascension.route.waking"
+    of: "7f20f3c6570565fa"
+    plainenglish: "{NAME}, {RELATION}, had an awakening in {YEAR}."
+  - address: "core:messages#ascension.route.title"
+    of: "e34c9da2bb602f86"
+    plainenglish: "Evidence about inherited power"
+  - address: "core:messages#ascension.route.rule"
+    of: "0ce5ffa95c5ddf75"
+    plainenglish: "Sons inherit this blood from their mothers. Fathers pass it to their daughters. Recorded awakenings in a potential bride's family give you evidence to consider."
+  - address: "core:messages#ascension.route.caution"
+    of: "028aa154851e7048"
+    plainenglish: "A recorded awakening does not guarantee what a child will inherit or whether they will wake. Fertility history and documented relatedness describe different trade-offs."
+  - address: "core:messages#ascension.route.no_match"
+    of: "4e9764b352e712f7"
+    plainenglish: "No currently open marriage offer has a bride with a recorded awakening in her family. You can review the women in your family and any later offers. There is no promised date for another offer."

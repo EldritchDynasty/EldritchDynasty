@@ -97,6 +97,39 @@ describe('the house learns expression through Awakening (#1820)', () => {
 });
 
 describe('Standing legibility (#356)', () => {
+  it.each(['original', 'plainenglish'] as const)('links witnessed family and contrasting Match evidence with native controls (%s)', async (mode) => {
+    const current = view();
+    current.ascension.diagnosis = {
+      target: 'hierophant', targetTitle: 'Hierophant', blockers: [{ kind: 'power', text: 'The power is short.', hint: 'Read the family.' }],
+      route: {
+        title: mode === 'original' ? 'The blood, in witnessed lives' : 'Evidence about inherited power',
+        rule: 'A son inherits through his mother.', caution: 'No child is promised.',
+        daughters: [{ person: 'mara', name: 'Mara', evidence: ['Her father woke in 1100.'] }],
+        cards: [{ decision: 'match', card: 'anwen', name: 'Anwen', label: 'Blood', evidence: ['Her brother woke.'] }],
+        alternatives: [{ decision: 'match', card: 'cesse', name: 'Cesse', label: 'Continuity', evidence: ['Five children grew up in that line.'] }],
+      },
+    };
+    const wrapper = mount(Standing, { attachTo: document.body, props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode } });
+    try {
+      const route = wrapper.get('.power-route');
+      expect(route.element.tagName).toBe('DETAILS');
+      expect(route.get('summary').text()).toBe(current.ascension.diagnosis.route!.title);
+      const buttons = route.findAll('button');
+      expect(buttons.map((button) => button.text())).toEqual(['Mara', 'Anwen · Blood', 'Cesse · Continuity']);
+      for (const button of buttons) {
+        (button.element as HTMLButtonElement).focus();
+        expect(document.activeElement).toBe(button.element);
+        await button.trigger('click');
+      }
+      expect(wrapper.emitted('look')).toEqual([['mara']]);
+      expect(wrapper.emitted('match')).toEqual([['match', 'anwen'], ['match', 'cesse']]);
+      current.ascension.diagnosis.route!.cards = [];
+      current.ascension.diagnosis.route!.none = 'No current Match shows that evidence.';
+      await wrapper.setProps({ view: { ...current } });
+      expect(wrapper.text()).toContain('No current Match shows that evidence.');
+    } finally { wrapper.unmount(); }
+  });
+
   it('gives each household reading its own labelled row', () => {
     const wrapper = mount(Standing, {
       props: { view: view(), jump: null, saveStatus: 'idle' },

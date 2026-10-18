@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { CastRequest, MatchCard, MatchPanel, RecordOption, SessionView, SlotFill } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { futureOf, type GameActions } from '../lib/game';
@@ -23,6 +23,8 @@ const props = defineProps<{
    * class is a client that draws the answer.
    */
   refusedCard?: { card: string; reason: string } | null;
+  /** Reader navigation from the ladder; never changes the dealt hand. */
+  revealCard?: { card: string; token: number } | null;
 }>();
 
 function readingStorage(): Storage | null {
@@ -309,10 +311,21 @@ function onKey(e: KeyboardEvent): void {
 }
 
 const heading = ref<HTMLElement | null>(null);
+function revealMatchCard(): boolean {
+  if (!props.revealCard || props.decision.kind !== 'match') return false;
+  const article = [...(heading.value?.closest('.docket')?.querySelectorAll<HTMLElement>('[data-match-card]') ?? [])]
+    .find((element) => element.dataset.matchCard === props.revealCard?.card);
+  if (!article) return false;
+  const panel = article.querySelector<HTMLDetailsElement>('details.panel');
+  if (panel) panel.open = true;
+  article.focus();
+  return true;
+}
+watch(() => props.revealCard, () => { revealMatchCard(); }, { flush: 'post' });
 onMounted(async () => {
   window.addEventListener('keydown', onKey);
   await nextTick();
-  heading.value?.focus();
+  if (!revealMatchCard()) heading.value?.focus();
 });
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
@@ -444,7 +457,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       </p>
 
       <div class="cards">
-        <article v-for="(card, i) in decision.cards" :key="card.id" class="card" :class="{ shut: !card.available }">
+        <article v-for="(card, i) in decision.cards" :key="card.id" class="card" :class="{ shut: !card.available }"
+          :data-match-card="card.id" :aria-label="card.name" tabindex="-1">
           <div class="row">
             <span class="dim key" aria-hidden="true">{{ i + 1 }}</span>
             <strong>{{ card.name }}</strong>

@@ -6,7 +6,8 @@ import {
   loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
   tableView, viewOf,
   GameSession, type ChronicleEntry,
-  makeRng, queueChoice, resolveSlots, genomeOf, castOf, measureAscension,
+  makeRng, queueChoice, queueMatch, resolveSlots, genomeOf, castOf, measureAscension,
+  type MatchCard,
 } from '@ed/core';
 import {
   buildPair, earlyComesFirst, parseArgs, renderAnswerKey, renderReaderSheet, stripClockTells,
@@ -14,6 +15,103 @@ import {
 import { coreMessageAddress } from './messages.js';
 
 const content = loadContent();
+
+function powerEvidenceFixture(mode: 'original' | 'plainenglish') {
+  const g = newGame(content, { seed: 1805, proseMode: mode });
+  const ctx = g.ctx;
+  const father = ctx.world.people.household(ctx.world.playerHouse, g.year).find((p) => p.sex === 'male')!;
+  const genome = genomeOf(father, ctx.genetics);
+  for (const index of ctx.genetics.table.fontIndices) {
+    genome.sex[0][index] = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.tags.includes('null'));
+  }
+  const index = ctx.genetics.table.fontIndices[0]!;
+  genome.sex[0][index] = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.effect > 0);
+  expect(genome.sex[0][index]).toBeGreaterThanOrEqual(0);
+  father.phenotype = undefined;
+  father.awakening = { ...father.awakening, awakened: true, year: 1040, age: 20 };
+  const daughter = place(ctx, { sex: 'female', age: 20, name: 'Mara' });
+  beget(ctx, daughter, undefined, father);
+  const hidden = place(ctx, { sex: 'male', age: 18, name: 'Unwoken brother' });
+  beget(ctx, hidden, undefined, father);
+  const bride: MatchCard = {
+    id: 'power_bride', kind: 'outsider', name: 'Anwen', sex: 'female', age: 20,
+    house: ctx.world.playerHouse, houseName: 'The witnessed line', blurb: '', dowry: 0,
+    blood: 'deep', kinship: 0.0625, line: 'unknown', lineSeen: 0, words: '',
+    papersAsked: 0, papersShown: 0, available: true,
+    panel: { issue: [], woken: [{ name: 'Her father', relation: 'her father', kin: 'father',
+      year: 1038, sex: 'male', expressed: true }], said: [], ourBook: [] },
+  };
+  const broad: MatchCard = { ...bride, id: 'continuity_bride', name: 'Cesse', blood: undefined,
+    kinship: 0, line: 'fertile', lineSeen: 3, dowry: 100,
+    panel: { issue: [{ name: 'Her mother', relation: 'her mother', kin: 'mother', borne: 6, grown: 5 }],
+      woken: [], said: [], ourBook: [] } };
+  ctx.world.pendingDecisions = [];
+  queueMatch(ctx, { subject: { id: hidden.id, name: hidden.name, sex: 'male', age: 18 }, cards: [bride, broad] });
+  // Ordinary view() already realises lazy founding/placed genomes. Isolate
+  // the new read from that existing representation-only conversion.
+  for (const person of ctx.world.people.all()) genomeOf(person, ctx.genetics);
+  return { g, father, daughter, hidden };
+}
+
+describe('power blockers lead to public family and Match evidence (#1805)', () => {
+  it.each(['original', 'plainenglish'] as const)('names witnessed lives and distinct trade-offs without changing the save (%s)', (mode) => {
+    const { g, father, daughter } = powerEvidenceFixture(mode);
+    const stable = (key: string, value: unknown) => key === 'savedAt' ? undefined : value;
+    const saved = JSON.stringify(g.save(), stable);
+    const reading = g.view().ascension.diagnosis!;
+    expect(reading.blockers[0]?.kind).toBe('power');
+    const route = reading.route!;
+    expect(route.daughters.find((row) => row.person === daughter.id)?.evidence.join(' ')).toContain(father.name);
+    expect(route.cards[0]).toMatchObject({ card: 'power_bride', name: 'Anwen' });
+    expect(route.cards[0]?.evidence.join(' ')).toContain('1038');
+    expect(route.alternatives.find((row) => row.card === 'continuity_bride')?.evidence.length).toBeGreaterThan(0);
+    expect(route.none).toBeUndefined();
+    expect(JSON.stringify(route)).not.toMatch(/"(?:font|genome|carriedFont|canExpress|probability)"/);
+    expect(route.caution).toMatch(mode === 'original' ? /not a promise/ : /does not guarantee/);
+    expect(JSON.stringify(g.save(), stable)).toBe(saved);
+    const resumed = resumeGame(g.save(), content);
+    resumed.setProseMode(mode);
+    expect(resumed.view().ascension.diagnosis?.route).toEqual(route);
+    expect(g.ctx.prose.missing.size).toBe(0);
+  });
+
+  it.each(['original', 'plainenglish'] as const)('keeps unwoken capacity out of the route and explains an unavailable Match (%s)', (mode) => {
+    const { g, hidden, father } = powerEvidenceFixture(mode);
+    const beforeView = g.view();
+    const before = beforeView.ascension.diagnosis!.route;
+    const genome = genomeOf(hidden, g.ctx.genetics);
+    for (const index of g.ctx.genetics.table.fontIndices) {
+      const alleles = g.ctx.genetics.table.xAlleles[index]!;
+      genome.sex[0][index] = alleles.reduce((best, allele, i) => allele.effect > alleles[best]!.effect ? i : best, 0);
+    }
+    hidden.phenotype = undefined;
+    expect(phenotypeOf(hidden, g.ctx.genetics, g.year).eldritch.canExpress).toBe(true);
+    expect(g.view().ascension.diagnosis!.route).toEqual(before);
+    expect(g.view()).toEqual(beforeView);
+    for (const index of g.ctx.genetics.table.fontIndices) {
+      genome.sex[0][index] = g.ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.tags.includes('null'));
+    }
+    hidden.phenotype = undefined;
+    expect(phenotypeOf(hidden, g.ctx.genetics, g.year).eldritch.canExpress).toBe(false);
+    expect(g.view().ascension.diagnosis!.route).toEqual(before);
+    expect(g.view()).toEqual(beforeView);
+    g.ctx.world.pendingDecisions = [];
+    const absent = g.view().ascension.diagnosis!.route!;
+    expect(absent.cards).toEqual([]);
+    expect(absent.none).toMatch(/No (?:open Match|currently open marriage offer)/);
+    father.awakening.awakened = false;
+    expect(g.view().ascension.diagnosis?.route).toBeUndefined();
+  });
+
+  it('follows the recorded father rather than recovering the true pedigree', () => {
+    const { g, daughter, hidden } = powerEvidenceFixture('original');
+    const before = g.view().ascension.diagnosis!.route;
+    daughter.trueParents.father = hidden.id;
+    expect(g.view().ascension.diagnosis!.route).toEqual(before);
+    daughter.claimedParents.father = hidden.id;
+    expect(g.view().ascension.diagnosis!.route!.daughters.some((row) => row.person === daughter.id)).toBe(false);
+  });
+});
 
 function signingBundle() {
   const prologue = content.prologue!;

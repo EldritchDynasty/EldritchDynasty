@@ -250,6 +250,24 @@ function spyActions() {
     & { readonly __brand?: GameActions };
 }
 
+describe('following a Match from the power blocker (#1805)', () => {
+  it.each(['original', 'plainenglish'] as const)('focuses the named card and opens its existing evidence (%s)', async (mode) => {
+    const decision = matchDecision();
+    const wrapper = mount(Docket, { attachTo: document.body, props: {
+      decision, actions: spyActions() as unknown as GameActions, proseMode: mode, revealCard: { card: 'continuity', token: 1 },
+    } });
+    try {
+      await wrapper.vm.$nextTick();
+      const card = wrapper.get('[data-match-card="continuity"]');
+      expect(document.activeElement).toBe(card.element);
+      expect((card.get('details.panel').element as HTMLDetailsElement).open).toBe(true);
+      expect(card.get('.future').text()).toContain('Continuity');
+      await wrapper.setProps({ revealCard: { card: 'blood', token: 2 } });
+      expect(document.activeElement).toBe(wrapper.get('[data-match-card="blood"]').element);
+    } finally { wrapper.unmount(); }
+  });
+});
+
 describe('the docket draws what it is handed', () => {
   it('announces the decision and moves focus to its heading', async () => {
     const w = mount(Docket, {

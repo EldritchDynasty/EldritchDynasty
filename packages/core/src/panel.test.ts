@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { indexContent, proseOriginalHash } from '@ed/schema';
 import { testWorld, place, marry, beget } from './testing.js';
-import { readPanel, issueOf, emptyPanel, kinPhrase } from './people/panel.js';
+import { readPanel, issueOf, emptyPanel, kinPhrase, visibleWakings } from './people/panel.js';
 import { queueMatch } from './events/decisions.js';
 import { loadGame, saveGame } from './save.js';
 import { PANEL_KIN } from '@ed/schema';
@@ -68,6 +68,26 @@ function census(): LineCensus {
 }
 
 describe('the matchmaker’s panel', () => {
+  it('shares the witnessed-kin reading with family advice without changing a saved card', () => {
+    const ctx = testWorld(content, 1805);
+    const father = place(ctx, { sex: 'male', age: 45, name: 'Witnessed father', awakened: true });
+    const hidden = place(ctx, { sex: 'male', age: 22, name: 'Unwoken brother' });
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'The daughter' });
+    beget(ctx, girl, undefined, father);
+    beget(ctx, hidden, undefined, father);
+    const card = cardFor(girl);
+    readPanel(ctx, card, census());
+    const rows = visibleWakings(ctx, girl);
+    expect(rows.some((row) => row.person === father.id)).toBe(true);
+    expect(rows.some((row) => row.person === hidden.id)).toBe(false);
+    expect(rows.map(({ person: _person, ...row }) => row)).toEqual(card.panel.woken);
+    const saved = structuredClone(card.panel);
+    father.awakening.year! -= 1;
+    expect(visibleWakings(ctx, girl)).not.toEqual(rows);
+    expect(card.panel).toEqual(saved);
+    expect(Object.keys(card.panel.woken[0]!)).not.toContain('person');
+  });
+
   it('uses his kinship labels for a male candidate and keeps her labels for a woman', () => {
     const ctx = testWorld(content, 966, 1200);
     const mother = place(ctx, { sex: 'female', age: 60, name: 'Eira' });
