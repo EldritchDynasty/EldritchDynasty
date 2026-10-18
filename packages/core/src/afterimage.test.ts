@@ -48,6 +48,11 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     expect(evidence.blank?.text).toBeNull();
     expect(evidence.blank?.title).toBeUndefined();
     expect(evidence.spent).toBeUndefined();
+    ctx.world.chronicle = [
+      page({ id: 'one', eventId: 'omitted', people: [] }),
+      page({ id: 'two', eventId: 'omitted', people: [] }),
+    ];
+    expect(afterimageEvidence(ctx).people).toEqual([]);
   });
 
   it('requires a successful rite mark and an explicitly named written account', () => {
@@ -110,5 +115,25 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     expect(evidence.blank?.text).toBeNull();
     evidence.blank!.text = 'Cannot write into the save.';
     expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('keeps the recorded ancestral silhouette after every member has left the living tree', () => {
+    const ctx = testWorld(content, 1042, 1400);
+    const parent = place(ctx, { name: 'The recorded mother', sex: 'female', age: 80 });
+    const hidden = place(ctx, { name: 'The real mother', sex: 'female', age: 80 });
+    const head = place(ctx, { name: 'The last head', sex: 'male', age: 50 });
+    head.trueParents = { mother: hidden.id };
+    head.claimedParents = { mother: parent.id };
+    ctx.world.succession = [{ person: head.id, name: head.name, from: 1370 }];
+    ctx.world.people.kill(head.id, 1400, 'the line ended');
+    ctx.world.people.kill(parent.id, 1390, 'old age');
+    const before = digestOf(ctx);
+    const evidence = afterimageEvidence(ctx);
+    expect(evidence.line?.map((person) => person.name)).toEqual(['The last head', 'The recorded mother']);
+    expect(evidence.line?.[0]?.record.parents.mother).toBe(parent.id);
+    expect(JSON.stringify(evidence)).not.toContain('The real mother');
+    expect(digestOf(ctx)).toBe(before);
+    evidence.line![0]!.record.parents.mother = 'an edit to the photograph';
+    expect(head.claimedParents.mother).toBe(parent.id);
   });
 });

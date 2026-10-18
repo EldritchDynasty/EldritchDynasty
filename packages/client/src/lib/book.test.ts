@@ -518,6 +518,11 @@ describe('the house afterimage (#260)', () => {
     expect(plain.memories.at(-1)!.text).not.toContain('Unrecorded father');
     expect(input).toEqual(before);
     expect(afterimageModel({ ...source, members: [] }).memories).toEqual([]);
+    const archived = afterimageModel({ ...source, members: [], evidence: { people: [], line: [
+      { id: 'last', name: 'Last head', head: true, record: { parents: { father: 'ancestor' } } },
+      { id: 'ancestor', name: 'An archived ancestor', head: false, record: { parents: {} } },
+    ] } });
+    expect(archived.memories.at(-1)?.text).toBe('An archived ancestor → Last head');
   });
 
   it('measures every name, caption, fact and source before exporting, including unspaced Unicode (#1808)', () => {

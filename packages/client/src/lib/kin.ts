@@ -1,6 +1,7 @@
 import type { SessionView } from '@ed/core';
 
 export type MemberView = SessionView['halls'][number]['members'][number];
+type RecordedKin = Pick<MemberView, 'id'> & { record: Pick<MemberView['record'], 'parents'> };
 
 /**
  * WHO THIS PERSON HANGS UNDER, ACCORDING TO THE BOOK.
@@ -16,9 +17,9 @@ export type MemberView = SessionView['halls'][number]['members'][number];
  * which case the child is a root of this one, which is exactly what a cadet
  * branch looks like from the inside.
  */
-export function recordedParent(m: MemberView, hall: MemberView[]): string | undefined {
+export function recordedParent(m: RecordedKin, hall: readonly RecordedKin[]): string | undefined {
   const members = new Map(hall.map((person) => [person.id, person]));
-  const preferred = (person: MemberView): string | undefined => {
+  const preferred = (person: RecordedKin): string | undefined => {
     const { father, mother } = person.record.parents;
     if (father && members.has(father)) return father;
     return mother && members.has(mother) ? mother : undefined;
