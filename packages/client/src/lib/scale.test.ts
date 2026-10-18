@@ -26,7 +26,7 @@ const SRC = join(import.meta.dirname, '..');
  * This looks only at `font-size` and at the `font:` shorthand.
  */
 
-/** `font-size: …` and any `font:` shorthand carrying an absolute size. */
+/** `font-size: …` and any `font:` shorthand carrying a raw CSS size. */
 const SIZE = /font-size\s*:\s*([^;}]+)/g;
 const SHORTHAND = /font\s*:\s*([^;}]+)/g;
 
@@ -56,9 +56,13 @@ export function hardSizes(css: string): string[] {
       if (!scales(m[1]!)) found.push(m[0].trim());
     }
     for (const m of line.matchAll(SHORTHAND)) {
-      // The shorthand sets a size only when it carries a length. `font: inherit`
-      // is the idiom this client resets buttons with and is exactly right.
-      if (/\d\s*(px|pt|cm|mm|in|pc)\b/.test(m[1]!)) found.push(m[0].trim());
+      // A shorthand resets font-size as well as font family. Relative lengths
+      // and percentages are raw sizes too: they scale with the root but evade
+      // the role-token ladder just as px does. Unitless line-height is fine.
+      // `font: inherit` and `font: 500 var(--t-body)/1.3 serif` stay valid.
+      if (/(?:\d+(?:\.\d+)?|\.\d+)\s*(?:(?:px|pt|cm|mm|in|pc|rem|em|ch|ex|vw|vh|vmin|vmax)\b|%)/i.test(m[1]!)) {
+        found.push(m[0].trim());
+      }
     }
   }
   return found;
@@ -100,12 +104,17 @@ describe('the type scale', () => {
     // matches nothing matches nothing.
     expect(hardSizes('.name { font-size: 13px; }')).toEqual(['font-size: 13px']);
     expect(hardSizes('.year { font: 500 26px/1.1 serif; }')).toEqual(['font: 500 26px/1.1 serif']);
+    expect(hardSizes('.year { font: 500 1.125rem/1.3 serif; }')).toEqual(['font: 500 1.125rem/1.3 serif']);
+    expect(hardSizes('.year { font: italic .9em Georgia; }')).toEqual(['font: italic .9em Georgia']);
+    expect(hardSizes('.year { font: bold 2vw sans-serif; }')).toEqual(['font: bold 2vw sans-serif']);
+    expect(hardSizes('.year { font: 90%/1.5 serif; }')).toEqual(['font: 90%/1.5 serif']);
     expect(hardSizes('h1 { font-size: 2rem; }')).toEqual(['font-size: 2rem']);
   });
 
   it('passes what the client actually writes', () => {
     expect(hardSizes('.name { font-size: var(--t-card); }')).toEqual([]);
     expect(hardSizes('button { font: inherit; }')).toEqual([]);
+    expect(hardSizes('p { font: 500 var(--t-body)/1.3 serif; }')).toEqual([]);
     expect(hardSizes('  --t-display: clamp(2.25rem, 7vw, 3rem);')).toEqual([]);
   });
 
