@@ -5,6 +5,15 @@ import { phenotypeOf } from './factory.js';
 import { escheatBranchLand } from '../land.js';
 import { msg } from '../messages.js';
 
+/** The same reviewed title identifies surviving older pages in tenure history. */
+export function branchFoundingTitle(ctx: SimCtx): string {
+  return msg(ctx, 'branches.founded.title', 'A Second Roof');
+}
+
+export function branchRecallTitle(ctx: SimCtx): string {
+  return msg(ctx, 'branches.recalled.title', 'They Sent for the Cousin');
+}
+
 /**
  * CADET BRANCHES (concept §16). See `schema/src/branch.ts` for what a branch
  * is and why the family needs more than one household.
@@ -275,7 +284,7 @@ function foundBranch(ctx: SimCtx, founder: Person, splitFrom: string): BranchSta
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: msg(ctx, 'branches.founded.title', 'A Second Roof'),
+    title: branchFoundingTitle(ctx),
     text: msg(ctx, 'branches.founded.text', '{FOUNDER} took the east rooms and then took a house of his own, which the family called generous and the family called sensible, and which was both. He kept the name. He did not keep the seal.', { FOUNDER: founder.name }),
     named: false,
   });
@@ -421,7 +430,7 @@ export function recallToMain(ctx: SimCtx, p: Person): void {
   w.chronicle.push({
     year: w.year,
     weight: 'paragraph',
-    title: msg(ctx, 'branches.recalled.title', 'They Sent for the Cousin'),
+    title: branchRecallTitle(ctx),
     text: msg(ctx, 'branches.recalled.text', '{PERSON} was born in the smaller house and had not expected to see the inside of the seal room. He was sent for in the winter and the road was bad. Nobody in the main line had thought about him in thirty years, and every one of them knew his name by spring.', { PERSON: p.name }),
     named: false,
   });

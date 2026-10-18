@@ -18,7 +18,7 @@ const props = defineProps<{
   selected: string | null;
   proseMode?: ProseMode;
   /** Explicit navigation request from outside the tree (Chronicle/passage links). */
-  reveal?: { id: string; token: number } | null;
+  reveal?: { id: string; token: number; focus?: boolean } | null;
   line?: readonly LineEntry[];
   mentions?: (person: string) => MentionPage[];
 }>();
@@ -303,10 +303,14 @@ async function jumpToId(id: string): Promise<void> {
   await makeVisible({ id, hallId: hall.id });
 }
 
-async function revealId(id: string): Promise<void> {
-  const hall = hallFor(id);
+async function revealId(request: NonNullable<typeof props.reveal>): Promise<void> {
+  const hall = hallFor(request.id);
   if (!hall) return;
-  await makeVisible({ id, hallId: hall.id });
+  await makeVisible({ id: request.id, hallId: hall.id });
+  if (request.focus && props.reveal?.token === request.token) {
+    document.getElementById('member-' + request.id)
+      ?.querySelector<HTMLButtonElement>('button.face')?.focus({ preventScroll: true });
+  }
 }
 
 /**
@@ -316,7 +320,7 @@ async function revealId(id: string): Promise<void> {
  * mounts the tree in the same tick; token handles following the same link twice.
  */
 watch(() => props.reveal?.token, () => {
-  if (props.reveal) void revealId(props.reveal.id);
+  if (props.reveal) void revealId(props.reveal);
 }, { immediate: true });
 </script>
 

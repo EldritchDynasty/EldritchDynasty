@@ -14,6 +14,7 @@ import Naming from './components/Naming.vue';
 import PassageLog from './components/Passage.vue';
 import Tree from './components/Tree.vue';
 import TreeCounsel from './components/TreeCounsel.vue';
+import TreeChanges from './components/TreeChanges.vue';
 import Cast from './components/Cast.vue';
 import Chronicle from './components/Chronicle.vue';
 import GameTable from './components/Table.vue';
@@ -191,6 +192,8 @@ const middle = computed(() => (pane.value === 'chronicle' ? 'house' : pane.value
  * answer would put two different people on the screen at once.
  */
 const selected = ref<string | null>(null);
+/** Undefined follows the current tenure; an explicit index reads an earlier one. */
+const generationIndex = ref<number | undefined>(undefined);
 
 /**
  * An explicit request to make a person visible in the tree. Selection alone
@@ -198,7 +201,7 @@ const selected = ref<string | null>(null);
  * but must not discard the planning filters the player deliberately chose.
  * The token makes repeated links to the same person a fresh navigation.
  */
-const treeReveal = ref<{ id: string; token: number } | null>(null);
+const treeReveal = ref<{ id: string; token: number; focus?: boolean } | null>(null);
 let treeRevealToken = 0;
 
 function select(id: string): void {
@@ -229,10 +232,10 @@ function selectFromCast(id: string): void {
  * somebody and finding their card shut because it was already open is not a
  * thing anybody asked for.
  */
-function look(id: string): void {
+function look(id: string, focus = false): void {
   pane.value = 'house';
   selected.value = id;
-  treeReveal.value = { id, token: ++treeRevealToken };
+  treeReveal.value = { id, token: ++treeRevealToken, focus };
 }
 
 const matchReveal = ref<{ card: string; token: number } | null>(null);
@@ -301,6 +304,7 @@ function leaveToStart(): void {
   lineOpen.value = null;
   helpOpen.value = false;
   selected.value = null;
+  generationIndex.value = undefined;
   treeReveal.value = null;
   pane.value = 'house';
   actions.leave();
@@ -685,6 +689,13 @@ const yearAndBirths = computed(() => {
                this is the way in. -->
           <Cast :cast="view.cast" :selected="selected" :prose-mode="accessibility.proseMode" @select="selectFromCast" />
           <TreeCounsel :view="view" :selected="selected" :actions="actions" :prose-mode="accessibility.proseMode" />
+          <TreeChanges
+            :reading="actions.generationChanges ? actions.generationChanges(generationIndex) : undefined"
+            :prose-mode="accessibility.proseMode"
+            @tenure="generationIndex = $event"
+            @select="look($event, true)"
+            @book="openBook"
+          />
           <Tree
             :view="view"
             :selected="selected"

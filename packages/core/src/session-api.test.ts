@@ -1324,3 +1324,123 @@ describe('blind-reader material (#85)', () => {
     expect(() => parseArgs(['--pairs', '0'])).toThrow(/positive integer/);
   });
 });
+
+describe('recorded changes during a Head’s tenure (#1815)', () => {
+  function generations() {
+    const g = newGame(content, { seed: 181500 });
+    const ctx = g.ctx;
+    const w = ctx.world;
+    w.year = 1100;
+    w.chronicle = [];
+    for (const p of w.people.all()) { p.traits.clear(); p.castSlots = []; }
+    const founder = w.people.all()[0]!;
+    const head = place(ctx, { sex: 'female', age: 40, name: 'Maud of the New Seal', castSlots: ['head'] });
+    head.membership[0]!.from = head.born;
+    w.succession = [
+      { person: founder.id, name: founder.name, from: 1042, to: 1080 },
+      { person: head.id, name: head.name, from: 1080 },
+    ];
+    const mother = place(ctx, { sex: 'female', age: 65, name: 'Recorded Mother' });
+    const trueFather = place(ctx, { sex: 'male', age: 66, name: 'The Private Father' });
+    const paperFather = place(ctx, { sex: 'male', age: 65, name: 'Father on the Papers' });
+    const child = place(ctx, { sex: 'female', age: 10, name: 'Child of the Papers' });
+    beget(ctx, child, mother, trueFather);
+    child.claimedParents.father = paperFather.id;
+    const bride = place(ctx, { sex: 'female', age: 35, name: 'The Married Daughter' });
+    const spouse = place(ctx, { sex: 'male', age: 37, house: 'house_marrow', name: 'Her Recorded Spouse' });
+    marry(ctx, bride, spouse);
+    bride.marriages[0]!.from = spouse.marriages[0]!.from = 1092;
+    const marriage = content.events.find((event) => event.tags.includes('marriage'))!;
+    expect(marriage).toBeDefined();
+    w.chronicle.push({ id: 'the_wedding_page', year: 1092, weight: 'paragraph', text: 'The daughter married under the household seal.',
+      named: false, eventId: marriage.id, people: [bride.id, spouse.id] });
+    const deceased = place(ctx, { sex: 'male', age: 50, name: 'Death in the Book' });
+    w.people.kill(deceased.id, 1094, 'the real cause');
+    w.chronicle.push({ id: 'the_claimed_death', year: 1096, weight: 'paragraph', text: 'The book dates his death two years later.', named: false,
+      record: 'embellish', people: [deceased.id], claims: [
+        { kind: 'death', person: deceased.id, year: 1096, cause: 'the recorded cause' },
+        { kind: 'attr', person: deceased.id, attr: 'eldritch_power', value: 40 },
+      ] });
+    const omitted = place(ctx, { sex: 'female', age: 50, name: 'The Name Left Out' });
+    w.people.kill(omitted.id, 1095, 'an omitted event');
+    w.chronicle.push({ id: 'the_blank_page', year: 1095, weight: 'paragraph', text: null, named: false,
+      record: 'omit', people: [omitted.id] });
+    const spent = place(ctx, { sex: 'female', age: 45, name: 'Margery Given by Name' });
+    w.people.kill(spent.id, 1097, 'given to the rite', 'vessel_consumed');
+    w.chronicle.push({ id: 'the_rite_page', year: 1097, weight: 'paragraph', text: 'Margery was given to the Vessel rite.', named: false,
+      eventId: 'the_vessel_rite', people: [spent.id] });
+    const cousin = place(ctx, { sex: 'male', age: 45, name: 'Founder of the Smaller Hall', branch: 'the_small_hall' });
+    cousin.membership[0]!.kind = 'cadet';
+    w.branches.set('the_small_hall', {
+      id: 'the_small_hall' as never, house: w.playerHouse as never, name: 'The Smaller Hall',
+      founder: cousin.id, speaker: cousin.id, foundedYear: 1093, splitFrom: 'main', grievance: 20,
+    });
+    // This is an actual older system page: no stored id and no people array.
+    w.chronicle.push({ year: 1093, weight: 'paragraph', title: 'A Second Roof', text: 'The cousin founded a smaller hall.', named: false });
+    for (const p of [mother, trueFather, paperFather, bride, deceased, omitted, spent, cousin]) p.membership[0]!.from = Math.max(1042, p.born);
+    return { g, head, trueFather, paperFather, child, bride, deceased, omitted, spent, cousin };
+  }
+
+  it.each(['original', 'plainenglish'] as const)('names changed people from the record, keeps omissions blank, and survives resume (%s)', (mode) => {
+    const { g, head, trueFather, paperFather, child, bride, deceased, omitted, spent, cousin } = generations();
+    g.setProseMode(mode);
+    const stable = (key: string, value: unknown) => key === 'savedAt' ? undefined : value;
+    const before = JSON.stringify(g.save(), stable);
+    const reading = g.generationChanges();
+    expect(reading.tenure).toEqual({ person: head.id, name: head.name, from: 1080 });
+    expect(reading.through).toBe(1100);
+    expect(reading.changes.map((row) => row.kind).sort()).toEqual(['birth', 'blank', 'branch', 'death', 'marriage', 'rite_loss', 'succession']);
+    expect(reading.changes.find((row) => row.kind === 'birth')).toMatchObject({ person: child.id,
+      related: [{ name: 'Recorded Mother' }, { person: paperFather.id, name: paperFather.name }] });
+    expect(reading.changes.find((row) => row.kind === 'marriage')).toMatchObject({ person: bride.id, pageId: 'the_wedding_page' });
+    expect(reading.changes.find((row) => row.kind === 'death')).toMatchObject({ person: deceased.id, year: 1096, pageId: 'the_claimed_death' });
+    expect(reading.changes.find((row) => row.kind === 'rite_loss')).toMatchObject({ person: spent.id, year: 1097, pageId: 'the_rite_page' });
+    expect(reading.changes.find((row) => row.kind === 'blank')).toEqual({ id: 'blank:the_blank_page', kind: 'blank', year: 1095, pageId: 'the_blank_page' });
+    expect(JSON.stringify(reading)).not.toContain(trueFather.name);
+    expect(JSON.stringify(reading)).not.toContain(omitted.name);
+    const moved = reading.changes.find((row) => row.person === cousin.id)!;
+    expect(moved.pageId).toMatch(/^legacy-chronicle:/);
+    expect(g.book().find((page) => page.id === moved.pageId)?.text).toBe('The cousin founded a smaller hall.');
+    expect(g.book({ from: 1093, to: 1093 })[0]?.id).toBe(moved.pageId);
+    expect(g.ctx.world.chronicle.at(-1)?.id).toBeUndefined();
+    expect(JSON.stringify(g.save(), stable)).toBe(before);
+    expect(resumeGame(g.save(), content).generationChanges()).toEqual(reading);
+    const previous = g.generationChanges(0);
+    expect(previous.tenure?.from).toBe(1042);
+    expect(previous.through).toBe(1080);
+    expect(previous.changes.every((row) => row.year <= 1080)).toBe(true);
+    expect(previous.changes.some((row) => row.person === child.id)).toBe(false);
+    expect(g.ctx.prose.missing.size).toBe(0);
+  });
+
+  it('bounds the reading, returns values, and keeps a new line honestly empty', () => {
+    const g = newGame(content, { seed: 181501 });
+    const w = g.ctx.world;
+    expect(g.generationChanges().changes).toEqual([]);
+    const founder = w.people.all()[0]!;
+    w.succession = [{ person: founder.id, name: founder.name, from: 1042 }];
+    w.year = 1060;
+    for (let i = 0; i < 20; i++) place(g.ctx, { sex: 'female', age: 1, name: `Recent Child ${i}` });
+    const reading = g.generationChanges();
+    expect(reading.changes).toHaveLength(12);
+    expect(reading.more).toBe(8);
+    const original = g.generationChanges();
+    reading.changes[0]!.name = 'a changed photograph';
+    reading.tenure!.name = 'another photograph';
+    expect(g.generationChanges()).toEqual(original);
+    expect(g.generationChanges(-5).index).toBe(0);
+    expect(g.generationChanges(500).index).toBe(0);
+  });
+
+  it('does not recover a rite’s private cause from a different account in the book', () => {
+    const { g, spent } = generations();
+    const page = g.ctx.world.chronicle.find((entry) => entry.id === 'the_rite_page')!;
+    page.record = 'embellish';
+    page.text = 'The book says she died of a fever.';
+    page.claims = [{ kind: 'death', person: spent.id, year: 1097, cause: 'a fever' }];
+    const row = g.generationChanges().changes.find((entry) => entry.person === spent.id)!;
+    expect(row.kind).toBe('death');
+    expect(row.pageId).toBe('the_rite_page');
+    expect(g.generationChanges().changes.some((entry) => entry.kind === 'rite_loss')).toBe(false);
+  });
+});
