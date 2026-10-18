@@ -428,7 +428,7 @@ export function diagnosticIntervalLines(rows: { term: number; runs: DensityRun[]
   output.push('regency = woman holding the seal; unwoken = seated non-regent Head, no WITNESSED awake expresser in the house');
   output.push('only blocking choice/Record counts as meaningful; forms and automatic resolutions excluded');
   output.push('Table orders and bid decisions count only when the supplied policy actually sends a successful order; default policy sends none');
-  const header = ['term', 'scope', 'seed', 'year range', 'years', 'quiet max', 'meaningful choice', 'match', 'record', 'auction', 'orders', 'routine', 'actionable', 'no route', 'blocker years'];
+  const header = ['term', 'scope', 'seed', 'year range', 'years', 'quiet max', 'choice (per y)', 'match (per y)', 'record (per y)', 'auction (per y)', 'orders (per y)', 'routine (per y)', 'actionable', 'no route', 'blocker years'];
   const data: string[][] = [];
   const sums = (rs: DiagnosticInterval[], key: 'choices' | 'matches' | 'records' | 'auctions' | 'orders' | 'routine' | 'actionableYears' | 'blockedYears') =>
     rs.reduce((total, r) => total + r[key], 0);
@@ -451,9 +451,8 @@ export function diagnosticIntervalLines(rows: { term: number; runs: DensityRun[]
         .slice(0, 3).map(([name, years]) => `${name}:${years}`).join(',');
       const row = (seed: string, range: string, n: number, quiet: number, subset: DiagnosticInterval[], blockers: string) => [
         String(term), period, seed, range, String(n), String(quiet),
-        String(sums(subset, 'choices')), String(sums(subset, 'matches')),
-        String(sums(subset, 'records')), String(sums(subset, 'auctions')),
-        String(sums(subset, 'orders')), String(sums(subset, 'routine')),
+        ...(['choices', 'matches', 'records', 'auctions', 'orders', 'routine'] as const)
+          .map((key) => `${sums(subset, key)} (${(sums(subset, key) / (n || 1)).toFixed(2)}/y)`),
         String(sums(subset, 'actionableYears')), String(sums(subset, 'blockedYears')),
         blockers,
       ];
