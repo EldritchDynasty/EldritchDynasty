@@ -330,7 +330,6 @@ export const EffectS = z.discriminatedUnion('kind', [
    * people; with none, it means whichever hall is angriest.
    */
   z.object({ kind: z.literal('branch'), op: z.enum(['appease', 'slight']), slot: z.string().optional(), amount: z.number().default(10) }),
-  z.object({ kind: z.literal('recast'), slot: z.string() }),
   /**
    * A RITE OF THE LADDER (concept §22, issue #43).
    *

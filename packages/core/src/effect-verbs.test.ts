@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { SlotSpecS, type EventTemplate } from '@ed/schema';
 import {
   applyEffect,
   beget,
@@ -14,38 +13,6 @@ import {
 } from '@ed/core';
 
 const bundle = loadContent();
-
-/**
- * THE VERBS NOBODY HAS SPOKEN.
- *
- * EffectS is a closed verb set. Some verbs are intentionally engine vocabulary
- * before content adopts them; every such verb still needs direct coverage.
- * awakening is one of those: concept §11 requires a mechanical forced-Awakening
- * path before the serialized ritual content can be wired.
- *
- * Historically rumour and recast were covered by nothing at all —
- * never authored, never tested, never once executed in the history of the
- * project. That is not the same as unused. They are live authoring vocabulary,
- * and the day someone reaches for one is a bad day to find out what it does.
- *
- * `recast` in particular was wrong the whole time. It filtered the literal
- * string `'head'` out of `castSlots` regardless of which slot it was pointed
- * at, so it freed nothing on any slot that was not the Head's, and stripped
- * the seal from a VESSEL who happened to be holding it. See `scope.ts`.
- */
-
-/**
- * A real template, adjusted to the slot shape a test needs. Never a toy bundle,
- * and the slots go through `SlotSpecS` so they carry the same defaults an
- * authored one does rather than a hand-written approximation of them.
- */
-function templateWithSlots(roles: Record<string, string>): EventTemplate {
-  const e = structuredClone(bundle.events[0]!);
-  e.slots = Object.fromEntries(
-    Object.entries(roles).map(([slot, role]) => [slot, SlotSpecS.parse({ role })]),
-  );
-  return e;
-}
 
 function placedCarrier(ctx: ReturnType<typeof bootstrap>, sex: 'male' | 'female') {
   for (let i = 0; i < 96; i += 1) {
@@ -177,71 +144,6 @@ describe('forced Awakening downstream participation', () => {
     expect(forcedStanding.rung).toBe(naturalStanding.rung);
     expect(forcedStanding.blocker).toBe(naturalStanding.blocker);
     expect(forcedStanding.blocker).not.toBe('awakening');
-  });
-});
-
-describe('the recast effect frees the role the slot casts for', () => {
-  it('frees the Head from the seal when pointed at a head slot', () => {
-    const ctx = bootstrap(bundle, 1042, 1042);
-    const head = place(ctx, { sex: 'male', age: 45, name: 'The Sitting Head', castSlots: ['head'] });
-    const event = templateWithSlots({ HEAD: 'head' });
-
-    applyEffect({ kind: 'recast', slot: 'HEAD' }, ctx, { HEAD: head.id }, { event });
-
-    expect(head.castSlots).not.toContain('head');
-  });
-
-  /**
-   * The bug, stated as a test. A VESSEL is cast `family_member`; before the
-   * fix this call removed `'head'` — which the vessel did not have — and left
-   * `family_member` exactly where it was, so `maintainCast` never refilled the
-   * slot and the effect was a no-op that looked like it had worked.
-   */
-  it('frees a non-head slot from ITS role, not from the seal', () => {
-    const ctx = bootstrap(bundle, 1042, 1042);
-    const vessel = place(ctx, { sex: 'male', age: 20, name: 'The Vessel', castSlots: ['family_member'] });
-    const event = templateWithSlots({ VESSEL: 'family_member' });
-
-    applyEffect({ kind: 'recast', slot: 'VESSEL' }, ctx, { VESSEL: vessel.id }, { event });
-
-    expect(vessel.castSlots).not.toContain('family_member');
-  });
-
-  /**
-   * The other half of the same bug, and the expensive one: a person can hold
-   * the seal AND stand in some other slot of the same scene. Recasting that
-   * other slot must not take the house's Head off them.
-   */
-  it('leaves the seal alone when the recast slot is not the head slot', () => {
-    const ctx = bootstrap(bundle, 1042, 1042);
-    const both = place(ctx, { sex: 'male', age: 45, name: 'Head And Witness', castSlots: ['head', 'family_member'] });
-    const event = templateWithSlots({ WITNESS: 'family_member' });
-
-    applyEffect({ kind: 'recast', slot: 'WITNESS' }, ctx, { WITNESS: both.id }, { event });
-
-    expect(both.castSlots).toContain('head');
-    expect(both.castSlots).not.toContain('family_member');
-  });
-
-  /**
-   * Absent the template there is no role to free, and guessing one is what the
-   * old code did. Doing nothing is the same choice `arcFlag` makes when it is
-   * asked outside an arc: the permissive default is the expensive one.
-   */
-  it('does nothing at all with no template in scope, rather than guessing a role', () => {
-    const ctx = bootstrap(bundle, 1042, 1042);
-    const head = place(ctx, { sex: 'male', age: 45, name: 'Untouched', castSlots: ['head'] });
-
-    expect(() => applyEffect({ kind: 'recast', slot: 'HEAD' }, ctx, { HEAD: head.id })).not.toThrow();
-
-    expect(head.castSlots).toContain('head');
-  });
-
-  it('does nothing when nobody stands in the slot', () => {
-    const ctx = bootstrap(bundle, 1042, 1042);
-    const event = templateWithSlots({ HEAD: 'head' });
-
-    expect(() => applyEffect({ kind: 'recast', slot: 'HEAD' }, ctx, {}, { event })).not.toThrow();
   });
 });
 

@@ -10,6 +10,8 @@ describe('vocabulary authorship merge witness', () => {
     const verdict = vocabularyAuthorship(loadContent());
 
     expect(verdict.ok, verdict.lines.join('\n')).toBe(true);
+    expect(verdict.declared).not.toContain('recast');
+    expect(VOCABULARY_AUTHORSHIP_OWED).toEqual([]);
     expect(verdict.newlyUnauthored).toEqual([]);
     expect(verdict.paidOff).toEqual([]);
     expect(verdict.owedStill).toEqual([...VOCABULARY_AUTHORSHIP_OWED]);

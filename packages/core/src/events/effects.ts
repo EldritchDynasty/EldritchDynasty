@@ -238,19 +238,6 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       }
       break;
     }
-    case 'recast': {
-      // Free the slot's occupant from the role so `maintainCast` refills it.
-      //
-      // The role comes from the TEMPLATE, not from a guess. This line used to
-      // read `s !== 'head'`, hardcoded, which is right for `{slot: HEAD}` and
-      // wrong for every other slot in the game: it left a freed VESSEL still
-      // cast as `family_member` and, if that person happened to hold the seal,
-      // quietly took it off them instead.
-      const role = scope.event?.slots[eff.slot]?.role;
-      const p = w.people.get(soleCast(fill, eff.slot) ?? '');
-      if (role && p) p.castSlots = p.castSlots.filter((s) => s !== role);
-      break;
-    }
     /**
      * A RITE OF THE LADDER (§22, issue #43). Two people, named by slot,
      * because a rite is a thing one person has done to another — `resolveTargets`
@@ -541,7 +528,7 @@ export function applyOutcome(
   // needs to remember the page this outcome is about to write (#269).
   const entryId = chronicleEntryId(ctx);
   // The template and its page join the scope here rather than being passed
-  // separately: recast needs the role, and provenance needs the page.
+  // separately: the event's cast context and its Chronicle page travel together.
   const inner: EvalScope = { ...scope, event: e, page: entryId };
   for (const [index, eff] of outcome.effects.entries()) {
     // Select this specific authored line before it enters the permanent book.

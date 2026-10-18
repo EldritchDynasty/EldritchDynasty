@@ -23,6 +23,37 @@ const content = loadContent();
  * healthy.
  */
 describe('a run survives being written down', () => {
+  it('rejects retired recast effects embedded in saved pending event templates (#1812)', () => {
+    // A choice/Record docket carries the whole EventTemplateS in SavedGameS.
+    // The old verb must not survive that validation path, even in a pending save.
+    const saved = saveGame(bootstrap(content, 1812, 1042));
+    const event = content.events.find((candidate) =>
+      candidate.interaction.kind === 'narration' && candidate.interaction.outcomes.length > 0,
+    );
+    expect(event, 'no narrated event to use as a valid save fixture').toBeDefined();
+    const record = {
+      kind: 'record',
+      id: 'retired_recast_docket',
+      year: 1042,
+      event,
+      subject: 'An existing record',
+      options: [],
+      entryId: 'chr_recast_schema_witness',
+      fill: {},
+    };
+    expect(SavedGameS.safeParse({ ...saved, pendingDecisions: [record] }).success).toBe(true);
+
+    const mutated = structuredClone(event) as typeof event & {
+      interaction: { outcomes: Array<{ effects?: unknown[] }> };
+    };
+    mutated.interaction.outcomes[0]!.effects ??= [];
+    mutated.interaction.outcomes[0]!.effects.push({ kind: 'recast', slot: 'HEAD' });
+    expect(SavedGameS.safeParse({
+      ...saved,
+      pendingDecisions: [{ ...record, event: mutated }],
+    }).success).toBe(false);
+  });
+
   /**
    * The saved format is a contract, not merely a number. This fixture makes a
    * version bump deliberate: `SAVE_FORMAT` can move only alongside a save

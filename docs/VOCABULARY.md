@@ -37,7 +37,6 @@ compile error until it is handled.
 | `rumour` | `op: seed\|feed\|correct` `id: string` `accuracy: number?` |
 | `clause` | `reveal: string` |
 | `branch` | `op: appease\|slight` `slot: string?` `amount: number = 10` |
-| `recast` | `slot: string` |
 | `rite` | `rite: vessel\|great_rite\|unmaking` `ascendant: string` `subject: string?` `cause: string?` |
 | `schedule` | `event: string` `inYears: number` |
 | `arc` | `op: start\|advance\|cancel` `arc: string` |
