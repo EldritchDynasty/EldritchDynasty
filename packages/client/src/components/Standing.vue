@@ -316,7 +316,8 @@ const muster = computed(() => {
       <div class="name">{{ view.ascension.title }}</div>
 
       <LadderPath
-        :ascension="view.ascension"
+        v-if="view.ascension.rungs?.length"
+        :ascension="{ ...view.ascension }"
         :prose-mode="proseMode"
         @look="(person) => emit('look', person)"
         @match="(decision, card) => emit('match', decision, card)"
