@@ -266,6 +266,16 @@ export type Filter =
    */
   | { declaredMundane: boolean }
   /**
+   * HE HAS BEEN PUT THROUGH A FORCING RITE ALREADY (§11, #1817).
+   *
+   * Set when any template declaring `forcing` resolves on him, called from
+   * the Table or drawn ambient alike. A boy goes through one forcing rite,
+   * whichever it is; every forcing slot asks `{ forcingTried: false }`
+   * (`rites/forcing`), so the house cannot keep putting the same son in the
+   * water until he wakes.
+   */
+  | { forcingTried: boolean }
+  /**
    * Held by debt, or not (world §12, `core/src/people/bond.ts`). A slot that
    * casts a bondsman has to be able to ask for one: `bond` with `op: 'free'`
    * against somebody who owes nothing is an effect that returns without
@@ -328,6 +338,7 @@ export const FilterS: z.ZodType<Filter> = z.lazy(() =>
     z.object({ awakened: z.boolean() }),
     z.object({ canExpress: z.boolean() }),
     z.object({ declaredMundane: z.boolean() }),
+    z.object({ forcingTried: z.boolean() }),
     z.object({ bonded: z.boolean() }),
     /**
      * WHERE THIS ONE MAN STANDS ON THE LADDER (§22).

@@ -1,4 +1,5 @@
 import type { Choice, EventTemplate } from '@ed/schema';
+import { outcomeDrawSets } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
@@ -139,5 +140,9 @@ export function decideBranch(
  * which is the knob they already reach for.
  */
 function byWeight(choices: Choice[], rng: Rng): Choice {
-  return rng.weighted(choices, (c) => c.outcomes.reduce((s, o) => s + o.weight, 0) || 1) ?? choices[0]!;
+  // A guarded branch (#1817) is one draw per kind of cast, not their sum: it
+  // is worth its largest draw set. An unguarded branch is one set, itself, so
+  // this is the same number it always was.
+  const worth = (c: Choice) => Math.max(...outcomeDrawSets(c.outcomes).map((set) => set.reduce((s, o) => s + o.weight, 0)));
+  return rng.weighted(choices, (c) => worth(c) || 1) ?? choices[0]!;
 }
