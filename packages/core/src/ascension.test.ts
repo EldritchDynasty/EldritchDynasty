@@ -6,7 +6,7 @@ import { indexContent, proseOriginalHash } from '@ed/schema';
 import {
   DEMIGOD_AGEING_STOPPED, LADDER_BLOCKERS, RUNGS, affinitiesFor, booksFor, bootstrap, diagnoseAscension, eldritchPower, foremostOf, grantHeirloom, householdAffinities, householdBooks,
   maxExpressiblePower, order, performUnmaking, phenotypeOf, place, rungIndex, rungTitle, standingOf, testWorld, tickAscension, viewOf,
-  setProseMode, setProseVariants,
+  setProseMode, setProseVariants, frozenLadder, saveGame,
   type SimCtx,
 } from '@ed/core';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
@@ -904,5 +904,85 @@ describe('the rung titles speak the reader\'s setting (#832)', () => {
     expect(plain.titles).toEqual(original.titles.map((t) => `plain: ${t}`));
     expect(plain.target).toEqual([original.target[0], original.target[1], `plain: ${original.target[2]}`]);
     expect(plain.view).toEqual([original.view[0], `plain: ${original.view[1]}`, original.view[2], `plain: ${original.view[3]}`]);
+  });
+});
+
+/**
+ * THE FROZEN LADDER (§7, §11, issue #1803). A reading, from what the house
+ * knows, of whether any rung can move; and nothing the reading does may change
+ * the world it reads.
+ */
+describe('the frozen ladder', () => {
+  /** A house with nobody in it but the people a test places. */
+  function emptyHouse(seed = 1803): SimCtx {
+    const ctx = bootstrap(bundle, seed, 1042);
+    for (const p of ctx.world.people.living()) ctx.world.people.kill(p.id, ctx.world.year, 'before the test began');
+    for (const p of ctx.world.people.all()) {
+      p.castSlots = [];
+      // The founding cast died above; forget that any of them ever woke, so the
+      // test owns the whole history of who carried the Power.
+      p.awakening = { ...p.awakening, awakened: false };
+    }
+    return ctx;
+  }
+
+  /** A son of the house who carries the Power: the first name that expresses. */
+  function expresser(ctx: SimCtx, age: number, stem: string, awakened: boolean) {
+    for (let i = 0; i < 200; i++) {
+      const p = place(ctx, { sex: 'male', age, name: `${stem}${i}`, awakened });
+      if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return p;
+      ctx.world.people.kill(p.id, ctx.world.year, 'not the son this test needs');
+      p.awakening = { ...p.awakening, awakened: false };
+    }
+    throw new Error(`no expressing ${stem} in 200 names`);
+  }
+
+  it('is not frozen while an awakened man who carries the Power lives in the house', () => {
+    const ctx = emptyHouse();
+    expresser(ctx, 30, 'Woken', true);
+    expect(frozenLadder(ctx)).toBeUndefined();
+    expect(viewOf(ctx).ascension.frozen).toBeUndefined();
+  });
+
+  it('is frozen while the only men who carry it have not woken, and says so from the start of the run', () => {
+    const ctx = emptyHouse();
+    expresser(ctx, 26, 'Waiting', false);
+    ctx.world.year = 1100;
+    expect(frozenLadder(ctx)).toEqual({ since: 1042, years: 58 });
+    expect(viewOf(ctx).ascension.frozen).toEqual({ since: 1042, years: 58 });
+  });
+
+  it('dates the stretch from the year the last awakened man of the blood died', () => {
+    const ctx = emptyHouse();
+    const elder = expresser(ctx, 50, 'Elder', true);
+    expect(frozenLadder(ctx)).toBeUndefined();
+    ctx.world.year = 1070;
+    ctx.world.people.kill(elder.id, 1070, 'his time');
+    ctx.world.year = 1084;
+    expect(frozenLadder(ctx)).toEqual({ since: 1070, years: 14 });
+  });
+
+  it('thaws the year a man of the blood wakes', () => {
+    const ctx = emptyHouse();
+    const son = expresser(ctx, 22, 'Thaw', false);
+    expect(frozenLadder(ctx)).toBeDefined();
+    son.awakening = { ...son.awakening, awakened: true, year: ctx.world.year, age: 22 };
+    son.phenotype = undefined;
+    expect(frozenLadder(ctx)).toBeUndefined();
+  });
+
+  it('never counts a woman, who carries and never expresses', () => {
+    const ctx = emptyHouse();
+    place(ctx, { sex: 'female', age: 30, name: 'Carrier', awakened: true });
+    expect(frozenLadder(ctx)).toBeDefined();
+  });
+
+  it('is a reading: asking it changes nothing in the saved world', () => {
+    const ctx = emptyHouse();
+    expresser(ctx, 26, 'Read', false);
+    const before = JSON.stringify({ ...saveGame(ctx), savedAt: '' });
+    frozenLadder(ctx);
+    viewOf(ctx);
+    expect(JSON.stringify({ ...saveGame(ctx), savedAt: '' })).toBe(before);
   });
 });

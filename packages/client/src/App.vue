@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { createGame, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import { createProseModeSelector } from './lib/prose-selection';
-import { appShellCopy, clockBlockers } from './lib/app-shell-copy';
+import { appShellCopy, clockBlockers, frozenLine, frozenNoticeShown } from './lib/app-shell-copy';
 import Start from './components/Start.vue';
 import Prologue from './components/Prologue.vue';
 import Standing from './components/Standing.vue';
@@ -541,6 +541,20 @@ const yearAndBirths = computed(() => {
           <p v-if="waiting" class="dim small why">
             {{ blocking }} — {{ shellCopy.waitingSuffix }}
           </p>
+          <!-- THE FROZEN LADDER (issue #1803). Named once, in the house's own
+               knowledge, with the one control that lets the dead decades pass:
+               the same years, stopping at the first decision, the first waking,
+               or twenty-five years, whichever comes first. -->
+          <template v-if="view.ascension.frozen && frozenNoticeShown(view.ascension.frozen) && !view.ending">
+            <p class="small frozen" role="status">
+              {{ frozenLine(accessibility.proseMode, view.ascension.frozen.since, view.ascension.frozen.years) }}
+            </p>
+            <button
+              :disabled="waiting"
+              :title="blocking"
+              @click="actions.advance(25, { untilThawed: true })"
+            >{{ shellCopy.waitForBlood }}</button>
+          </template>
         </div>
 
         <!-- A CONTROL, NOT A KEYSTROKE (issue #107). The panel below is the
