@@ -1,3 +1,6 @@
+import { saveGame } from './save.js';
+import { viewOf } from './session.js';
+import { observeFamilyChallenge, recordedAffinityScore, type ChallengeObservation } from './tools/challenge-observation.js';
 import { acquireLibraryCopy, attr, beginStudy, completeStudies, degradeLibraryCopy, evalFilter, gainSpellbook, knowsAffinity, loseLibraryCopy, loseSpellbookKnowledge, makeRng, autoCast, resolveSlots } from '@ed/core';
 import { ALL_AFFINITIES, THRESHOLD_AFFINITIES, EventTemplateS, FilterS, PoolSpecS, asId, runRule } from '@ed/schema';
 import type { SlotSpec } from '@ed/schema';
@@ -535,4 +538,173 @@ describe('family-challenges regressions (#1796)', () => {
       expect(affinities.size).toBe(8);
     });
   });
+});
+
+
+describe('challenge measurement (#1813)', () => {
+  const content = loadContent();
+  function set(ctx: SimCtx, person: Person, key: string, value: number) {
+    person.acquired[key] = (person.acquired[key] ?? 0) + value - attr(person, key, ctx.genetics, ctx.world.year);
+    if (person.phenotype) person.phenotype.dirty = true;
+  }
+  function fixture() {
+    const ctx = testWorld(content);
+    for (const person of ctx.world.people.all()) person.spellsKnown = [];
+    return ctx;
+  }
+  function collect(ctx: SimCtx) {
+    const rows: ChallengeObservation[] = [];
+    ctx.observeOutcome = (observation) => {
+      const row = observeFamilyChallenge(ctx, observation);
+      if (row) rows.push(row);
+    };
+    return rows;
+  }
+  const savedState = (ctx: SimCtx) => ({ ...saveGame(ctx), savedAt: '' });
+
+  describe('family challenge diagnosis (#1813)', () => {
+    it('keeps an absent eligible Elemental reader separate from a missing working', () => {
+      const ctx = fixture();
+      // Build an all-women household without introducing a death into the scene.
+      for (const person of ctx.world.people.all()) person.membership = [];
+      place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
+      const rows = collect(ctx);
+      expect(executeOutcomeWitness(ctx, content.event('the_smoke_above_the_store')!, {
+        choiceId: 'use_fluid', expectedOutcomeId: 'lost', rng: makeRng(8),
+      }).ok).toBe(true);
+      expect(rows[0]).toMatchObject({ passed: false, cause: 'no_eligible_relative', affinity: { capable: 0, learned: 0 } });
+    });
+
+    it('reads the engine\'s role-specific check bonus without drawing another result', () => {
+      const ctx = fixture();
+      const person = place(ctx, { sex: 'female', age: 30, name: 'Amice' });
+      const trait = content.traits.find((candidate) => candidate.dispatch.some((dispatch) =>
+        dispatch.whenCastAs?.includes('family_member') && dispatch.modifiers.some((modifier) =>
+          modifier.kind === 'check_bonus' && modifier.match.tags?.includes(asId('violence')))))!;
+      person.traits.add(trait.id);
+      for (const key of ['strength', 'agility']) set(ctx, person, key, 40);
+      const event = structuredClone(content.event('the_wick_bridge_load')!);
+      event.tags.push('violence');
+      const rows = collect(ctx);
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'lifted', expectedOutcomeId: 'clear',
+        cast: { SENT: person.id }, rng: makeRng(7) }).ok).toBe(true);
+      expect(rows[0]).toMatchObject({ score: 40, passed: true });
+      expect(rows[0]!.bonus).toBeGreaterThan(0);
+    });
+
+    it('isolates missing learned knowledge from unchanged inherited affinity', () => {
+      const ctx = fixture();
+      const reader = place(ctx, { sex: 'male', age: 30, awakened: true, name: 'Gyles' });
+      const event = content.event('the_smoke_above_the_store')!;
+      const rows = collect(ctx);
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_fluid', expectedOutcomeId: 'lost', rng: makeRng(1) }).ok).toBe(true);
+      const genome = structuredClone(reader.genome);
+      expect(rows[0]).toMatchObject({ passed: false, cause: 'missing_learned_knowledge', affinity: { learned: 0 } });
+      expect(rows[0]!.affinity!.capable).toBeGreaterThan(0);
+      expect(gainSpellbook(ctx, reader, content.spellbook('lesser_workings_of_fluid')!)).toBe(true);
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_fluid', expectedOutcomeId: 'held', rng: makeRng(1) }).ok).toBe(true);
+      expect(rows[1]).toMatchObject({ passed: true, participants: [{ person: reader.id, name: reader.name }] });
+      expect(rows[1]!.affinity!.inherited).toBe(rows[0]!.affinity!.inherited);
+      expect(reader.genome).toEqual(genome);
+    });
+
+    it('does not call a learned specialist\'s low compound score a breadth failure', () => {
+      const ctx = fixture();
+      const reader = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
+      expect(gainSpellbook(ctx, reader, content.spellbook('lesser_workings_of_darkness')!)).toBe(true);
+      set(ctx, reader, 'darkness', 0);
+      set(ctx, reader, 'mind', 0);
+      const rows = collect(ctx);
+      const event = content.event('the_cawdry_copy')!;
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: 'lost', rng: makeRng(2) }).ok).toBe(true);
+      expect(rows[0]).toMatchObject({ cause: 'insufficient_ability', score: 0, participants: [{ person: reader.id }] });
+      // Only this reader's relevant affinity changes; no working or other
+      // relative supplies the difference.
+      set(ctx, reader, 'darkness', 26);
+      expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: 'held', rng: makeRng(2) }).ok).toBe(true);
+      expect(rows[1]!.passed).toBe(true);
+      expect(rows[1]!.score).toBeCloseTo(18.2);
+    });
+
+    it('classifies a low family_any core ability separately from an absent relative', () => {
+      const ctx = fixture();
+      for (const person of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) set(ctx, person, 'mind', 0);
+      const rows = collect(ctx);
+      const event = content.event('the_fever_and_the_vigil')!;
+      const choice = event.interaction.kind === 'narration' ? undefined : event.interaction.choices.find((candidate) =>
+        event.checks.find((check) => check.id === candidate.check)?.pool.kind === 'family_any');
+      expect(choice).toBeDefined();
+      expect(executeOutcomeWitness(ctx, event, { choiceId: choice!.id, expectedOutcomeId: 'lost', rng: makeRng(3) }).ok).toBe(true);
+      expect(rows[0]).toMatchObject({ cause: 'insufficient_ability', pool: 'family_any' });
+      expect(rows[0]!.participants.length).toBeGreaterThan(0);
+    });
+
+    it('records the actual player cast before its injury, without changing RNG or saved state', () => {
+      const run = (observed: boolean) => {
+        const ctx = fixture();
+        const weak = place(ctx, { sex: 'female', age: 30, name: 'Amice' });
+        const strong = place(ctx, { sex: 'male', age: 30, name: 'Gyles' });
+        for (const key of ['strength', 'agility']) { set(ctx, weak, key, 20); set(ctx, strong, key, 70); }
+        const rows: ChallengeObservation[] = [];
+        if (observed) ctx.observeOutcome = (observation) => {
+          const before = JSON.stringify(savedState(ctx));
+          rows.push(observeFamilyChallenge(ctx, observation)!);
+          expect(JSON.stringify(savedState(ctx))).toBe(before);
+          expect(weak.acquired.health ?? 0).toBe(0);
+          // A consumer receives a private cast, never the live commit input.
+          observation.fill.SENT = strong.id;
+        };
+        const rng = makeRng(5);
+        expect(executeOutcomeWitness(ctx, content.event('the_wick_bridge_load')!, {
+          choiceId: 'paid', expectedOutcomeId: 'wet', cast: { SENT: weak.id }, rng,
+        }).ok).toBe(true);
+        return { save: savedState(ctx), rows, next: rng.next() };
+      };
+      const plain = run(false);
+      const measured = run(true);
+      expect(measured.save).toEqual(plain.save);
+      expect(measured.next).toBe(plain.next);
+      expect(measured.rows[0]).toMatchObject({ cause: 'insufficient_ability',
+        participants: [{ name: 'Amice' }], health: [{ name: 'Amice', delta: -3 }] });
+      expect(measured.rows[0]!.chronicle).toContain('Amice');
+    });
+
+    it('does not count buying preparation as a failed check', () => {
+      const ctx = fixture();
+      const novice = place(ctx, { sex: 'female', age: 30, awakened: true });
+      set(ctx, novice, 'mind', 1000);
+      const rows = collect(ctx);
+      expect(executeOutcomeWitness(ctx, content.event('the_cawdry_copy')!, {
+        choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(6),
+      }).ok).toBe(true);
+      expect(rows).toEqual([]);
+    });
+
+    it('never uses hidden card recipes or unclaimed attribute values to guide breeding', () => {
+      const ctx = fixture();
+      const person = place(ctx, { sex: 'female', age: 30 });
+      const view = viewOf(ctx, 0);
+      const member = view.halls.flatMap((hall) => hall.members).find((candidate) => candidate.id === person.id)!;
+      const card = { person: person.id };
+      member.attrs.death = 1000;
+      member.record.attrs.death = 1000;
+      member.record.claimed = [];
+      expect(recordedAffinityScore(view, card, ['death', 'darkness'])).toBe(0);
+      member.record.claimed.push('death');
+      expect(recordedAffinityScore(view, card, ['death', 'darkness'])).toBe(1000);
+      const outsider = { ...card, person: undefined, recipe: { genome: 'secret' } };
+      expect(recordedAffinityScore(view, outsider, ['death'])).toBe(0);
+      // A recorded parent can be evidence. An unrelated real parent is not.
+      const parent = view.halls.flatMap((hall) => hall.members).find((candidate) => candidate.id !== person.id)!;
+      parent.record.claimed = ['death'];
+      parent.record.attrs.death = 25;
+      member.record.claimed = [];
+      member.record.parents = { mother: undefined, father: undefined };
+      parent.record.parents = { mother: undefined, father: undefined };
+      expect(recordedAffinityScore(view, card, ['death'])).toBe(0);
+      member.record.parents = { mother: asId(parent.id) };
+      expect(recordedAffinityScore(view, card, ['death'])).toBe(25);
+    });
+  });
+
 });

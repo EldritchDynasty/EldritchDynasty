@@ -180,6 +180,12 @@ export interface CheckResult {
   outcomeId: string;
 }
 
+/** The deterministic inputs to a check, shared with read-only instruments. */
+export function checkReading(ctx: SimCtx, check: Check, event: EventTemplate, fill: SlotFill): Pick<CheckResult, 'score' | 'bonus' | 'difficulty'> {
+  return { score: poolScore(ctx, check.pool, fill, event),
+    bonus: checkBonus(ctx, check, event, fill), difficulty: evalDifficulty(ctx, check.difficulty) };
+}
+
 /**
  * The pool becomes a roll (variance is a `rng.normal` draw centred on the
  * score; `none` skips the draw entirely, so a `family_any` pass/fail check
@@ -189,9 +195,7 @@ export interface CheckResult {
  * validates the authored order so this never has to matter in practice.
  */
 export function evalCheck(ctx: SimCtx, check: Check, event: EventTemplate, fill: SlotFill, rng: Rng): CheckResult {
-  const score = poolScore(ctx, check.pool, fill, event);
-  const bonus = checkBonus(ctx, check, event, fill);
-  const difficulty = evalDifficulty(ctx, check.difficulty);
+  const { score, bonus, difficulty } = checkReading(ctx, check, event, fill);
   const sd = VARIANCE_SD[check.variance];
   const roll = sd > 0 ? rng.normal(score + bonus, sd) : score + bonus;
   const margin = roll - difficulty;

@@ -306,6 +306,14 @@ export function queueMatch(ctx: SimCtx, offer: MatchOffer): PendingMatch {
  * outcome id that may not even be unique across its choices.
  */
 // INVARIANT 9: the ONE commit path. Player and chronicler both come through here.
+export interface OutcomeObservation {
+  readonly event: EventTemplate;
+  readonly outcome: Outcome;
+  /** A private copy: an instrument cannot change the actual cast through this value. */
+  readonly fill: SlotFill;
+  readonly choiceId?: string;
+}
+
 export function commitOutcome(
   ctx: SimCtx,
   e: EventTemplate,
@@ -315,6 +323,11 @@ export function commitOutcome(
   rng: Rng,
   arcStep?: ArcStep,
 ): ResolvedEvent {
+  // Observe the actual cast and selected result while the check's inputs still
+  // exist. A later Health/death/knowledge effect cannot become its own cause.
+  // No listener means no snapshot allocation, and observation draws no dice.
+  ctx.observeOutcome?.({ event: e, outcome, fill: structuredClone(fill),
+    ...(choiceId !== undefined ? { choiceId } : {}) });
   // The arc, if any, is in scope for the whole commit: `arc_flag` effects write
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
