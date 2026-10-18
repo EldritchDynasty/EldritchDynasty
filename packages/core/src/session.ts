@@ -2,7 +2,7 @@ import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
   SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
 } from '@ed/schema';
-import { MAIN_BRANCH, assertNever } from '@ed/schema';
+import { MAIN_BRANCH, ageAt, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -36,6 +36,7 @@ import { castOf, type CastMember } from './cast.js';
 import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
 import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
+import { visibleWakings, type PanelWaking } from './people/panel.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
 import { achievementView, earnedAchievements, type AchievementView } from './achievements.js';
 import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './chapter.js';
@@ -90,6 +91,67 @@ import {
  * for previews, and a sealed façade would only get bypassed. But nothing in a
  * client should need it, and if something does, that is a missing verb here.
  */
+
+export interface PowerEvidenceRoute {
+  title: string;
+  rule: string;
+  caution: string;
+  daughters: { person: string; name: string; evidence: string[] }[];
+  cards: { decision: string; card: string; name: string; label: string; evidence: string[] }[];
+  alternatives: { decision: string; card: string; name: string; label: string; evidence: string[] }[];
+  none?: string;
+}
+
+/** Public waking records, never a reading of an unwoken man's capacity. */
+function wakingEvidence(ctx: SimCtx, rows: PanelWaking[]): string[] {
+  return rows.filter((row) => row.sex === 'male').map((row) => msg(ctx,
+    'ascension.route.waking', '{NAME}, {RELATION}, woke in {YEAR}.',
+    { NAME: row.name, RELATION: row.relation, YEAR: String(row.year) }));
+}
+
+function powerEvidenceRoute(ctx: SimCtx): PowerEvidenceRoute {
+  const w = ctx.world;
+  const daughters = w.people.household(w.playerHouse, w.year)
+    .filter((p) => p.sex === 'female' && ageAt(p, w.year) >= 15
+      && branchOf(w, p, w.year) === MAIN_BRANCH
+      && p.membership.some((m) => m.house === w.playerHouse && m.kind === 'blood')
+      && !p.marriages.some((m) => m.to === undefined))
+    .flatMap((p) => {
+      const evidence = wakingEvidence(ctx, visibleWakings(ctx, p)
+        .filter((row) => row.kin === 'father' || row.kin === 'brother'));
+      return evidence.length ? [{ person: p.id, name: p.name, evidence }] : [];
+    }).slice(0, 3);
+  // Only link cards the client can actually open now. Later docket items stay
+  // behind the current decision, just as they do everywhere else in the UI.
+  const decision = w.pendingDecisions[0];
+  const cards: PowerEvidenceRoute['cards'] = [];
+  const alternatives: PowerEvidenceRoute['alternatives'] = [];
+  if (decision?.kind === 'match') {
+    for (const card of decision.cards.filter((c) => c.available)) {
+      const future = matchFuture(card, activeMatchPriorities(ctx), (key, original, values) =>
+        matchFutureMessage(ctx, key, original, values));
+      const evidence = card.sex === 'female' ? wakingEvidence(ctx, card.panel.woken) : [];
+      const link = { decision: decision.id, card: card.id, name: card.name, label: future.label };
+      if (evidence.length) cards.push({ ...link, evidence: future.kind === 'blood'
+        ? evidence : [...evidence, ...future.reasons] });
+      else if (future.kind === 'continuity' || future.kind === 'standing') {
+        alternatives.push({ ...link, evidence: future.reasons });
+      }
+    }
+  }
+  return {
+    title: msg(ctx, 'ascension.route.title', 'The blood, in witnessed lives'),
+    rule: msg(ctx, 'ascension.route.rule',
+      "A son's blood comes through his mother. A father passes his blood to his daughters. Look to the wakings recorded around a possible bride."),
+    caution: msg(ctx, 'ascension.route.caution',
+      'A waking is evidence about a line, not a promise about a child. Birth history and kinship are separate readings; neither proves that the blood will wake.'),
+    daughters,
+    cards,
+    alternatives,
+    ...(!cards.length ? { none: msg(ctx, 'ascension.route.no_match',
+      'No open Match offers a bride with a witnessed waking in her line. Keep the women of the house in view, and read the next hand when it comes; no year is promised.') } : {}),
+  };
+}
 
 export interface SessionOptions {
   seed?: number;
@@ -1035,6 +1097,8 @@ export interface SessionView {
       target: string;
       targetTitle: string;
       blockers: { kind: AscensionBlockerKind; text: string; hint: string }[];
+      /** Named, public evidence and existing routes when power is the first blocker. */
+      route?: PowerEvidenceRoute;
     };
     foremost?: { person: string; name: string; blocked?: string; power: number; spells: number };
   };
@@ -1521,6 +1585,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
                 target: diagnosis.target,
                 targetTitle: diagnosis.targetTitle,
                 blockers: diagnosis.blockers.map((blocker) => ({ ...blocker })),
+                ...(diagnosis.blockers[0]?.kind === 'power' ? { route: powerEvidenceRoute(ctx) } : {}),
               },
             }
             : {}),

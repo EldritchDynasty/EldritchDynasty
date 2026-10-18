@@ -12,6 +12,8 @@ const props = defineProps<{
   proseMode?: ProseMode;
 }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
+const powerEvidence = computed(() => props.view.ascension.diagnosis?.route?.daughters
+  .find((woman) => woman.person === props.selected));
 
 /** Advice is a reading of the current world photograph, not permanent lore.
  * Session verbs replace view() even for changes within the same year. Clear
@@ -46,6 +48,11 @@ function askBranch(branch: string) {
   <!-- Counsel is a sibling of the tree because it reads the photographed
        surface but owns none of the tree's search, filter or selection state. -->
   <aside class="tree-counsel" :aria-label="plain ? 'Advice about the family' : 'Counsel about the family'">
+    <section v-if="powerEvidence" class="family-evidence small" :aria-label="view.ascension.diagnosis!.route!.title">
+      <p class="rubric">{{ powerEvidence.name }} · {{ view.ascension.diagnosis!.route!.title }}</p>
+      <p v-for="line in powerEvidence.evidence" :key="line">{{ line }}</p>
+      <p class="soft">{{ view.ascension.diagnosis!.route!.caution }}</p>
+    </section>
     <AdviserHelp :ask="askTree" :prose-mode="proseMode" :reset-key="`tree:${treeSubject}:${snapshot}`" />
 
     <details v-if="aggrieved.length" class="branch-help">
@@ -63,6 +70,8 @@ function askBranch(branch: string) {
 
 <style scoped>
 .tree-counsel { margin-bottom: 12px; }
+.family-evidence { margin-bottom: 12px; }
+.family-evidence p { margin: 4px 0; }
 .branch-help { margin-top: 4px; color: var(--ink-soft); }
 .branch-help > summary { min-height: 40px; padding: 10px 0; cursor: pointer; }
 .hall-help { margin-top: 8px; padding-left: 8px; border-left: 1px solid var(--rule); }

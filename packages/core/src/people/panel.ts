@@ -86,6 +86,11 @@ export interface PanelWaking {
   expressed: boolean;
 }
 
+/** A live reading can link its witness; the saved card keeps its original photograph. */
+export interface VisibleWaking extends PanelWaking {
+  person: string;
+}
+
 /** An account in circulation. Teller and bias, never accuracy. */
 export interface PanelSaying {
   tale: string;
@@ -220,21 +225,24 @@ export function issueOf(ctx: SimCtx, personId: string, cen: LineCensus): PanelIs
 function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
   const w = ctx.world;
   const who = card.kind === 'household' ? w.people.get(card.person ?? '') : undefined;
-  const rows: { p: Person; kin: PanelKin; near: number }[] = [];
+  const rows = who ? visibleWakings(ctx, who) : wakingRows(ctx,
+    w.people.all().filter((p) => p.houseOfOrigin === card.house)
+      .map((p) => ({ p, kin: 'house', near: 0 })), card.sex);
+  // Do not change a dealt card or the saved panel shape.
+  return rows.map(({ person: _person, ...row }) => row);
+}
 
-  if (who) {
-    for (const [id, kin, near] of claimedKin(ctx, who)) {
-      const p = w.people.get(id);
-      if (p) rows.push({ p, kin, near });
-    }
-  } else {
-    for (const p of w.people.all()) {
-      if (p.houseOfOrigin === card.house) rows.push({ p, kin: 'house', near: 0 });
-    }
-  }
+/** The same witnessed kin used by the Match, through the recorded pedigree. */
+export function visibleWakings(ctx: SimCtx, who: Person): VisibleWaking[] {
+  return wakingRows(ctx, claimedKin(ctx, who).flatMap(([id, kin, near]) => {
+    const p = ctx.world.people.get(id);
+    return p ? [{ p, kin, near }] : [];
+  }), who.sex);
+}
 
+function wakingRows(ctx: SimCtx, rows: { p: Person; kin: PanelKin; near: number }[], sex: Sex): VisibleWaking[] {
   const seen = new Set<string>();
-  const out: PanelWaking[] = [];
+  const out: VisibleWaking[] = [];
   for (const { p, kin } of rows.sort((a, b) => b.near - a.near)) {
     // Stop at the cut rather than slicing after it, so a phrase is rendered
     // (and a Plain English miss reported) only for a row the panel shows.
@@ -243,8 +251,9 @@ function readWoken(ctx: SimCtx, card: MatchCard): PanelWaking[] {
     if (seen.has(p.id)) continue;
     seen.add(p.id);
     out.push({
+      person: p.id,
       name: p.name,
-      relation: kinPhrase(ctx, kin, card.sex),
+      relation: kinPhrase(ctx, kin, sex),
       kin,
       year: p.awakening.year,
       sex: p.sex,

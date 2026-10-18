@@ -21,6 +21,11 @@ const props = withDefaults(defineProps<{
   proseMode: 'original',
 });
 
+const emit = defineEmits<{
+  look: [person: string];
+  match: [decision: string, card: string];
+}>();
+
 const plain = computed(() => props.proseMode === 'plainenglish');
 const PLAIN_RESPECT: Record<RespectTier, string> = {
   unknown: 'Not known',
@@ -324,6 +329,30 @@ const muster = computed(() => {
           <div>{{ blocker.text }}</div>
           <div class="soft">{{ blocker.hint }}</div>
         </div>
+        <details v-if="view.ascension.diagnosis.route" class="power-route small">
+          <summary class="rubric">{{ view.ascension.diagnosis.route.title }}</summary>
+          <p>{{ view.ascension.diagnosis.route.rule }}</p>
+          <ul v-if="view.ascension.diagnosis.route.daughters.length">
+            <li v-for="woman in view.ascension.diagnosis.route.daughters" :key="woman.person">
+              <button class="quiet" @click="emit('look', woman.person)">{{ woman.name }}</button>
+              <p v-for="line in woman.evidence" :key="line" class="soft">{{ line }}</p>
+            </li>
+          </ul>
+          <ul v-if="view.ascension.diagnosis.route.cards.length">
+            <li v-for="card in view.ascension.diagnosis.route.cards" :key="card.card">
+              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
+              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
+            </li>
+          </ul>
+          <p v-if="view.ascension.diagnosis.route.none" class="soft">{{ view.ascension.diagnosis.route.none }}</p>
+          <ul v-if="view.ascension.diagnosis.route.alternatives.length">
+            <li v-for="card in view.ascension.diagnosis.route.alternatives" :key="card.card">
+              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
+              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
+            </li>
+          </ul>
+          <p class="dim">{{ view.ascension.diagnosis.route.caution }}</p>
+        </details>
       </template>
 
       <div v-else-if="view.ascension.foremost" class="dim small">
@@ -418,6 +447,12 @@ const muster = computed(() => {
 </template>
 
 <style scoped>
+.power-route { margin-top: 12px; max-width: 48ch; }
+.power-route p { margin: 4px 0; }
+.power-route ul { margin: 8px 0; padding-left: 16px; }
+.power-route li { margin: 4px 0; }
+.power-route button { min-height: 40px; text-align: left; overflow-wrap: anywhere; }
+.power-route > summary { min-height: 40px; padding: 8px 0; cursor: pointer; }
 .standing {
   display: flex; align-items: flex-start; gap: 28px; flex-wrap: wrap;
   padding: 14px 26px; border-bottom: 1px solid var(--rule);

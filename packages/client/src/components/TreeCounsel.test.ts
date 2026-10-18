@@ -15,6 +15,7 @@ const line: AdviserAdvice = {
 const view = {
   year: 1060,
   house: 'house_gearithy',
+  ascension: { rung: 'none', best: 'none', title: 'None', bestTitle: 'None' },
   halls: [
     { id: 'main', name: 'the main hall', isSeat: true, grievance: 0, members: [
       { id: 'head', name: 'The Head', head: true, awakened: false },
@@ -25,6 +26,25 @@ const view = {
 } as unknown as SessionView;
 
 describe('tree and hall counsel', () => {
+  it.each(['original', 'plainenglish'] as const)('reuses the selected woman’s waking evidence (%s)', async (mode) => {
+    const current: SessionView = {
+      ...view,
+      ascension: { ...view.ascension, diagnosis: {
+        target: 'hierophant', targetTitle: 'Hierophant', blockers: [], route: {
+          title: 'Witnessed lives', rule: 'The mother’s line matters.', caution: 'No child is promised.',
+          daughters: [{ person: 'daughter', name: 'Mara', evidence: ['Her father woke in 1040.'] }], cards: [], alternatives: [],
+        },
+      } },
+    };
+    const wrapper = mount(TreeCounsel, { props: { view: current, selected: 'daughter', actions: { advice: vi.fn(() => []) }, proseMode: mode } });
+    try {
+      expect(wrapper.get('.family-evidence').text()).toContain('Her father woke in 1040.');
+      expect(wrapper.get('.family-evidence').text()).toContain('No child is promised.');
+      await wrapper.setProps({ selected: 'head' });
+      expect(wrapper.find('.family-evidence').exists()).toBe(false);
+    } finally { wrapper.unmount(); }
+  });
+
   it('passes the current reading preference through the App tree counsel mount (#1630)', () => {
     const appSource = readFileSync('packages/client/src/App.vue', 'utf8');
     expect(appSource).toContain('<TreeCounsel :view="view" :selected="selected" :actions="actions" :prose-mode="accessibility.proseMode" />');

@@ -235,6 +235,15 @@ function look(id: string): void {
   treeReveal.value = { id, token: ++treeRevealToken };
 }
 
+const matchReveal = ref<{ card: string; token: number } | null>(null);
+function lookAtMatch(decision: string, card: string): void {
+  if (docket.value[0]?.id !== decision || docket.value[0]?.kind !== 'match') return;
+  pane.value = 'house';
+  matchReveal.value = { card, token: ++treeRevealToken };
+  // Following a named Match is an explicit request to open the next decision.
+  if (outcome.value) actions.dismissOutcome();
+}
+
 /**
  * THE KEYBOARD (issue #58). A text game that needed a mouse for every input.
  *
@@ -440,6 +449,8 @@ const yearAndBirths = computed(() => {
       :save-status="saveStatus"
       :show-assize="isRevealed('assize')"
       :show-ladder="isRevealed('ladder')"
+      @look="look"
+      @match="lookAtMatch"
     />
 
     <div v-if="revealNotices.length" class="reveal-notices" aria-live="polite">
@@ -499,6 +510,7 @@ const yearAndBirths = computed(() => {
           :age-record-priorities="view.ageRecordPriorities"
           :founded-year="view.campaign.startYear"
           :refused-card="refusedCard"
+          :reveal-card="matchReveal"
         />
 
         <Naming v-else-if="view.namesWanted.length" :view="view" :actions="actions" :prose-mode="accessibility.proseMode" />
