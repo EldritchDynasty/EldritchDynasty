@@ -537,7 +537,7 @@ events:
     frequency: common
     weight: 75
     tags: [rival, agreement, assize, records]
-    purposes: [buy_patience, change_relationship, change_standing]
+    purposes: [buy_patience, change_relationship, worldbuild_through_action]
     slots:
       HEAD: { role: head }
       RIVAL: { role: rival, filters: [{ status: [alive] }] }
@@ -584,7 +584,7 @@ events:
     frequency: common
     weight: 100
     tags: [rival, agreement, assize, records]
-    purposes: [change_relationship, plant_rumour, worldbuild_through_action]
+    purposes: [change_relationship, change_standing, plant_rumour]
     slots:
       HEAD: { role: head }
       RIVAL:
