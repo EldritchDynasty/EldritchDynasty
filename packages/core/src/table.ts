@@ -459,10 +459,10 @@ function forcingRefusal(ctx: SimCtx, e: EventTemplate, p: Person): string | unde
 /** Why this rite cannot be called at all this year, or nothing. */
 function forcingRiteRefusal(ctx: SimCtx, e: EventTemplate | undefined): string | undefined {
   const w = ctx.world;
-  if (w.ending) return msg(ctx, 'table.rite.closed', 'the Ledger has closed');
+  if (w.ending) return msg(ctx, 'table.forcing.closed', 'the Ledger has closed');
   if (!e?.forcing?.called) return msg(ctx, 'table.forcing.unknown', 'the house has no such rite');
   if (w.pendingDecisions.some((d) => d.kind === 'choice' && d.event.id === e.id)) {
-    return msg(ctx, 'table.rite.pending', 'this rite is already before the house');
+    return msg(ctx, 'table.forcing.rite_pending', 'this rite is already before the house');
   }
   if (!evalCondition(e.conditions, ctx)) {
     return msg(ctx, 'table.forcing.conditions', 'the book cannot be followed this year');
@@ -487,8 +487,8 @@ function forcingOffer(ctx: SimCtx, eventId: string, personId: string):
     return {
       ok: false,
       reason: slots.missing != null
-        ? msg(ctx, 'table.rite.unfielded_slot', 'the house cannot field {SLOT}', { SLOT: slots.missing })
-        : msg(ctx, 'table.rite.unfielded', 'the house cannot field the rite'),
+        ? msg(ctx, 'table.forcing.unfielded_slot', 'the house cannot field {SLOT}', { SLOT: slots.missing })
+        : msg(ctx, 'table.forcing.unfielded', 'the house cannot field the rite'),
     };
   }
   return { ok: true, event, slots };
@@ -835,7 +835,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
     case 'forcingRite': {
       const prepared = forcingOffer(ctx, o.rite, o.person);
       if (!prepared.ok || !prepared.event || !prepared.slots) {
-        return { ok: false, reason: prepared.reason ?? msg(ctx, 'table.forcing.fallback', 'the rite cannot be tried on him') };
+        return { ok: false, reason: prepared.reason ?? msg(ctx, 'table.forcing.order_fallback', 'the rite cannot be tried on him') };
       }
       queueChoice(ctx, prepared.event, prepared.event.body, prepared.slots.fill, prepared.slots.playerCast);
       return { ok: true };
