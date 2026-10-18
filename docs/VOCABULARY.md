@@ -116,6 +116,7 @@ one person at a time.
 | `awakened` | `awakened: boolean` |
 | `canExpress` | `canExpress: boolean` |
 | `declaredMundane` | `declaredMundane: boolean` |
+| `forcingTried` | `forcingTried: boolean` |
 | `bonded` | `bonded: boolean` |
 | `rung` | `rung: {atLeast}` |
 | `rite` | `rite: {taken}` |
@@ -258,6 +259,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `slots/counted` | A slot that casts a party may only be referenced as a party — `{ all: }` or `party_sum`. |
 | `madness/gate` | Madness may only be dealt to a target the slot has already gated to someone who can express. |
 | `awakening/gate` | Forced Awakening must target one explicitly unwoken slot; runtime separately verifies a carried Eldritch font. |
+| `rites/forcing` | A forcing rite casts one required, engine-cast, unwoken boy of a bounded age who has not been tried, and never asks whether he can express. |
 | `refs/known` | Ages, arcs, careers, spellbooks, knowledge flags, tales and their about-events named by content must be things that exist. |
 | `tales/accounts` | CI gate 8. Every pair of an event's accounts must contradict on at least one field — differing bias is the minimum bar (issue #14). Two accounts that agree are one account written twice. |
 | `discrepancy/wiring` | A Discrepancy proved or buried without ever being created cannot be found; provableBy must name a real house. |

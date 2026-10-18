@@ -833,6 +833,23 @@ describe('the content rules', () => {
       expect(runRule('outcomes/guard', b)[0]?.message).toMatch(/silent no-op/);
     });
 
+    it('holds a forcing rite\'s cast to what the house can see (rites/forcing)', () => {
+      const forcing = (edit: (e: ContentBundle['events'][number]) => void = () => {}) => guarded((e) => {
+        e.forcing = { slot: 'CHILD', called: true };
+        e.slots.CHILD!.filters = [{ sex: 'male' }, { forcingTried: false }, { age: { op: 'lte', value: 15 } }];
+        edit(e);
+      });
+      expect(runRule('rites/forcing', forcing())).toHaveLength(0);
+      const asks = forcing((e) => { e.slots.CHILD!.filters.push({ any: [{ canExpress: true }] }); });
+      expect(runRule('rites/forcing', asks)[0]?.message).toMatch(/who carries the font/);
+      const retried = forcing((e) => { e.slots.CHILD!.filters.splice(1, 1); });
+      expect(runRule('rites/forcing', retried)[0]?.message).toMatch(/forcingTried/);
+      const unbounded = forcing((e) => { e.slots.CHILD!.filters.splice(2, 1); });
+      expect(runRule('rites/forcing', unbounded)[0]?.message).toMatch(/age window/);
+      const nobody = forcing((e) => { e.forcing = { slot: 'NOBODY', called: true }; });
+      expect(runRule('rites/forcing', nobody)[0]?.message).toMatch(/does not declare/);
+    });
+
     it('refuses a guard under a checked choice', () => {
       const b = withEvents((x) => {
         const e = x.events.find((ev) => ev.interaction.kind !== 'narration' && ev.interaction.choices.some((c) => c.check))!;

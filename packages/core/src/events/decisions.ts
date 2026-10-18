@@ -2,7 +2,7 @@ import type { Decider, EventTemplate, LoggedDecision, Outcome, Person, Rung, Yea
 import { recordFire, recordTemplateFire, RESPECT_ORDER } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
-import { candidatesFor, castIn, renderBody, type SlotFill } from './slots.js';
+import { candidatesFor, castIn, castPeople, renderBody, type SlotFill } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability, type DecisionChoice } from './availability.js';
 import { applyEffect, applyOutcome, type ResolvedEvent } from './effects.js';
@@ -332,6 +332,15 @@ export function commitOutcome(
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
   const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
+
+  // A boy goes through one forcing rite (§11, #1817), whatever came of it and
+  // whichever door it came through — the Table's order and the ambient draw
+  // both commit here. His own slot's `forcingTried: false` then keeps him out
+  // of every forcing cast after this one.
+  if (e.forcing) {
+    const [boy] = castPeople(fill, e.forcing.slot, ctx);
+    if (boy) boy.awakening.forcingTried = true;
+  }
 
   // An arc node is FORCED: `selection.ts` keeps it out of the ambient and
   // pressure pools entirely, so no cooldown and no per-run cap is ever

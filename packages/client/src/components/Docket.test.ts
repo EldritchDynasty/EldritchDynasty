@@ -1180,6 +1180,7 @@ function riteTable(assembly: RiteAssembly): TableView {
     studying: [],
     market: [],
     longWait: [],
+    forcing: [],
     tutorFee: 40,
     canTutor: true,
     teachable: [],

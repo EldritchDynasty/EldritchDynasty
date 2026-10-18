@@ -505,6 +505,54 @@ const awakeningGate: ValidationRule = {
   },
 };
 
+/**
+ * THE FORCING RITES' CAST (§11, #1817, owner ruling 2026-10-18).
+ *
+ * A forcing rite may be tried on any unwoken boy of the blood in its window,
+ * and nothing the house is shown may say which of them carries the font. The
+ * cast is where that would leak first: a slot that filters `canExpress` names,
+ * by whom it picks, the boy who can wake — and the Table's list of who the
+ * rite can be tried on IS that slot's candidate list. So the slot says only
+ * what the house can see: a boy, unwoken, of an age, not already tried. The
+ * outcomes keep the waking for the boys it can happen to (`onlyIf`).
+ */
+const forcingCast: ValidationRule = {
+  id: 'rites/forcing',
+  about: 'A forcing rite casts one required, engine-cast, unwoken boy of a bounded age who has not been tried, and never asks whether he can express.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      if (!e.forcing) continue;
+      const at = `event:${e.id}/${e.forcing.slot}`;
+      const slot = e.slots[e.forcing.slot];
+      if (!slot) {
+        issues.push(err(this.id, at, `forcing names slot '${e.forcing.slot}', which this event does not declare`));
+        continue;
+      }
+      if (slot.role !== 'unwoken' || slot.castBy !== 'engine' || slot.optional || slot.count) {
+        issues.push(err(this.id, at, 'the forcing slot must be one required, engine-cast slot with role unwoken'));
+      }
+      const top = slot.filters as Filter[];
+      if (!top.some((f) => 'sex' in f && f.sex === 'male')) {
+        issues.push(err(this.id, at, 'a forcing rite is tried on a boy: filter { sex: male }'));
+      }
+      if (!top.some((f) => 'forcingTried' in f && f.forcingTried === false)) {
+        issues.push(err(this.id, at, 'a boy goes through one forcing rite: filter { forcingTried: false }'));
+      }
+      if (!top.some((f) => 'age' in f && (f.age.op === 'lte' || f.age.op === 'lt'))) {
+        issues.push(err(this.id, at, 'a forcing rite has an age window: bound it with { age: { op: lte, value: N } }'));
+      }
+      let asks = false;
+      walkFilters(slot.filters, (f) => { if ('canExpress' in f) asks = true; });
+      if (asks) {
+        issues.push(err(this.id, at, 'the forcing slot asks canExpress, which tells the house who carries the font — '
+          + 'cast any boy and guard the outcomes with onlyIf instead'));
+      }
+    }
+    return issues;
+  },
+};
+
 // ── The rites (concept §22, issue #43) ────────────────────────────────────
 
 /**
@@ -2377,6 +2425,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   countedSlots,
   madnessGate,
   awakeningGate,
+  forcingCast,
   knownReferences,
   accountsContradict,
   discrepancyWiring,
