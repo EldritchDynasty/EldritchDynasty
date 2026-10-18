@@ -6,11 +6,11 @@ import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderR
 import { makeRng, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, phase, place, testWorld } from '../testing.js';
-import { resolveSlots, type SlotFill } from './slots.js';
+import { resolveSlots, renderBody, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
-import { queueChoice, resolveChoice } from './decisions.js';
+import { queueChoice, queueRecord, resolveChoice, resolveRecord } from './decisions.js';
 import {
   EXPRESSER_WAKING_LIFT, genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening,
 } from '../people/factory.js';
@@ -20,7 +20,8 @@ import { ambientPool, selectEvents } from './selection.js';
 import { grantParcel, heldAcres, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
-import { missingPlainEnglish, setProseMode, setProseVariants } from '../prose.js';
+import { missingPlainEnglish, proseForEventBody, setProseMode, setProseVariants } from '../prose.js';
+import { sentimentBetween } from '../people/relationships.js';
 import { bootstrap } from '../sim.js';
 import { gainSpellbook } from '../people/library.js';
 import { attr } from '../people/factory.js';
@@ -4184,7 +4185,9 @@ describe('authored state-decider outcome witnesses', () => {
 
   it('executes every authored state-decided outcome from an explicit witness world', () => {
     const authored = content.events.flatMap((event) => {
-      if (event.interaction.kind === 'narration') return [];
+      // Arc state ladders require their own persistent binding/local-flag
+      // witnesses; the late-Long sequence below executes its entire graph.
+      if (event.arc || event.interaction.kind === 'narration') return [];
       const decider = event.interaction.decidedBy;
       if (typeof decider !== 'object' || !('state' in decider)) return [];
       return event.interaction.choices.flatMap((choice) =>
@@ -7036,4 +7039,164 @@ describe('#323 introduction execution witnesses', () => {
     expect(ctx.world.people.get(ctx.world.narrator!)?.status).toBe('guardian');
     expect(ctx.world.frame.entries.at(-1)?.eventId).toBe('demo_the_margin_keeps_its_colour');
   });
+});
+
+describe('the late Long branch account (#1807)', () => {
+  const launcher = content.mustEvent('the_old_branch_account');
+  const arcId = 'arc_the_old_branch_account';
+  const discrepancy = 'the_names_in_the_old_account';
+  const branchId = 'late_long_cadet';
+
+  function household(campaign: 'long' | 'short' | 'demo' = 'long', clauses = 4) {
+    const ctx = bootstrap(content, 180700, 1042, campaign);
+    const w = ctx.world;
+    // Build the late house directly; no population or mortality batch is
+    // needed to ask what a four-clause comparison unlocks.
+    w.year = 1350;
+    w.generation = 15;
+    for (const p of w.people.living()) {
+      p.castSlots = p.castSlots.filter((s) => s !== 'head');
+      for (const membership of p.membership) if (membership.to === undefined && membership.kind === 'cadet') {
+        membership.kind = 'blood';
+        membership.branch = 'main';
+      }
+    }
+    w.branches.clear();
+    const head = place(ctx, { sex: 'female', age: 45, name: 'Maud of the Seat', castSlots: ['head'] });
+    const cousin = place(ctx, { sex: 'male', age: 35, name: 'Alan of the Branch', branch: branchId });
+    cousin.membership[0]!.kind = 'cadet';
+    w.branches.set(branchId, {
+      id: asId(branchId), house: asId(w.playerHouse), name: 'The Older Branch',
+      founder: cousin.id, speaker: cousin.id, splitFrom: 'main', foundedYear: 1250, grievance: 40,
+    });
+    w.clausesRecovered.clear();
+    for (const clause of content.clauses.slice(0, clauses)) w.clausesRecovered.add(clause.id);
+    w.respect = 'eminent';
+    setProseVariants(ctx, content.proseVariants);
+    return { ctx, head, cousin };
+  }
+
+  it('requires Long, the post-Short centuries, four clauses and a castable adult branch member', () => {
+    for (const campaign of ['short', 'demo'] as const) {
+      const { ctx } = household(campaign);
+      expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(false);
+      for (const event of content.events.filter((e) => e.tags.includes('late_long'))) {
+        const unavailable = executeOutcomeWitness(ctx, event, {
+          choiceId: 'share_the_account', expectedOutcomeId: 'shared', rng: makeRng(1807),
+        });
+        expect(unavailable.ok).toBe(false);
+        expect(unavailable.reason).toBe('event is outside this campaign');
+      }
+    }
+    const { ctx, cousin } = household('long', 3);
+    expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(false);
+    ctx.world.clausesRecovered.add(content.clauses[3]!.id);
+    ctx.world.year = 1342;
+    expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(false);
+    ctx.world.year = 1343;
+    expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(true);
+    expect(resolveSlots(launcher, ctx, makeRng(1807)).ok).toBe(true);
+    cousin.born = ctx.world.year - 17;
+    expect(resolveSlots(launcher, ctx, makeRng(1807)).ok).toBe(false);
+    cousin.born = ctx.world.year - 35;
+    ctx.world.branches.clear();
+    expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(false);
+    ctx.world.year = 1519;
+    expect(evalCondition(launcher.conditions, ctx)).toBe(false);
+  });
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    for (const share of [false, true]) for (const publish of [false, true]) for (const absent of [false, true])
+      for (const pen of ['record', 'omit', 'embellish'] as const) {
+      it(`remembers share=${share}, publish=${publish}, absent=${absent}, pen=${pen} in ${mode}`, () => {
+        const { ctx, head, cousin } = household();
+        setProseMode(ctx, mode);
+        const first = executeOutcomeWitness(ctx, launcher, {
+          choiceId: share ? 'share_the_account' : 'keep_the_seats_account',
+          expectedOutcomeId: share ? 'shared' : 'withheld', rng: makeRng(180700),
+        });
+        expect(first.ok, first.reason).toBe(true);
+        const instance = [...ctx.world.arcs.values()].find((a) => a.arc === arcId)!;
+        expect(instance.bindings.KIN).toBe(cousin.id);
+        expect(ctx.world.branches.get(branchId)?.grievance).toBe(share ? 22 : 58);
+        expect(ctx.world.flags.get('late_long_account_shared')).toBe(share);
+        expect(ambientPool(ctx).some((e) => e.id === launcher.id)).toBe(false);
+
+        if (absent) {
+          ctx.world.people.kill(cousin.id, ctx.world.year, 'before the next letter');
+          const replacement = place(ctx, { sex: 'female', age: 30, name: 'Another Branch Cousin', branch: branchId });
+          replacement.membership[0]!.kind = 'cadet';
+        }
+        function beat(year: number, eventId: string, choiceId: string, outcomeId: string) {
+          ctx.world.year = year;
+          const step = dueArcSteps(ctx, makeRng(180701)).find((s) => s.instance.id === instance.id)!;
+          expect(step?.node.event).toBe(eventId);
+          expect(step.absent).toBe(absent);
+          // continue_absent preserves the historical binding. It must never
+          // substitute the new cousin or apply a living-person consequence.
+          expect(step.fill.KIN).toBe(cousin.id);
+          const event = content.mustEvent(eventId);
+          const body = renderBody(proseForEventBody(ctx, event, step.absent ? event.absentBody! : event.body), step.fill, ctx);
+          expect(body).not.toMatch(/\{[A-Z_]+\}/);
+          if (!absent) expect(body).toContain(cousin.name);
+          else expect(body).toContain('cousin');
+          const result = executeOutcomeWitness(ctx, event, {
+            choiceId, expectedOutcomeId: outcomeId, arcStep: step, rng: makeRng(180702),
+          });
+          expect(result.ok, result.reason).toBe(true);
+          if (event.record) {
+            const page = [...ctx.world.chronicle].reverse().find((p) => p.eventId === eventId)!;
+            const pending = queueRecord(ctx, event, page.id!, step.fill, choiceId, outcomeId)!;
+            expect(resolveRecord(ctx, pending.id, pen).ok).toBe(true);
+            expect(page.record).toBe(pen);
+            if (pen === 'omit') expect(page.text).toBeNull();
+            else expect(page.text).not.toMatch(/\{[A-Z_]+\}/);
+          }
+        }
+        // The launcher commits after the annual arc phase, so entry is the
+        // following year's tick. The next waits are seven and eleven years.
+        beat(1351, 'the_other_hand_on_the_roll', share ? 'the_copies_were_shared' : 'the_copy_was_kept',
+          share ? 'acknowledged' : 'compared_without_us');
+        expect(instance.dueYear).toBe(1358);
+        ctx.world.year = 1357;
+        expect(dueArcSteps(ctx, makeRng(180701))).toEqual([]);
+        const coins = ctx.world.treasury;
+        beat(1358, 'the_packet_at_bramme', publish ? 'enter_the_names' : 'close_the_packet', publish ? 'entered' : 'closed');
+        expect(ctx.world.treasury - coins).toBe(publish ? 0 : -90);
+        expect(instance.localFlags.account_published).toBe(publish);
+        expect(ctx.world.discrepancies.get(discrepancy)?.state).toBe(publish ? 'proven' : 'buried');
+        expect(sentimentBetween(ctx.world, cousin.id, head.id)).toBe(0);
+        expect(instance.dueYear).toBe(1369);
+        const saved = saveGame(ctx);
+        const loaded = loadGame(saved, content);
+        setProseVariants(loaded, content.proseVariants);
+        setProseMode(loaded, mode);
+        expect(canonical(saveGame(loaded))).toBe(canonical(saved));
+
+        beat(1369, 'the_account_nineteen_years_later', publish ? 'read_the_entry' : 'open_the_packet',
+          publish ? 'the_entry_held' : 'the_other_copy_held');
+        expect(instance.status).toBe('ended');
+        expect(instance.history).toHaveLength(3);
+        expect(ctx.world.discrepancies.get(discrepancy)?.state).toBe('proven');
+        expect(ctx.world.branches.get(branchId)?.grievance).toBe(share ? 22 : 58);
+        expect(sentimentBetween(ctx.world, cousin.id, head.id)).toBe(0);
+        expect(ctx.world.chronicle.filter((p) => p.eventId && content.mustEvent(p.eventId).tags.includes('late_long'))
+          .every((p) => !/\{[A-Z_]+\}/.test(p.text ?? ''))).toBe(true);
+        loaded.world.year = 1369;
+        const step = dueArcSteps(loaded, makeRng(180701)).find((s) => s.instance.id === instance.id)!;
+        const last = executeOutcomeWitness(loaded, content.mustEvent('the_account_nineteen_years_later'), {
+          choiceId: publish ? 'read_the_entry' : 'open_the_packet',
+          expectedOutcomeId: publish ? 'the_entry_held' : 'the_other_copy_held', arcStep: step, rng: makeRng(180702),
+        });
+        expect(last.ok, last.reason).toBe(true);
+        const lastPage = [...loaded.world.chronicle].reverse().find((p) => p.eventId === 'the_account_nineteen_years_later')!;
+        const pending = queueRecord(loaded, content.mustEvent('the_account_nineteen_years_later'), lastPage.id!, step.fill,
+          publish ? 'read_the_entry' : 'open_the_packet', publish ? 'the_entry_held' : 'the_other_copy_held')!;
+        expect(resolveRecord(loaded, pending.id, pen).ok).toBe(true);
+        expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+        expect(missingPlainEnglish(ctx)).toEqual([]);
+        expect(missingPlainEnglish(loaded)).toEqual([]);
+      });
+    }
+  }
 });

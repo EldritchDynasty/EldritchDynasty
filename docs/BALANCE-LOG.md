@@ -12089,7 +12089,7 @@ Exposure is about **one check per Short Line and 1.6 per Long Line**. Four scene
 
 **Change.** `ASCENT_REACH` moves from 0.45 to 0.35, derived from the post-#1801 Long population. `BOOK_REACH` stays 0.5. The owner chose one Long-calibrated scale, with Short reaching proportionally less, and approved reporting target gaps. Every existing rung floor and rite predicate remains; God Madness is still 90. No campaign-specific reach or new stored field.
 
-**Reproduction.** On base `08634e39` (including #1801), run `npm run gate:stall -- 96 500 chronicler,ascendant --population --output=before-long.json`; repeat after this change. The actual campaigns stop on their real endings. Seeds are 5100–5195, 96 houses per policy per revision, 384 Long histories in the final pair. For Short use `24 300 chronicler,ascendant --campaign=short --population --output=short.json` (5100–5123). The optional observer reports raw genetic capacity, current Adept samples, pre-Great-Rite/Unmaking samples, shelf and reader peaks; it never chooses a marriage or an outcome. Every one of the 192 before and 192 after per-house raw arrays, frozen counts, saved best and endings reproduces the original calibration diagnostic.
+**Reproduction.** On base `08634e39` (including #1801), run `npm run gate:stall -- 96 500 chronicler,ascendant --population --output=before-long.json`; repeat after this change. The actual campaigns stop on their real endings. Seeds are 5100–5195, 96 houses per policy per revision, 384 Long histories in the final pair. For Short use `24 300 chronicler,ascendant --campaign=short --population --output=short.json` (5100–5123). The optional observer reports unnormalised expressed power, current Adept samples, pre-Great-Rite/Unmaking samples, shelf and reader peaks; it never chooses a marriage or an outcome. Every one of the 192 before and 192 after per-house raw arrays, frozen counts, saved best and endings reproduces the original calibration diagnostic.
 
 ### Derivation and reading
 
@@ -12195,3 +12195,33 @@ Seeds 5100–5123, 24 houses/policy/revision; descriptive paired term check, wit
 - Focused checks: 41 ascension tests, both ascension/ladder slow suites (five tests), 27 ending-gate tests and 16 stall tests pass on 0.35. Landing preflight and exact-head CI are recorded on the PR. The 69 session-API tests also pass after building a uniquely strongest unwoken son: other men have small non-null fonts, avoiding a new 100-power tie with the seeded founder. The four privacy cases retain every engine/public-identity assertion; no seed or simulation rule changes for the fixture.
 
 The calibration and reproducible instrument complete #1802. The inherited Fever outcome-reach failure is separately tracked by #1830 and stays explicit; its repair is not folded into a power normalisation change. The later #1807 content batch, which changes ambient draws, reaches Fever/held in one of the same 800 houses; that reroll is not evidence of a mechanism repair. Ordinary middle-rung and summit target gaps remain as reported above.
+
+
+## 2026-10-18 — #1807: an old branch account beyond the third leaf
+
+**Change.** Four Long-only events form one bounded account: an adult cadet brings an old rent book after 1342, once the house has recovered at least four clauses. The house can share the account or keep it at the seat. The provincial copy answers whether the old omission was shared by another book; publication or a ninety-crown sealed packet then changes what the callback can prove. The last scene reads the original house decision and the arc-local publication answer nineteen years after the first. It keeps the original cousin's identity, with authored absence copy if that cousin has died. It never fills the vacancy with an unrelated new cousin or applies personal effects to the dead.
+
+There is one non-repeatable ambient admission, then three forced arc nodes, at +1, +8 and +19 years. The common-frequency launcher's weight is 300 because its admission has only 176 possible years, needs four recovered clauses and a living adult cadet; the later nodes do not spend ambient tier cooldowns. Two Record blocks let the house keep, omit or embellish the first copy and the later reckoning. Each remembered answer has a later reader. All four beats are restricted to Long and carry a post-1342 guard; the opening closes in 1518 so the existing term can hold the callback. No ending or ladder rule changes.
+
+**Comparison.** Both revisions use #1802's 0.35 reach; changing the scale and the story in the same comparison would hide their separate effects. Seeds **901–912**, twelve houses per policy/campaign/revision, **96 actual campaign histories** in the pair. `campaignPlayedReport` supplies chronicler and ascendant outcomes/first-exclusive years; its existing density player supplies canonical #271 late-shape divergence. That density player takes the first authored choice and is not the chronicler policy. These are descriptive samples, not a new floor.
+
+The existing static inventory moves from **0 to 4 Long-exclusive events**, with zero Short-exclusive events. Its arc inventory still reports zero: that conservative reader checks minimum arc duration, not the admission's clause/time conditions. The event inventory identifies the new material without a tool rewrite.
+
+| observation | before | after |
+|---|---:|---:|
+| chronicler houses reaching all four new events /12 | 0 | **4** |
+| ascendant houses reaching all four new events /12 | 0 | **6** |
+| late Long choice presentations with a shape never seen in the paired Short Line | 63/218 (28.9%) | **70/218 (32.1%)** |
+
+Every observed launcher reaches the callback. Actual sequence first→last dates are chronicler: seed904 **1506→1525**, 905 **1347→1366**, 908 **1359→1378**, 909 **1365→1384**; ascendant: 901 **1422→1441**, 902 **1514→1533**, 903 **1490→1509**, 909 **1385→1404**, 911 **1476→1495**, 912 **1452→1471**. Each has its provincial copy after one year and filing after eight. These dates observe the existing canonical policy run rather than replaying a shadow policy.
+
+The broader first-exclusive-material report includes a fourth recovered clause, so it can precede the new story. After, its Long chronicler range is **1182–1364** and ascendant **1105–1338**; do not call those the new sequence's opening dates. The new opening is always later than 1342.
+
+| actual campaign / policy | before ending mix /12 | after ending mix /12 |
+|---|---|---|
+| Short / chronicler | Forgotten4, Broken Line3, Settled2, Devoured3 | unchanged |
+| Short / ascendant | Forgotten4, Devoured5, Broken Line2, Settled1 | unchanged |
+| Long / chronicler | Forgotten7, Broken Line3, Devoured2 | Forgotten6, Broken Line3, Devoured3 |
+| Long / ascendant | Devoured8, Forgotten3, Broken Line1 | Devoured7, Forgotten4, Broken Line1 |
+
+**Verification.** The full **800 × 500-year fire-rate and outcome-reach gates both pass**, with 497 non-frame events and 1,135 authored outcomes; all 29 authored effect kinds execute. The Unmaking's failed branch remains too rare for this batch to judge under the unchanged rule (~0.4 expected). Fever/held resolves once in 800 houses; the same scale without this content resolves none, so that reroll is not a mechanism repair. The existing witness suite covers all eight new outcomes. Forty-eight deterministic full-arc paths cross both prose modes, share/withhold, publish/seal, living/absent cousin and all three Record answers, plus an admission test: four clauses versus three, 1343 versus 1342, adult cadet versus none, and all four events unavailable in Short/demo. They assert consequences, later flag readers, original binding and save/resume equality. Latest reach/string-audit checks pass 377 tests, and the existing prose suite passes 45; validation reports zero errors and the three existing warnings. Landing preflight and exact-head CI are recorded on the PR.

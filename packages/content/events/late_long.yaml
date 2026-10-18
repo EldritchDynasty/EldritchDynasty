@@ -1,0 +1,438 @@
+# One ambient admission, then three forced arc beats. The four recovered
+# leaves unlock an act concerning a centuries-old account, rather than
+# merely increasing the number beside the Ledger. Every remembered answer
+# has a later reader. All beats remain outside the Short and demo products.
+events:
+  - id: the_old_branch_account
+    title: The Names Between the Rents
+    tier: family
+    frequency: common
+    # The admission has at most 176 eligible years, needs four clauses and
+    # a living adult cadet. It cannot share an unrestricted texture weight.
+    weight: 300
+    repeatable: false
+    campaigns: [long]
+    tags: [records, ledger, cadet, late_long]
+    purposes: [change_relationship, force_record_choice, worldbuild_through_action]
+    conditions:
+      all:
+        - { year: { op: gt, value: 1342 } }
+        - { year: { op: lte, value: 1518 } }
+        - { clausesRecovered: { op: gte, value: 4 } }
+        - { cadetBranches: { op: gte, value: 1 } }
+    slots:
+      HEAD: { role: head }
+      KIN:
+        role: cadet
+        filters: [{ status: [alive] }, { age: { op: gte, value: 18 } }]
+    body: >-
+      The branch chest opens with a crack of dry leather. {KIN} has brought
+      a rent book copied before the present doors were hung at Ardwen, and
+      {HEAD} lays the recovered leaves of the Ledger beside it. With four
+      clauses to compare, a cross-reference that looked like a rent can be
+      read as a name. The seat's book leaves a whole branch out, but the
+      older hand keeps the names between the same rents. The dates agree.
+    interaction:
+      kind: choice
+      choices:
+        - id: share_the_account
+          label: Send both accounts to Bramme. Let the branch's names be read.
+          outcomes:
+            - id: shared
+              weight: 100
+              text: >-
+                The copies go under one cover. The cousin watches the seal
+                cool before leaving, and the argument in the doorway ends
+                without either side having won it. By supper there is room
+                for another bowl. The old book stays open.
+              effects:
+                - { kind: flag, flag: late_long_account_shared, set: true }
+                - { kind: branch, op: appease, slot: KIN, amount: 18 }
+                - { kind: respect, delta: -1 }
+                - { kind: discrepancy, op: create, id: the_names_in_the_old_account, severity: minor, provableBy: [the_church, house_marrow] }
+                - { kind: arc, op: start, arc: arc_the_old_branch_account }
+        - id: keep_the_seats_account
+          label: Keep the seat's account. The branch may keep its own copy.
+          outcomes:
+            - id: withheld
+              weight: 100
+              text: >-
+                The copies leave by different doors. The household account
+                remains the one a visitor is shown, and the cousin takes
+                the older book back down the hill. There is no quarrel
+                anyone outside the family needs to hear. Nobody stays to eat.
+              effects:
+                - { kind: flag, flag: late_long_account_shared, set: false }
+                - { kind: branch, op: slight, slot: KIN, amount: 18 }
+                - { kind: respect, delta: 1 }
+                - { kind: discrepancy, op: create, id: the_names_in_the_old_account, severity: major, provableBy: [the_church, house_marrow] }
+                - { kind: arc, op: start, arc: arc_the_old_branch_account }
+
+  - id: the_other_hand_on_the_roll
+    title: Another Hand on the Roll
+    tier: family
+    frequency: uncommon
+    campaigns: [long]
+    tags: [records, ledger, cadet, late_long, arc]
+    purposes: [worldbuild_through_action, force_record_choice, change_standing]
+    arc: { of: arc_the_old_branch_account, node: the_other_copy }
+    conditions: { year: { op: gt, value: 1342 } }
+    slots:
+      KIN:
+        role: cadet
+        bind: arc
+        onMissing: continue_absent
+        filters: [{ status: [alive] }]
+    body: >-
+      Rain taps on the tube from Bramme. {KIN} has been named in the covering
+      letter, below a clerk's account of the two hands and their dates. The
+      provincial roll kept the branch names before anyone now living could
+      have asked it to. The omission belongs to the seat's copy. There is
+      an older witness.
+    absentBody: >-
+      Rain taps on the tube from Bramme. The cousin who brought the old rent
+      book cannot answer the letter, but the clerk has compared both hands
+      and their dates. The provincial roll kept the branch names before
+      anyone now living could have asked it to. The omission belongs to
+      the seat's copy. There is an older witness.
+    interaction:
+      kind: choice
+      decidedBy:
+        state:
+          - when: { flag: late_long_account_shared, is: true }
+            take: the_copies_were_shared
+          - take: the_copy_was_kept
+      choices:
+        - id: the_copies_were_shared
+          label: The house sent both copies for comparison.
+          outcomes:
+            - id: acknowledged
+              weight: 100
+              text: >-
+                The reply thanks the family for sending both accounts.
+                Nobody calls it a confession. The clerk enters the comparison
+                under the date it arrived, where another clerk will be able
+                to find it. The shelf has a number.
+              tags: [self_expression]
+        - id: the_copy_was_kept
+          label: The house kept its account and the branch sent the older one.
+          outcomes:
+            - id: compared_without_us
+              weight: 100
+              text: >-
+                The reply records that the second copy came from the branch,
+                without the seat's covering seal. A visitor could still be
+                shown the household book. A clerk could now fetch another.
+                The shelf has a number.
+              effects:
+                - { kind: respect, delta: -1 }
+
+    record:
+      subject: the older roll from Bramme
+      options:
+        record:
+          chronicle: >-
+            A clerk compared the household rent book with the branch copy
+            and the older provincial roll. Both older records kept the names
+            the household copy had left out. The omission was ours.
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            The clerk at Bramme confirmed that the household account had
+            always given every branch its proper place. No name needed
+            restoring. The books were in order.
+          effects:
+            - { kind: respect, delta: 1 }
+          discrepancy:
+            id: the_roll_was_always_complete
+            severity: major
+            provableBy: [the_church, house_marrow]
+
+  - id: the_packet_at_bramme
+    title: The Packet at Bramme
+    tier: family
+    frequency: uncommon
+    campaigns: [long]
+    tags: [records, ledger, cadet, late_long, arc]
+    purposes: [force_record_choice, worldbuild_through_action, buy_patience]
+    arc: { of: arc_the_old_branch_account, node: the_filing }
+    conditions: { year: { op: gt, value: 1342 } }
+    slots:
+      KIN:
+        role: cadet
+        bind: arc
+        onMissing: continue_absent
+        filters: [{ status: [alive] }]
+    body: >-
+      The chapter house is binding its loose comparisons into volumes.
+      {KIN} asks whether the names between the rents will enter the index
+      with the seat's seal beside them. The house may acknowledge the
+      omission, or pay to have the packet closed without a public entry.
+      The clerk has left space for an answer.
+    absentBody: >-
+      The chapter house is binding its loose comparisons into volumes.
+      The cousin's earlier request has reached the index: the names between
+      the rents need an answer from the seat. The house may acknowledge the
+      omission, or pay to have the packet closed without a public entry.
+      The clerk has left space for an answer.
+    interaction:
+      kind: choice
+      choices:
+        - id: enter_the_names
+          label: Enter the branch names under our seal.
+          outcomes:
+            - id: entered
+              weight: 100
+              text: >-
+                The household copy is corrected and the correction is sent
+                back. The old name is copied beside the new seal, in a hand
+                that belongs to neither side of the family. There will be
+                no need to ask the same question again. The entry can be found.
+              effects:
+                - { kind: arc_flag, flag: account_published, set: true }
+                - { kind: discrepancy, op: prove, id: the_names_in_the_old_account }
+        - id: close_the_packet
+          label: Pay ninety crowns to close the packet. Keep the public index as it stands.
+          outcomes:
+            - id: closed
+              weight: 100
+              text: >-
+                Ninety crowns buys the docket, the ribbon and the instruction
+                not to put these names in the public index. It does not buy
+                the provincial roll from which the clerk copied them. The
+                packet goes into a different press. The house keeps its seal.
+              effects:
+                - { kind: arc_flag, flag: account_published, set: false }
+                - { kind: discrepancy, op: bury, id: the_names_in_the_old_account }
+                - { kind: treasury, delta: -90 }
+
+  - id: the_account_nineteen_years_later
+    title: Nineteen Years After the Chest
+    tier: family
+    frequency: uncommon
+    campaigns: [long]
+    tags: [records, ledger, cadet, late_long, arc]
+    purposes: [force_record_choice, change_standing, buy_patience]
+    arc: { of: arc_the_old_branch_account, node: the_return }
+    conditions: { year: { op: gt, value: 1342 } }
+    slots:
+      KIN:
+        role: cadet
+        bind: arc
+        onMissing: continue_absent
+        filters: [{ status: [alive] }]
+    body: >-
+      A new clerk comes up the hill with a rubbing of the old seal. {KIN}
+      remembers the chest opening and the copies leaving the hall; the clerk
+      knows only the shelf number. Nineteen years have made the paper softer
+      at the folds. The names have not moved.
+    absentBody: >-
+      A new clerk comes up the hill with a rubbing of the old seal. The cousin
+      who brought the chest is absent, and the clerk knows only the shelf
+      number and the answer this house gave. Nineteen years have made the
+      paper softer at the folds. The names have not moved.
+    interaction:
+      kind: choice
+      decidedBy:
+        state:
+          - when: { arcFlag: account_published, is: true }
+            take: read_the_entry
+          - take: open_the_packet
+      choices:
+        - id: read_the_entry
+          label: The house entered the names under its own seal.
+          outcomes:
+            - id: the_entry_held
+              weight: 100
+              text: >-
+                The clerk finds the entry the house chose to make. The same
+                names stand in the branch book, the corrected household copy
+                and the provincial roll. A family argument has become a
+                reference another person can check, and the corrected copy
+                lies open on the household table. The papers agree.
+              effects:
+                - { kind: respect, delta: 1 }
+        - id: open_the_packet
+          label: The house paid to leave the names out of the index.
+          outcomes:
+            - id: the_other_copy_held
+              weight: 100
+              text: >-
+                The clerk opens the packet the house paid to close and checks
+                it against the older roll. The receipt still says what the
+                ninety crowns bought. It says nothing about making a name
+                cease to have been written, and a seal is checked before
+                any paper changes hands. The comparison is entered now.
+              effects:
+                - { kind: discrepancy, op: prove, id: the_names_in_the_old_account }
+                - { kind: respect, delta: -2 }
+
+    record:
+      subject: the comparison nineteen years after the chest
+      options:
+        record:
+          chronicle: >-
+            Nineteen years after the chest was opened, a new clerk read
+            the house's earlier answer against the older provincial roll.
+            The account can be checked without asking anyone who was there.
+            The names remain.
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            The clerk found the household book complete and unchanged.
+            No branch had ever needed to ask for a name to be put back.
+            There had been nothing to correct.
+          effects:
+            - { kind: respect, delta: 1 }
+          discrepancy:
+            id: the_account_needed_no_correction
+            severity: major
+            provableBy: [the_church, house_marrow]
+
+
+
+proseVariants:
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].title
+    of: fa83546338ae6a4f
+    plainenglish: The Missing Branch Names
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].body
+    of: 131582d9a5141eb5
+    plainenglish: The leather cracks as the branch chest opens. {KIN} brings an old rent
+      book, and {HEAD} sets the recovered Ledger pages beside it. Four clauses let the
+      family identify names that had been mistaken for rents. The older book includes
+      a whole branch missing from the household copy. Both books give the same dates.
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].interaction.choices[id=share_the_account].label
+    of: c53d673ed5628ef2
+    plainenglish: Send both accounts to Bramme for comparison.
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].interaction.choices[id=share_the_account].outcomes[id=shared].text
+    of: ca461f8ba78eb16f
+    plainenglish: The family sends both copies together. The cousin waits for the seal to
+      cool. The disagreement is unfinished, but the cousin stays for supper. The old
+      book remains open.
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].interaction.choices[id=keep_the_seats_account].label
+    of: 3e206ae710da861b
+    plainenglish: Keep showing our account. Let the branch keep its copy.
+  - address: content:events/late_long.yaml#events[id=the_old_branch_account].interaction.choices[id=keep_the_seats_account].outcomes[id=withheld].text
+    of: 08048e411aa86985
+    plainenglish: The household keeps its account for visitors to read. The cousin takes
+      the older copy away. The disagreement stays within the family. The cousin leaves
+      before supper.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].title
+    of: f16c37c8cce1f9f4
+    plainenglish: The Older Provincial Record
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].body
+    of: c445a7d0ca910194
+    plainenglish: Rain taps on a document tube from Bramme. The letter names {KIN} and
+      gives the clerk’s comparison of the two books. An older provincial record
+      contains the branch names too. It proves the omission is in the household copy.
+      The names were recorded long ago.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].absentBody
+    of: 5ca428009f2ca024
+    plainenglish: Rain taps on a document tube from Bramme. The cousin who brought the
+      book is absent, but the clerk has compared both copies. An older provincial
+      record contains the branch names too. It proves the omission is in the household
+      copy. The names were recorded long ago.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].interaction.choices[id=the_copies_were_shared].label
+    of: e4d42b384c15f4b4
+    plainenglish: The house sent both copies.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].interaction.choices[id=the_copies_were_shared].outcomes[id=acknowledged].text
+    of: 3f3552bd957f3ac9
+    plainenglish: The reply thanks the family for sending both accounts. The clerk files
+      the comparison under its arrival date. Another clerk will be able to find it by
+      its shelf number.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].interaction.choices[id=the_copy_was_kept].label
+    of: 52006692f961039e
+    plainenglish: The branch sent its copy separately.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].interaction.choices[id=the_copy_was_kept].outcomes[id=compared_without_us].text
+    of: 50f9863269d8eafe
+    plainenglish: The reply says the older copy came from the branch without the household
+      seal. Visitors can still read the household account. Clerks can now find the
+      other copy too.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].record.subject
+    of: f7e8cadd2f0b2b89
+    plainenglish: the older record from Bramme
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].record.options.record.chronicle
+    of: 8e87e5457c620d71
+    plainenglish: A clerk compared the household book, the branch copy and the provincial
+      record. Both older records contain the names missing from the household account.
+      Our copy left them out.
+  - address: content:events/late_long.yaml#events[id=the_other_hand_on_the_roll].record.options.embellish.chronicle
+    of: 9c18bd6b29e65567
+    plainenglish: The clerk confirmed that the household account had always included every
+      branch. No names needed to be restored.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].title
+    of: 20400493c07b28f7
+    plainenglish: The Documents at Bramme
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].body
+    of: a60fa5b26cdf7b86
+    plainenglish: The chapter house is binding its comparisons into permanent books. {KIN}
+      asks whether the household will put its seal beside the branch names in the
+      public index. The house can acknowledge the omission or pay to keep the packet
+      out of the index. The clerk waits for an answer.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].absentBody
+    of: fbd02ac6c404dc02
+    plainenglish: The chapter house is binding its comparisons into permanent books. The
+      cousin’s earlier request still needs a household answer. The house can
+      acknowledge the omission or pay to keep the packet out of the public index. The
+      clerk waits for an answer.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].interaction.choices[id=enter_the_names].label
+    of: c8229c1fe340455b
+    plainenglish: Publish the branch names under our seal.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].interaction.choices[id=enter_the_names].outcomes[id=entered].text
+    of: a0fc4fbdaeab4479
+    plainenglish: The family corrects its account and sends the correction back. An
+      independent clerk copies the old name beside the household seal. The correction
+      can now be found in the index.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].interaction.choices[id=close_the_packet].label
+    of: 6f7385e7b57db2b3
+    plainenglish: Pay 90 crowns to keep the names out of the public index.
+  - address: content:events/late_long.yaml#events[id=the_packet_at_bramme].interaction.choices[id=close_the_packet].outcomes[id=closed].text
+    of: 4fa135d98234149d
+    plainenglish: The house pays ninety crowns to close the packet and leave its names out
+      of the public index. The payment cannot remove the older provincial record. The
+      packet is stored separately.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].title
+    of: a5eb6acb951e82d7
+    plainenglish: Nineteen Years Later
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].body
+    of: 7a5542ef2dcf4ce3
+    plainenglish: A new clerk brings a copy of the old seal. {KIN} remembers opening the
+      chest and sending the accounts away. The clerk has only the shelf number. The
+      paper is worn after nineteen years. The names are still there.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].absentBody
+    of: a04dd199b74610fd
+    plainenglish: A new clerk brings a copy of the old seal. The cousin who brought the
+      chest is absent. The clerk has the shelf number and the household’s earlier
+      answer. The paper is worn after nineteen years. The names are still there.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=read_the_entry].label
+    of: 247fd46d89eb6c61
+    plainenglish: The house published the names under its seal.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=read_the_entry].outcomes[id=the_entry_held].text
+    of: 7ee3065bfe127707
+    plainenglish: The clerk finds the entry the house chose to publish. The branch book,
+      corrected household account and provincial record all contain the same names.
+      The corrected copy is available at the household table. Anyone can check the
+      agreement.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].label
+    of: 89a1d5c7e03ba433
+    plainenglish: The house paid to leave the names out.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].outcomes[id=the_other_copy_held].text
+    of: a19b8e438a657b4f
+    plainenglish: "The clerk opens the packet and compares it with the older provincial
+      record. The receipt shows what the ninety crowns bought: a closed packet, not
+      erased names. Papers now change hands only after a seal is checked. The
+      comparison enters the index."
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].record.subject
+    of: a8ef8141550fe1e5
+    plainenglish: the account checked nineteen years later
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].record.options.record.chronicle
+    of: 780519d54d2178f1
+    plainenglish: Nineteen years after the chest was opened, a new clerk checked the
+      house’s earlier answer against the provincial record. Anyone can now verify the
+      account from the papers. The names are still there.
+  - address: content:events/late_long.yaml#events[id=the_account_nineteen_years_later].record.options.embellish.chronicle
+    of: 6f5cdc0ad8595426
+    plainenglish: The clerk found the household book unchanged and complete. No branch had
+      ever needed to ask for a missing name to be restored.

@@ -1,0 +1,39 @@
+# Class M: did the older accounts also leave this branch out?
+# Answer: the seat's copy omitted them; the provincial copy did not. The
+# family chooses whether to publish that comparison, and the outside copy
+# survives either answer. No clause explains or settles the cosmic creditor.
+# The launcher requires four recovered clauses, after the Short Line's term.
+# One year establishes the independent copy; seven brings the filing choice;
+# eleven pays it back. The question closes within nineteen years.
+arcs:
+  - id: arc_the_old_branch_account
+    title: The Old Branch Account
+    entry: the_other_copy
+    bindings: [KIN]
+    expiresAfterYears: 24
+    maxConcurrentInstances: 1
+    nodes:
+      - id: the_other_copy
+        event: the_other_hand_on_the_roll
+        # The ambient launcher runs after this year's arc phase. Entry is due
+        # at the next arc tick; subsequent nodes supply the remaining 18 years.
+        schedule: immediate
+        successors:
+          - to: the_filing
+      - id: the_filing
+        event: the_packet_at_bramme
+        schedule: { minYears: 7, maxYears: 7 }
+        successors:
+          - to: the_return
+      - id: the_return
+        event: the_account_nineteen_years_later
+        schedule: { minYears: 11, maxYears: 11 }
+        successors:
+          - to: end
+
+
+
+proseVariants:
+  - address: content:arcs/late_long.yaml#arcs[id=arc_the_old_branch_account].title
+    of: 8ffa47c8aa90dc0c
+    plainenglish: The Branch’s Older Account
