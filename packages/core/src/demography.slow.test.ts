@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap, runYears,
-  expectRate, CHILDBEARING, heirApparent,
+  expectRate, CHILDBEARING, FERTILITY_MAX, heirApparent,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
 
@@ -103,12 +103,22 @@ describe('the house survives its own Long Line', () => {
     }
   });
 
+  /**
+   * The ceiling is the engine's own, not a number this test remembers. It was
+   * 6 from the first commit, when a couple's completed family was a flat hash
+   * of 2-5; it is heritable now, and acquired health and nutrition move it
+   * (`acquiredFamilySize`), so a well-fed fecund couple completes a family of
+   * seven by design (#1834: Thomasin the fifth, seed 1042, 1173-1187). What
+   * this guards is the shape the name promises — a completed family, not
+   * twenty-seven fertile years at the annual rate.
+   */
   it('caps each couple at a completed family rather than 27 fertile years', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     runYears(ctx, 400);
+    expect(FERTILITY_MAX).toBeLessThan(CHILDBEARING.to - CHILDBEARING.from);
     for (const p of ctx.world.people.all()) {
       if (p.sex !== 'female') continue;
-      expect(ctx.world.people.children(p.id).length, p.name).toBeLessThanOrEqual(6);
+      expect(ctx.world.people.children(p.id).length, p.name).toBeLessThanOrEqual(FERTILITY_MAX);
     }
   });
 

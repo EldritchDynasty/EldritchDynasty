@@ -290,16 +290,26 @@ describe('every authored event can actually happen', () => {
  * the right one, and it reads every interlude's own reach.
  */
 describe('the frame', () => {
+  /** Interludes per run, for the runs whose line lived to the term. */
   function frameCounts(seeds: number[], years = CAMPAIGN_YEARS): number[] {
-    return seeds.map((seed) => {
+    return seeds.flatMap((seed) => {
       const ctx = bootstrap(bundle, seed, 1042);
       runYears(ctx, years);
-      return ctx.world.frame.entries.length;
+      return ctx.world.year >= 1042 + years ? [ctx.world.frame.entries.length] : [];
     });
   }
 
-  it('fires in every seed of the batch — never a run of total silence', () => {
+  /**
+   * Over the runs that reach the term, for the reason the cadence test below
+   * gives: a line broken in its founding century has no frame because it has
+   * no house, which `demography.slow.test.ts` owns. This read every seed and
+   * went red the day a re-roll broke 8003's line in 1134, with nothing wrong
+   * with the frame (#1834). The floor on how many reach the term keeps the
+   * claim from going vacuous instead.
+   */
+  it('fires in every run that reaches the term — never a run of total silence', () => {
     const counts = frameCounts(SEEDS);
+    expect(counts.length, 'too few of the batch reached the term').toBeGreaterThanOrEqual(SEEDS.length / 2);
     expect(counts.every((n) => n > 0), `counts were ${counts.join(',')}`).toBe(true);
   });
 

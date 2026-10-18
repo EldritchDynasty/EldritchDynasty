@@ -116,7 +116,13 @@ function play(seed: number, policy: 'take' | 'refuse'): RiteRun {
     let guard = 0;
     while (w.pendingDecisions.length && guard++ < 200) {
       const rng = makeRng(hashSeed(seed, 'rite-batch', w.year, guard));
-      const pending = w.pendingDecisions.find((d): d is PendingChoice => d.kind === 'choice');
+      // A door to the rite is answered FIRST, whatever else is on the docket.
+      // Taking whichever choice happened to be first meant a year with two
+      // decisions sent the Vessel to `autoResolveAll` below, which took it at
+      // random — and the refusing column carried the rite it had refused
+      // (#1834: seed 4000, `the_second_name` in 1188, behind a second scene).
+      const choices = w.pendingDecisions.filter((d): d is PendingChoice => d.kind === 'choice');
+      const pending = choices.find(offersTheVessel) ?? choices[0];
 
       if (pending && offersTheVessel(pending)) {
         out.offered += 1;
