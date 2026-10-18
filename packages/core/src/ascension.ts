@@ -2,7 +2,7 @@ import type { Person } from '@ed/schema';
 import { MAIN_BRANCH, RESPECT_ORDER, RUNG_ORDER, assertNever } from '@ed/schema';
 import type { Rung } from '@ed/schema';
 import type { SimCtx } from './world.js';
-import { attr, phenotypeOf } from './people/factory.js';
+import { attr, knownToExpress, phenotypeOf } from './people/factory.js';
 import type { LocusTable } from './genetics/loci.js';
 import { hall } from './people/branches.js';
 import { heirloomDef, heldHeirlooms } from './people/heirlooms.js';
@@ -1133,6 +1133,13 @@ export interface HouseAscension {
   foremost?: { person: string; name: string; standing: Standing };
 }
 
+/** The same ranking, restricted to what the house has witnessed. Engine roles keep their pool. */
+export function visibleAscensionRanking(ctx: SimCtx): NonNullable<HouseAscension['foremost']>[] {
+  return rankedExpressers(ctx)
+    .filter(({ person }) => knownToExpress(person, ctx.genetics, ctx.world.year))
+    .map(({ person, standing }) => ({ person: person.id, name: person.name, standing }));
+}
+
 /**
  * Where the house stands. Measured every year by the `ascension` phase, which
  * writes `world.ascension` — so a client, an authored condition and the year
@@ -1162,9 +1169,7 @@ export interface FrozenLadder {
 
 export function frozenLadder(ctx: SimCtx): FrozenLadder | undefined {
   const w = ctx.world;
-  const known = (p: Person): boolean => p.sex === 'male'
-    && p.awakening.awakened
-    && phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress;
+  const known = (p: Person): boolean => knownToExpress(p, ctx.genetics, w.year);
   const household = w.people.household(w.playerHouse, w.year);
   if (household.some((p) => p.status === 'alive' && known(p))) return undefined;
 
@@ -1211,7 +1216,11 @@ export function diagnoseHouseAscension(
   ctx: SimCtx,
   measured: HouseAscension,
 ): HouseAscensionDiagnosis | undefined {
-  const top = measured.foremost;
+  const candidate = measured.foremost && ctx.world.people.get(measured.foremost.person);
+  // An engine measurement may name an unwoken man. Reuse it only when the
+  // house knows him; otherwise diagnose the highest witnessed expresser.
+  const top = candidate && knownToExpress(candidate, ctx.genetics, ctx.world.year)
+    ? measured.foremost : visibleAscensionRanking(ctx)[0];
   if (!top) {
     return {
       target: 'touched',
@@ -1219,9 +1228,9 @@ export function diagnoseHouseAscension(
       blockers: [{
         kind: 'expression',
         text: msg(ctx, 'ascension.diagnosis.house_no_expresser_text',
-          'No living man of the house can express the blood.'),
+          'No living man is known to express the blood.'),
         hint: msg(ctx, 'ascension.diagnosis.house_no_expresser_hint',
-          'Seek a Match that could carry the font back into the line; no child is promised.'),
+          'Consider the Match, wait for Awakening, or use the Long Wait order. The forcing rites carry their own risks.'),
       }],
     };
   }

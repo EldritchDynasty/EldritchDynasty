@@ -9,7 +9,7 @@ import {
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { branchOf, halls, viableCadetHall } from './people/branches.js';
-import { measureAscension, rungTitle } from './ascension.js';
+import { visibleAscensionRanking, rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
 import { msg } from './messages.js';
 import type { PendingChoice, PendingDecision, PendingMatch, PendingRecord } from './events/decisions.js';
@@ -191,9 +191,9 @@ function matchRelevance(
   }
 
   if (ambition === 'raise_ascendant') {
-    const measured = measureAscension(ctx);
+    const foremost = visibleAscensionRanking(ctx)[0];
     const named = new Set(
-      [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
+      [ctx.world.scion, ctx.world.scionHeir, foremost?.person]
         .filter((id): id is string => Boolean(id)),
     );
     if (!named.has(decision.subject.id)) return undefined;
@@ -257,9 +257,9 @@ function recordRelevance(
   }
 
   if (ambition === 'raise_ascendant') {
-    const measured = measureAscension(ctx);
+    const foremost = visibleAscensionRanking(ctx)[0];
     const programme = new Set(
-      [ctx.world.scion, ctx.world.scionHeir, measured.foremost?.person]
+      [ctx.world.scion, ctx.world.scionHeir, foremost?.person]
         .filter((id): id is string => Boolean(id)),
     );
     if (recordMentionedIds(decision).some((id) => programme.has(id))) {
@@ -587,11 +587,10 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     };
   }
 
-  const measured = measureAscension(ctx);
   const targetRung = w.campaign === 'short' ? 'hierophant' : 'god';
   const current = Math.max(0, RUNG_ORDER.indexOf(w.ascension.rung));
   const target = RUNG_ORDER.indexOf(targetRung);
-  const foremost = measured.foremost;
+  const foremost = visibleAscensionRanking(ctx)[0];
   const rungs = {
     HELD: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best), HORIZON: rungTitle(ctx, targetRung),
   };

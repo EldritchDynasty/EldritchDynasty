@@ -17,8 +17,8 @@ const view = {
   house: 'house_gearithy',
   halls: [
     { id: 'main', name: 'the main hall', isSeat: true, grievance: 0, members: [
-      { id: 'head', name: 'The Head', head: true },
-      { id: 'daughter', name: 'The Daughter', head: false },
+      { id: 'head', name: 'The Head', head: true, awakened: false },
+      { id: 'daughter', name: 'The Daughter', head: false, awakened: false },
     ] },
     { id: 'branch_elm', name: 'Elm Hall', isSeat: false, grievance: 12, members: [] },
   ],

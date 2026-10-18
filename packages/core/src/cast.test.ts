@@ -486,8 +486,6 @@ describe('the cast speaks the reader\'s setting (#915)', () => {
       'carries {MADNESS} of it against a mind of {MIND}, and is running out of room.',
     'cast.at_risk.carrying':
       'carries {MADNESS} of it against a mind of {MIND}.',
-    'cast.at_risk.unwoken':
-      'has the blood and has not woken to it, and he is {AGE}.',
     'cast.carrier.only_unspent':
       'carries the only font left in the house, and has not been spent.',
     'cast.carrier.only_married':
@@ -523,9 +521,9 @@ describe('the cast speaks the reader\'s setting (#915)', () => {
     'cast.foremost.clear':
       'stands highest of anyone the house has, with nothing left in the way.',
     'cast.sole_expresser.old':
-      'is the only man living of this house who can express a word of it, and he is {AGE}.',
+      'is the only man living of this house known to express a word of it, and he is {AGE}.',
     'cast.sole_expresser.only':
-      'is the only man living of this house who can express a word of it.',
+      'is the only man living of this house known to express a word of it.',
     'cast.unwed.never_asked':
       'is {AGE}, carries a font, and has never been asked for by anybody.',
     'cast.unwed.never_married':

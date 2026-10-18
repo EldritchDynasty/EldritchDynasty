@@ -19,7 +19,7 @@ import {
 } from './advisers.js';
 import type { SlotFill } from './events/slots.js';
 import { branchOf, halls } from './people/branches.js';
-import { phenotypeOf } from './people/factory.js';
+import { knownToExpress, phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
 import { visibleRecordView } from './record.js';
 import { loadGame, saveGame } from './save.js';
@@ -31,7 +31,7 @@ import {
   activeCommitment, maxMen, musterOrder, positionOptions, type MusterOrder, type MusterOrderResult,
   type PositionOption,
 } from './muster.js';
-import { diagnoseHouseAscension, frozenLadder, measureAscension, rungTitle, type AscensionBlockerKind, type FrozenLadder } from './ascension.js';
+import { diagnoseHouseAscension, frozenLadder, visibleAscensionRanking, rungTitle, type AscensionBlockerKind, type FrozenLadder } from './ascension.js';
 import { castOf, type CastMember } from './cast.js';
 import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
@@ -1131,18 +1131,8 @@ export interface MemberView {
    * women's, by design. Read this with `expresses` or not at all (issue #78).
    */
   awakened: boolean;
-  /**
-   * Whether the Power actually comes through them: `canExpress`, computed
-   * where it is always computed and carried out here so no client ever
-   * recomputes it. Invariant 4 gives it one home, and `sex === 'male' &&
-   * awakened` is a second one — correct today, and a hand-written copy of a
-   * closed rule the moment anything about the font changes.
-   *
-   * A woman is `awakened: true, expresses: false` and that is the ordinary
-   * case, not a defect: she reads and she carries, and the risk was never
-   * hers (§10). A client drawing one mark for both states the opposite of §7.
-   */
-  expresses: boolean;
+  /** Absent until Awakening; thereafter whether the witnessed Power comes through them. */
+  expresses?: boolean;
   /** Only ever nonzero where the person can express. See invariant 1. */
   madness: number;
   contract?: string;
@@ -1325,7 +1315,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           status: p.status,
           head: p.castSlots.includes('head'),
           awakened: p.awakening.awakened,
-          expresses: ph.eldritch.canExpress,
+          ...(p.awakening.awakened ? { expresses: knownToExpress(p, ctx.genetics, w.year) } : {}),
           madness: p.madness,
           attrs: realAttrs,
           parents: { ...p.trueParents },
@@ -1509,9 +1499,8 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         return frozen ? { frozen } : {};
       })(),
       ...(() => {
-        const measured = measureAscension(ctx);
-        const f = measured.foremost;
-        const diagnosis = diagnoseHouseAscension(ctx, measured);
+        const f = visibleAscensionRanking(ctx)[0];
+        const diagnosis = diagnoseHouseAscension(ctx, { rung: w.ascension.rung, best: w.ascension.best, foremost: f });
         return {
           ...(f
             ? {
