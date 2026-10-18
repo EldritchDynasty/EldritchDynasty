@@ -110,6 +110,11 @@ export function phenotypeOf(p: Person, ctx: GeneticsCtx, year: Year) {
   return p.phenotype;
 }
 
+/** Player-facing expression is witnessed only after Awakening (#1820). */
+export function knownToExpress(p: Person, ctx: GeneticsCtx, year: Year): boolean {
+  return p.awakening.awakened && phenotypeOf(p, ctx, year).eldritch.canExpress;
+}
+
 /**
  * The genome's own expression, read once and carried between years.
  *

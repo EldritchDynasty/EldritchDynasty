@@ -1,6 +1,6 @@
 import { assertNever, MAIN_BRANCH, type PersonId } from '@ed/schema';
 import type { SimCtx } from '../world.js';
-import { measureAscension } from '../ascension.js';
+import { visibleAscensionRanking } from '../ascension.js';
 import { cadetFamilyMember, halls, viableCadetHall } from './branches.js';
 import { knownSuccession } from './succession.js';
 import { msg } from '../messages.js';
@@ -52,7 +52,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
 
   switch (ambition) {
     case 'raise_ascendant': {
-      const foremost = measureAscension(ctx).foremost;
+      const foremost = visibleAscensionRanking(ctx)[0];
       if (foremost) {
         add(out, foremost.person as PersonId,
           foremost.standing.diagnosis?.blockers[0]?.text

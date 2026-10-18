@@ -5,12 +5,15 @@ import { mount } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LandView, SessionView, StandingDelta, TableView } from '@ed/core';
+import { newGame, phenotypeOf } from '@ed/core';
+import { loadContent } from '@ed/content';
 import Standing from './Standing.vue';
 import Muster from './Muster.vue';
 import GameTable from './Table.vue';
 import Abroad from './Abroad.vue';
 import Naming from './Naming.vue';
 import Member from './Member.vue';
+import Cast from './Cast.vue';
 import { LEGEND, MARKS, markSays } from '../lib/marks';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
@@ -62,6 +65,36 @@ function view(): SessionView {
     },
   } as unknown as SessionView;
 }
+
+describe('the house learns expression through Awakening (#1820)', () => {
+  it.each(['original', 'plainenglish'] as const)('shows the neutral ladder and no Member mark before waking (%s)', async (mode) => {
+    const game = newGame(loadContent(), { seed: 1820, proseMode: mode });
+    const candidate = game.ctx.world.people.household(game.ctx.world.playerHouse, game.year)
+      .find((p) => phenotypeOf(p, game.ctx.genetics, game.year).eldritch.canExpress)!;
+    expect(candidate).toBeDefined();
+    const before = game.view();
+    const member = before.halls.flatMap((hall) => hall.members).find((m) => m.id === candidate.id)!;
+    expect(member).not.toHaveProperty('expresses');
+    const standing = mount(Standing, { props: { view: before, jump: null, saveStatus: 'idle', proseMode: mode } });
+    const cast = mount(Cast, { props: { cast: before.cast, selected: null, proseMode: mode } });
+    const card = mount(Member, { props: { member, names: before.attributes, traitNames: before.traits, open: false, proseMode: mode } });
+    try {
+      expect(standing.get('.ladder-blocker').text()).toContain(mode === 'original'
+        ? 'No living man is known to express the blood.' : "No living man is known to express the blood's power.");
+      expect(standing.find('.ladder-measure').exists()).toBe(false);
+      expect(card.find('.marks .expresses').exists()).toBe(false);
+      expect(cast.text()).not.toContain('has the blood and has not woken');
+      expect(cast.text()).not.toContain('cannot express a word');
+      candidate.awakening.awakened = true;
+      candidate.phenotype = undefined;
+      const after = game.view();
+      await standing.setProps({ view: after });
+      await card.setProps({ member: after.halls.flatMap((hall) => hall.members).find((m) => m.id === candidate.id)! });
+      expect(standing.get('.ladder-measure').text()).toMatch(/(?:power|Power) \d+/);
+      expect(card.find('.marks .expresses').exists()).toBe(true);
+    } finally { standing.unmount(); cast.unmount(); card.unmount(); }
+  });
+});
 
 describe('Standing legibility (#356)', () => {
   it('gives each household reading its own labelled row', () => {

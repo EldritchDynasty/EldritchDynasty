@@ -1,11 +1,11 @@
 import type { Person } from '@ed/schema';
 import { MAIN_BRANCH, RUNG_ORDER, assertNever } from '@ed/schema';
 import type { SimCtx } from './world.js';
-import { attr, phenotypeOf } from './people/factory.js';
+import { attr, knownToExpress, phenotypeOf } from './people/factory.js';
 import { branchOf, wouldSpeakFor } from './people/branches.js';
 import { grudgesAgainst } from './people/relationships.js';
-import { heirApparent } from './people/succession.js';
-import { measureAscension } from './ascension.js';
+import { knownSuccession } from './people/succession.js';
+import { visibleAscensionRanking } from './ascension.js';
 import { msg } from './messages.js';
 import { proseForContentField } from './prose.js';
 
@@ -209,7 +209,7 @@ interface Read {
   head?: Person;
   age: (p: Person) => number;
   font: (p: Person) => number;
-  canExpress: (p: Person) => boolean;
+  knownExpresses: (p: Person) => boolean;
   isBlood: (p: Person) => boolean;
   halls: number;
 }
@@ -310,7 +310,8 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
     }
   }
 
-  const next = heirApparent(ctx, r.head?.id);
+  const heir = knownSuccession(ctx).heir;
+  const next = heir ? w.people.get(heir) : undefined;
   if (!next) return undefined;
   const age = r.age(next);
   const hall = branchOf(w, next, w.year);
@@ -318,6 +319,8 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
   const ofTheHead = r.head !== undefined
     && (next.trueParents.father === r.head.id || next.trueParents.mother === r.head.id);
   const headAge = r.head ? r.age(r.head) : 0;
+  const knownMundane = next.sex === 'male' && (next.awakening.declaredMundane
+    || (next.awakening.awakened && !r.knownExpresses(next)));
 
   return first(next, [
     // No expressing son anywhere in the house. §22's Ledger keeps counting
@@ -341,7 +344,7 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
     // who will almost certainly never sit, and that is the news.
     [r.head !== undefined && age >= headAge + 10, 30, () => msg(ctx, 'cast.heir.older',
       'is {AGE}, and is waiting on a man ten years younger than himself.', { AGE: String(age) })],
-    [!r.canExpress(next) && r.head !== undefined && r.canExpress(r.head), 26, () => msg(ctx, 'cast.heir.mundane',
+    [knownMundane && r.head !== undefined && r.knownExpresses(r.head), 26, () => msg(ctx, 'cast.heir.mundane',
       'takes the seat the day it falls vacant, and cannot express a word of it.')],
     [r.head !== undefined && !ofTheHead, 20, () => msg(ctx, 'cast.heir.not_his',
       'takes the seat the day it falls vacant, and is no child of the man who holds it.')],
@@ -351,18 +354,10 @@ function heir(ctx: SimCtx, r: Read): Candidate | undefined {
   ]);
 }
 
-/**
- * The one the blood is going to hurt.
- *
- * First the man closest to losing to it, because that is a person with a
- * countdown on him. If nobody in the house is anywhere near it, then the boy
- * of hot blood who has not woken — `attributes.yaml` says it out loud, and it
- * is the design's own Fragile One: *the unwoken son of hot blood is the most
- * fragile person in the house*.
- */
+/** The witnessed expresser closest to the visible strain overwhelming his Mind. */
 function atRisk(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
-  const expressers = r.living.filter(r.canExpress);
+  const expressers = r.living.filter(r.knownExpresses);
 
   const worst = [...expressers].sort((a, b) => strain(ctx, b) - strain(ctx, a))[0];
   if (worst && worst.madness >= 3) {
@@ -376,17 +371,6 @@ function atRisk(ctx: SimCtx, r: Read): Candidate | undefined {
     return { person: worst, because, salience: Math.min(66, 26 + s * 70) };
   }
 
-  const fragile = expressers
-    .filter((p) => !p.awakening.awakened && r.age(p) < 16)
-    .sort((a, b) => a.born - b.born)[0];
-  if (fragile) {
-    return {
-      person: fragile,
-      because: () => msg(ctx, 'cast.at_risk.unwoken',
-        'has the blood and has not woken to it, and he is {AGE}.', { AGE: String(r.age(fragile)) }),
-      salience: 34,
-    };
-  }
   return undefined;
 }
 
@@ -527,7 +511,7 @@ function marriedIn(ctx: SimCtx, r: Read): Candidate | undefined {
 /** The family's answer to "am I winning?" — and how far up it is worth saying. */
 function foremost(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
-  const best = measureAscension(ctx).foremost;
+  const best = visibleAscensionRanking(ctx)[0];
   if (!best) return undefined;
   const p = w.people.get(best.person);
   if (!p) return undefined;
@@ -552,7 +536,7 @@ function foremost(ctx: SimCtx, r: Read): Candidate | undefined {
  * farm with a good name — and nothing else on this panel says so.
  */
 function soleExpresser(ctx: SimCtx, r: Read): Candidate | undefined {
-  const men = r.living.filter((p) => r.canExpress(p) && r.isBlood(p));
+  const men = r.living.filter((p) => r.knownExpresses(p) && r.isBlood(p));
   if (men.length !== 1) return undefined;
   const him = men[0]!;
   const age = r.age(him);
@@ -560,8 +544,8 @@ function soleExpresser(ctx: SimCtx, r: Read): Candidate | undefined {
     person: him,
     because: () => age >= 55
       ? msg(ctx, 'cast.sole_expresser.old',
-        'is the only man living of this house who can express a word of it, and he is {AGE}.', { AGE: String(age) })
-      : msg(ctx, 'cast.sole_expresser.only', 'is the only man living of this house who can express a word of it.'),
+        'is the only man living of this house known to express a word of it, and he is {AGE}.', { AGE: String(age) })
+      : msg(ctx, 'cast.sole_expresser.only', 'is the only man living of this house known to express a word of it.'),
     salience: age >= 55 ? 62 : 50,
   };
 }
@@ -799,7 +783,7 @@ export function castOf(ctx: SimCtx): CastMember[] {
     head: living.find((p) => p.castSlots.includes('head')),
     age: (p) => ageOf(ctx, p),
     font: (p) => phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont,
-    canExpress: (p) => phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress,
+    knownExpresses: (p) => knownToExpress(p, ctx.genetics, w.year),
     isBlood: (p) => isBlood(p, w.playerHouse),
     halls: new Set(living.map((p) => branchOf(w, p, w.year))).size,
   };

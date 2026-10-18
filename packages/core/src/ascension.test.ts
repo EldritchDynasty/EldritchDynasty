@@ -137,8 +137,8 @@ describe('the ladder is a ladder', () => {
     expect(diagnosis?.target).toBe('touched');
     expect(diagnosis?.blockers[0]).toEqual({
       kind: 'expression',
-      text: 'No living man of the house can express the blood.',
-      hint: 'Seek a Match that could carry the font back into the line; no child is promised.',
+      text: 'No living man is known to express the blood.',
+      hint: 'Consider the Match, wait for Awakening, or use the Long Wait order. The forcing rites carry their own risks.',
     });
   });
 
@@ -760,9 +760,9 @@ describe('the ladder diagnosis speaks the reader\'s setting (#827, #828)', () =>
       'ascension.diagnosis.awakening_hint': 'Keep him in view for an Awakening; study cannot supply this step.',
       'ascension.diagnosis.no_expresser_text': 'The blood does not answer through him.',
       'ascension.diagnosis.no_expresser_hint': 'The house must look to another living man of the blood.',
-      'ascension.diagnosis.house_no_expresser_text': 'No living man of the house can express the blood.',
+      'ascension.diagnosis.house_no_expresser_text': 'No living man is known to express the blood.',
       'ascension.diagnosis.house_no_expresser_hint':
-        'Seek a Match that could carry the font back into the line; no child is promised.',
+        'Consider the Match, wait for Awakening, or use the Long Wait order. The forcing rites carry their own risks.',
     });
   });
 
@@ -856,7 +856,7 @@ describe('the ladder diagnosis speaks the reader\'s setting (#827, #828)', () =>
   it('reads a house with nobody to climb in Plain English (#827)', () => {
     const empty = { foremost: undefined } as unknown as HouseAscension;
     const original = diagnoseHouseAscension(prepare('original', 8213), empty)!;
-    expect(original.blockers[0]!.text).toBe('No living man of the house can express the blood.');
+    expect(original.blockers[0]!.text).toBe('No living man is known to express the blood.');
     expect(diagnoseHouseAscension(prepare('plainenglish', 8213), empty))
       .toEqual({ ...original, blockers: original.blockers.map(plain) });
   });

@@ -902,13 +902,13 @@ proseVariants:
     plainenglish: >-
       Find another living man of the bloodline.
   - address: "core:messages#ascension.diagnosis.house_no_expresser_text"
-    of: "8b2631245784deb8"
+    of: "be31ac06f7e9df92"
     plainenglish: >-
-      No living man in the house can express the blood's power.
+      No living man is known to express the blood's power.
   - address: "core:messages#ascension.diagnosis.house_no_expresser_hint"
-    of: "b84903114107701d"
+    of: "dbf07e5816527c5c"
     plainenglish: >-
-      Seek a Match that could restore the font to the line. No child's inheritance is guaranteed.
+      Consider a Match, wait for Awakening, or use the Long Wait order. Forcing rites have their own risks.
   - address: "core:messages#ascension.rung_reached_title_vessel"
     of: "d86d9ecec92ecdd2"
     plainenglish: >-
@@ -1242,10 +1242,6 @@ proseVariants:
     of: "b020a66c038905b8"
     plainenglish: >-
       has {MADNESS} Madness against {MIND} Mind.
-  - address: "core:messages#cast.at_risk.unwoken"
-    of: "14f13d49c42137b5"
-    plainenglish: >-
-      carries the blood but has not awakened, at age {AGE}.
   - address: "core:messages#cast.carrier.only_unspent"
     of: "a36c39555e35e121"
     plainenglish: >-
@@ -1317,13 +1313,13 @@ proseVariants:
     plainenglish: >-
       is highest on the ladder in the house, with no obstacles remaining.
   - address: "core:messages#cast.sole_expresser.old"
-    of: "4417c4e054b8051c"
+    of: "0589784e0173c09a"
     plainenglish: >-
-      is the house's only living man who can express the blood's power. He is {AGE}.
+      is the only living man in the house known to express the blood’s power. He is {AGE}.
   - address: "core:messages#cast.sole_expresser.only"
-    of: "b05a151ffdffae1b"
+    of: "239f0db9c123dd05"
     plainenglish: >-
-      is the house's only living man who can express the blood's power.
+      is the only living man in the house known to express the blood’s power.
   - address: "core:messages#cast.unwed.never_asked"
     of: "de5fd18ccf1ac088"
     plainenglish: >-
