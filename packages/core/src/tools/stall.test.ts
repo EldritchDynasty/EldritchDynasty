@@ -4,6 +4,7 @@ import {
   LADDER_BLOCKERS,
   eldritchPower,
   foremostOf,
+  rungIndex,
   standingOf,
 } from '../ascension.js';
 import { phenotypeOf } from '../people/factory.js';
@@ -12,6 +13,7 @@ import { grantHeirloom } from '../people/heirlooms.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
 import { order } from '../table.js';
+import { digestOf } from '../save.js';
 import { head, type SimCtx } from '../world.js';
 import { measureDensity, diagnosticPeriod } from './density-gate.js';
 import {
@@ -24,6 +26,7 @@ import {
 } from './stall.js';
 import {
   countNever, emptyStallRun, foldStallYear, readStallYear, type StallYear,
+  emptyStallPopulation, observeStallPopulation, populationStats, stallReport,
 } from './ladder-stall.js';
 
 const bundle = loadContent();
@@ -272,6 +275,53 @@ describe('the ladder-stall instrument', () => {
     countNever(ctx, run);
     expect(run.diedGrown - before.diedGrown).toBe(2);
     expect(run.diedNeverWoke - before.diedNeverWoke).toBe(1);
+  });
+
+  it('separates unwoken capacity, widened power, and household versus expresser reading', () => {
+    const ctx = emptyHouse(180201);
+    const waiting = expresser(ctx, 25, 'Waiting', false);
+    const adept = expresser(ctx, 40, 'Widened', true);
+    adept.acquired[ELDRITCH_GIFT] = 400;
+    adept.acquired[ELDRITCH_REACH] = 400;
+    adept.acquired.mind = 400;
+    adept.madness = 65;
+    adept.rites.push('vessel', 'great_rite');
+    adept.spellsKnown = ctx.content.spellbooks.slice(0, 7).map((b) => b.id);
+    adept.phenotype = undefined;
+    const reader = place(ctx, { sex: 'female', age: 40, name: 'Household Reader' });
+    reader.spellsKnown = ctx.content.spellbooks.map((b) => b.id);
+    ctx.world.library.clear();
+    acquireLibraryCopy(ctx, String(ctx.content.spellbooks[0]!.id));
+
+    const sample = emptyStallPopulation(ctx);
+    const widened = phenotypeOf(adept, ctx.genetics, ctx.world.year).eldritch.expressedPower;
+    const unwoken = phenotypeOf(waiting, ctx.genetics, ctx.world.year).eldritch.expressedPower;
+    phenotypeOf(reader, ctx.genetics, ctx.world.year);
+    expect(rungIndex(standingOf(ctx, adept).rung)).toBeGreaterThanOrEqual(rungIndex('adept'));
+    const before = digestOf(ctx);
+    observeStallPopulation(ctx, sample);
+
+    expect(sample).toMatchObject({
+      campaign: 'long', maxPower: ctx.genetics.maxPower,
+      raw: [unwoken, widened], awakeRaw: [widened], preRiteRaw: [unwoken], adeptRaw: [widened],
+      shelfPeak: 1, readerPeak: ctx.content.spellbooks.length, expresserReaderPeak: 7,
+    });
+    expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('reports empirical distributions without sorting raw evidence or replacing the saved best', () => {
+    const raw = [9, 0, 3, 2, 8];
+    expect(populationStats(raw)).toEqual({ n: 5, p50: 3, p90: 9, p99: 9, max: 9 });
+    expect(raw).toEqual([9, 0, 3, 2, 8]);
+    expect(populationStats([])).toEqual({ n: 0, p50: null, p90: null, p99: null, max: null });
+    const ctx = emptyHouse();
+    const run = emptyStallRun(1, 'chronicler');
+    run.best = 'vessel';
+    run.attainedBest = 'hierophant';
+    run.population = emptyStallPopulation(ctx);
+    const report = stallReport([run]).join('\n');
+    expect(report).toContain('best rung: vessel 1');
+    expect(report).toContain('saved best at least: {"adept":1,"hierophant":1,"vessel":0');
   });
 });
 

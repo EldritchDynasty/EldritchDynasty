@@ -66,7 +66,7 @@
     "gate:land": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/land-gate.ts",
     "//13": "Issue #132's Stage 2: once a line thins to one or two, is recovery ever possible, or is broken_line just how it ends?",
     "gate:bottleneck": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/bottleneck-gate.ts",
-    "//18": "Issue #1801: where does the ladder stall, and for whom? Frozen years (no woken man who can express), split by what the house was waiting on, plus §11's Never. Read-only; seeds 5100+ as first published.",
+    "//18": "Issues #1801/#1802: frozen years split by the wait, plus §11's Never; --campaign=short chooses the actual term, --population samples raw power/reading and saved best, --output=report.json retains paired evidence. Read-only; seeds 5100+ as first published.",
     "gate:stall": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-stall.ts",
     "//14": "Issue #133 Stage 5A-E: one 500-year batch for Ledger, decisions, frame, land/Muster and system reach. Measurement, not a CI threshold.",
     "gate:long": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/long-line-gate.ts",

@@ -904,6 +904,23 @@ describe('family planning fields do not read hidden blood', () => {
       }
       const son = place(ctx, { name: 'The unwoken son', age: 23, sex: 'male' });
       beget(ctx, son, undefined, head);
+      // The scale may cap several seeded men at 100. Build the contrast this
+      // privacy test needs: keep every other man's font small but non-null,
+      // so the maximal unwoken son below is uniquely foremost in one world.
+      for (const other of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+        if (other.id === son.id || other.sex !== 'male') continue;
+        const genome = genomeOf(other, ctx.genetics);
+        for (const index of ctx.genetics.table.fontIndices) {
+          const empty = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.tags.includes('null'));
+          expect(empty).toBeGreaterThanOrEqual(0);
+          genome.sex[0][index] = empty;
+        }
+        const index = ctx.genetics.table.fontIndices[0]!;
+        const present = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.effect > 0);
+        expect(present).toBeGreaterThanOrEqual(0);
+        genome.sex[0][index] = present;
+        other.phenotype = undefined;
+      }
       ctx.world.houseAmbition = 'raise_ascendant';
       return son;
     });

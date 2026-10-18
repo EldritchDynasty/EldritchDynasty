@@ -202,14 +202,14 @@ export function maxExpressiblePower(ctx: SimCtx): number {
  *
  * Derivation: post-#1801, 96 Long Lines per policy, seeds 5100-5195,
  * chronicler and canonical ascendant. Every expresser-year is sampled,
- * including unwoken zeroes. Raw power p50/p90/p99/max:
+ * including unwoken men and boys. Raw capacity p50/p90/p99/max:
  *   chronicler       6 / 16.96 / 23.00 / 28.00
  *   ascendant        6 / 17.28 / 25.28 / 36.36
  * Before Great Rite/Unmaking, the upper deciles are 16.8 / 16.48.
  * Both policies' established Adept subset has median raw power 11.
  *
- * Anchor the pre-rite upper decile near Vessel power: 16.5 / (66 * 0.35)
- * * 100 = 71.4. The table-derived reference is 23.1 with today's loci. Paired
+ * Anchor the pre-rite upper decile near Vessel power: 100 times
+ * 16.5 / (66 * 0.35) = 71.4. The table-derived reference is 23.1. Paired
  * sweeps at 0.30 and 0.33 overshot the climbing Vessel target; 0.35 preserves
  * that middle shape. The ordinary-play shortfall is reported, not hidden.
  * The resulting mapping is:
@@ -239,8 +239,8 @@ const ASCENT_REACH = 0.35;
  * authored afterwards to a different size (invariant 11).
  *
  * That is the same shape `ASCENT_REACH` was built to fix, so it takes the same
- * fix, including the mistake that file already records making once. Measured
- * over twelve played thousand-year runs at a bid ceiling of 600:
+ * fix, including the mistake that file already records making once. The
+ * original derivation used twelve thousand-year runs at a bid ceiling of 600:
  *
  *   the catalogue                      21 books, 8 of them at threshold 0
  *   the shelf the house assembles      12.1 of the 21
@@ -248,9 +248,9 @@ const ASCENT_REACH = 0.35;
  *
  * So normalising against the catalogue itself — all twenty-one — would be
  * `maxExpressiblePower` all over again: an arithmetic ceiling nobody stands
- * near, wearing better clothes. The scale is anchored where a thousand years
- * can actually put books in ONE MAN'S hands, which is `BOOK_REACH` of what
- * exists, and §22's counts are then read as fractions of its own top of forty:
+ * near, wearing better clothes. That historical measurement chose `BOOK_REACH`
+ * of the catalogue; the current 500-year measurement below checks whether to
+ * retain it. §22's counts are read as fractions of its own top of forty:
  *
  *   Adept's 3      ->  1 book    an ordinary reader has it; a rung, cleared early
  *   Hierophant's 8 ->  3 books   a scaled 2, floored by the 3 affinities beside it
@@ -280,9 +280,10 @@ const SPELLS_AT_GOD = 40;
 /**
  * THE READING FRACTION, RETAINED AFTER THE 500-YEAR MEASUREMENT (#1802).
  *
- * Post-#1801, 96 runs/policy, seeds 5100-5195: peak household readers hold
+ * Post-#1801, 96 runs/policy, seeds 5100-5195: peak expresser readers hold
  * p50/p90/max 4/6/8 books for chronicler and 9/10/11 for ascendant. Peak
- * shelves are 5/8/10 and 11/14/17. Books are the foremost blocker in 16.4% /
+ * shelves are 5/8/10 and 11/14/17. Household-reader peaks agree in this batch.
+ * Books are the foremost blocker in 16.4% /
  * 9.3% of baseline played years, against power's 54.4% / 49.1%.
  *
  * Retain the 0.5 catalogue fraction. With the current catalogue this asks
