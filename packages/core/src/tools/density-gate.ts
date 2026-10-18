@@ -68,10 +68,12 @@ import {
 } from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import type { TableOrder } from '../table.js';
-import type { SimCtx } from '../world.js';
+import { head, inRegency, type SimCtx } from '../world.js';
+import { knownToExpress } from '../people/factory.js';
 import {
   delegationDensityLines, densityLines, shapeFrequencies,
-  type DensityRun,
+  traceDiagnosticIntervals,
+  type DiagnosticPeriod, type DiagnosticYear, type DensityRun,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
 export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './density-report.js';
@@ -151,6 +153,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const ageShapeCounts = new Map<string, Map<string, number>>();
   const ageShapeChoices = new Map<string, number>();
   const categoryWindow: string[] = [];
+  const diagnosticYears: DiagnosticYear[] = [];
   const campaignStall = makeStallClock();
   const ageStalls = new Map<string, StallClock>();
   const ambitionIds = ambitionOptions(g.ctx).map((a) => a.id);
@@ -201,7 +204,18 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     // make every interactive year look like waiting.
     const top = foremostOf(g.ctx);
     const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
-    sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
+    const action = sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
+    // One sample per actual advanced year, before the session resolves its
+    // docket. Never confuse naming forms with time-blocking choices.
+    const diagnostic: DiagnosticYear | undefined = turned ? {
+      year: w.year,
+      period: diagnosticPeriod(g.ctx),
+      blocker,
+      actionable: action.actionable,
+      spine: false,
+      choices: 0, matches: 0, records: 0, auctions: 0, orders: 0, routine: 0,
+    } : undefined;
+    if (diagnostic) diagnosticYears.push(diagnostic);
 
     const activeAges = new Set(w.age.active.map((a) => String(a.age)));
     for (const age of activeAges) {
@@ -256,6 +270,11 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     const tableOrder = opts.tableOrder?.(g.ctx);
     if (tableOrder) {
       const result = g.order(tableOrder);
+      if (diagnostic && result.ok) {
+        diagnostic.orders += 1;
+        if (tableOrder.kind === 'bid' || tableOrder.kind === 'lotBid') diagnostic.auctions += 1;
+        diagnostic.spine = true;
+      }
       const observed = observeOrderAttempt(tableOrder, result);
       if (observed) {
         noteOrderAttempt(campaignFailures, observed);
@@ -275,6 +294,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       if (d.kind === 'match') {
         matches += 1;
         landmark = true;
+        if (diagnostic) { diagnostic.matches += 1; diagnostic.spine = true; }
         if (d.cards[0]) g.match(d.id, d.cards[0].id);
         else g.declineHand(d.id);
       } else if (d.kind === 'record') {
@@ -290,6 +310,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         if (previous === undefined) delete w.delegation.records[eventId];
         else w.delegation.records[eventId] = previous;
         if (guard) meaningfulRecords += 1;
+        if (diagnostic) {
+          if (guard) { diagnostic.records += 1; diagnostic.spine = true; }
+          else diagnostic.routine += 1;
+        }
 
         const result = g.record(d.id, 'record');
         // Match the real client: a standing preference is learned only after
@@ -303,6 +327,12 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         const predetermined = isPredetermined(g.ctx, d);
         if (predetermined) predeterminedChoices += 1;
         else nonPredeterminedChoices += 1;
+        if (diagnostic) {
+          if (guard && !predetermined) {
+            diagnostic.choices += 1;
+            diagnostic.spine = true;
+          } else diagnostic.routine += 1;
+        }
 
         const shapes: Record<ShapeGrain, string> = {
           kind: shapeOf(d, 'kind'),
@@ -476,7 +506,24 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     reach: seenInRun.size,
     meaningfulChoices,
     meaningfulRecords,
+    diagnosticIntervals: traceDiagnosticIntervals(diagnosticYears),
   };
+}
+
+/**
+ * A diagnostic category, not a player-facing fact. Regency is the ACTUAL
+ * female-Head state (#1814), not an approximation based on ancestry or whether
+ * a wizard is missing. 'Unwoken' means a non-regent, seated Head currently has
+ * no WITNESSED living expresser in his house: an unawakened man's secret
+ * genome is never read to classify or surface an interval (#1820).
+ */
+export function diagnosticPeriod(ctx: SimCtx): DiagnosticPeriod | undefined {
+  const w = ctx.world;
+  if (inRegency(w)) return 'regency';
+  if (!head(w)) return undefined; // Wardship/vacant seal is not Regency.
+  const witnessed = w.people.household(w.playerHouse, w.year).some((person) =>
+    person.sex === 'male' && knownToExpress(person, ctx.genetics, w.year));
+  return witnessed ? undefined : 'unwoken';
 }
 
 interface AmbitionTracker {
