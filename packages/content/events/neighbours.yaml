@@ -537,7 +537,7 @@ events:
     frequency: common
     weight: 75
     tags: [rival, agreement, assize, records]
-    purposes: [change_relationship, change_standing, worldbuild_through_action]
+    purposes: [buy_patience, change_relationship, change_standing]
     slots:
       HEAD: { role: head }
       RIVAL: { role: rival, filters: [{ status: [alive] }] }
@@ -584,7 +584,7 @@ events:
     frequency: common
     weight: 100
     tags: [rival, agreement, assize, records]
-    purposes: [change_relationship, change_standing, worldbuild_through_action]
+    purposes: [change_relationship, plant_rumour, worldbuild_through_action]
     slots:
       HEAD: { role: head }
       RIVAL:
@@ -655,7 +655,7 @@ proseVariants:
     plainenglish: >-
       Years after {RIVAL} signed the settlement with {HEAD}, {NEW_RIVAL} brings another
       complaint to Cawdry. The clerk reads {RIVAL}'s name from the old agreement, which still
-      stands. The new rival has different witnesses and a different case.
+      stands. {NEW_RIVAL} has different witnesses and a different case.
   - address: "content:events/neighbours.yaml#events[id=the_name_under_the_second_signature].absentBody"
     of: "e6bc4163db260907"
     plainenglish: >-
