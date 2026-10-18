@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD_RITE_FAILED, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type SigningQuestion } from '@ed/schema';
+import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD_RITE_FAILED, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type Outcome, type SigningQuestion } from '@ed/schema';
 
 const content = loadContent();
 
@@ -814,6 +814,94 @@ describe('the content rules', () => {
     const issues = runRule('awakening/gate', b);
     expect(issues).toHaveLength(1);
     expect(issues[0]!.message).toMatch(/explicit slot/);
+  });
+
+  describe('an outcome that asks something of the cast (#1817)', () => {
+    /**
+     * A narration that casts any unwoken boy and splits its outcomes on
+     * whether he can express — the shape the forcing rites take.
+     */
+    const guarded = (edit: (e: ContentBundle['events'][number], outcomes: Outcome[]) => void = () => {}) =>
+      withEvents((x) => {
+        const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;
+        if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+        e.slots.CHILD = {
+          role: 'unwoken', castBy: 'engine', optional: false,
+          filters: [{ sex: 'male' }], bind: 'event',
+        };
+        const base = e.interaction.outcomes[0]!;
+        e.interaction.outcomes = [
+          { ...structuredClone(base), id: 'woke', weight: 100,
+            onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] },
+            effects: [{ kind: 'awakening', target: { slot: 'CHILD' } }, { kind: 'madness', target: { slot: 'CHILD' }, delta: 10 }] },
+          { ...structuredClone(base), id: 'nothing', weight: 100,
+            onlyIf: { slot: 'CHILD', filters: [{ canExpress: false }] }, effects: [] },
+        ];
+        edit(e, e.interaction.outcomes);
+      });
+
+    it('lets a guard prove expression for forced Awakening and Madness', () => {
+      const b = guarded();
+      expect(runRule('awakening/gate', b)).toHaveLength(0);
+      expect(runRule('madness/gate', b)).toHaveLength(0);
+      expect(runRule('outcomes/guard', b)).toHaveLength(0);
+      expect(runRule('outcomes/cover', b)).toHaveLength(0);
+    });
+
+    it('measures weights inside each draw set, not across the group', () => {
+      expect(runRule('outcomes/weights', guarded())).toHaveLength(0);
+      const b = guarded((_, outcomes) => { outcomes[1]!.weight = 40; });
+      const issues = runRule('outcomes/weights', b);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]!.message).toMatch(/sum to 40/);
+    });
+
+    it('still refuses Awakening when the guard does not prove expression', () => {
+      const b = guarded((_, outcomes) => { outcomes[0]!.onlyIf = { slot: 'CHILD', filters: [{ awakened: false }] }; });
+      expect(runRule('awakening/gate', b)[0]?.message).toMatch(/does not prove a carried font/);
+    });
+
+    it('refuses a group some cast would draw nothing from', () => {
+      const b = guarded((_, outcomes) => { outcomes.splice(1, 1); });
+      const issues = runRule('outcomes/cover', b);
+      expect(issues).toHaveLength(1);
+      expect(issues[0]!.level).toBe('error');
+    });
+
+    it('accepts X and not: X as a cover, and an unguarded outcome as one too', () => {
+      expect(runRule('outcomes/cover', guarded((_, outcomes) => {
+        outcomes[0]!.onlyIf = { slot: 'CHILD', filters: [{ age: { op: 'gte', value: 10 } }] };
+        outcomes[1]!.onlyIf = { slot: 'CHILD', filters: [{ not: { age: { op: 'gte', value: 10 } } }] };
+      }))).toHaveLength(0);
+      expect(runRule('outcomes/cover', guarded((_, outcomes) => { delete outcomes[1]!.onlyIf; }))).toHaveLength(0);
+    });
+
+    it('refuses a guard on a slot that can hold nobody, several, or the player\'s cast', () => {
+      for (const change of [{ optional: true }, { castBy: 'player' as const }, { count: { min: 1, max: 2 } }]) {
+        const b = guarded((e) => { Object.assign(e.slots.CHILD!, change); });
+        expect(runRule('outcomes/guard', b).length, JSON.stringify(change)).toBeGreaterThan(0);
+      }
+      const undeclared = guarded((_, outcomes) => { outcomes[0]!.onlyIf!.slot = 'NOBODY'; });
+      expect(runRule('outcomes/guard', undeclared)[0]?.message).toMatch(/does not declare/);
+    });
+
+    it('refuses Madness under a guard that proves the man cannot express', () => {
+      const b = guarded((_, outcomes) => {
+        outcomes[1]!.effects = [{ kind: 'madness', target: { slot: 'CHILD' }, delta: 5 }];
+      });
+      expect(runRule('outcomes/guard', b)[0]?.message).toMatch(/silent no-op/);
+    });
+
+    it('refuses a guard under a checked choice', () => {
+      const b = withEvents((x) => {
+        const e = x.events.find((ev) => ev.interaction.kind !== 'narration' && ev.interaction.choices.some((c) => c.check))!;
+        if (e.interaction.kind === 'narration') throw new Error('unreachable');
+        const c = e.interaction.choices.find((ch) => ch.check)!;
+        const head = Object.entries(e.slots).find(([, s]) => s.castBy === 'engine' && !s.optional && !s.count)![0];
+        c.outcomes[0]!.onlyIf = { slot: head, filters: [{ sex: 'male' }] };
+      });
+      expect(runRule('outcomes/guard', b).some((i) => /checked choice/.test(i.message))).toBe(true);
+    });
   });
 
   it('catches outcome weights that can never resolve', () => {

@@ -200,7 +200,7 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng, arcStep?: 
   }
   const fill = autoCast(e, ctx, res.fill, res.playerCast, rng);
 
-  const outcome = pickOutcome(e.interaction.outcomes, rng, ctx);
+  const outcome = pickOutcome(e.interaction.outcomes, rng, ctx, fill);
   const text = renderBody(proseForOutcome(ctx, e, outcome), fill, ctx);
   const entry: FrameEntry = { year: w.year, eventId: e.id, outcomeId: outcome.id, text };
 
