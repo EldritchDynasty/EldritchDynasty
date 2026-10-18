@@ -1,8 +1,8 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
+  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung,
 } from '@ed/schema';
-import { MAIN_BRANCH, assertNever } from '@ed/schema';
+import { MAIN_BRANCH, RUNG_ORDER, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -1081,6 +1081,8 @@ export interface SessionView {
      */
     bestTitle: string;
     bestAt?: number;
+    /** Canonical bottom-to-top ladder. Never infer a rung's name or order in a client. */
+    rungs: { id: Rung; title: string; reachedAt?: number }[];
     /**
      * THE LADDER IS FROZEN (issue #1803): no man of the house has woken to the
      * Power, so no rung can move. Present only then. Derived from public facts
@@ -1555,6 +1557,11 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       best: w.ascension.best,
       title: rungTitle(ctx, w.ascension.rung),
       bestTitle: rungTitle(ctx, w.ascension.best),
+      rungs: RUNG_ORDER.map((id) => ({
+        id,
+        title: rungTitle(ctx, id),
+        ...(w.ascension.reachedAt[id] !== undefined ? { reachedAt: w.ascension.reachedAt[id]! } : {}),
+      })),
       ...(w.ascension.reachedAt[w.ascension.best] !== undefined
         ? { bestAt: w.ascension.reachedAt[w.ascension.best]! }
         : {}),
