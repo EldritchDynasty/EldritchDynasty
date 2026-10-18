@@ -17,7 +17,7 @@ import Cast from './Cast.vue';
 import { LEGEND, MARKS, markSays } from '../lib/marks';
 import Ambition from './Ambition.vue';
 import type { GameActions } from '../lib/game';
-import { RespectTierS, TaleFormS, type RespectTier, type TaleForm } from '@ed/schema';
+import { RUNG_ORDER, RespectTierS, TaleFormS, type RespectTier, type TaleForm } from '@ed/schema';
 
 function view(): SessionView {
   return {
@@ -53,6 +53,11 @@ function view(): SessionView {
       title: 'Adept',
       bestTitle: 'Hierophant',
       bestAt: 1114,
+      rungs: RUNG_ORDER.map((id) => ({
+        id,
+        title: id.charAt(0).toUpperCase() + id.slice(1),
+        ...(id === 'hierophant' ? { reachedAt: 1114 } : {}),
+      })),
       foremost: { person: 'p1', name: 'Maren', power: 42, spells: 3 },
     },
     cast: [],
@@ -1271,5 +1276,111 @@ describe('Standing debt-safe Plain English (#1749)', () => {
     } finally {
       wrapper.unmount();
     }
+  });
+});
+
+describe('Ascension path accessibility (#1806)', () => {
+  it('uses the canonical engine rung order and public names, not copied UI constants', () => {
+    const game = newGame(loadContent(), { seed: 1806 });
+    const ascension = game.view().ascension;
+    expect(ascension.rungs.map((step) => step.id)).toEqual(RUNG_ORDER);
+    expect(ascension.rungs.find((step) => step.id === ascension.rung)?.title).toBe(ascension.title);
+    expect(ascension.rungs.find((step) => step.id === ascension.best)?.title).toBe(ascension.bestTitle);
+    expect(ascension.rungs[0]?.reachedAt).toBeUndefined();
+  });
+
+  it.each(['original', 'plainenglish'] as const)('reads the ordered ladder and a lost former rung (%s)', async (mode) => {
+    const current = view();
+    const before = structuredClone(current);
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode } });
+    try {
+      const list = wrapper.get('ol.ladder-path');
+      expect(list.findAll(':scope > li')).toHaveLength(RUNG_ORDER.length);
+      expect(list.findAll(':scope > li').map((li) => li.attributes('data-rung'))).toEqual(RUNG_ORDER);
+      expect(list.get('[data-rung="adept"]').attributes('aria-current')).toBe('step');
+      expect(list.get('[data-rung="hierophant"]').attributes('data-state')).toBe('once');
+      expect(list.get('[data-rung="hierophant"]').text()).toContain('1114');
+      expect(list.get('[data-rung="hierophant"]').text()).toContain(mode === 'original' ? 'none holds it now' : 'no one holds it now');
+      expect(list.get('[data-rung="demigod"]').text()).not.toMatch(/power|threshold|\d+ of 100/i);
+      expect(wrapper.text()).toContain(mode === 'original' ? 'Highest reached' : 'Highest level reached');
+      expect(current).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('shows the ground when no family member has reached a rung', () => {
+    const current = view();
+    current.ascension = {
+      ...current.ascension, rung: 'none', best: 'none', title: 'None', bestTitle: 'None',
+      bestAt: undefined, foremost: undefined, diagnosis: undefined,
+      rungs: current.ascension.rungs.map((r) => ({ id: r.id, title: r.title })),
+    };
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle', proseMode: 'plainenglish' } });
+    try {
+      expect(wrapper.get('[data-rung="none"]').attributes('aria-current')).toBe('step');
+      expect(wrapper.get('[data-rung="none"]').text()).toContain('Not yet on the ladder');
+      expect(wrapper.get('.rung').text()).toContain('No family member is on the ladder.');
+      expect(wrapper.find('[data-state="once"]').exists()).toBe(false);
+    } finally { wrapper.unmount(); }
+  });
+
+  it.each(['original', 'plainenglish'] as const)('shows multiple blockers only under the next rung (%s)', async (mode) => {
+    const current = view();
+    current.ascension.diagnosis = {
+      target: 'hierophant', targetTitle: 'Hierophant', name: 'Maren',
+      blockers: [
+        { kind: 'power', text: 'The power is short.', hint: 'Look to the family.' },
+        { kind: 'books', text: 'The reading is short.', hint: 'Read more books.' },
+      ] as NonNullable<SessionView['ascension']['diagnosis']>['blockers'],
+    };
+    const wrapper = mount(Standing, { props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode } });
+    try {
+      const next = wrapper.get('[data-rung="hierophant"]');
+      expect(next.findAll('.ladder-blocker')).toHaveLength(2);
+      expect(wrapper.findAll('.ladder-blocker')).toHaveLength(2);
+      expect(next.text()).toContain('The power is short.');
+      expect(next.text()).toContain('Read more books.');
+      expect(next.get('.next-rung').text()).toContain(mode === 'original' ? 'Next rung' : 'Next level');
+      expect(wrapper.get('.ladder-measure').text()).toContain(mode === 'original' ? 'power 42 of 100' : 'Power 42 out of 100');
+    } finally { wrapper.unmount(); }
+  });
+
+  it('marks a clear next rung without inventing blockers, and keeps the existing action links keyboard-operable', async () => {
+    const current = view();
+    current.ascension = {
+      ...current.ascension, rung: 'touched', best: 'touched', title: 'Touched', bestTitle: 'Touched',
+      diagnosis: undefined, rungs: current.ascension.rungs.map((r) => ({ id: r.id, title: r.title })),
+    };
+    const wrapper = mount(Standing, { attachTo: document.body, props: { view: current, jump: null, saveStatus: 'idle' } });
+    try {
+      expect(wrapper.get('[data-rung="adept"]').attributes('data-state')).toBe('next');
+      expect(wrapper.get('[data-rung="adept"] .next-rung').text()).toContain('Adept');
+      expect(wrapper.find('.ladder-blocker').exists()).toBe(false);
+      expect(wrapper.text()).toContain('Maren — nothing stands in the way.');
+
+      current.ascension.diagnosis = {
+        target: 'adept', targetTitle: 'Adept',
+        blockers: [{ kind: 'power', text: 'Find the blood.', hint: 'Read the family.' }],
+        route: { title: 'The blood', rule: 'Read the family.', caution: 'No child is promised.',
+          daughters: [{ person: 'mara', name: 'Mara', evidence: [] }], cards: [], alternatives: [] },
+      };
+      await wrapper.setProps({ view: { ...current } });
+      const button = wrapper.get('.power-route button');
+      (button.element as HTMLButtonElement).focus();
+      expect(document.activeElement).toBe(button.element);
+      await button.trigger('click');
+      expect(wrapper.emitted('look')).toEqual([['mara']]);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('provides a stacked narrow viewport path without concealing status text', () => {
+    const source = readFileSync(join(process.cwd(), 'packages/client/src/components/LadderPath.vue'), 'utf8');
+    expect(source).toContain('@media (max-width: 680px)');
+    expect(source).toContain('.ladder-path { display: block;');
+    const wrapper = mount(Standing, { props: { view: view(), jump: null, saveStatus: 'idle' } });
+    try {
+      for (const li of wrapper.findAll('ol.ladder-path > li')) {
+        expect(li.get('.ladder-step-head .soft').text().length).toBeGreaterThan(0);
+      }
+    } finally { wrapper.unmount(); }
   });
 });
