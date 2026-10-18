@@ -10,6 +10,7 @@ import { resolveSlots, renderBody, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
+import { maintainCast } from '../people/succession.js';
 import { queueChoice, queueRecord, resolveChoice, resolveRecord } from './decisions.js';
 import {
   EXPRESSER_WAKING_LIFT, genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening,
@@ -251,6 +252,70 @@ function singleOutcomeNarration() {
   }
   throw new Error('fixture has no fillable single-outcome narration');
 }
+
+describe('a rivalry ends without a death and the next one remembers it (#1812)', () => {
+  const root = content.event('the_second_signature');
+  const callback = content.event('the_name_under_the_second_signature');
+  if (!root || root.interaction.kind !== 'choice' || !callback || callback.interaction.kind !== 'narration') {
+    throw new Error('the authored rival settlement must have a choice and a narrated callback');
+  }
+
+  const prepared = (seed: number) => {
+    const ctx = fixture(seed);
+    for (const person of ctx.world.people.all()) {
+      person.castSlots = person.castSlots.filter((slot) => slot !== 'rival');
+    }
+    const old = place(ctx, { sex: 'male', age: 31, house: 'house_marrow', name: 'A Rival Before Peace', castSlots: ['rival'] });
+    return { ctx, old };
+  };
+
+  for (const choice of root.interaction.choices) {
+    it(`witnesses ${choice.id} through the actual choice/outcome commit`, () => {
+      const { ctx, old } = prepared(1812);
+      const outcome = choice.outcomes[0]!;
+      const result = executeOutcomeWitness(ctx, root, {
+        choiceId: choice.id, expectedOutcomeId: outcome.id, rng: makeRng(1812),
+      });
+      expect(result.ok, result.reason).toBe(true);
+      expect(result.key).toBe(`the_second_signature|${choice.id}|${outcome.id}`);
+      expect(old.status).toBe('alive');
+      expect(old.castSlots.includes('rival')).toBe(choice.id !== 'put_the_seal_to_it');
+    });
+  }
+
+  it('witnesses the due follow-up with old and newly minted rivals in the same cast', () => {
+    const { ctx, old } = prepared(1813);
+    const first = executeOutcomeWitness(ctx, root, {
+      choiceId: 'put_the_seal_to_it', expectedOutcomeId: 'the_seals_agreed', rng: makeRng(1813),
+    });
+    expect(first.ok, first.reason).toBe(true);
+    const arc = [...ctx.world.arcs.values()].find((instance) =>
+      instance.arc === 'inline_the_second_signature__the_seals_agreed');
+    expect(arc, 'the settlement did not docket its inline follow-up').toBeDefined();
+    expect(arc!.bindings.RIVAL).toBe(old.id);
+
+    const newRng = { ...makeRng(1813), bool: () => true };
+    const newRival = maintainCast(ctx, newRng).find((person) => person.castSlots.includes('rival'));
+    expect(newRival, 'no replacement for the dismissed rival').toBeDefined();
+    arc!.dueYear = ctx.world.year;
+    const due = dueArcSteps(ctx, makeRng(1814))
+      .find((step) => step.node.event === callback.id);
+    expect(due, 'the new rival could not meet the former rival on the callback').toBeDefined();
+    expect(due!.fill.RIVAL).toBe(old.id);
+    expect(due!.fill.NEW_RIVAL).toBe(newRival!.id);
+    const words = renderBody(callback.body, due!.fill, ctx);
+    expect(words).toContain(old.name);
+    expect(words).toContain(newRival!.name);
+
+    const result = executeOutcomeWitness(ctx, callback, {
+      expectedOutcomeId: 'another_claim', rng: makeRng(1815), arcStep: due!,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(result.key).toBe('the_name_under_the_second_signature||another_claim');
+    expect(arc!.status).toBe('ended');
+    expect(old.status).toBe('alive');
+  });
+});
 
 describe('deterministic outcome execution witnesses', () => {
   it('records a witnessed outcome only after the real commit path resolves it', () => {
