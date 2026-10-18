@@ -5,6 +5,7 @@ import type { StandingDelta } from '@ed/core';
 import type { ProseMode, RespectTier } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
+import LadderPath from './LadderPath.vue';
 
 const props = withDefaults(defineProps<{
   view: SessionView;
@@ -314,51 +315,17 @@ const muster = computed(() => {
     <div v-if="showLadder" class="rung">
       <div class="name">{{ view.ascension.title }}</div>
 
-      <template v-if="view.ascension.diagnosis">
-        <div class="rubric small next-rung">
-          {{ plain ? 'Next level' : 'Next rung' }} · {{ view.ascension.diagnosis.targetTitle }}
-          <span v-if="view.ascension.diagnosis.name" class="dim">
-            · {{ view.ascension.diagnosis.name }}
-          </span>
-        </div>
-        <div
-          v-for="blocker in view.ascension.diagnosis.blockers"
-          :key="blocker.kind + blocker.text"
-          class="ladder-blocker small"
-        >
-          <div>{{ blocker.text }}</div>
-          <div class="soft">{{ blocker.hint }}</div>
-        </div>
-        <details v-if="view.ascension.diagnosis.route" class="power-route small">
-          <summary class="rubric">{{ view.ascension.diagnosis.route.title }}</summary>
-          <p>{{ view.ascension.diagnosis.route.rule }}</p>
-          <ul v-if="view.ascension.diagnosis.route.daughters.length">
-            <li v-for="woman in view.ascension.diagnosis.route.daughters" :key="woman.person">
-              <button class="quiet" @click="emit('look', woman.person)">{{ woman.name }}</button>
-              <p v-for="line in woman.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <ul v-if="view.ascension.diagnosis.route.cards.length">
-            <li v-for="card in view.ascension.diagnosis.route.cards" :key="card.card">
-              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
-              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <p v-if="view.ascension.diagnosis.route.none" class="soft">{{ view.ascension.diagnosis.route.none }}</p>
-          <ul v-if="view.ascension.diagnosis.route.alternatives.length">
-            <li v-for="card in view.ascension.diagnosis.route.alternatives" :key="card.card">
-              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
-              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <p class="dim">{{ view.ascension.diagnosis.route.caution }}</p>
-        </details>
-      </template>
+      <LadderPath
+        :ascension="view.ascension"
+        :prose-mode="proseMode"
+        @look="(person) => emit('look', person)"
+        @match="(decision, card) => emit('match', decision, card)"
+      />
 
-      <div v-else-if="view.ascension.foremost" class="dim small">
+      <div v-if="!view.ascension.diagnosis && view.ascension.foremost" class="dim small">
         {{ view.ascension.foremost.name }} — {{ plain ? 'can advance to the next level.' : 'nothing stands in the way.' }}
       </div>
-      <div v-else class="dim small">{{ plain ? 'No family member is on the ladder.' : 'nobody of the house is on the ladder' }}</div>
+      <div v-else-if="!view.ascension.diagnosis" class="dim small">{{ plain ? 'No family member is on the ladder.' : 'nobody of the house is on the ladder' }}</div>
 
       <!-- THE READING (issue #50). Kept tertiary rather than promoted into a
            progress treatment: this is the existing exact inspection, while
@@ -447,12 +414,6 @@ const muster = computed(() => {
 </template>
 
 <style scoped>
-.power-route { margin-top: 12px; max-width: 48ch; }
-.power-route p { margin: 4px 0; }
-.power-route ul { margin: 8px 0; padding-left: 16px; }
-.power-route li { margin: 4px 0; }
-.power-route button { min-height: 40px; text-align: left; overflow-wrap: anywhere; }
-.power-route > summary { min-height: 40px; padding: 8px 0; cursor: pointer; }
 .standing {
   display: flex; align-items: flex-start; gap: 28px; flex-wrap: wrap;
   padding: 14px 26px; border-bottom: 1px solid var(--rule);
