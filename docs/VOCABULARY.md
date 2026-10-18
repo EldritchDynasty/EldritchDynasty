@@ -256,6 +256,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `slots/negated-relation` | A negated relation filter must name a counterpart cast before it, or it rejects everybody instead of narrowing anybody. |
 | `slots/arc-bound` | A slot bound for a whole substory needs an arc, and an absent-body if it may go missing. |
 | `slots/counted` | A slot that casts a party may only be referenced as a party — `{ all: }` or `party_sum`. |
+| `recast/role` | A recast effect may dismiss only a recurring role that maintainCast can refill. |
 | `madness/gate` | Madness may only be dealt to a target the slot has already gated to someone who can express. |
 | `awakening/gate` | Forced Awakening must target one explicitly unwoken slot; runtime separately verifies a carried Eldritch font. |
 | `refs/known` | Ages, arcs, careers, spellbooks, knowledge flags, tales and their about-events named by content must be things that exist. |

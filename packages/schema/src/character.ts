@@ -31,6 +31,16 @@ export const CharacterRoleS = z.enum([
 ]);
 export type CharacterRole = z.infer<typeof CharacterRoleS>;
 
+/**
+ * The one recurring-cast roster. maintainCast mints these roles again after
+ * their slot becomes empty; content may only dismiss roles on this roster.
+ * Keep the refill odds beside the role so validation never copies the list.
+ */
+export const RECURRING_CAST_ROLES = [
+  { slot: 'rival', role: 'rival', chance: 0.5 },
+  { slot: 'the_match', role: 'the_match', chance: 0.25 },
+] as const satisfies readonly { slot: CharacterRole; role: CharacterRole; chance: number }[];
+
 export const HouseWeightS = z.object({
   house: z.string(),
   weight: z.number().default(100),

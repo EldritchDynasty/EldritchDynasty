@@ -2,6 +2,7 @@ import type { ArcDef, Schedule } from './arc.js';
 import type { Content } from './content-index.js';
 import type { EventTemplate } from './event.js';
 import { isLadderRole } from './event.js';
+import { RECURRING_CAST_ROLES } from './character.js';
 import type { Filter } from './conditions.js';
 import type { Issue, ValidationRule } from './validate.js';
 import { FREQUENCY_PROFILES } from './frequency.js';
@@ -393,6 +394,37 @@ const arcBoundSlots: ValidationRule = {
         }
         if (spec.bind === 'arc' && spec.onMissing === 'continue_absent' && !e.absentBody) {
           issues.push(err(this.id, at, 'continue_absent requires absentBody — otherwise this renders a token for a man forty years in the ground'));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
+
+/**
+ * Casting is not a universal dismissal system. Only the roles maintainCast
+ * mints anew can actually be recast: a Head's seal, for example, must never be
+ * silently stripped by authored content. Read the same roster as the runtime.
+ */
+const recastRole: ValidationRule = {
+  id: 'recast/role',
+  about: 'A recast effect may dismiss only a recurring role that maintainCast can refill.',
+  check(content) {
+    const issues: Issue[] = [];
+    const refillable = new Set<string>(RECURRING_CAST_ROLES.map(({ slot }) => slot));
+    for (const e of content.events) {
+      for (const o of allOutcomes(e)) {
+        for (const eff of o.effects) {
+          if (eff.kind !== 'recast') continue;
+          const role = e.slots[eff.slot]?.role;
+          if (!role || !refillable.has(role)) {
+            issues.push(err(
+              this.id,
+              `event:${e.id}/${o.id}`,
+              `recast slot '${eff.slot}' has role '${role ?? 'missing'}', which maintainCast cannot refill`,
+            ));
+          }
         }
       }
     }
@@ -2253,6 +2285,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   negatedRelationOnPlayerCast,
   arcBoundSlots,
   countedSlots,
+  recastRole,
   madnessGate,
   awakeningGate,
   knownReferences,

@@ -132,6 +132,43 @@ describe('the content rules', () => {
     expect(runRule('ids/unique', content)).toHaveLength(0);
   });
 
+
+  describe('recast/role (#1812)', () => {
+    const recast = (role: 'rival' | 'the_match' | 'head' | 'family_member', slotName = 'REPLACEMENT') =>
+      withEvents((b) => {
+        const e = b.events.find((event) => event.interaction.kind === 'narration' && Object.keys(event.slots).length > 0)!;
+        if (e.interaction.kind !== 'narration') throw new Error('unreachable');
+        const existing = e.slots[Object.keys(e.slots)[0]!];
+        if (!existing) throw new Error('no slot fixture available');
+        e.slots[slotName] = { ...existing, role, count: undefined, optional: false };
+        e.interaction.outcomes[0]!.effects.push({ kind: 'recast', slot: slotName });
+      });
+
+    it('refuses dismissing the Head or another role nobody refills', () => {
+      for (const role of ['head', 'family_member'] as const) {
+        const issues = runRule('recast/role', recast(role));
+        expect(issues.some((i) => i.level === 'error' && i.message.includes('cannot refill'))).toBe(true);
+      }
+    });
+
+    it('accepts each recurring role whose vacant slot maintainCast refills', () => {
+      for (const role of ['rival', 'the_match'] as const) {
+        expect(runRule('recast/role', recast(role))).toHaveLength(0);
+      }
+    });
+
+    it('rejects a recast naming an undeclared slot', () => {
+      const b = recast('rival');
+      const e = b.events.find((event) => 'REPLACEMENT' in event.slots)!;
+      delete e.slots.REPLACEMENT;
+      expect(runRule('recast/role', b).some((i) => i.message.includes('missing'))).toBe(true);
+    });
+
+    it('does not reject shipped content', () => {
+      expect(runRule('recast/role', content)).toHaveLength(0);
+    });
+  });
+
   // ── Rules that must actually fire ───────────────────────────────────────
 
   /**
