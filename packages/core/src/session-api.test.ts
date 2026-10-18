@@ -783,74 +783,75 @@ describe('the two ends of the run, through the façade', () => {
 });
 
 describe('family planning fields do not read hidden blood', () => {
-  it.each(['original', 'plainenglish'] as const)('keeps the entire view, table and Cast identical before a foremost man or heir wakes (%s)', (mode) => {
-    for (const scenario of ['foremost', 'heir'] as const) {
-      const a = newGame(content, { seed: 1820, proseMode: mode });
-      const b = newGame(content, { seed: 1820, proseMode: mode });
-      const sons = [a, b].map((g) => {
-        const ctx = g.ctx;
-        const head = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).find((p) => p.castSlots.includes('head'))!;
-        if (scenario === 'heir') {
-          for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
-            if (p.id !== head.id) ctx.world.people.kill(p.id, ctx.world.year, 'a built narrow succession');
-          }
+  it.each([
+    ['original', 'foremost'], ['original', 'heir'],
+    ['plainenglish', 'foremost'], ['plainenglish', 'heir'],
+  ] as const)('keeps view, Table and Cast identical before waking (%s / %s)', (mode, scenario) => {
+    const a = newGame(content, { seed: 1820, proseMode: mode });
+    const b = newGame(content, { seed: 1820, proseMode: mode });
+    const sons = [a, b].map((g) => {
+      const ctx = g.ctx;
+      const head = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).find((p) => p.castSlots.includes('head'))!;
+      if (scenario === 'heir') {
+        for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+          if (p.id !== head.id) ctx.world.people.kill(p.id, ctx.world.year, 'a built narrow succession');
         }
-        const son = place(ctx, { name: 'The unwoken son', age: 23, sex: 'male' });
-        beget(ctx, son, undefined, head);
-        ctx.world.houseAmbition = 'raise_ascendant';
-        return son;
-      });
-      const hot = genomeOf(sons[0]!, a.ctx.genetics);
-      for (const index of a.ctx.genetics.table.channelIndices) {
-        const alleles = a.ctx.genetics.table.autosomalAlleles[index]!;
-        const widest = alleles.reduce((best, allele, i) => allele.effect > alleles[best]!.effect ? i : best, 0);
-        hot.autosomal[0][index] = widest;
-        hot.autosomal[1][index] = widest;
       }
-      for (const index of a.ctx.genetics.table.fontIndices) {
-        const alleles = a.ctx.genetics.table.xAlleles[index]!;
-        hot.sex[0][index] = alleles.reduce((best, allele, i) => allele.effect > alleles[best]!.effect ? i : best, 0);
-      }
-      sons[1]!.genome = { kind: 'materialized', genome: structuredClone(hot) };
-      for (const index of b.ctx.genetics.table.fontIndices) {
-        const alleles = b.ctx.genetics.table.xAlleles[index]!;
-        const empty = alleles.findIndex((allele) => allele.tags.includes('null'));
-        expect(empty).toBeGreaterThanOrEqual(0);
-        sons[1]!.genome.genome.sex[0][index] = empty;
-      }
-      sons.forEach((son) => { son!.phenotype = undefined; });
-      expect(phenotypeOf(sons[0]!, a.ctx.genetics, a.year).eldritch.canExpress).toBe(true);
-      expect(phenotypeOf(sons[1]!, b.ctx.genetics, b.year).eldritch.canExpress).toBe(false);
-      [a, b].forEach((g, index) => {
-        const event = structuredClone(content.events.find((e) => e.id === 'the_drowning')!);
-        event.record!.subject = 'the account of {CHILD}';
-        g.ctx.world.pendingDecisions.push({
-          kind: 'record', id: 'record_the_son', year: g.year, event,
-          subject: 'the account of the unwoken son', entryId: 'son_page',
-          fill: { CHILD: sons[index]!.id }, options: [{ option: 'record', chronicle: 'An account was kept.' }],
-        });
-      });
-      const engine = structuredClone(a.ctx.world.ascension);
-      const measured = measureAscension(a.ctx);
-      expect(measured.foremost?.person).toBe(sons[0]!.id);
-      expect(measureAscension(b.ctx).foremost?.person).not.toBe(sons[1]!.id);
-      expect(JSON.stringify(a.view()), scenario).toBe(JSON.stringify(b.view()));
-      expect(JSON.stringify(a.table()), scenario).toBe(JSON.stringify(b.table()));
-      expect(castOf(a.ctx), scenario).toEqual(castOf(b.ctx));
-      const member = a.view().halls.flatMap((hall) => hall.members).find((p) => p.id === sons[0]!.id)!;
-      expect(member).not.toHaveProperty('expresses');
-      if (scenario === 'heir') expect(member.succession).toBe('heir');
-      expect(a.view().ascension.foremost).toBeUndefined();
-      expect(a.ctx.world.ascension).toEqual(engine);
-      expect(measureAscension(a.ctx)).toEqual(measured);
-
-      sons[0]!.awakening.awakened = true;
-      sons[0]!.phenotype = undefined;
-      const awake = a.view();
-      expect(awake.halls.flatMap((hall) => hall.members).find((p) => p.id === sons[0]!.id)?.expresses).toBe(true);
-      expect(awake.ascension.foremost?.person).toBe(sons[0]!.id);
-      expect(awake.ascension.foremost!.power).toBeGreaterThan(0);
+      const son = place(ctx, { name: 'The unwoken son', age: 23, sex: 'male' });
+      beget(ctx, son, undefined, head);
+      ctx.world.houseAmbition = 'raise_ascendant';
+      return son;
+    });
+    const hot = genomeOf(sons[0]!, a.ctx.genetics);
+    for (const index of a.ctx.genetics.table.channelIndices) {
+      const alleles = a.ctx.genetics.table.autosomalAlleles[index]!;
+      const widest = alleles.reduce((best, allele, i) => allele.effect > alleles[best]!.effect ? i : best, 0);
+      hot.autosomal[0][index] = widest;
+      hot.autosomal[1][index] = widest;
     }
+    for (const index of a.ctx.genetics.table.fontIndices) {
+      const alleles = a.ctx.genetics.table.xAlleles[index]!;
+      hot.sex[0][index] = alleles.reduce((best, allele, i) => allele.effect > alleles[best]!.effect ? i : best, 0);
+    }
+    sons[1]!.genome = { kind: 'materialized', genome: structuredClone(hot) };
+    for (const index of b.ctx.genetics.table.fontIndices) {
+      const alleles = b.ctx.genetics.table.xAlleles[index]!;
+      const empty = alleles.findIndex((allele) => allele.tags.includes('null'));
+      expect(empty).toBeGreaterThanOrEqual(0);
+      sons[1]!.genome.genome.sex[0][index] = empty;
+    }
+    sons.forEach((son) => { son!.phenotype = undefined; });
+    expect(phenotypeOf(sons[0]!, a.ctx.genetics, a.year).eldritch.canExpress).toBe(true);
+    expect(phenotypeOf(sons[1]!, b.ctx.genetics, b.year).eldritch.canExpress).toBe(false);
+    [a, b].forEach((g, index) => {
+      const event = structuredClone(content.events.find((e) => e.id === 'the_drowning')!);
+      event.record!.subject = 'the account of {CHILD}';
+      g.ctx.world.pendingDecisions.push({
+        kind: 'record', id: 'record_the_son', year: g.year, event,
+        subject: 'the account of the unwoken son', entryId: 'son_page',
+        fill: { CHILD: sons[index]!.id }, options: [{ option: 'record', chronicle: 'An account was kept.' }],
+      });
+    });
+    const engine = structuredClone(a.ctx.world.ascension);
+    const measured = measureAscension(a.ctx);
+    expect(measured.foremost?.person).toBe(sons[0]!.id);
+    expect(measureAscension(b.ctx).foremost?.person).not.toBe(sons[1]!.id);
+    expect(JSON.stringify(a.view()), scenario).toBe(JSON.stringify(b.view()));
+    expect(JSON.stringify(a.table()), scenario).toBe(JSON.stringify(b.table()));
+    expect(castOf(a.ctx), scenario).toEqual(castOf(b.ctx));
+    const member = a.view().halls.flatMap((hall) => hall.members).find((p) => p.id === sons[0]!.id)!;
+    expect(member).not.toHaveProperty('expresses');
+    if (scenario === 'heir') expect(member.succession).toBe('heir');
+    expect(a.view().ascension.foremost).toBeUndefined();
+    expect(a.ctx.world.ascension).toEqual(engine);
+    expect(measureAscension(a.ctx)).toEqual(measured);
+
+    sons[0]!.awakening.awakened = true;
+    sons[0]!.phenotype = undefined;
+    const awake = a.view();
+    expect(awake.halls.flatMap((hall) => hall.members).find((p) => p.id === sons[0]!.id)?.expresses).toBe(true);
+    expect(awake.ascension.foremost?.person).toBe(sons[0]!.id);
+    expect(awake.ascension.foremost!.power).toBeGreaterThan(0);
   });
   it('keeps succession and relevance identical when only an unwoken genome changes', () => {
     const a = newGame(content, { seed: 268 });
