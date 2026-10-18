@@ -22,6 +22,8 @@ import { branchOf, halls } from './people/branches.js';
 import { knownToExpress, phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
 import { visibleRecordView } from './record.js';
+import { chronicleReading, generationChangesOf, type GenerationChanges } from './people/generation-changes.js';
+export type { GenerationChange, GenerationChangeKind, GenerationChanges } from './people/generation-changes.js';
 import { loadGame, saveGame } from './save.js';
 import { marriagePromiseLotName } from './auction.js';
 import { assizeFavour } from './assize.js';
@@ -728,9 +730,14 @@ export class GameSession {
    */
   book(opts: { from?: number; to?: number } = {}): ChronicleEntry[] {
     const { from, to } = opts;
-    return this.ctx.world.chronicle.filter(
+    return chronicleReading(this.ctx.world.chronicle).filter(
       (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
     ).map((entry) => structuredClone(entry));
+  }
+
+  /** Recorded family changes during one Head's tenure, current by default. */
+  generationChanges(index?: number): GenerationChanges {
+    return generationChangesOf(this.ctx, index);
   }
 
   /** The earlier act a Chronicle page answers, when one is recoverable. */
@@ -745,7 +752,7 @@ export class GameSession {
 
   /** Stable authored pages in which the book explicitly cast this person. */
   mentions(person: string): string[] {
-    return this.ctx.world.chronicle.flatMap((entry) =>
+    return chronicleReading(this.ctx.world.chronicle).flatMap((entry) =>
       entry.id && entry.people?.includes(person) ? [entry.id] : []);
   }
 
@@ -1430,7 +1437,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   // here, without sending the whole person store (or hidden facts) to Vue.
   // Chronicle views must not expose writable references into the saved book.
   // Deep copies matter: a page's people, claims and cause are nested values.
-  const chronicle = w.chronicle.slice(-chronicleLines).map((entry) => structuredClone(entry));
+  const chronicle = chronicleReading(w.chronicle).slice(-chronicleLines).map((entry) => structuredClone(entry));
   const chroniclePeople = [...new Set(chronicle.flatMap((entry) => entry.people ?? []))]
     .flatMap((id) => {
       const person = w.people.get(id);

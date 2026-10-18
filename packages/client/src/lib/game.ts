@@ -365,6 +365,7 @@ export interface GameActions {
    * are the living household; this is the fourteen generations behind them.
    */
   line(): ReturnType<GameSession['line']>;
+  generationChanges(index?: number): ReturnType<GameSession['generationChanges']> | undefined;
   /**
    * THE WAY BACK (issue #269). The earlier page a later one answers, when the
    * book kept one, and the years in which later pages answer this one.
@@ -958,6 +959,10 @@ export function createGame(
 
     line() {
       return session.value?.line() ?? [];
+    },
+
+    generationChanges(index) {
+      return session.value?.generationChanges(index);
     },
 
     causeOf(entryId) {

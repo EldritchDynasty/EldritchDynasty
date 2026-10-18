@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { mount, type VueWrapper } from '@vue/test-utils';
-import type { SessionView } from '@ed/core';
+import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
+import type { GenerationChanges, SessionView } from '@ed/core';
 import Tree from './Tree.vue';
+import TreeChanges from './TreeChanges.vue';
 import Kin from './Kin.vue';
 import Standing from './Standing.vue';
 import Line from './Line.vue';
@@ -482,6 +483,16 @@ describe('the family tree as a planning board (#268)', () => {
     expect(links.map((link) => link.text())).toEqual(['1104', '1129']);
     await links[1]!.trigger('click');
     expect(wrapper.emitted('book')).toEqual([['entry-b']]);
+    wrapper.unmount();
+  });
+
+  it('hands keyboard focus to an activated generation link after revealing a filtered person', async () => {
+    const wrapper = mount(Tree, { attachTo: document.body, props: { view: largeView(), selected: null, reveal: null } });
+    await wrapper.get('[data-filter="awakened"]').trigger('click');
+    expect(wrapper.find('#member-p001').exists()).toBe(false);
+    await wrapper.setProps({ selected: 'p001', reveal: { id: 'p001', token: 1, focus: true } });
+    await flushPromises();
+    expect(document.activeElement === wrapper.get('#member-p001 button.face').element).toBe(true);
     wrapper.unmount();
   });
 
@@ -1166,5 +1177,64 @@ describe('person-specific branch focus accessible names (#1731)', () => {
     } finally {
       first.unmount();
     }
+  });
+});
+
+describe('the tree’s persistent tenure reading (#1815)', () => {
+  function reading(): GenerationChanges {
+    return {
+      index: 1, count: 3, tenure: { person: 'head', name: 'Maud', from: 1080, to: 1100 }, through: 1100, more: 4,
+      changes: [
+        { id: 'birth:child', kind: 'birth', year: 1098, person: 'child', name: 'Recorded Child', inTree: true,
+          related: [{ person: 'paper-father', name: 'Father in the Book', role: 'father' }], pageId: 'birth-page' },
+        { id: 'loss:dead', kind: 'death', year: 1097, person: 'dead', name: 'Departed Alan', inTree: false, pageId: 'death-page' },
+        { id: 'blank:omission', kind: 'blank', year: 1096, pageId: 'omission' },
+        { id: 'branch:past', kind: 'branch', year: 1095, person: 'past', name: 'The Earlier Cousin', inTree: false, pageId: 'legacy-chronicle:9' },
+        { id: 'death:unwritten', kind: 'death', year: 1094, person: 'unwritten', name: 'A Public Life Date', inTree: false },
+      ],
+    };
+  }
+
+  it.each(['original', 'plainenglish'] as const)('links a current member, historical page and dated blank by their exact identities (%s)', async (mode) => {
+    const wrapper = mount(TreeChanges, { attachTo: document.body, props: { reading: reading(), proseMode: mode } });
+    expect(wrapper.text()).toContain('Maud');
+    expect(wrapper.text()).toContain('1080');
+    expect(wrapper.text()).toContain('1100');
+    expect(wrapper.text()).toContain('Father in the Book');
+    expect(wrapper.text()).toContain(mode === 'original' ? 'What changed under this seal' : 'Changes during this leader’s time');
+    const child = wrapper.findAll('button').find((button) => button.text() === 'Recorded Child')!;
+    child.element.focus();
+    expect(document.activeElement).toBe(child.element);
+    expect(child.attributes('aria-label')).toContain('Recorded Child');
+    await child.trigger('click');
+    expect(wrapper.emitted('select')).toEqual([['child']]);
+    await wrapper.findAll('button').find((button) => button.text() === 'Departed Alan')!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === 'The Earlier Cousin')!.trigger('click');
+    await wrapper.find('[data-change="blank:omission"] button').trigger('click');
+    expect(wrapper.emitted('book')).toEqual([['death-page'], ['legacy-chronicle:9'], ['omission']]);
+    expect(wrapper.find('[data-change="blank:omission"]').text()).not.toMatch(/Alan|Cousin|Child/);
+    expect(wrapper.find('[data-change="death:unwritten"]').find('button').exists()).toBe(false);
+    await wrapper.find('button.more').trigger('click');
+    expect(wrapper.emitted('book')?.at(-1)).toEqual([]);
+    wrapper.unmount();
+  });
+
+  it('changes tenure with native controls and has an honest early/empty reading', async () => {
+    const wrapper = mount(TreeChanges, { props: { reading: reading() } });
+    const navigation = wrapper.find('nav');
+    const buttons = navigation.findAll('button');
+    expect(buttons.map((button) => button.text())).toEqual(['Earlier seal', 'Later seal', 'This seal']);
+    await buttons[0]!.trigger('click');
+    await buttons[1]!.trigger('click');
+    await buttons[2]!.trigger('click');
+    expect(wrapper.emitted('tenure')).toEqual([[0], [2], [undefined]]);
+    await wrapper.setProps({ reading: { ...reading(), index: 0, count: 1, changes: [], more: 0 } });
+    expect(wrapper.find('nav').exists()).toBe(false);
+    expect(wrapper.text()).toContain('no changes recorded');
+    await wrapper.setProps({ proseMode: 'plainenglish' });
+    expect(wrapper.text()).toContain('No family changes are recorded');
+    await wrapper.setProps({ reading: { index: 0, count: 0, through: 1042, changes: [], more: 0 } });
+    expect(wrapper.text()).toContain('No leadership history has been recorded');
+    expect(wrapper.findAll('button')).toHaveLength(0);
   });
 });
