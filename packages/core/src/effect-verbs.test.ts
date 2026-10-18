@@ -3,6 +3,13 @@ import { loadContent } from '@ed/content';
 import { SlotSpecS, type EventTemplate } from '@ed/schema';
 import {
   applyEffect,
+  dueArcSteps,
+  loadGame,
+  maintainCast,
+  renderBody,
+  saveGame,
+  startArc,
+  testRng,
   beget,
   bootstrap,
   canStudySpellbook,
@@ -242,6 +249,55 @@ describe('the recast effect frees the role the slot casts for', () => {
     const event = templateWithSlots({ HEAD: 'head' });
 
     expect(() => applyEffect({ kind: 'recast', slot: 'HEAD' }, ctx, {}, { event })).not.toThrow();
+  });
+});
+
+describe('a settled rivalry leaves room for another named rival (#1812)', () => {
+  it('frees the old opponent alive, refills from the recurring cast, and remembers both people', () => {
+    const ctx = testWorld(bundle, 1812, 1092);
+    for (const p of ctx.world.people.all()) {
+      p.castSlots = p.castSlots.filter((slot) => slot !== 'rival');
+    }
+    const former = place(ctx, {
+      sex: 'male', age: 30, house: 'house_marrow',
+      name: 'The Former Rival', castSlots: ['rival'],
+    });
+    const head = place(ctx, { sex: 'male', age: 42, name: 'The Head', castSlots: ['head'] });
+    const membership = structuredClone(former.membership);
+    const root = ctx.content.mustEvent('the_second_signature');
+
+    applyEffect({ kind: 'recast', slot: 'RIVAL' }, ctx, { HEAD: head.id, RIVAL: former.id }, { event: root });
+
+    expect(former.status).toBe('alive');
+    expect(former.membership).toEqual(membership);
+    expect(former.castSlots).not.toContain('rival');
+    expect(head.castSlots).toContain('head');
+
+    // The cast-maintenance rule is the same one a played year uses; override
+    // only its refill roll so the test asserts the mechanism, not a lucky seed.
+    const rng = { ...testRng('recast-refill'), bool: () => true };
+    const minted = maintainCast(ctx, rng).find((person) => person.castSlots.includes('rival'));
+    expect(minted, 'a freed rival slot was never refilled').toBeDefined();
+    expect(minted!.id).not.toBe(former.id);
+
+    const arc = ctx.content.arc('inline_the_second_signature__the_seals_agreed');
+    expect(arc, 'the settlement has no compiled follow-up').toBeDefined();
+    const pending = startArc(arc!, ctx, testRng('recast-arc'), { RIVAL: former.id });
+    expect(pending).toBeDefined();
+    pending!.dueYear = ctx.world.year;
+    const followUp = dueArcSteps(ctx, testRng('recast-due'))
+      .find((step) => step.node.event === 'the_name_under_the_second_signature');
+    expect(followUp, 'the new rival never meets the record of the old one').toBeDefined();
+    expect(followUp!.fill.RIVAL).toBe(former.id);
+    expect(followUp!.fill.NEW_RIVAL).toBe(minted!.id);
+    const callback = ctx.content.mustEvent('the_name_under_the_second_signature');
+    expect(renderBody(callback.body, followUp!.fill, ctx)).toContain(former.name);
+    expect(renderBody(callback.body, followUp!.fill, ctx)).toContain(minted!.name);
+
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(resumed.world.people.get(former.id)?.castSlots).not.toContain('rival');
+    expect(resumed.world.people.get(former.id)?.membership).toEqual(membership);
+    expect(resumed.world.arcs.get(pending!.id)?.bindings.RIVAL).toBe(former.id);
   });
 });
 

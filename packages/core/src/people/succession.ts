@@ -1,5 +1,5 @@
-import type { CharacterRole, Person, RetainerRole } from '@ed/schema';
-import { RetainerRoleS } from '@ed/schema';
+import type { Person, RetainerRole } from '@ed/schema';
+import { RECURRING_CAST_ROLES, RetainerRoleS } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { landIncome } from '../land.js';
@@ -604,12 +604,6 @@ function hireableRoles(ctx: SimCtx): RetainerRole[] {
   return RetainerRoleS.options.filter((r) => named.has(r));
 }
 
-/** Cast slots kept occupied by minting, and the role that refills each. */
-const CAST_ROLES: { slot: string; role: CharacterRole; chance: number }[] = [
-  { slot: 'rival', role: 'rival', chance: 0.5 },
-  { slot: 'the_match', role: 'the_match', chance: 0.25 },
-];
-
 /**
  * Recurring roles are refilled with new people every few generations, so the
  * family's history rhymes. Event authors write to SLOTS, not to individuals —
@@ -647,7 +641,7 @@ export function maintainCast(ctx: SimCtx, rng: Rng): Person[] {
   }
 
   // ── Recurring cast: refilled when the last occupant dies ────────────────
-  for (const { slot, role, chance } of CAST_ROLES) {
+  for (const { slot, role, chance } of RECURRING_CAST_ROLES) {
     if (living.some((p) => p.castSlots.includes(slot))) continue;
     if (!rng.bool(chance)) continue;
     const p = mintForRole(ctx, role, rng);
