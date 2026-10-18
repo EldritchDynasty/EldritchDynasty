@@ -12,7 +12,7 @@ const props = defineProps<{
   proseMode?: ProseMode;
 }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
-const powerEvidence = computed(() => props.view.ascension.diagnosis?.route?.daughters
+const powerEvidence = computed(() => props.view.ascension?.diagnosis?.route?.daughters
   .find((woman) => woman.person === props.selected));
 
 /** Advice is a reading of the current world photograph, not permanent lore.
