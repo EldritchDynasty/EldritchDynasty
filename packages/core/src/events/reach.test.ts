@@ -11,7 +11,9 @@ import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitn
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc } from './arcs.js';
 import { queueChoice, resolveChoice } from './decisions.js';
-import { genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening } from '../people/factory.js';
+import {
+  EXPRESSER_WAKING_LIFT, genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening,
+} from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool, selectEvents } from './selection.js';
@@ -3280,6 +3282,26 @@ describe('the Late Waking (§11, #1797)', () => {
     expect(phenotypeOf(woman, ctx.genetics, ctx.world.year).eldritch.carriedFont).toBeGreaterThan(0);
     expect(rollAwakening(woman, ctx.world.year, ctx.genetics, always)).toBe(true);
     expect(draws).toBe(3);
+  });
+
+  it('lifts the yearly chance for a man who can express, and only for him, without adding a draw (#1801)', () => {
+    // A die that never comes up and records what it was asked, so both people
+    // stay unwoken and the same age can be asked twice.
+    const asked: number[] = [];
+    const never = { bool: (p: number) => { asked.push(p); return false; } } as unknown as Rng;
+
+    const { ctx, man } = waitingMan(1803, 16);
+    const woman = place(ctx, { sex: 'female', age: 16, name: 'A Daughter of the Same Blood' });
+    woman.genome = { kind: 'materialized', genome: genomeOf(man, ctx.genetics) };
+    woman.phenotype = undefined;
+    const fontOf = (p: typeof man) => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.carriedFont;
+    expect(fontOf(woman), 'the comparison needs one font in both').toBe(fontOf(man));
+
+    expect(rollAwakening(man, ctx.world.year, ctx.genetics, never)).toBe(false);
+    expect(rollAwakening(woman, ctx.world.year, ctx.genetics, never)).toBe(false);
+    expect(asked).toHaveLength(2);
+    expect(asked[0]! / asked[1]!).toBeCloseTo(EXPRESSER_WAKING_LIFT, 9);
+    expect(EXPRESSER_WAKING_LIFT).toBeGreaterThan(1);
   });
 });
 
