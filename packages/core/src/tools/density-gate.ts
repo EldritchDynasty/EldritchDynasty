@@ -516,6 +516,9 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
  * a wizard is missing. 'Unwoken' means a non-regent, seated Head currently has
  * no WITNESSED living expresser in his house: an unawakened man's secret
  * genome is never read to classify or surface an interval (#1820).
+ *
+ * The observer and reporter are the independently landed slice (#1836);
+ * #1814 retains the played-campaign baseline and pacing interpretation.
  */
 export function diagnosticPeriod(ctx: SimCtx): DiagnosticPeriod | undefined {
   const w = ctx.world;
