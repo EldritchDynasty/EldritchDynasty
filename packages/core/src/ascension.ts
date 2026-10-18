@@ -15,7 +15,7 @@ import { campaignDef } from './campaign.js';
  * This was not in the code. Grepping `core` for a tier, a rung or a gate
  * returned comments and test fixtures and nothing else. Six rungs are
  * specified — Touched, Adept, Hierophant, the Vessel, Demigod, God — and they
- * are what a player is supposed to be climbing for forty generations, and the
+ * are what a player is supposed to be climbing across centuries, and the
  * simulation had no idea they existed. The player's only answer to "am I
  * winning?" was a Respect tier that landed on exalted anyway and a clause
  * count that filled itself.
@@ -193,36 +193,38 @@ export function maxExpressiblePower(ctx: SimCtx): number {
 }
 
 /**
- * HOW MUCH OF THE THEORETICAL MAXIMUM A THOUSAND YEARS CAN ACTUALLY REACH.
+ * THE POWER A SHIPPED LONG LINE CAN PRODUCE (#1802, 18 Oct 2026).
  *
- * The first cut of this file normalised against `maxExpressiblePower` itself —
- * every font locus at its best allele, throttled by the best possible channel —
- * and that was the same mistake as §22's raw numbers, wearing better clothes.
- * Measured: the table's theoretical maximum is 66, and across six thousand-year
- * runs the highest carried font anybody reached was 26.8 and the highest
- * EXPRESSED power about 22. A scale whose top is 66 puts an ordinary expresser
- * at 17 and the best man in a run at 33, so the ladder's second rung was still
- * a coin flip and its top four were still unreachable.
+ * One scale, calibrated to 500 years; the 300-year Short Line shares it and
+ * reaches proportionally less. The former 0.45 was anchored to thousand-year
+ * runs. Owner targets and paired validation are in BALANCE-LOG; rung floors
+ * and the other gates do not change here.
  *
- * Invariant 10 is the rule that was being broken both times: *anything mapping
- * an attribute onto a real quantity centres on what the population actually
- * produces*, not on an arithmetic ceiling nobody stands near. So the scale is
- * anchored where forty generations of deliberate concentration can actually
- * reach, and the calibration is a measurement rather than an argument:
+ * Derivation: post-#1801, 96 Long Lines per policy, seeds 5100-5195,
+ * chronicler and canonical ascendant. Every expresser-year is sampled,
+ * including unwoken zeroes. Raw power p50/p90/p99/max:
+ *   chronicler       6 / 16.96 / 23.00 / 28.00
+ *   ascendant        6 / 17.28 / 25.28 / 36.36
+ * Before Great Rite/Unmaking, the upper deciles are 16.8 / 16.48.
+ * Both policies' established Adept subset has median raw power 11.
  *
- *   ordinary expresser   raw ~11  ->  EP ~37   (Adept's 25 is a real rung)
- *   a well-bred line     raw ~22  ->  EP ~74   (Hierophant's 50 is a goal)
- *   the best ever seen   raw ~27  ->  EP ~90   (Demigod's 85 is a tail)
- *   God's 98                          needs raw ~29, beyond any run measured
+ * Anchor the pre-rite upper decile near Vessel power: 16.5 / (66 * 0.35)
+ * * 100 = 71.4. The table-derived reference is 23.1 with today's loci. Paired
+ * sweeps at 0.30 and 0.33 overshot the climbing Vessel target; 0.35 preserves
+ * that middle shape. The ordinary-play shortfall is reported, not hidden.
+ * The resulting mapping is:
+ *   ordinary expresser median  raw  6   -> EP26  (Adept)
+ *   established Adept median   raw 11   -> EP48  (near Hierophant power)
+ *   pre-rite upper decile      raw 16.5 -> EP71  (Vessel power)
+ *   exceptional raw power reaches the existing 100 cap.
  *
- * That is the shape §22 asks for in prose: Adept typical by generation 3-5,
- * Hierophant "where most first runs die", Demigod a target rather than a
- * milestone, and God the terminal outcome a family has to be built for.
- *
- * Still derived from the table, so an author who adds a font locus moves the
- * ladder with it rather than silently breaking it.
+ * The other book, affinity, Mind/Madness, Respect, Regalia, clause and rite
+ * gates still decide attainment. A 100 power reading promises neither a rung
+ * nor a reliable working. God-Madness stays 90; #1818 owns the summit gap.
+ * Another locus table changes the reference through ctx.genetics.maxPower,
+ * rather than inheriting a hard-coded raw denominator.
  */
-const ASCENT_REACH = 0.45;
+const ASCENT_REACH = 0.35;
 
 /**
  * §22's BOOK COUNTS — the second quantity in this file that was prose taken
@@ -276,18 +278,19 @@ const SPELLS_OF_22: Record<Rung, number> = {
 const SPELLS_AT_GOD = 40;
 
 /**
- * HOW MUCH OF THE LIBRARY A THOUSAND YEARS COULD PUT IN ONE MAN.
+ * THE READING FRACTION, RETAINED AFTER THE 500-YEAR MEASUREMENT (#1802).
  *
- * Half of it. The measurement is in the block above: the shelf reaches 12.1 of
- * 21 and the best-read man of a run holds 7, never more than 9. Half of the
- * catalogue is 10.5. This scales the individual lower rungs. The God rite
- * now draws on living family readers. Its final reading remains eight distinct
- * books, while its circle asks the family to represent each opposed pair; the
- * old individual eleven-book target does not describe either half.
+ * Post-#1801, 96 runs/policy, seeds 5100-5195: peak household readers hold
+ * p50/p90/max 4/6/8 books for chronicler and 9/10/11 for ascendant. Peak
+ * shelves are 5/8/10 and 11/14/17. Books are the foremost blocker in 16.4% /
+ * 9.3% of baseline played years, against power's 54.4% / 49.1%.
  *
- * A number to sweep and re-measure, not to nudge: raising it makes the top of
- * the ladder ask for books that do not exist again, and lowering it hands the
- * Vessel to any man who reads.
+ * Retain the 0.5 catalogue fraction. With the current catalogue this asks
+ * Adept 1, Hierophant 3 (floored by its affinities), Vessel 4, Demigod 7.
+ * Lowering reading cannot reduce Hierophant's three-affinity requirement;
+ * the measurements do not justify changing the library alongside power.
+ * God's distinct family reading remains eight. New books still move lower
+ * rung counts through the catalogue; no raw-count replacement is introduced.
  */
 const BOOK_REACH = 0.5;
 
