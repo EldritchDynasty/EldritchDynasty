@@ -316,11 +316,14 @@ test hid a moved gate and cost another 76 minutes to find it — the argument
 this file already made about CI's jobs, which had been true of the landing the
 whole time.
 
-Everything runs on every push to `main` that touches anything but markdown,
-because this repository fast-forwards without pull requests and a PR-gated job
-would run approximately never. The gate
-step runs everything in `GATES` rather than a list of names, because the list
-used to be kept by remembering and gate 2 was left off it.
+Full-tier CI runs on the native merge queue's synthetic `merge_group` head
+before GitHub advances `main` — this is the authoritative integration check.
+Ready same-repository PRs enter that queue through `auto-merge-queue.yml`
+after their exact head passes `CI required`; sessions do not fast-forward
+`main` directly. Pushes to `main` still run CI for a post-landing verdict
+(and to judge exceptional direct changes), with the documented markdown-only
+short-tier exception. The gate step runs everything in `GATES` rather than
+a hand-maintained list: one such list once omitted gate 2.
 
 **One job runs on Windows, and it is the one that makes AGENTS.md's
 "Supported environments" a fact rather than a sentence.** It runs the same
