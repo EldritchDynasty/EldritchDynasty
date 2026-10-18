@@ -11770,3 +11770,113 @@ counterparts. The preparation regression verifies the paid physical copy,
 unfinished study, delayed knowledge, and scheduled review; the choice-requirement
 inventory also exercises its unavailable and available states. No gate floor,
 frequency profile, deterministic witness rule or existing outcome was waived.
+
+## 2026-10-18 — #1641 closed: the 11.4-minute nightly was the runner
+
+#1641 asked why the nightly fire-rate gate went from 11.4m (Oct 9) to 27.1m
+(Oct 13). Earlier sections attributed the code growth after Oct 11 (the
+retainer-membership repair, +30% legitimate work; the rival-spouse scans,
+removed by #1642) and left one gap open: on fixed hardware Oct 9 → Oct 11
+cost +21%, hosted +103%. This section closes that gap as far as a fixed
+runner can, and fixes the instrument that made it unanswerable.
+
+### Method
+
+Each nightly's exact `main` SHA in its own git worktree, timing only the
+official `playGateBatch(content, runs, 500)`, content load outside the clock,
+`ED_CONTENT_CACHE=off`, one process at a time unless stated. Node v22.22.0 on
+a 4-vCPU KVM Intel Xeon @ 2.80GHz (33 MB L3); a probe confirmed each worktree
+resolves its own `@ed/core` and content. The sorted template-run hash is
+identical on every repeat of a snapshot, and at 800 runs the templates seen
+are **447 / 449 / 452 / 487** for Oct 8 / 9 / 11 / 17 — exactly the
+non-frame counts each hosted nightly printed. These are the batches CI played.
+
+### The Oct 9 point is a fast runner, not cheap code
+
+| Nightly | SHA | Hosted | Hosted ÷ Oct 8 | Local 100×500 ÷ Oct 8 | Local 800×500 ÷ Oct 8 |
+|---|---|---:|---:|---:|---:|
+| Oct 7 | `41765386` | 16.1m | 0.99 | 0.99 | — |
+| Oct 8 | `9b2b64a3` | 16.3m | 1.00 | 1.00 (278.6s) | 1.00 (2305.5s) |
+| Oct 9 | `1e8519e4` | **11.4m** | **0.70** | 0.98 | 0.99 |
+| Oct 11 | `b9596ea0` | 23.1m | 1.42 | 1.14 | 1.16 |
+| Oct 17 | `4de6f8c3` | 15.1m | 0.93 | 0.85 | 0.89 |
+
+The 100-run column is the mean of two interleaved passes (forward then
+reverse); the 800-run column ran the four snapshots concurrently. Oct 9's
+code costs the same as Oct 8's at the full official sample (−0.6%), while its
+hosted job was 30% faster. The same night, on the same SHA, the war lane
+(`nightly gates (war)`, same engine) went the other way: 13m31s on Oct 8,
+18m14s on Oct 9. Code cannot do both; two runners can. The headline
+"11.4 → 23.1, +103%" was therefore about half runner: measured from its
+neighbours, Oct 8 → Oct 11 is +42% hosted against +16% fixed-runner.
+
+The 100-seed prefix every earlier attribution used is representative: Oct 8 →
+Oct 11 is +13.5% at 100 runs and +15.7% at 800.
+
+### A hosted excess that is not the code, and not anything local reproduces
+
+Dividing each hosted ratio by the fixed-runner ratio gives a per-night runner
+factor. 100×500 against an in-run Oct 8 reference, on 1, 2 and 4 pinned cores
+(`taskset`), and 4 cores with GC accounting:
+
+| Nightly | Hosted ÷ Oct 8 | Local ÷ Oct 8 (range over 4 series) | Runner factor |
+|---|---:|---:|---:|
+| Oct 9 | 0.70 | 0.94–1.05 | 0.67–0.71 |
+| Oct 11 | 1.42 | 1.09–1.19 | 1.19–1.27 |
+| Oct 12 | 1.58 | 1.22–1.30 | 1.22–1.29 |
+| Oct 13 | 1.66 | 1.22–1.27 | 1.31–1.36 |
+| Oct 14 | 1.64 | 1.20–1.37 | 1.20–1.37 |
+| Oct 15 | 1.36 | 1.11–1.17 | 1.17–1.23 |
+| Oct 16 | 1.39 | 1.05–1.23 | 1.13–1.32 |
+| Oct 17 | 0.93 | 0.83–0.94 | 1.00–1.12 |
+
+Oct 11 through 16 all carry a hosted-only excess of about 1.2–1.35×, every
+night, and it drops back to about 1.0–1.1 on Oct 17, the first nightly after
+#1791 removed repeated per-year scans and copies. Ruled out, each by
+measurement:
+
+- **The sample.** 800 runs agree with 100 (above).
+- **Garbage collection.** Main-thread GC pause is 4.0–4.8% of wall at every
+  snapshot and core count; it did not grow with the workload.
+- **Core count.** Oct 8 → Oct 14 is 1.25× on 4 cores, 1.20× on 2, 1.33× on 1.
+  None approaches hosted 1.64×. The repository is public, so `ubuntu-latest`
+  is the 4-vCPU runner, not the 2-vCPU private one.
+- **The nightly wrapper.** Timing `gateFireRateNightly` itself, its non-batch
+  remainder (climbing acquittal runs and vocabulary reach) is 0–55s at every
+  snapshot, and a second `playGateBatch` call costs 0s: the memo holds and the
+  batch is never replayed.
+- **Image and Node.** Unchanged across Oct 9–14 (earlier section); the image
+  advanced on Oct 15 while the excess persisted.
+
+What remains is consistent with hosted hardware that is more sensitive to
+the Oct 11–16 workload than any machine measured here — for example a
+smaller per-core cache meeting a content index that grew 72% and populations
+that grew 39% — but no hosted log records which CPU a job ran on, so that is a
+hypothesis, not an attribution. Local noise is real too: the Oct 8 reference
+moved up to 9% between series in one session, and the container itself was
+moved from a 2.80GHz to a 2.10GHz host when the session resumed.
+
+### The fix is to the instrument
+
+`npm run gates -- … --timings-json` now writes version 2 of its artifact with
+a `host` block — CPU model, logical CPUs, Node, platform, arch — and prints
+`gate host: <model> × <cpus>, node <version>` in the job log. The next time a
+lane's wall clock moves, the retained artifact says whether the machine moved
+with it. Four days of this issue were spent unable to ask that.
+
+### Acceptance
+
+- Cause named with measurements: the Oct 9 point is a runner outlier; code
+  growth Oct 8 → 11 is +16% (full sample) and the later growth is the
+  retainer repair and spouse scans already recorded; a further ~1.2–1.35×
+  hosted-only excess on Oct 11–16 is measured, bounded, and unreproducible
+  locally, and is now instrumented.
+- Per-run cost: the Oct 17 scheduled nightly took **15.1m**, below Oct 7 / 8
+  (16.1m / 16.3m), and the fixed runner agrees (0.85–0.94× Oct 8).
+- Three scheduled nightlies after #1642 — 22.2m, 22.6m, 15.1m — all inside
+  the unchanged 31.9m guard.
+
+No sample, assertion, baseline, `maxFactor` or limit changes. The 25.5m
+baseline now sits at about 1.7× the latest nightly, so it would let a large
+regression through; it should be re-measured down once three post-#1791
+scheduled nightlies exist, citing their `host` blocks.
