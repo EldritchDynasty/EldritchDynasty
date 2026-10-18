@@ -459,6 +459,33 @@ export function wakeNaturally(p: Person, year: Year): boolean {
 export const LATE_WAKING_AGE = 30;
 
 /**
+ * HOW MUCH MORE OFTEN A MAN WHO CAN EXPRESS WAKES, each year inside the window
+ * (issue #1801). It multiplies the yearly chance; it never touches whether the
+ * die is cast, so the stream draws exactly as before (invariant 8).
+ *
+ * At 1, a third of the men who could express reached thirty unwoken, and the
+ * ladder stood frozen with nobody on it for 29-33% of a Long Line's years.
+ * Swept over 96 Long Lines per policy (`npm run gate:stall -- 96 500`, seeds
+ * 5100-5195), chronicler / ascendant:
+ *
+ *     lift   frozen       longest (median)   never woke by 30
+ *      1     28.7 / 33.0     52 / 58            34.9 / 33.7%
+ *      2     21.9 / 30.7     35 / 63            18.5 / 19.3%
+ *      2.5   19.8 / 24.2     28 / 30            13.2 / 12.7%
+ *      3     19.4 / 23.0     34 / 43            10.9 / 10.7%
+ *
+ * Three is the owner's pick (2026-10-18): both houses improve, the longest
+ * stretch sits inside §7's 30-80 years, and one man in nine still never wakes
+ * — §11's "Never" stays a real outcome. Base, slope and a wider spread were
+ * swept first at 24 runs and moved nothing past the noise; a strong lever on
+ * the whole curve was the only one that did.
+ *
+ * MEN WHO CAN EXPRESS ONLY. A daughter's waking is the Match's honest signal
+ * and keeps its old clock, so the market reads what it always read.
+ */
+export const EXPRESSER_WAKING_LIFT = 3;
+
+/**
  * THE LONG WAIT ENDS (§11, issue #1794). The house stops waiting for him.
  *
  * `declaredMundane` was saved, read by `rollAwakening` below and written by
@@ -520,7 +547,8 @@ export function rollAwakening(p: Person, year: Year, ctx: GeneticsCtx, rng: Rng)
   const peak = Math.max(6, 22 - font * 0.55);
   const spread = 7 + font * 0.2;
   const density = Math.exp(-((age - peak) ** 2) / (2 * spread ** 2));
-  const chance = density * (0.03 + font * 0.004);
+  const lift = profile.canExpress ? EXPRESSER_WAKING_LIFT : 1;
+  const chance = lift * density * (0.03 + font * 0.004);
   // The die is drawn BEFORE the Late Waking rule is asked, on purpose: this
   // phase shares one stream, and skipping a draw would move every roll after
   // it this year (invariant 8). The rule changes what a hit means, not
