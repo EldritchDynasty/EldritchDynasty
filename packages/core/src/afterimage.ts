@@ -11,6 +11,8 @@ export interface AfterimageSource {
 
 export interface AfterimageEvidence {
   people: { person: string; name: string; sources: AfterimageSource[] }[];
+  /** The last seal-holder's surviving recorded ancestry, including archived people. */
+  line?: { id: string; name: string; head: boolean; record: { parents: { mother?: string; father?: string } } }[];
   spent?: { person: string; name: string; source: AfterimageSource };
   /** Smallest preserved generation-opening count, not a continuous population minimum. */
   brush?: { count: number; source: AfterimageSource };
@@ -96,7 +98,25 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   const embellishment = written.find((page) => page.record === 'embellish'
     && page.discrepancyId && w.discrepancies.get(page.discrepancyId)?.state === 'open');
   const blank = pages.find((page) => page.text === null);
+  const line: NonNullable<AfterimageEvidence['line']> = [];
+  const lastHead = w.succession.at(-1)?.person;
+  const ancestors = lastHead ? [String(lastHead)] : [];
+  const seen = new Set<string>();
+  while (ancestors.length) {
+    const id = ancestors.shift()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const p = w.people.get(id);
+    if (!p) continue;
+    // Exactly session.ts's record.parents projection. No true parentage,
+    // phenotype or inferred missing ancestor crosses the seam.
+    line.push({ id, name: p.name, head: id === lastHead, record: { parents: { ...p.claimedParents } } });
+    for (const parent of [p.claimedParents.father, p.claimedParents.mother]) {
+      if (parent) ancestors.push(parent);
+    }
+  }
   return {
+    ...(line.length ? { line } : {}),
     // Ranking is a selection method, never a player-facing grade. Stable id
     // breaks the final tie without depending on locale or Map insertion order.
     people: [...people.values()].map((person) => ({

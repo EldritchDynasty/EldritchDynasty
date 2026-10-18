@@ -427,8 +427,9 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
     text: '', source: evidence.blank,
   });
   // Use the tree's recorded-parent projection, including its cycle handling.
-  // Historical parentage that the public tree cannot supply stays absent.
-  const members = [...(input.members ?? [])];
+  // The epilogue also supplies archived recorded ancestors. Older readers
+  // can still provide the visible hall snapshot; missing ancestors stay absent.
+  const members = [...(input.evidence?.line ?? input.members ?? [])];
   let person = members.find((member) => member.head);
   const line: string[] = [];
   const seen = new Set<string>();
