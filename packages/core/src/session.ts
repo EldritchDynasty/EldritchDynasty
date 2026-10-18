@@ -2,7 +2,7 @@ import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
   SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary,
 } from '@ed/schema';
-import { MAIN_BRANCH, ageAt, assertNever } from '@ed/schema';
+import { MAIN_BRANCH, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -37,6 +37,7 @@ import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoic
 import { msg } from './messages.js';
 import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
 import { visibleWakings, type PanelWaking } from './people/panel.js';
+import { eligibleToMarry } from './people/demography.js';
 import { epilogueOf, type EpilogueView } from './ending.js';
 import { achievementView, earnedAchievements, type AchievementView } from './achievements.js';
 import { chapterOf, openingOf, type ChapterOpening, type ChapterView } from './chapter.js';
@@ -112,10 +113,9 @@ function wakingEvidence(ctx: SimCtx, rows: PanelWaking[]): string[] {
 function powerEvidenceRoute(ctx: SimCtx): PowerEvidenceRoute {
   const w = ctx.world;
   const daughters = w.people.household(w.playerHouse, w.year)
-    .filter((p) => p.sex === 'female' && ageAt(p, w.year) >= 15
+    .filter((p) => p.sex === 'female' && eligibleToMarry(ctx, p)
       && branchOf(w, p, w.year) === MAIN_BRANCH
-      && p.membership.some((m) => m.house === w.playerHouse && m.kind === 'blood')
-      && !p.marriages.some((m) => m.to === undefined))
+      && p.membership.some((m) => m.house === w.playerHouse && m.kind === 'blood'))
     .flatMap((p) => {
       const evidence = wakingEvidence(ctx, visibleWakings(ctx, p)
         .filter((row) => row.kin === 'father' || row.kin === 'brother'));
