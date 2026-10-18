@@ -1,14 +1,18 @@
 # Issues needing owner action
 
-Updated 2026-10-17. Owner confirmed on 2026-10-16 that Windows signing, the
+Updated 2026-10-18. Owner confirmed on 2026-10-16 that Windows signing, the
 Android upload keystore/Play account, Apple enrollment/TestFlight access and a
 Steam App ID will not be available for at least several months.
 
 This file carries the remaining owner requirements from #321, #322 and #349;
-those issues are being closed at the owner's request because their remaining
+those issues were closed at the owner's request because their remaining
 release work depends on this setup. Closure records the move here, not a signed
-or published release. The Steam owner requirements from mixed issue #323 are
-also recorded here; #323 stays open for its actionable demo engineering.
+or published release. The Steam owner requirements from #323 are also recorded
+here; #323 itself closed once its demo engineering shipped.
+
+It also carries the first-player playtest (`Suggestions.md` G2). That is game
+research rather than release setup, and no account above blocks it, but it
+needs people only the owner can recruit.
 
 When setup is available, record completion dates and the exact artifact/run
 evidence here. Open focused engineering follow-ups for provider-specific signing
@@ -155,12 +159,47 @@ Owner actions:
   launch; move the release date if below 5,000 at four weeks out. Record dates
   and actual counts; these are owner business checkpoints.
 
-#323 remains open for code/content: dated demo arc and every-seed proof of the
-signing, complete Age, forced Record, interlude and verdict. The owner resolved
-its design on 2026-10-14: existing short front-loaded Age through campaign data;
-fixed authored Daveed death routed through kill() to the guardian redirect;
-dated arc nodes rather than weights. No demo-only Age or if(demo) core branch.
-It shares structural/invariant checks, not the 300/500-year balance gates.
+#323 closed on 2026-10-17 (PR #1790) with its engineering complete: the dated
+demo arc and every-seed proof of the signing, a complete Age, a forced Record,
+an interlude and a verdict, built to the owner's 2026-10-14 design. Only the
+Steam owner actions above remain. The demo is not offered on the normal start
+screen; shipping it is a Steam step and waits on the App ID.
 
-#277 remains the commercial-pass parent for the engineering still in the
-tracker. It should refer here for deferred owner release/store requirements.
+#277, the commercial-pass parent, closed the same day. Open engineering is
+chosen from the issue tracker by priority label (AGENTS.md); this file keeps
+only what needs the owner.
+
+## First-player playtest — Suggestions.md G2
+
+Source: `Suggestions.md` G2 ("Watch five people play it") and
+`docs/PLAYTEST.md`.
+
+Every human acceptance test in `docs/PLAYTEST.md` was waived on 2026-09-28
+(#324, #335), and none has been run. Waived means not owed, not passed: no bot
+run can say whether the game is legible, moving, or boring at minute twelve.
+`Suggestions.md` puts this first in its order of game work, because what five
+people say should reorder everything after it.
+
+Owner actions:
+
+- Recruit five people who have not played or watched the game.
+- Choose the build. The unsigned v0.1.0-beta.3 Windows installer (see #321
+  above) is verified on a fresh VM but predates the Long Wait (#1794, #1797)
+  and family challenges (#1796). To test what `main` plays now, cut a newer
+  unsigned prerelease first (`.github/workflows/prerelease-tag.yml`, from an
+  exact green `main` SHA).
+- Give each person one Short Line with no editor, debug panel or explanation a
+  normal player would not receive. Run `docs/PLAYTEST.md` as written, freeze
+  the mechanisms it lists for the whole cohort, and fill in its per-participant
+  record (build SHA, platform, campaign and actual years, seed, first or second
+  run).
+- Afterwards, ask the five questions in `Suggestions.md` G2: which three people
+  they remember and why; what the house was trying to do; one decision that
+  changed what happened later; what they weighed when choosing Record, Omit or
+  Embellish; and where they stopped understanding what they were looking at.
+- Record first, interpret second, tune last. Open each failed observation as a
+  narrow new issue rather than reopening a waived one, and record the cohort
+  report's date and location here.
+
+Relevant docs: `docs/PLAYTEST.md` (protocol, per-participant record, cohort
+report) and `Suggestions.md` §§4 (G2) and 7.
