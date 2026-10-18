@@ -109,6 +109,13 @@ describe('ending image uses the selected reader mode (#1717)', () => {
       year: 1542, title: 'The old reckoning', summary: 'The account is unsettled.',
       opening: 'An original opening.', closing: 'An original closing.', ring: [],
       read: [{ year: 1500, weight: 'illuminated', text: 'A saved Chronicle sentence.', title: 'The remembered night' }],
+      afterimage: {
+        people: [{ person: 'meriel', name: 'Meriel 家', sources: [{ year: 1200, page: 'the-rite', title: 'The rite account', text: 'Meriel 家 was named in the cold room.' }] }],
+        spent: { person: 'meriel', name: 'Meriel 家', source: { year: 1200, page: 'the-rite', title: 'The rite account', text: 'Meriel 家 was named in the cold room.' } },
+        brush: { count: 2, source: { year: 1150, text: 'Only two of the blood were living.' } },
+        embellishment: { year: 1180, text: 'The book claimed the door was never opened.' },
+        blank: { year: 1100, text: null, title: 'The unspoken contents' },
+      },
       reckoning: {
         pages: 10, blanks: 2, embellished: 3, standingLies: 4, provenLies: 1,
         clauses: 7, clausesTotal: 9, attested: 'none', livingBlood: 12, rungsWithheld: 0,
@@ -129,6 +136,14 @@ describe('ending image uses the selected reader mode (#1717)', () => {
           ? 'CHRONICLE EXCERPT · 1500 · The remembered night'
           : 'FROM THE CHRONICLE · 1500 · The remembered night');
         expect(painted).toContain(mode === 'plainenglish' ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage');
+        for (const memory of w.findAll('.memory')) {
+          expect(painted).toContain(memory.get('h4').text());
+          if (memory.find('.memory-name').exists()) expect(painted).toContain(memory.get('.memory-name').text());
+          if (memory.find('blockquote').exists()) expect(painted).toContain(memory.get('blockquote').text());
+        }
+        expect(w.findAll('.memory-blank')).toHaveLength(1);
+        expect(painted).not.toContain('The unspoken contents');
+        expect(w.get('.house-memory').text()).not.toContain('The unspoken contents');
         for (const text of ['House Ash', 'A Long Line · 1542 · seed 47', 'The old reckoning',
           'The account is unsettled.', 'A saved Chronicle sentence.', '7 of 9 clauses', '12']) {
           expect(painted).toContain(text);
@@ -152,5 +167,24 @@ describe('ending image uses the selected reader mode (#1717)', () => {
       canvas.mockRestore();
       vi.mocked(downloadBlob).mockClear();
     }
+  });
+});
+
+describe('ending image export failures', () => {
+  it('reports a failed canvas allocation and leaves the export available for retry', async () => {
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const view = { houseName: '家', seed: 1, campaign: { name: 'A Short Line' } } as SessionView;
+    const epilogue = { year: 1342, title: 'An ending', summary: '', opening: '', closing: '', ring: [], read: [],
+      reckoning: { pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+        clauses: 0, clausesTotal: 3, attested: 'none', livingBlood: 0, rungsWithheld: 0 } } as unknown as EpilogueView;
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn() } as unknown as GameActions } });
+    try {
+      await w.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(w.get('[role="alert"]').text()).toContain('could not be saved');
+      expect(w.get('.ending-actions button').attributes('disabled')).toBeUndefined();
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(w.get('[role="alert"]').text()).toBe('Could not save the ending image. Try again.');
+    } finally { w.unmount(); canvas.mockRestore(); }
   });
 });

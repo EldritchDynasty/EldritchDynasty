@@ -6,6 +6,7 @@ import { prologueTriad, prologueView } from './prologue.js';
 import { END_YEAR, campaignDef } from './campaign.js';
 import { renderContentProse } from './prose.js';
 import { msg } from './messages.js';
+import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -464,6 +465,8 @@ export interface RingBeat {
 }
 
 export interface EpilogueView {
+  /** Derived, attributed historical selections for the shareable house image. */
+  afterimage?: AfterimageEvidence;
   id: EndingId;
   title: string;
   opening: string;
@@ -561,6 +564,7 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     summary: `${endingSummary(ctx, w.ending.id, reckoning)} ${ledger}`,
     reckoning,
     read,
+    afterimage: afterimageEvidence(ctx),
     year: w.ending.year,
   };
 

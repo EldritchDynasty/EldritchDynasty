@@ -1,5 +1,6 @@
-import type { ChronicleEntry } from '@ed/core';
+import type { ChronicleEntry, EpilogueView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
+import { recordedParent, type MemberView } from './kin';
 
 /**
  * READING THE BOOK (issue #69), as functions rather than as a component.
@@ -335,6 +336,8 @@ export function plateName(houseName: string, entries: readonly ChronicleEntry[])
  * asks the client to infer hidden truth, and nothing is scored.
  */
 export interface AfterimageInput {
+  evidence?: EpilogueView['afterimage'];
+  members?: readonly MemberView[];
   houseName: string;
   campaignName: string;
   seed: number;
@@ -361,6 +364,11 @@ export interface AfterimageModel {
   endingTitle: string;
   summary: string;
   facts: { label: string; value: string }[];
+  memories: {
+    heading: string;
+    text: string;
+    source?: NonNullable<EpilogueView['afterimage']>['blank'];
+  }[];
   quoteHeading: string;
   footer: string;
   quote?: { year: number; title?: string; text: string };
@@ -392,6 +400,48 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
   const r = input.reckoning;
   const quote = afterimageQuote(input.read);
   const plain = mode === 'plainenglish';
+  const evidence = input.evidence;
+  const memories: AfterimageModel['memories'] = [];
+  for (const person of evidence?.people ?? []) {
+    memories.push({
+      heading: plain ? 'Remembered person' : 'A name the book keeps',
+      text: person.name,
+      source: person.sources[0],
+    });
+  }
+  if (evidence?.spent) memories.push({
+    heading: plain ? 'Named in the rite account' : 'The name given to the rite',
+    text: evidence.spent.name, source: evidence.spent.source,
+  });
+  if (evidence?.brush) memories.push({
+    heading: plain ? 'Smallest preserved generation-opening count' : 'Where the line stood thinnest in a generation account',
+    text: `${evidence.brush.count} ${plain ? 'living blood relatives' : 'of the blood, living'}`,
+    source: evidence.brush.source,
+  });
+  if (evidence?.embellishment) memories.push({
+    heading: plain ? 'Oldest embellished page still unexposed' : 'The oldest improvement still standing',
+    text: '', source: evidence.embellishment,
+  });
+  if (evidence?.blank) memories.push({
+    heading: plain ? 'Oldest blank page' : 'The oldest silence',
+    text: '', source: evidence.blank,
+  });
+  // Use the tree's recorded-parent projection, including its cycle handling.
+  // Historical parentage that the public tree cannot supply stays absent.
+  const members = [...(input.members ?? [])];
+  let person = members.find((member) => member.head);
+  const line: string[] = [];
+  const seen = new Set<string>();
+  while (person && !seen.has(person.id)) {
+    seen.add(person.id);
+    line.unshift(person.name);
+    const parent = recordedParent(person, members);
+    person = members.find((member) => member.id === parent);
+  }
+  if (line.length) memories.push({
+    heading: plain ? 'Direct line in the surviving family record' : 'The line the surviving tree records',
+    text: line.join(' → '),
+  });
   return {
     houseName: input.houseName,
     strap: `${input.campaignName} · ${input.year} · seed ${input.seed}`,
@@ -409,6 +459,7 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
       { label: plain ? 'Highest level claimed in the Chronicle' : 'What the book attests', value: r.attestedTitle ?? (plain ? 'No level claimed' : 'nothing at all') },
       { label: plain ? 'Living blood relatives' : 'Of the blood, living', value: String(r.livingBlood) },
     ],
+    memories,
     quoteHeading: plain ? 'CHRONICLE EXCERPT' : 'FROM THE CHRONICLE',
     footer: plain ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage',
     ...(quote ? { quote } : {}),
@@ -421,42 +472,44 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
  * silently clip when copy changes.
  */
 export interface AfterimageLayout {
-  endingFont: string;
-  summaryFont: string;
-  quoteFont: string;
-  endingLines: string[];
-  summaryLines: string[];
-  quoteLines: string[];
+  rows: PlateRow[];
   height: number;
 }
 
 export function afterimageLayout(model: AfterimageModel, measure: Measure): AfterimageLayout {
   const inner = PLATE.width - PLATE.pad * 2;
-  const endingFont = `500 28px ${PLATE.serif}`;
-  const summaryFont = `18px ${PLATE.serif}`;
-  const quoteFont = `italic 19px ${PLATE.serif}`;
-  const endingLines = wrap(model.endingTitle, endingFont, inner, measure);
-  const summaryLines = wrap(model.summary, summaryFont, inner, measure);
-  const quoteLines = model.quote
-    ? wrap(model.quote.text, quoteFont, inner - 36, measure)
-    : [];
-  const height = Math.max(
-    760,
-    214
-      + endingLines.length * 38
-      + summaryLines.length * 30
-      + model.facts.length * 42
-      + (model.quote ? 88 + quoteLines.length * 31 : 0)
-      + 80,
-  );
+  const rows: PlateRow[] = [];
+  const add = (text: string, size: number, colour: string, gap = 8, italic = false): void => {
+    const lines = wrap(text, `${italic ? 'italic ' : ''}${size}px ${PLATE.serif}`, inner, measure);
+    lines.forEach((text, i) => rows.push({ text, size, colour, italic, gap: i === lines.length - 1 ? gap : 2 }));
+  };
+  add(model.houseName, 34, PLATE.ink);
+  add(model.strap, 13, PLATE.faint, 24);
+  add(model.endingTitle, 28, PLATE.rubric, 12);
+  add(model.summary, 18, PLATE.ink, 24);
+  for (const fact of model.facts) {
+    add(fact.label, 14, PLATE.faint, 2);
+    add(fact.value, 17, PLATE.ink, 16);
+  }
+  for (const memory of model.memories) {
+    add(memory.heading, 14, PLATE.rubric, 4);
+    add(memory.text, 19, PLATE.ink, 8);
+    if (memory.source) {
+      const source = memory.source;
+      // An omission's title/cast is not a licence to reconstruct its contents.
+      add(`${source.year}${source.text !== null && source.title ? ` · ${source.title}` : ''}`, 13, PLATE.faint, 4);
+      if (source.text === null) rows.push({ text: '', size: 16, colour: PLATE.rule, rule: true, gap: 20 });
+      else add(source.text, 16, PLATE.soft, 20, true);
+    }
+  }
+  if (model.quote) {
+    add(`${model.quoteHeading} · ${model.quote.year}${model.quote.title ? ` · ${model.quote.title}` : ''}`, 12, PLATE.faint);
+    add(model.quote.text, 19, PLATE.ink, 20, true);
+  }
+  const height = Math.max(760, Math.ceil(90 + rows.reduce((sum, row) => sum + row.size * 1.5 + row.gap, 0)));
 
   return {
-    endingFont,
-    summaryFont,
-    quoteFont,
-    endingLines,
-    summaryLines,
-    quoteLines,
+    rows,
     height,
   };
 }
