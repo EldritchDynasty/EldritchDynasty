@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ChronicleEntry } from '@ed/core';
+import type { MemberView } from './kin';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
   afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
@@ -467,9 +468,9 @@ describe('the house afterimage (#260)', () => {
         : undefined,
     }, monospace);
 
-    expect(short.endingLines.join(' ')).toBe(model.endingTitle);
-    expect(long.summaryLines.length).toBeGreaterThan(short.summaryLines.length);
-    expect(long.quoteLines.length).toBeGreaterThan(short.quoteLines.length);
+    expect(short.rows.filter((row) => row.size === 28).map((row) => row.text).join(' ')).toBe(model.endingTitle);
+    expect(long.rows.filter((row) => row.size === 18).length).toBeGreaterThan(short.rows.filter((row) => row.size === 18).length);
+    expect(long.rows.filter((row) => row.italic).length).toBeGreaterThan(short.rows.filter((row) => row.italic).length);
     expect(long.height).toBeGreaterThan(short.height);
   });
 
@@ -489,6 +490,49 @@ describe('the house afterimage (#260)', () => {
       .toBe('élodie家-1542-seed-8080-afterimage.png');
     expect(afterimageName('!!!', 7, 1242))
       .toBe('the-house-1242-seed-7-afterimage.png');
+  });
+
+  it('keeps people and moments attributed, and draws only the surviving recorded parent path (#1808)', () => {
+    const sourcePage = { year: 1200, page: 'rite-page', title: 'A different account', text: 'The book said Meriel returned.' };
+    const members = [
+      { id: 'head', name: 'Élodie 家', head: true, parents: { father: 'real' }, record: { parents: { mother: 'recorded' } } },
+      { id: 'recorded', name: 'Meriel', record: { parents: {} } },
+      { id: 'real', name: 'Unrecorded father', record: { parents: {} } },
+    ] as MemberView[];
+    const input = { ...source, members, evidence: {
+      people: [{ person: 'recorded', name: 'Meriel', sources: [sourcePage] }],
+      spent: { person: 'recorded', name: 'Meriel', source: sourcePage },
+      brush: { count: 2, source: { year: 1180, text: 'Only two remained at the opening of the generation.' } },
+      embellishment: sourcePage,
+      blank: { year: 1100, text: null },
+    } };
+    const before = structuredClone(input);
+    const original = afterimageModel(input);
+    const plain = afterimageModel(input, 'plainenglish');
+    expect(original.memories.map((memory) => memory.text)).toEqual([
+      'Meriel', 'Meriel', '2 of the blood, living', '', '', 'Meriel → Élodie 家',
+    ]);
+    expect(plain.memories[2]!.heading).toBe('Smallest preserved generation-opening count');
+    expect(original.memories[1]!.source?.text).toBe(sourcePage.text);
+    expect(plain.memories.map((memory) => memory.source)).toEqual(original.memories.map((memory) => memory.source));
+    expect(plain.memories.at(-1)!.text).not.toContain('Unrecorded father');
+    expect(input).toEqual(before);
+    expect(afterimageModel({ ...source, members: [] }).memories).toEqual([]);
+  });
+
+  it('measures every name, caption, fact and source before exporting, including unspaced Unicode (#1808)', () => {
+    const long = 'Élodie家族'.repeat(90);
+    const model = afterimageModel({ ...source, houseName: long, evidence: {
+      people: [{ person: 'p', name: long, sources: [{ year: 1400, title: long, text: long }] }],
+      blank: { year: 1100, text: null, title: 'This blank must not acquire a heading' },
+    } });
+    const layout = afterimageLayout(model, monospace);
+    expect(layout.rows.every((row) => monospace(row.text, '') <= 1200 - 64 * 2)).toBe(true);
+    expect(layout.rows.some((row) => row.rule)).toBe(true);
+    expect(layout.rows.some((row) => row.text.includes('must not acquire'))).toBe(false);
+    const lastBaseline = 64 + layout.rows.reduce((sum, row) => sum + row.size * 1.5 + row.gap, 0);
+    expect(layout.height).toBeGreaterThan(lastBaseline + 24);
+    expect(layout.height).toBeGreaterThan(afterimageLayout(afterimageModel(source), monospace).height);
   });
 });
 

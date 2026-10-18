@@ -55,6 +55,8 @@ const afterimage = computed(() => afterimageModel({
     livingBlood: props.epilogue.reckoning.livingBlood,
   },
   read: props.epilogue.read,
+  evidence: props.epilogue.afterimage,
+  members: props.view.halls?.flatMap((hall) => hall.members),
 }, props.proseMode));
 
 const savingAfterimage = ref(false);
@@ -85,10 +87,6 @@ async function saveAfterimage(): Promise<void> {
     const filename = afterimageName(props.view.houseName, props.view.seed, props.epilogue.year);
     const layout = afterimageLayout(model, measure);
     const width = PLATE.width;
-    const {
-      endingFont, summaryFont, quoteFont, endingLines, summaryLines, quoteLines,
-    } = layout;
-
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = layout.height;
@@ -97,83 +95,20 @@ async function saveAfterimage(): Promise<void> {
 
     ink.fillStyle = PLATE.ground;
     ink.fillRect(0, 0, canvas.width, canvas.height);
-
-    let y = 66;
-    ink.fillStyle = PLATE.ink;
-    ink.font = `500 34px ${PLATE.serif}`;
-    ink.fillText(model.houseName, PLATE.pad, y);
-
-    y += 28;
-    ink.fillStyle = PLATE.faint;
-    ink.font = `13px ${PLATE.serif}`;
-    ink.fillText(model.strap, PLATE.pad, y);
-
-    y += 24;
-    ink.strokeStyle = PLATE.rule;
-    ink.beginPath();
-    ink.moveTo(PLATE.pad, y);
-    ink.lineTo(width - PLATE.pad, y);
-    ink.stroke();
-
-    y += 52;
-    ink.fillStyle = PLATE.rubric;
-    ink.font = endingFont;
-    for (const line of endingLines) {
-      ink.fillText(line, PLATE.pad, y);
-      y += 38;
-    }
-
-    y += 4;
-    ink.fillStyle = PLATE.ink;
-    ink.font = summaryFont;
-    for (const line of summaryLines) {
-      ink.fillText(line, PLATE.pad, y);
-      y += 30;
-    }
-
-    y += 22;
-    ink.strokeStyle = PLATE.rule;
-    ink.beginPath();
-    ink.moveTo(PLATE.pad, y);
-    ink.lineTo(width - PLATE.pad, y);
-    ink.stroke();
-    y += 32;
-
-    for (const fact of model.facts) {
-      ink.textAlign = 'left';
-      ink.fillStyle = PLATE.faint;
-      ink.font = `14px ${PLATE.serif}`;
-      ink.fillText(fact.label, PLATE.pad, y);
-
-      ink.textAlign = 'right';
-      ink.fillStyle = PLATE.ink;
-      ink.font = `17px ${PLATE.serif}`;
-      ink.fillText(fact.value, width - PLATE.pad, y);
-      y += 42;
-    }
-    ink.textAlign = 'left';
-
-    if (model.quote) {
-      y += 8;
-      ink.strokeStyle = PLATE.rule;
-      ink.beginPath();
-      ink.moveTo(PLATE.pad, y);
-      ink.lineTo(width - PLATE.pad, y);
-      ink.stroke();
-      y += 32;
-
-      ink.fillStyle = PLATE.faint;
-      ink.font = `12px ${PLATE.serif}`;
-      const title = model.quote.title ? ` · ${model.quote.title}` : '';
-      ink.fillText(`${model.quoteHeading} · ${model.quote.year}${title}`, PLATE.pad, y);
-      y += 34;
-
-      ink.fillStyle = PLATE.ink;
-      ink.font = quoteFont;
-      for (const line of quoteLines) {
-        ink.fillText(line, PLATE.pad + 18, y);
-        y += 31;
+    let y = 64;
+    for (const row of layout.rows) {
+      if (row.rule) {
+        ink.strokeStyle = row.colour;
+        ink.beginPath();
+        ink.moveTo(PLATE.pad, y);
+        ink.lineTo(width - PLATE.pad, y);
+        ink.stroke();
+      } else {
+        ink.fillStyle = row.colour;
+        ink.font = `${row.italic ? 'italic ' : ''}${row.size}px ${PLATE.serif}`;
+        ink.fillText(row.text, PLATE.pad, y);
       }
+      y += row.size * 1.5 + row.gap;
     }
 
     ink.fillStyle = PLATE.faint;
@@ -269,6 +204,19 @@ async function saveAfterimage(): Promise<void> {
       </dl>
     </section>
 
+    <section v-if="afterimage.memories.length" class="house-memory" aria-labelledby="house-memory-title">
+      <h3 id="house-memory-title" class="label">{{ plain ? 'People and records remembered' : 'What remains of the house' }}</h3>
+      <article v-for="(memory, index) in afterimage.memories" :key="index" class="memory">
+        <h4 class="label">{{ memory.heading }}</h4>
+        <p v-if="memory.text" class="memory-name">{{ memory.text }}</p>
+        <template v-if="memory.source">
+          <p class="memory-date">{{ memory.source.year }}<template v-if="memory.source.text !== null && memory.source.title"> · {{ memory.source.title }}</template></p>
+          <hr v-if="memory.source.text === null" class="memory-blank" :aria-label="plain ? 'Blank page' : 'A silence in the book'">
+          <blockquote v-else>{{ memory.source.text }}</blockquote>
+        </template>
+      </article>
+    </section>
+
     <!-- THE RING. Three beats, one substitution, and the substitution is what
          the five centuries cost. -->
     <section class="ring">
@@ -341,5 +289,12 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
   font-size: var(--t-lead); color: var(--ink);
 }
 .ending-actions { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.house-memory { margin-top: 32px; }
+.memory { margin: 24px 0; overflow-wrap: anywhere; }
+.memory h4 { color: var(--rubric); margin: 0 0 8px; }
+.memory-name { color: var(--ink); font-size: var(--t-card); margin: 0 0 8px; }
+.memory-date { color: var(--ink-faint); font-size: var(--t-fine); margin: 0 0 4px; }
+.memory blockquote { color: var(--ink-soft); margin: 0; font-style: italic; line-height: 1.75; }
+.memory-blank { border: 0; border-top: 1px solid var(--rule); margin: 16px 0 24px; }
 .afterimage-error { margin: 10px 0 0; }
 </style>
