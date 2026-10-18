@@ -48,14 +48,13 @@ tools/            Agent workflow, CI evidence, claims, landing and measurements.
 
 The original build order and commercial pass ([#277](https://github.com/EldritchDynasty/EldritchDynasty/issues/277)) are complete. Open work lives in
 [the issue tracker](https://github.com/EldritchDynasty/EldritchDynasty/issues), selected by the priority rule in [AGENTS.md](AGENTS.md).
-[Suggestions.md](Suggestions.md) is the current decision surface for improving the game.
 
 ## Other documents
 
 | File | Purpose and reader |
 |---|---|
 | [README.md](README.md) | Project orientation for players, contributors and agents. |
-| [Suggestions.md](Suggestions.md) | Current improvement priorities and tradeoffs for the owner and implementers. |
+| [Suggestions.md](Suggestions.md) | Design rationale and evidence behind tracked work; issue priority labels set the order. |
 | [fullstory.md](fullstory.md) | Complete story reference for authors and reviewers; contains ending and identity spoilers. |
 | [criticalprose.md](criticalprose.md) | Narrative promises and prose beats for content authors; contains spoilers. |
 | `market research.md` | Dated market evidence and commercial implications for the owner. |

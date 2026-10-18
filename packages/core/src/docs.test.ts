@@ -1,9 +1,52 @@
 import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CONTENT_RULES, EffectS, SlotRoleS, vocabulary } from '@ed/schema';
 import { renderVocabulary, vocabularyIsCurrent, VOCABULARY_PATH } from './tools/gen-docs.js';
 import { YEAR_PHASES } from './year/phases.js';
+
+const REPO = join(import.meta.dirname, '../../..');
+
+/** Only the inventory counts; mentioning a file elsewhere does not orient a reader. */
+function unnamedRoots(roots: Iterable<string>, readme: string): string[] {
+  const inventory = /## What's here\r?\n([\s\S]*?)(?=\r?\n## |$)/.exec(readme)?.[1] ?? '';
+  const layout = /```[^\n]*\r?\n([\s\S]*?)```/.exec(inventory)?.[1] ?? '';
+  const documents = /## Other documents\r?\n([\s\S]*?)(?=\r?\n## |$)/.exec(readme)?.[1] ?? '';
+  const named = new Set([
+    ...layout.split(/\r?\n/).filter((line) => /^\S/.test(line))
+      .map((line) => line.split(/\s/)[0].split('/')[0]),
+    ...documents.split(/\r?\n/).filter((line) => line.startsWith('|'))
+      .flatMap((line) => [...(line.split('|')[1] ?? '').matchAll(/`([^`]+)`|\[([^\]]+)\]\([^)]*\)/g)])
+      .map((match) => (match[1] ?? match[2]).split('/')[0]),
+  ]);
+  return [...roots].filter((root) => !named.has(root)).sort();
+}
+
+describe('the README inventories the tracked root', () => {
+  it('names every tracked root entry in the layout or Other documents table', () => {
+    // git emits slash-separated paths on Windows too. -z preserves spaces and
+    // avoids core.quotePath escaping a tracked name before we compare it.
+    const roots = new Set(execFileSync('git', ['ls-files', '-z'], { cwd: REPO, encoding: 'utf8' })
+      .split('\0').filter(Boolean).map((file) => file.split('/')[0]));
+    const missing = unnamedRoots(roots, readFileSync(join(REPO, 'README.md'), 'utf8'));
+    expect(missing, `README inventory is missing tracked root entries: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('reports missing entries by their literal names, including spaces and dotfiles', () => {
+    const readme = [
+      '## What\'s here', '', '```', 'packages/  Workspace packages.', '```', '',
+      '## Other documents', '', '| File | Purpose |', '|---|---|',
+      '| `market research.md` | Evidence. |', '| [.gitignore](.gitignore) | Exclusions. |', '',
+      '## Elsewhere', '', '`missing.md` and `.github` are mentioned here.',
+    ].join('\r\n');
+    expect(unnamedRoots(['packages', 'market research.md', '.gitignore'], readme)).toEqual([]);
+    expect(unnamedRoots(['missing.md', '.git', '.github', 'research.md', 'package'], readme))
+      .toEqual(['.git', '.github', 'missing.md', 'package', 'research.md']);
+    expect(unnamedRoots(['packages'], readme.replace('## What\'s here', '## Another section')))
+      .toEqual(['packages']);
+  });
+});
 
 /**
  * `docs/VOCABULARY.md` is generated the way `loci.yaml` is, and for the same

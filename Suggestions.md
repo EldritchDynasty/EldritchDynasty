@@ -1,7 +1,8 @@
 # Eldritch Dynasty — Suggestions
 
-> **Purpose:** one current decision surface for **improving the game**: what to
-> build or fix next, and what to avoid.
+> **Purpose:** design rationale and measured evidence for improving the game.
+> Issue priority labels decide work order under `AGENTS.md`; §9 explains the
+> design rationale and does not set a second queue.
 >
 > **Focus:** the owner's priority is the game, not the launch. Launch work is
 > blocked for months anyway. `issuesneedingowneraction` records that Windows
@@ -10,8 +11,8 @@
 > setup, not game design. So nothing in it competes with the work below. Launch
 > notes are parked in the appendix.
 >
-> **Checked against:** `main` at `e5ab83c` and the issue tracker on **17 October
-> 2026** (one open issue, #1641, a CI timing P0). Every claim about what the game
+> **Checked against:** `main` at `6f8c144b` and the issue tracker on **18 October
+> 2026** (18 open issues; #1641 is closed). Every claim about what the game
 > does or measures cites its issue, file or `docs/BALANCE-LOG.md` entry. Numbers
 > move, so re-check before relying on one.
 >
@@ -57,7 +58,7 @@ The sentence a player should be able to say afterwards:
 - **I want to see how this ends.**
 
 A feature is worth building when it strengthens one of these without weakening
-the others. Each priority below names the feeling it serves.
+the others. Each proposal below names the feeling it serves.
 
 ---
 
@@ -75,7 +76,7 @@ experience.
 | Faster second run | Skip-seen prose (#267). Shape, stall and divergence instruments (#270–#272). #341's ranked rewrite. | Never auto-skip a changed variant, a decision, a Record, a rite or an interlude. |
 | Tree as a strategic surface | #268: search (diacritic-insensitive, #1759), hall filter, direct-line rooting, relevance, known succession, kinship paths, TreeCounsel. | Surface people for what they **did**. |
 | Chronicle as causal memory | #269: dated backlinks from bill to page to act. | No hidden formulas. |
-| House Afterimage | #260: `afterimageModel` in `client/src/lib/book.ts`. | No grade, no score. |
+| House Afterimage | #260, then #1808: people, defining records and recorded lineage in `afterimageModel`, with archived ancestry preserved. | No grade, no score. |
 | Help without omniscience | #273: graduated, in-world adviser help. | Diagnosis first, then the knowable rule. Never the hidden roll. |
 | Reading comfort, localisation readiness | #275, #276, `docs/LOCALISATION.md`. | The Chronicle keeps the words the player saw. |
 | — (new) | **Plain English** mode (#410/#415): 5,492 counterparts, 0 missing, a zero-gap guard. | Same mechanics in both modes. Only the words change. |
@@ -92,14 +93,25 @@ experience.
 
 ---
 
-# 4. Game priorities
+# 4. Game improvement rationale
 
-Ordered by how much of the game each one leaves unreached. Every item comes
-from a measurement.
+Grouped by the part of the game each proposal opens up. Every item comes from
+a measurement; tracker priority labels decide which actionable issue comes next.
 
 ## G1 — The ladder stops halfway, for everyone
 
 *Feelings: I have a plan · I want to see how this ends.*
+
+**Tracked:** #1801 (awakening odds), #1802 (ladder scales), #1803 (frozen
+stretches, shipped), #1805 (power-gap evidence), #1817 (callable forcing rites),
+#1818 (summit), #1820 (hidden capacity) and #1824 (casting-reveal audit).
+
+**Owner rulings, 18 October:** raise natural waking odds for expressing men
+only (#1801); keep one ladder scale calibrated to the Long Line (#1802); let
+the player try forcing on any unwoken boy in the rite's window, once per boy,
+with capacity hidden and the same danger for every boy (#1817); keep the summit
+reachable for climbing play (#1818). Free capacity reveals are removed;
+knowledge paid for through a rite's consequences remains allowed.
 
 `docs/GAME-LOOP.md` calls the Ascension Ladder *"the main progress track"*: six
 rungs. Measured play rarely gets past the second or third.
@@ -146,14 +158,13 @@ are a minor wall.
 - In **55%** of those years a **grown man (20+) who can express has simply not
   woken**. In 35% there is no expressing man at all. Only about 10% are boys
   still in the normal waking window.
-- §11 designed three answers to exactly this. **The player can use none of
-  them:**
-  - **Declaring a man mundane** (§11, *"The Long Wait"*):
-    `Person.awakening.declaredMundane` is in the schema, saved, and read by
-    `rollAwakening`, but **written by nothing**. There is no verb (invariant
-    11's shape, reversed).
-  - **The Late Waking** (§11: after 30, *"always a scripted moment"*): no
-    content exists.
+- §11 designed three answers to exactly this. **Two are now built; callable
+  forcing remains tracked in #1817:**
+  - **Declaring a man mundane — built (#1794)** (§11, *"The Long Wait"*):
+    the Table writes `Person.awakening.declaredMundane`; succession and natural
+    waking respect it. Bot policies do not yet use the order.
+  - **The Late Waking — built (#1797)** (§11: after 30, *"always a scripted
+    moment"*): `the_late_waking` in `events/rare_blood.yaml`, rare and unforced.
   - **Forcing it.** The Drowning, the Vigil and the Dark Year cast only boys
     aged 7–15 (Dark Year 10–18), so none can reach the grown men who make up
     most of the wait. They are rare ambient draws the player cannot call. Over
@@ -166,7 +177,7 @@ play and **9** for the ascendant house, which marries in. That is the breeding
 game doing its job. The question is whether the player can *see* which marriage
 closes it.
 
-### Direction, in this order
+### Direction and dependencies
 
 1. **Give the Long Wait the verbs §11 already wrote.**
    - **Built (#1794):** a Table order to **declare a man mundane**. A grown
@@ -176,25 +187,26 @@ closes it.
      married or sent. Both the upside and the risk are real. No bot policy
      uses it yet, so the frozen-ladder numbers above are unchanged until
      somebody plays it, or a policy is taught to.
-   - **The Late Waking**: a scripted scene for a man past 30. Rare, unforced,
-     and a turn in the story when it comes.
+   - **Built (#1797): The Late Waking**, a scripted scene for a man past 30.
+     Rare, unforced, and a turn in the story when it comes.
    - **Let the player call a forcing rite** for an eligible boy, the way the
      Vessel rite is already callable from the Table, with the Madness and death
      risk unchanged. *Invariant check:* the call is the player's; the outcome
      must stay a gamble. Forcing must never become reliable, or Eldritch Power
-     schedulable (invariants 4 and "Do not"). Settle this with the owner before
-     building it.
+     schedulable (invariants 4 and "Do not"). The owner approved the any-boy,
+     hidden-capacity route on #1817; land after #1801 and #1820 and measure it
+     separately from the natural-odds change.
 2. **Make the power gap legible, not smaller.** Hierophant's 50 is the intended
    hard part. Use the Match card's word about the line (#28), the three
    futures (#214) and TreeCounsel to show *which marriage* closes a 9–13-point
-   gap. No floor changes.
+   gap without promising a gain. #1805 owns this presentation; #1802 separately
+   re-derives the scale after #1801, against the owner's recorded reach targets.
 3. **Books, only after 1 and 2.** For ordinary play, consider making the auction
    ceiling visible at the first auction rather than leaving it at 0.
 4. **Then the top.** Work the joint gates after the Unmaking — Mind over
    Madness, the Ledger overlap, Exalted after the rite spends two tiers — one
-   mechanism at a time, on paired seeds. If the owner decides the summit stays
-   mythic, say so in the game, rewrite `ending_all_long`, and stop presenting
-   Apotheosis as an ordinary destination.
+   mechanism at a time, on paired seeds. The owner chose a reachable summit
+   for climbing play (#1818), after #1801 and #1802; the God-Madness floor stays.
 
 **Never:** make Eldritch Power reliable or schedulable, or quietly lower the
 God-Madness floor (invariant 4; #378).
@@ -206,6 +218,9 @@ diagnostic before and after each change, on the same seeds.
 ## G2 — Watch five people play it
 
 *Feelings: all five. This is the only instrument that measures them.*
+
+**Tracked:** `issuesneedingowneraction`, using `docs/PLAYTEST.md`. Recruiting
+the people requires the owner; this is not an agent-buildable tracker issue.
 
 **Evidence:** `docs/PLAYTEST.md`. Every human acceptance test was **waived on
 28 September and none was run**: a first-timer finishing a Short Line, naming
@@ -232,11 +247,13 @@ interpret second, tune last. Ask:
 - *When you chose Record, Omit or Embellish, what were you weighing?*
 - *Where did you stop understanding what you were looking at?*
 
-What they say should reorder everything below this item.
+What they say should inform changes to the tracker priority labels.
 
 ## G3 — Give the Long Line things the Short Line cannot hold
 
 *Feelings: this generation is different · I want to see how this ends.*
+
+**Tracked:** #1807.
 
 **Evidence** (#274 baseline, BALANCE-LOG 2 Oct, 12 shared seeds):
 
@@ -264,6 +281,8 @@ Measure **Long-exclusive reach under chronicler play**.
 
 *Feelings: that happened because of me · this generation is different.*
 
+**Tracked:** #1809.
+
 **Evidence** (BALANCE-LOG, #36 remeasurement, 26 Sep): §29.7 asks that
 high-Bearing houses reach *higher* rungs on average **and** arrive more
 variously, failing harder. The first half holds — high beat low in **8 of 8**
@@ -285,13 +304,16 @@ Never name the flaw on screen (§29.4).
 
 *Feelings: this person matters · I want to see how this ends.*
 
-**Evidence:** `afterimageModel` prints seven counts — pages, blanks,
+**Tracked:** #1808, shipped on `main` (including archived recorded ancestry).
+The list below records the rationale for that change, not outstanding work.
+
+**Original evidence:** `afterimageModel` printed seven counts — pages, blanks,
 embellishments, lies standing, clauses, attested rung, living blood — and one
-Chronicle quote. **It names no person.** The ending screen is the last thing the
-player sees. As built, it answers *"how many pages?"*, not *"what was this
+Chronicle quote. **It named no person.** The ending screen is the last thing the
+player sees. That version answered *"how many pages?"*, not *"what was this
 house?"*
 
-**Add, from existing read models only:**
+**Built from existing read models:**
 
 - three central people, ranked by how often the Chronicle and decision log name
   them;
@@ -305,6 +327,8 @@ No grade, no rank, no reconstruction of what a blank omitted.
 ## G6 — Write real trade-offs for the money-shaped choices
 
 *Feelings: I have a plan · that happened because of me.*
+
+**Tracked:** #1810.
 
 **Evidence** (#341 closeout, 6 Oct): replay familiarity is at **27.1%**, the
 adopted target. But **money is in 9 of the 10 most common choice shapes**, and
@@ -328,6 +352,8 @@ flatter the figure.
 
 *Feeling: this generation is different.*
 
+**Tracked:** #1811.
+
 **Evidence:** at 800 × 500 years, the rarest of 487 non-frame events fire in
 0.75–1.25% of runs (BALANCE-LOG 17 Oct). AGENTS.md records **seven frame
 interludes that fire in 1–4 of 60 runs**, each waiting on a single named lie.
@@ -340,6 +366,10 @@ If not, fix the funnel upstream — the launcher, the premise, the page — as t
 five-stage funnel in §5.
 
 ## G8 — Unfinished corners of the brief
+
+**Tracked:** #1812 (`recast`), #1813 (family challenges) and #1814 (Regency
+and unwoken stretches). Auction favours were deliberately not raised: the
+owner removed them in #1184 until a source exists.
 
 Smaller items. Each is a promise in the concept brief that the code does not yet
 keep.
@@ -367,10 +397,14 @@ keep.
 
 *Feeling: I have a plan.*
 
+**Tracked:** #1815 (item 1), #1808 (item 6, shipped) and #1806 (item 7,
+after #1805). Items 2 and 4 already have #214's futures and #269's backlinks;
+items 3 and 5 wait on the G2 human playtest before new work is raised.
+
 Every visual element should answer one of: **who matters? what changed? what
 did this cost? what is the house trying to do? what is remembered?**
 
-The highest-value surfaces, in order:
+The surfaces and their design rationale (work order remains in the tracker):
 
 1. the tree changing across generations;
 2. the Match as three futures;
@@ -485,19 +519,20 @@ If the first three answers are **no**, it is unlikely to improve the game.
 
 ---
 
-# 9. Suggested order of game work
+# 9. Rationale and dependencies for game work
 
-This is a direction order, not a replacement for issue priority or repository
-coordination.
+Issue priority labels are the only work ordering, after safely advancing
+in-flight work as `AGENTS.md` requires. This section explains the relationships
+between proposals; its numbering does not assign priorities.
 
 1. **G2: watch five people play.** It is cheap, it uses a build that exists,
-   and it can reorder everything else. Run it first, or in parallel with
-   step 2.
-2. **G1: the ladder.** First the Long Wait's verbs (declare mundane, the Late
-   Waking, a callable forcing rite, the last after an owner ruling). Then the
-   power gap's legibility. Then the top.
+   and its findings can change the issue labels. Recruitment waits on the owner.
+2. **G1: the ladder.** Declare mundane and the Late Waking are built. Natural
+   waking odds (#1801) precede scale calibration (#1802), then the reachable
+   summit (#1818). Callable forcing (#1817) follows #1801 and #1820 and is
+   measured separately. Power-gap evidence (#1805) follows #1820.
 3. **G3: the Long Line's late centuries.**
-4. **G5: the Afterimage with people in it.**
+4. **G5: the Afterimage with people in it.** Built in #1808; protect it.
 5. **G4: pride's late bites.**
 6. **G6: the money-shape content pass.** Long Wait decisions (G1) are good
    non-money trade-offs to write into it.
