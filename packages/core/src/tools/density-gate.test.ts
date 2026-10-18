@@ -104,7 +104,7 @@ describe('Regency and unwoken pacing (#1814)', () => {
         seed: 5100, diagnosticIntervals: intervals,
       } as DensityRun],
     }]).join('\n');
-    expect(text).toContain('Regency /');
+    expect(text).toContain('REGENCY /');
     // Explanatory header rules out treating forms or automatic resolutions as player decisions.
     expect(text).toContain('automatic resolutions excluded');
     expect(text).toContain('5100');
