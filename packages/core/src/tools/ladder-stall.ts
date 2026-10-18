@@ -3,6 +3,8 @@
  *
  *   npm run gate:stall -- [runs] [years] [policies]
  *   npm run gate:stall -- 24 500 chronicler,ascendant
+ *   npm run gate:stall -- 96 500 chronicler,ascendant --population --output=long.json
+ *   npm run gate:stall -- 24 300 chronicler,ascendant --campaign=short --population
  *
  * The ladder froze for 30-34% of a Long Line's years when this was first
  * measured (17 Oct 2026, `Suggestions.md` G1): no living man of the house who
@@ -36,6 +38,7 @@
  * must leave that above zero — "Never" is a real outcome.
  */
 import { loadContent } from '@ed/content';
+import { writeFileSync } from 'node:fs';
 import { indexContent, type Content, type ContentBundle } from '@ed/schema';
 import { bootstrap, clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
@@ -44,7 +47,7 @@ import { autoResolveAll } from '../events/decisions.js';
 import { campaignDef } from '../campaign.js';
 import type { CampaignId } from '@ed/schema';
 import { closeTheLedger } from '../ending.js';
-import { foremostOf, rungIndex, type Rung } from '../ascension.js';
+import { foremostOf, rungIndex, standingOf, type Rung } from '../ascension.js';
 import { phenotypeOf, LATE_WAKING_AGE } from '../people/factory.js';
 import type { SimCtx } from '../world.js';
 import { configureAscendant, prepareAscendantYear, resolveAscendantYear } from './ending-gate.js';
@@ -107,6 +110,61 @@ export interface StallRun {
   diedGrown: number;
   /** ...and how many of those never woke. */
   diedNeverWoke: number;
+  /** Optional #1802 diagnostic; default stall reports retain their old shape. */
+  population?: StallPopulation;
+  /** The saved annual high-water mark, distinct from the post-resolution reading `best`. */
+  attainedBest?: Rung;
+}
+
+export interface StallPopulation {
+  campaign: CampaignId;
+  maxPower: number;
+  /** Every living household expresser-year, including unwoken men and boys. */
+  raw: number[];
+  awakeRaw: number[];
+  /** The subset currently standing at Adept or above. */
+  adeptRaw: number[];
+  /** Excludes the two rites which directly widen expressed power. */
+  preRiteRaw: number[];
+  shelfPeak: number;
+  /** Best-read living HOUSEHOLD member, including women and mundane men. */
+  readerPeak: number;
+  expresserReaderPeak: number;
+}
+
+export function emptyStallPopulation(ctx: SimCtx): StallPopulation {
+  return {
+    campaign: ctx.world.campaign, maxPower: ctx.genetics.maxPower,
+    raw: [], awakeRaw: [], adeptRaw: [], preRiteRaw: [], shelfPeak: 0, readerPeak: 0,
+    expresserReaderPeak: 0,
+  };
+}
+
+/** Read after annual decisions, at the same boundary as the frozen-year tally. */
+export function observeStallPopulation(ctx: SimCtx, sample: StallPopulation): void {
+  const w = ctx.world;
+  sample.shelfPeak = Math.max(sample.shelfPeak, w.library.size);
+  for (const p of w.people.household(w.playerHouse, w.year)) {
+    sample.readerPeak = Math.max(sample.readerPeak, p.spellsKnown.length);
+    const ph = phenotypeOf(p, ctx.genetics, w.year);
+    if (!ph.eldritch.canExpress) continue;
+    sample.raw.push(ph.eldritch.expressedPower);
+    sample.expresserReaderPeak = Math.max(sample.expresserReaderPeak, p.spellsKnown.length);
+    if (p.awakening.awakened) sample.awakeRaw.push(ph.eldritch.expressedPower);
+    if (!p.rites.includes('great_rite') && !p.rites.includes('unmaking')) {
+      sample.preRiteRaw.push(ph.eldritch.expressedPower);
+    }
+    if (rungIndex(standingOf(ctx, p).rung) >= rungIndex('adept')) {
+      sample.adeptRaw.push(ph.eldritch.expressedPower);
+    }
+  }
+}
+
+/** Empirical order statistics, preserving input order for paired raw reports. */
+export function populationStats(values: readonly number[]) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * p))] ?? null;
+  return { n: sorted.length, p50: q(0.5), p90: q(0.9), p99: q(0.99), max: sorted.at(-1) ?? null };
 }
 
 /** Reads the house as it stands. Pure: no stream is drawn, nothing is written. */
@@ -181,6 +239,7 @@ export function playStallRun(
   years: number,
   policy: StallPolicy,
   campaign: CampaignId = 'long',
+  population = false,
 ): StallRun {
   const def = campaignDef(campaign);
   const ctx = bootstrap(indexContent(source), seed, def.startYear, campaign);
@@ -189,6 +248,7 @@ export function playStallRun(
   if (policy === 'bid') w.bidCeiling = 600;
   const tally = { asked: 0, paid: 0 };
   const run = emptyStallRun(seed, policy);
+  if (population) run.population = emptyStallPopulation(ctx);
   let streak = 0;
 
   for (let y = 0; y < years; y++) {
@@ -204,12 +264,14 @@ export function playStallRun(
     }
     clearNamingQueue(ctx);
     streak = foldStallYear(run, readStallYear(ctx), streak);
+    if (run.population) observeStallPopulation(ctx, run.population);
   }
   // `closeTheLedger` runs inside `stepYear` on the year AFTER the term, which
   // this loop never takes — `playToTheEnd` reads the ending the same way.
   if (w.year >= def.endYear || w.ending) closeTheLedger(ctx);
   countNever(ctx, run);
   if (w.ending) run.ending = w.ending.id;
+  if (population) run.attainedBest = w.ascension.best;
   return run;
 }
 
@@ -257,6 +319,22 @@ export function stallReport(runs: readonly StallRun[]): string[] {
   const endings: Record<string, number> = {};
   for (const r of runs) endings[r.ending ?? 'none'] = (endings[r.ending ?? 'none'] ?? 0) + 1;
   lines.push('  endings: ' + Object.entries(endings).map(([k, n]) => `${k} ${n}`).join(' · '));
+  const samples = runs.flatMap((r) => r.population ? [r.population] : []);
+  if (samples.length) {
+    lines.push('  population (n/p50/p90/p99/max): ' + JSON.stringify({
+      raw: populationStats(samples.flatMap((p) => p.raw)),
+      awakeRaw: populationStats(samples.flatMap((p) => p.awakeRaw)),
+      preRiteRaw: populationStats(samples.flatMap((p) => p.preRiteRaw)),
+      adeptRaw: populationStats(samples.flatMap((p) => p.adeptRaw)),
+      shelfPeak: populationStats(samples.map((p) => p.shelfPeak)),
+      householdReaderPeak: populationStats(samples.map((p) => p.readerPeak)),
+      expresserReaderPeak: populationStats(samples.map((p) => p.expresserReaderPeak)),
+    }));
+    const reach = Object.fromEntries((['adept', 'hierophant', 'vessel', 'demigod', 'god'] as const)
+      .map((rung) => [rung, runs.filter((r) => r.attainedBest !== undefined
+        && rungIndex(r.attainedBest) >= rungIndex(rung)).length]));
+    lines.push('  saved best at least: ' + JSON.stringify(reach));
+  }
   return lines;
 }
 
@@ -272,13 +350,15 @@ export function runStallPartition(
   source: Source,
   partition: GatePartition<StallInput>,
   years: number,
+  campaign: CampaignId = 'long',
+  population = false,
 ): GatePartitionResult<StallRun> {
   const content = indexContent(source);
   return {
     id: partition.id,
     observations: partition.items.map(({ index, input }) => ({
       index,
-      value: playStallRun(content, input.seed, years, input.policy),
+      value: playStallRun(content, input.seed, years, input.policy, campaign, population),
     })),
   };
 }
@@ -288,30 +368,39 @@ export function measureStall(
   runs: number,
   years: number,
   policies: readonly StallPolicy[],
+  campaign: CampaignId = 'long',
+  population = false,
 ): StallRun[] {
   const content = indexContent(source);
   const plan = partitionGateInputs(stallInputs(runs, policies), gatePartitionWorkerCount());
   const results = plan.length === 1
-    ? plan.map((partition) => runStallPartition(content, partition, years))
+    ? plan.map((partition) => runStallPartition(content, partition, years, campaign, population))
     : runGatePartitionsInWorkers<StallInput, StallRun>(plan, {
       moduleUrl: import.meta.url,
       exportName: 'runStallPartition',
       argsBefore: [content.bundle],
-      argsAfter: [years],
+      argsAfter: [years, campaign, population],
     });
   return reduceGatePartitions(plan, results);
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('ladder-stall.ts');
 if (isMain) {
+  const campaignArg = process.argv.find((a) => a.startsWith('--campaign='))?.split('=')[1] ?? 'long';
+  if (campaignArg !== 'short' && campaignArg !== 'long' && campaignArg !== 'demo') {
+    throw new Error(`unknown campaign ${campaignArg}; one of demo, short, long`);
+  }
+  const campaign: CampaignId = campaignArg;
   const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
   const runs = Number(args[0]) || STALL_DEFAULT_RUNS;
-  const years = Number(args[1]) || campaignDef('long').endYear - campaignDef('long').startYear;
+  const years = Number(args[1]) || campaignDef(campaign).years;
   const policies = (args[2]?.split(',') ?? ['chronicler', 'ascendant']) as StallPolicy[];
   for (const p of policies) {
     if (!STALL_POLICIES.includes(p)) throw new Error(`unknown policy ${p}; one of ${STALL_POLICIES.join(', ')}`);
   }
-  const played = measureStall(loadContent(), runs, years, policies);
+  const played = measureStall(loadContent(), runs, years, policies, campaign, process.argv.includes('--population'));
   for (const p of policies) console.log(stallReport(played.filter((r) => r.policy === p)).join('\n'));
   if (process.argv.includes('--json')) console.log(JSON.stringify(played));
+  const output = process.argv.find((a) => a.startsWith('--output='))?.slice('--output='.length);
+  if (output) writeFileSync(output, JSON.stringify(played, null, 2) + '\n');
 }

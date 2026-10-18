@@ -12083,3 +12083,115 @@ Exposure is about **one check per Short Line and 1.6 per Long Line**. Four scene
 - The observer runs only on committed outcomes before effects. Score/bonus/difficulty use the engine’s canonical reading. Diagnostic genome/cache work uses copies and draws no die. A listener receives a private cast; it cannot redirect the committed injury through that copy.
 - The injury case compares saved state and the next RNG draw with/without observation. Six complete campaign/policy fingerprints matched with observation enabled/disabled; eight standard `digest -- 8 400` fingerprints matched across the check-input refactor. Preparation-year replays also match their original full-save fingerprints.
 - Focused checks/lane suites passed 431 tests before the final affinity-only case adjustment. Final preflight results are recorded on the PR. No new played batch enters the fast lane and no duration baseline is hand-edited.
+
+
+## 2026-10-18 — #1802: one power scale for the shipped campaigns
+
+**Change.** `ASCENT_REACH` moves from 0.45 to 0.35, derived from the post-#1801 Long population. `BOOK_REACH` stays 0.5. The owner chose one Long-calibrated scale, with Short reaching proportionally less, and approved reporting target gaps. Every existing rung floor and rite predicate remains; God Madness is still 90. No campaign-specific reach or new stored field.
+
+**Reproduction.** On base `08634e39` (including #1801), run `npm run gate:stall -- 96 500 chronicler,ascendant --population --output=before-long.json`; repeat after this change. The actual campaigns stop on their real endings. Seeds are 5100–5195, 96 houses per policy per revision, 384 Long histories in the final pair. For Short use `24 300 chronicler,ascendant --campaign=short --population --output=short.json` (5100–5123). The optional observer reports raw genetic capacity, current Adept samples, pre-Great-Rite/Unmaking samples, shelf and reader peaks; it never chooses a marriage or an outcome. Every one of the 192 before and 192 after per-house raw arrays, frozen counts, saved best and endings reproduces the original calibration diagnostic.
+
+### Derivation and reading
+
+Baseline Long order statistics (p50 / p90 / p99 / max), sampled every living household expresser-year, including unwoken men and boys. Raw capacity is not an awakening claim; unwoken capacity need not be zero.
+
+| raw sample | chronicler | ascendant |
+|---|---|---|
+| all expressers | 6 / 16.96 / 23 / 28 | 6 / 17.28 / 25.28 / 36.36 |
+| awakened only | 6 / 17 / 23 / 28 | 8 / 18.08 / 25.76 / 36.36 |
+| before widening rites | 6 / 16.8 / 22.4 / 27.52 | 6 / 16.48 / 22 / 27.52 |
+| currently Adept or higher | 11 / 19.2 / 24.48 / 28 | 11 / 20.96 / 27.68 / 36.36 |
+
+The pre-rite upper deciles are 16.8 and 16.48. With the current table maximum of 66, a 0.35 fraction gives a reference of 23.1: raw 6 → EP26, established-Adept raw 11 → EP48, pre-rite upper-decile raw 16.5 → EP71. Thus the middle distribution reaches the existing Adept/Hierophant/Vessel power gates while every other predicate still matters. Exceptional raw power can hit the existing 100 cap; that does not confer God. New locus data still changes the denominator through `ctx.genetics.maxPower`.
+
+Peak **expresser** reader books are p50/p90/max 4/6/8 chronicler and 9/10/11 ascendant; peak shelves 5/8/10 and 11/14/17. Household-reader peaks agree in this batch. Retain the reading fraction: Adept 1, Hierophant 3, Vessel 4, Demigod 7, and God’s existing eight distinct family books. Lowering the fraction cannot remove the three-affinity Hierophant requirement and is not supported alongside this power change.
+
+Exploratory sweeps used these same 96 Long seeds (counts at or above Adept / Hierophant / Vessel / Demigod / God):
+
+| reach | chronicler / 96 | ascendant / 96 |
+|---|---|---|
+| 0.45 | 82 / 21 / 2 / 0 / 0 | 86 / 55 / 38 / 10 / 1 |
+| 0.30 | 86 / 40 / 5 / 0 / 0 | 88 / 76 / 67 / 41 / 1 |
+| 0.33 | 85 / 36 / 3 / 0 / 0 | 87 / 75 / 62 / 31 / 0 |
+| 0.35 | 85 / 30 / 4 / 0 / 0 | 87 / 66 / 53 / 26 / 0 |
+
+The 0.30 and 0.33 candidates improve ordinary Hierophant reach further but overshoot the climbing Vessel target (69.8% and 64.6%). The selected 0.35 raises the middle without that overshoot. These are calibration comparisons, not independent confirmations of the targets; the unchanged gate batches provide separate validation.
+
+### Long reach and the owner’s gaps
+
+Use **`world.ascension.best`**, the saved annual high-water mark specified by the owner. The original stall `best` separately samples foremost standing after annual decisions; for example after Unmaking it can record a rung before the next annual high-water update. Both readings remain in the diagnostic, with `attainedBest` naming the saved one. Ending attainment is a third reading, substantiated by surviving Chronicle evidence.
+
+Each after share gives its binomial two-SE margin; paired changes use the per-seed binary differences. Percentages and margins are percentage points. Zero counts do not prove impossibility (0/96 has a roughly 4% two-SE Wilson upper bound).
+
+| policy / rung ≥ | before /96 | after /96 (% ±2SE) | paired change ±2SE | owner target |
+|---|---:|---:|---:|---:|
+| chronicler / adept | 82 | 85 (88.5 ±6.5) | +3.1 ±3.6 | 90% |
+| chronicler / hierophant | 21 | 30 (31.2 ±9.5) | +9.4 ±6.7 | 60% |
+| chronicler / vessel | 2 | 4 (4.2 ±4.1) | +2.1 ±2.9 | 25% |
+| chronicler / demigod | 0 | 0 (0.0 ±0.0) | +0.0 ±0.0 | 5% |
+| chronicler / god | 0 | 0 (0.0 ±0.0) | +0.0 ±0.0 | summit follow-up |
+| ascendant / adept | 86 | 87 (90.6 ±5.9) | +1.0 ±2.1 | 95% |
+| ascendant / hierophant | 55 | 66 (68.8 ±9.5) | +11.5 ±7.8 | 80% |
+| ascendant / vessel | 38 | 53 (55.2 ±10.2) | +15.6 ±8.0 | 50% |
+| ascendant / demigod | 10 | 26 (27.1 ±9.1) | +16.7 ±9.2 | 25% |
+| ascendant / god | 1 | 0 (0.0 ±0.0) | -1.0 ±2.1 | summit follow-up |
+
+Climbing Vessel 55.2% and Demigod 27.1% fit the requested 50%/25% shape. Climbing Hierophant is 68.8%, 11.2 points below 80% and just outside the approximate ten-point point-estimate tolerance; its sampling margin overlaps that shape. Ordinary Hierophant 31.2% and Vessel 4.2% remain clearly below 60%/25%. Adept reaches 88.5%/90.6% against 90%/95%. Ordinary Demigod is still 0/96 against about 5%. The scale alone does not satisfy every middle target. Do not relabel these gaps as success or move unrelated floors to conceal them. #1811 diagnoses the admission/selection funnel; #1818 owns the joint summit gates after this calibration.
+
+### Blockers and frozen years
+
+Foremost first-unmet gate, share of actual played years (before → after):
+
+| blocker | chronicler | ascendant |
+|---|---:|---:|
+| power | 54.4% → 46.0% | 49.1% → 42.7% |
+| books | 16.4% → 22.8% | 9.3% → 12.0% |
+| awakening | 13.7% → 12.8% | 14.0% → 12.9% |
+| no-expresser | 9.3% → 9.3% | 12.0% → 8.4% |
+| respect | 1.1% → 0.9% | 9.2% → 14.0% |
+| madness-floor | 4.8% → 7.3% | 4.8% → 7.5% |
+| madness-overflow | 0.1% → 0.2% | 1.6% → 2.3% |
+| mind | 0.2% → 0.6% | 0.0% → 0.0% |
+| affinities | 0.2% → 0.2% | 0.0% → 0.0% |
+| clauses | 0.0% → 0.0% | 0.0% → 0.2% |
+| rite | 0.0% → 0.0% | 0.0% → 0.1% |
+| clear | 0.0% → 0.0% | 0.0% → 0.0% |
+
+| policy | played years before → after | frozen years / played | median / worst longest stretch | paired per-house frozen-share change ±2SE |
+|---|---:|---:|---:|---:|
+| chronicler | 37577 → 37540 | 7283/37577 (19.4%) → 7101/37540 (18.9%) | 34/245 → 35/245 | -0.1 ±2.0 pp |
+| ascendant | 37581 → 37575 | 8648/37581 (23.0%) → 6773/37575 (18.0%) | 43/275 → 35/275 | -4.1 ±3.0 pp |
+
+The frozen criterion is unchanged: no living, woken expresser. The aggregate year share and paired per-house share weight early-ending houses differently; the latter’s margin above treats the house as the independent unit. Population and policy feedback can change those waits when the scale changes. This is not another awakening-odds change.
+
+### Ending mix
+
+| ending | chronicler before → after /96 | ascendant before → after /96 |
+|---|---:|---:|
+| forgotten | 48 → 44 | 23 → 15 |
+| devoured | 19 → 25 | 39 → 47 |
+| unmade | 0 → 0 | 6 → 7 |
+| apotheosis | 0 → 0 | 1 → 0 |
+| broken_line | 29 → 27 | 27 → 27 |
+
+The accepted middle-rung consequence appears: Devoured grows 19→25 chronicler and 39→47 ascendant, while Forgotten falls 48→44 and 23→15. Apotheosis is 0/96 in both after columns, within the ordinary 0–1% aim but below the climbing 8% floor; keep that summit shortfall explicit for #1818. The unchanged 29% ceiling is checked on the full ending gate, separately from this calibration sample.
+
+### Short Line, shared scale
+
+Seeds 5100–5123, 24 houses/policy/revision; descriptive paired term check, with no separate Short reach.
+
+| policy | best ≥ Adept / Hierophant / Vessel / Demigod, before → after | frozen years / played before → after | ending counts before → after |
+|---|---|---|---|
+| chronicler | 21 / 6 / 0 / 0 → 21 / 8 / 0 / 0 | 1536/6800 → 1514/6800 | broken_line 2, devoured 6, forgotten 11, settled 5 → broken_line 2, devoured 8, forgotten 9, settled 5 |
+| ascendant | 20 / 11 / 7 / 0 → 21 / 14 / 9 / 3 | 1148/6118 → 1111/6118 | broken_line 5, devoured 10, forgotten 6, settled 3 → broken_line 5, devoured 12, forgotten 6, settled 1 |
+
+### Verification
+
+- Full fire-rate: **pass**, 800 × 500 years, 493 non-frame events; all 29 authored effect kinds reached.
+- Full outcome reach: **one inherited failure**, `the_fever_and_the_vigil/use_death → held`, 0 resolutions in 98 event firings (~49 expected by the existing gate). On unchanged 0.45, the same 800-house batch fails this outcome too (0/99 firings, ~49.5 expected), plus both Unmaking outcomes. The 0.35 batch resolves Unmaking/taken once; its other branch is classified too rare at ~0.4 expected. No gate assertion or sample was relaxed. This is not an all-green gate verdict.
+- Ladder scales: **pass**, 32 × 500 years, 2,283 expresser samples. Canonical ladder-policy gate: **pass**, six houses per policy at 500 years.
+- Blood: **pass**, the full **2,048 paired 500-year** houses. Concentrate minus dilute late font is +0.70, 4.9 standard errors; both-carrying pairs differ by −0.60.
+- Endings: **pass**, **512 houses per policy at 500 years**. Chronicler: Apotheosis 0, Unmade 0, Broken Line 153, Forgotten 234, Devoured 125. Ascendant: Apotheosis **1/512 (0.2%)**, Unmade 39/512; the unchanged 29% ceiling passes and the 8% floor remains a reported shortfall. Unmaking occurs in 58/512 climbing houses, with 77 recipients. Among taker-house joint gates, 58 are alive, 54 clear power, 46 books/circle, 30 Madness, 18 Mind, 10 clauses and only 3 Respect/God. These overlaps point #1818 toward the joint summit bottleneck, not another power-floor change.
+- Focused checks: 41 ascension tests, both ascension/ladder slow suites (five tests), 27 ending-gate tests and 16 stall tests pass on 0.35. Landing preflight and exact-head CI are recorded on the PR. The 69 session-API tests also pass after building a uniquely strongest unwoken son: other men have small non-null fonts, avoiding a new 100-power tie with the seeded founder. The four privacy cases retain every engine/public-identity assertion; no seed or simulation rule changes for the fixture.
+
+The calibration and reproducible instrument complete #1802. The inherited Fever outcome-reach failure is separately tracked by #1830 and stays explicit; its repair is not folded into a power normalisation change. The later #1807 content batch, which changes ambient draws, reaches Fever/held in one of the same 800 houses; that reroll is not evidence of a mechanism repair. Ordinary middle-rung and summit target gaps remain as reported above.
