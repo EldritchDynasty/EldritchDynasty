@@ -175,8 +175,11 @@ describe('what awakening means, and what it does not', () => {
       for (const m of members) {
         const p = ctx.world.people.get(m.id)!;
         checked += 1;
+        // #1820: the house learns whether the Power comes through somebody
+        // when they wake, and not before — so the field is absent until then,
+        // and the true gate after.
         expect(m.expresses, `seed ${seed}: ${m.name} is drawn against the wrong gate`)
-          .toBe(phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress);
+          .toBe(p.awakening.awakened ? phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress : undefined);
       }
 
       // Nobody female is ever drawn as expressing. Invariant 4, asked through

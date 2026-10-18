@@ -96,6 +96,8 @@ interface Run {
   worn: { name: string; sex: string; ours: boolean }[];
   /** Every attribute lift actually carried by somebody wearing one of the five. */
   lifts: { attr: string; points: number }[];
+  /** The year the line ended, if it ended before the run did. */
+  endedIn?: number;
 }
 
 function play(seed: number): Run {
@@ -114,7 +116,8 @@ function play(seed: number): Run {
   const worn = w.people.all()
     .filter((p) => FIVE.some((f) => f.name === p.name))
     .map((p) => ({ name: p.name, sex: p.sex as string, ours: p.houseOfOrigin === w.playerHouse }));
-  return { seed, spent: w.friends.filter((f) => f.spentIn !== undefined), worn, lifts: liftsIn(ctx) };
+  return { seed, spent: w.friends.filter((f) => f.spentIn !== undefined), worn, lifts: liftsIn(ctx),
+    ...(w.ending ? { endedIn: w.ending.year } : {}) };
 }
 
 /**
@@ -173,6 +176,12 @@ describe('the five names, over a played batch', () => {
     for (const r of runs) {
       const years = r.spent.map((f) => f.spentIn!).sort((a, b) => a - b);
       if (years.length < 2) continue;
+      // A line that ends inside the span cannot spread what it never got to
+      // spend. Four seeds were swapped out of this batch for exactly that
+      // (the notes above SEEDS); asking it only of runs that lived through
+      // the span is the claim itself, and the next re-roll does not need a
+      // fifth swap (#1834: 916 broke its line in 1151 with three still due).
+      if (r.endedIn !== undefined && r.endedIn < 1042 + FRIEND_SPAN_YEARS) continue;
       const first = years[0]!;
       const last = years[years.length - 1]!;
       expect(last - first, `seed ${r.seed} spent them all inside ${last - first} years`)
