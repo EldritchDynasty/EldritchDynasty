@@ -17,7 +17,7 @@ function fixture(boughtBack = false): TableView {
     shelf: [], studying: [], missingPrimers: [], pupils: [], teachable: [],
     canTutor: false, tutoring: [], posts: [], marriagePolicy: 'in',
     programmeCandidates: [], scion: null, scionHeir: null,
-    scionVacant: false, scionHeirVacant: false, market: [], longWait: [],
+    scionVacant: false, scionHeirVacant: false, market: [], longWait: [], forcing: [],
     papers: [], pedigreePrices: [], servants: [], maxBond: 20,
   } as unknown as TableView;
 }
@@ -501,6 +501,69 @@ describe('the Long Wait asks twice before it gives up on a man (#1794)', () => {
       const panel = w.findAll('.panel').find((p) => p.text().includes('The long wait'))!;
       expect(panel.text()).toContain('Nobody of the line is old enough to be given up on.');
       expect(panel.text()).toContain('he has already woken');
+    } finally { w.unmount(); }
+  });
+});
+
+describe('a forcing rite asks twice, and names no boy apart from the others (#1817)', () => {
+  const rite = {
+    rite: 'the_drowning', title: 'The Drowning', from: 7, to: 15, ready: true,
+    boys: [{ person: 'ash', name: 'Ash', age: 12 }, { person: 'birch', name: 'Birch', age: 9 }],
+  };
+  const mountWith = (forcing: unknown[], refusal: { kind: string; reason: string } | null = null) => {
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table: { ...fixture(), forcing } as unknown as TableView,
+      land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions,
+      refusal, receipt: null, proseMode: 'original',
+    } });
+    return { w, order };
+  };
+
+  it('confirms, cancels without an order, and names each boy for a screen reader in both modes', async () => {
+    const { w, order } = mountWith([rite]);
+    const button = (label: string) => w.findAll('button').find((b) => b.text() === label);
+    try {
+      expect(button('The forcing rites')?.attributes('aria-expanded')).toBe('true');
+      const ash = w.findAll('button').find((b) => b.attributes('aria-label') === 'Put Ash, 12 years old, through The Drowning')!;
+      expect(ash.element.tagName).toBe('BUTTON');
+      expect(ash.text()).toBe('Ash, 12');
+
+      await ash.trigger('click');
+      expect(w.text()).toContain('He will not be offered another.');
+      await button('Not him')!.trigger('click');
+      expect(order).not.toHaveBeenCalled();
+
+      await ash.trigger('click');
+      await button('Put him through it')!.trigger('click');
+      expect(order).toHaveBeenCalledTimes(1);
+      expect(order).toHaveBeenCalledWith({ kind: 'forcingRite', rite: 'the_drowning', person: 'ash' });
+
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect(button('Rites to force an awakening')).toBeDefined();
+      expect(w.findAll('button').some((b) => b.attributes('aria-label') === 'Start The Drowning for Birch, age 9')).toBe(true);
+    } finally { w.unmount(); }
+  });
+
+  it('folds with the reason when no boy can be tried, and refuses in place', async () => {
+    const { w } = mountWith(
+      [{ ...rite, ready: false, reason: 'no boy of the line is of the age the book asks', boys: [] }],
+      { kind: 'forcingRite', reason: 'he has been put through a forcing rite already' },
+    );
+    try {
+      const fold = w.findAll('button').find((b) => b.text() === 'The forcing rites')!;
+      expect(fold.attributes('aria-expanded')).toBe('false');
+      await fold.trigger('click');
+      expect(w.text()).toContain('no boy of the line is of the age the book asks');
+      expect(w.text()).toContain('he has been put through a forcing rite already');
+    } finally { w.unmount(); }
+  });
+
+  it('is absent when the content has no rite the house can call', () => {
+    const { w } = mountWith([]);
+    try {
+      expect(w.findAll('button').some((b) => b.text() === 'The forcing rites')).toBe(false);
     } finally { w.unmount(); }
   });
 });

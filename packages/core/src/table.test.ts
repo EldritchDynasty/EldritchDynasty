@@ -4,13 +4,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadBundle, loadContent } from '@ed/content';
 import { proseOriginalHash, type ProseMode, type ProseVariant } from '@ed/schema';
-import { canBeTaught, type SlotSpec } from '@ed/schema';
+import { canBeTaught, EventTemplateS, validateBundle, type SlotSpec } from '@ed/schema';
 import {
   applyEffect, autoMarry, beginCommitment, beginTutoring, eventTitleAddress, positionOptions, setPosition, viewOf, candidatesFor, DEBT_FLOOR, DEMIGOD_AGEING_STOPPED, expectRate, LEDGER_SEARCH_FEE,
   resolveSlots, TUTOR_FEE, TUTOR_GAIN, TUTOR_YEARS, loadGame, newGame, onTheMarket, order, phase, place,
   resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   MAX_BOND, type SimCtx, type TableOrder,
   bootstrap, foremostOf, heirApparent, knownSuccession, MUNDANE_AGE, phenotypeOf, rollAwakening,
+  pickOutcome, resolveChoice,
 } from '@ed/core';
 import type { Person } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
@@ -1978,3 +1979,204 @@ describe('no authored awakening can wake a man the house declared mundane', () =
   });
 });
 
+
+/**
+ * TRYING A FORCING RITE ON A BOY (§11, #1817).
+ *
+ * Owner ruling 2026-10-18: any unwoken boy of the blood in the window, the list
+ * never consulting whether he can express; once per boy, called or ambient;
+ * the same danger for every boy, and only a boy who can express ever wakes.
+ *
+ * The rite here is a fixture rather than `the_drowning`, so these hold the
+ * Table's mechanism to the ruling whatever weights and prose the content
+ * gives the authored rites.
+ */
+const FORCING = EventTemplateS.parse({
+  id: 'test_forcing_rite',
+  title: 'A Trial by Water',
+  tier: 'individual',
+  frequency: 'rare',
+  purposes: ['test_magic_rule', 'force_record_choice', 'change_relationship'],
+  forcing: { slot: 'CHILD' },
+  slots: {
+    HEAD: { role: 'head' },
+    CHILD: {
+      role: 'unwoken',
+      filters: [{ sex: 'male' }, { forcingTried: false }, { age: { op: 'gte', value: 7 } }, { age: { op: 'lte', value: 15 } }],
+    },
+  },
+  body: 'The trough is filled the night before. {CHILD} is told what will happen and {HEAD} holds the count, and nobody in the room says what it costs.',
+  interaction: {
+    kind: 'choice',
+    choices: [
+      {
+        id: 'full_count',
+        label: 'The full count.',
+        outcomes: [
+          { id: 'woke', weight: 60, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'He wakes.',
+            effects: [{ kind: 'awakening', target: { slot: 'CHILD' } }, { kind: 'madness', target: { slot: 'CHILD' }, delta: 10 }] },
+          { id: 'nothing', weight: 40, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'Nothing comes.',
+            effects: [{ kind: 'madness', target: { slot: 'CHILD' }, delta: 4 }] },
+          { id: 'cold', weight: 60, onlyIf: { slot: 'CHILD', filters: [{ canExpress: false }] }, text: 'Nothing comes.', effects: [] },
+          { id: 'drowned', weight: 40, onlyIf: { slot: 'CHILD', filters: [{ canExpress: false }] }, text: 'He does not come up.',
+            effects: [{ kind: 'status', target: { slot: 'CHILD' }, status: 'dead', cause: 'a trial by water' }] },
+        ],
+      },
+      { id: 'short_count', label: 'Stop short.', outcomes: [{ id: 'stopped', weight: 100, text: 'Nothing happens.', effects: [] }] },
+    ],
+  },
+});
+
+const forcingBundle = (() => {
+  const b = structuredClone(bundle.bundle);
+  b.events.push(FORCING);
+  return b;
+})();
+
+function forcingHouse(seed = 1817): SimCtx {
+  const ctx = bootstrap(forcingBundle, seed, 1042);
+  for (const p of ctx.world.people.living()) ctx.world.people.kill(p.id, ctx.world.year, 'before the test began');
+  for (const p of ctx.world.people.all()) p.castSlots = [];
+  ctx.world.headSince = undefined;
+  ctx.world.chronicle = [];
+  place(ctx, { sex: 'male', age: 50, name: 'Holder', castSlots: ['head'] });
+  return ctx;
+}
+
+/** A boy of the house at `age` who can, or cannot, express. Lazy genomes make it the same boy every run. */
+function boyWho(ctx: SimCtx, expresses: boolean, age: number, stem: string): Person {
+  for (let i = 0; i < 200; i++) {
+    const p = place(ctx, { sex: 'male', age, name: `${stem}${i}` });
+    if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress === expresses) return p;
+    ctx.world.people.kill(p.id, ctx.world.year, 'not the boy this test needs');
+  }
+  throw new Error(`no ${expresses ? 'expressing' : 'mundane'} ${stem} in 200 names`);
+}
+
+const forcingRow = (ctx: SimCtx) => tableView(ctx).forcing.find((r) => r.rite === FORCING.id)!;
+
+describe('trying a forcing rite on a boy (#1817)', () => {
+  it('uses a fixture the casting and outcome rules would accept', () => {
+    // The rules about who a rite may cast and what may land on him. The
+    // fixture is not a scene, so the rules about what a rare scene owes the
+    // Record are not asked.
+    const rules = ['rites/forcing', 'outcomes/guard', 'outcomes/cover', 'outcomes/weights', 'awakening/gate', 'madness/gate', 'slots/references'];
+    const errors = (b: typeof forcingBundle) => validateBundle(b, rules).filter((i) => i.level === 'error').map((i) => `${i.rule} ${i.where}`);
+    expect(errors(forcingBundle)).toEqual(errors(bundle.bundle));
+  });
+
+  it('offers every boy in the window, whether or not the blood is in him', () => {
+    const ctx = forcingHouse();
+    const can = boyWho(ctx, true, 10, 'Ash');
+    const cannot = boyWho(ctx, false, 10, 'Birch');
+    const row = forcingRow(ctx);
+    expect(row).toMatchObject({ ready: true, from: 7, to: 15 });
+    expect(row.boys.map((b) => b.person).sort()).toEqual([can.id, cannot.id].sort());
+  });
+
+  it('cannot be told apart by which boy it is offered for', () => {
+    // The swap test: two houses alike but for which boy stands in the window.
+    // Everything the Table says about the rite is the same, name aside.
+    const read = (expresses: boolean) => {
+      const ctx = forcingHouse();
+      const boy = boyWho(ctx, expresses, 10, expresses ? 'Ash' : 'Birch');
+      const { boys, ...rest } = forcingRow(ctx);
+      return { rest, boys: boys.map((b) => ({ ...b, person: b.person === boy.id, name: b.name === boy.name })) };
+    };
+    expect(read(true)).toEqual(read(false));
+  });
+
+  it('refuses outside the window, and for a boy woken, given up on, already tried, or a daughter', () => {
+    const ctx = forcingHouse();
+    const young = place(ctx, { sex: 'male', age: 6, name: 'Young' });
+    const old = place(ctx, { sex: 'male', age: 16, name: 'Old' });
+    const woken = place(ctx, { sex: 'male', age: 10, name: 'Woken', awakened: true });
+    const declared = place(ctx, { sex: 'male', age: 10, name: 'Declared' });
+    declared.awakening.declaredMundane = true;
+    const tried = place(ctx, { sex: 'male', age: 10, name: 'Tried' });
+    tried.awakening.forcingTried = true;
+    const daughter = place(ctx, { sex: 'female', age: 10, name: 'Daughter' });
+    expect(forcingRow(ctx)).toMatchObject({ ready: false, boys: [] });
+    for (const p of [young, old, woken, declared, tried, daughter]) {
+      const result = order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: p.id });
+      expect(result.ok, p.name).toBe(false);
+      expect(result.reason, p.name).toBeTruthy();
+    }
+    expect(order(ctx, { kind: 'forcingRite', rite: 'the_vessel_rite', person: young.id }).ok).toBe(false);
+    expect(ctx.world.pendingDecisions).toEqual([]);
+  });
+
+  it('dockets the rite with him cast, and only a boy who can express ever wakes', () => {
+    for (const expresses of [true, false]) {
+      const ctx = forcingHouse();
+      const boy = boyWho(ctx, expresses, 10, expresses ? 'Ash' : 'Birch');
+      expect(order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id }).ok).toBe(true);
+      const pending = ctx.world.pendingDecisions.find((d) => d.kind === 'choice' && d.event.id === FORCING.id);
+      if (!pending || pending.kind !== 'choice') throw new Error('the rite was not docketed');
+      expect(pending.fill.CHILD).toBe(boy.id);
+      expect(resolveChoice(ctx, pending.id, 'full_count', testRng('forcing', String(expresses))).ok).toBe(true);
+      const outcome = ctx.world.decisionLog.at(-1);
+      expect(outcome?.kind === 'outcome' && outcome.outcomeId).toSatisfy((id: string) =>
+        (expresses ? ['woke', 'nothing'] : ['cold', 'drowned']).includes(id));
+      if (!expresses) {
+        expect(boy.awakening.awakened).toBe(false);
+        expect(boy.madness).toBe(0);
+      }
+      expect(boy.awakening.forcingTried).toBe(true);
+    }
+  });
+
+  it('draws the authored weights: the order changes when, not what', () => {
+    // Paired seeds. The outcome the docket commits is the outcome the rite's
+    // own draw gives on that stream, for both kinds of boy.
+    const tally = { woke: 0, nothing: 0, cold: 0, drowned: 0 } as Record<string, number>;
+    for (let i = 0; i < 60; i++) {
+      for (const expresses of [true, false]) {
+        const ctx = forcingHouse();
+        const boy = boyWho(ctx, expresses, 10, expresses ? 'Ash' : 'Birch');
+        order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id });
+        const pending = ctx.world.pendingDecisions[0]!;
+        if (pending.kind !== 'choice' || pending.event.interaction.kind === 'narration') throw new Error('unreachable');
+        const choice = pending.event.interaction.choices[0]!;
+        const expected = pickOutcome(choice.outcomes, testRng('paired', i), ctx, pending.fill, pending.event).id;
+        resolveChoice(ctx, pending.id, 'full_count', testRng('paired', i));
+        const logged = ctx.world.decisionLog.at(-1);
+        expect(logged?.kind === 'outcome' && logged.outcomeId, `seed ${i}`).toBe(expected);
+        tally[expected]! += 1;
+      }
+    }
+    expect(tally.woke! + tally.nothing!).toBe(60);
+    expect(tally.cold! + tally.drowned!).toBe(60);
+    expect(Math.min(...Object.values(tally))).toBeGreaterThan(0);
+  });
+
+  it('tries a boy once, and the ambient cast steps around him after', () => {
+    const ctx = forcingHouse();
+    const boy = boyWho(ctx, true, 10, 'Ash');
+    order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id });
+    expect(order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id }).ok).toBe(false);
+    const pending = ctx.world.pendingDecisions[0]!;
+    resolveChoice(ctx, pending.id, 'short_count', testRng('once'));
+    // Even the short count spends his one attempt.
+    expect(boy.awakening.forcingTried).toBe(true);
+    if (boy.status === 'alive') {
+      expect(order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id }).reason)
+        .toBe('he has been put through a forcing rite already');
+      expect(candidatesFor(FORCING.slots.CHILD!, ctx, {}).map((p) => p.id)).not.toContain(boy.id);
+    }
+  });
+
+  it('survives a save between the order and the answer', () => {
+    const answer = (ctx: SimCtx) => {
+      const pending = ctx.world.pendingDecisions[0]!;
+      resolveChoice(ctx, pending.id, 'full_count', testRng('resume'));
+      const { savedAt: _ignored, ...rest } = saveGame(ctx);
+      return rest;
+    };
+    const ctx = forcingHouse();
+    const boy = boyWho(ctx, true, 10, 'Ash');
+    order(ctx, { kind: 'forcingRite', rite: FORCING.id, person: boy.id });
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), forcingBundle);
+    expect(answer(resumed)).toEqual(answer(ctx));
+  });
+});

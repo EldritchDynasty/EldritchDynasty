@@ -784,6 +784,17 @@ export const EventTemplateS = z.object({
   /** Product scope; absent means the same scene can occur in any campaign. */
   campaigns: z.array(CampaignIdS).min(1).optional(),
   slots: z.record(z.string(), SlotSpecS).default({}),
+  /**
+   * A FORCING RITE (§11, #1817): the boy cast in `slot` is put through it.
+   *
+   * Three things read this. `commitOutcome` marks him `forcingTried`, so he
+   * goes through one rite and not one a year; `rites/forcing` holds the slot
+   * to the shape the owner ruled — any unwoken boy of the window, never asking
+   * whether he can express; and the Table's `forcingRite` order offers every
+   * template that sets `called`, so a rite the house does not know it has
+   * (the bricked-up room) is never on the Table's list.
+   */
+  forcing: z.object({ slot: z.string(), called: z.boolean().default(true) }).strict().optional(),
   conditions: ConditionS.optional(),
   checks: z.array(CheckS).default([]),
   /**

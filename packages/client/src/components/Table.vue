@@ -222,6 +222,22 @@ function confirmMundane(): void {
 }
 
 /**
+ * THE FORCING RITES (§11, #1817). The house may try a rite on any boy of the
+ * line in its window; the list is the same whether or not the blood is in
+ * him, because the house does not know. A boy goes through one rite, so this
+ * too is asked twice: choose him, then confirm. Cancelling mutates nothing.
+ */
+const forcingRites = computed(() => props.table.forcing ?? []);
+const forcingMatters = computed(() => forcingRites.value.some((r) => r.ready));
+const pendingForcing = ref<{ rite: string; title: string; person: string; name: string } | null>(null);
+function confirmForcing(): void {
+  const chosen = pendingForcing.value;
+  if (!chosen) return;
+  pendingForcing.value = null;
+  props.actions.order({ kind: 'forcingRite', rite: chosen.rite, person: chosen.person });
+}
+
+/**
  * WHAT THE HOUSE COULD DO THIS YEAR, and what it is only being shown.
  *
  * The table was a 2,300px scroll because every panel drew whether or not it
@@ -807,6 +823,53 @@ const MARRIAGE_ORDERS = [
         </button>
       </div>
       <p v-if="refusedIn('declareMundane')" class="small rubric">{{ refusedIn('declareMundane') }}</p>
+    </div>
+
+    <!-- §11, FORCING (#1817): "The family has rites to force an awakening —
+         dangerous, sometimes lethal." Any boy of the line in the window may be
+         put through one, once. The panel never says whether the blood is in
+         him: the house finds out the way it always has, by trying. -->
+    <div v-if="forcingRites.length" class="panel" :class="{ idle: idle('forcing', forcingMatters) }">
+      <h3 class="label">
+        <button class="fold" :aria-expanded="!idle('forcing', forcingMatters)" @click="shut['forcing'] = !shut['forcing']">{{ local('The forcing rites', 'Rites to force an awakening') }}</button>
+      </h3>
+      <p class="small dim blurb">
+        {{ local(
+          'The old books give ways to force a waking out of a boy who has not woken. Each is dangerous, and some of them kill. A boy is put through one, once, and the book does not say who it will answer in.',
+          'These rites try to force an unawakened boy of the family to awaken. They are dangerous and can kill him. Each boy can go through only one, once. There is no way to know beforehand whether it can work on him.',
+        ) }}
+      </p>
+      <div v-if="pendingForcing" class="line" role="group" :aria-label="local('Confirm the rite', 'Confirm starting this rite')">
+        <p class="small">
+          <strong>{{ pendingForcing.title }}</strong> — <strong>{{ pendingForcing.name }}</strong>
+          {{ local('— the rite goes before the house. He will not be offered another.', '— the rite will start. He cannot go through another one.') }}
+        </p>
+        <div class="row">
+          <button class="primary small" @click="confirmForcing">{{ local('Put him through it', 'Confirm: start the rite') }}</button>
+          <button class="small" @click="pendingForcing = null">{{ local('Not him', 'Cancel') }}</button>
+        </div>
+      </div>
+      <template v-else>
+      <div v-for="rite in forcingRites" :key="rite.rite" class="line">
+        <p class="small">
+          <strong>{{ rite.title }}</strong>
+          <span v-if="rite.to !== undefined" class="dim"> · {{ local('for a boy of', 'ages') }} {{ rite.from ?? 0 }}–{{ rite.to }}</span>
+        </p>
+        <p v-if="!rite.ready" class="small dim">{{ rite.reason }}</p>
+        <div v-else class="wrap">
+          <button
+            v-for="b in rite.boys"
+            :key="b.person"
+            class="small"
+            :aria-label="local(`Put ${b.name}, ${b.age} years old, through ${rite.title}`, `Start ${rite.title} for ${b.name}, age ${b.age}`)"
+            @click="pendingForcing = { rite: rite.rite, title: rite.title, person: b.person, name: b.name }"
+          >
+            {{ b.name }}, {{ b.age }}
+          </button>
+        </div>
+      </div>
+      </template>
+      <p v-if="refusedIn('forcingRite')" class="small rubric">{{ refusedIn('forcingRite') }}</p>
     </div>
 
     <!-- §7: "A dowry is not money. Great houses negotiate in lineage

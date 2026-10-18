@@ -147,6 +147,12 @@ export const AwakeningStateS = z.object({
   age: z.number().optional(),
   forced: z.boolean().default(false),
   declaredMundane: z.boolean().default(false),
+  /**
+   * Put through a forcing rite, whatever came of it (§11, #1817). A boy goes
+   * through one. Absent means never tried, which is what every boy in a save
+   * written before it was — so it needs no `SAVE_FORMAT` bump.
+   */
+  forcingTried: z.boolean().optional(),
 });
 export type AwakeningState = z.infer<typeof AwakeningStateS>;
 
