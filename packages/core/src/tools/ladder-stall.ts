@@ -43,14 +43,15 @@ import { indexContent, type Content, type ContentBundle } from '@ed/schema';
 import { bootstrap, clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { makeRng, hashSeed } from '../rng.js';
-import { autoResolveAll } from '../events/decisions.js';
+import { autoResolveAll, type DecisionObservation } from '../events/decisions.js';
 import { campaignDef } from '../campaign.js';
 import type { CampaignId } from '@ed/schema';
 import { closeTheLedger } from '../ending.js';
 import { foremostOf, rungIndex, standingOf, type Rung } from '../ascension.js';
 import { phenotypeOf, LATE_WAKING_AGE } from '../people/factory.js';
 import type { SimCtx } from '../world.js';
-import { configureAscendant, prepareAscendantYear, resolveAscendantYear } from './ending-gate.js';
+import { configureAscendant, prepareAscendantYear, resolveAscendantYear, type PolicyOrderVisit } from './ending-gate.js';
+import type { YearReport } from '../year/report.js';
 import {
   gatePartitionWorkerCount,
   partitionGateInputs,
@@ -233,6 +234,15 @@ export function countNever(ctx: SimCtx, run: StallRun): void {
 }
 
 /** One played run, by the same policies `gate:endings` plays. */
+export interface StallObserver {
+  beforeYear?: (ctx: SimCtx) => void;
+  afterStep?: (ctx: SimCtx, report: YearReport) => void;
+  decision?: (ctx: SimCtx, answer: DecisionObservation) => void;
+  order?: (ctx: SimCtx, visit: PolicyOrderVisit) => void;
+  afterYear?: (ctx: SimCtx) => void;
+  finish?: (ctx: SimCtx) => void;
+}
+
 export function playStallRun(
   source: Source,
   seed: number,
@@ -240,10 +250,13 @@ export function playStallRun(
   policy: StallPolicy,
   campaign: CampaignId = 'long',
   population = false,
+  observer?: StallObserver,
 ): StallRun {
   const def = campaignDef(campaign);
   const ctx = bootstrap(indexContent(source), seed, def.startYear, campaign);
   const w = ctx.world;
+  if (observer?.decision) ctx.observeDecision = (answer) => observer.decision!(ctx, answer);
+  const observeOrder = observer?.order ? (visit: PolicyOrderVisit) => observer.order!(ctx, visit) : undefined;
   if (policy === 'ascendant') configureAscendant(ctx);
   if (policy === 'bid') w.bidCeiling = 600;
   const tally = { asked: 0, paid: 0 };
@@ -253,9 +266,11 @@ export function playStallRun(
 
   for (let y = 0; y < years; y++) {
     if (w.year >= def.endYear || w.ending) break;
-    if (policy === 'ascendant') prepareAscendantYear(ctx);
-    stepYear(ctx, false);
-    if (policy === 'ascendant') resolveAscendantYear(ctx, seed, tally);
+    observer?.beforeYear?.(ctx);
+    if (policy === 'ascendant') prepareAscendantYear(ctx, observeOrder);
+    const report = stepYear(ctx, false);
+    observer?.afterStep?.(ctx, report);
+    if (policy === 'ascendant') resolveAscendantYear(ctx, seed, tally, observeOrder);
     else {
       let guard = 0;
       while (w.pendingDecisions.length && guard++ < 200) {
@@ -265,6 +280,7 @@ export function playStallRun(
     clearNamingQueue(ctx);
     streak = foldStallYear(run, readStallYear(ctx), streak);
     if (run.population) observeStallPopulation(ctx, run.population);
+    observer?.afterYear?.(ctx);
   }
   // `closeTheLedger` runs inside `stepYear` on the year AFTER the term, which
   // this loop never takes — `playToTheEnd` reads the ending the same way.
@@ -272,6 +288,7 @@ export function playStallRun(
   countNever(ctx, run);
   if (w.ending) run.ending = w.ending.id;
   if (population) run.attainedBest = w.ascension.best;
+  observer?.finish?.(ctx);
   return run;
 }
 

@@ -8,7 +8,7 @@ import { emptyAgeState, emptyFrequencyLedger, emptyMusterState } from '@ed/schem
 import { PersonStore } from './people/store.js';
 import type { GeneticsCtx } from './people/factory.js';
 import type { BearingEntry } from './bearing.js';
-import type { OutcomeObservation, PendingDecision } from './events/decisions.js';
+import type { DecisionObservation, OutcomeObservation, PendingDecision } from './events/decisions.js';
 import type { Rung } from './ascension.js';
 import type { FriendName } from './people/friends.js';
 import type { DelegationPreferences } from './delegation.js';
@@ -778,6 +778,8 @@ export interface SimCtx {
   prose: ProseRuntime;
   /** Measurement-only listener before an authored outcome applies. Never saved or called by previews. */
   observeOutcome?: (observation: OutcomeObservation) => void;
+  /** Measurement-only docket listener; choice/Record inputs precede effects. Never saved. */
+  observeDecision?: (observation: DecisionObservation) => void;
 }
 
 /**

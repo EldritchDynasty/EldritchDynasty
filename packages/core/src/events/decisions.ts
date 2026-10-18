@@ -314,6 +314,13 @@ export interface OutcomeObservation {
   readonly choiceId?: string;
 }
 
+/** A successful docket answer. Copies cannot change the live decision or cast. */
+export interface DecisionObservation {
+  readonly decision: PendingDecision;
+  /** Choice/card identity, Record option, or null for a declined Match. */
+  readonly answer: string | null;
+}
+
 export function commitOutcome(
   ctx: SimCtx,
   e: EventTemplate,
@@ -440,6 +447,7 @@ export function resolveChoice(
   const availability = choiceAvailability(choice, ctx, fill, e);
   if (!availability.available) return { ok: false, reason: availability.blockedBy ?? 'unavailable' };
 
+  ctx.observeDecision?.({ decision: structuredClone({ ...pending, fill }), answer: choice.id });
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
   const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep);
@@ -493,6 +501,10 @@ export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): Mat
   // answer, and a hand where every card has closed is answered by declining.
   if (!result.ok) return { ok: false, reason: result.reason };
 
+  // takeCard validates and marries together. A Match needs no pre-effect check
+  // reading; report only the successful answer, before withdrawing other hands.
+  ctx.observeDecision?.({ decision: structuredClone(pending), answer: card.id });
+
   // WITH AN OUTSIDE CARD ON THE TABLE, which is the whole condition: taking
   // the cousin because he is the only card is not the same act, and after the
   // fact the two are indistinguishable. This is the only moment either the
@@ -533,6 +545,7 @@ export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): Mat
 export function declineMatch(ctx: SimCtx, decision: string): boolean {
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
   if (!pending || pending.kind !== 'match') return false;
+  ctx.observeDecision?.({ decision: structuredClone(pending), answer: null });
   // The world forgets a refusal the moment it is taken, and this is the one
   // act §29 is most about — so it is written down here, at the verb, and
   // nowhere else (`bearing.ts`).
@@ -587,6 +600,7 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   if (option !== 'record' && option !== 'omit' && option !== 'embellish') return { ok: false };
   const pending = ctx.world.pendingDecisions.find((d) => d.id === decision);
   if (!pending || pending.kind !== 'record') return { ok: false };
+  ctx.observeDecision?.({ decision: structuredClone(pending), answer: option });
   drop(ctx, decision);
   const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
   return { ok: true, line: applyRecord(

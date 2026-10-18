@@ -13,9 +13,11 @@ import { grantHeirloom } from '../people/heirlooms.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
 import { order } from '../table.js';
-import { digestOf } from '../save.js';
+import { canonical, digestOf, saveGame } from '../save.js';
 import { head, type SimCtx } from '../world.js';
 import { measureDensity, diagnosticPeriod } from './density-gate.js';
+import { DensityObserver, MaintenanceTracker, maintenanceSituation } from './density-observer.js';
+import { emptyReport } from '../year/report.js';
 import {
   traceDiagnosticIntervals, diagnosticIntervalLines,
   type DiagnosticYear, type DensityRun,
@@ -27,6 +29,7 @@ import {
 import {
   countNever, emptyStallRun, foldStallYear, readStallYear, type StallYear,
   emptyStallPopulation, observeStallPopulation, populationStats, stallReport,
+  playStallRun,
 } from './ladder-stall.js';
 
 const bundle = loadContent();
@@ -334,6 +337,97 @@ function sample(year: number, overrides: Partial<DiagnosticYear> = {}): Diagnost
 }
 
 describe('Regency and unwoken pacing (#1814)', () => {
+  it('ends an interval when the seal passes even when both Heads are unwoken', () => {
+    const intervals = traceDiagnosticIntervals([
+      sample(1100, { head: 'old', headName: 'First Head' }),
+      sample(1101, { head: 'new', headName: 'Next Head' }),
+      sample(1102, { head: 'new', headName: 'Next Head' }),
+    ]);
+    expect(intervals.map((row) => [row.head, row.from, row.to, row.longestQuiet]))
+      .toEqual([['old', 1100, 1100, 1], ['new', 1101, 1102, 2]]);
+  });
+
+  it('reports automatic narration separately and leaves naming forms out of both decision counts', () => {
+    const ctx = testWorld(bundle, 181401);
+    const observer = new DensityObserver();
+    observer.beforeYear(ctx);
+    observer.afterStep(ctx, emptyReport(ctx.world.year));
+    ctx.world.decisionLog.push({ kind: 'outcome', year: ctx.world.year, event: 'narration', outcomeId: 'only', fill: {} });
+    ctx.world.pendingNames.push({ person: head(ctx.world)!.id, suggested: 'A form',
+      born: ctx.world.year, sex: 'male', because: 'a naming form' });
+    observer.afterYear(ctx);
+    expect(observer.years[0]).toMatchObject({ automatic: 1, choices: 0, matches: 0, records: 0, routine: 0 });
+  });
+
+  it('counts actual successful orders on their own date and treats failed attempts as no interruption', () => {
+    const ctx = testWorld(bundle, 181402);
+    const observer = new DensityObserver();
+    observer.beforeYear(ctx);
+    observer.afterStep(ctx, emptyReport(ctx.world.year));
+    observer.afterYear(ctx);
+    observer.order(ctx, { year: ctx.world.year, command: { kind: 'seekClause' }, ok: false });
+    observer.order(ctx, { year: ctx.world.year, command: { kind: 'bid', ceiling: 600 }, ok: true });
+    observer.order(ctx, { year: ctx.world.year - 1, command: { kind: 'seekClause' }, ok: true });
+    expect(observer.years[0]).toMatchObject({ orders: 1, auctions: 1, spine: true });
+  });
+
+  it('distinguishes exact maintenance from a changed fortune, target or answer', () => {
+    const ctx = testWorld(bundle, 181403);
+    const tracker = new MaintenanceTracker();
+    const key = canonical(['the-template', 'choice', 'same-person', 'same-answer']);
+    expect(tracker.observe(key, maintenanceSituation(ctx))).toBe(false);
+    expect(tracker.observe(key, maintenanceSituation(ctx))).toBe(true);
+    ctx.world.treasury += 1;
+    expect(tracker.observe(key, maintenanceSituation(ctx))).toBe(false);
+    expect(tracker.observe(canonical(['the-template', 'choice', 'other-person', 'same-answer']), maintenanceSituation(ctx))).toBe(false);
+    expect(tracker.observe(canonical(['the-template', 'choice', 'same-person', 'other-answer']), maintenanceSituation(ctx))).toBe(false);
+  });
+
+  it('keeps annual harvest noise out of spine gaps while counting changed holdings and Age boundaries', () => {
+    const ctx = testWorld(bundle, 181405);
+    const observer = new DensityObserver();
+    const holding = [...ctx.world.parcels.values()][0]!;
+    observer.beforeYear(ctx);
+    holding.yieldFactor = 0.7;
+    observer.afterStep(ctx, emptyReport(ctx.world.year));
+    observer.afterYear(ctx);
+    expect(observer.years[0]?.spine).toBe(false);
+
+    ctx.world.year += 1;
+    observer.beforeYear(ctx);
+    holding.yieldBonus = (holding.yieldBonus ?? 0) + 1;
+    observer.afterStep(ctx, emptyReport(ctx.world.year));
+    observer.afterYear(ctx);
+    expect(observer.years[1]?.spine).toBe(true);
+
+    ctx.world.year += 1;
+    observer.beforeYear(ctx);
+    const boundary = emptyReport(ctx.world.year);
+    boundary.agesBegan.push('the_long_peace');
+    observer.afterStep(ctx, boundary);
+    observer.afterYear(ctx);
+    expect(observer.years[2]?.spine).toBe(true);
+  });
+
+  it('preserves the canonical players entire save, decision log and RNG with observation enabled', () => {
+    const saved = (ctx: SimCtx) => {
+      const { savedAt: _timestamp, ...world } = saveGame(ctx);
+      return canonical(world);
+    };
+    for (const policy of ['chronicler', 'ascendant'] as const) {
+      let before = '';
+      let after = '';
+      const baseline = playStallRun(bundle, 181404, 12, policy, 'short', false, {
+        finish: (ctx) => { before = saved(ctx); },
+      });
+      const observer = Object.assign(new DensityObserver(), { finish: (ctx: SimCtx) => { after = saved(ctx); } });
+      const measured = playStallRun(bundle, 181404, 12, policy, 'short', false, observer);
+      expect(measured).toEqual(baseline);
+      expect(after).toBe(before);
+      expect(observer.years).toHaveLength(12);
+    }
+  });
+
   it('reads actual Regency from the seated woman, never from no-expresser alone', () => {
     const ctx = testWorld(loadContent().bundle);
     const incumbent = head(ctx.world);

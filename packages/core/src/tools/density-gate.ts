@@ -54,6 +54,7 @@
  * for the same answer. This is the sweep rig that produced the band.
  */
 import { loadContent } from '@ed/content';
+import { writeFileSync } from 'node:fs';
 import type { CampaignId, Content, ContentBundle, HouseAmbitionId } from '@ed/schema';
 import { newGame } from '../session.js';
 import { mustSurface } from '../delegation.js';
@@ -68,12 +69,13 @@ import {
 } from './stall.js';
 import { isPredetermined, shapeOf, type ShapeGrain } from './shapes.js';
 import type { TableOrder } from '../table.js';
-import { head, inRegency, type SimCtx } from '../world.js';
-import { knownToExpress } from '../people/factory.js';
+import type { SimCtx } from '../world.js';
+import { DensityObserver, diagnosticPeriod, measurePolicyDensity } from './density-observer.js';
+import { STALL_POLICIES, type StallPolicy } from './ladder-stall.js';
+export { diagnosticPeriod } from './density-observer.js';
 import {
-  delegationDensityLines, densityLines, shapeFrequencies,
-  traceDiagnosticIntervals,
-  type DiagnosticPeriod, type DiagnosticYear, type DensityRun,
+  delegationDensityLines, densityLines, diagnosticIntervalLines, shapeFrequencies,
+  type DensityRun,
 } from './density-report.js';
 export { delegationDensityLines, densityLines } from './density-report.js';
 export type { DensityRun, ShapeFrequency, ShapeRepeat, ShapeTops } from './density-report.js';
@@ -153,7 +155,11 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   const ageShapeCounts = new Map<string, Map<string, number>>();
   const ageShapeChoices = new Map<string, number>();
   const categoryWindow: string[] = [];
-  const diagnosticYears: DiagnosticYear[] = [];
+  const diagnosticObserver = new DensityObserver();
+  let explicitAnswer: string | undefined;
+  g.ctx.observeDecision = (observation) => {
+    if (observation.decision.id === explicitAnswer) diagnosticObserver.decision(g.ctx, observation);
+  };
   const campaignStall = makeStallClock();
   const ageStalls = new Map<string, StallClock>();
   const ambitionIds = ambitionOptions(g.ctx).map((a) => a.id);
@@ -181,6 +187,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
   let guard = 0;
 
   while (g.year < end && !w.ending && guard++ < 100_000) {
+    diagnosticObserver.beforeYear(g.ctx);
     const turned = g.advance(1).years[0];
     let landmark = false;
     if (turned) {
@@ -205,18 +212,9 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     const top = foremostOf(g.ctx);
     const blocker: LadderBlocker = top?.standing.blocker ?? 'no-expresser';
     const action = sampleStallClock(g.ctx, campaignStall, blocker, top?.person.id);
-    // One sample per actual advanced year, before the session resolves its
-    // docket. Never confuse naming forms with time-blocking choices.
-    const diagnostic: DiagnosticYear | undefined = turned ? {
-      year: w.year,
-      period: diagnosticPeriod(g.ctx),
-      blocker,
-      actionable: action.actionable,
-      spine: false,
-      choices: 0, matches: 0, records: 0, auctions: 0, orders: 0, routine: 0,
-    } : undefined;
-    if (diagnostic) diagnosticYears.push(diagnostic);
-
+    if (turned) diagnosticObserver.afterStep(g.ctx, turned, {
+      period: diagnosticPeriod(g.ctx), blocker, actionable: action.actionable,
+    });
     const activeAges = new Set(w.age.active.map((a) => String(a.age)));
     for (const age of activeAges) {
       if (!ageAmbitionTrackers.has(age)) {
@@ -270,11 +268,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     const tableOrder = opts.tableOrder?.(g.ctx);
     if (tableOrder) {
       const result = g.order(tableOrder);
-      if (diagnostic && result.ok) {
-        diagnostic.orders += 1;
-        if (tableOrder.kind === 'bid' || tableOrder.kind === 'lotBid') diagnostic.auctions += 1;
-        diagnostic.spine = true;
-      }
+      diagnosticObserver.order(g.ctx, { year: w.year, command: tableOrder, ok: result.ok });
       const observed = observeOrderAttempt(tableOrder, result);
       if (observed) {
         noteOrderAttempt(campaignFailures, observed);
@@ -291,10 +285,10 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     while (w.pendingDecisions.length && inner++ < 500) {
       decisionsThisYear += 1;
       const d = w.pendingDecisions[0]!;
+      explicitAnswer = d.id;
       if (d.kind === 'match') {
         matches += 1;
         landmark = true;
-        if (diagnostic) { diagnostic.matches += 1; diagnostic.spine = true; }
         if (d.cards[0]) g.match(d.id, d.cards[0].id);
         else g.declineHand(d.id);
       } else if (d.kind === 'record') {
@@ -310,11 +304,6 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         if (previous === undefined) delete w.delegation.records[eventId];
         else w.delegation.records[eventId] = previous;
         if (guard) meaningfulRecords += 1;
-        if (diagnostic) {
-          if (guard) { diagnostic.records += 1; diagnostic.spine = true; }
-          else diagnostic.routine += 1;
-        }
-
         const result = g.record(d.id, 'record');
         // Match the real client: a standing preference is learned only after
         // the ordinary answer succeeds, never before its resolver/drain runs.
@@ -327,13 +316,6 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
         const predetermined = isPredetermined(g.ctx, d);
         if (predetermined) predeterminedChoices += 1;
         else nonPredeterminedChoices += 1;
-        if (diagnostic) {
-          if (guard && !predetermined) {
-            diagnostic.choices += 1;
-            diagnostic.spine = true;
-          } else diagnostic.routine += 1;
-        }
-
         const shapes: Record<ShapeGrain, string> = {
           kind: shapeOf(d, 'kind'),
           category: shapeOf(d, 'category'),
@@ -422,6 +404,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
       // Never leave the docket standing: a decision with no answer stops the
       // clock for good (invariant 9), and this loop would spin on it.
       if (w.pendingDecisions[0] === d) g.letHimDecide();
+      explicitAnswer = undefined;
     }
 
     for (const tracker of ambitionTrackers.values()) noteAmbitionDecisions(tracker, decisionsThisYear);
@@ -437,6 +420,7 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
 
     names += w.pendingNames.length;
     for (const n of [...w.pendingNames]) g.name(n.person, n.suggested);
+    diagnosticObserver.afterYear(g.ctx);
   }
   ordinary = Math.max(ordinary, span);
 
@@ -506,27 +490,8 @@ export function measureDensity(source: ContentBundle | Content, seed: number, ye
     reach: seenInRun.size,
     meaningfulChoices,
     meaningfulRecords,
-    diagnosticIntervals: traceDiagnosticIntervals(diagnosticYears),
+    diagnosticIntervals: diagnosticObserver.intervals,
   };
-}
-
-/**
- * A diagnostic category, not a player-facing fact. Regency is the ACTUAL
- * female-Head state (#1814), not an approximation based on ancestry or whether
- * a wizard is missing. 'Unwoken' means a non-regent, seated Head currently has
- * no WITNESSED living expresser in his house: an unawakened man's secret
- * genome is never read to classify or surface an interval (#1820).
- *
- * The observer and reporter are the independently landed slice (#1836);
- * #1814 retains the played-campaign baseline and pacing interpretation.
- */
-export function diagnosticPeriod(ctx: SimCtx): DiagnosticPeriod | undefined {
-  const w = ctx.world;
-  if (inRegency(w)) return 'regency';
-  if (!head(w)) return undefined; // Wardship/vacant seal is not Regency.
-  const witnessed = w.people.household(w.playerHouse, w.year).some((person) =>
-    person.sex === 'male' && knownToExpress(person, ctx.genetics, w.year));
-  return witnessed ? undefined : 'unwoken';
 }
 
 interface AmbitionTracker {
@@ -593,7 +558,20 @@ if (isMain) {
   // worlds asked to stop at two different pages.
   const seeds = chosen ?? Array.from({ length: runs }, (_, i) => 4100 + i);
   const selectedTerms = terms.length ? terms : [CAMPAIGN_YEARS, 300];
-  if (argv.includes('--delegation')) {
+  const policies = flag('policies')?.split(',');
+  if (policies) {
+    for (const policy of policies) {
+      if (!STALL_POLICIES.includes(policy as StallPolicy)) throw new Error(`unknown density policy: ${policy}`);
+    }
+    const rows = selectedTerms.flatMap((term) => policies.map((policy) => ({
+      term, policy,
+      runs: seeds.map((seed) => measurePolicyDensity(bundle, seed, term, policy as StallPolicy, campaignForTerm(term))),
+    })));
+    console.log(`${seeds.length} runs per term/policy; canonical ending/G1 policies (not the default first-choice player)`);
+    for (const line of diagnosticIntervalLines(rows)) console.log(line);
+    const output = flag('output');
+    if (output) writeFileSync(output, JSON.stringify({ seeds, rows }, null, 2) + '\n');
+  } else if (argv.includes('--delegation')) {
     const rows = selectedTerms.map((term) => ({
       term,
       before: seeds.map((seed) => measureDensity(bundle, seed, term, { campaign: campaignForTerm(term) })),
