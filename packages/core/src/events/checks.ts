@@ -4,7 +4,7 @@ import type {
 import { assertNever, RESPECT_ORDER } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from '../world.js';
 import type { Rng } from '../rng.js';
-import { pickOutcome } from './effects.js';
+import { outcomeAdmits, pickOutcome } from './effects.js';
 import { influencedAttr } from './influence.js';
 import { knowsAffinity } from '../people/library.js';
 import { castPeople, soleCast, type SlotFill } from './slots.js';
@@ -218,8 +218,12 @@ export function resolveChoiceOutcome(
   rng: Rng,
 ): Outcome {
   const check = choice.check ? event.checks.find((c) => c.id === choice.check) : undefined;
-  if (!check) return pickOutcome(choice.outcomes, rng, ctx, event);
+  if (!check) return pickOutcome(choice.outcomes, rng, ctx, fill, event);
 
   const result = evalCheck(ctx, check, event, fill, rng);
-  return choice.outcomes.find((o) => o.id === result.outcomeId) ?? pickOutcome(choice.outcomes, rng, ctx, event);
+  // A band names its outcome outright, so `onlyIf` cannot share a checked
+  // choice (`outcomes/guard`). Asked anyway, a band whose outcome this cast
+  // cannot reach falls to the draw rather than telling him something untrue.
+  const banded = choice.outcomes.find((o) => o.id === result.outcomeId);
+  return banded && outcomeAdmits(banded, ctx, fill, event) ? banded : pickOutcome(choice.outcomes, rng, ctx, fill, event);
 }

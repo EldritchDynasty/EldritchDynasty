@@ -1,7 +1,7 @@
 import type { ArcDef, Schedule } from './arc.js';
 import type { Content } from './content-index.js';
 import type { EventTemplate } from './event.js';
-import { isLadderRole } from './event.js';
+import { isLadderRole, outcomeDrawSets, type Outcome } from './event.js';
 import type { Filter } from './conditions.js';
 import type { Issue, ValidationRule } from './validate.js';
 import { FREQUENCY_PROFILES } from './frequency.js';
@@ -402,6 +402,12 @@ const arcBoundSlots: ValidationRule = {
 
 // ── The Madness gate (invariant 1) ────────────────────────────────────────
 
+/** Whether `o` lands only on a `slot` holder who can express (#1817). */
+function guardProvesExpression(o: Outcome, slot: string): boolean {
+  return o.onlyIf?.slot === slot
+    && o.onlyIf.filters.some((f) => 'canExpress' in f && f.canExpress === true);
+}
+
 const madnessGate: ValidationRule = {
   id: 'madness/gate',
   about: 'Madness may only be dealt to a target the slot has already gated to someone who can express.',
@@ -419,7 +425,8 @@ const madnessGate: ValidationRule = {
           // to restate the role.
           const guarded = isLadderRole(slot?.role)
             || slot?.filters.some((f) => 'canExpress' in f && f.canExpress === true)
-            || slot?.filters.some((f) => 'sex' in f && f.sex === 'male');
+            || slot?.filters.some((f) => 'sex' in f && f.sex === 'male')
+            || (typeof t === 'object' && 'slot' in t && guardProvesExpression(o, t.slot));
           if (!guarded) {
             issues.push(err(
               this.id,
@@ -478,9 +485,12 @@ const awakeningGate: ValidationRule = {
           // proof so a mundane unwoken person cannot be cast and make the
           // effect silently do nothing. The shipped Drowning already has this
           // filter because its Madness cost requires the same gate.
+          // An outcome that only lands on a man who can express proves it as
+          // well as the slot would (#1817): a rite may cast any boy and keep
+          // the waking for the ones it can happen to.
           const provesFont = slot.filters.some(
             (f) => 'canExpress' in f && f.canExpress === true,
-          );
+          ) || guardProvesExpression(o, named);
           if (!provesFont) {
             issues.push(err(
               this.id,
@@ -1349,10 +1359,122 @@ const outcomeWeights: ValidationRule = {
       const groups = e.interaction.kind !== 'narration'
         ? e.interaction.choices.filter((c) => c.check === undefined).map((c) => c.outcomes)
         : outcomeGroups(e);
+      // Guarded outcomes (#1817) are measured inside each set a cast can
+      // actually draw from, which is what the weights mean.
       for (const group of groups) {
-        const sum = group.reduce((s, o) => s + o.weight, 0);
-        if (sum === 0) issues.push(err(this.id, `event:${e.id}`, 'outcome weights sum to zero'));
-        else if (sum !== 100) issues.push(warn(this.id, `event:${e.id}`, `outcome weights sum to ${sum}, not 100`));
+        for (const set of outcomeDrawSets(group)) {
+          const sum = set.reduce((s, o) => s + o.weight, 0);
+          if (sum === 0) issues.push(err(this.id, `event:${e.id}`, 'outcome weights sum to zero'));
+          else if (sum !== 100) issues.push(warn(this.id, `event:${e.id}`, `outcome weights sum to ${sum}, not 100`));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
+/**
+ * WHAT AN `onlyIf` MAY NAME (#1817).
+ *
+ * The guard is read against the person already in the slot, at the moment of
+ * the draw. Four ways to write one that reads nobody, and none of them throws:
+ *
+ *   an undeclared slot;
+ *   a player-cast slot, which narration draws for BEFORE the player's cast is
+ *     in (`present`), so the guard would see an empty slot;
+ *   an optional or counted slot, which can hold nobody or several;
+ *   a checked choice, whose band names its outcome outright and never draws.
+ *
+ * And one that reads somebody and does nothing: a Madness or Awakening effect
+ * under a guard that has already proved the man cannot express, which the
+ * engine's own gate turns into a silent no-op (invariant 1).
+ */
+const outcomeGuards: ValidationRule = {
+  id: 'outcomes/guard',
+  about: 'An outcome\'s onlyIf names one required, engine-cast slot, sits under no check, and never guards an effect it makes inert.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      const groups = e.interaction.kind === 'narration'
+        ? [{ checked: false, outcomes: e.interaction.outcomes }]
+        : e.interaction.choices.map((c) => ({ checked: c.check !== undefined, outcomes: c.outcomes }));
+      for (const { checked, outcomes } of groups) {
+        for (const o of outcomes) {
+          const guard = o.onlyIf;
+          if (!guard) continue;
+          const at = `event:${e.id}/${o.id}`;
+          const slot = e.slots[guard.slot];
+          if (!slot) {
+            issues.push(err(this.id, at, `onlyIf names slot '${guard.slot}', which this event does not declare`));
+            continue;
+          }
+          if (slot.castBy !== 'engine') {
+            issues.push(err(this.id, at, `onlyIf reads '${guard.slot}', which the player casts — the draw can come before his cast is in`));
+          }
+          if (slot.optional || slot.count) {
+            issues.push(err(this.id, at, `onlyIf reads '${guard.slot}', which can hold nobody or several — guard a slot that holds exactly one person`));
+          }
+          if (checked) {
+            issues.push(err(this.id, at, 'onlyIf on a checked choice: a band names its outcome outright, so the guard is never asked'));
+          }
+          const mundane = guard.filters.some((f) => 'canExpress' in f && f.canExpress === false);
+          const inert = o.effects.some((eff) =>
+            ((eff.kind === 'madness' && eff.delta > 0) || eff.kind === 'awakening')
+            && typeof eff.target === 'object' && 'slot' in eff.target && eff.target.slot === guard.slot);
+          if (mundane && inert) {
+            issues.push(err(this.id, at, `Madness or Awakening on '${guard.slot}' under a guard that proves he cannot express — the engine makes it a silent no-op`));
+          }
+        }
+      }
+    }
+    return issues;
+  },
+};
+
+/** Two single filters of which every person passes exactly one. */
+function complementary(a: Filter, b: Filter): boolean {
+  const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
+  if ('not' in a && same(a.not, b)) return true;
+  if ('not' in b && same(b.not, a)) return true;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== 1 || kb.length !== 1 || ka[0] !== kb[0]) return false;
+  const va = (a as Record<string, unknown>)[ka[0]!];
+  const vb = (b as Record<string, unknown>)[kb[0]!];
+  return typeof va === 'boolean' && typeof vb === 'boolean' && va !== vb;
+}
+
+/**
+ * EVERY CAST CAN DRAW SOMETHING (#1817).
+ *
+ * A group of outcomes that some cast could filter down to nothing is a
+ * decision that never resolves, and an unanswered decision stops the clock
+ * for good (invariant 9). The rule does not try to reason about arbitrary
+ * filters; it accepts the two shapes that are covered by construction — an
+ * unguarded outcome in the group, or, on one slot, a pair of single-filter
+ * guards of which every person passes exactly one (`canExpress: true` and
+ * `canExpress: false`; `X` and `not: X`). Anything cleverer is refused and has
+ * to be written as one of those.
+ */
+const outcomeCover: ValidationRule = {
+  id: 'outcomes/cover',
+  about: 'Every cast must leave at least one outcome to draw: an unguarded one, or a complementary pair of guards on one slot.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      const groups = e.interaction.kind === 'narration'
+        ? [{ id: undefined, outcomes: e.interaction.outcomes }]
+        : e.interaction.choices.map((c) => ({ id: c.id, outcomes: c.outcomes }));
+      for (const { id, outcomes } of groups) {
+        if (!outcomes.some((o) => o.onlyIf) || outcomes.some((o) => !o.onlyIf)) continue;
+        const single = outcomes.flatMap((o) =>
+          o.onlyIf && o.onlyIf.filters.length === 1 ? [{ slot: o.onlyIf.slot, filter: o.onlyIf.filters[0]! }] : []);
+        const covered = single.some((a) => single.some((b) => a.slot === b.slot && complementary(a.filter, b.filter)));
+        if (!covered) {
+          issues.push(err(this.id, `event:${e.id}${id ? `/${id}` : ''}`,
+            'every outcome here is guarded, and nothing proves every cast passes one of the guards — add an unguarded '
+            + 'outcome, or guard one slot with a complementary pair such as { canExpress: true } and { canExpress: false }'));
+        }
       }
     }
     return issues;
@@ -2265,6 +2387,8 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   arcFlags,
   deciderWiring,
   outcomeWeights,
+  outcomeGuards,
+  outcomeCover,
   choiceShape,
   checksWiring,
   ageCoverage,

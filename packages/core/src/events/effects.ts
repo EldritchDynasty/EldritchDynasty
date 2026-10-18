@@ -3,6 +3,7 @@ import { assertNever, canHoldPost, FREQUENCY_PROFILES, MAIN_BRANCH, RESPECT_ORDE
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import type { SlotFill } from './slots.js';
 import { castPeople, renderBody, soleCast } from './slots.js';
+import { evalFilter } from './conditions.js';
 import { forceAwakening, phenotypeOf, wakeNaturally } from '../people/factory.js';
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
 import { acquireLibraryCopy, beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
@@ -496,6 +497,25 @@ function outcomeWeightMultiplier(o: Outcome, ctx: SimCtx): number {
 }
 
 /**
+ * Whether `o` can land on this cast: its `onlyIf` slot holds one person, and
+ * that person passes every filter (#1817). The filters are read exactly as the
+ * slot's own casting reads them, with the slot's role, so an `attribute`
+ * modifier that would have counted while casting counts here too.
+ *
+ * A guarded slot with nobody in it admits nothing. `outcomes/guard` makes that
+ * unauthorable — the slot is engine-cast, single and required — so this is the
+ * answer for content that was never validated, not a case content can reach.
+ */
+export function outcomeAdmits(o: Outcome, ctx: SimCtx, fill: SlotFill, event?: EventTemplate): boolean {
+  const guard = o.onlyIf;
+  if (!guard) return true;
+  const [p] = castPeople(fill, guard.slot, ctx);
+  if (!p) return false;
+  const role = event?.slots[guard.slot]?.role;
+  return guard.filters.every((f) => evalFilter(f, p, ctx, fill, role));
+}
+
+/**
  * THE HOUSE STOPS BEING TOLD (§29 stage 3, issue #45).
  *
  * An outcome tagged `warning` is the branch where the retainer says the thing,
@@ -509,13 +529,23 @@ function outcomeWeightMultiplier(o: Outcome, ctx: SimCtx): number {
  * warning withheld leaves a trace the player can find later — without it,
  * suppressed information is indistinguishable from bad dice.
  */
-export function pickOutcome(outcomes: Outcome[], rng: Rng, ctx: SimCtx, event?: EventTemplate): Outcome {
+export function pickOutcome(
+  outcomes: Outcome[], rng: Rng, ctx: SimCtx, fill: SlotFill, event?: EventTemplate,
+): Outcome {
   const suppression = warningWeight(ctx);
   const weigh = (o: Outcome) => o.weight * outcomeWeightMultiplier(o, ctx)
     * (o.tags.includes(WARNING_TAG) ? suppression : 1);
 
-  const picked = rng.weighted(outcomes, weigh) ?? outcomes[0]!;
-  const hadOne = outcomes.some((o) => o.tags.includes(WARNING_TAG));
+  // The draw is over the outcomes this cast can reach (#1817), and it is the
+  // same single `weighted` call: a group with no `onlyIf` is the same array,
+  // so it consumes the same number and lands on the same outcome as before.
+  // `outcomes/cover` refuses a group some cast could empty; the fall-back to
+  // the whole group is for content that never passed validation, because a
+  // draw that returns nothing is a decision that never resolves (invariant 9).
+  const open = outcomes.filter((o) => outcomeAdmits(o, ctx, fill, event));
+  const pool = open.length ? open : outcomes;
+  const picked = rng.weighted(pool, weigh) ?? pool[0]!;
+  const hadOne = pool.some((o) => o.tags.includes(WARNING_TAG));
   if (hadOne && !picked.tags.includes(WARNING_TAG)) noteUnheard(ctx, event?.id ?? 'unnamed');
   return picked;
 }
