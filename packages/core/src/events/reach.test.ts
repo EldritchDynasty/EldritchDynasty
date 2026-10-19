@@ -3461,6 +3461,7 @@ describe('authored negative-knowledge outcome witnesses', () => {
     const result = executeOutcomeWitness(ctx, event, {
       expectedOutcomeId: outcome.id,
       rng: makeRng(8803),
+      targetWeightedOutcome: true,
     });
     expect(result.ok, result.reason).toBe(true);
     expect(result.key).toBe(outcomeKey(String(event.id), undefined, String(outcome.id)));

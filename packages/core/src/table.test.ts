@@ -2073,6 +2073,21 @@ describe('authored forcing odds and paid failures (#1817)', () => {
     { id: 'the_dark_year_fast', full: 'keep_the_fast', expressive: { woke: 52, nothing: 10, died: 38 }, mundane: { nothing_mundane: 62, died: 38 } },
   ];
 
+  it('keeps the repeated Drowning at 90/10/0 and shares its surviving failure', () => {
+    const event = bundle.events.find((entry) => entry.id === 'the_drowning_repeated')!;
+    if (event.interaction.kind !== 'narration') throw new Error('rediscovery must be narration');
+    for (const expresses of [true, false]) {
+      const ctx = forcingHouse();
+      const boy = boyWho(ctx, expresses, 12, expresses ? 'Ash' : 'Birch');
+      const pool = event.interaction.outcomes.filter((outcome) => outcomeAdmits(outcome, ctx, { CHILD: boy.id }, event));
+      expect(Object.fromEntries(pool.map((outcome) => [outcome.id, outcome.weight])))
+        .toEqual(expresses ? { full_price: 90, nothing: 10 } : { full_price_mundane: 100 });
+    }
+    expect(event.interaction.outcomes.find((outcome) => outcome.id === 'nothing')!.text)
+      .toBe(event.interaction.outcomes.find((outcome) => outcome.id === 'full_price_mundane')!.text);
+    expect(event.forcing?.called).toBe(false);
+  });
+
   it.each(rites)('$id keeps the approved pools and identical death draws for either boy', (rite) => {
     const event = bundle.events.find((entry) => entry.id === rite.id)!;
     if (event.interaction.kind !== 'choice') throw new Error('rite must be a choice');
