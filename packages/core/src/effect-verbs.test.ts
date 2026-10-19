@@ -277,7 +277,9 @@ describe('a settled rivalry leaves room for another named rival (#1812)', () => 
     // only its refill roll so the test asserts the mechanism, not a lucky seed.
     // The recurring rival template is uncommon and starts at generation one.
     ctx.world.generation = 1;
-    const rng = { ...testRng('recast-refill'), bool: () => true };
+    // Retainer hiring runs first and shares the uncommon frequency ledger. A
+    // forced hire would take the tier's cooldown before rival refill gets a turn.
+    const rng = { ...testRng('recast-refill'), bool: (chance: number) => chance === 0.5 };
     const minted = maintainCast(ctx, rng).find((person) => person.castSlots.includes('rival'));
     expect(minted, 'a freed rival slot was never refilled').toBeDefined();
     expect(minted!.id).not.toBe(former.id);

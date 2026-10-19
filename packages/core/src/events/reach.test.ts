@@ -296,7 +296,8 @@ describe('a rivalry ends without a death and the next one remembers it (#1812)',
     expect(arc, 'the settlement did not docket its inline follow-up').toBeDefined();
     expect(arc!.bindings.RIVAL).toBe(old.id);
 
-    const newRng = { ...makeRng(1813), bool: () => true };
+    // Avoid consuming the uncommon tier by forcing an earlier retainer hire.
+    const newRng = { ...makeRng(1813), bool: (chance: number) => chance === 0.5 };
     const newRival = maintainCast(ctx, newRng).find((person) => person.castSlots.includes('rival'));
     expect(newRival, 'no replacement for the dismissed rival').toBeDefined();
     arc!.dueYear = ctx.world.year;
