@@ -251,9 +251,15 @@ describe('fertility is inherited', () => {
     // retainer departures re-rolled the draw, 927 ends as a Broken Line in
     // 1155 and 940 and 943 bottleneck at 21 and 34 qualifying couples. The
     // replacements measured 217, 224 and 227 under the same rules.
+    // #1850: the scheduled 20-seed batch left only 17 cohorts above the
+    // unchanged >40-couple floor. Keep every historical seed, and add the
+    // next twelve consecutive seeds before observing their outcomes. This
+    // supplies more independent cohorts without selecting survivors or
+    // reducing the 18-cohort, 800-couple or confidence requirements below.
     const WIDE_SEEDS = [
       900, 902, 904, 905, 916, 918, 919, 921, 924, 909, 928,
       930, 931, 932, 934, 913, 945, 942, 923, 950,
+      ...Array.from({ length: 12 }, (_, i) => 951 + i),
     ];
     const mothers: number[] = [];
     const fathers: number[] = [];
