@@ -12517,3 +12517,48 @@ The natural pair now joins the existing mechanism-checked coverage path. Its pos
 **Corrected full800 evidence.** The frozenbfbcc rerun passes **499-event fire**, **30-kind vocabulary** and **1,140-outcome telemetry**. Every template-house count, selected-choice firing count and outcome-house count exactly equals3589. The archdeacon answer has **six actual offers, three expected selections and zero selections**, so the gate reports it unproven, projecting about1,334 runs to support a zero. The other two unproven outcomes retain their actual selected-choice denominators and earlier projections. No unseen outcome is called covered by this batch. Eight new complete-save controls and unchanged canonical800 aggregates jointly check that offer observation leaves play unchanged. Every default gate and the exact-head landing preflight remain the final acceptance checks; their run results accompany the PR/native merge-queue handoff. Concurrent local timings are not host-regression benchmarks.
 
 **Artifacts and commands.** `npm run gate:funnel -- --runs=200 --years=500 --controls=8 --output=<report.json>` reproduces the Long diagnosis; the Short diagnostic supplies the four displaced/root IDs with `--campaign=short --years=300`. Raw observations and summaries remain in `scratch/eldritch-1811-corrected-before200*`, `eldritch-1811-main-short-before200*`, `eldritch-1811-readers-before200*`, `eldritch-1811-repaired-after200*` and `eldritch-1811-readers-short-{before,after}200*`. Paired household differences/SEs and existing-helper results are in `eldritch-1811-repaired-paired-{long,short}.json` and `eldritch-1811-repaired-paired-inference.json`. Original3589 gates/counts/arc logs and correctedbfbcc offers controls/gates/counts/arc logs use the `eldritch-1811-repaired-*` and `eldritch-1811-offers-*` prefixes respectively. These workspace artifacts preserve requested seeds, annual stages, actual cast failures, branch counts, named writers and full-save controls.
+### 2026-10-19 — Forcing a waking without a capacity oracle (#1817)
+
+Any unwoken, undeclared boy of the blood in the authored age window may now be tried once, across ambient and called rites. The public offer never reads his hidden capacity. Mundane boys never awaken or gain Madness; surviving failures share prose with expressive failures and pay their authored costs. A failed expressive attempt may leave a visible Madness mark as paid knowledge. Succession is unchanged.
+
+The approved awakening/failure/death odds are Vigil **58/10/32**, Fast **52/10/38**, and repeated Drowning **90/10/0**. Mundane failure/death odds are respectively **68/32**, **62/38**, and **100/0**. Both Drowning variants retain their old zero immediate death risk: the old `lost` result was Madness, not death. Full-count expressive Drowning keeps woke/nothing/lost **46/33/21**; short count keeps safe/partial **74/26**.
+
+Format 32 stores guarded pending templates and attempt markers. Format 31 loads explicitly: pending wording and odds remain promised, existing pending Records identify an already-made attempt, and completed outcome logs recover the tried boy when their saved cast identifies him. Historical attempts without that record are not guessed.
+
+The first same-seed 100-house pilot (`5000 + 7*i`, 500 years) found that retaining the old weights increased Drowning/Vigil/Fast appearances from **5/3/2** houses to **22/14/15**. Weights were reduced to Drowning **200**, repeated Drowning **160**, Vigil/Fast **80**. The final 90/10/0 repeated-Drowning pilot reached **12/7/3/6** houses (13/7/3/6 fires); Drowning and second-Drowning lies reached **2/1** houses, versus **1/4** before. These 100-house observations repeat the initial weighted control exactly; the full 800-house count is below.
+
+The G1 comparison plays 24 seeds **5100–5123** under each of chronicler, bid and ascendant, up to 500 years. Before-source is `c2fc1702`; final reproducible after-source is `45b7fe51`. Campaigns ran in an isolated checkout at `63279626`; the later changes only recover attempts while loading format 31 saves and add the inherited fertility-test seed repair. The authored content tree is identical (`dd92475b`), and eight 400-year current-format digest/byte controls confirm those later changes preserve the measured campaigns. The optional `--forcing` policy makes at most one full attempt per year, picks the oldest publicly eligible boy, rotates among his eligible known rites by seed/year, and resolves the new Record through the existing policy. It never selects by hidden capacity. The ordinary policy salts and answers are retained, including the canonical ascendant policy’s existing genome-based Scion ranking. Only the new forcing overlay chooses entirely from public offers; these columns preserve their established calibration policies. All 72 baseline observer runs matched the original full-save SHA and pacing reading; final after-arms matched their earlier 100%-repeated controls in all 144 full-save hashes.
+
+| Arm | Policy | Played years | Frozen years (%) | Longest median / worst | Rites resolved | Madness paid | Direct rite deaths |
+|---|---|---:|---:|---:|---:|---:|---:|
+| before | chronicler | 10,682 | 2,660 (24.90%) | 64 / 227 | 2 | 28 | 0 |
+| before | bid | 10,399 | 2,723 (26.19%) | 69 / 214 | 3 | 50 | 0 |
+| before | ascendant | 9,193 | 2,360 (25.67%) | 45 / 465 | 6 | 23 | 1 |
+| ambient | chronicler | 10,537 | 2,871 (27.25%) | 56 / 500 | 10 | 0 | 1 |
+| ambient | bid | 10,523 | 3,388 (32.20%) | 74 / 500 | 8 | 0 | 2 |
+| ambient | ascendant | 8,719 | 2,251 (25.82%) | 54 / 325 | 8 | 0 | 0 |
+| called | chronicler | 9,968 | 2,148 (21.55%) | 53 / 294 | 2,422 | 4,082 | 435 |
+| called | bid | 10,199 | 2,791 (27.37%) | 60 / 294 | 2,525 | 4,462 | 423 |
+| called | ascendant | 9,404 | 3,041 (32.34%) | 68 / 353 | 2,102 | 4,024 | 322 |
+
+Called-policy boy/rite offers were **8,371 / 8,816 / 6,974** and accepted calls **2,422 / 2,525 / 2,101**, in chronicler/bid/ascendant order. Offers count boy/rite opportunities sampled once per year, so a waiting boy can contribute again in another year. Direct costs are observed around the actual authored effect commit, including ambient rites; they are not predicted from effect definitions.
+
+| Arm | Policy | None | Touched | Adept | Hierophant | Vessel | Demigod | God |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| before | chronicler | 2 | 1 | 13 | 8 | 0 | 0 | 0 |
+| before | bid | 2 | 1 | 13 | 8 | 0 | 0 | 0 |
+| before | ascendant | 4 | 0 | 7 | 2 | 6 | 4 | 1 |
+| ambient | chronicler | 3 | 0 | 12 | 9 | 0 | 0 | 0 |
+| ambient | bid | 3 | 0 | 13 | 8 | 0 | 0 | 0 |
+| ambient | ascendant | 3 | 0 | 7 | 3 | 5 | 6 | 0 |
+| called | chronicler | 3 | 0 | 14 | 6 | 1 | 0 | 0 |
+| called | bid | 3 | 0 | 12 | 8 | 1 | 0 | 0 |
+| called | ascendant | 5 | 0 | 6 | 6 | 4 | 3 | 0 |
+
+These 24 paired houses per policy do not establish a population-wide reduction in frozen time. Paired per-house frozen-share changes for the called policy were **−3.66 / +0.45 / +3.71 percentage points**; approximate 95% paired t intervals were **[−15.80, +8.47] / [−12.24, +13.15] / [−5.98, +13.40]**. This is an available, costly intervention, with mixed policy outcomes; it does not resolve the separate summit calibration (#1818).
+
+The canonical 800 × 500-year batch reached Drowning/repeated Drowning/Vigil/Fast in **117/62/52/50 houses** (**14.625/7.75/6.5/6.25%**), versus **68/37/39/25** before (the retained pre-forcing `4eebd754` batch). All **30 effect kinds** reached. The remaining 100-house lie-supply comparison above is bounded to that paired pilot, not extrapolated to 800.
+
+Validation completed: **ladder scales**, canonical **2,048-pair blood** and **512-pair endings** passed. Blood concentration beat dilution on late font by **5.3 standard errors**. Chronicler endings were broken line **146/512**, forgotten **231/512**, devoured **135/512**; ascendant Apotheosis remained **0/512** and Unmade **38/512**. The summit floor remains a separate #1818 gap.
+
+**Full fire/outcome acceptance is red; #1817 remains a draft.** Gate 4 found the Codex invoice in **3/800** houses, below the unchanged 0.5% floor. Gate 8 found seven zero outcomes: `waking_early/say_nothing/quiet`, the learned Terra/Death/Darkness successes (#1830), the Codex invoice’s purchase, and the Fast’s two expressive outcomes. The Fast’s full choice fired **25** times with **zero expressive casts**; its mundane failure/death outcomes resolved in **16/9** houses. The Vigil had **one expressive opportunity** in 25 full choices, giving conditional expected resolutions **0.58/0.10** for awakening/failure; these and the repeated Drowning failure were reported unproven at the unchanged expectation threshold of five. Thus wider public casts preserved overall appearances but left the Fast’s expressive ambient funnel unobserved. Deterministic built-state witnesses prove those guarded outcomes execute, and the public calling comparison exercises the intervention, but neither substitutes for the requested full sampled acceptance. Further work must diagnose that cast supply and the existing rare-source/learned-reader funnels without weakening their gates. Exact-head CI `39236188076` on `45b7fe51` passes typecheck, validation and all 177 files / 5,165 fast tests. The local rite-content preflight passed 177 / 5,163 before adding the two legacy-cast migration cases; all 54 save tests pass afterwards. Eight 400-year current-format saved digests and byte lengths match the frozen measurement source after that legacy-only change. Targeted actual odds/UI and 336 execution witnesses pass; 1,150 authored keys have deterministic execution witnesses.
