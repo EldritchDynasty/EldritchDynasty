@@ -518,7 +518,8 @@ describe('family-challenges regressions (#1796)', () => {
       expect(result.ok, result.reason).toBe(true);
       expect(ctx.world.library.has('lesser_workings_of_darkness')).toBe(true);
       expect(knowsAffinity(ctx, novice, 'darkness')).toBe(false);
-      expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + 12)).toBe(true);
+      expect(ctx.world.scheduled.filter((s) => s.event === event.id).map((s) => s.year).sort((a, b) => a - b))
+        .toEqual([ctx.world.year + 3, ctx.world.year + 12]);
       const study = ctx.world.studies.find((s) => s.person === novice.id && s.book === 'lesser_workings_of_darkness')!;
       expect(study).toBeDefined();
       ctx.world.year = study.completes;
@@ -582,6 +583,23 @@ describe('family-challenges regressions (#1796)', () => {
       const cast = resolveSlots(content.mustEvent(id), ctx, makeRng(1834));
       expect(cast.ok).toBe(true);
       expect(cast.fill.APPRENTICE).toBe(eligible ? novice.id : undefined);
+    });
+
+    it.each([
+      ['the_fever_and_the_vigil', 'death', 16, 30],
+      ['the_wind_under_the_slates', 'terra', 16, 20],
+    ] as const)('%s rewards a practised reader while a weaker learned reader still fails (#1830)', (id, affinity, practisedAffinity, practisedMind) => {
+      for (const practised of [false, true]) {
+        const ctx = fixture();
+        const reader = place(ctx, { sex: affinity === 'death' ? 'female' : 'male', age: 30, awakened: true, name: 'The working reader' });
+        expect(gainSpellbook(ctx, reader, content.spellbook(`lesser_workings_of_${affinity}`)!)).toBe(true);
+        set(ctx, reader, affinity, practised ? practisedAffinity : 5);
+        set(ctx, reader, 'mind', practised ? practisedMind : 10);
+        const result = executeOutcomeWitness(ctx, content.mustEvent(id), {
+          choiceId: `use_${affinity}`, expectedOutcomeId: practised ? 'held' : 'lost', rng: makeRng(1835),
+        });
+        expect(result.ok, result.reason).toBe(true);
+      }
     });
 
     it('uses every family primitive and each affinity in reachable authored checks or filters', () => {
