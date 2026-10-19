@@ -15,11 +15,63 @@ import { TEST_FAMILIES } from './tools/testFamilies.js';
 import { rollDeath } from './people/demography.js';
 import { makeRng } from './rng.js';
 import { coreMessageAddress } from './messages.js';
-import { diagnoseHouseAscension, type HouseAscension } from './ascension.js';
+import { ascensionBlockersFor, diagnoseHouseAscension, type HouseAscension } from './ascension.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
 const content = indexContent(bundle);
+
+describe('the summit reads concurrent gates from the same ladder', () => {
+  function ready() {
+    const ctx = testWorld(bundle);
+    const person = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress)!;
+    person.awakening.awakened = true;
+    person.acquired[ELDRITCH_GIFT] = 400;
+    person.acquired[ELDRITCH_REACH] = 400;
+    person.acquired.mind = 400;
+    person.madness = 65;
+    person.spellsKnown = content.spellbooks.map((book) => book.id);
+    person.rites = ['unmaking'];
+    person.phenotype = undefined;
+    ctx.world.respect = 'exalted';
+    for (let i = 0; i < 7; i++) ctx.world.clausesRecovered.add(`summit_clause_${i}`);
+    for (const id of ['the_ninefold_seal', 'the_ring', 'the_rod']) grantHeirloom(ctx, id);
+    return { ctx, person };
+  }
+
+  it('requires every lower rung and reports all simultaneous failures once', () => {
+    const { ctx, person } = ready();
+    expect(standingOf(ctx, person).rung).toBe('god');
+    expect(ascensionBlockersFor(ctx, person, 'god')).toEqual([]);
+
+    person.madness = 1000;
+    ctx.world.respect = 'regarded';
+    ctx.world.clausesRecovered.clear();
+    const failures = ascensionBlockersFor(ctx, person, 'god');
+    expect(failures).toEqual(['madness-overflow', 'respect', 'clauses']);
+    expect(failures[0]).toBe(standingOf(ctx, person).blocker);
+    expect(ascensionBlockersFor(ctx, person, 'vessel')).toEqual(['madness-overflow', 'respect']);
+  });
+
+  it('distinguishes a sole joint blocker from two individually missing gates', () => {
+    const { ctx, person } = ready();
+    ctx.world.clausesRecovered.clear();
+    expect(ascensionBlockersFor(ctx, person, 'god')).toEqual(['clauses']);
+    ctx.world.respect = 'eminent';
+    expect(ascensionBlockersFor(ctx, person, 'god')).toEqual(['respect', 'clauses']);
+    expect(ascensionBlockersFor(ctx, person, 'demigod')).toEqual([]);
+  });
+
+  it('retains capability and awakening prerequisites above the first rung', () => {
+    const { ctx, person } = ready();
+    person.awakening.awakened = false;
+    expect(ascensionBlockersFor(ctx, person, 'god')).toEqual(['awakening']);
+    const woman = place(ctx, { sex: 'female', age: 30 });
+    expect(ascensionBlockersFor(ctx, woman, 'god')).toEqual(['no-expresser']);
+    expect(ascensionBlockersFor(ctx, woman, 'none')).toEqual([]);
+  });
+});
 
 /**
  * THE ASCENSION LADDER (concept §22) — six rungs that were not in the code.
