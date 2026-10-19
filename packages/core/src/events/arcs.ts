@@ -16,8 +16,6 @@ function soleBindings(fill: SlotFill, slots: readonly string[]): Record<string, 
     const who = soleCast(fill, sid);
     if (who) out[sid] = who;
   }
-  if (out.length) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
-    candidates: out.map(step => ({ event: String(step.node.event), source: 'arc' })) });
   return out;
 }
 
@@ -212,6 +210,8 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
     out.push({ instance: inst, node, fill: res.fill, playerCast: res.playerCast, absent });
   }
 
+  if (out.length) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
+    candidates: out.map(step => ({ event: String(step.node.event), source: 'arc' })) });
   return out;
 }
 

@@ -194,6 +194,12 @@ describe('pre-effect selection observations (#1811)', () => {
     const before = canonical(saveGame(ctx));
     expect(classifyFunnelPoint(ctx, child).stage).toBe('not_selected');
     expect(canonical(saveGame(ctx))).toBe(before);
+    const observations: SelectionObservation[] = [];
+    ctx.observeSelection = row => observations.push(row);
+    const steps = dueArcSteps(ctx, makeRng(18116), 'tale');
+    expect(steps.some(step => step.node.event === child.id)).toBe(true);
+    expect(observations).toContainEqual({ kind: 'selected', year: ctx.world.year,
+      candidates: [{ event: child.id, source: 'arc' }] });
   });
 
   it('distinguishes an actual selection from a committed branch', () => {
