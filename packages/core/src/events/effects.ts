@@ -539,11 +539,10 @@ export function pickOutcome(
   // The draw is over the outcomes this cast can reach (#1817), and it is the
   // same single `weighted` call: a group with no `onlyIf` is the same array,
   // so it consumes the same number and lands on the same outcome as before.
-  // `outcomes/cover` refuses a group some cast could empty; the fall-back to
-  // the whole group is for content that never passed validation, because a
-  // draw that returns nothing is a decision that never resolves (invariant 9).
-  const open = outcomes.filter((o) => outcomeAdmits(o, ctx, fill, event));
-  const pool = open.length ? open : outcomes;
+  // Validated groups always cover the cast. Invalid content must fail here,
+  // before drawing or applying an outcome whose explicit guard does not hold.
+  const pool = outcomes.filter((o) => outcomeAdmits(o, ctx, fill, event));
+  if (!pool.length) throw new Error(`no eligible outcome for ${event?.id ?? 'an unvalidated event'}`);
   const picked = rng.weighted(pool, weigh) ?? pool[0]!;
   const hadOne = pool.some((o) => o.tags.includes(WARNING_TAG));
   if (hadOne && !picked.tags.includes(WARNING_TAG)) noteUnheard(ctx, event?.id ?? 'unnamed');

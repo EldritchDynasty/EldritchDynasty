@@ -574,24 +574,43 @@ export const OutcomeGuardS = z.object({
 }).strict();
 export type OutcomeGuard = z.infer<typeof OutcomeGuardS>;
 
+/** Guard arrays are conjunctions, so their authored order is immaterial. */
+export function outcomeGuardKey(guard: OutcomeGuard): string {
+  return JSON.stringify({ slot: guard.slot, filters: guard.filters.map((filter) => JSON.stringify(filter)).sort() });
+}
+
+/** Two single-filter guards which partition every person in one slot. */
+export function outcomeGuardsComplementary(a: OutcomeGuard, b: OutcomeGuard): boolean {
+  if (a.slot !== b.slot || a.filters.length !== 1 || b.filters.length !== 1) return false;
+  const left = a.filters[0]!;
+  const right = b.filters[0]!;
+  const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
+  if ('not' in left && same(left.not, right)) return true;
+  if ('not' in right && same(right.not, left)) return true;
+  const lk = Object.keys(left);
+  const rk = Object.keys(right);
+  if (lk.length !== 1 || rk.length !== 1 || lk[0] !== rk[0]) return false;
+  const lv = (left as Record<string, unknown>)[lk[0]!];
+  const rv = (right as Record<string, unknown>)[rk[0]!];
+  return typeof lv === 'boolean' && typeof rv === 'boolean' && lv !== rv;
+}
+
 /**
- * The sets one group of outcomes can actually be drawn from: for each distinct
- * `onlyIf`, the unguarded outcomes plus the outcomes under it. A group with no
- * guard is one set, itself. The weight rule and the reach gate both measure an
- * outcome's share inside these, because a guarded pair that is 70/30 for one
- * kind of boy and 70/30 for the other is two draws that each sum to 100, not
- * one draw that sums to 200.
+ * Draw sets for a validated group: no guards, one guard plus an open fallback,
+ * or two complementary guards. Overlapping independent guards are refused by
+ * outcomes/guard; treating them as separate pools would miss their joint draw.
  */
 export function outcomeDrawSets<O extends { onlyIf?: OutcomeGuard }>(outcomes: readonly O[]): O[][] {
   const open = outcomes.filter((o) => !o.onlyIf);
   const guarded = new Map<string, O[]>();
   for (const o of outcomes) {
     if (!o.onlyIf) continue;
-    const key = JSON.stringify(o.onlyIf);
+    const key = outcomeGuardKey(o.onlyIf);
     guarded.set(key, [...(guarded.get(key) ?? []), o]);
   }
   if (!guarded.size) return [[...outcomes]];
-  return [...guarded.values()].map((under) => [...open, ...under]);
+  const sets = [...guarded.values()].map((under) => [...open, ...under]);
+  return guarded.size === 1 && open.length ? [open, ...sets] : sets;
 }
 
 export const OutcomeS = z.object({

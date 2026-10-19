@@ -272,6 +272,13 @@ const guardedOutcome = (id: string, weight: number, onlyIf?: Outcome['onlyIf']):
 const expresses = (v: boolean): Outcome['onlyIf'] => ({ slot: 'CHILD', filters: [{ canExpress: v }] });
 
 describe('onlyIf (#1817)', () => {
+  it('never falls back to an explicitly ineligible outcome in invalid content', () => {
+    const ctx = testWorld(content);
+    const cannot = guardBoy(ctx, false, 'Birch');
+    expect(() => pickOutcome([guardedOutcome('woke', 100, expresses(true))],
+      testRng('uncovered'), ctx, { CHILD: cannot.id })).toThrow(/no eligible outcome/);
+  });
+
   it('counts opportunities before the selected effect changes the guarded state', () => {
     const ctx = testWorld(content);
     const boy = guardBoy(ctx, true, 'Ash');

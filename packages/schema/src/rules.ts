@@ -1,7 +1,7 @@
 import type { ArcDef, Schedule } from './arc.js';
 import type { Content } from './content-index.js';
 import type { Effect, EventTemplate, RecordBlock } from './event.js';
-import { isLadderRole, outcomeDrawSets, type Outcome } from './event.js';
+import { isLadderRole, outcomeDrawSets, outcomeGuardKey, outcomeGuardsComplementary, type Outcome } from './event.js';
 import { RECURRING_CAST_ROLES } from './character.js';
 import type { Filter } from './conditions.js';
 import type { Issue, ValidationRule } from './validate.js';
@@ -1490,6 +1490,8 @@ const outcomeGuards: ValidationRule = {
         ? [{ checked: false, outcomes: e.interaction.outcomes }]
         : e.interaction.choices.map((c) => ({ checked: c.check !== undefined, outcomes: c.outcomes }));
       for (const { checked, outcomes } of groups) {
+        const guards = [...new Map(outcomes.flatMap((outcome) => outcome.onlyIf
+          ? [[outcomeGuardKey(outcome.onlyIf), outcome.onlyIf] as const] : [])).values()];
         for (const o of outcomes) {
           const guard = o.onlyIf;
           if (!guard) continue;
@@ -1516,24 +1518,15 @@ const outcomeGuards: ValidationRule = {
             issues.push(err(this.id, at, `Madness or Awakening on '${guard.slot}' under a guard that proves he cannot express — the engine makes it a silent no-op`));
           }
         }
+        if (guards.length > 1 && (guards.length !== 2 || !outcomeGuardsComplementary(guards[0]!, guards[1]!))) {
+          issues.push(err(this.id, `event:${e.id}`,
+            'onlyIf pools must use one guard or a complementary pair on one slot; independent guards can overlap in the same draw'));
+        }
       }
     }
     return issues;
   },
 };
-
-/** Two single filters of which every person passes exactly one. */
-function complementary(a: Filter, b: Filter): boolean {
-  const same = (x: unknown, y: unknown) => JSON.stringify(x) === JSON.stringify(y);
-  if ('not' in a && same(a.not, b)) return true;
-  if ('not' in b && same(b.not, a)) return true;
-  const ka = Object.keys(a);
-  const kb = Object.keys(b);
-  if (ka.length !== 1 || kb.length !== 1 || ka[0] !== kb[0]) return false;
-  const va = (a as Record<string, unknown>)[ka[0]!];
-  const vb = (b as Record<string, unknown>)[kb[0]!];
-  return typeof va === 'boolean' && typeof vb === 'boolean' && va !== vb;
-}
 
 /**
  * EVERY CAST CAN DRAW SOMETHING (#1817).
@@ -1558,9 +1551,8 @@ const outcomeCover: ValidationRule = {
         : e.interaction.choices.map((c) => ({ id: c.id, outcomes: c.outcomes }));
       for (const { id, outcomes } of groups) {
         if (!outcomes.some((o) => o.onlyIf) || outcomes.some((o) => !o.onlyIf)) continue;
-        const single = outcomes.flatMap((o) =>
-          o.onlyIf && o.onlyIf.filters.length === 1 ? [{ slot: o.onlyIf.slot, filter: o.onlyIf.filters[0]! }] : []);
-        const covered = single.some((a) => single.some((b) => a.slot === b.slot && complementary(a.filter, b.filter)));
+        const guards = outcomes.flatMap((outcome) => outcome.onlyIf ? [outcome.onlyIf] : []);
+        const covered = guards.some((a) => guards.some((b) => outcomeGuardsComplementary(a, b)));
         if (!covered) {
           issues.push(err(this.id, `event:${e.id}${id ? `/${id}` : ''}`,
             'every outcome here is guarded, and nothing proves every cast passes one of the guards — add an unguarded '

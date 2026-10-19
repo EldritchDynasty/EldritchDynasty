@@ -154,6 +154,7 @@ export interface SuccessorShape { to: string; when?: unknown; weight: number }
 export function outcomeSignature(o: Outcome, routes: readonly SuccessorShape[] = []): string {
   return stable({
     weight: o.weight,
+    onlyIf: o.onlyIf,
     tags: [...o.tags].sort(),
     effects: o.effects.map(stable),
     next: o.next && { event: o.next.event, after: o.next.after, keep: [...o.next.keep].sort() },
