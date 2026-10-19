@@ -3669,3 +3669,6 @@ proseVariants:
   - address: "core:messages#ascension.route.no_match"
     of: "4e9764b352e712f7"
     plainenglish: "No currently open marriage offer has a bride with a recorded awakening in her family. You can review the women in your family and any later offers. There is no promised date for another offer."
+  - address: "core:messages#choice.blocked.reader"
+    of: "54888036402ab8aa"
+    plainenglish: "No available reader knows {AFFINITY}."

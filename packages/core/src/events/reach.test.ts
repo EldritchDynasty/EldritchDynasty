@@ -4448,6 +4448,35 @@ describe('authored choice-requirement witnesses', () => {
       if (result.key) witnessed.push(result.key);
     }
 
+    for (const [eventId, affinity, sex] of [
+      ['the_fever_and_the_vigil', 'death', 'female'],
+      ['the_wind_under_the_slates', 'terra', 'male'],
+      ['the_cawdry_copy', 'darkness', 'female'],
+    ] as const) {
+      for (const outcomeId of ['held', 'lost']) {
+        const ctx = fixture(1830);
+        for (const person of ctx.world.people.all()) person.spellsKnown = [];
+        const event = content.mustEvent(eventId);
+        const choiceId = `use_${affinity}`;
+        const blocked = executeOutcomeWitness(ctx, event, {
+          choiceId, expectedOutcomeId: outcomeId, rng: makeRng(1830),
+        });
+        expect(blocked.ok).toBe(false);
+        const reader = place(ctx, { sex, age: 30, awakened: true, name: 'The Known Working Reader' });
+        expect(gainSpellbook(ctx, reader, content.spellbook(`lesser_workings_of_${affinity}`)!)).toBe(true);
+        for (const key of [affinity, 'mind']) {
+          const value = outcomeId === 'held' ? 100 : key === 'mind' ? 10 : 0;
+          reader.acquired[key] = (reader.acquired[key] ?? 0) + value - attr(reader, key, ctx.genetics, ctx.world.year);
+          if (reader.phenotype) reader.phenotype.dirty = true;
+        }
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId, expectedOutcomeId: outcomeId, rng: makeRng(1831),
+        });
+        expect(result.ok, result.reason).toBe(true);
+        if (result.key) witnessed.push(result.key);
+      }
+    }
+
     for (const [eventId, sex] of [
       ['the_cawdry_copy', 'female'],
       ['the_fever_and_the_vigil', 'female'],

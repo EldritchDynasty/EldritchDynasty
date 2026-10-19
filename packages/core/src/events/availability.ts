@@ -33,11 +33,16 @@ export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event
   for (const req of c.requires) {
     const p = ctx.world.people.get(soleCast(fill, req.slot) ?? '');
     if (!p) {
+      const knowledge = event.slots[req.slot]?.filters.find(filter => 'knows' in filter);
       return {
         id: c.id,
         label: c.label,
         available: false,
-        blockedBy: msg(ctx, 'choice.blocked.uncast', 'nobody stands as {SLOT}', { SLOT: req.slot }),
+        blockedBy: knowledge && 'knows' in knowledge
+          ? msg(ctx, 'choice.blocked.reader', 'No eligible reader of {AFFINITY} is available.', {
+            AFFINITY: attributeName(ctx, knowledge.knows.affinity),
+          })
+          : msg(ctx, 'choice.blocked.uncast', 'nobody stands as {SLOT}', { SLOT: req.slot }),
       };
     }
     const role = event.slots[req.slot]?.role;

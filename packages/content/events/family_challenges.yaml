@@ -319,6 +319,8 @@ events:
         - id: use_terra
           label: Set the cracked stone beneath the main beam.
           check: practised_working
+          requires:
+            - { slot: STONE, attr: mind, op: gte, value: 0 }
           outcomes:
             - id: held
               weight: 100
@@ -466,8 +468,8 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        # Paid-study pilot: eight actual readers scored 18.3–27.1; 25 passed one.
-        difficulty: 19
+        # Full paid-study batch: 19 actual readers scored 10.1–35.9; 16 clears 13.
+        difficulty: 16
         variance: none
         bands:
           - atLeast: 0
@@ -527,6 +529,8 @@ events:
         - id: use_death
           label: Ask a Death reader to prepare the vigil safely.
           check: practised_working
+          requires:
+            - { slot: KEEPER, attr: mind, op: gte, value: 0 }
           outcomes:
             - id: held
               weight: 100
@@ -679,7 +683,9 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 12
+        # The separate paid-return trace has 21 available-reader scores;
+        # 18 clears 13, leaving a real skill failure after learning.
+        difficulty: 18
         variance: none
         bands:
           - atLeast: 0
@@ -737,6 +743,8 @@ events:
         - id: use_darkness
           label: Use Darkness to cover the private letter while the roll is opened.
           check: practised_working
+          requires:
+            - { slot: COVER, attr: mind, op: gte, value: 0 }
           outcomes:
             - id: held
               weight: 100
