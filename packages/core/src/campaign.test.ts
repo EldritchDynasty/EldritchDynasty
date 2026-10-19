@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { eventInCampaign } from '@ed/schema';
+import { EventTemplateS, FREQUENCY_PROFILES, eventInCampaign } from '@ed/schema';
 import { bootstrap } from './sim.js';
-import { phase } from './testing.js';
+import { phase, testWorld } from './testing.js';
 import { makeRng } from './rng.js';
 import { tickAges } from './ages/scheduler.js';
 import { resolveRecord } from './events/decisions.js';
 import { framePool } from './events/frame.js';
-import { selectEvents } from './events/selection.js';
+import { ambientExclusionReason, ambientPool, selectEvents, type SelectionObservation } from './events/selection.js';
+import { PersonStore } from './people/store.js';
+import { genomeOf } from './people/factory.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import {
   CAMPAIGNS,
@@ -21,6 +23,96 @@ import {
   isLateCampaignYear,
   isFullCampaignEvent,
 } from './campaign.js';
+
+describe('pre-effect selection observations (#1811)', () => {
+  const content = loadContent();
+  function event(id: string, overrides: Record<string, unknown> = {}) {
+    return EventTemplateS.parse({
+      id, title: 'A selection witness', tier: 'family', frequency: 'common', repeatable: true,
+      purposes: ['establish_magic_rule', 'worldbuild_through_action', 'change_relationship'],
+      body: 'A letter waits on the table.', slots: { HEAD: { role: 'head' } },
+      interaction: { kind: 'narration', outcomes: [{ id: 'read', weight: 100, text: 'The letter is read.', effects: [] }] },
+      ...overrides,
+    });
+  }
+  function fixture() {
+    const missing = event('funnel_missing', { slots: { READER: {
+      role: 'family_member', filters: [{ age: { op: 'gte', value: 5000 } }],
+    } } });
+    const ready = event('funnel_ready');
+    const ctx = testWorld({ ...content.bundle, events: [missing, ready] }, 18110);
+    ctx.world.generation = 6;
+    return { ctx, missing, ready };
+  }
+
+  it('uses the same first refusals as the production pool and leaves casts unproven', () => {
+    const { ctx, missing, ready } = fixture();
+    expect(ambientExclusionReason(ready, ctx)).toBeUndefined();
+    expect(ambientExclusionReason(missing, ctx)).toBeUndefined();
+    expect(ambientPool(ctx).map(template => template.id)).toEqual([missing.id, ready.id]);
+    expect(ambientExclusionReason(event('wrong_campaign', { campaigns: ['short'] }), ctx)).toBe('campaign');
+    expect(ambientExclusionReason(event('a_frame', { tier: 'frame' }), ctx)).toBe('frame');
+    expect(ambientExclusionReason(event('an_arc', { arc: { of: 'funnel_arc', node: 'a_node' } }), ctx)).toBe('arc');
+    const capped = event('capped', { frequency: 'uncommon' });
+    ctx.world.frequency.templateFires[capped.id] = FREQUENCY_PROFILES.uncommon.maxFiresPerTemplate;
+    expect(ambientExclusionReason(capped, ctx)).toBe('tier_cap');
+    const once = event('once', { repeatable: false });
+    ctx.world.frequency.templateLastFired[once.id] = ctx.world.year;
+    expect(ambientExclusionReason(once, ctx)).toBe('template_ration');
+    ctx.world.age.active = [];
+    expect(ambientExclusionReason(event('wrong_age', { ages: { only: ['the_quickening'] } }), ctx)).toBe('age');
+    ctx.world.frequency.lastFiredYear.uncommon = ctx.world.year;
+    expect(ambientExclusionReason(event('tier_cooling', { frequency: 'uncommon' }), ctx)).toBe('frequency');
+    expect(ambientExclusionReason(event('missing_page', { conditions: { knowledge: 'funnel_unseen', has: true } }), ctx)).toBe('condition');
+  });
+
+  it('records actual failed casts and selected sources before any outcome applies', () => {
+    const { ctx, missing, ready } = fixture();
+    const rows: SelectionObservation[] = [];
+    ctx.observeSelection = row => rows.push(row);
+    const beforeTreasury = ctx.world.treasury;
+    const chosen = selectEvents(ctx, { ...makeRng(18111), weighted: items => items[0] }, 1);
+    expect(chosen.map(candidate => candidate.event.id)).toEqual([ready.id]);
+    expect(rows).toEqual([
+      { kind: 'before_draw', year: ctx.world.year, budget: 1, forced: [] },
+      { kind: 'cast_failure', year: ctx.world.year, event: missing.id, source: 'ambient', missing: 'READER' },
+      { kind: 'selected', year: ctx.world.year, candidates: [{ event: ready.id, source: 'ambient' }] },
+    ]);
+    expect(ctx.world.treasury).toBe(beforeTreasury);
+    expect(ctx.world.frequency.templateFires[ready.id]).toBeUndefined();
+  });
+
+  it('keeps forced selection and exhausted ambient budget distinct', () => {
+    const { ctx, ready } = fixture();
+    ctx.world.scheduled.push({ event: ready.id, year: ctx.world.year });
+    const rows: SelectionObservation[] = [];
+    ctx.observeSelection = row => rows.push(row);
+    const chosen = selectEvents(ctx, makeRng(18112), 0);
+    expect(chosen.map(candidate => candidate.source)).toEqual(['forced']);
+    expect(rows).toEqual([
+      { kind: 'before_draw', year: ctx.world.year, budget: 0, forced: [ready.id] },
+      { kind: 'selected', year: ctx.world.year, candidates: [{ event: ready.id, source: 'forced' }] },
+    ]);
+  });
+
+  it('preserves the complete saved state and next RNG draw with private diagnostic reads', () => {
+    const worlds = [false, true].map(observe => {
+      const { ctx } = fixture();
+      if (observe) ctx.observeSelection = row => {
+        if (row.kind !== 'before_draw') return;
+        const people = new PersonStore();
+        for (const person of ctx.world.people.all()) people.add(structuredClone(person));
+        const probe = { ...ctx, world: { ...ctx.world, people }, observeSelection: undefined };
+        for (const person of people.all()) genomeOf(person, probe.genetics);
+        for (const template of ctx.content.events) ambientExclusionReason(template, probe);
+      };
+      const rng = makeRng(18113);
+      const selected = selectEvents(ctx, rng, 1);
+      return { selected, nextDraw: rng.int(1_000_000), save: canonical(saveGame(ctx)) };
+    });
+    expect(worlds[1]).toEqual(worlds[0]);
+  });
+});
 
 describe('campaign profiles (#66, #133)', () => {
   it('defines the full campaigns and the demo term from one source', () => {
