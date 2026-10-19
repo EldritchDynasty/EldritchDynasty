@@ -184,26 +184,32 @@ export class FunnelObserver {
       this.previous.observeSelection?.(observation);
     };
     ctx.observeDecision = observation => {
-      if (observation.decision.kind === 'choice') this.selected(observation.decision.event.id, observation.decision.year);
+      if (observation.decision.kind === 'choice') this.selected(observation.decision.event.id, observation.decision.year, true);
       this.previous.observeDecision?.(observation);
     };
     ctx.observeOutcome = observation => {
-      this.selected(observation.event.id, ctx.world.year);
+      this.selected(observation.event.id, ctx.world.year, true);
       this.previous.observeOutcome?.(observation);
     };
   }
 
   private record(state: WatchedState, year: number, point: FunnelPoint): void {
-    if (point.probeFill !== undefined || point.stage === 'unresolved' || point.stage === 'reached') state.castProved.add(year);
-    if (point.stage === 'not_selected' || point.stage === 'unresolved' || point.stage === 'reached') state.eligible.add(year);
+    if (point.probeFill !== undefined || point.stage === 'reached') state.castProved.add(year);
+    if (point.stage === 'not_selected' || point.stage === 'reached') state.eligible.add(year);
     const previous = state.points.get(year);
     if (!previous || FUNNEL_STAGES.indexOf(point.stage) > FUNNEL_STAGES.indexOf(previous.stage)) state.points.set(year, point);
   }
 
-  private selected(id: string, year: number): void {
+  private selected(id: string, year: number, castProved = false): void {
     const state = this.watched.get(id);
     if (!state) return;
     state.selected.add(year);
+    // Ambient/arc candidates resolve before selection; frames choose a name
+    // first and may then fail their cast. Selection alone is not cast proof.
+    if (castProved) {
+      state.castProved.add(year);
+      state.eligible.add(year);
+    }
     this.record(state, year, { stage: 'unresolved', reason: 'actual selection / accepted decision; commit not yet assumed' });
   }
 
@@ -212,7 +218,7 @@ export class FunnelObserver {
       case 'before_draw':
         for (const state of this.watched.values()) {
           if (state.event.arc || state.event.tier === 'frame') continue;
-          if (observation.forced.includes(state.event.id)) this.selected(state.event.id, observation.year);
+          if (observation.forced.includes(state.event.id)) this.selected(state.event.id, observation.year, true);
           else this.record(state, observation.year, classifyFunnelPoint(this.ctx, state.event));
         }
         return;
@@ -242,7 +248,7 @@ export class FunnelObserver {
         return;
       }
       case 'selected':
-        for (const candidate of observation.candidates) this.selected(candidate.event, observation.year);
+        for (const candidate of observation.candidates) this.selected(candidate.event, observation.year, candidate.source !== 'frame');
         return;
       default: return assertNever(observation);
     }
@@ -263,7 +269,7 @@ export class FunnelObserver {
         this.record(state, entry.year, { stage: 'reached', reason: 'actual committed outcome in decisionLog' });
       }
       for (const pending of this.ctx.world.pendingDecisions) {
-        if (pending.kind === 'choice' && pending.event.id === state.event.id) this.selected(state.event.id, pending.year);
+        if (pending.kind === 'choice' && pending.event.id === state.event.id) this.selected(state.event.id, pending.year, true);
       }
       const interaction = state.event.interaction;
       const declared = interaction.kind === 'narration'
@@ -461,7 +467,8 @@ export function runFunnel(source: ContentBundle, ids: readonly string[], options
 
 const DEFAULT_IDS = ['the_codex_in_the_eastern_invoice', 'the_marrow_codex_offered', 'the_hall_is_answered',
   'waking_early', 'eight_days_and_then_it_did', 'the_hall_stops_writing',
-  'the_north_wind_finds_the_patch', 'the_west_wing_roof', 'what_hangs_in_smoke', 'a_birth_in_the_house'];
+  'the_north_wind_finds_the_patch', 'the_west_wing_roof', 'what_hangs_in_smoke', 'a_birth_in_the_house',
+  'the_hand_the_warden_accepts'];
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
