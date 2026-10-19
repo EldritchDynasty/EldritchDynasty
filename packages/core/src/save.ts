@@ -393,10 +393,11 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // attempt already happened; a pending choice is marked by commitOutcome.
   // Completed old attempts without a surviving cast record are not guessed.
   if (legacyForcing) {
+    const forcingByEvent = new Map(content.events.map((event) => [String(event.id), event.forcing] as const));
     for (const decision of world.pendingDecisions) {
       if (decision.kind !== 'choice' && decision.kind !== 'record') continue;
       const forcing = decision.event.forcing
-        ?? content.events.find((event) => event.id === decision.event.id)?.forcing;
+        ?? forcingByEvent.get(String(decision.event.id));
       if (!forcing) continue;
       decision.event.forcing = { ...forcing };
       if (decision.kind === 'record') {
@@ -404,6 +405,14 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
         const boy = typeof id === 'string' ? world.people.get(id) : undefined;
         if (boy) boy.awakening.forcingTried = true;
       }
+    }
+    for (const decision of world.decisionLog) {
+      if (decision.kind !== 'outcome' || !decision.fill) continue;
+      const forcing = forcingByEvent.get(String(decision.event));
+      if (!forcing) continue;
+      const id = decision.fill[forcing.slot];
+      const boy = typeof id === 'string' ? world.people.get(id) : undefined;
+      if (boy) boy.awakening.forcingTried = true;
     }
   }
 

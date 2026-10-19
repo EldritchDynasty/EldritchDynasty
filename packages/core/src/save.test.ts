@@ -8,7 +8,7 @@ import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
-  saveGame, SaveFormatError, stepYear, viewOf, resolveChoice, testRng,
+  saveGame, SaveFormatError, stepYear, viewOf, order, resolveChoice, resolveRecord, testRng,
 } from '@ed/core';
 
 const content = loadContent();
@@ -50,6 +50,27 @@ describe('a run survives being written down', () => {
     expect(digestOf(after)).toBe(digestOf(before));
     expect(after.world.people.all().some((person) => person.awakening.forcingTried)).toBe(false);
     expect(legacy.format).toBe(31);
+  });
+
+  it.each([false, true])('recovers a completed format-31 rite only when its cast was saved (%s)', (hasCast) => {
+    const ctx = bootstrap(content, 18170, 1042);
+    const boy = place(ctx, { sex: 'male', age: 12 });
+    expect(order(ctx, { kind: 'forcingRite', rite: 'the_seven_lamp_vigil', person: boy.id }).ok).toBe(true);
+    const choice = ctx.world.pendingDecisions.find((decision) => decision.kind === 'choice')!;
+    expect(resolveChoice(ctx, choice.id, 'put_out_the_lamps', testRng('legacy-completed')).ok).toBe(true);
+    const record = ctx.world.pendingDecisions.find((decision) => decision.kind === 'record')!;
+    expect(resolveRecord(ctx, record.id, 'omit').ok).toBe(true);
+    expect(ctx.world.pendingDecisions).toHaveLength(0);
+    const legacy = JSON.parse(JSON.stringify(saveGame(ctx)));
+    legacy.format = 31;
+    delete legacy.people.find((person: { id: string }) => person.id === boy.id).awakening.forcingTried;
+    const result = legacy.decisionLog.find((entry: { kind: string; event?: string }) =>
+      entry.kind === 'outcome' && entry.event === 'the_seven_lamp_vigil');
+    expect(result.fill.CHILD).toBe(boy.id);
+    if (!hasCast) result.fill = {};
+    const resumed = loadGame(legacy, content);
+    expect(resumed.world.people.get(boy.id)!.awakening.forcingTried).toBe(hasCast ? true : undefined);
+    expect(order(resumed, { kind: 'forcingRite', rite: 'the_dark_year_fast', person: boy.id }).ok).toBe(!hasCast);
   });
 
   it.each(['choice', 'record'] as const)('keeps a format-31 Vigil %s and its promised odds', (kind) => {
