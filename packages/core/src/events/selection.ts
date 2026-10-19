@@ -13,6 +13,12 @@ export interface Candidate {
   source: 'forced' | 'pressure' | 'ambient';
 }
 
+export type SelectionObservation = { readonly year: number } & (
+  | { readonly kind: 'before_draw'; readonly budget: number; readonly forced: readonly string[] }
+  | { readonly kind: 'cast_failure'; readonly event: string; readonly source: Candidate['source']; readonly missing?: string }
+  | { readonly kind: 'selected'; readonly candidates: readonly { readonly event: string; readonly source: Candidate['source'] }[] }
+);
+
 /**
  * SELECTION
  * =========
@@ -37,6 +43,10 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
   // due with two follow-ups fired one and dropped the other permanently, and
   // the only symptom was a scene that was scheduled and never arrived.
   const out: Candidate[] = forcedCandidates(ctx, rng);
+  ctx.observeSelection?.({
+    kind: 'before_draw', year: ctx.world.year, budget,
+    forced: out.map((candidate) => String(candidate.event.id)),
+  });
 
   // PRESSURE. Content gated on discontent, an angry branch, a grudge against
   // the house or an open Discrepancy only enters this pool because the
@@ -54,6 +64,7 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
 
     const res = resolveSlots(chosen, ctx, rng);
     if (!res.ok) {
+      ctx.observeSelection?.({ kind: 'cast_failure', year: ctx.world.year, event: String(chosen.id), source: 'pressure', missing: res.missing });
       pressurePool.splice(pressurePool.indexOf(chosen), 1);
       continue;
     }
@@ -74,6 +85,7 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
 
     const res = resolveSlots(chosen, ctx, rng);
     if (!res.ok) {
+      ctx.observeSelection?.({ kind: 'cast_failure', year: ctx.world.year, event: String(chosen.id), source: 'ambient', missing: res.missing });
       // Unfillable: discard and redraw. This is the single largest source of
       // between-run variety, so it must be cheap and it must be silent.
       pool.splice(pool.indexOf(chosen), 1);
@@ -82,6 +94,10 @@ export function selectEvents(ctx: SimCtx, rng: Rng, budget: number): Candidate[]
     out.push({ event: chosen, fill: res.fill, playerCast: res.playerCast, source: 'ambient' });
   }
 
+  ctx.observeSelection?.({
+    kind: 'selected', year: ctx.world.year,
+    candidates: out.map((candidate) => ({ event: String(candidate.event.id), source: candidate.source })),
+  });
   return out;
 }
 
@@ -128,29 +144,37 @@ function referencesPressureSignal(c: Condition | undefined): boolean {
 
 /** Everything that passes the cheap gates. Slots are NOT resolved here. */
 export function ambientPool(ctx: SimCtx): EventTemplate[] {
-  const w = ctx.world;
   const active = activeAgeIds(ctx);
+  return ctx.content.events.filter((event) => ambientExclusionReason(event, ctx, active) === undefined);
+}
 
-  return ctx.content.events.filter((e) => {
-    if (!eventInCampaign(e, w.campaign)) return false;
-    if (e.tier === 'frame') return false;
-    if (e.arc) return false;                       // arc nodes fire via the arc
-    if (!canTemplateFire(e.id, e.frequency, w.frequency)) return false;
-    // The author's own ration, next to the tier's. See `templateRationAllows`.
-    if (!templateRationAllows(e, w.frequency, w.year)) return false;
+export type AmbientExclusion = 'campaign' | 'frame' | 'arc' | 'tier_cap' | 'template_ration' | 'age' | 'frequency' | 'condition';
 
-    // Age scoping is a declarative field precisely so it can be checked first:
-    // it is the cheapest possible prefilter and it skips whole buckets.
-    if (e.ages?.only && !e.ages.only.some((a) => active.includes(a))) return false;
-    if (e.ages?.never && e.ages.never.some((a) => active.includes(a))) return false;
-    if (e.ages?.register) {
-      const regs = active.map((a) => ctx.content.age(a)?.register);
-      if (!e.ages.register.some((r) => regs.includes(r))) return false;
-    }
+/** The production prefilter's first refusal. An absent refusal means only
+ * state eligibility: required slots and the weighted draw still lie ahead.
+ * Diagnostic callers that inspect additional templates must use a private
+ * context, so lazy genetic reads cannot change the saved representation. */
+export function ambientExclusionReason(e: EventTemplate, ctx: SimCtx, active: readonly string[] = activeAgeIds(ctx)): AmbientExclusion | undefined {
+  const w = ctx.world;
+  if (!eventInCampaign(e, w.campaign)) return 'campaign';
+  if (e.tier === 'frame') return 'frame';
+  if (e.arc) return 'arc';                       // arc nodes fire via the arc
+  if (!canTemplateFire(e.id, e.frequency, w.frequency)) return 'tier_cap';
+  // The author's own ration, next to the tier's. See `templateRationAllows`.
+  if (!templateRationAllows(e, w.frequency, w.year)) return 'template_ration';
 
-    if (frequencyWeight(e.frequency, w.frequency, w.year, w.generation) <= 0) return false;
-    return evalCondition(e.conditions, ctx);
-  });
+  // Age scoping is a declarative field precisely so it can be checked first:
+  // it is the cheapest possible prefilter and it skips whole buckets.
+  if (e.ages?.only && !e.ages.only.some((a) => active.includes(a))) return 'age';
+  if (e.ages?.never && e.ages.never.some((a) => active.includes(a))) return 'age';
+  if (e.ages?.register) {
+    const regs = active.map((a) => ctx.content.age(a)?.register);
+    if (!e.ages.register.some((r) => regs.includes(r))) return 'age';
+  }
+
+  if (frequencyWeight(e.frequency, w.frequency, w.year, w.generation) <= 0) return 'frequency';
+  if (!evalCondition(e.conditions, ctx)) return 'condition';
+  return undefined;
 }
 
 /**
@@ -315,6 +339,7 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
         out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced' });
         continue;
       }
+      ctx.observeSelection?.({ kind: 'cast_failure', year: w.year, event: String(e.id), source: 'forced', missing: res.missing });
     }
     // Reconsider in five years, with the original due year as the patience
     // anchor so an unreachable event cannot be postponed indefinitely.

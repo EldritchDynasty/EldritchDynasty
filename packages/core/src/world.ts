@@ -13,6 +13,7 @@ import type { Rung } from './ascension.js';
 import type { FriendName } from './people/friends.js';
 import type { DelegationPreferences } from './delegation.js';
 import type { ProseRuntime } from './prose.js';
+import type { SelectionObservation } from './events/selection.js';
 
 export interface ChronicleEntry {
   /**
@@ -780,6 +781,8 @@ export interface SimCtx {
   observeOutcome?: (observation: OutcomeObservation) => void;
   /** Measurement-only docket listener; choice/Record inputs precede effects. Never saved. */
   observeDecision?: (observation: DecisionObservation) => void;
+  /** Measurement-only selection listener before effects. Never saved. */
+  observeSelection?: (observation: SelectionObservation) => void;
 }
 
 /**
