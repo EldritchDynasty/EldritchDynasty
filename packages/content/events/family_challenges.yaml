@@ -260,7 +260,8 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 20
+        # Paid-study pilot: actual readers scored 9.1, 17.2 and 32.0.
+        difficulty: 16
         variance: none
         bands:
           - atLeast: 0
@@ -465,7 +466,8 @@ events:
               weight: 0.7
             - attr: mind
               weight: 0.3
-        difficulty: 25
+        # Paid-study pilot: eight actual readers scored 18.3–27.1; 25 passed one.
+        difficulty: 19
         variance: none
         bands:
           - atLeast: 0
@@ -797,7 +799,8 @@ events:
             - id: a_reading_begins
               weight: 100
               text: "{APPRENTICE} takes up the new Darkness book, which cost ninety crowns. The clerk is paid for
-                the visit and sets a review in twelve years. The house must spend the years before
+                the visit and will return in three years to see the new working, then review
+                the roll after twelve. The house must spend the years before
                 it can use the working."
               effects:
                 - kind: treasury
@@ -811,6 +814,11 @@ events:
                   target:
                     slot: APPRENTICE
                   book: lesser_workings_of_darkness
+                # A paid lesson earns a near-term chance to use the learned
+                # working, as well as the existing later account review.
+                - kind: schedule
+                  event: the_cawdry_copy
+                  inYears: 3
                 - kind: schedule
                   event: the_cawdry_copy
                   inYears: 12
@@ -1136,11 +1144,9 @@ proseVariants:
   - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=prepare_next_time].label
     of: 0d826036bd8653ca
     plainenglish: Pay 35 crowns for the inspection and 90 for a Darkness book. Set a relative studying it.
-  - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text
-    of: d2de30070c084c7b
-    plainenglish: "{APPRENTICE} starts studying the Darkness book, which costs ninety crowns. The family
-      also pays the clerk for his visit. He will inspect the records again in twelve years. The
-      reading must be completed before this relative can use the working."
+  - address: "content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text"
+    of: "1fc6d068a6e502dc"
+    plainenglish: "{APPRENTICE} starts studying a new Darkness book costing ninety crowns. The clerk is paid for this visit and will return in three years to see the working used, then review the rent roll after twelve years. The family must wait for the reading to finish before using the working."
   - address: content:events/family_challenges.yaml#events[id=the_cawdry_copy].record.subject
     of: f68a4593970b0777
     plainenglish: the inspection of the rent roll at Cawdry

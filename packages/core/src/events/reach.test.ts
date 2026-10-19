@@ -81,17 +81,18 @@ describe('family challenge execution witnesses (#1796)', () => {
           const cost = outcome.effects.reduce((sum, e) => sum + (e.kind === 'treasury' ? e.delta : 0), 0);
           expect(ctx.world.treasury - before).toBe(cost);
           if (choice.id === 'prepare_next_time') {
-            const preparations: Record<string, { book: string; years: number }> = {
-              the_cawdry_copy: { book: 'lesser_workings_of_darkness', years: 12 },
-              the_fever_and_the_vigil: { book: 'lesser_workings_of_death', years: 4 },
-              the_wind_under_the_slates: { book: 'lesser_workings_of_terra', years: 4 },
+            const preparations: Record<string, { book: string; years: number[] }> = {
+              the_cawdry_copy: { book: 'lesser_workings_of_darkness', years: [3, 12] },
+              the_fever_and_the_vigil: { book: 'lesser_workings_of_death', years: [4] },
+              the_wind_under_the_slates: { book: 'lesser_workings_of_terra', years: [4] },
             };
             const preparation = preparations[event.id]!;
             expect(preparation).toBeDefined();
             expect(ctx.world.library.has(preparation.book)).toBe(true);
             expect(ctx.world.studies.some((s) => s.book === preparation.book)).toBe(true);
             expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).some((p) => p.spellsKnown.includes(asId(preparation.book)))).toBe(false);
-            expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + preparation.years)).toBe(true);
+            expect(ctx.world.scheduled.filter((s) => s.event === event.id).map((s) => s.year).sort((a, b) => a - b))
+              .toEqual(preparation.years.map((years) => ctx.world.year + years));
           }
           expect(result.key).toBe(outcomeKey(event.id, choice.id, outcome.id));
         });
