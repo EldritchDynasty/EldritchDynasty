@@ -7,13 +7,16 @@ import {
   rungIndex,
   standingOf,
 } from '../ascension.js';
-import { phenotypeOf } from '../people/factory.js';
+import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { acquireLibraryCopy, canStudySpellbook } from '../people/library.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { place, testWorld } from '../testing.js';
 import { order } from '../table.js';
-import { canonical, digestOf, saveGame } from '../save.js';
+import { canonical, digestOf, loadGame, saveGame } from '../save.js';
+import { executeOutcomeWitness } from '../events/reach.js';
+import { makeRng } from '../rng.js';
+import { emptyForcingStats, forcingSelection, observeForcingCosts, tryForcingRite } from './forcing-policy.js';
 import { head, type SimCtx } from '../world.js';
 import { measureDensity, diagnosticPeriod } from './density-gate.js';
 import { DensityObserver, MaintenanceTracker, maintenanceSituation } from './density-observer.js';
@@ -33,6 +36,76 @@ import {
 } from './ladder-stall.js';
 
 const bundle = loadContent();
+
+describe('public forcing policy and paid cost observations (#1817)', () => {
+  it('selects the oldest offered boy and rotates only among his public rites', () => {
+    const rows = [
+      { rite: 'water', title: 'Water', ready: true, boys: [{ person: 'young', name: 'Young', age: 9 }] },
+      { rite: 'lamps', title: 'Lamps', ready: true, boys: [{ person: 'old', name: 'Old', age: 15 }] },
+      { rite: 'fast', title: 'Fast', ready: true, boys: [{ person: 'old', name: 'Old', age: 15 }] },
+      { rite: 'closed', title: 'Closed', ready: false, boys: [{ person: 'older', name: 'Older', age: 18 }] },
+    ];
+    expect(forcingSelection(rows, 0, 1042)).toEqual({ rite: 'lamps', person: 'old' });
+    expect(forcingSelection(rows, 1, 1042)).toEqual({ rite: 'fast', person: 'old' });
+    expect(forcingSelection([], 0, 1042)).toBeUndefined();
+  });
+
+  function costFixture(expresses: boolean) {
+    const ctx = testWorld(bundle, 18170);
+    for (const person of ctx.world.people.living()) person.born = ctx.world.year - 40;
+    for (let i = 0; i < 100; i++) {
+      const boy = place(ctx, { sex: 'male', age: 12, name: `Cost witness ${i}` });
+      if (!expresses) {
+        const genome = genomeOf(boy, ctx.genetics);
+        for (const index of ctx.genetics.table.fontIndices) {
+          const zero = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.effect === 0);
+          if (zero < 0) throw new Error('font locus has no mundane allele');
+          genome.sex[0][index] = zero;
+        }
+        boy.phenotype = undefined;
+      }
+      if (phenotypeOf(boy, ctx.genetics, ctx.world.year).eldritch.canExpress === expresses) return { ctx, boy };
+      boy.born = ctx.world.year - 40;
+    }
+    throw new Error('no boy of the required capacity');
+  }
+
+  it.each([
+    { expresses: true, outcome: 'nothing', madness: 4, deaths: 0 },
+    { expresses: false, outcome: 'nothing_mundane', madness: 0, deaths: 0 },
+    { expresses: false, outcome: 'died', madness: 0, deaths: 1 },
+  ])('counts actual effects for $outcome without changing the saved run', ({ expresses, outcome, madness, deaths }) => {
+    const { ctx } = costFixture(expresses);
+    const observed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    const stats = emptyForcingStats();
+    observeForcingCosts(observed, stats);
+    const event = bundle.events.find((entry) => entry.id === 'the_seven_lamp_vigil')!;
+    for (const run of [ctx, observed]) {
+      const result = executeOutcomeWitness(run, event, {
+        choiceId: 'keep_the_lamps', expectedOutcomeId: outcome,
+        rng: makeRng(18171), targetWeightedOutcome: true,
+      });
+      expect(result.ok, result.reason).toBe(true);
+    }
+    expect(stats.resolved.the_seven_lamp_vigil).toBe(1);
+    expect(stats.madness.the_seven_lamp_vigil).toBe(madness);
+    expect(stats.deaths.the_seven_lamp_vigil).toBe(deaths);
+    const first = saveGame(ctx);
+    expect({ ...saveGame(observed), savedAt: first.savedAt }).toEqual(first);
+  });
+
+  it('takes one public offer through the Table and resolves the full rite', () => {
+    const { ctx, boy } = costFixture(false);
+    const stats = emptyForcingStats();
+    observeForcingCosts(ctx, stats);
+    expect(tryForcingRite(ctx, 1817, stats)).toBe(true);
+    expect(Object.values(stats.taken).reduce((sum, n) => sum + n, 0)).toBe(1);
+    expect(Object.values(stats.resolved).reduce((sum, n) => sum + n, 0)).toBe(1);
+    expect(boy.awakening.forcingTried).toBe(true);
+    expect(Object.values(stats.madness).reduce((sum, n) => sum + n, 0)).toBe(0);
+    expect(tryForcingRite(ctx, 1817, stats)).toBe(false);
+  });
+});
 
 function placedExpresser(
   ctx: SimCtx,

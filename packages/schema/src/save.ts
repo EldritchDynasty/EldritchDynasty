@@ -196,7 +196,10 @@ import { CommitmentS } from './muster.js';
  * ids; replay needs those bootstrap inputs, so the exact-current-format loader
  * refuses older shapes rather than inventing them.
  */
-export const SAVE_FORMAT = 31;
+/** Format 32 protects the guarded templates embedded in pending questions
+ * (#1817). The loader explicitly upgrades format 31; absent attempt markers
+ * retain their original meaning of no recorded forcing attempt. */
+export const SAVE_FORMAT = 32;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).

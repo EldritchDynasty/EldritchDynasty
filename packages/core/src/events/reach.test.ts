@@ -24,6 +24,7 @@ import { campaignDef } from '../campaign.js';
 import { missingPlainEnglish, proseForEventBody, setProseMode, setProseVariants } from '../prose.js';
 import { sentimentBetween } from '../people/relationships.js';
 import { bootstrap } from '../sim.js';
+import { viewOf } from '../session.js';
 import { gainSpellbook } from '../people/library.js';
 import { attr } from '../people/factory.js';
 
@@ -3184,76 +3185,72 @@ describe('authored founding-bottleneck blood-count outcome witnesses', () => {
 });
 
 
-describe('forced-Awakening rites of the Vigil and Dark Year (#518)', () => {
-  const rites = [
-    { id: 'the_seven_lamp_vigil', full: 'keep_the_lamps', decline: 'put_out_the_lamps', declineOutcome: 'spared', madness: 18 },
-    { id: 'the_dark_year_fast', full: 'keep_the_fast', decline: 'break_the_fast', declineOutcome: 'fed', madness: 24 },
-  ] as const;
+describe('forcing rites cast either kind of boy and commit every guarded outcome (#1817)', () => {
+  const ids = ['the_drowning', 'the_drowning_repeated', 'the_seven_lamp_vigil', 'the_dark_year_fast'];
 
-  function unwokenExpressingChild(seed: number) {
-    const ctx = testWorld(content, seed);
-    ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES.rare.minGeneration);
-    const donor = ctx.world.people.living()
-      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
-    if (!donor) throw new Error('forced-Awakening witness needs a founding expressing genome');
-    const child = place(ctx, { sex: 'male', age: 12, name: 'Vigil and Dark Year Witness' });
+  function childOfEitherKind(expresses: boolean) {
+    const ctx = testWorld(content, 5180);
+    ctx.world.generation = 6;
+    ctx.world.knowledge.delete('knows_drowning_cost');
+    let donor = ctx.world.people.living().find((person) =>
+      phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress === expresses);
+    for (let i = 0; !donor && i < 100; i++) {
+      const person = place(ctx, { sex: 'male', age: 40, name: `Rite donor ${i}` });
+      if (phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress === expresses) donor = person;
+    }
+    if (!donor) throw new Error('no donor for rite witness');
+    // The engine must find this boy, rather than a test bypassing its caster.
+    for (const person of ctx.world.people.living()) person.born = ctx.world.year - 40;
+    const child = place(ctx, { sex: 'male', age: 12, name: 'Forcing Witness' });
     child.genome = { kind: 'materialized', genome: genomeOf(donor, ctx.genetics) };
     child.phenotype = undefined;
-    child.awakening.awakened = false;
-    expect(phenotypeOf(child, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(true);
     return { ctx, child };
   }
 
-  it.each(rites)('offers $id only to an unwoken expressing male and witnesses every authored outcome', (rite) => {
-    const event = content.events.find((item) => String(item.id) === rite.id);
-    expect(event, rite.id + ' must be authored').toBeDefined();
-    if (!event || event.interaction.kind === 'narration') throw new Error('rite must ask the player');
-    expect(event.frequency).toBe('rare');
-    expect(event.record).toBeDefined();
-    expect(event.slots.CHILD?.role).toBe('unwoken');
-    expect(event.slots.CHILD?.filters).toEqual(expect.arrayContaining([
-      { sex: 'male' },
-      { canExpress: true },
-    ]));
-
-    const declared = event.interaction.choices.flatMap((choice) =>
-      choice.outcomes.map((outcome) =>
-        outcomeKey(rite.id, String(choice.id), String(outcome.id))));
-    const witnessed: string[] = [];
-    for (const choice of event.interaction.choices) {
-      for (const outcome of choice.outcomes) {
-        const { ctx, child } = unwokenExpressingChild(5180);
+  it.each(ids)('%s admits both capacities, keeps the attempt and witnesses every result', (id) => {
+    const event = content.events.find((item) => item.id === id)!;
+    expect(event.forcing?.slot).toBe('CHILD');
+    expect(event.slots.CHILD?.filters).toContainEqual({ forcingTried: false });
+    expect(event.slots.CHILD?.filters?.some((filter) => 'canExpress' in filter)).toBe(false);
+    const groups = event.interaction.kind === 'narration'
+      ? [{ id: undefined, outcomes: event.interaction.outcomes }]
+      : event.interaction.choices;
+    for (const choice of groups) for (const outcome of choice.outcomes) {
+      const capacity = outcome.onlyIf?.filters.find((filter) => 'canExpress' in filter);
+      const kinds = capacity && 'canExpress' in capacity ? [capacity.canExpress] : [true, false];
+      for (const expresses of kinds) {
+        const { ctx, child } = childOfEitherKind(expresses);
         const slots = resolveSlots(event, ctx, makeRng(5181));
-        expect(slots.ok, rite.id + ' should cast a valid unwoken expresser').toBe(true);
-        if (!slots.ok) continue;
-        expect(slots.playerCast).toHaveLength(0);
+        expect(slots.ok).toBe(true);
+        if (!slots.ok) throw new Error('rite did not cast');
         expect(slots.fill.CHILD).toBe(child.id);
-        expect(ambientPool(ctx).some((candidate) => String(candidate.id) === rite.id)).toBe(true);
-
+        expect(ambientPool(ctx).some((candidate) => candidate.id === id)).toBe(true);
         const result = executeOutcomeWitness(ctx, event, {
-          choiceId: String(choice.id),
-          expectedOutcomeId: String(outcome.id),
-          rng: makeRng(5181),
-          targetWeightedOutcome: choice.outcomes.length > 1,
+          choiceId: choice.id, expectedOutcomeId: outcome.id,
+          rng: makeRng(5181), targetWeightedOutcome: true,
         });
-        expect(result.ok, `${rite.id}/${choice.id}/${outcome.id}: ${result.reason ?? 'no reason'}`).toBe(true);
-        expect(result.key).toBe(outcomeKey(rite.id, String(choice.id), String(outcome.id)));
-        if (result.key) witnessed.push(result.key);
-
-        if (String(outcome.id) === 'woke') {
-          expect(child.status).toBe('alive');
-          expect(child.awakening.awakened).toBe(true);
-          expect(child.madness).toBeGreaterThanOrEqual(rite.madness);
-        } else if (String(outcome.id) === 'died') {
-          expect(child.status).toBe('dead');
-        } else {
-          expect(String(outcome.id)).toBe(rite.declineOutcome);
-          expect(child.status).toBe('alive');
+        expect(result.ok, `${id}/${choice.id}/${outcome.id}: ${result.reason}`).toBe(true);
+        expect(child.awakening.forcingTried).toBe(true);
+        if (!expresses) {
           expect(child.awakening.awakened).toBe(false);
+          expect(child.madness).toBe(0);
+        }
+        if (outcome.id === 'woke') expect(child.awakening.awakened).toBe(true);
+        if (outcome.id === 'died') expect(child.status).toBe('dead');
+        if (expresses && outcome.id === 'nothing') {
+          expect(child.awakening.awakened).toBe(false);
+          expect(child.madness).toBeGreaterThan(0);
+          const visible = viewOf(ctx).halls.flatMap((hall) => hall.members).find((person) => person.id === child.id)!;
+          expect(visible.madness).toBe(child.madness);
+          expect(visible).not.toHaveProperty('expresses');
+        }
+        const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+        expect(resumed.world.people.get(child.id)!.awakening.forcingTried).toBe(true);
+        for (const rite of content.events.filter((candidate) => ids.includes(candidate.id))) {
+          expect(resolveSlots(rite, resumed, makeRng(5182)).ok).toBe(false);
         }
       }
     }
-    expect(witnessed.sort()).toEqual(declared.sort());
   });
 });
 
@@ -5470,7 +5467,9 @@ describe('authored record-bearing TEST_FAMILIES fixture-sweep outcome witnesses'
   it('executes ordinary record-bearing player outcomes through a shared family fixture', () => {
     const candidates = content.events.flatMap((event) => {
       if (
-        event.tier === 'frame'
+        // Capacity-specific forcing outcomes have their two-cast witnesses above.
+        event.forcing !== undefined
+        || event.tier === 'frame'
         || event.arc !== undefined
         || event.record === undefined
         || event.ages !== undefined
@@ -6323,7 +6322,9 @@ describe('mature-house TEST_FAMILIES fallback outcome witnesses', () => {
     const cases: Case[] = [];
     for (const event of content.events) {
       if (
-        event.tier === 'frame'
+        // Capacity-specific forcing outcomes have their two-cast witnesses above.
+        event.forcing !== undefined
+        || event.tier === 'frame'
         || event.arc !== undefined
         || event.ages !== undefined
         || offeredByStandardFamily(event)
@@ -6486,7 +6487,9 @@ describe('mature-lean TEST_FAMILIES fallback outcome witnesses', () => {
 
     for (const event of content.events) {
       if (
-        event.tier === 'frame'
+        // Capacity-specific forcing outcomes have their two-cast witnesses above.
+        event.forcing !== undefined
+        || event.tier === 'frame'
         || event.arc !== undefined
         || event.ages !== undefined
       ) continue;

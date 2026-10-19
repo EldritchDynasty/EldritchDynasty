@@ -5,6 +5,7 @@
  *   npm run gate:stall -- 24 500 chronicler,ascendant
  *   npm run gate:stall -- 96 500 chronicler,ascendant --population --output=long.json
  *   npm run gate:stall -- 24 300 chronicler,ascendant --campaign=short --population
+ *   npm run gate:stall -- 24 500 chronicler,bid,ascendant --forcing --output=forcing.json
  *
  * The ladder froze for 30-34% of a Long Line's years when this was first
  * measured (17 Oct 2026, `Suggestions.md` G1): no living man of the house who
@@ -14,7 +15,9 @@
  * diagnostic". This is that diagnostic, in the repository, so a balance
  * change to who wakes can be measured on the seeds it was first measured on.
  *
- * READ-ONLY. It plays the same houses `gate:endings` plays — `chronicler`
+ * The default is read-only. `--forcing` adds one deliberate full forcing
+ * attempt per year, selected from the public Table, and records direct costs.
+ * It plays the same houses `gate:endings` plays — `chronicler`
  * with the `'ending-batch'` salt, `ascendant` through `configureAscendant`
  * and its two per-year helpers — plus `bid`, the chronicler with a 600-crown
  * auction ceiling. Every reading goes through the engine's own functions
@@ -52,6 +55,8 @@ import { phenotypeOf, LATE_WAKING_AGE } from '../people/factory.js';
 import type { SimCtx } from '../world.js';
 import { configureAscendant, prepareAscendantYear, resolveAscendantYear, type PolicyOrderVisit } from './ending-gate.js';
 import type { YearReport } from '../year/report.js';
+import { emptyForcingStats, observeForcingCosts, tryForcingRite, type ForcingStats } from './forcing-policy.js';
+import { resolveYear } from './ladder-policy.js';
 import {
   gatePartitionWorkerCount,
   partitionGateInputs,
@@ -115,6 +120,8 @@ export interface StallRun {
   population?: StallPopulation;
   /** The saved annual high-water mark, distinct from the post-resolution reading `best`. */
   attainedBest?: Rung;
+  /** Optional public forcing policy; absent in the original baseline. */
+  forcing?: ForcingStats;
 }
 
 export interface StallPopulation {
@@ -251,6 +258,7 @@ export function playStallRun(
   campaign: CampaignId = 'long',
   population = false,
   observer?: StallObserver,
+  forcing = false,
 ): StallRun {
   const def = campaignDef(campaign);
   const ctx = bootstrap(indexContent(source), seed, def.startYear, campaign);
@@ -261,6 +269,10 @@ export function playStallRun(
   if (policy === 'bid') w.bidCeiling = 600;
   const tally = { asked: 0, paid: 0 };
   const run = emptyStallRun(seed, policy);
+  if (forcing) {
+    run.forcing = emptyForcingStats();
+    observeForcingCosts(ctx, run.forcing);
+  }
   if (population) run.population = emptyStallPopulation(ctx);
   let streak = 0;
 
@@ -276,6 +288,11 @@ export function playStallRun(
       while (w.pendingDecisions.length && guard++ < 200) {
         autoResolveAll(ctx, makeRng(hashSeed(seed, 'ending-batch', w.year, guard)));
       }
+    }
+    if (run.forcing && !w.ending && w.year < def.endYear && tryForcingRite(ctx, seed, run.forcing)) {
+      // Resolve only the new docket, without trying the upper rites a second time.
+      if (policy === 'ascendant') resolveYear(ctx, seed, 'ascendant', tally);
+      else autoResolveAll(ctx, makeRng(hashSeed(seed, 'forcing-record', w.year)));
     }
     clearNamingQueue(ctx);
     streak = foldStallYear(run, readStallYear(ctx), streak);
@@ -336,6 +353,15 @@ export function stallReport(runs: readonly StallRun[]): string[] {
   const endings: Record<string, number> = {};
   for (const r of runs) endings[r.ending ?? 'none'] = (endings[r.ending ?? 'none'] ?? 0) + 1;
   lines.push('  endings: ' + Object.entries(endings).map(([k, n]) => `${k} ${n}`).join(' · '));
+  if (runs.some((run) => run.forcing)) {
+    const totals = emptyForcingStats();
+    for (const run of runs) if (run.forcing) {
+      for (const field of ['offered', 'taken', 'resolved', 'madness', 'deaths'] as const) {
+        for (const [rite, n] of Object.entries(run.forcing[field])) totals[field][rite] = (totals[field][rite] ?? 0) + n;
+      }
+    }
+    lines.push('  forcing (boy/rite offers, calls, all resolutions and direct costs): ' + JSON.stringify(totals));
+  }
   const samples = runs.flatMap((r) => r.population ? [r.population] : []);
   if (samples.length) {
     lines.push('  population (n/p50/p90/p99/max): ' + JSON.stringify({
@@ -369,13 +395,14 @@ export function runStallPartition(
   years: number,
   campaign: CampaignId = 'long',
   population = false,
+  forcing = false,
 ): GatePartitionResult<StallRun> {
   const content = indexContent(source);
   return {
     id: partition.id,
     observations: partition.items.map(({ index, input }) => ({
       index,
-      value: playStallRun(content, input.seed, years, input.policy, campaign, population),
+      value: playStallRun(content, input.seed, years, input.policy, campaign, population, undefined, forcing),
     })),
   };
 }
@@ -387,16 +414,17 @@ export function measureStall(
   policies: readonly StallPolicy[],
   campaign: CampaignId = 'long',
   population = false,
+  forcing = false,
 ): StallRun[] {
   const content = indexContent(source);
   const plan = partitionGateInputs(stallInputs(runs, policies), gatePartitionWorkerCount());
   const results = plan.length === 1
-    ? plan.map((partition) => runStallPartition(content, partition, years, campaign, population))
+    ? plan.map((partition) => runStallPartition(content, partition, years, campaign, population, forcing))
     : runGatePartitionsInWorkers<StallInput, StallRun>(plan, {
       moduleUrl: import.meta.url,
       exportName: 'runStallPartition',
       argsBefore: [content.bundle],
-      argsAfter: [years, campaign, population],
+      argsAfter: [years, campaign, population, forcing],
     });
   return reduceGatePartitions(plan, results);
 }
@@ -415,7 +443,7 @@ if (isMain) {
   for (const p of policies) {
     if (!STALL_POLICIES.includes(p)) throw new Error(`unknown policy ${p}; one of ${STALL_POLICIES.join(', ')}`);
   }
-  const played = measureStall(loadContent(), runs, years, policies, campaign, process.argv.includes('--population'));
+  const played = measureStall(loadContent(), runs, years, policies, campaign, process.argv.includes('--population'), process.argv.includes('--forcing'));
   for (const p of policies) console.log(stallReport(played.filter((r) => r.policy === p)).join('\n'));
   if (process.argv.includes('--json')) console.log(JSON.stringify(played));
   const output = process.argv.find((a) => a.startsWith('--output='))?.slice('--output='.length);

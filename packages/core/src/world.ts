@@ -779,6 +779,8 @@ export interface SimCtx {
   prose: ProseRuntime;
   /** Measurement-only listener before an authored outcome applies. Never saved or called by previews. */
   observeOutcome?: (observation: OutcomeObservation) => void;
+  /** Measurement-only listener immediately after those authored effects. Never saved. */
+  observeAppliedOutcome?: (observation: OutcomeObservation) => void;
   /** Measurement-only docket listener; choice/Record inputs precede effects. Never saved. */
   observeDecision?: (observation: DecisionObservation) => void;
   /** Measurement-only selection listener before effects. Never saved. */

@@ -220,11 +220,14 @@ export class SaveFormatError extends Error {
  */
 export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx {
   const format = (raw as { format?: unknown } | null)?.format;
-  if (format !== SAVE_FORMAT) {
+  const legacyForcing = format === 31;
+  if (format !== SAVE_FORMAT && !legacyForcing) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
-  const parsed = SavedGameS.safeParse(raw);
+  const parsed = SavedGameS.safeParse(legacyForcing
+    ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT }
+    : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -384,6 +387,25 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
 
   world.pendingNames = s.pendingNames;
   world.pendingDecisions = s.pendingDecisions as typeof world.pendingDecisions;
+
+  // A legacy docket keeps the wording and odds already promised. Add only
+  // the attempt metadata for this known rite. A pending Record proves the
+  // attempt already happened; a pending choice is marked by commitOutcome.
+  // Completed old attempts without a surviving cast record are not guessed.
+  if (legacyForcing) {
+    for (const decision of world.pendingDecisions) {
+      if (decision.kind !== 'choice' && decision.kind !== 'record') continue;
+      const forcing = decision.event.forcing
+        ?? content.events.find((event) => event.id === decision.event.id)?.forcing;
+      if (!forcing) continue;
+      decision.event.forcing = { ...forcing };
+      if (decision.kind === 'record') {
+        const id = decision.fill[forcing.slot];
+        const boy = typeof id === 'string' ? world.people.get(id) : undefined;
+        if (boy) boy.awakening.forcingTried = true;
+      }
+    }
+  }
 
   world.counters = s.counters;
 
@@ -563,6 +585,9 @@ export function digest(save: SavedGame): string {
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
   }
+  // #1817's version protects readers of embedded guarded templates. The tag
+  // itself adds no simulation state; guards and attempt facts stay hashed.
+  if (value.format === 32) value.format = 31;
   // #1581: when every attempt lived, the counter is exactly the true-child
   // count which seeded earlier formats. Only a lost conception adds state
   // that changes the next genome; retain it in that world's fingerprint.

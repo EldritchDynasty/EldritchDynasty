@@ -8,7 +8,7 @@ import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
-  saveGame, SaveFormatError, stepYear, viewOf,
+  saveGame, SaveFormatError, stepYear, viewOf, resolveChoice, testRng,
 } from '@ed/core';
 
 const content = loadContent();
@@ -39,6 +39,53 @@ describe('a run survives being written down', () => {
     const before = bootstrap(content, 1042, 1042);
     const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), content);
     expect(digestOf(after)).toBe(digestOf(before));
+  });
+
+  it('reads format 31 without inventing an unrecorded forcing attempt', () => {
+    const before = bootstrap(content, 1042, 1042);
+    const legacy = { ...saveGame(before), format: 31 };
+    for (const person of legacy.people) delete person.awakening.forcingTried;
+    const after = loadGame(JSON.parse(JSON.stringify(legacy)), content);
+    expect(saveGame(after).format).toBe(32);
+    expect(digestOf(after)).toBe(digestOf(before));
+    expect(after.world.people.all().some((person) => person.awakening.forcingTried)).toBe(false);
+    expect(legacy.format).toBe(31);
+  });
+
+  it.each(['choice', 'record'] as const)('keeps a format-31 Vigil %s and its promised odds', (kind) => {
+    const ctx = bootstrap(content, 1817, 1042);
+    const boy = place(ctx, { sex: 'male', age: 12 });
+    const event = structuredClone(content.events.find((entry) => entry.id === 'the_seven_lamp_vigil')!);
+    if (event.interaction.kind !== 'choice') throw new Error('Vigil is not a choice');
+    delete event.forcing;
+    const full = event.interaction.choices[0]!;
+    full.outcomes = full.outcomes.filter((outcome) => ['woke', 'died'].includes(outcome.id));
+    for (const outcome of full.outcomes) {
+      delete outcome.onlyIf;
+      outcome.weight = outcome.id === 'woke' ? 68 : 32;
+    }
+    const legacy = JSON.parse(JSON.stringify(saveGame(ctx)));
+    legacy.format = 31;
+    legacy.pendingDecisions = [kind === 'choice' ? {
+      kind, id: 'old_vigil', year: ctx.world.year, event,
+      body: 'The old question already shown.', fill: { CHILD: boy.id },
+      choices: [], cast: [],
+    } : {
+      kind, id: 'old_vigil', year: ctx.world.year, event,
+      subject: 'The old Record already shown.', options: [], entryId: 'old_page',
+      fill: { CHILD: boy.id },
+    }];
+    const resumed = loadGame(legacy, content);
+    const pending = resumed.world.pendingDecisions[0]!;
+    if (pending.kind === 'match') throw new Error('wrong docket');
+    expect(pending.event).toEqual({ ...event, forcing: { slot: 'CHILD', called: true } });
+    expect(resumed.world.people.get(boy.id)!.awakening.forcingTried).toBe(kind === 'record' ? true : undefined);
+    if (pending.kind === 'choice') {
+      expect(pending.body).toBe('The old question already shown.');
+      expect(resolveChoice(resumed, pending.id, 'put_out_the_lamps', testRng('old-vigil')).ok).toBe(true);
+      expect(resumed.world.people.get(boy.id)!.awakening.forcingTried).toBe(true);
+    } else expect(pending.subject).toBe('The old Record already shown.');
+    expect(legacy.pendingDecisions[0].event.forcing).toBeUndefined();
   });
 
   it('keeps conception ordinals after a loss and isolates their saved copies (#1581)', () => {

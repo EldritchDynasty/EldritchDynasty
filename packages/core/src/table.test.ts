@@ -10,8 +10,8 @@ import {
   resolveSlots, TUTOR_FEE, TUTOR_GAIN, TUTOR_YEARS, loadGame, newGame, onTheMarket, order, phase, place,
   resumeGame, saveGame, setProseMode, setProseVariants, missingPlainEnglish, tableView, testRng, testWorld,
   MAX_BOND, type SimCtx, type TableOrder,
-  bootstrap, foremostOf, heirApparent, knownSuccession, MUNDANE_AGE, phenotypeOf, rollAwakening,
-  pickOutcome, resolveChoice,
+  bootstrap, foremostOf, heirApparent, knownSuccession, MUNDANE_AGE, genomeOf, phenotypeOf, rollAwakening,
+  pickOutcome, resolveChoice, outcomeAdmits,
 } from '@ed/core';
 import type { Person } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
@@ -2013,12 +2013,12 @@ const FORCING = EventTemplateS.parse({
         id: 'full_count',
         label: 'The full count.',
         outcomes: [
-          { id: 'woke', weight: 60, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'He wakes.',
+          { id: 'woke', weight: 50, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'He wakes.',
             effects: [{ kind: 'awakening', target: { slot: 'CHILD' } }, { kind: 'madness', target: { slot: 'CHILD' }, delta: 10 }] },
-          { id: 'nothing', weight: 40, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'Nothing comes.',
+          { id: 'nothing', weight: 10, onlyIf: { slot: 'CHILD', filters: [{ canExpress: true }] }, text: 'Nothing comes.',
             effects: [{ kind: 'madness', target: { slot: 'CHILD' }, delta: 4 }] },
           { id: 'cold', weight: 60, onlyIf: { slot: 'CHILD', filters: [{ canExpress: false }] }, text: 'Nothing comes.', effects: [] },
-          { id: 'drowned', weight: 40, onlyIf: { slot: 'CHILD', filters: [{ canExpress: false }] }, text: 'He does not come up.',
+          { id: 'drowned', weight: 40, text: 'He does not come up.',
             effects: [{ kind: 'status', target: { slot: 'CHILD' }, status: 'dead', cause: 'a trial by water' }] },
         ],
       },
@@ -2047,6 +2047,17 @@ function forcingHouse(seed = 1817): SimCtx {
 function boyWho(ctx: SimCtx, expresses: boolean, age: number, stem: string): Person {
   for (let i = 0; i < 200; i++) {
     const p = place(ctx, { sex: 'male', age, name: `${stem}${i}` });
+    if (!expresses) {
+      // A bootstrap biases the founding blood toward capacity. Build an
+      // ordinary X explicitly instead of depending on a rare random draw.
+      const genome = genomeOf(p, ctx.genetics);
+      for (const index of ctx.genetics.table.fontIndices) {
+        const zero = ctx.genetics.table.xAlleles[index]!.findIndex((allele) => allele.effect === 0);
+        if (zero < 0) throw new Error('font locus has no mundane allele');
+        genome.sex[0][index] = zero;
+      }
+      p.phenotype = undefined;
+    }
     if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress === expresses) return p;
     ctx.world.people.kill(p.id, ctx.world.year, 'not the boy this test needs');
   }
@@ -2054,6 +2065,67 @@ function boyWho(ctx: SimCtx, expresses: boolean, age: number, stem: string): Per
 }
 
 const forcingRow = (ctx: SimCtx) => tableView(ctx).forcing.find((r) => r.rite === FORCING.id)!;
+
+describe('authored forcing odds and paid failures (#1817)', () => {
+  const rites = [
+    { id: 'the_drowning', full: 'full_count', expressive: { woke: 46, nothing: 33, lost: 21 }, mundane: { nothing_mundane: 79, lost_mundane: 21 } },
+    { id: 'the_seven_lamp_vigil', full: 'keep_the_lamps', expressive: { woke: 58, nothing: 10, died: 32 }, mundane: { nothing_mundane: 68, died: 32 } },
+    { id: 'the_dark_year_fast', full: 'keep_the_fast', expressive: { woke: 52, nothing: 10, died: 38 }, mundane: { nothing_mundane: 62, died: 38 } },
+  ];
+
+  it.each(rites)('$id keeps the approved pools and identical death draws for either boy', (rite) => {
+    const event = bundle.events.find((entry) => entry.id === rite.id)!;
+    if (event.interaction.kind !== 'choice') throw new Error('rite must be a choice');
+    const outcomes = event.interaction.choices.find((choice) => choice.id === rite.full)!.outcomes;
+    const deathMasks: boolean[][] = [];
+    for (const expresses of [true, false]) {
+      const ctx = forcingHouse();
+      const boy = boyWho(ctx, expresses, 12, 'Publicly the same boy');
+      const eligible = outcomes.filter((outcome) => outcomeAdmits(outcome, ctx, { CHILD: boy.id }, event));
+      expect(Object.fromEntries(eligible.map((outcome) => [outcome.id, outcome.weight])))
+        .toEqual(expresses ? rite.expressive : rite.mundane);
+      deathMasks.push(Array.from({ length: 256 }, (_, seed) =>
+        pickOutcome(outcomes, testRng('authored-danger', seed), ctx, { CHILD: boy.id }, event).id === 'died'));
+      const offers = tableView(ctx).forcing.filter((row) => row.rite !== FORCING.id);
+      expect(offers.map((row) => row.rite)).toEqual(rites.map((entry) => entry.id));
+      for (const row of offers) expect(row.boys.map((entry) => entry.person)).toContain(boy.id);
+    }
+    expect(deathMasks[0]).toEqual(deathMasks[1]);
+    expect(outcomes.find((outcome) => outcome.id === 'nothing')!.text)
+      .toBe(outcomes.find((outcome) => outcome.id === 'nothing_mundane')!.text);
+  });
+
+  it.each(rites)('$id calls, saves and resolves a surviving failure without revealing hidden capacity', (rite) => {
+    for (const expresses of [true, false]) {
+      const ctx = forcingHouse();
+      const boy = boyWho(ctx, expresses, 12, expresses ? 'Ash' : 'Birch');
+      expect(order(ctx, { kind: 'forcingRite', rite: rite.id, person: boy.id }).ok).toBe(true);
+      const pending = ctx.world.pendingDecisions[0]!;
+      if (pending.kind !== 'choice' || pending.event.interaction.kind !== 'choice') throw new Error('no choice');
+      const outcomes = pending.event.interaction.choices.find((choice) => choice.id === rite.full)!.outcomes;
+      const target = expresses ? 'nothing' : 'nothing_mundane';
+      let seed = 0;
+      while (pickOutcome(outcomes, testRng('paid-failure', seed), ctx, pending.fill, pending.event).id !== target) {
+        if (++seed > 500) throw new Error('failure could not be drawn');
+      }
+      const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), forcingBundle);
+      for (const run of [ctx, resumed]) {
+        expect(resolveChoice(run, pending.id, rite.full, testRng('paid-failure', seed)).ok).toBe(true);
+        const survivor = run.world.people.get(boy.id)!;
+        expect(survivor.status).toBe('alive');
+        expect(survivor.awakening).toMatchObject({ awakened: false, forcingTried: true });
+        expect(survivor.madness).toBe(expresses ? (rite.id === 'the_drowning' ? 6 : 4) : 0);
+        const visible = viewOf(run).halls.flatMap((hall) => hall.members).find((person) => person.id === boy.id)!;
+        expect(visible.madness).toBe(survivor.madness);
+        expect(visible).not.toHaveProperty('expresses');
+        for (const next of rites) expect(order(run, { kind: 'forcingRite', rite: next.id, person: boy.id }).ok).toBe(false);
+      }
+      const { savedAt: _a, ...original } = saveGame(ctx);
+      const { savedAt: _b, ...loaded } = saveGame(resumed);
+      expect(loaded).toEqual(original);
+    }
+  });
+});
 
 describe('trying a forcing rite on a boy (#1817)', () => {
   it('uses a fixture the casting and outcome rules would accept', () => {
@@ -2117,7 +2189,7 @@ describe('trying a forcing rite on a boy (#1817)', () => {
       expect(resolveChoice(ctx, pending.id, 'full_count', testRng('forcing', String(expresses))).ok).toBe(true);
       const outcome = ctx.world.decisionLog.at(-1);
       expect(outcome?.kind === 'outcome' && outcome.outcomeId).toSatisfy((id: string) =>
-        (expresses ? ['woke', 'nothing'] : ['cold', 'drowned']).includes(id));
+        (expresses ? ['woke', 'nothing', 'drowned'] : ['cold', 'drowned']).includes(id));
       if (!expresses) {
         expect(boy.awakening.awakened).toBe(false);
         expect(boy.madness).toBe(0);
@@ -2145,8 +2217,7 @@ describe('trying a forcing rite on a boy (#1817)', () => {
         tally[expected]! += 1;
       }
     }
-    expect(tally.woke! + tally.nothing!).toBe(60);
-    expect(tally.cold! + tally.drowned!).toBe(60);
+    expect(Object.values(tally).reduce((sum, n) => sum + n, 0)).toBe(120);
     expect(Math.min(...Object.values(tally))).toBeGreaterThan(0);
   });
 

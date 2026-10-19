@@ -11,31 +11,23 @@ events:
     title: The Drowning
     tier: individual
     frequency: rare
-    # 600, up from 120, and this is the argument `the_drowning_repeated`
-    # already makes forty lines down: WHAT RATIONS THIS IS THE CAST AND NOT
-    # THE TIER. Every other ambient rare template in the game casts off `head`
-    # or `family_member`; this one needs an unwoken, expressing male between
-    # seven and fifteen, which is the narrowest cast in the content and is
-    # present in a minority of household-years.
-    #
-    # A flat weight was survivable while the ambient rare pool was nine
-    # templates. At fifty-nine it is not: measured over the sixty-seed
-    # coverage batch, this fell from thirteen runs in sixty to TWO, and
-    # `the_drowning_lie` — which three frame interludes read and which needs
-    # this to fire AND the chronicler to embellish — went to zero in sixty.
-    # At 600 it is back to nine in sixty and the lie to four, which is where
-    # both were before the pool grew.
-    weight: 600
+    # #1817 widens the old expresser-only cast to every unwoken boy, once.
+    # The paired 100-house pilot at the old 600 weight rose from 5 to 22
+    # houses; its lie rose from 1 to 8. Re-measured at 200 below; the dated
+    # BALANCE-LOG entry records the full batch and downstream lie supply.
+    weight: 200
     repeatable: true
     tags: [ritual, awakening, madness]
     purposes: [test_magic_rule, force_record_choice, change_relationship]
+    forcing: { slot: CHILD }
     slots:
       HEAD: { role: head }
       CHILD:
         role: unwoken
         filters:
           - { sex: male }
-          - { canExpress: true }
+          - { forcingTried: false }
+          - { declaredMundane: false }
           - { age: { op: gte, value: 7 } }
           - { age: { op: lte, value: 15 } }
     body: >-
@@ -52,6 +44,7 @@ events:
           outcomes:
             - id: woke
               weight: 46
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
               text: >-
                 He wakes on the ninth day and he is changed, and the change is
                 not the kind anyone had prepared a word for.
@@ -61,17 +54,29 @@ events:
                 - { kind: knowledge, op: grant, flag: knows_drowning_cost }
             - id: nothing
               weight: 33
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
               text: Nothing. He is cold for a week and then he is fine and then he is ordinary.
               effects:
                 - { kind: madness, target: { slot: CHILD }, delta: 6 }
+            - id: nothing_mundane
+              weight: 79
+              onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+              text: Nothing. He is cold for a week and then he is fine and then he is ordinary.
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -4 }
             - id: lost
               weight: 21
-              text: >-
-                They bring him out on the sixth day and he is breathing, and he
-                goes on breathing for eleven more years without ever once
-                saying anything that follows from the thing said before it.
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
+              text: 'They bring him out on the sixth day and he is breathing. For eleven mornings he does not answer to his name. By the twelfth, the household has stopped asking what the book promised.'
               effects:
                 - { kind: madness, target: { slot: CHILD }, delta: 30 }
+                - { kind: knowledge, op: grant, flag: knows_drowning_cost }
+            - id: lost_mundane
+              weight: 21
+              onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+              text: 'They bring him out on the sixth day and he is breathing. For eleven mornings he does not answer to his name. By the twelfth, the household has stopped asking what the book promised.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: mind, delta: -30 }
                 - { kind: knowledge, op: grant, flag: knows_drowning_cost }
         - id: short_count
           label: Stop short. Half the count, half the risk.
@@ -82,9 +87,16 @@ events:
               effects: []
             - id: partial
               weight: 26
-              text: He wakes anyway, four years later, and nobody can say whether it was the water.
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
+              text: He spends four days by the hearth and does not ask to go back. Nothing answers the short count, but something of the room stays with him.
               effects:
                 - { kind: madness, target: { slot: CHILD }, delta: 5 }
+            - id: partial_mundane
+              weight: 26
+              onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+              text: 'He spends four days by the hearth and does not ask to go back. Nothing answers the short count, but something of the room stays with him.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -5 }
     record:
       subject: the cost of the Drowning
       options:
@@ -117,29 +129,22 @@ events:
     title: Nobody Remembers Why the Room Is Bricked Up
     tier: individual
     frequency: rare
-    # 340, because what rations this is the CONDITION and not the tier: it can
-    # only fire in a run where the Drowning's cost was never learned, and the
-    # moment it or `the_drowning` fires it bars itself forever. Measured, the
-    # whole rare tier fires about 6.6 times in a thousand years — base draw
-    # weight 40 against common's 1000 — so at 100 this reached 2% of runs and
-    # everything downstream of it — including `frame_the_second_time`, whose
-    # Discrepancy only exists on this template's Embellish path — sat on the
-    # outcome-reach gate's noise floor and fell off it whenever anything else
-    # in the game changed. The rare tier's own draw weight was raised in the
-    # same commit and is the bigger half of the fix; this is the half that is
-    # about THIS template's self-barring condition.
-    weight: 240
+    # Still requires forgotten cost and generation six. At 240 the widened
+    # cast reached 9/100 houses (6/100 before); 160 is measured alongside the
+    # other forcing weights. The unknown book remains unavailable to call.
+    weight: 160
     tags: [ritual, awakening, knowledge]
     purposes: [test_magic_rule, force_record_choice, worldbuild_through_action]
     conditions:
       all:
         - { knowledge: knows_drowning_cost, has: false }
         - { generation: { op: gte, value: 6 } }
+    forcing: { slot: CHILD, called: false }
     slots:
       HEAD: { role: head }
       CHILD:
         role: unwoken
-        filters: [{ sex: male }, { canExpress: true }, { age: { op: lte, value: 15 } }]
+        filters: [{ sex: male }, { age: { op: gte, value: 7 } }, { forcingTried: false }, { declaredMundane: false }, { age: { op: lte, value: 15 } }]
     body: >-
       The book is in the second cellar behind a door that somebody bricked and
       somebody else unbricked, and there is no note with it. Forty pages, nine
@@ -151,12 +156,22 @@ events:
       outcomes:
         - id: full_price
           weight: 100
+          onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
           text: >-
             They pay the price again, the whole of it, two hundred years after
             it was first paid and written down by nobody.
           effects:
             - { kind: awakening, target: { slot: CHILD } }
             - { kind: madness, target: { slot: CHILD }, delta: 22 }
+            - { kind: knowledge, op: grant, flag: knows_drowning_cost }
+        - id: full_price_mundane
+          weight: 100
+          onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+          text: >-
+            They pay the price again, the whole of it, two hundred years after
+            it was first paid and written down by nobody.
+          effects:
+            - { kind: attribute, target: { slot: CHILD }, attr: mind, delta: -22 }
             - { kind: knowledge, op: grant, flag: knows_drowning_cost }
     record:
       subject: the rediscovery
@@ -192,22 +207,25 @@ events:
     accounts: [ballad_of_the_ninth_day, a_scholars_footnote]
 
   # #518: rare forced-Awakening rites, using the existing awakening gate.
-  # Only a young unwoken expressing male can be offered either ceremony.
-  # The full ritual risks death, and its surviving branch costs Madness;
+  # Any unwoken boy in the age window can be offered either ceremony.
+  # The full ritual risks the same death share for every boy; only an expresser
+  # can wake or carry a Madness mark after a surviving failure.
   # abandoning it carries an ordinary and lasting nursing bill.
   - id: the_seven_lamp_vigil
     title: The Seven-Lamp Vigil
     tier: individual
     frequency: rare
-    weight: 240
+    # Widened-cast pilot: 14/100 houses at 240, versus 3/100 before #1817.
+    weight: 80
     repeatable: true
     tags: [ritual, awakening, madness]
     purposes: [test_magic_rule, force_record_choice, plant_rumour]
+    forcing: { slot: CHILD }
     slots:
       HEAD: { role: head }
       CHILD:
         role: unwoken
-        filters: [{ sex: male }, { canExpress: true }, { age: { op: gte, value: 7 } }, { age: { op: lte, value: 15 } }]
+        filters: [{ sex: male }, { forcingTried: false }, { declaredMundane: false }, { age: { op: gte, value: 7 } }, { age: { op: lte, value: 15 } }]
     body: >-
       The seven lamps have been trimmed and set around the bed, and for seven
       nights {CHILD} is to be kept from sleep. {HEAD} has paid for the oil
@@ -220,13 +238,27 @@ events:
           label: Keep every lamp alight until the seventh dawn.
           outcomes:
             - id: woke
-              weight: 68
+              weight: 58
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
               text: >-
                 At the seventh dawn he answers a question nobody has spoken.
                 He knows what was asked. His hands will not be still again.
               effects:
                 - { kind: awakening, target: { slot: CHILD } }
                 - { kind: madness, target: { slot: CHILD }, delta: 18 }
+            - id: nothing
+              weight: 10
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
+              text: 'At dawn he asks for water and then for sleep. No answer comes from beyond the room. The seventh lamp is put out beside his bed.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -4 }
+                - { kind: madness, target: { slot: CHILD }, delta: 4 }
+            - id: nothing_mundane
+              weight: 68
+              onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+              text: 'At dawn he asks for water and then for sleep. No answer comes from beyond the room. The seventh lamp is put out beside his bed.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -4 }
             - id: died
               weight: 32
               text: >-
@@ -265,15 +297,17 @@ events:
     title: The Fast of the Dark Year
     tier: individual
     frequency: rare
-    weight: 240
+    # Widened-cast pilot: 15/100 houses at 240, versus 2/100 before #1817.
+    weight: 80
     repeatable: true
     tags: [ritual, awakening, madness]
     purposes: [test_magic_rule, force_record_choice, plant_rumour]
+    forcing: { slot: CHILD }
     slots:
       HEAD: { role: head }
       CHILD:
         role: unwoken
-        filters: [{ sex: male }, { canExpress: true }, { age: { op: gte, value: 10 } }, { age: { op: lte, value: 18 } }]
+        filters: [{ sex: male }, { forcingTried: false }, { declaredMundane: false }, { age: { op: gte, value: 10 } }, { age: { op: lte, value: 18 } }]
     body: >-
       An old calendar calls the year dark, though the harvest and the sun
       have kept their ordinary dates. The instructions forbid {CHILD} bread
@@ -286,13 +320,27 @@ events:
           label: Keep the Dark Year fast through its last night.
           outcomes:
             - id: woke
-              weight: 62
+              weight: 52
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
               text: >-
                 He rises before the doors are opened. No one tells him it
                 is morning; he has heard it coming through the stone.
               effects:
                 - { kind: awakening, target: { slot: CHILD } }
                 - { kind: madness, target: { slot: CHILD }, delta: 24 }
+            - id: nothing
+              weight: 10
+              onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
+              text: 'He is carried to the table and given broth a spoonful at a time. He knows the voices around him. Nothing has answered from the dark.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -4 }
+                - { kind: madness, target: { slot: CHILD }, delta: 4 }
+            - id: nothing_mundane
+              weight: 62
+              onlyIf: { slot: CHILD, filters: [{ canExpress: false }] }
+              text: 'He is carried to the table and given broth a spoonful at a time. He knows the voices around him. Nothing has answered from the dark.'
+              effects:
+                - { kind: attribute, target: { slot: CHILD }, attr: health, delta: -4 }
             - id: died
               weight: 38
               text: >-
@@ -1339,10 +1387,8 @@ proseVariants:
     plainenglish: >-
       Nothing happens. He is cold for a week, then he is fine, and then he is ordinary.
   - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=lost].text"
-    of: "80b16be07d67c3fc"
-    plainenglish: >-
-      They bring him out on the sixth day and he is breathing. He goes on breathing for eleven
-      more years, but he never again says anything that follows from what he said before.
+    of: "3f6c4b786ef4c68c"
+    plainenglish: "They bring him out on the sixth day, still breathing. He does not answer to his name for eleven mornings. By the twelfth, the family has stopped asking what the book promised."
   - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].label"
     of: "1ef428b9ef24f6f5"
     plainenglish: >-
@@ -1352,9 +1398,8 @@ proseVariants:
     plainenglish: >-
       Nothing happens. That is what the short count was paid for.
   - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].outcomes[id=partial].text"
-    of: "fb6d23d6f45a11aa"
-    plainenglish: >-
-      He wakes anyway, four years later. Nobody can say whether the water did it.
+    of: "dadf93fe51172eaa"
+    plainenglish: "He spends four days by the fire and does not ask to repeat the rite. Nothing answers the short count, but the experience stays with him."
   - address: "content:events/rites.yaml#events[id=the_drowning].record.subject"
     of: "2bd3f8a175a77455"
     plainenglish: >-
@@ -1901,3 +1946,27 @@ proseVariants:
     of: "0472776efde3bf8a"
     plainenglish: >-
       The Unmaking (the rite that takes an elder apart to raise a descendant)
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=nothing_mundane].text"
+    of: "23c8c159521f24f5"
+    plainenglish: "Nothing happens. He is cold for a week, then he is fine, and then he is ordinary."
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=full_count].outcomes[id=lost_mundane].text"
+    of: "3f6c4b786ef4c68c"
+    plainenglish: "They bring him out on the sixth day, still breathing. He does not answer to his name for eleven mornings. By the twelfth, the family has stopped asking what the book promised."
+  - address: "content:events/rites.yaml#events[id=the_drowning].interaction.choices[id=short_count].outcomes[id=partial_mundane].text"
+    of: "dadf93fe51172eaa"
+    plainenglish: "He spends four days by the fire and does not ask to repeat the rite. Nothing answers the short count, but the experience stays with him."
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].interaction.outcomes[id=full_price_mundane].text"
+    of: "7ee294b735a67b43"
+    plainenglish: "They pay the price again, all of it, two hundred years after it was first paid. Nobody wrote it down then."
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=nothing].text"
+    of: "9fe800226c3d74fe"
+    plainenglish: "At dawn he asks for water and sleep. Nothing answers from outside the room. The seventh lamp is put out beside his bed."
+  - address: "content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=nothing_mundane].text"
+    of: "9fe800226c3d74fe"
+    plainenglish: "At dawn he asks for water and sleep. Nothing answers from outside the room. The seventh lamp is put out beside his bed."
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=nothing].text"
+    of: "5d4f91aec675028a"
+    plainenglish: "They carry him to the table and feed him broth one spoonful at a time. He recognises the people speaking. Nothing has answered from the dark."
+  - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=nothing_mundane].text"
+    of: "5d4f91aec675028a"
+    plainenglish: "They carry him to the table and feed him broth one spoonful at a time. He recognises the people speaking. Nothing has answered from the dark."

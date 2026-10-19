@@ -333,12 +333,16 @@ export function commitOutcome(
   // Observe the actual cast and selected result while the check's inputs still
   // exist. A later Health/death/knowledge effect cannot become its own cause.
   // No listener means no snapshot allocation, and observation draws no dice.
-  ctx.observeOutcome?.({ event: e, outcome, fill: structuredClone(fill),
-    ...(choiceId !== undefined ? { choiceId } : {}) });
+  const observation = ctx.observeOutcome || ctx.observeAppliedOutcome
+    ? { event: e, outcome, fill: structuredClone(fill),
+      ...(choiceId !== undefined ? { choiceId } : {}) }
+    : undefined;
+  if (observation) ctx.observeOutcome?.(observation);
   // The arc, if any, is in scope for the whole commit: `arc_flag` effects write
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
   const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
+  if (observation) ctx.observeAppliedOutcome?.(observation);
 
   // A boy goes through one forcing rite (§11, #1817), whatever came of it and
   // whichever door it came through — the Table's order and the ambient draw
