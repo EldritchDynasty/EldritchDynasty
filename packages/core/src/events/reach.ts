@@ -9,7 +9,8 @@ import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
 import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
 import { commitOutcome, queueChoice, resolveChoice } from './decisions.js';
-import { pickOutcome } from './effects.js';
+import { outcomeAdmits, pickOutcome } from './effects.js';
+import type { OutcomeObservation } from './decisions.js';
 import { evalCondition } from './conditions.js';
 import { framePool, presentFrame } from './frame.js';
 import type { ArcStep } from './arcs.js';
@@ -680,6 +681,13 @@ export interface Reach {
    * and two firings in one run are two chances (issue #80).
    */
   firings: Map<string, number>;
+  /** Live pre-effect readings for groups with onlyIf. Final saved people
+   * cannot reconstruct the state in which a weighted outcome was drawn. */
+  guarded?: {
+    opportunities: Map<string, number>;
+    /** Sum of the authored share inside each actual eligible pool. */
+    expected: Map<string, number>;
+  };
   /** Actual available player answers at resolved dockets in a canonical
    * uniform-chronicler batch. Missing means this evidence was not collected. */
   choiceOffers?: {
@@ -703,6 +711,26 @@ export function recordChoiceOffers(into: Reach, event: string, choices: readonly
     const key = choiceKey(event, choice);
     offered.counts.set(key, (offered.counts.get(key) ?? 0) + 1);
     offered.expectedSelections.set(key, (offered.expectedSelections.get(key) ?? 0) + 1 / choices.length);
+  }
+}
+
+/** Attach through observeOutcome, which runs before any effect or forcing
+ * attempt mark. Never credit a boy who could not draw a guarded outcome as
+ * an opportunity for it. Unguarded groups retain their existing accounting. */
+export function observeGuardedOutcome(ctx: SimCtx, observation: OutcomeObservation, into: Reach): void {
+  const { event, choiceId, fill } = observation;
+  const group = event.interaction.kind === 'narration'
+    ? event.interaction.outcomes
+    : event.interaction.choices.find((choice) => choice.id === choiceId)?.outcomes;
+  if (!group?.some((outcome) => outcome.onlyIf)) return;
+  const guarded = into.guarded ??= { opportunities: new Map(), expected: new Map() };
+  const eligible = group.filter((outcome) => outcomeAdmits(outcome, ctx, fill, event));
+  const total = eligible.reduce((sum, outcome) => sum + outcome.weight, 0);
+  for (const outcome of group) {
+    const key = outcomeKey(String(event.id), choiceId, outcome.id);
+    const admitted = eligible.includes(outcome) && outcome.weight > 0 && total > 0;
+    guarded.opportunities.set(key, (guarded.opportunities.get(key) ?? 0) + Number(admitted));
+    guarded.expected.set(key, (guarded.expected.get(key) ?? 0) + (admitted ? outcome.weight / total : 0));
   }
 }
 
