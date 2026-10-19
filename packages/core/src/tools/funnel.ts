@@ -34,7 +34,25 @@ export function privateFunnelContext(ctx: SimCtx, cloneArcs = true): SimCtx {
   const copy = (person: Person): Person => {
     let detached = copies.get(person.id);
     if (!detached) {
-      detached = structuredClone(person);
+      // Head/retainer pools scan living people before filtering. Most of
+      // those people need only an id, contract or castSlots read; deep-copying
+      // every genome and its expression tables here dwarfs the simulation.
+      // Detach nested data when first read, and keep all writes on this copy.
+      const detachedKeys = new Set<PropertyKey>();
+      detached = new Proxy({ ...person }, {
+        get(target, key, receiver) {
+          const value: unknown = Reflect.get(target, key, receiver);
+          if (value && typeof value === 'object' && !detachedKeys.has(key)) {
+            Reflect.set(target, key, structuredClone(value));
+            detachedKeys.add(key);
+          }
+          return Reflect.get(target, key, receiver);
+        },
+        set(target, key, value) {
+          detachedKeys.add(key);
+          return Reflect.set(target, key, value);
+        },
+      });
       copies.set(person.id, detached);
     }
     return detached;

@@ -164,6 +164,8 @@ describe('pre-effect selection observations (#1811)', () => {
     expect(detached).not.toBe(original);
     expect(probe.world.people.living().find(person => person.id === original.id)).toBe(detached);
     detached.name = 'A private diagnostic change';
+    detached.castSlots.push('private_probe');
+    detached.acquired.mind = 999;
     genomeOf(detached, probe.genetics);
     expect(() => probe.world.people.kill(original.id, ctx.world.year, 'a forbidden probe'))
       .toThrow('Funnel probes cannot call PersonStore.kill');
