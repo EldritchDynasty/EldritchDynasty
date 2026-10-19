@@ -1,6 +1,6 @@
 import type { ArcDef, Schedule } from './arc.js';
 import type { Content } from './content-index.js';
-import type { EventTemplate } from './event.js';
+import type { Effect, EventTemplate, RecordBlock } from './event.js';
 import { isLadderRole } from './event.js';
 import { RECURRING_CAST_ROLES } from './character.js';
 import type { Filter } from './conditions.js';
@@ -414,19 +414,30 @@ const recastRole: ValidationRule = {
     const issues: Issue[] = [];
     const refillable = new Set<string>(RECURRING_CAST_ROLES.map(({ slot }) => slot));
     for (const e of content.events) {
-      for (const o of allOutcomes(e)) {
-        for (const eff of o.effects) {
+      const checkEffects = (effects: readonly Effect[], source: string) => {
+        for (const eff of effects) {
           if (eff.kind !== 'recast') continue;
           const role = e.slots[eff.slot]?.role;
           if (!role || !refillable.has(role)) {
             issues.push(err(
               this.id,
-              `event:${e.id}/${o.id}`,
+              `event:${e.id}/${source}`,
               `recast slot '${eff.slot}' has role '${role ?? 'missing'}', which maintainCast cannot refill`,
             ));
           }
         }
-      }
+      };
+      const checkRecord = (record: RecordBlock, source: string) => {
+        for (const option of ['record', 'omit', 'embellish'] as const) {
+          checkEffects(record.options[option].effects, `${source}/${option}`);
+        }
+      };
+      for (const o of allOutcomes(e)) checkEffects(o.effects, o.id);
+      // Record options use the same effect executor. A guard inspecting only
+      // choice outcomes would still let a page strip the sitting Head's seal.
+      if (e.record) checkRecord(e.record, 'record');
+      for (const row of e.recordByChoice ?? []) checkRecord(row, `recordByChoice:${row.id}`);
+      for (const row of e.recordByOutcome ?? []) checkRecord(row, `recordByOutcome:${row.id}`);
     }
     return issues;
   },
