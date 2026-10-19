@@ -102,6 +102,8 @@ function readHolds(ctx: SimCtx, r: FrameRead): boolean {
   return assertNever(r);
 }
 
+export { readHolds as frameReadHolds };
+
 /**
  * Everything a frame event's own `reads` currently allows, and not shown too
  * recently. `repeatable` and `cooldownYears` get their first real reader
@@ -140,10 +142,18 @@ export function frameOverdue(ctx: SimCtx): boolean {
 
 /** One frame template, weighted, or none if this is not a frame year. */
 export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
-  if (!frameDue(ctx, rng)) return undefined;
+  ctx.observeSelection?.({ kind: 'before_frame', year: ctx.world.year });
+  const due = frameDue(ctx, rng);
+  ctx.observeSelection?.({ kind: 'frame_due', year: ctx.world.year, due });
+  if (!due) return undefined;
 
   const pool = framePool(ctx);
-  if (pool.length) return rng.weighted(pool, (e) => e.weight);
+  if (pool.length) {
+    const chosen = rng.weighted(pool, (e) => e.weight);
+    if (chosen) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
+      candidates: [{ event: String(chosen.id), source: 'frame' }] });
+    return chosen;
+  }
 
   // OVERDUE, AND THE POOL IS EMPTY. This is the case that produced runs of two
   // interludes: the cadence came due and every eligible scene was inside its
@@ -165,6 +175,8 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
     (ctx.world.frame.firedAt[e.id] ?? -Infinity) < (ctx.world.frame.firedAt[best.id] ?? -Infinity)
       ? e : best
   ));
+  ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
+    candidates: [{ event: String(stalest.id), source: 'frame' }] });
   return stalest;
 }
 
@@ -182,7 +194,10 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng, arcStep?: 
   const res = arcStep
     ? { ok: true as const, fill: arcStep.fill, playerCast: arcStep.playerCast }
     : resolveSlots(e, ctx, rng);
-  if (!res.ok) return undefined;
+  if (!res.ok) {
+    ctx.observeSelection?.({ kind: 'cast_failure', year: w.year, event: String(e.id), source: 'frame', missing: res.missing });
+    return undefined;
+  }
   const fill = autoCast(e, ctx, res.fill, res.playerCast, rng);
 
   const outcome = pickOutcome(e.interaction.outcomes, rng, ctx);

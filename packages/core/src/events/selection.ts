@@ -15,8 +15,11 @@ export interface Candidate {
 
 export type SelectionObservation = { readonly year: number } & (
   | { readonly kind: 'before_draw'; readonly budget: number; readonly forced: readonly string[] }
-  | { readonly kind: 'cast_failure'; readonly event: string; readonly source: Candidate['source']; readonly missing?: string }
-  | { readonly kind: 'selected'; readonly candidates: readonly { readonly event: string; readonly source: Candidate['source'] }[] }
+  | { readonly kind: 'before_frame' }
+  | { readonly kind: 'frame_due'; readonly due: boolean }
+  | { readonly kind: 'before_arc_steps'; readonly layer?: 'tale' | 'frame' }
+  | { readonly kind: 'cast_failure'; readonly event: string; readonly source: Candidate['source'] | 'arc' | 'frame'; readonly missing?: string }
+  | { readonly kind: 'selected'; readonly candidates: readonly { readonly event: string; readonly source: Candidate['source'] | 'arc' | 'frame' }[] }
 );
 
 /**

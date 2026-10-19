@@ -6,10 +6,13 @@ import { phase, testWorld } from './testing.js';
 import { makeRng } from './rng.js';
 import { tickAges } from './ages/scheduler.js';
 import { resolveRecord } from './events/decisions.js';
-import { framePool } from './events/frame.js';
+import { framePool, presentFrame, selectFrame } from './events/frame.js';
+import { dueArcSteps } from './events/arcs.js';
 import { ambientExclusionReason, ambientPool, selectEvents, type SelectionObservation } from './events/selection.js';
 import { PersonStore } from './people/store.js';
 import { genomeOf } from './people/factory.js';
+import { classifyFunnelPoint, FunnelObserver, funnelSources, privateFunnelContext, summariseFunnel } from './tools/funnel.js';
+import { executeOutcomeWitness } from './events/reach.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import {
   CAMPAIGNS,
@@ -111,6 +114,149 @@ describe('pre-effect selection observations (#1811)', () => {
       return { selected, nextDraw: rng.int(1_000_000), save: canonical(saveGame(ctx)) };
     });
     expect(worlds[1]).toEqual(worlds[0]);
+  });
+
+  it('observes the frame and arc entry points without spending another die', () => {
+    const rows: SelectionObservation[] = [];
+    const worlds = [false, true].map(observe => {
+      const { ctx } = fixture();
+      if (observe) ctx.observeSelection = row => rows.push(row);
+      const rng = makeRng(18114);
+      dueArcSteps(ctx, rng, 'tale');
+      selectFrame(ctx, rng);
+      return { save: canonical(saveGame(ctx)), nextDraw: rng.int(1_000_000) };
+    });
+    expect(rows.slice(0, 2)).toEqual([
+      { kind: 'before_arc_steps', year: START_YEAR, layer: 'tale' },
+      { kind: 'before_frame', year: START_YEAR },
+    ]);
+    expect(rows).toHaveLength(3);
+    expect(rows[2]).toMatchObject({ kind: 'frame_due', year: START_YEAR });
+    if (rows[2]?.kind !== 'frame_due') throw new Error('frame cadence observation is missing');
+    expect(typeof rows[2].due).toBe('boolean');
+    expect(worlds[1]).toEqual(worlds[0]);
+  });
+
+  it('separates a missing premise, missing cast, other condition and undrawn cast', () => {
+    const { ctx, ready, missing } = fixture();
+    const before = canonical(saveGame(ctx));
+    expect(classifyFunnelPoint(ctx, event('no_page', { conditions: { knowledge: 'unseen_page', has: true } })).stage).toBe('premise');
+    expect(classifyFunnelPoint(ctx, missing).stage).toBe('cast');
+    expect(classifyFunnelPoint(ctx, event('too_costly', { conditions: { treasury: { op: 'gte', value: 1_000_000 } } })).stage).toBe('condition');
+    expect(classifyFunnelPoint(ctx, ready).stage).toBe('not_selected');
+    expect(canonical(saveGame(ctx))).toBe(before);
+  });
+
+  it('does not turn a mixed OR into a mandatory missing page', () => {
+    const { ctx } = fixture();
+    const page = { knowledge: 'unseen_page', has: true };
+    const money = { treasury: { op: 'gte', value: -1_000_000 } };
+    expect(classifyFunnelPoint(ctx, event('either', { conditions: { any: [page, money] } })).stage).toBe('not_selected');
+    expect(classifyFunnelPoint(ctx, event('both', { conditions: { all: [page, money] } })).stage).toBe('premise');
+  });
+
+  it('delegates person queries to the real store but detaches their results and refuses mutation', () => {
+    const { ctx } = fixture();
+    const before = canonical(saveGame(ctx));
+    const original = ctx.world.people.living()[0]!;
+    const probe = privateFunnelContext(ctx);
+    const detached = probe.world.people.mustGet(original.id);
+    expect(detached).not.toBe(original);
+    expect(probe.world.people.living().find(person => person.id === original.id)).toBe(detached);
+    detached.name = 'A private diagnostic change';
+    genomeOf(detached, probe.genetics);
+    expect(() => probe.world.people.kill(original.id, ctx.world.year, 'a forbidden probe'))
+      .toThrow('Funnel probes cannot call PersonStore.kill');
+    expect(canonical(saveGame(ctx))).toBe(before);
+  });
+
+  it('reads a frame page through its production reader', () => {
+    const framed = event('funnel_frame', { tier: 'frame', reads: [{ chronicled: 'funnel_page' }] });
+    const ctx = testWorld({ ...content.bundle, events: [framed] }, 18115);
+    expect(classifyFunnelPoint(ctx, framed).stage).toBe('premise');
+    ctx.world.chronicle.push({ year: START_YEAR, weight: 'line', text: 'A page survived.', eventId: 'funnel_page', named: true });
+    expect(classifyFunnelPoint(ctx, framed).stage).toBe('not_selected');
+  });
+
+  it('probes the real chained patch without advancing the live arc', () => {
+    const ctx = testWorld(content, 18116);
+    const child = content.mustEvent('the_north_wind_finds_the_patch');
+    expect(classifyFunnelPoint(ctx, child).stage).toBe('premise');
+    const opening = executeOutcomeWitness(ctx, content.mustEvent('the_west_wing_roof'), {
+      choiceId: 'patch_it_again', expectedOutcomeId: 'patched', rng: makeRng(18116),
+    });
+    expect(opening.ok, opening.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find(arc => arc.arc === child.arc?.of)!;
+    expect(instance).toBeDefined();
+    ctx.world.year = instance.dueYear!;
+    const before = canonical(saveGame(ctx));
+    expect(classifyFunnelPoint(ctx, child).stage).toBe('not_selected');
+    expect(canonical(saveGame(ctx))).toBe(before);
+  });
+
+  it('distinguishes an actual selection from a committed branch', () => {
+    const { ctx, ready } = fixture();
+    const observer = new FunnelObserver(ctx, [ready.id]);
+    selectEvents(ctx, makeRng(18117), 1);
+    const row = observer.finish()[0]!;
+    expect(row.selectedYears).toBe(1);
+    expect(row.commits).toBe(0);
+    expect(row.stages.unresolved).toBe(1);
+    expect(row.neverResolved).toHaveLength(1);
+  });
+
+  it('keeps two traced built states and one untraced state byte-identical', () => {
+    const saves = [false, true, true].map(trace => {
+      const { ctx, ready, missing } = fixture();
+      const observer = trace ? new FunnelObserver(ctx, [ready.id, missing.id]) : undefined;
+      selectEvents(ctx, makeRng(18118), 1);
+      const result = executeOutcomeWitness(ctx, ready, { expectedOutcomeId: 'read', rng: makeRng(18119) });
+      expect(result.ok, result.reason).toBe(true);
+      const rows = observer?.finish();
+      if (rows) {
+        expect(rows.find(row => row.id === ready.id)).toMatchObject({ commits: 1, firedYears: 1, neverResolved: [] });
+        expect(rows.find(row => row.id === missing.id)?.stages.cast).toBe(1);
+      }
+      return canonical(saveGame(ctx));
+    });
+    expect(saves[1]).toBe(saves[0]);
+    expect(saves[2]).toBe(saves[0]);
+  });
+
+  it('records a selected frame whose cast cannot be filled without inventing a commit', () => {
+    const framed = event('funnel_unfilled_frame', { tier: 'frame', slots: {
+      READER: { role: 'family_member', filters: [{ age: { op: 'gte', value: 5000 } }] },
+    } });
+    const ctx = testWorld({ ...content.bundle, events: [framed] }, 18120);
+    ctx.world.assize.openedAt = START_YEAR - 108;
+    const observer = new FunnelObserver(ctx, [framed.id]);
+    expect(selectFrame(ctx, makeRng(18120))?.id).toBe(framed.id);
+    expect(presentFrame(ctx, framed, makeRng(18121))).toBeUndefined();
+    expect(observer.finish()[0]).toMatchObject({ selectedYears: 1, commits: 0,
+      actualCastFailures: { 'frame:READER': 1 }, stages: { unresolved: 1 } });
+  });
+
+  it('names the real inline launcher and the Record option that creates a frame premise', () => {
+    const patch = funnelSources(content, 'the_north_wind_finds_the_patch');
+    expect(patch.some(source => source.reference.startsWith('arc:')
+      && source.writers.some(writer => writer.includes('the_west_wing_roof|patch_it_again|patched')))).toBe(true);
+    const copy = funnelSources(content, 'frame_the_copy_that_was_short');
+    expect(copy.find(source => source.reference === 'discrepancy:the_short_copy_at_cawdry')?.writers)
+      .toContain('event:the_hand_the_warden_accepts/Record:embellish creates');
+  });
+
+  it('ranks actual household firings and keeps unresolved branches explicit', () => {
+    const { ctx, ready, missing } = fixture();
+    const observer = new FunnelObserver(ctx, [ready.id, missing.id]);
+    selectEvents(ctx, makeRng(18122), 1);
+    expect(executeOutcomeWitness(ctx, ready, { expectedOutcomeId: 'read', rng: makeRng(18123) }).ok).toBe(true);
+    const templates = observer.finish();
+    const rows = [{ seed: 18122, playedYears: 0, control: 'not sampled' as const, frameDue: { true: 0, false: 0 }, templates }];
+    const ranked = summariseFunnel(ctx.content, { ids: [ready.id, missing.id], rows });
+    expect(ranked.map(row => row.id)).toEqual([missing.id, ready.id]);
+    expect(ranked[0]).toMatchObject({ houses: { sampled: 1, castProved: 0, eligible: 0, selected: 0, fired: 0 },
+      neverResolved: ['funnel_missing||read'] });
+    expect(ranked[1]).toMatchObject({ houses: { sampled: 1, fired: 1 }, neverResolved: [], branches: { 'funnel_ready||read': 1 } });
   });
 });
 
