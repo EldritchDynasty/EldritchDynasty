@@ -1,8 +1,10 @@
 # Regency and unwoken pacing — 18 October 2026
 
-Current baseline for #1814, after the shared ladder calibration (#1802) and late Long Line account (#1807). Measurement source: `ce86d24ba760bf7866b3bd65892506f1e63fd24e`. There are 104 played policy/campaign histories: seeds 901–902 and 5100–5123, chronicler and ascendant, actual Short (300-year) and Long (500-year) campaigns. Early endings stop the denominator. The two seed pools remain separate below; neither the old G1 numbers nor a truncated Long Line stand in for a current Short Line. No new density threshold is set.
+Baseline measured for #1814 on 18 October, after the shared ladder calibration (#1802) and late Long Line account (#1807). Measurement source: `ce86d24ba760bf7866b3bd65892506f1e63fd24e`. There are 104 played policy/campaign histories: seeds 901–902 and 5100–5123, chronicler and ascendant, actual Short (300-year) and Long (500-year) campaigns. Early endings stop the denominator. The two seed pools remain separate below; neither the old G1 numbers nor a truncated Long Line stand in for a current Short Line. No new density threshold is set.
 
 Measured source trees: core `8b96f84abed3c3b90b9a8a9035e5d930c7605802`, content `fac6cbc030e1df05e471203f0efbe1fd07bd38ef`. These identify the measured code and content through later rebases.
+
+The merged source `7f6cd66287e612946555a3c7a7d0bc5c5854f0f2` has those same core and content trees and is the permanent reproduction point. These findings precede #1812's later rival settlement; subsequent content changes can move the measured histories.
 
 ## Concrete pacing bottlenecks
 
@@ -32,6 +34,9 @@ The shared `playStallRun` loop retains the original ending-batch and ladder-deci
 ## Reproduce
 
 ```bash
+git worktree add ../eldritch-pacing-baseline 7f6cd66287e612946555a3c7a7d0bc5c5854f0f2
+cd ../eldritch-pacing-baseline
+npm ci
 npm run gate:density -- --policies=chronicler,ascendant --seeds=901,902 500 300 --output=regency-901-902.json
 npm run gate:density -- --policies=chronicler,ascendant --seeds=5100,5101,5102,5103,5104,5105,5106,5107,5108,5109,5110,5111,5112,5113,5114,5115,5116,5117,5118,5119,5120,5121,5122,5123 500 300 --output=regency-G1.json
 ```

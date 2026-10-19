@@ -12262,3 +12262,48 @@ no change in run incidence, selection share or confidence margin is asserted.
 The full hosted PR/merge-group CI must still judge the actual integration
 with the repository's gate and slow-test lanes. Evidence and failures are
 tracked at [PR #1847](https://github.com/EldritchDynasty/EldritchDynasty/pull/1847).
+
+---
+
+## 2026-10-19 — #1814: Regency and unwoken pacing (18 October baseline)
+
+**Instrument.** The density/stall observer now runs through the existing canonical chronicler and ascendant policy loop, preserving its salts and answers. The default first-choice/always-Record density player remains separate. A true female-Head Regency and a male Head without a witnessed living expresser are separately labelled; a seal handover ends an interval. Automatic resolutions, naming forms, routine presentations and exact same-template/verb/target/answer maintenance are distinguished. The quiet clock reads meaningful choice/Record, Match, successful deliberate orders, actual Age boundaries and changed seal, witnessed awakening/rite bearers, clauses, rung, Regalia or durable holdings. Annual harvest rolls do not reset it. No WorldState/save field or balance threshold was added.
+
+**Sample.** Measured on 18 October after #1802 and #1807, before #1812’s later rival settlement: seeds **901–902** and **5100–5123**, chronicler and ascendant, actual Short and Long campaigns: **104 played histories**. Early endings stop the denominator. [The full report](REGENCY-PACING.md) records every interval, rates, blockers, ending mixes, exact source trees and reproduction commands. The following G1 rows use 24 histories each; they are current measurements, not the old 117–145 frozen-year figures. Head-bounded Regency/unwoken intervals also differ from a frozen stretch that could span several Heads.
+
+| Campaign / policy | Period | Years / played | Intervals; mean/max years | Quiet max | Choice / Match / Record / order | Routine / automatic / exact maintenance | Route / no route years |
+|---|---|---:|---:|---:|---:|---:|---:|
+| short / chronicler | regency | 1106/6800 (16.3%) | 39; 28.4/77 | 12 | 312/46/40/0 | 53/91/0 | 74/1032 |
+| short / chronicler | unwoken | 563/6800 (8.3%) | 33; 17.1/47 | 6 | 138/52/4/0 | 31/29/0 | 52/511 |
+| short / ascendant | regency | 524/6118 (8.6%) | 25; 21.0/74 | 14 | 165/20/14/2 | 33/42/0 | 76/448 |
+| short / ascendant | unwoken | 684/6118 (11.2%) | 40; 17.1/63 | 6 | 187/61/16/44 | 42/33/0 | 61/623 |
+| long / chronicler | regency | 2033/11138 (18.3%) | 68; 29.9/85 | 13 | 557/76/81/0 | 129/186/0 | 189/1844 |
+| long / chronicler | unwoken | 679/11138 (6.1%) | 48; 14.1/47 | 8 | 175/61/10/0 | 35/34/0 | 61/618 |
+| long / ascendant | regency | 1460/9542 (15.3%) | 60; 24.3/82 | 13 | 443/57/67/10 | 90/145/0 | 111/1349 |
+| long / ascendant | unwoken | 649/9542 (6.8%) | 42; 15.5/63 | 7 | 176/58/13/43 | 27/32/0 | 58/591 |
+
+The smaller 901–902 baseline, kept separate from G1:
+
+| Campaign / policy | Played years | Regency years; quiet max | Unwoken years; quiet max | Ending mix /2 |
+|---|---:|---:|---:|---|
+| short / chronicler | 486 | 8; 3 | 62; 5 | broken_line 1, forgotten 1 |
+| short / ascendant | 600 | 42; 6 | 61; 4 | devoured 1, forgotten 1 |
+| long / chronicler | 689 | 52; 6 | 93; 5 | broken_line 1, forgotten 1 |
+| long / ascendant | 1000 | 440; 11 | 61; 4 | devoured 2 |
+
+G1 ending mixes /24:
+
+| Campaign / policy | Actual endings |
+|---|---|
+| short / chronicler | broken_line 2, devoured 8, forgotten 9, settled 5 |
+| short / ascendant | broken_line 5, devoured 12, forgotten 6, settled 1 |
+| long / chronicler | broken_line 3, devoured 7, forgotten 14 |
+| long / ascendant | broken_line 6, devoured 12, forgotten 5, unmade 1 |
+
+**Bottlenecks.** Meaningful family decisions occur during these stretches, but they often cannot move the exact ladder predicate. Long/chronicler seed 5105, Fritha the second, has a **45-year Regency (1164–1208)** entirely behind no-expresser, four current-route years and a **13-year quiet gap**, despite ten meaningful choices, four Matches and one meaningful Record. Long/ascendant seed 5112, Merrick the sixth, has **20 unwoken years (1356–1375)** all behind awakening, no current route, three meaningful choices, no Match/order and a **seven-year quiet gap**. Short/ascendant seed 5116, Amice, has a **74-year Regency (1158–1231)**, one current-route Match year, 51 no-expresser / 23 power years and the sample’s **14-year** worst quiet gap. The full report also retains the longest Regencies (up to 85 years) and less quiet counterexamples.
+
+Almost all Long unwoken years bind on awakening: **678/679** chronicler and **637/649** ascendant. Their offered current routes are Matches, which affect the next generation. A successful book search can interrupt the player’s quiet clock without moving that awakening gate. #1817 owns forcing; this evidence does not silently change its risks or make a missing route available.
+
+**Limits.** Chronicler sends no deliberate Table orders. Ascendant sends its existing book-search/rite/clause-search orders; direct Scion/heir and opening bid-ceiling setup are not invented orders. Neither sends an explicit bid/lot-bid, so auction-decision counts are zero, not a judgment that auctions are unavailable. Exact maintenance is zero under the conservative house-wide state identity test while routine presentations remain nonzero; a strict zero does not establish that recurring routine scenes feel different. Quiet gaps include leading/trailing years inside each interval. No arbitrary density floor follows from this sample.
+
+**Verification.** The 22 focused stall/diagnostic tests pass, covering actual Regency, an unwoken Head, an offered Match route, awakening ending a stretch, same-category succession, automatic/naming separation, strict maintenance, dated successful versus failed orders, and harvest noise versus durable holdings/Age boundaries. Eight full on/off saved-state replays (901–902 × both policies × both actual campaigns) match, including lazy genome representation, all saved state and the decision log; additional completed paired samples also match. The original density player’s four same-runtime 901–902 controls retain every legacy result field and ordered choice visit. All 48 Short G1 histories also match every common StallRun field in #1802’s measured after sample. Final landing preflight and exact-head CI are recorded on the PR.
