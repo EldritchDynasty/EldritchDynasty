@@ -1,7 +1,7 @@
 import { saveGame } from './save.js';
 import { viewOf } from './session.js';
 import { observeFamilyChallenge, recordedAffinityScore, type ChallengeObservation } from './tools/challenge-observation.js';
-import { acquireLibraryCopy, attr, beginStudy, completeStudies, degradeLibraryCopy, evalFilter, gainSpellbook, knowsAffinity, loseLibraryCopy, loseSpellbookKnowledge, makeRng, autoCast, resolveSlots } from '@ed/core';
+import { acquireLibraryCopy, attr, beginStudy, choiceAvailability, completeStudies, degradeLibraryCopy, evalFilter, gainSpellbook, knowsAffinity, loseLibraryCopy, loseSpellbookKnowledge, makeRng, autoCast, resolveSlots, setProseMode } from '@ed/core';
 import { ALL_AFFINITIES, THRESHOLD_AFFINITIES, EventTemplateS, FilterS, PoolSpecS, asId, runRule } from '@ed/schema';
 import type { SlotSpec } from '@ed/schema';
 import type { SimCtx } from './world.js';
@@ -525,6 +525,7 @@ describe('family-challenges regressions (#1796)', () => {
       ctx.world.year = study.completes;
       completeStudies(ctx);
       set(ctx, novice, 'mind', 60);
+      set(ctx, novice, 'darkness', 40);
       expect(knowsAffinity(ctx, novice, 'darkness')).toBe(true);
       expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: 'held', rng: makeRng(7) }).ok).toBe(true);
     });
@@ -543,7 +544,7 @@ describe('family-challenges regressions (#1796)', () => {
       expect(ctx.world.library.has(book)).toBe(false);
       expect(executeOutcomeWitness(ctx, event, {
         choiceId: `use_${affinity}`, expectedOutcomeId: 'lost', rng: makeRng(1830),
-      }).ok).toBe(true);
+      }).ok).toBe(false);
       const before = ctx.world.treasury;
       const madness = novice.madness;
       const preparation = executeOutcomeWitness(ctx, event, {
@@ -558,7 +559,7 @@ describe('family-challenges regressions (#1796)', () => {
       expect(study!.completes).toBeGreaterThan(ctx.world.year);
       expect(executeOutcomeWitness(ctx, event, {
         choiceId: `use_${affinity}`, expectedOutcomeId: 'lost', rng: makeRng(1832),
-      }).ok).toBe(true);
+      }).ok).toBe(false);
       ctx.world.year = study!.completes;
       completeStudies(ctx);
       expect(knowsAffinity(ctx, novice, affinity)).toBe(true);
@@ -567,6 +568,35 @@ describe('family-challenges regressions (#1796)', () => {
       });
       expect(working.ok, working.reason).toBe(true);
       expect(novice.madness).toBe(madness);
+    });
+
+    it.each([
+      ['the_fever_and_the_vigil', 'death', 'female'],
+      ['the_wind_under_the_slates', 'terra', 'male'],
+      ['the_cawdry_copy', 'darkness', 'female'],
+    ] as const)('%s requires a learned reader but still lets a weak reader fail (#1830)', (id, affinity, sex) => {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        const ctx = fixture();
+        setProseMode(ctx, mode);
+        const reader = place(ctx, { sex, age: 30, awakened: true, name: 'The prospective reader' });
+        const event = content.mustEvent(id);
+        if (event.interaction.kind === 'narration') throw new Error('working is not a choice');
+        const choice = event.interaction.choices.find(candidate => candidate.id === `use_${affinity}`)!;
+        const availability = () => choiceAvailability(choice, ctx, resolveSlots(event, ctx, makeRng(1836)).fill, event);
+        expect(availability().available).toBe(false);
+        expect(availability().blockedBy).not.toMatch(/KEEPER|STONE|COVER/);
+        expect(availability().blockedBy?.toLowerCase()).toContain('reader');
+        expect(acquireLibraryCopy(ctx, `lesser_workings_of_${affinity}`)).toBeDefined();
+        expect(availability().available).toBe(false);
+        expect(gainSpellbook(ctx, reader, content.spellbook(`lesser_workings_of_${affinity}`)!)).toBe(true);
+        set(ctx, reader, affinity, 0);
+        set(ctx, reader, 'mind', 0);
+        expect(availability().available).toBe(true);
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id, expectedOutcomeId: 'lost', rng: makeRng(1837),
+        });
+        expect(result.ok, result.reason).toBe(true);
+      }
     });
 
     it.each([
