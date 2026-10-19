@@ -164,6 +164,28 @@ describe('the content rules', () => {
       expect(runRule('recast/role', b).some((i) => i.message.includes('missing'))).toBe(true);
     });
 
+    it('guards recast effects in all three Record option locations', () => {
+      const b = recast('rival');
+      const event = b.events.find((row) => row.interaction.kind === 'choice' && row.interaction.choices.length > 0)!;
+      if (event.interaction.kind !== 'choice') throw new Error('expected choice fixture');
+      const source = b.events.find((row) => row.record)?.record;
+      if (!source) throw new Error('expected an authored Record fixture');
+      const copy = () => structuredClone(source);
+      const choice = event.interaction.choices[0]!;
+      event.record = copy();
+      event.record.options.record.effects.push({ kind: 'recast', slot: 'UNDECLARED' });
+      event.recordByChoice = [{ ...copy(), id: choice.id }];
+      event.recordByChoice[0]!.options.omit.effects.push({ kind: 'recast', slot: 'UNDECLARED' });
+      event.recordByOutcome = [{ ...copy(), id: `${choice.id}/${choice.outcomes[0]!.id}` }];
+      event.recordByOutcome[0]!.options.embellish.effects.push({ kind: 'recast', slot: 'UNDECLARED' });
+      const scopes = runRule('recast/role', b)
+        .filter((issue) => issue.message.includes('UNDECLARED'))
+        .map((issue) => issue.where);
+      expect(scopes).toContain(`event:${event.id}/record/record`);
+      expect(scopes).toContain(`event:${event.id}/recordByChoice:${choice.id}/omit`);
+      expect(scopes).toContain(`event:${event.id}/recordByOutcome:${choice.id}/${choice.outcomes[0]!.id}/embellish`);
+    });
+
     it('does not reject shipped content', () => {
       expect(runRule('recast/role', content)).toHaveLength(0);
     });
