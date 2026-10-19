@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { AttributeId, ContentBundle, Outcome, TraitDef, TraitId } from '@ed/schema';
-import { asId, OutcomeS, proseOriginalHash, type Person } from '@ed/schema';
+import { asId, EventTemplateS, OutcomeS, proseOriginalHash, type Person } from '@ed/schema';
 import { outcomeAdmits } from './events/effects.js';
 import { phenotypeOf } from './people/factory.js';
 import type { SimCtx } from './world.js';
@@ -10,6 +10,9 @@ import {
   pickOutcome, place, setProseMode, setProseVariants, testRng, testWorld, tickEconomy,
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
+import { decideBranch } from './events/deciders.js';
+import { commitOutcome } from './events/decisions.js';
+import { emptyReach, observeGuardedOutcome, outcomeKey, readRun } from './events/reach.js';
 
 const content = loadContent();
 const bundle = content.bundle;
@@ -269,6 +272,60 @@ const guardedOutcome = (id: string, weight: number, onlyIf?: Outcome['onlyIf']):
 const expresses = (v: boolean): Outcome['onlyIf'] => ({ slot: 'CHILD', filters: [{ canExpress: v }] });
 
 describe('onlyIf (#1817)', () => {
+  it('counts opportunities before the selected effect changes the guarded state', () => {
+    const ctx = testWorld(content);
+    const boy = guardBoy(ctx, true, 'Ash');
+    boy.awakening.awakened = false;
+    const event = EventTemplateS.parse({
+      ...content.mustEvent('the_seal_questioned'),
+      slots: { CHILD: { role: 'unwoken', filters: [{ canExpress: true }] } },
+      interaction: { kind: 'narration', outcomes: [
+        { ...guardedOutcome('woke', 100, { slot: 'CHILD', filters: [{ awakened: false }] }),
+          effects: [{ kind: 'awakening', target: { slot: 'CHILD' } }] },
+        guardedOutcome('already_woke', 100, { slot: 'CHILD', filters: [{ awakened: true }] }),
+      ] },
+    });
+    if (event.interaction.kind !== 'narration') throw new Error('narration fixture');
+    const reach = emptyReach();
+    ctx.observeOutcome = (observation) => observeGuardedOutcome(ctx, observation, reach);
+    const fill = { CHILD: boy.id };
+    const rng = testRng('pre-effect-opportunities');
+    const selected = pickOutcome(event.interaction.outcomes, rng, ctx, fill, event);
+    commitOutcome(ctx, event, selected, fill, undefined, rng);
+    readRun(ctx, reach);
+    expect(boy.awakening.awakened).toBe(true);
+    const woke = outcomeKey(String(event.id), undefined, 'woke');
+    const already = outcomeKey(String(event.id), undefined, 'already_woke');
+    expect(reach.guarded?.opportunities.get(woke)).toBe(1);
+    expect(reach.guarded?.expected.get(woke)).toBe(1);
+    expect(reach.guarded?.opportunities.get(already)).toBe(0);
+    expect(reach.guarded?.expected.get(already)).toBe(0);
+    expect(reach.runs.get(woke)).toBe(1);
+  });
+
+  it('keeps branch odds unchanged when this cast cannot draw an added outcome', () => {
+    const ctx = testWorld(content);
+    const cannot = guardBoy(ctx, false, 'Birch');
+    const base = EventTemplateS.parse({
+      ...content.mustEvent('the_seal_questioned'),
+      slots: { CHILD: { role: 'unwoken' } },
+      interaction: {
+        kind: 'choice', decidedBy: 'chance', choices: [
+          { id: 'try', label: 'Try', outcomes: [guardedOutcome('cold', 10)] },
+          { id: 'leave', label: 'Leave', outcomes: [guardedOutcome('left', 100)] },
+        ],
+      },
+    });
+    const guarded = structuredClone(base);
+    if (guarded.interaction.kind === 'narration') throw new Error('choice fixture');
+    guarded.interaction.choices[0]!.outcomes.push(guardedOutcome('woke', 90, expresses(true)));
+    for (let i = 0; i < 200; i++) {
+      const fill = { CHILD: cannot.id };
+      expect(decideBranch(ctx, guarded, fill, testRng('branch-pair', i)).choice?.id)
+        .toBe(decideBranch(ctx, base, fill, testRng('branch-pair', i)).choice?.id);
+    }
+  });
+
   it('keeps each kind of boy to his own outcomes, whatever the dice', () => {
     const ctx = testWorld(content);
     const can = guardBoy(ctx, true, 'Ash');

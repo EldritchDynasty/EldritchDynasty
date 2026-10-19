@@ -1,5 +1,4 @@
 import type { Choice, EventTemplate } from '@ed/schema';
-import { outcomeDrawSets } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
@@ -8,6 +7,7 @@ import type { SlotFill } from './slots.js';
 import type { EvalScope } from './scope.js';
 import { choiceAvailability } from './availability.js';
 import { msg } from '../messages.js';
+import { outcomeAdmits } from './effects.js';
 
 /**
  * WHO TAKES THE BRANCH — the evaluator for `schema/src/decider.ts`.
@@ -71,7 +71,7 @@ export function decideBranch(
   const scope = opts.scope ?? {};
   const open = choices.filter((c) => choiceAvailability(c, ctx, fill, e).available);
   const fallback = (why: string): BranchDecision => ({
-    choice: byWeight(open.length ? open : choices, rng),
+    choice: byWeight(open.length ? open : choices, rng, ctx, fill, e),
     asks: false,
     why,
   });
@@ -139,10 +139,11 @@ export function decideBranch(
  * branch taken twice as often as another says so by weighting its outcomes,
  * which is the knob they already reach for.
  */
-function byWeight(choices: Choice[], rng: Rng): Choice {
-  // A guarded branch (#1817) is one draw per kind of cast, not their sum: it
-  // is worth its largest draw set. An unguarded branch is one set, itself, so
-  // this is the same number it always was.
-  const worth = (c: Choice) => Math.max(...outcomeDrawSets(c.outcomes).map((set) => set.reduce((s, o) => s + o.weight, 0)));
+function byWeight(choices: Choice[], rng: Rng, ctx: SimCtx, fill: SlotFill, event: EventTemplate): Choice {
+  // Ineligible outcomes cannot buy a branch extra weight. An unguarded group
+  // retains its authored total and consumes the same single weighted draw.
+  const worth = (c: Choice) => c.outcomes
+    .filter((o) => outcomeAdmits(o, ctx, fill, event))
+    .reduce((sum, o) => sum + o.weight, 0);
   return rng.weighted(choices, (c) => worth(c) || 1) ?? choices[0]!;
 }
