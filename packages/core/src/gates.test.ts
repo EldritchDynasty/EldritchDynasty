@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { SlotSpecS, type ContentBundle } from '@ed/schema';
+import { EventTemplateS, SlotSpecS, type ContentBundle } from '@ed/schema';
+import { playGateBatch } from './tools/gate-batch.js';
 import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateHost, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
   gateClauses, gateFireRate, gateFireRateNightly, gateLadderScales, gateOutcomeReach, gatePurposes,
@@ -33,6 +34,31 @@ import { executeOutcomeWitness } from './events/reach.js';
 import { eldritchPower, madnessOf, mindOf } from './ascension.js';
 
 const content = loadContent();
+
+describe('live guarded reach in the canonical batch (#1817)', () => {
+  it('credits actual eligible pools, including an open outcome shared by both casts', () => {
+    const bundle = structuredClone(content.bundle);
+    bundle.events = [EventTemplateS.parse({
+      id: 'guarded_batch_witness', title: 'A guarded draw', tier: 'head',
+      frequency: 'common', repeatable: true,
+      purposes: ['test_magic_rule', 'change_relationship', 'worldbuild_through_action'],
+      slots: { HEAD: { role: 'head' } }, body: 'The house waits.',
+      interaction: { kind: 'narration', outcomes: [
+        { id: 'gift', weight: 1, text: 'A gift.', effects: [], onlyIf: { slot: 'HEAD', filters: [{ canExpress: true }] } },
+        { id: 'ordinary', weight: 1, text: 'An ordinary day.', effects: [], onlyIf: { slot: 'HEAD', filters: [{ canExpress: false }] } },
+        { id: 'shared', weight: 1, text: 'The day ends.', effects: [] },
+      ] },
+    })];
+    const batch = playGateBatch(bundle, 1, 5);
+    const guarded = batch.reach.guarded!;
+    const fires = batch.reach.firings.get('guarded_batch_witness|')!;
+    expect(fires).toBeGreaterThan(0);
+    expect(guarded.opportunities.get('guarded_batch_witness||shared')).toBe(fires);
+    expect(guarded.expected.get('guarded_batch_witness||shared')).toBe(fires / 2);
+    expect((guarded.opportunities.get('guarded_batch_witness||gift') ?? 0)
+      + (guarded.opportunities.get('guarded_batch_witness||ordinary') ?? 0)).toBe(fires);
+  });
+});
 
 describe('#431 forced-Awakening provenance', () => {
   it('records the Drowning survivor as forced in the same row gate 9 reports', () => {
