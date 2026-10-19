@@ -12307,3 +12307,88 @@ Almost all Long unwoken years bind on awakening: **678/679** chronicler and **63
 **Limits.** Chronicler sends no deliberate Table orders. Ascendant sends its existing book-search/rite/clause-search orders; direct Scion/heir and opening bid-ceiling setup are not invented orders. Neither sends an explicit bid/lot-bid, so auction-decision counts are zero, not a judgment that auctions are unavailable. Exact maintenance is zero under the conservative house-wide state identity test while routine presentations remain nonzero; a strict zero does not establish that recurring routine scenes feel different. Quiet gaps include leading/trailing years inside each interval. No arbitrary density floor follows from this sample.
 
 **Verification.** The 22 focused stall/diagnostic tests pass, covering actual Regency, an unwoken Head, an offered Match route, awakening ending a stretch, same-category succession, automatic/naming separation, strict maintenance, dated successful versus failed orders, and harvest noise versus durable holdings/Age boundaries. Eight full on/off saved-state replays (901–902 × both policies × both actual campaigns) match, including lazy genome representation, all saved state and the decision log; additional completed paired samples also match. The original density player’s four same-runtime 901–902 controls retain every legacy result field and ordered choice visit. All 48 Short G1 histories also match every common StallRun field in #1802’s measured after sample. Final landing preflight and exact-head CI are recorded on the PR.
+
+
+## 2026-10-19 — #1824: authored signs do not test hidden capacity
+
+**Scope and knowledge rule.** The fifteen candidates in the issue are reviewed below. Five ordinary scenes now cast without reading capacity. Seven fresh supernatural roles require a witnessed awakening while retaining every `canExpress` guard on Madness. The two actual natural-reveal scenes and the Ring’s previously bought consequence remain legitimate. No generic slot inheritance, Mystic learnability, death path, gate threshold, frequency profile, template weight or outcome odds changes. #1817’s forcing work is not included.
+
+**Paired measurement.** The unchanged canonical `playGateBatch` chronicler runs **800 Long Lines × 500 years**, seeds `5000 + 7*i`, `i=0..799`, on each revision. Before `0270303b04535fe7f53ebeac7048c541e1f8632c` has identical entire core/schema/content trees to main `3dbe68c8c975b64ea9c54b9077b9d12d04afeb81`; after `734a479024c33b3d4ef7393a55c7c43509cda970` is the frozen implementation head. Both full gate readers reuse that same played batch. The figures are houses with at least one fire, not number of firings; divided by eight they are percentages. Shared seeds make the comparison reproducible, but changing candidate pools rerolls later content, so these are observed incidences rather than isolated causal effects.
+
+| Scene | Review / repair | Houses before → after /800 |
+|---|---|---:|
+| `the_horse_that_will_not_pass_the_gate` | Ordinary horse behaviour; remove hidden capacity filter. | 199 → 228 |
+| `the_knife_everybody_wears` | Ordinary blade care; remove hidden capacity filter. | 179 → 200 |
+| `the_unmirrored_eye_offered` | An offer to buy is not artifact use; admit any Head, including a woman. | 103 → 143 |
+| `the_witness_at_the_wall` | An ambiguous witnessed incident; remove hidden capacity filter. | 54 → 60 |
+| `the_sickroom_rule` | Fever and household privacy; remove hidden capacity filter. | 203 → 239 |
+| `iron_will_not_hold_an_edge` | Fresh cast requires a witnessed awakening; retain the Madness capability guard. | 68 → 68 |
+| `a_head_at_the_top_of_it` | Fresh Head requires a witnessed awakening; retain the Madness capability guard. | 60 → 55 |
+| `the_ninth_night_it_answered` | Fresh cast requires a witnessed awakening; retain the Madness capability guard. | 49 → 54 |
+| `it_does_not_come_when_called` | Its previous manifestation is now a real witnessed awakening; retain the Madness capability guard. | 275 → 229 |
+| `the_ring_that_fits` | First fitting names an already awakened wearer; no free test of an unwoken man. | 203 → 194 |
+| `ring_the_household_decides` | Keep the first wearer; cancel if he dies before this unpaid choice rather than silently fitting an heir. | 166 → 152 |
+| `ring_what_it_costs` | Legitimate paid consequence: retain the original bound ID, including after death. | 165 → 152 |
+| `ring_it_fits_again` | The later fitting selects its own already awakened man; both prose modes use matching pronouns. | 111 → 100 |
+| `the_year_two_woke` | Legitimate natural reveal: every outcome actually awakens both unwoken, undeclared men, ages 9–29. | 45 → 10 |
+| `the_late_waking` | Legitimate natural reveal, unchanged: every outcome awakens its unwoken, undeclared man aged 30+. | 89 → 102 |
+
+**Natural and paid consequences.** `the_year_two_woke` previously described two Awakenings without applying either. All three outcomes now commit both with `forced: false` before their existing costs, and the cast cannot select them again afterwards. Its lower age window ends at 29 to leave the existing Late Waking at 30+. Declared-mundane men are excluded from both natural scenes. This adds real natural awakening supply relative to the bug; it is not merely a presentation change. The Ring’s first household choice retains its original living wearer and cancels on his death before that choice; inheriting there would invent another fitting before the intended second fitting 120–280 years later. The later paid `ring_what_it_costs` retains `continue_absent`, including its actual +18 Madness on the dead bound wearer. No generic inheritance behaviour changes.
+
+**Affected outcome reach.** Every affected outcome resolves after the repair. The witness inventory retains all 1,141 existing keys; 34 belong to these fifteen scenes. The following are houses resolving each outcome at least once in the paired batch.
+
+| Event / choice / outcome | Houses before → after /800 |
+|---|---:|
+| `a_head_at_the_top_of_it / keep_him_in_the_chair / an_order_gets_out` | 18 → 15 |
+| `a_head_at_the_top_of_it / keep_him_in_the_chair / he_holds_it` | 18 → 13 |
+| `a_head_at_the_top_of_it / take_it_off_him / taken` | 24 → 27 |
+| `iron_will_not_hold_an_edge / move_him / it_follows_him` | 15 → 14 |
+| `iron_will_not_hold_an_edge / move_him / moved` | 13 → 15 |
+| `iron_will_not_hold_an_edge / rebuild_the_room / rebuilt` | 41 → 40 |
+| `it_does_not_come_when_called /  / nothing_at_all` | 275 → 229 |
+| `ring_it_fits_again / follow_the_record / followed` | 55 → 51 |
+| `ring_it_fits_again / follow_the_song / followed_song` | 56 → 49 |
+| `ring_the_household_decides / let_it_stay / worn` | 81 → 79 |
+| `ring_the_household_decides / take_it_off / taken` | 85 → 73 |
+| `ring_what_it_costs / keep_him_close / kept` | 88 → 84 |
+| `ring_what_it_costs / send_him_out / sent` | 77 → 68 |
+| `the_horse_that_will_not_pass_the_gate / give_him_to_the_groom / kept` | 122 → 140 |
+| `the_horse_that_will_not_pass_the_gate / sell_the_horse / sold` | 95 → 113 |
+| `the_knife_everybody_wears /  / a_horn_handle` | 103 → 113 |
+| `the_knife_everybody_wears /  / he_keeps_it` | 84 → 96 |
+| `the_late_waking / keep_it_within_the_walls / kept_quiet` | 46 → 55 |
+| `the_late_waking / say_it_aloud / all_at_once` | 13 → 14 |
+| `the_late_waking / say_it_aloud / woke_late` | 39 → 44 |
+| `the_ninth_night_it_answered / close_the_book / closed` | 27 → 29 |
+| `the_ninth_night_it_answered / go_on_to_the_tenth / nothing_further` | 12 → 12 |
+| `the_ninth_night_it_answered / go_on_to_the_tenth / the_tenth` | 11 → 14 |
+| `the_ring_that_fits /  / it_went_on` | 203 → 194 |
+| `the_sickroom_rule / keep_the_custom / custom_kept` | 108 → 127 |
+| `the_sickroom_rule / keep_the_room_clear / kept_clear` | 114 → 144 |
+| `the_unmirrored_eye_offered / buy / bought` | 52 → 70 |
+| `the_unmirrored_eye_offered / decline / left` | 51 → 73 |
+| `the_witness_at_the_wall / pay_him_off / he_stays_bought` | 9 → 10 |
+| `the_witness_at_the_wall / pay_him_off / paid` | 18 → 24 |
+| `the_witness_at_the_wall / the_third_night / of_the_household` | 27 → 27 |
+| `the_year_two_woke / keep_them_together / both_at_ardwen` | 14 → 1 |
+| `the_year_two_woke / keep_them_together / it_holds` | 9 → 1 |
+| `the_year_two_woke / send_one_out / four_miles_off` | 26 → 8 |
+
+**Full gate verdicts.** These are the actual default verdicts, including any unrelated failures; no zero is waived and no sample or assertion is relaxed.
+
+- before / fire-rate: **PASS**.
+  gate 4 (fire rate): 800 runs x 500y — rarest of 499 non-frame events:
+  gate 10 (vocabulary reach): 30 Effect kinds — 30 authored, 30 reached in 800 runs x 500y
+- before / outcome-reach: **PASS**.
+  gate 8 (outcome reach): 800 runs x 500y — rarest of 1138 authored outcomes:
+- after / fire-rate: **PASS**.
+  gate 4 (fire rate): 800 runs x 500y — rarest of 499 non-frame events:
+  gate 10 (vocabulary reach): 30 Effect kinds — 30 authored, 30 reached in 800 runs x 500y
+- after / outcome-reach: **FAIL**.
+  gate 8 (outcome reach): 800 runs x 500y — rarest of 1138 authored outcomes:
+    FAIL: 1 outcome(s) never resolve:
+      the_wind_under_the_slates/use_terra -> held  — expected ~46.0 of 92 firings, resolved none
+
+**Remaining reach debt.** Terra’s `the_wind_under_the_slates/use_terra → held` falls from one house before to zero after (92 after-choice firings). Its scarcity and the sibling Death/Darkness checks are already tracked by #1830. This is a newly red verdict on an existing thin route, not an all-green full outcome gate. No Terra source or gate exception is changed here. The natural two-person scene falls from 45 to 10 houses after requiring two actual unwoken men; its three answers resolve in 1, 1 and 8 houses. Those rare keep-together answers remain thin even though each is reached. No improved encounter rate or statistical robustness is claimed for them.
+
+**Copy and verification.** Ten Plain English counterpart rows carry the actual Original hashes; the Ring’s second wearer uses male pronouns in both modes. The rival settlement uses “signer” for its unrestricted Head and its callback refers to the house’s old settlement rather than making a successor Head its original signatory. All **55 focused casting/arc tests** pass, with **19 regression failures** reproduced before the repair. They compare actual null/non-null font genomes for ordinary unwoken casts, preserve the female Head’s artifact offer, enforce witnessed waking on fresh supernatural casts, execute all three two-person and all three Late Waking outcomes, protect the age/declaration boundary, and verify living, missing and paid-dead Ring bindings. All **334 existing execution witness tests** pass. The landing preflight on the implementation head passes type checks, **44 validation rules / zero errors / three existing warnings**, and **177 files / 5,141 fast tests**. Hosted exact-head and native merge-group CI remain authoritative.
