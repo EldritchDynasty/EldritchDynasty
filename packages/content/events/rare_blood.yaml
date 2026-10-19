@@ -25,29 +25,29 @@ events:
     purposes: [establish_magic_rule, force_record_choice, test_magic_rule]
     slots:
       HEAD: { role: head }
-      # Two who can express, alive, in one hall. That pair is the premise and
-      # it is the whole reason this template is thin: it needs the rarest
-      # thing this family produces, twice, at once. The band is 9-34 rather
-      # than 9-22 because a man who woke at twenty is still a man who woke,
-      # and the scene is about the year rather than about boyhood.
+      # Both natural Awakenings happen in this scene, whichever answer the
+      # house gives. Neither man is already awake or declared mundane.
+      # Thirty and above belongs to the distinct Late Waking; keep this pair
+      # below that boundary. Every outcome commits both Awakenings before cost.
       FIRST:
-        role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 9 } }, { age: { op: lte, value: 34 } }]
+        role: unwoken
+        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { declaredMundane: false }, { age: { op: gte, value: 9 } }, { age: { op: lte, value: 29 } }]
       SECOND:
-        role: family_member
+        role: unwoken
         filters:
           - { sex: male }
           - { status: [alive] }
           - { canExpress: true }
+          - { declaredMundane: false }
           - { age: { op: gte, value: 9 } }
-          - { age: { op: lte, value: 34 } }
+          - { age: { op: lte, value: 29 } }
           - { relation: not, of: FIRST }
     body: >-
       {FIRST} wakes in Greening and {SECOND} wakes before Slaughter, in the
       same house, in the same year, and there is nothing in any book at Ardwen
       that says this happens. The archivist goes back four hundred years of
-      entries in eleven days and finds no second instance anywhere. Both boys
-      are well. Both boys are watched by everybody in the hall from the second
+      entries in eleven days and finds no second instance anywhere. Both
+      are well. Both are watched by everybody in the hall from the second
       week on, and by Frostfall they have both noticed being watched.
     interaction:
       kind: choice
@@ -65,6 +65,8 @@ events:
                 year they stop speaking, both of them are already past the age
                 where any of it can be undone.
               effects:
+                - { kind: awakening, target: { slot: FIRST }, forced: false }
+                - { kind: awakening, target: { slot: SECOND }, forced: false }
                 - { kind: madness, target: { slot: FIRST }, delta: 9 }
                 - { kind: madness, target: { slot: SECOND }, delta: 9 }
                 - { kind: relationship, from: { slot: SECOND }, to: { slot: FIRST }, sentiment: -18 }
@@ -76,6 +78,8 @@ events:
                 the founding. The province notices the second one about four
                 years after it stops being deniable.
               effects:
+                - { kind: awakening, target: { slot: FIRST }, forced: false }
+                - { kind: awakening, target: { slot: SECOND }, forced: false }
                 - { kind: madness, target: { slot: SECOND }, delta: 6 }
                 - { kind: respect, delta: 2 }
         - id: send_one_out
@@ -84,13 +88,15 @@ events:
             - id: four_miles_off
               weight: 100
               text: >-
-                Four miles of bad gravel and a hall with six people in it, and
-                a boy of fourteen told at the gate that this is for the good of
-                the family and not told which part of the family. He is
+                Four miles of bad gravel and a hall with six people in it. At
+                the gate, {SECOND} is told that this is for the good of the
+                family and not told which part of the family. He is
                 perfectly correct about that for the rest of his life. The
-                cadet line he founds is the one that asks, in 1263, what
+                cadet line he founds is the one that asks, two generations later, what
                 exactly it was sent away for.
               effects:
+                - { kind: awakening, target: { slot: FIRST }, forced: false }
+                - { kind: awakening, target: { slot: SECOND }, forced: false }
                 - { kind: madness, target: { slot: SECOND }, delta: 4 }
                 - { kind: branch, op: slight, amount: 18 }
                 - { kind: relationship, from: { slot: SECOND }, to: head, sentiment: -24 }
@@ -133,7 +139,7 @@ events:
       HEAD: { role: head }
       KIN:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 15 } }]
+        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { awakened: true }, { age: { op: gte, value: 15 } }]
     body: >-
       Every blade that spends a night in the east chamber comes out of it
       soft, and it has been true since Slaughter, and the smith at Wick has
@@ -312,7 +318,7 @@ events:
     tags: [madness, blood, succession, household]
     purposes: [change_relationship, force_record_choice, test_magic_rule]
     slots:
-      HEAD: { role: head, filters: [{ sex: male }, { canExpress: true }] }
+      HEAD: { role: head, filters: [{ sex: male }, { canExpress: true }, { awakened: true }] }
       HEIR:
         role: family_member
         filters: [{ status: [alive] }, { age: { op: gte, value: 18 } }, { relation: not, of: HEAD }]
@@ -405,7 +411,7 @@ events:
       HEAD: { role: head }
       SEEN:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 14 } }]
+        filters: [{ sex: male }, { status: [alive] }, { age: { op: gte, value: 14 } }]
       WITNESS: { role: outsider, filters: [{ status: [alive] }, { age: { op: gte, value: 16 } }] }
     body: >-
       Whatever happened in the yard happened at the hour nobody is meant to be
@@ -672,7 +678,7 @@ events:
       HEAD: { role: head }
       SAYER:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 16 } }]
+        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { awakened: true }, { age: { op: gte, value: 16 } }]
     body: >-
       The Quieting is said at dusk for nine nights and on the ninth the house
       says it in its own chapel, which the family does perhaps twice in a
@@ -870,13 +876,8 @@ proseVariants:
     plainenglish: >-
       Two Woke in One Year
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].body"
-    of: "4bb6005efa4bcb32"
-    plainenglish: >-
-      The power wakes in {FIRST} in Greening, and in {SECOND} before Slaughter: in the same
-      house, in the same year. Nothing in any book at Ardwen says this can happen. The archivist
-      goes through four hundred years of records in eleven days and finds no other case. Both
-      boys are well. From the second week on, everyone in the hall watches them both, and by
-      Frostfall both boys have noticed being watched.
+    of: "366df42cd60e1d20"
+    plainenglish: "{FIRST} awakens in Greening and {SECOND} before Slaughter, both in the same house and year. The archivist searches four hundred years of entries in eleven days and finds no other example. Both are well. Everyone in the hall watches them from the second week, and by Frostfall both know they are being watched."
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=keep_them_together].label"
     of: "3616fe0a21c10c76"
     plainenglish: >-
@@ -896,15 +897,10 @@ proseVariants:
       four years after it can no longer be denied.
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=send_one_out].label"
     of: "2210b0db0a30dae7"
-    plainenglish: >-
-      Send the second boy to the smaller hall before anyone starts counting.
+    plainenglish: "Send the second to the smaller hall before anyone starts counting."
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].interaction.choices[id=send_one_out].outcomes[id=four_miles_off].text"
-    of: "4bdfa824213137b8"
-    plainenglish: >-
-      Four miles of bad gravel road, a hall with six people in it, and a boy of fourteen told at
-      the gate that this is for the good of the family, without being told which part of the
-      family. For the rest of his life he is perfectly right about that. In 1263, the branch of
-      the family he founds is the one that asks exactly why he was sent away.
+    of: "0e251803561a3e17"
+    plainenglish: "The family sends {SECOND} to a small hall four miles away, down a bad gravel road, with six people living there. At the gate, he is told it is for the family’s good, but nobody says which part of the family benefits. He remembers that distinction for the rest of his life. Two generations later, the branch he founds asks why it was sent away."
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].record.subject"
     of: "d0bfe497649719fb"
     plainenglish: >-

@@ -87,6 +87,7 @@ events:
         filters:
           - { status: [alive] }
           - { canExpress: true }
+          - { awakened: true }
           - { age: { op: gte, value: 19 } }
           - { relation: not, of: HEAD }
     body: >-

@@ -177,7 +177,7 @@ events:
         - { generation: { op: gte, value: 3 } }
         - { treasury: { op: gte, value: 380 } }
     slots:
-      HEAD: { role: head, filters: [{ canExpress: true }] }
+      HEAD: { role: head }
     body: >-
       The dealer will not say where it came from and {HEAD} does not ask twice.
       It is not a book and it is not a bottle. It is heavier than its size

@@ -468,7 +468,7 @@ events:
       HEAD: { role: head }
       KIN:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 14 } }]
+        filters: [{ sex: male }, { status: [alive] }, { age: { op: gte, value: 14 } }]
     body: >-
       Everybody in this world wears a knife and eats with it, and a man who
       comes armed with anything more to another man's hall is either an idiot

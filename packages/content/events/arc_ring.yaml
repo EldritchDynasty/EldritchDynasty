@@ -3,9 +3,10 @@
 # add a great deal of content without taking a share of the one event a year
 # the ambient budget allows.
 #
-# WEARER is bound arc-wide and inherits down the blood, because the ring is not
-# about a man, it is about what a family does twice, two hundred years apart,
-# with the same object and no memory of the first time worth the name.
+# WEARER stays the person whose hand the ring fitted. If he dies before the
+# household's first choice, that unpaid scene ends rather than fitting an heir.
+# A paid consequence still follows him after death. The later fitting names its
+# own publicly awakened wearer, two hundred years after the first.
 events:
   - id: ring_the_household_decides
     title: It Went On Without Being Worked At
@@ -20,8 +21,8 @@ events:
       WEARER:
         role: family_member
         bind: arc
-        onMissing: { inherit: closest_blood }
-        filters: [{ status: [alive] }, { canExpress: true }]
+        onMissing: cancel_arc
+        filters: [{ status: [alive] }, { canExpress: true }, { awakened: true }]
     body: >-
       Nobody said anything at supper, which is how the house says a great deal.
       The ring has been in the second press since before the roof was last
@@ -167,6 +168,7 @@ events:
         filters:
           - { status: [alive] }
           - { canExpress: true }
+          - { awakened: true }
           - { age: { op: gte, value: 19 } }
           - { age: { op: lte, value: 40 } }
     body: >-
@@ -183,25 +185,25 @@ events:
       kind: choice
       choices:
         - id: follow_the_record
-          label: Do what the four lines did. Take it off her tonight.
+          label: Do what the four lines did. Take it off him tonight.
           outcomes:
             - id: followed
               weight: 100
               text: >-
-                It comes off as easily as it did the first time. She is
-                thanked, in front of the forty, for understanding, and she does
+                It comes off as easily as it did the first time. He is
+                thanked, in front of the forty, for understanding, and he does
                 understand, and that is somehow the worst available outcome for
                 everyone in the room. The four lines get a fifth line. It says
                 the same thing the first four said and adds the year.
               effects:
                 - { kind: relationship, from: { slot: SECOND }, to: head, sentiment: -30 }
         - id: follow_the_song
-          label: Do what the song did. Let her keep it and see.
+          label: Do what the song did. Let him keep it and see.
           outcomes:
             - id: followed_song
               weight: 100
               text: >-
-                She keeps it eleven years, which is what the last one got, and
+                He keeps it eleven years, which is what the last one got, and
                 the eleven years are very good and end the way the song says
                 they end rather than the way the four lines imply. Both accounts
                 survive this. Neither is corrected. The house now has three
@@ -351,27 +353,17 @@ proseVariants:
       Nobody alive witnessed the first fitting, but everybody has an opinion. Most who read the
       lines believe one account; most who know only the song believe the other.
   - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_record].label"
-    of: "d992bff884fd35dc"
-    plainenglish: >-
-      Follow the four-line record. Remove the ring from her hand tonight.
+    of: "ae029183592a2ae7"
+    plainenglish: "Follow the four-line record. Remove the ring from his hand tonight."
   - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_record].outcomes[id=followed].text"
-    of: "4a1f822c75d49df0"
-    plainenglish: >-
-      The ring comes off just as easily as before. She is thanked before all forty guests for
-      understanding the decision. She really does understand, which somehow makes the moment
-      worse for everyone present. The four-line record gains a fifth line. It repeats the
-      earlier account and adds the year.
+    of: "cda3cf8c0c1404e0"
+    plainenglish: "The ring comes off just as easily as before. He is thanked before all forty guests for understanding the decision. He really does understand, which somehow makes the moment worse for everyone present. The four-line record gains a fifth line. It repeats the earlier account and adds the year."
   - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_song].label"
-    of: "82e4e1e93755c16d"
-    plainenglish: >-
-      Follow the song. Let her keep wearing the ring and see what happens.
+    of: "a92c2272592f7e46"
+    plainenglish: "Follow the song. Let him keep wearing the ring and see what happens."
   - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].interaction.choices[id=follow_the_song].outcomes[id=followed_song].text"
-    of: "8f909a0e6499fd72"
-    plainenglish: >-
-      She wears it for eleven years, just like the first wearer. Those years are very good, and
-      they end as the song describes rather than as the four-line record suggests. Both
-      contradictory accounts survive unchanged. The house now holds three documents about the
-      ring, but still has no rule for what to do with it.
+    of: "dafcd21979090bb5"
+    plainenglish: "He wears it for eleven years, just like the first wearer. Those years are very good, and they end as the song describes rather than as the four-line record suggests. Both contradictory accounts survive unchanged. The house now holds three documents about the ring, but still has no rule for what to do with it."
   - address: "content:events/arc_ring.yaml#events[id=ring_it_fits_again].record.subject"
     of: "70b84ed69110cffa"
     plainenglish: >-
