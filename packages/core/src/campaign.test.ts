@@ -232,7 +232,7 @@ describe('pre-effect selection observations (#1811)', () => {
     const observer = new FunnelObserver(ctx, [framed.id]);
     expect(selectFrame(ctx, makeRng(18120))?.id).toBe(framed.id);
     expect(presentFrame(ctx, framed, makeRng(18121))).toBeUndefined();
-    expect(observer.finish()[0]).toMatchObject({ selectedYears: 1, commits: 0,
+    expect(observer.finish()[0]).toMatchObject({ selectedYears: 1, castProvedYears: 0, eligibleYears: 0, commits: 0,
       actualCastFailures: { 'frame:READER': 1 }, stages: { unresolved: 1 } });
   });
 
