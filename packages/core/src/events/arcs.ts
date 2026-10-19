@@ -16,6 +16,8 @@ function soleBindings(fill: SlotFill, slots: readonly string[]): Record<string, 
     const who = soleCast(fill, sid);
     if (who) out[sid] = who;
   }
+  if (out.length) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
+    candidates: out.map(step => ({ event: String(step.node.event), source: 'arc' })) });
   return out;
 }
 
@@ -125,6 +127,7 @@ export interface ArcStep {
  * this function exists at all.
  */
 export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): ArcStep[] {
+  ctx.observeSelection?.({ kind: 'before_arc_steps', year: ctx.world.year, layer });
   const out: ArcStep[] = [];
 
   for (const inst of ctx.world.arcs.values()) {
@@ -200,7 +203,11 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
     // Old saves can contain the entire parent fill (#1285). Unkept slots
     // must still recast from the current world instead of inheriting it.
     const res = resolveSlots(event, ctx, rng, soleBindings(inst.bindings, arc.bindings));
-    if (!res.ok) { inst.dueYear = ctx.world.year + 5; continue; }
+    if (!res.ok) {
+      ctx.observeSelection?.({ kind: 'cast_failure', year: ctx.world.year, event: String(event.id), source: 'arc', missing: res.missing });
+      inst.dueYear = ctx.world.year + 5;
+      continue;
+    }
 
     out.push({ instance: inst, node, fill: res.fill, playerCast: res.playerCast, absent });
   }
