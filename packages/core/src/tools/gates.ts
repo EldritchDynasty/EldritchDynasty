@@ -57,7 +57,7 @@ import type { Rung } from '@ed/schema';
 import { phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { CAMPAIGN_YEARS, isFullCampaignEvent, START_YEAR } from '../campaign.js';
-import { vocabularyAuthorship } from './vocabulary-authorship.js';
+import { VOCABULARY_AUTHORSHIP_OWED, vocabularyAuthorship } from './vocabulary-authorship.js';
 import { BLOCKING_GATE_CONFIG, GATE_BATCH_SEED_START, GATE_BATCH_SEED_STEP, type BlockingGateId } from './gate-registry.js';
 
 /** What a gate hands back: the verdict, and the lines it would have printed. */
@@ -1149,28 +1149,9 @@ export function gateVocabularyReachTelemetry(
   const unauthored = declared.filter((k) => !authored.has(k));
   const unreached = declared.filter((k) => authored.has(k) && !reached.has(k));
 
-  /**
-   * THE KIND THE GAME STILL OWES, PINNED RATHER THAN FORGIVEN.
-   *
-   * `recast` is declared, handled and unit-tested but authored by no shipped
-   * content, so no run has executed it yet. `schedule` was once pinned here
-   * too, but is now authored and reached in the nightly 800-run sample (#1015);
-   * retaining that paid-off pin would make the debt ratchet fail on healthy
-   * content. Paying the remaining `recast` debt is content work, not test work.
-   *
-   * `muster` was pinned here through #95 (issue #89's Stage 2, the engine
-   * substrate with no content calling it yet) and is PAID OFF by #97 (Stage
-   * 3): `events/muster.yaml` now carries the `muster` effect on five
-   * outcomes. Removed from OWED the moment that landed — see this comment's
-   * own rule two paragraphs down.
-   *
-   * So the gate ratchets instead of forgiving. The debt is named in the output
-   * every run, and BOTH directions fail: a new unauthored kind is the bug this
-   * gate exists for, and paying one of these off without editing this list
-   * leaves a comment claiming a debt the game no longer owes. An allowance
-   * that only ever gets looser is how a known gap becomes the specification.
-   */
-  const OWED = ['recast'];
+  // Share the static debt inventory with the blocking authorship gate.
+  // The earlier separate pin became stale as soon as #1812 authored recast.
+  const OWED: readonly string[] = VOCABULARY_AUTHORSHIP_OWED;
   const newlyUnauthored = unauthored.filter((k) => !OWED.includes(k));
   const paidOff = OWED.filter((k) => !unauthored.includes(k));
 
