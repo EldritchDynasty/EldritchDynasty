@@ -84,15 +84,16 @@ describe('the content cache', () => {
 
       // Warm the cache on the unedited copy first — without this the test
       // passes on a cache that never reads anything back.
-      expect(weightOf(root)).toBe(600);
+      const original = weightOf(root);
+      if (original === undefined) throw new Error('Drowning cache fixture is missing');
 
       const path = join(root, 'events', 'rites.yaml');
       const text = readFileSync(path, 'utf8');
-      const edited = text.replace('weight: 600', 'weight: 601');
+      const edited = text.replace(`weight: ${original}`, `weight: ${original + 1}`);
       expect(edited).not.toBe(text);
       writeFileSync(path, edited);
 
-      expect(weightOf(root)).toBe(601);
+      expect(weightOf(root)).toBe(original + 1);
     });
   });
 });

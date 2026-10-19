@@ -155,7 +155,7 @@ events:
       kind: narration
       outcomes:
         - id: full_price
-          weight: 100
+          weight: 90
           onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
           text: >-
             They pay the price again, the whole of it, two hundred years after
@@ -163,6 +163,16 @@ events:
           effects:
             - { kind: awakening, target: { slot: CHILD } }
             - { kind: madness, target: { slot: CHILD }, delta: 22 }
+            - { kind: knowledge, op: grant, flag: knows_drowning_cost }
+        - id: nothing
+          weight: 10
+          onlyIf: { slot: CHILD, filters: [{ canExpress: true }] }
+          text: >-
+            They pay the price again, the whole of it, two hundred years after
+            it was first paid and written down by nobody.
+          effects:
+            - { kind: attribute, target: { slot: CHILD }, attr: mind, delta: -22 }
+            - { kind: madness, target: { slot: CHILD }, delta: 4 }
             - { kind: knowledge, op: grant, flag: knows_drowning_cost }
         - id: full_price_mundane
           weight: 100
@@ -1970,3 +1980,6 @@ proseVariants:
   - address: "content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=nothing_mundane].text"
     of: "5d4f91aec675028a"
     plainenglish: "They carry him to the table and feed him broth one spoonful at a time. He recognises the people speaking. Nothing has answered from the dark."
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].interaction.outcomes[id=nothing].text"
+    of: "7ee294b735a67b43"
+    plainenglish: "They pay the price again, all of it, two hundred years after it was first paid. Nobody wrote it down then."
