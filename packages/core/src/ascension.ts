@@ -740,14 +740,15 @@ function diagnosisFor(ctx: SimCtx, target: Rung, blocker: GateBlocker): Ascensio
 }
 
 /**
- * §22's gates, in order, each returning the first predicate that is NOT met.
+ * §22's gates, in order, yielding each predicate that is NOT met.
  *
  * The order is also the diagnosis priority. Inventing a separate severity
  * score would create a second opinion about the ladder. One failed predicate
  * is enough to answer "what next?" without exposing later thresholds as a
- * checklist.
+ * checklist. Ordinary callers take only the first yield; diagnostics can
+ * continue through the same predicates to measure concurrent shortages.
  */
-function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
+function* unmetRungGates(ctx: SimCtx, p: Person, rung: Rung): Generator<GateBlocker, void> {
   const w = ctx.world;
   const inherited = p.rites.includes('unmaking');
   const power = eldritchPower(ctx, p);
@@ -770,11 +771,11 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
 
   switch (rung) {
     case 'none':
-      return undefined;
+      return;
 
     case 'touched':
       if (!p.awakening.awakened) {
-        return gateBlocker(
+        yield gateBlocker(
           'awakening',
           'awakening',
           'he has not awakened',
@@ -784,38 +785,38 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
             'Keep him in view for an Awakening; study cannot supply this step.'),
         );
       }
-      if (power < POWER_FLOOR.touched) return powerBlocker(ctx, power, POWER_FLOOR.touched, target);
-      return undefined;
+      if (power < POWER_FLOOR.touched) yield powerBlocker(ctx, power, POWER_FLOOR.touched, target);
+      return;
 
     case 'adept':
-      if (power < POWER_FLOOR.adept) return powerBlocker(ctx, power, POWER_FLOOR.adept, target);
-      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
+      if (power < POWER_FLOOR.adept) yield powerBlocker(ctx, power, POWER_FLOOR.adept, target);
+      if (reading < books) yield booksBlocker(ctx, reading, books, inherited, target);
       if (madness > mind) {
-        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
+        yield overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
-      return undefined;
+      return;
 
     case 'hierophant':
-      if (power < POWER_FLOOR.hierophant) return powerBlocker(ctx, power, POWER_FLOOR.hierophant, target);
-      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
-      if (arts < affinityNeed) return affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
+      if (power < POWER_FLOOR.hierophant) yield powerBlocker(ctx, power, POWER_FLOOR.hierophant, target);
+      if (reading < books) yield booksBlocker(ctx, reading, books, inherited, target);
+      if (arts < affinityNeed) yield affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
       // The Madness FLOOR. From here up a placid mind cannot ascend, which is
       // the whole shape of the design: the ladder runs through the thing that
       // destroys the family.
-      if (madness < MADNESS_FLOOR.hierophant!) return costBlocker(ctx, 'the blood has not cost him enough yet', target);
+      if (madness < MADNESS_FLOOR.hierophant!) yield costBlocker(ctx, 'the blood has not cost him enough yet', target);
       if (madness > mind) {
-        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
+        yield overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
       if (respect < RESPECT_ORDER.indexOf('regarded')) {
-        return respectBlocker(ctx, 'the house is not yet regarded', target);
+        yield respectBlocker(ctx, 'the house is not yet regarded', target);
       }
-      return undefined;
+      return;
 
     case 'vessel':
-      if (power < POWER_FLOOR.vessel) return powerBlocker(ctx, power, POWER_FLOOR.vessel, target);
-      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
+      if (power < POWER_FLOOR.vessel) yield powerBlocker(ctx, power, POWER_FLOOR.vessel, target);
+      if (reading < books) yield booksBlocker(ctx, reading, books, inherited, target);
       if (mind < MIND_FLOOR.vessel!) {
-        return gateBlocker(
+        yield gateBlocker(
           'mind',
           'mind',
           'his mind is not yet wide enough for what the Vessel would put into it',
@@ -826,14 +827,14 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
         );
       }
       if (respect < RESPECT_ORDER.indexOf('eminent')) {
-        return respectBlocker(ctx, 'the house is not yet eminent', target);
+        yield respectBlocker(ctx, 'the house is not yet eminent', target);
       }
       // THE RITE, and it is a thing that happened rather than a quantity that
       // accumulated (issue #43). This line used to return unconditionally,
       // which made rung four unreachable in principle and said so honestly —
       // `events/rites.ts` is what finally lets it be answered.
       if (!p.rites.includes('vessel') && !p.rites.includes('unmaking')) {
-        return gateBlocker(
+        yield gateBlocker(
           'rites',
           'rite',
           'the Vessel is unpaid: a living member of the blood, willingly given',
@@ -843,25 +844,25 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
             'Call the Vessel rite when the house is ready to give a willing member of the blood.'),
         );
       }
-      return undefined;
+      return;
 
     case 'demigod':
-      if (power < POWER_FLOOR.demigod) return powerBlocker(ctx, power, POWER_FLOOR.demigod, target);
-      if (reading < books) return booksBlocker(ctx, reading, books, inherited, target);
-      if (arts < affinityNeed) return affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
+      if (power < POWER_FLOOR.demigod) yield powerBlocker(ctx, power, POWER_FLOOR.demigod, target);
+      if (reading < books) yield booksBlocker(ctx, reading, books, inherited, target);
+      if (arts < affinityNeed) yield affinitiesBlocker(ctx, arts, affinityNeed, inherited, target);
       if (respect < RESPECT_ORDER.indexOf('eminent')) {
-        return respectBlocker(ctx, 'the house is not yet eminent', target);
+        yield respectBlocker(ctx, 'the house is not yet eminent', target);
       }
       if (madness < MADNESS_FLOOR.demigod!) {
-        return costBlocker(ctx, 'the blood has not hurt him deeply enough yet', target);
+        yield costBlocker(ctx, 'the blood has not hurt him deeply enough yet', target);
       }
       if (madness > mind) {
-        return overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
+        yield overborneBlocker(ctx, 'what the blood has done to him is already more than his mind can bear');
       }
       // Most runs have lost at least one of the three, which §22 says is
       // often the real gate. `regalia.slow.test.ts` exists because of it.
       if (regalia < REGALIA_COMPLETE) {
-        return gateBlocker(
+        yield gateBlocker(
           'regalia',
           'regalia',
           `the Regalia are still divided — ${regalia} of ${REGALIA_COMPLETE} held`,
@@ -875,7 +876,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       // runs, `the_great_rite` was offered three times and taken in three
       // (issue #61).
       if (!p.rites.includes('great_rite') && !p.rites.includes('unmaking')) {
-        return gateBlocker(
+        yield gateBlocker(
           'rites',
           'rite',
           'the Great Rite remains undone — sanctioned or defied',
@@ -885,12 +886,12 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
             'Call the Great Rite, sanctioned or defied, when its other costs are ready.'),
         );
       }
-      return undefined;
+      return;
 
     case 'god': {
-      if (power < POWER_FLOOR.god) return powerBlocker(ctx, power, POWER_FLOOR.god, target);
+      if (power < POWER_FLOOR.god) yield powerBlocker(ctx, power, POWER_FLOOR.god, target);
       if (reading < books) {
-        return gateBlocker(
+        yield gateBlocker(
           'final_circle',
           'books',
           `living family readers know ${reading} books; the last working asks ${books}`,
@@ -902,7 +903,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       }
       const circlePairs = householdOpposedPairs(ctx);
       if (circlePairs < affinityNeed) {
-        return gateBlocker(
+        yield gateBlocker(
           'final_circle',
           'affinities',
           `living family readers cover ${circlePairs} of the ${affinityNeed} opposed pairs; the last working asks one affinity from each`,
@@ -913,10 +914,10 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
         );
       }
       if (respect < RESPECT_ORDER.indexOf('exalted')) {
-        return respectBlocker(ctx, 'the house is not yet exalted', target);
+        yield respectBlocker(ctx, 'the house is not yet exalted', target);
       }
       if (madness < MADNESS_FLOOR.god!) {
-        return gateBlocker(
+        yield gateBlocker(
           'madness',
           'madness-floor',
           'the blood has not brought him close enough to ruin',
@@ -927,7 +928,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
         );
       }
       if (mind < madness) {
-        return gateBlocker(
+        yield gateBlocker(
           'mind',
           'madness-overflow',
           'what the blood has done to him is more than his mind can bear',
@@ -938,7 +939,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
         );
       }
       if (w.clausesRecovered.size < GOD_CLAUSES) {
-        return gateBlocker(
+        yield gateBlocker(
           'clauses',
           'clauses',
           `the book holds ${w.clausesRecovered.size} of the ${GOD_CLAUSES} clauses the last step requires`,
@@ -957,7 +958,7 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
       // checks only that the completed act has happened, never that the
       // sacrificed man somehow remains alive afterwards (issue #61).
       if (!p.rites.includes('unmaking')) {
-        return gateBlocker(
+        yield gateBlocker(
           'final_circle',
           'rite',
           'no two-rite elder has yet been unmade for him',
@@ -967,12 +968,36 @@ function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
             'Prepare a separate two-rite elder, then call the Unmaking for this ascendant.'),
         );
       }
-      return undefined;
+      return;
     }
 
     default:
       return assertNever(rung);
   }
+}
+
+/** Preserve the first-failure reading and its short-circuit boundary. */
+function gateFor(ctx: SimCtx, p: Person, rung: Rung): GateBlocker | undefined {
+  const first = unmetRungGates(ctx, p, rung).next();
+  return first.done ? undefined : first.value;
+}
+
+/**
+ * Complete prerequisite reading for campaign diagnostics, including lower
+ * rungs. Uses the same ordered predicates as standingOf; repeated categories
+ * are counted once. This is not a player-facing capacity disclosure.
+ *
+ * A sole failure is also the leave-one-out joint test: every other prerequisite
+ * holds for THIS person. Never combine one man's Mind with another man's rite.
+ */
+export function ascensionBlockersFor(ctx: SimCtx, p: Person, target: Rung): LadderBlocker[] {
+  if (target === 'none') return [];
+  if (!phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) return ['no-expresser'];
+  const blockers = new Set<LadderBlocker>();
+  for (const rung of RUNG_ORDER.slice(1, rungIndex(target) + 1)) {
+    for (const failure of unmetRungGates(ctx, p, rung)) blockers.add(failure.blocker);
+  }
+  return [...blockers];
 }
 
 /** All three founding heirlooms, held at once. */
