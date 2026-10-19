@@ -1,9 +1,108 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import type { Filter } from '@ed/schema';
-import { evalFilter, place, testWorld } from '@ed/core';
+import { candidatesFor, evalFilter, genomeOf, phenotypeOf, place, resolveSlots, testRng, testWorld } from '@ed/core';
+import { executeOutcomeWitness } from './events/reach.js';
 
 const bundle = loadContent();
+
+describe('authored casting keeps unwoken capacity private (#1824)', () => {
+  function fixture(expresses: boolean, asHead = false, headSex: 'male' | 'female' = 'male') {
+    const ctx = testWorld(bundle, 18240);
+    for (const person of ctx.world.people.living()) ctx.world.people.kill(person.id, ctx.world.year, 'before the casting witness');
+    for (const person of ctx.world.people.all()) person.castSlots = [];
+    const head = place(ctx, { sex: asHead ? headSex : 'female', age: 60, name: 'The Holder', castSlots: ['head'] });
+    const subject = asHead ? head : place(ctx, { sex: 'male', age: 30, name: 'An unwoken member' });
+    place(ctx, { sex: 'male', age: 45, name: 'An outside witness', house: 'house_marrow' });
+    const genome = genomeOf(subject, ctx.genetics);
+    for (const index of ctx.genetics.table.fontIndices) {
+      const allele = ctx.genetics.table.xAlleles[index]!.findIndex((entry) => expresses ? entry.effect > 0 : entry.effect === 0);
+      if (allele < 0) throw new Error('capacity fixture lacks a font allele');
+      genome.sex[0][index] = allele;
+    }
+    subject.phenotype = undefined;
+    expect(phenotypeOf(subject, ctx.genetics, ctx.world.year).eldritch.canExpress).toBe(expresses);
+    expect(subject.awakening.awakened).toBe(false);
+    return { ctx, head, subject };
+  }
+
+  it.each([
+    ['the_horse_that_will_not_pass_the_gate', 'RIDER'],
+    ['the_knife_everybody_wears', 'KIN'],
+    ['the_unmirrored_eye_offered', 'HEAD'],
+    ['the_witness_at_the_wall', 'SEEN'],
+    ['the_sickroom_rule', 'SICK'],
+  ])('%s casts the same unwoken person without buying knowledge', (id, slot) => {
+    const event = bundle.mustEvent(id!);
+    const worlds = [false, true].map((capacity) => fixture(capacity, slot === 'HEAD'));
+    const casts = worlds.map(({ ctx, head, subject }) => {
+      expect(candidatesFor(event.slots[slot!]!, ctx, { HEAD: head.id }).map((person) => person.id)).toContain(subject.id);
+      const resolved = resolveSlots(event, ctx, testRng('private-cast'));
+      expect(resolved.ok).toBe(true);
+      return resolved.fill;
+    });
+    expect(casts[0]).toEqual(casts[1]);
+  });
+
+  it('offers the unmirrored eye to a female Head without claiming she can use it', () => {
+    const { ctx, head } = fixture(false, true, 'female');
+    const event = bundle.mustEvent('the_unmirrored_eye_offered');
+    const resolved = resolveSlots(event, ctx, testRng('eye-regent'));
+    expect(resolved.ok).toBe(true);
+    expect(resolved.fill.HEAD).toBe(head.id);
+  });
+
+  it.each([
+    ['iron_will_not_hold_an_edge', 'KIN'], ['a_head_at_the_top_of_it', 'HEAD'],
+    ['the_ninth_night_it_answered', 'SAYER'], ['it_does_not_come_when_called', 'TRIER'],
+    ['the_ring_that_fits', 'WEARER'], ['ring_the_household_decides', 'WEARER'],
+    ['ring_it_fits_again', 'SECOND'],
+  ])('%s / %s requires a witnessed waking before a fresh cast', (id, slot) => {
+    const event = bundle.mustEvent(id!);
+    const { ctx, head, subject } = fixture(true, slot === 'HEAD');
+    const fill = { HEAD: head.id, FIRST: head.id };
+    const offered = () => candidatesFor(event.slots[slot!]!, ctx, fill).map((person) => person.id);
+    expect(offered()).not.toContain(subject.id);
+    subject.awakening.awakened = true;
+    expect(offered()).toContain(subject.id);
+  });
+
+  it.each([
+    ['keep_them_together', 'both_at_ardwen'], ['keep_them_together', 'it_holds'],
+    ['send_one_out', 'four_miles_off'],
+  ])('makes both natural awakenings real through %s / %s', (choiceId, expectedOutcomeId) => {
+    const { ctx, subject } = fixture(true);
+    const second = place(ctx, { sex: 'male', age: 20, name: 'The second to wake' });
+    const firstGenome = genomeOf(subject, ctx.genetics);
+    const secondGenome = genomeOf(second, ctx.genetics);
+    for (const index of ctx.genetics.table.fontIndices) secondGenome.sex[0][index] = firstGenome.sex[0][index]!;
+    second.phenotype = undefined;
+    const event = bundle.mustEvent('the_year_two_woke');
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId, expectedOutcomeId, targetWeightedOutcome: true, rng: testRng('two-wakings'),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    for (const person of [subject, second]) {
+      expect(person.awakening.awakened).toBe(true);
+      expect(person.awakening.forced).toBe(false);
+    }
+    expect(resolveSlots(event, ctx, testRng('not-a-second-waking')).ok).toBe(false);
+  });
+
+  it.each([
+    ['say_it_aloud', 'woke_late'], ['say_it_aloud', 'all_at_once'],
+    ['keep_it_within_the_walls', 'kept_quiet'],
+  ])('preserves the real late waking through %s / %s', (choiceId, expectedOutcomeId) => {
+    const { ctx, subject } = fixture(true);
+    const event = bundle.mustEvent('the_late_waking');
+    const result = executeOutcomeWitness(ctx, event, {
+      choiceId, expectedOutcomeId, targetWeightedOutcome: true, rng: testRng('late-waking'),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(subject.awakening.awakened).toBe(true);
+    expect(subject.awakening.forced).toBe(false);
+  });
+});
 
 /**
  * ── EVERY FILTER PREDICATE, ASKED A QUESTION IT MUST ANSWER BOTH WAYS ──────

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
 import { evalCondition } from '@ed/core';
-import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, place, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, genomeOf, place, startArc, testRng, testWorld } from '@ed/core';
 import { executeOutcomeWitness } from './events/reach.js';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
@@ -10,6 +10,60 @@ import { executeOutcomeWitness } from './events/reach.js';
 // an object whose `arcs` array had the new arc in it and whose `arc()` lookup
 // did not.
 const base = loadBundle();
+
+describe('the ring does not reveal an unknown replacement through a binding (#1824)', () => {
+  function ringHeir(expresses: boolean, awakened: boolean, originalSurvives = false) {
+    const ctx = testWorld(base, 18241);
+    for (const person of ctx.world.people.living()) person.awakening.awakened = false;
+    const wearer = place(ctx, { sex: 'male', age: 50, name: 'The known wearer', awakened: true });
+    const heir = place(ctx, { sex: 'male', age: 25, name: 'His heir', awakened });
+    for (const [person, capacity] of [[wearer, true], [heir, expresses]] as const) {
+      const genome = genomeOf(person, ctx.genetics);
+      for (const index of ctx.genetics.table.fontIndices) {
+        const allele = ctx.genetics.table.xAlleles[index]!.findIndex((entry) => capacity ? entry.effect > 0 : entry.effect === 0);
+        if (allele < 0) throw new Error('ring witness lacks a font allele');
+        genome.sex[0][index] = allele;
+      }
+      person.phenotype = undefined;
+    }
+    ctx.world.people.setParents(heir.id, { father: wearer.id });
+    const instance = startArc(ctx.content.mustArc('arc_the_two_it_fitted'), ctx, testRng('ring-heir'), { WEARER: wearer.id });
+    if (!instance) throw new Error('ring witness did not start');
+    if (!originalSurvives) ctx.world.people.kill(wearer.id, ctx.world.year, 'before the household decides');
+    return { ctx, wearer, heir, instance };
+  }
+
+  it.each([[false, false], [true, false], [true, true]] as const)('does not substitute an heir (capacity %s, awakened %s) before the first price', (capacity, awakened) => {
+    const { ctx, heir, instance } = ringHeir(capacity, awakened);
+    const steps = dueArcSteps(ctx, testRng('ring-replacement'));
+    expect(steps.some((step) => step.fill.WEARER === heir.id)).toBe(false);
+    expect(instance.status).toBe('cancelled');
+  });
+
+  it('keeps the original living wearer bound to the first household choice', () => {
+    const { ctx, wearer, instance } = ringHeir(false, false, true);
+    const step = dueArcSteps(ctx, testRng('ring-original')).find((entry) => entry.instance.id === instance.id);
+    expect(step?.fill.WEARER).toBe(wearer.id);
+    expect(instance.status).toBe('active');
+  });
+
+  it('keeps the paid consequence bound to the dead wearer', () => {
+    const { ctx, wearer, instance } = ringHeir(false, false);
+    instance.node = 'what_it_costs';
+    instance.dueYear = ctx.world.year;
+    const step = dueArcSteps(ctx, testRng('ring-dead-wearer')).find((entry) => entry.instance.id === instance.id);
+    expect(step?.fill.WEARER).toBe(wearer.id);
+    expect(step?.absent).toBe(true);
+    if (!step) throw new Error('the paid consequence lost its bound wearer');
+    const madness = wearer.madness;
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('ring_what_it_costs'), {
+      choiceId: 'keep_him_close', expectedOutcomeId: 'kept', arcStep: step, rng: testRng('ring-paid-cost'),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(wearer.status).toBe('dead');
+    expect(wearer.madness).toBe(madness + 18);
+  });
+});
 
 describe('inline follow-up entry delays (#1278)', () => {
   it.each([false, true])('retains only declared persistent slots when inline is %s (#1285)', (inline) => {
