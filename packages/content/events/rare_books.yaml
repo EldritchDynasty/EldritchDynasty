@@ -532,7 +532,11 @@ events:
     title: They Will Sell Us Their Own Book
     tier: head
     frequency: rare
-    weight: 120
+    # A living rival supplies this narrow upstream cast. #1811's 200x500
+    # reader-inclusive baseline: eligible in 163 houses, offered in eight,
+    # sold east once, one eastern invoice. Buy opportunities at the offer,
+    # preserving the sale's knowledge and scheduled callback requirements.
+    weight: 300
     tags: [library, rival, money, trade]
     purposes: [advance_clause, change_relationship, change_standing]
     slots:

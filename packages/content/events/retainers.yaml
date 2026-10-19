@@ -227,7 +227,11 @@ events:
     title: The Hand the Warden's Clerk Accepts
     tier: head
     frequency: rare
-    weight: 100
+    # The fair-hand retainer rations this launcher before the rare draw does.
+    # #1811's reader-inclusive 200x500 baseline: eligible in 164 houses,
+    # fired in four, three short copies, one short-copy frame. Supply the
+    # actual discrepancy upstream; keep the frame's read and cadence intact.
+    weight: 400
     repeatable: true
     tags: [retainer, records, law]
     purposes: [force_record_choice, change_relationship, plant_rumour]

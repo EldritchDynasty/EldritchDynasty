@@ -195,19 +195,6 @@ describe('every authored event can actually happen', () => {
   const THIN_FRAME_REACH_DEBT = ['frame_two_of_three'];
 
   /**
-   * STARVED FOUR STEPS UPSTREAM, MEASURED (#1834, owed to #1811).
-   * `frame_the_copy_that_was_short` reads one Discrepancy, opened only when
-   * the chronicler copies `the_hand_the_warden_accepts` short. Over the first
-   * 120 of `COVERAGE_SEEDS`, last green nightly (`4de6f8c`) against `d673c36`:
-   * a fair-hand retainer 118 → 115 runs, the scene 10 → 5, copied short
-   * 5 → 1, open at the end 8 → 2, the interlude 3 → 0. The interlude did not
-   * get thinner; its rare launcher lost half its share of a rare pool that
-   * grew in that window. Raising the launcher is content work for #1811, and
-   * gate 8 remains the instrument that reads its reach.
-   */
-  const STARVED_FRAME_REACH_DEBT = ['frame_the_copy_that_was_short'];
-
-  /**
    * One event is deliberately proved by mechanism instead of by a sampled
    * zero. See the dedicated Cawdry frame test below.
    */
@@ -222,7 +209,6 @@ describe('every authored event can actually happen', () => {
       !STAGE5_REACH_DEBT.includes(id)
       && !LAND_REACH_DEBT.includes(id)
       && !THIN_FRAME_REACH_DEBT.includes(id)
-      && !STARVED_FRAME_REACH_DEBT.includes(id)
       && !MECHANISM_CHECKED_REACH.includes(id)
     ))).toEqual([]);
     expect(
@@ -236,10 +222,6 @@ describe('every authored event can actually happen', () => {
     expect(
       THIN_FRAME_REACH_DEBT.filter((id) => !bundle.events.some((e) => e.id === id)),
       'a measured thin-frame reach debt no longer names authored content — remove the stale pin',
-    ).toEqual([]);
-    expect(
-      STARVED_FRAME_REACH_DEBT.filter((id) => !bundle.events.some((e) => e.id === id)),
-      'a starved-frame reach debt no longer names authored content — remove the stale pin',
     ).toEqual([]);
   });
 
