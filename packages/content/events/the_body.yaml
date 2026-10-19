@@ -396,7 +396,7 @@ events:
       HEAD: { role: head }
       SICK:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 16 } }]
+        filters: [{ sex: male }, { status: [alive] }, { age: { op: gte, value: 16 } }]
     body: >-
       A person in this world dies at home, in the room, in front of the
       family, and is washed and laid out by the women of the household, and

@@ -556,7 +556,7 @@ events:
               weight: 100
               text: >-
                 The clerk sand-dries the page and writes that {RIVAL} has withdrawn the claim. {HEAD}
-                pays eight crowns and yields a place on the Roll. Neither man dies; the seal merely frees
+                pays eight crowns and yields a place on the Roll. Neither signer dies; the seal merely frees
                 a name that has held the opposite chair too long. A later claimant will have to bring a
                 different case.
               effects:
@@ -573,7 +573,7 @@ events:
               text: >-
                 The two copies go back into different satchels. {RIVAL} says nothing on the stairs, which
                 is not forgiveness. The Warden's clerk leaves the dispute entered under both names; the
-                next encounter will carry this refusal into the room before either man speaks.
+                next encounter will carry this refusal into the room before either signer speaks.
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -12, grudge: { severity: 12, inheritance: heir_only } }
@@ -593,7 +593,7 @@ events:
         onMissing: continue_absent
       NEW_RIVAL: { role: rival, filters: [{ status: [alive] }] }
     body: >-
-      Years after {RIVAL} put his seal beside {HEAD}'s, {NEW_RIVAL} comes to the same table at
+      Years after {RIVAL} put his seal to the house's settlement, {NEW_RIVAL} comes to the same table at
       Cawdry with a different grievance. The clerk points to the older settlement and names
       {RIVAL} aloud: that name left the roll without a funeral, and nothing in the new claim
       undoes the peace that was bought. {NEW_RIVAL} has brought new witnesses and means to be
@@ -632,30 +632,22 @@ proseVariants:
     plainenglish: >-
       Sign the settlement and end this rivalry.
   - address: "content:events/neighbours.yaml#events[id=the_second_signature].interaction.choices[id=put_the_seal_to_it].outcomes[id=the_seals_agreed].text"
-    of: "08eb08fa9353827e"
-    plainenglish: >-
-      The clerk dries the ink and records that {RIVAL} has dropped the claim. {HEAD} pays eight
-      crowns and loses standing. Both people live, but this dispute ends. Anyone who challenges
-      the house later must bring a new claim.
+    of: "8c0350768d84988a"
+    plainenglish: "The clerk dries the ink and records that {RIVAL} has dropped the claim. {HEAD} pays eight crowns and loses standing. Both people live, but this dispute ends. Anyone who challenges the house later must bring a new claim."
   - address: "content:events/neighbours.yaml#events[id=the_second_signature].interaction.choices[id=let_the_claim_stand].label"
     of: "902f365902aed3fd"
     plainenglish: >-
       Refuse the settlement. Keep the claim open.
   - address: "content:events/neighbours.yaml#events[id=the_second_signature].interaction.choices[id=let_the_claim_stand].outcomes[id=the_quarrel_kept].text"
-    of: "7dccefe2e5299e86"
-    plainenglish: >-
-      Each house takes back its copy. {RIVAL} does not speak on the stairs. The clerk leaves
-      the complaint under both names, so the next meeting will still be about this refusal.
+    of: "b12b9d2ecfbafa62"
+    plainenglish: "Each house takes back its copy. {RIVAL} does not speak on the stairs. The clerk leaves the complaint under both names, so the next meeting will still be about this refusal."
   - address: "content:events/neighbours.yaml#events[id=the_name_under_the_second_signature].title"
     of: "cfe7878bc18a524f"
     plainenglish: >-
       A New Rival Takes the Place
   - address: "content:events/neighbours.yaml#events[id=the_name_under_the_second_signature].body"
-    of: "a567118c444fdb80"
-    plainenglish: >-
-      Years after {RIVAL} signed the settlement with {HEAD}, {NEW_RIVAL} brings another
-      complaint to Cawdry. The clerk reads {RIVAL}'s name from the old agreement, which still
-      stands. {NEW_RIVAL} has different witnesses and a different case.
+    of: "89540f5f00d239b3"
+    plainenglish: "Years after {RIVAL} signed a settlement with this house, {NEW_RIVAL} brings another complaint to Cawdry. The clerk reads {RIVAL}'s name from the old agreement, which still stands. {NEW_RIVAL} has different witnesses and a different case."
   - address: "content:events/neighbours.yaml#events[id=the_name_under_the_second_signature].absentBody"
     of: "e6bc4163db260907"
     plainenglish: >-

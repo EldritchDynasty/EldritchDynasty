@@ -262,7 +262,7 @@ events:
     slots:
       TRIER:
         role: family_member
-        filters: [{ canExpress: true }, { status: [alive] }, { age: { op: gte, value: 17 } }]
+        filters: [{ canExpress: true }, { awakened: true }, { status: [alive] }, { age: { op: gte, value: 17 } }]
     body: >-
       Three nights in the second cellar with the door wedged, because the third
       night is the one the book in the press says matters, and the book in the

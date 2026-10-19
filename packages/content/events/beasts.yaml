@@ -23,7 +23,7 @@ events:
       HEAD: { role: head }
       RIDER:
         role: family_member
-        filters: [{ sex: male }, { status: [alive] }, { canExpress: true }, { age: { op: gte, value: 15 } }]
+        filters: [{ sex: male }, { status: [alive] }, { age: { op: gte, value: 15 } }]
     body: >-
       An eight-crown riding horse that has come through that gatehouse four
       hundred times will not take it with {RIDER} up, and has not for a

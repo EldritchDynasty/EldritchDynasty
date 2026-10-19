@@ -72,6 +72,8 @@ describe('authored casting keeps unwoken capacity private (#1824)', () => {
     ['send_one_out', 'four_miles_off'],
   ])('makes both natural awakenings real through %s / %s', (choiceId, expectedOutcomeId) => {
     const { ctx, subject } = fixture(true);
+    subject.born = ctx.world.year - 22;
+    subject.phenotype = undefined;
     const second = place(ctx, { sex: 'male', age: 20, name: 'The second to wake' });
     const firstGenome = genomeOf(subject, ctx.genetics);
     const secondGenome = genomeOf(second, ctx.genetics);
@@ -87,6 +89,19 @@ describe('authored casting keeps unwoken capacity private (#1824)', () => {
       expect(person.awakening.forced).toBe(false);
     }
     expect(resolveSlots(event, ctx, testRng('not-a-second-waking')).ok).toBe(false);
+  });
+
+  it('reserves thirty and above for the Late Waking and respects a mundane declaration', () => {
+    const { ctx, subject } = fixture(true);
+    const pair = bundle.mustEvent('the_year_two_woke');
+    const eligible = () => candidatesFor(pair.slots.FIRST!, ctx, {}).map(person => person.id);
+    expect(eligible()).not.toContain(subject.id);
+    expect(candidatesFor(bundle.mustEvent('the_late_waking').slots.MAN!, ctx, {}).map(person => person.id)).toContain(subject.id);
+    subject.born = ctx.world.year - 22;
+    subject.phenotype = undefined;
+    expect(eligible()).toContain(subject.id);
+    subject.awakening.declaredMundane = true;
+    expect(eligible()).not.toContain(subject.id);
   });
 
   it.each([
