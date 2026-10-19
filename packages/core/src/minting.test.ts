@@ -74,9 +74,12 @@ describe('character templates', () => {
   it('never mints a second unique while one is alive', () => {
     const ctx = bootstrap(bundle, 6, 1042);
     const rng = makeRng(6);
-    const unique = bundle.characterTemplates.find((t) => t.unique && t.role === 'rival')!;
+    // Recast (#1812) deliberately reuses the rival archetype even while its
+    // previous actor lives. A common unique retainer still proves uniqueness.
+    const unique = bundle.characterTemplates.find((t) => t.unique && t.role === 'retainer' && t.frequency === 'common')!;
+    expect(eligibleTemplates(ctx, 'retainer').map((t) => t.id)).toContain(unique.id);
     mint(unique, ctx, rng);
-    expect(eligibleTemplates(ctx, 'rival').map((t) => t.id)).not.toContain(unique.id);
+    expect(eligibleTemplates(ctx, 'retainer').map((t) => t.id)).not.toContain(unique.id);
   });
 
   it('respects the frequency gate — no mythic arrivals in generation one', () => {
