@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { DeclaredOutcome, Reach } from '../events/reach.js';
 import {
   judgeZeroReach,
+  judgeOutcomeReachZero,
   scopedOutcomeReachVerdict,
 } from './outcome-reach-verdict.js';
 
@@ -25,6 +26,26 @@ function reach(
 }
 
 describe('scoped blocking outcome reach (#502)', () => {
+  it('judges guarded outcomes from eligible casts rather than every parent firing', () => {
+    const key = 'rite|try|woke';
+    const outcome: DeclaredOutcome = { label: 'woke', choice: 'rite|try', share: 0.5, guarded: true };
+    const observed = reach({}, { 'rite|try': 1000 });
+    observed.guarded = { opportunities: new Map([[key, 2]]), expected: new Map([[key, 1]]) };
+    expect(judgeOutcomeReachZero(key, outcome, observed, 200).kind).toBe('unproven');
+    observed.guarded.opportunities.set(key, 20);
+    observed.guarded.expected.set(key, 10);
+    expect(judgeOutcomeReachZero(key, outcome, observed, 200).kind).toBe('dead');
+  });
+
+  it('distinguishes absent guarded observations from a cast that never qualified', () => {
+    const key = 'rite|try|woke';
+    const outcome: DeclaredOutcome = { label: 'woke', choice: 'rite|try', share: 0.5, guarded: true };
+    const observed = reach({}, { 'rite|try': 50 });
+    expect(judgeOutcomeReachZero(key, outcome, observed, 200).why).toMatch(/no pre-effect/);
+    observed.guarded = { opportunities: new Map([[key, 0]]), expected: new Map([[key, 0]]) };
+    expect(judgeOutcomeReachZero(key, outcome, observed, 200)).toEqual({ kind: 'dead', why: 'no eligible cast in 50 firings of its choice' });
+  });
+
   it('keeps a witnessed outcome green when the fixture batch never resolves it', () => {
     const key = 'event_seen|take|quiet';
     const verdict = scopedOutcomeReachVerdict(

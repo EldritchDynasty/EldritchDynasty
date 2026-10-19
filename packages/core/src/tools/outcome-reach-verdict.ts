@@ -53,6 +53,32 @@ export function judgeZeroReach(
   };
 }
 
+/** A guarded result gets only the opportunities its actual cast admitted.
+ * Parent firings and a best-case conditional share would overstate its chance.
+ * Missing observations fail explicitly instead of silently inventing a chance. */
+export function judgeOutcomeReachZero(
+  key: string,
+  outcome: DeclaredOutcome,
+  reach: Reach,
+  runs: number,
+): ZeroReachVerdict {
+  const fired = reach.firings.get(outcome.choice) ?? 0;
+  if (!outcome.guarded || fired === 0) {
+    return judgeZeroReach(fired, outcome.share, runs, choiceExposure(reach, outcome.choice));
+  }
+  const guarded = reach.guarded;
+  if (!guarded?.expected.has(key) || !guarded.opportunities.has(key)) {
+    return { kind: 'dead', why: 'guarded outcome has no pre-effect opportunity observation' };
+  }
+  const opportunities = guarded.opportunities.get(key)!;
+  if (!opportunities) {
+    return { kind: 'dead', why: `no eligible cast in ${fired} firings of its choice` };
+  }
+  const expected = guarded.expected.get(key)!;
+  const verdict = judgeZeroReach(opportunities, expected / opportunities, runs);
+  return { ...verdict, why: `eligible casts: ${verdict.why}` };
+}
+
 export interface ScopedOutcomeReachVerdict {
   ok: boolean;
   declared: number;
@@ -102,12 +128,7 @@ export function scopedOutcomeReachVerdict(
 
     if (resolved > 0) continue;
 
-    const zero = judgeZeroReach(
-      reach.firings.get(outcome.choice) ?? 0,
-      outcome.share,
-      runs,
-      choiceExposure(reach, outcome.choice),
-    );
+    const zero = judgeOutcomeReachZero(key, outcome, reach, runs);
     (zero.kind === 'dead' ? dead : unproven)
       .push(`${outcome.label}  — ${zero.why}`);
   }

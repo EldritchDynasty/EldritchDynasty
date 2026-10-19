@@ -30,7 +30,6 @@ import { TEST_FAMILIES } from './testFamilies.js';
 import { resolveSlots } from '../events/slots.js';
 import { makeRng } from '../rng.js';
 import { declaredOutcomes, outcomeKey } from '../events/reach.js';
-import { choiceExposure, judgeZeroReach } from './outcome-reach-verdict.js';
 import { gateLadder, ladderPolicyMatrix } from './ladder-gate.js';
 import { playGateBatch } from './gate-batch.js';
 import { runFireRateGate, type FireRateGateOptions } from './fire-rate-gate.js';
@@ -43,6 +42,7 @@ import { gateBlood } from './blood-gate.js';
 import { gateLibraryNeutrality } from './library-gate.js';
 import { gateSigning } from './signing-gate.js';
 import { gateUnwitnessedOutcomeReach } from './outcome-reach-blocking.js';
+import { judgeOutcomeReachZero } from './outcome-reach-verdict.js';
 import {
   gatePartitionWorkerCount,
   partitionGateInputs,
@@ -359,7 +359,7 @@ export function gateOutcomeReach(
   const reach = playGateBatch(source, runs, years).reach;
 
   const rates = [...declared]
-    .map(([key, o]) => ({ o, pct: (100 * (reach.runs.get(key) ?? 0)) / runs }))
+    .map(([key, o]) => ({ key, o, pct: (100 * (reach.runs.get(key) ?? 0)) / runs }))
     .sort((a, b) => a.pct - b.pct);
 
   /**
@@ -395,9 +395,9 @@ export function gateOutcomeReach(
   const dead: string[] = [];
   const unproven: string[] = [];
 
-  for (const { o, pct } of rates) {
+  for (const { key, o, pct } of rates) {
     if (pct > 0) continue;
-    const verdict = judgeZeroReach(reach.firings.get(o.choice) ?? 0, o.share, runs, choiceExposure(reach, o.choice));
+    const verdict = judgeOutcomeReachZero(key, o, reach, runs);
     (verdict.kind === 'dead' ? dead : unproven).push(`${o.label}  — ${verdict.why}`);
   }
 

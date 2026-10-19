@@ -856,6 +856,18 @@ describe('the content rules', () => {
       expect(issues[0]!.message).toMatch(/sum to 40/);
     });
 
+    it('measures the open-only draw and refuses overlapping guard pools', () => {
+      const fallback = guarded((_, outcomes) => { delete outcomes[1]!.onlyIf; });
+      const sums = runRule('outcomes/weights', fallback);
+      expect(sums).toHaveLength(1);
+      expect(sums[0]!.message).toMatch(/sum to 200/);
+      const overlapping = guarded((_, outcomes) => {
+        outcomes[0]!.effects = [];
+        outcomes[1]!.onlyIf = { slot: 'CHILD', filters: [{ sex: 'male' }] };
+      });
+      expect(runRule('outcomes/guard', overlapping)[0]?.message).toMatch(/independent guards can overlap/);
+    });
+
     it('still refuses Awakening when the guard does not prove expression', () => {
       const b = guarded((_, outcomes) => { outcomes[0]!.onlyIf = { slot: 'CHILD', filters: [{ awakened: false }] }; });
       expect(runRule('awakening/gate', b)[0]?.message).toMatch(/does not prove a carried font/);

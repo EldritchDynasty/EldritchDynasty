@@ -63,6 +63,8 @@ export interface DeclaredOutcome {
   choice: string;
   /** Its share of that choice's outcome roll, in 0..1. */
   share: number;
+  /** Its group's pool depends on the cast; use live opportunities to judge it. */
+  guarded?: true;
 }
 
 /**
@@ -104,6 +106,7 @@ export function declaredOutcomes(
         label: outcomeLabel(String(e.id), choiceId, o.id),
         choice: choiceKey(String(e.id), choiceId),
         share,
+        ...(outcomes.some((outcome) => outcome.onlyIf) ? { guarded: true as const } : {}),
       });
     }
   };
