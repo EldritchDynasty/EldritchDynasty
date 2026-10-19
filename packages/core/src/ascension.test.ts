@@ -71,6 +71,21 @@ describe('the summit reads concurrent gates from the same ladder', () => {
     expect(ascensionBlockersFor(ctx, woman, 'god')).toEqual(['no-expresser']);
     expect(ascensionBlockersFor(ctx, woman, 'none')).toEqual([]);
   });
+
+  it('agrees with attained standing across the built families and every target', () => {
+    for (const family of TEST_FAMILIES) {
+      const ctx = family.build(bundle);
+      for (const person of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+        const standing = standingOf(ctx, person);
+        for (const target of RUNGS) {
+          const failures = ascensionBlockersFor(ctx, person, target);
+          expect(failures.length === 0, `${family.id}/${person.name}/${target}`)
+            .toBe(rungIndex(standing.rung) >= rungIndex(target));
+          if (failures.length) expect(failures[0]).toBe(standing.blocker);
+        }
+      }
+    }
+  });
 });
 
 /**
