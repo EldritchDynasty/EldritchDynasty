@@ -464,7 +464,9 @@ characterTemplates:
     role: rival
     frequency: uncommon
     weight: 100
-    unique: true
+    # Recasting frees a living opponent's role, not their life. An archetype
+    # must be reusable while that former rival still exists in the world.
+    unique: false
     sex: male
     naming: of_house
     ageAtArrival: { min: 28, max: 44 }

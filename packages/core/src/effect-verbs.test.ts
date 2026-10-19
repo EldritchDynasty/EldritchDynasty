@@ -275,6 +275,8 @@ describe('a settled rivalry leaves room for another named rival (#1812)', () => 
 
     // The cast-maintenance rule is the same one a played year uses; override
     // only its refill roll so the test asserts the mechanism, not a lucky seed.
+    // The recurring rival template is uncommon and starts at generation one.
+    ctx.world.generation = 1;
     const rng = { ...testRng('recast-refill'), bool: () => true };
     const minted = maintainCast(ctx, rng).find((person) => person.castSlots.includes('rival'));
     expect(minted, 'a freed rival slot was never refilled').toBeDefined();

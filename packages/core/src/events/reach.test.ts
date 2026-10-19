@@ -262,6 +262,8 @@ describe('a rivalry ends without a death and the next one remembers it (#1812)',
 
   const prepared = (seed: number) => {
     const ctx = fixture(seed);
+    // A rival archetype is uncommon; refill is ineligible at generation zero.
+    ctx.world.generation = 1;
     for (const person of ctx.world.people.all()) {
       person.castSlots = person.castSlots.filter((slot) => slot !== 'rival');
     }

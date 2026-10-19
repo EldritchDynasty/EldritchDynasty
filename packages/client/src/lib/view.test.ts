@@ -171,6 +171,17 @@ function climbingView(): Record<string, unknown> {
     if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) break;
     ctx.world.people.kill(p.id, ctx.world.year, 'not the man this fixture needs');
   }
+  // A frame outcome is optional in the played seeds and may disappear after
+  // unrelated content rebalances. Build its saved shape from an authored frame
+  // so the read-model reachability test is deterministic, not seed-mined.
+  const frame = ctx.content.events.find((event) => event.tier === 'frame' && event.interaction.kind === 'narration');
+  if (!frame || frame.interaction.kind !== 'narration' || !frame.interaction.outcomes[0]) {
+    throw new Error('view fixture needs an authored frame outcome');
+  }
+  ctx.world.frame.entries.push({
+    year: ctx.world.year, eventId: frame.id,
+    outcomeId: frame.interaction.outcomes[0].id, text: frame.body,
+  });
   return viewOf(ctx) as unknown as Record<string, unknown>;
 }
 
