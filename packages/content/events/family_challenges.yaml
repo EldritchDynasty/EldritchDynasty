@@ -225,6 +225,17 @@ events:
               affinity: terra
         select:
           bestBy: terra
+      APPRENTICE:
+        role: family_member
+        optional: true
+        filters:
+          - status: [alive]
+          - sex: male
+          - age: { op: gte, value: 16 }
+          - awakened: true
+          - not: { knows: { affinity: terra } }
+        select:
+          bestBy: mind
     body: The rafters knock above Ardwen's west room. Wind has found the gap under the slates, and the
       mason at Wick will not come before morning. Someone must hold the roof or take its weight down
       in pieces. The bed below is still warm.
@@ -357,6 +368,22 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+        - id: prepare_next_time
+          label: Pay 115 crowns for shoring and a Terra primer; begin a reading.
+          requires:
+            - { slot: APPRENTICE, attr: mind, op: gte, value: 0 }
+          outcomes:
+            - id: a_reading_begins
+              weight: 100
+              text: >-
+                The mason props the beam and leaves an eighty-crown Terra primer at Ardwen.
+                {APPRENTICE} begins the reading while the house pays thirty-five crowns for
+                the temporary work. The mason will return in four years.
+              effects:
+                - { kind: treasury, delta: -115 }
+                - { kind: spellbook, op: acquire_copy, target: household, book: lesser_workings_of_terra }
+                - { kind: spellbook, op: study, target: { slot: APPRENTICE }, book: lesser_workings_of_terra }
+                - { kind: schedule, event: the_wind_under_the_slates, inYears: 4 }
   - id: the_fever_and_the_vigil
     title: The Fever and the Vigil
     tier: family
@@ -403,6 +430,16 @@ events:
               affinity: death
         select:
           bestBy: death
+      APPRENTICE:
+        role: family_member
+        optional: true
+        filters:
+          - status: [alive]
+          - age: { op: gte, value: 16 }
+          - awakened: true
+          - not: { knows: { affinity: death } }
+        select:
+          bestBy: mind
     body: A bell from Wick can be heard through Ardwen's shutters. A tenant has died of fever; the
       people who sat beside the bed are ill, and the family has promised to pay for the vigil. Life
       has a working for the sick; Death has one for the vigil. Someone would have had to spend the
@@ -539,6 +576,22 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+        - id: prepare_next_time
+          label: Pay 125 crowns for the vigil and a Death primer; begin a reading.
+          requires:
+            - { slot: APPRENTICE, attr: mind, op: gte, value: 0 }
+          outcomes:
+            - id: a_reading_begins
+              weight: 100
+              text: >-
+                The chapter house at Bramme sends a ninety-crown Death primer and charges
+                thirty-five for the vigil. {APPRENTICE} begins reading after the burial.
+                The next parish review is in four years.
+              effects:
+                - { kind: treasury, delta: -125 }
+                - { kind: spellbook, op: acquire_copy, target: household, book: lesser_workings_of_death }
+                - { kind: spellbook, op: study, target: { slot: APPRENTICE }, book: lesser_workings_of_death }
+                - { kind: schedule, event: the_fever_and_the_vigil, inYears: 4 }
   - id: the_cawdry_copy
     title: The Cawdry Copy
     tier: family
@@ -1128,3 +1181,15 @@ proseVariants:
     of: 11f969ab2414dfd7
     plainenglish: "{SENT} cannot hold the wheel long enough for the carter to support it. The flour gets
       wet. The family pays for the ruined sacks and the damaged cart."
+  - address: "content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=prepare_next_time].label"
+    of: "5e5d90030e3d8b87"
+    plainenglish: "Pay 115 crowns for temporary roof repairs and a Terra book; start studying it."
+  - address: "content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text"
+    of: "af35d24d353e2e81"
+    plainenglish: "The mason supports the beam temporarily and leaves a Terra book at Ardwen. The book costs eighty crowns and the repairs cost thirty-five. {APPRENTICE} starts studying the book. The mason will return in four years."
+  - address: "content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=prepare_next_time].label"
+    of: "058f413e71d6d73a"
+    plainenglish: "Pay 125 crowns for the vigil and a Death book; start studying it."
+  - address: "content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text"
+    of: "86a0da65a35fdbd1"
+    plainenglish: "The chapter house at Bramme charges ninety crowns for a Death book and thirty-five for the vigil. {APPRENTICE} begins studying after the burial. The next church review is in four years."

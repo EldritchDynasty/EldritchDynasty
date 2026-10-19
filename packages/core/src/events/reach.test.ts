@@ -81,10 +81,17 @@ describe('family challenge execution witnesses (#1796)', () => {
           const cost = outcome.effects.reduce((sum, e) => sum + (e.kind === 'treasury' ? e.delta : 0), 0);
           expect(ctx.world.treasury - before).toBe(cost);
           if (choice.id === 'prepare_next_time') {
-            expect(ctx.world.library.has('lesser_workings_of_darkness')).toBe(true);
-            expect(ctx.world.studies.some((s) => s.book === 'lesser_workings_of_darkness')).toBe(true);
-            expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).some((p) => p.spellsKnown.includes(asId('lesser_workings_of_darkness')))).toBe(false);
-            expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + 12)).toBe(true);
+            const preparations: Record<string, { book: string; years: number }> = {
+              the_cawdry_copy: { book: 'lesser_workings_of_darkness', years: 12 },
+              the_fever_and_the_vigil: { book: 'lesser_workings_of_death', years: 4 },
+              the_wind_under_the_slates: { book: 'lesser_workings_of_terra', years: 4 },
+            };
+            const preparation = preparations[event.id]!;
+            expect(preparation).toBeDefined();
+            expect(ctx.world.library.has(preparation.book)).toBe(true);
+            expect(ctx.world.studies.some((s) => s.book === preparation.book)).toBe(true);
+            expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).some((p) => p.spellsKnown.includes(asId(preparation.book)))).toBe(false);
+            expect(ctx.world.scheduled.some((s) => s.event === event.id && s.year === ctx.world.year + preparation.years)).toBe(true);
           }
           expect(result.key).toBe(outcomeKey(event.id, choice.id, outcome.id));
         });
@@ -4440,15 +4447,19 @@ describe('authored choice-requirement witnesses', () => {
       if (result.key) witnessed.push(result.key);
     }
 
-    {
+    for (const [eventId, sex] of [
+      ['the_cawdry_copy', 'female'],
+      ['the_fever_and_the_vigil', 'female'],
+      ['the_wind_under_the_slates', 'male'],
+    ] as const) {
       const ctx = fixture(1796);
-      const event = content.event('the_cawdry_copy')!;
+      const event = content.mustEvent(eventId);
       for (const p of ctx.world.people.all()) p.awakening.awakened = false;
       const blocked = executeOutcomeWitness(ctx, event, {
         choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1796),
       });
       expect(blocked.ok).toBe(false);
-      place(ctx, { sex: 'female', age: 30, awakened: true, name: 'The New Reader' });
+      place(ctx, { sex, age: 30, awakened: true, name: 'The New Reader' });
       const result = executeOutcomeWitness(ctx, event, {
         choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1796),
       });

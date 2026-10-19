@@ -528,6 +528,62 @@ describe('family-challenges regressions (#1796)', () => {
       expect(executeOutcomeWitness(ctx, event, { choiceId: 'use_darkness', expectedOutcomeId: 'held', rng: makeRng(7) }).ok).toBe(true);
     });
 
+    it.each([
+      ['the_fever_and_the_vigil', 'death', 'female', 125],
+      ['the_wind_under_the_slates', 'terra', 'male', 115],
+    ] as const)('%s can buy a reader for a later working, without granting instant knowledge (#1830)', (id, affinity, sex, fee) => {
+      const ctx = fixture();
+      for (const person of ctx.world.people.living()) person.awakening.awakened = false;
+      const novice = place(ctx, { sex, age: 25, awakened: true, name: 'The paid reader' });
+      set(ctx, novice, 'mind', 40);
+      set(ctx, novice, affinity, 40);
+      const event = content.mustEvent(id);
+      const book = `lesser_workings_of_${affinity}`;
+      expect(ctx.world.library.has(book)).toBe(false);
+      expect(executeOutcomeWitness(ctx, event, {
+        choiceId: `use_${affinity}`, expectedOutcomeId: 'lost', rng: makeRng(1830),
+      }).ok).toBe(true);
+      const before = ctx.world.treasury;
+      const madness = novice.madness;
+      const preparation = executeOutcomeWitness(ctx, event, {
+        choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1831),
+      });
+      expect(preparation.ok, preparation.reason).toBe(true);
+      expect(ctx.world.treasury - before).toBe(-fee);
+      expect(ctx.world.library.has(book)).toBe(true);
+      expect(knowsAffinity(ctx, novice, affinity)).toBe(false);
+      const study = ctx.world.studies.find(row => row.person === novice.id && row.book === book);
+      expect(study).toBeDefined();
+      expect(study!.completes).toBeGreaterThan(ctx.world.year);
+      expect(executeOutcomeWitness(ctx, event, {
+        choiceId: `use_${affinity}`, expectedOutcomeId: 'lost', rng: makeRng(1832),
+      }).ok).toBe(true);
+      ctx.world.year = study!.completes;
+      completeStudies(ctx);
+      expect(knowsAffinity(ctx, novice, affinity)).toBe(true);
+      const working = executeOutcomeWitness(ctx, event, {
+        choiceId: `use_${affinity}`, expectedOutcomeId: 'held', rng: makeRng(1833),
+      });
+      expect(working.ok, working.reason).toBe(true);
+      expect(novice.madness).toBe(madness);
+    });
+
+    it.each([
+      ['the_fever_and_the_vigil', 'female', true, true],
+      ['the_fever_and_the_vigil', 'male', true, true],
+      ['the_wind_under_the_slates', 'male', true, true],
+      ['the_wind_under_the_slates', 'female', true, false],
+      ['the_fever_and_the_vigil', 'female', false, false],
+      ['the_wind_under_the_slates', 'male', false, false],
+    ] as const)('%s preparation respects %s waking=%s eligibility (#1830)', (id, sex, awakened, eligible) => {
+      const ctx = fixture();
+      for (const person of ctx.world.people.living()) person.awakening.awakened = false;
+      const novice = place(ctx, { sex, age: 25, awakened, name: 'The prospective reader' });
+      const cast = resolveSlots(content.mustEvent(id), ctx, makeRng(1834));
+      expect(cast.ok).toBe(true);
+      expect(cast.fill.APPRENTICE).toBe(eligible ? novice.id : undefined);
+    });
+
     it('uses every family primitive and each affinity in reachable authored checks or filters', () => {
       const events = content.events.filter((e) => e.tags.includes('family_challenge'));
       expect(events).toHaveLength(5);
