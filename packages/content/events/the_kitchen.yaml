@@ -167,6 +167,27 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
 
+        - id: rye_at_every_table
+          label: Rye for the guests as well. Let them tell Bramme what we eat.
+          outcomes:
+            - id: one_rye_bread
+              weight: 100
+              text: >-
+                The same rye loaf goes to the high board and the servants' trestles. The cook can make
+                a good rye loaf. The guests eat it, and repeat the menu at Bramme with the house's name
+                attached. The kitchen hears about that before the week is out.
+              effects:
+                - kind: respect
+                  delta: -1
+                - kind: relationship
+                  from: household
+                  to: head
+                  sentiment: 8
+                - kind: rumour
+                  op: seed
+                  id: rumour_rye_at_the_high_board
+                  accuracy: 1
+
   - id: the_still_room_in_greening
     title: The Still-Room
     tier: family
@@ -911,3 +932,12 @@ proseVariants:
       Nine days later, six people in the household have dysentery, including the cook. It passes
       slowly. The entry in the household book stays exactly as it was, because nobody who reads
       it now wants to be the one to correct it.
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=rye_at_every_table].label"
+    of: "98665214468369c0"
+    plainenglish: "Serve rye to everyone, including the guests, at a cost to standing."
+  - address: "content:events/the_kitchen.yaml#events[id=the_cook_and_the_second_kitchen].interaction.choices[id=rye_at_every_table].outcomes[id=one_rye_bread].text"
+    of: "20134a32165ce0ce"
+    plainenglish: >-
+      Guests and servants eat the same rye bread. The cook makes it well. Guests tell Bramme
+      what the house served, costing standing. The household appreciates sharing the high
+      table's bread.

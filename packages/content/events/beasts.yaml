@@ -175,25 +175,24 @@ events:
             - id: killed
               weight: 68
               text: >-
-                Two days, four men and a dog lost, and a sow of about nine
-                score on the board at Slaughter and the three holdings left
-                alone. The province hears about it because the province always
-                hears about a boar, and it is worth more to this family than
-                the oats were.
+                {HUNTER} brings the boar down on the second day, after it has put a tusk
+                through the shoulder of the coat. The wound is shallow enough to stitch and
+                deep enough to keep. The three holdings have their oats back. The story
+                travels farther than the meat.
               effects:
-                - { kind: respect, delta: 1 }
-                - { kind: treasury, delta: 4 }
+                - {kind: respect, delta: 1}
+                - {kind: attribute, target: {slot: HUNTER}, attr: health, delta: -2}
+                - {kind: chronicle, text: '{HUNTER} brought down the boar from the oats and came home with a torn shoulder.'}
             - id: it_goes_wrong
               weight: 32
               text: >-
-                It comes back through the line at the one man who is not
-                braced, which is how it always happens, and {HUNTER} is off his
-                feet with a thigh opened to the bone and is carried out of that
-                wood by four men. The boar is killed by somebody else four
-                tendays later. Nobody mentions that part afterwards.
+                The boar comes through the line and opens {HUNTER}'s thigh to the bone. Four
+                men carry the hunter out. The house sent the hunt in, and {HUNTER} remembers
+                who sent it. Somebody else kills the boar four tendays later.
               effects:
-                - { kind: attribute, target: { slot: HUNTER }, attr: health, delta: -7 }
-                - { kind: treasury, delta: -5 }
+                - {kind: attribute, target: {slot: HUNTER}, attr: health, delta: -7}
+                - {kind: relationship, from: head, to: {slot: HUNTER}, grudge: {severity: 20, inheritance: none}}
+                - {kind: relationship, from: {slot: HUNTER}, to: head, sentiment: -12}
         - id: pay_for_the_oats
           label: Pay for the oats and leave the wood alone.
           outcomes:
@@ -605,18 +604,15 @@ proseVariants:
     plainenglish: >-
       Hunt the boar this week with four men and the dogs.
   - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=killed].text"
-    of: "e5ae907413c13f30"
+    of: "01193bc060306224"
     plainenglish: >-
-      The hunt takes two days and four men, and one dog dies. A sow weighing about nine score is laid
-      on the board at Slaughter. The boar no longer troubles the three holdings. News of the hunt
-      spreads through the province, as it always does. That attention is worth more to the family than
-      the lost oats.
+      {HUNTER} kills the boar but takes a shoulder wound. The holdings can use their oats
+      again, and the house gains standing. The injury stays with the hunter.
   - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=it_goes_wrong].text"
-    of: "2b19e8f2f670f40e"
+    of: "28d60f84250c57e0"
     plainenglish: >-
-      The boar charges back through the hunting line toward a man who is not braced for it. It knocks
-      {HUNTER} down and cuts his thigh to the bone. Four men carry him out of the wood. Somebody else
-      kills the boar four tendays later, but nobody mentions that afterward.
+      The boar badly wounds {HUNTER}, who loses Health. {HUNTER} resents the Head for
+      ordering the hunt. Four men carry the hunter home. Somebody else kills the boar later.
   - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=pay_for_the_oats].label"
     of: "ecf1e9cbaaad9497"
     plainenglish: >-
@@ -816,3 +812,6 @@ proseVariants:
       The four poorest families get their pigs into the wood. Extra pigs feed on the home
       demesne and damage the seedbeds for next year. Wick has pork for winter, but the house
       ground will yield less.
+  - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=killed].effects[2].text"
+    of: "d3370ebdff92e689"
+    plainenglish: "{HUNTER} killed the boar and returned with a shoulder wound."

@@ -83,45 +83,73 @@ events:
       OLD:
         role: family_member
         filters: [{ status: [alive] }, { age: { op: gte, value: 66 } }, { relation: not, of: HEAD }]
+      CADET:
+        role: cadet
+        optional: true
+        filters:
+          - status:
+              - alive
+          - relation: not
+            of: OLD
     body: >-
-      {OLD} held this seat for thirty-one years and gave it up four years ago
-      and is still given the chair nearest the fire and served second, which
-      nobody arranged and everybody does. It has begun to matter, because he
-      has begun to give opinions at the board about things that were settled
-      before he gave anything up. The household serves whoever is served
-      second. That is the whole of how a hall works.
+      {OLD} has the chair nearest the fire and is served second. The household waits for an
+      opinion from that chair even after the seal has settled a question. There is room for
+      only one first answer. A cadet hall could give {OLD} another board to preside over, if
+      it were told to make room.
     interaction:
       kind: choice
       choices:
         - id: leave_the_precedence
-          label: Leave it. He gets the chair and he gets the second cup.
+          label: "Leave the chair and the second cup where they are."
           outcomes:
             - id: precedence_kept
               weight: 100
               text: >-
-                He keeps the chair for eleven more years and gives opinions
-                across all of them, and the household goes on taking its cue
-                from a man who does not hold the seal, and about two decisions
-                a year come out differently because of it. Not one of them is a
-                disaster. Every one of them is somebody else's.
+                The chair stays. {OLD} gives a second answer across the board, and the
+                servants wait to learn which answer holds. Affection keeps its place. The
+                seal has to ask twice.
               effects:
                 - { kind: relationship, from: { slot: OLD }, to: head, sentiment: 12 }
                 - { kind: respect, delta: -1 }
         - id: take_the_chair
-          label: Take the chair. Quietly, once, without saying anything.
+          label: "Take the chair quietly before the soup."
           outcomes:
             - id: chair_taken
               weight: 100
               text: >-
-                It is done on an ordinary evening without a word and it is
-                understood by every single person in the room before the soup,
-                including him, and he is gracious about it in a way that makes
-                it worse. He says almost nothing at that board again. The
-                household serves the seal from that evening and stops asking
-                twice.
+                {HEAD} takes the chair before the soup. {OLD} makes room without a word and
+                offers no opinion for the rest of supper. The servants serve the seal first.
+                Everybody has seen what it cost.
               effects:
                 - { kind: relationship, from: { slot: OLD }, to: head, sentiment: -18 }
                 - { kind: respect, delta: 1 }
+
+        - id: find_another_board
+          label: Require the cadet hall to give the elder a place of honour.
+          requires:
+            - slot: CADET
+              attr: mind
+              op: gte
+              value: 0
+          outcomes:
+            - id: another_board
+              weight: 100
+              text: >-
+                {CADET} receives a sealed instruction to keep a place of honour for {OLD}. The elder
+                has a chair, a second cup, and another table to advise. This household has one answer
+                again. The other hall has not been asked.
+              effects:
+                - kind: branch
+                  op: slight
+                  slot: CADET
+                  amount: 16
+                - kind: relationship
+                  from:
+                    slot: OLD
+                  to: head
+                  sentiment: 8
+                - kind: chronicle
+                  text: '{HEAD} required {CADET} to keep a place of honour at the cadet board for {OLD}.'
 
   - id: what_the_old_do_all_day
     title: There Is No Institution That Takes Anybody
@@ -151,14 +179,14 @@ events:
             - id: keys_given
               weight: 100
               text: >-
-                The keys, the press and the counting, given to somebody who has
-                nothing else and can do the work sitting down, and eleven years
-                of the best-kept still-room this house has had. Nobody planned
-                it. It was a way of filling a morning and it turns out to be
-                the arrangement that made the difference in two bad winters.
+                {OLD} takes the keys and checks every jar against the inventory before the
+                midday meal. The work can be done sitting down. A disputed count now has a
+                name beside it, and the household has someone to ask before using the winter
+                stores.
               effects:
-                - { kind: attribute, target: household, attr: health, delta: 1 }
-                - { kind: relationship, from: { slot: OLD }, to: head, sentiment: 16 }
+                - {kind: attribute, target: household, attr: health, delta: 1}
+                - {kind: relationship, from: {slot: OLD}, to: head, sentiment: 16}
+                - {kind: chronicle, text: '{HEAD} entrusted the still-room press keys and its inventory to {OLD}.'}
         - id: let_them_rest
           label: Let them rest. They have done their work.
           outcomes:
@@ -565,35 +593,27 @@ proseVariants:
     plainenglish: >-
       He Still Gets the Best Chair
   - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].body"
-    of: "c61338566d19a822"
+    of: "b72f51f39187164f"
     plainenglish: >-
-      {OLD} was Head for thirty-one years and stepped down four years ago. He is still given the
-      chair nearest the fire and served second at meals. Nobody arranged it, but everyone does
-      it. It has started to matter, because he has started giving opinions at the table about
-      things that were settled before he stepped down. Servants follow the lead of whoever is
-      served second. That is simply how a hall works.
+      {OLD} sits nearest the fire and is served second. The servants wait for an opinion
+      from that chair even after the Head has decided. A cadet hall could be ordered to make
+      a place of honour for {OLD} at its table.
   - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=leave_the_precedence].label"
-    of: "acb75f27610208c3"
-    plainenglish: >-
-      Leave it. He keeps the chair and the second cup.
+    of: "42326bc59d44cfc9"
+    plainenglish: "Let the elder keep the chair and second cup."
   - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=leave_the_precedence].outcomes[id=precedence_kept].text"
-    of: "7620aeabf511cdbf"
+    of: "bf2d8a0445b5a888"
     plainenglish: >-
-      He keeps the chair for eleven more years and gives his opinions the whole time. The
-      household keeps taking its lead from a man who no longer holds the seal, and about two
-      decisions a year turn out differently because of it. None of them is a disaster. Every one
-      of them was supposed to be someone else's decision.
+      {OLD} keeps the chair and keeps offering another answer after the Head has decided.
+      The elder is pleased, but the servants keep waiting to hear which answer to follow.
   - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=take_the_chair].label"
-    of: "7ee9fd09c5d07725"
-    plainenglish: >-
-      Take the chair. Quietly, once, without a word.
+    of: "8f3e5fae32c91f42"
+    plainenglish: "Take the chair quietly before the meal."
   - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=take_the_chair].outcomes[id=chair_taken].text"
-    of: "89d3119da3a59c01"
+    of: "ef2573bbc0ac6b17"
     plainenglish: >-
-      It is done on an ordinary evening without a word, and everyone in the room understands it
-      before the soup arrives, including him. He is gracious about it, which makes it worse. He
-      hardly speaks at that table again. From that evening, the household follows the current
-      Head and stops checking with anyone else.
+      {HEAD} takes the chair. {OLD} moves without speaking and gives no more opinions at the
+      meal. The servants follow the Head's answer, and the elder resents the change.
   - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].title"
     of: "ec4deef37c502def"
     plainenglish: >-
@@ -611,12 +631,11 @@ proseVariants:
     plainenglish: >-
       Give the still-room to whoever can still do the work.
   - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=give_them_the_keys].outcomes[id=keys_given].text"
-    of: "e308e5f31add650f"
+    of: "e98ede8a09092396"
     plainenglish: >-
-      The keys, the cupboards and the counting go to someone who has nothing else to do and can
-      work sitting down. The result is eleven years of the best-kept still-room this house has
-      ever had. Nobody planned it. It was a way to fill a morning, and it turns out to be what
-      got the house through two bad winters.
+      {OLD} takes charge of the still-room keys and checks the inventory. The work can be
+      done sitting down. The household benefits from better stores and knows who is
+      responsible for the count.
   - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=let_them_rest].label"
     of: "cfd86de1a60d4e9d"
     plainenglish: >-
@@ -852,3 +871,18 @@ proseVariants:
       what happens with the fourth verse, and why only one person in the parish knows it. The
       old woman dies in Frostfall. For eleven years afterwards the song is sung at every feast
       with three verses and a pause where the fourth used to be, and then without the pause.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=find_another_board].label"
+    of: "78da43bc523e3938"
+    plainenglish: "Make an available cadet hall give the elder a place of honour."
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=find_another_board].outcomes[id=another_board].text"
+    of: "8b94e6e44fe91760"
+    plainenglish: >-
+      The Head orders {CADET} to reserve an honoured place for {OLD}. The elder is pleased
+      and this household can follow one decision again. The cadet hall resents being ordered
+      to make room.
+  - address: "content:events/the_old.yaml#events[id=the_old_man_at_the_board].interaction.choices[id=find_another_board].outcomes[id=another_board].effects[2].text"
+    of: "44bf8d98cca2c744"
+    plainenglish: "{HEAD} ordered {CADET} to give {OLD} a place of honour at the cadet table."
+  - address: "content:events/the_old.yaml#events[id=what_the_old_do_all_day].interaction.choices[id=give_them_the_keys].outcomes[id=keys_given].effects[2].text"
+    of: "63e176b422468e40"
+    plainenglish: "{HEAD} gave {OLD} responsibility for the still-room keys and inventory."
