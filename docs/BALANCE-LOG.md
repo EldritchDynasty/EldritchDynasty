@@ -12810,3 +12810,40 @@ All41 Record tests pass, including six actual refusal/Record/save-load cases
 across both prose modes. Validation passes47rules, zero errors and three
 existing frequency-obligation warnings. A fresh paired72-run after sample
 must measure this mechanism before any reach or ending improvement is claimed.
+
+## 2026-10-20 — #1818: first mechanism measured, summit gap retained
+
+The refusal candidate is frozen `ed7fc2b8d08735bc3f960f007fd608ca365d4499`.
+All72 requested Long500 after runs completed with actual exit0, paired to
+`21f6ebaa` on the same24seeds and three unchanged players. Eight new candidate
+observer on/off controls match complete saves and pacing. Only ascendant5114
+changes its saved world; the other71 complete saves are identical to before.
+Top-rung reach and the ending mix are unchanged in every policy: ascendant
+Vessel10/24, Demigod5/24, God0/24. All15 recipient-years still jointly fail
+overflow, Respect and clauses,13 also fail the Mind floor, and one books.
+Correcting the false refusal account therefore improves factual Record
+behaviour without evidence of increased summit reach. The8% target remains
+unmet; no gate is weakened and no improvement is claimed from this sample.
+
+A targeted production-table trace then replayed the three actual recipient
+houses on this same frozen source. All three complete-save hashes and pacing
+rows exactly match the accepted after sample. It wraps the actual annual
+table phase only to capture stored fields immediately before/after; it does
+not draw RNG, read derived phenotypes or change the phase's arguments.
+Quenton5112 receives three paid Mind terms, completing at ages9,17 and28:
+he has27 acquired Mind. Wulfric5114 completed one childhood Mind term, then
+another subject; he is not named into the programme until age37. Cuthard5118
+is in a Fluid term at age8, enters a Terra term at15, is made Scion at17,
+and remains in Terra through22; the term completes at23, past the existing
+age22 admission limit. Treasury exceeds950crowns during his programme's
+remaining childhood window, so his missing Mind term is not a cash shortage.
+The steward already prioritises Mind for an idle named Scion/Heir; this case
+is a pre-existing paid term blocking the available tuition window, not an
+unimplemented programme priority. No education rule or player policy has
+been changed on the strength of this trace.
+
+Artifacts: `scratch/eldritch-1818-refusal-joints.json`, its summary and process
+completion, and `scratch/eldritch-1818-refusal-tuition-trace.json`. Rebase onto
+forcing closing head`432eed9d` changes no measured content or simulation:
+the only package difference against this frozen candidate is main's session
+test comment. Further joint-gate work and final integration gates remain.
