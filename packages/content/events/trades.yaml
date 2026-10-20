@@ -169,28 +169,31 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
         - id: do_it_ourselves
-          label: Do it with men and shovels. It is a race, not a rite.
+          label: Take a shovel yourself. Three weeks of work instead of the warrant.
           outcomes:
             - id: dug
               weight: 68
               text: >-
-                Nine men, three weeks, and it holds. It costs about the same
-                once the food is counted and it takes five times as long, and
-                the village decides the house is either very poor or very proud
-                and settles, after some discussion, on proud.
+                {HEAD} spends three weeks in the race with the digging gang.
+                The bank holds, though the hands that carried the shovel
+                shake over supper for a tenday afterwards. At Wick the story
+                is that this house would rather dig with its tenants than
+                bring a warranted man through the gate.
               effects:
-                - { kind: treasury, delta: -9 }
-                - { kind: respect, delta: -1 }
+                - { kind: attribute, target: head, attr: health, delta: -6 }
+                - { kind: rumour, op: seed, id: rumour_the_house_that_dug_the_race, accuracy: 0.55 }
             - id: failed
               weight: 32
               text: >-
-                Nine men, three weeks, and it goes again in the spring, and the
-                wright comes up from Bramme after all and is courteous about
-                the previous attempt in a way that costs this house more than
-                the eleven crowns did.
+                {HEAD} spends three weeks in the race with the digging gang,
+                and the bank goes again in spring. The hands have barely
+                stopped shaking when the wright arrives. Eleven crowns go
+                into his bag, and the village tells the whole story rather
+                than the part the house would have kept.
               effects:
-                - { kind: treasury, delta: -22 }
-                - { kind: respect, delta: -1 }
+                - { kind: treasury, delta: -11 }
+                - { kind: attribute, target: head, attr: health, delta: -6 }
+                - { kind: rumour, op: seed, id: rumour_the_house_that_dug_the_race, accuracy: 0.75 }
 
   - id: the_book_that_needs_a_reader
     title: Nobody Has Opened It in Sixty Years
@@ -583,21 +586,20 @@ proseVariants:
       spend all four days watching from the yard without wanting to be noticed. Neither can later
       explain what they hoped to see.
   - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].label"
-    of: 764dfe39f6996855
-    plainenglish: >-
-      Repair the channel with workers and shovels instead of magic.
+    of: "8d0bd883905002ff"
+    plainenglish: "Join the digging yourself instead of hiring the warranted wright."
   - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].outcomes[id=dug].text"
-    of: cf358ee36416a257
+    of: "d35931fb996d492f"
     plainenglish: >-
-      Nine men work for three weeks and the repair lasts. With food included, the work costs almost
-      as much as hiring the builder and takes five times longer. The villagers debate whether the
-      house is poor or proud. They decide it is proud.
+      {HEAD} digs with the tenants for three weeks. The bank holds, but the work leaves
+      shaking hands for another tenday. People at Wick say the family would rather dig with
+      tenants than bring a warranted practitioner into the house.
   - address: "content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].outcomes[id=failed].text"
-    of: 89036aceb1d1ddd2
+    of: "062c03d276de5606"
     plainenglish: >-
-      Nine men spend three weeks repairing the channel. It fails again in spring. The licensed
-      builder comes from Bramme to do the job after all. He is polite about the first attempt, but
-      his politeness embarrasses the family more than paying eleven crowns would have.
+      {HEAD} digs with the tenants for three weeks, but the bank fails again in spring. The
+      work has left shaking hands. The wright must still be paid eleven crowns, and the
+      village hears about both attempts.
   - address: "content:events/trades.yaml#events[id=the_book_that_needs_a_reader].title"
     of: 971beb3a59275bde
     plainenglish: >-

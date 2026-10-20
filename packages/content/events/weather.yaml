@@ -166,36 +166,38 @@ events:
               text: >-
                 The house's harvest is in by the third dry day and about a
                 third of the parish's is spoiled in the field, which is lawful,
-                customary, and exactly what the labour-days are for. The rents
-                come in short anyway, from men who have nothing to pay them
-                with. The house gains a good harvest and loses most of a year's
-                rent, which nobody at that table predicted.
+                customary, and exactly what the labour-days are for. At
+                supper the servants scrape black grain off their boots while
+                the house's dry sheaves are counted. Nobody asks to take
+                a sheaf home.
               effects:
-                - { kind: treasury, delta: -12 }
                 - { kind: relationship, from: household, to: head, sentiment: -16 }
         - id: theirs_first
-          label: Their ground first. Ours can wait for the fourth day.
+          label: Their ground first. Work beside them and risk the fourth day.
           outcomes:
             - id: theirs_in
               weight: 62
               text: >-
                 The parish is in by the third day and the house's ground is got
-                in on the fourth, wet, and dried in the barn at some cost and
-                some risk of the whole lot heating. It works. It works, and the
-                rents come in whole, and the village would carry this family
-                through fire for a generation.
+                in on the fourth. {HEAD} works through the last wet evening
+                with the tenants, then spends the night turning grain in
+                the barn to keep it from heating. Eight crowns go on drying
+                it. The cough lasts longer than the harvest.
               effects:
                 - { kind: treasury, delta: -8 }
+                - { kind: attribute, target: head, attr: health, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 20 }
             - id: the_fourth_day_never_comes
               weight: 38
               text: >-
                 There is no fourth dry day. The parish is in and the house's
                 ground stands until the second tenday of Ingathering and comes
-                in black, and the year is a disaster on the house's books alone.
-                Not one tenant ever mentions it. Every one of them knows.
+                in black. {HEAD} has worked beside the tenants and spent the
+                wet nights in the drying barn, and has a cough to show for it.
+                Sixty crowns are lost. The tenants bring their grain in dry.
               effects:
                 - { kind: treasury, delta: -60 }
+                - { kind: attribute, target: head, attr: health, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 22 }
 
   - id: the_comet
@@ -604,30 +606,27 @@ proseVariants:
     plainenglish: >-
       Call in the labour owed to the house and harvest its fields first.
   - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=our_ground_first].outcomes[id=ours_in].text
-    of: bf6160033be13f4f
+    of: "175bef65321c4069"
     plainenglish: >-
-      The house finishes its harvest by the third dry day. About a third of the parish's crops
-      spoil because the tenants had to work the house's fields first. This is legal and
-      customary. The tenants then have too little money to pay their rent. The house saves its
-      harvest but loses most of a year's rent, which nobody expected.
+      The house brings its harvest in by the third dry day, while a third of the tenants'
+      crop rots in the fields. It is legal and customary. At supper, servants scrape spoiled
+      grain from their boots while the house counts dry sheaves. Nobody asks to take one
+      home.
   - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].label
-    of: 1dd0b858263bfbec
-    plainenglish: >-
-      Harvest the tenants' fields first. Leave ours until the fourth day.
+    of: "76a4397ebb38f17a"
+    plainenglish: "Harvest the tenants' fields first. Work with them and risk waiting another day."
   - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=theirs_in].text
-    of: d0b3b47421ece540
+    of: "9bc6d2aa099ea096"
     plainenglish: >-
-      The tenants finish their harvest on the third day. The house harvests its own crops on the
-      fourth day, even though they are wet. Drying them in the barn costs money and risks the
-      grain overheating. The plan succeeds, the tenants pay their full rents, and the village
-      remains deeply loyal to the family for a generation.
+      The tenants finish by the third day and the house finishes on the fourth. {HEAD} works
+      with them through the wet evening, then turns grain all night in the barn. Drying
+      costs eight crowns. The work leaves a persistent cough.
   - address: content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=the_fourth_day_never_comes].text
-    of: 2b2fb13816e560b4
+    of: "6f41cd2ac6499086"
     plainenglish: >-
-      The fourth dry day never arrives. The tenants have saved their harvest, but the house's
-      corn stands until the second tenday of Ingathering and is black by the time it is brought
-      in. Only the house suffers the financial loss. The tenants never speak of the sacrifice,
-      but all of them know about it.
+      There is no fourth dry day. The tenants' crop is safe, but the house crop spoils.
+      {HEAD} works with the tenants and spends wet nights in the drying barn, leaving a
+      cough. The house loses sixty crowns.
   - address: content:events/weather.yaml#events[id=the_comet].title
     of: e80633c82769a8c4
     plainenglish: >-
