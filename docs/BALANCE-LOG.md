@@ -12774,3 +12774,39 @@ except that explanatory comment; content tree`83c8257e1c6cbdad1de9fdc511022c188e
 and schema tree`56f65e38570d8e0919652b3509ca4f37c21f1142` match exactly.
 No simulation or content change occurred after measurement. Final landing
 preflight and exact-head native CI still govern integration.
+
+## 2026-10-20 — #1818: fresh joint summit baseline and the refusal Record
+
+Route1 remains the owner's ruling. God-Madness90 and the ending gate's29%
+ceiling are unchanged; the8% Apotheosis floor remains report-only. The fresh
+baseline is frozen `21f6ebaa35fa56f662a331af4b6912444921e79f`, with content
+identical to forcing candidate `5f82c4ae477c7567ef187a0dc2c8fe267fb6c867`.
+All72 actual Long-Line runs completed on seeds5100–5123, under chronicler,
+bid and ascendant. Every full-save hash and pacing row matches the actual
+forcing ambient replay; a further bid5100 observer on/off control also agrees.
+The observer reports all concurrent predicates for the same actual person,
+including lower-rung requirements; it never supplies hidden facts to a player.
+
+Vessel/Demigod/God reach is0/0/0 of24 for chronicler and bid, and10/5/0 of24
+for ascendant. Endings are broken/forgotten/devoured4/12/8 for chronicler,
+6/12/6 for bid, and9/6/8 plus one Unmade for ascendant. Three Unmaking
+recipients supply15 observed recipient-years: all15 fail overflow, Respect
+and clauses together;13 also fail the Mind floor and one fails books. There
+is no God-only gap in this sample. A single-gate improvement cannot be called
+a reachable summit. Artifacts: `scratch/eldritch-1818-pair-repair-joints.json`
+and its `-summary.json`, with actual process exit0.
+
+The first changed mechanism is the Unmaking refusal's Record. Previously
+`let_him_be` inherited the performed-rite account: truth charged2Respect tiers
+and claimed an unmaking that never occurred, Omit created a total murder
+omission, and Embellish claimed the living elder died. Its choice-specific
+Record now describes putting the book back, at no murder charge. Omission
+leaves a dated blank. Embellishing the private refusal as a public act gains
+one Respect tier backed by a major, Church/house-provable discrepancy. Both
+prose modes have reviewed counterparts. The performed rite's odds, costs,
+accounts and all ascension predicates are unchanged.
+
+All41 Record tests pass, including six actual refusal/Record/save-load cases
+across both prose modes. Validation passes47rules, zero errors and three
+existing frequency-obligation warnings. A fresh paired72-run after sample
+must measure this mechanism before any reach or ending improvement is claimed.
