@@ -447,6 +447,14 @@ export function resolveChoice(
   const availability = choiceAvailability(choice, ctx, fill, e);
   if (!availability.available) return { ok: false, reason: availability.blockedBy ?? 'unavailable' };
 
+  // These are the answers the real docket presented, not speculative casts
+  // or freshly evaluated requirements. The canonical chronicler chooses
+  // uniformly from this same available list. Automatic deciders have no
+  // player offer and must not borrow that probability model.
+  if (pending.choicesAreOpen) ctx.observeSelection?.({
+    kind: 'choice_offered', year: ctx.world.year, event: String(e.id),
+    choices: pending.choices.filter(candidate => candidate.available).map(candidate => candidate.id),
+  });
   ctx.observeDecision?.({ decision: structuredClone({ ...pending, fill }), answer: choice.id });
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);

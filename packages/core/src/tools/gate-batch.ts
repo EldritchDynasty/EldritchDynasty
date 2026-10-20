@@ -1,7 +1,7 @@
 import { indexContent, type Content, type ContentBundle } from '@ed/schema';
 import { bootstrap, runYears } from '../sim.js';
 import { START_YEAR } from '../campaign.js';
-import { emptyReach, readRun, type Reach } from '../events/reach.js';
+import { emptyReach, readRun, recordChoiceOffers, type Reach } from '../events/reach.js';
 import { GATE_BATCH_SEED_START, GATE_BATCH_SEED_STEP } from './gate-registry.js';
 
 export type GateSource = ContentBundle | Content;
@@ -35,6 +35,9 @@ export function playGateBatch(source: GateSource, runs: number, years: number): 
   const batch: GateBatch = { runs, templateRuns: new Map(), reach: emptyReach() };
   for (let i = 0; i < runs; i++) {
     const ctx = bootstrap(content, GATE_BATCH_SEED_START + i * GATE_BATCH_SEED_STEP, START_YEAR);
+    ctx.observeSelection = observation => {
+      if (observation.kind === 'choice_offered') recordChoiceOffers(batch.reach, observation.event, observation.choices);
+    };
     runYears(ctx, years);
     for (const [id, n] of Object.entries(ctx.world.frequency.templateFires)) {
       if (n > 0) batch.templateRuns.set(id, (batch.templateRuns.get(id) ?? 0) + 1);

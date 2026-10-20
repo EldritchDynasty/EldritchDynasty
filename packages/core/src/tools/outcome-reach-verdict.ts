@@ -1,4 +1,10 @@
-import type { DeclaredOutcome, Reach } from '../events/reach.js';
+import type { ChoiceExposure, DeclaredOutcome, Reach } from '../events/reach.js';
+
+export function choiceExposure(reach: Reach, choice: string): ChoiceExposure | undefined {
+  const observed = reach.choiceOffers;
+  return observed ? { offered: observed.counts.get(choice) ?? 0,
+    expectedSelections: observed.expectedSelections.get(choice) ?? 0 } : undefined;
+}
 
 /**
  * How many expected resolutions make a sampled zero strong enough to convict.
@@ -17,8 +23,16 @@ export function judgeZeroReach(
   fired: number,
   share: number,
   runs: number,
+  exposure?: ChoiceExposure,
 ): ZeroReachVerdict {
   if (fired === 0) {
+    if (exposure && exposure.offered > 0) {
+      const expected = exposure.expectedSelections;
+      const why = `its answer was offered ${exposure.offered} times, expected ~${expected.toFixed(1)} selections, selected none`;
+      if (expected >= OUTCOME_REACH_PROOF_EXPECTED) return { kind: 'dead', why };
+      const needed = Math.ceil((runs * OUTCOME_REACH_PROOF_EXPECTED) / Math.max(expected, 1e-9));
+      return { kind: 'unproven', why: `${why}; would need ~${needed} runs to prove` };
+    }
     return { kind: 'dead', why: `its choice never fired in ${runs} runs` };
   }
 
@@ -92,6 +106,7 @@ export function scopedOutcomeReachVerdict(
       reach.firings.get(outcome.choice) ?? 0,
       outcome.share,
       runs,
+      choiceExposure(reach, outcome.choice),
     );
     (zero.kind === 'dead' ? dead : unproven)
       .push(`${outcome.label}  — ${zero.why}`);

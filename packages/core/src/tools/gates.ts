@@ -30,6 +30,7 @@ import { TEST_FAMILIES } from './testFamilies.js';
 import { resolveSlots } from '../events/slots.js';
 import { makeRng } from '../rng.js';
 import { declaredOutcomes, outcomeKey } from '../events/reach.js';
+import { choiceExposure, judgeZeroReach } from './outcome-reach-verdict.js';
 import { gateLadder, ladderPolicyMatrix } from './ladder-gate.js';
 import { playGateBatch } from './gate-batch.js';
 import { runFireRateGate, type FireRateGateOptions } from './fire-rate-gate.js';
@@ -312,60 +313,19 @@ export function gatePurposes(source: Source = loadContent()): GateResult {
  * bands are cleared or not by a population the simulation produces. The only
  * instrument for those is a run.
  *
- * No new bookkeeping: `world.decisionLog` already records `{event, choiceId,
- * outcomeId}` at every commit, because replay (issue #8) needed it to.
+ * The decision log records actual commits. A lightweight docket observation
+ * also counts available player answers in the uniform-chronicler batch, so
+ * an unselected answer is distinguished from one never offered. Neither
+ * observation is stored in the saved world.
  *
  * SAMPLE SIZE IS THE WHOLE DESIGN. At 30 runs this gate flags outcomes that
  * are merely rare — `hold_the_gate -> driven_off` resolves in 11% of runs and
  * looked dead at 30. 100 runs is gate 4's own sample and the smallest one
  * where "never" means never.
  */
-/**
- * HOW MANY TIMES AN OUTCOME MUST HAVE BEEN EXPECTED BEFORE A ZERO CONVICTS.
- *
- * A zero is evidence in proportion to how many chances were taken. If an
- * outcome should have resolved `e` times, the chance it resolved none is
- * about `exp(-e)`: at 3 that is 5%, at 5 it is under 1%. Five is the number
- * because this gate makes 872 of these judgements at once — at 5% each, a
- * few dozen marginal outcomes would produce a spurious red most runs, which
- * is the whole failure this constant exists to end.
- */
-const PROOF_EXPECTED = 5;
-
-/** What a zero can support, and the sentence explaining why. */
-export type ZeroVerdict =
-  | { kind: 'dead'; why: string }
-  | { kind: 'unproven'; why: string };
-
-/**
- * SORT ONE ZERO BY WHAT IT CAN ACTUALLY SUPPORT (issue #80).
- *
- * Pulled out of the gate and exported because the branch that matters most —
- * an outcome with plenty of chances that took none of them — cannot be
- * provoked from content at all. Weights are authored, so a choice that fires
- * often WILL land on every outcome under it unless the roller itself is
- * broken; that branch is a guard against an engine bug, and the only way to
- * see it fail is to hand it the numbers directly.
- *
- * `fired` is the parent choice's firings across the whole batch, `share` the
- * outcome's normalised weight within that choice.
- */
-export function judgeZeroReach(fired: number, share: number, runs: number): ZeroVerdict {
-  if (fired === 0) {
-    return { kind: 'dead', why: `its choice never fired in ${runs} runs` };
-  }
-  const expected = fired * share;
-  if (expected >= PROOF_EXPECTED) {
-    return { kind: 'dead', why: `expected ~${expected.toFixed(1)} of ${fired} firings, resolved none` };
-  }
-  // Linear in runs: firings scale with the batch, so this is the size at which
-  // a zero here would actually mean something.
-  const needed = Math.ceil((runs * PROOF_EXPECTED) / Math.max(expected, 1e-9));
-  return {
-    kind: 'unproven',
-    why: `only ~${expected.toFixed(1)} expected of ${fired} firings; would need ~${needed} runs to prove`,
-  };
-}
+// Both the full telemetry and scoped blocking gate use the same judgement.
+export { judgeZeroReach } from './outcome-reach-verdict.js';
+export type { ZeroReachVerdict as ZeroVerdict } from './outcome-reach-verdict.js';
 
 export function gateOutcomeReach(
   source: Source = loadContent(),
@@ -420,9 +380,10 @@ export function gateOutcomeReach(
    * So a zero is now sorted by what it can support, which needs the one number
    * the old shape threw away: how many chances the outcome actually had.
    *
-   *   the choice never fired at all  → DEAD. Nobody was ever offered it, and
-   *                                    that is the more serious finding, which
-   *                                    the old shape could not tell apart.
+   *   the choice never selected     → use actual available-answer offers and
+   *                                    expected uniform selections. An absent
+   *                                    offer still fails; a thin offer sample
+   *                                    is unproven below the same proof limit.
    *   expected >= PROOF_EXPECTED     → DEAD. It should have landed five times.
    *   expected <  PROOF_EXPECTED     → UNPROVEN. Says so, names the batch size
    *                                    that would settle it, and does not fail.
@@ -436,7 +397,7 @@ export function gateOutcomeReach(
 
   for (const { o, pct } of rates) {
     if (pct > 0) continue;
-    const verdict = judgeZeroReach(reach.firings.get(o.choice) ?? 0, o.share, runs);
+    const verdict = judgeZeroReach(reach.firings.get(o.choice) ?? 0, o.share, runs, choiceExposure(reach, o.choice));
     (verdict.kind === 'dead' ? dead : unproven).push(`${o.label}  — ${verdict.why}`);
   }
 

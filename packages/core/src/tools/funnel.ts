@@ -256,6 +256,11 @@ export class FunnelObserver {
       case 'frame_due':
         this.frameDue[observation.due ? 'true' : 'false']++;
         return;
+      case 'choice_offered':
+        // Gate batches read available-answer counts. This observer's annual
+        // template stages and actual branch commits already have their own
+        // checkpoints; an offered alternative is not a selected branch.
+        return;
       case 'cast_failure': {
         const state = this.watched.get(observation.event);
         if (state) {

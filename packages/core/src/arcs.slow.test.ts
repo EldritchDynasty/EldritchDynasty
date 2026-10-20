@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { END_YEAR, expectRate, bootstrap, candidatesFor, framePool, presentFrame, runYears,
   expectMean, testRng,
 } from '@ed/core';
 import { CAMPAIGN_YEARS, isFullCampaignEvent } from './campaign.js';
 import { TEST_FAMILIES } from './tools/testFamilies.js';
+import { declaredOutcomes } from './events/reach.js';
 
 const bundle = loadContent();
 
 const CAWDRY_FRAME = 'frame_read_out_in_a_hall_at_cawdry';
 const CAWDRY_SOURCE = 'archive_read_back_at_the_assize';
+const NATURAL_PAIR = 'the_year_two_woke';
 
 /**
  * ONE BATCH, READ SEVERAL WAYS.
@@ -195,10 +198,26 @@ describe('every authored event can actually happen', () => {
   const THIN_FRAME_REACH_DEBT = ['frame_two_of_three'];
 
   /**
-   * One event is deliberately proved by mechanism instead of by a sampled
-   * zero. See the dedicated Cawdry frame test below.
+   * Narrow events proved by mechanism instead of a sampled zero. Cawdry has
+   * its source-page/cast test below. The natural pair fires in 8/800 canonical
+   * houses both before and after #1811, but disappears from this 360-seed
+   * sample after an unrelated launcher change. filters.test.ts executes all
+   * three answers and proves both real, natural awakenings, the age boundary,
+   * and loss of eligibility afterwards. Require the generated execution
+   * witnesses below as well; keep population reach in the full telemetry.
    */
-  const MECHANISM_CHECKED_REACH = [CAWDRY_FRAME];
+  const MECHANISM_CHECKED_REACH = [CAWDRY_FRAME, NATURAL_PAIR];
+
+  it('keeps every natural-pair outcome covered by real execution witnesses', () => {
+    const manifest = JSON.parse(readFileSync(new URL('../../../tools/outcome-witnesses.json', import.meta.url), 'utf8')) as {
+      outcomes: string[];
+    };
+    const witnessed = new Set(manifest.outcomes);
+    const declared = declaredOutcomes(bundle, event => event.id === NATURAL_PAIR);
+    expect(declared.size, 'the natural-pair event disappeared').toBeGreaterThan(0);
+    expect([...declared.keys()].filter(key => !witnessed.has(key)),
+      'a natural-pair outcome needs a production execution witness').toEqual([]);
+  });
 
   it('fires every event at least once across the batch', () => {
     const dead = bundle.events
