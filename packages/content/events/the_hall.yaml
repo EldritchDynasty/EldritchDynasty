@@ -328,13 +328,17 @@ events:
     purposes: [buy_patience, change_standing, force_record_choice]
     slots:
       HEAD: { role: head }
+      CADET:
+        role: cadet
+        optional: true
+        filters:
+          - status:
+              - alive
     body: >-
-      A dovecote is the right of a landed house and this one holds four
-      hundred birds, and four hundred birds eat off eleven tenancies every
-      spring without asking. The reeve brings it up the way he brings
-      everything up, which is by mentioning something else first. Nobody
-      disputes the right. What they dispute is the number, and they have been
-      disputing it politely since 1074.
+      A dovecote is a landed house's right, and four hundred birds eat off eleven tenancies
+      each spring. The reeve asks whether a right needs quite so many wings. A cadet hall
+      could house half the flight instead; its keeper would have to feed them. Nobody
+      disputes who owns the birds.
     interaction:
       kind: choice
       choices:
@@ -366,6 +370,34 @@ events:
               effects:
                 - { kind: treasury, delta: 4 }
                 - { kind: respect, delta: -1 }
+
+        - id: send_half_to_the_cadet
+          label: Put two hundred birds at the cadet hall. Let that granary feed them.
+          requires:
+            - slot: CADET
+              attr: mind
+              op: gte
+              value: 0
+          outcomes:
+            - id: birds_sent
+              weight: 100
+              text: >-
+                Two hundred birds go in wicker crates, with a letter calling them a gift. {CADET} has
+                not asked for a dovecote or two hundred mouths at Seedmonth. The tenants see half the
+                flight leave. The other hall keeps the letter.
+              effects:
+                - kind: branch
+                  op: slight
+                  slot: CADET
+                  amount: 18
+                - kind: relationship
+                  from: household
+                  to: head
+                  sentiment: 6
+                - kind: chronicle
+                  text: >-
+                    {HEAD} transferred two hundred dovecote birds to {CADET}, requiring that hall to
+                    feed them.
 
   - id: the_old_bitch_by_the_fire
     title: The Old Bitch by the Fire
@@ -722,13 +754,11 @@ proseVariants:
     plainenglish: >-
       What the Pigeons Eat
   - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].body"
-    of: "235ffaf5adfd8651"
+    of: "a5a0abbe16f8d2a2"
     plainenglish: >-
-      A landed house has the right to keep a dovecote, and this one holds four hundred birds.
-      Every spring, those four hundred birds eat from the fields of eleven tenant farms without
-      asking. The reeve raises the matter the way he raises everything, by talking about
-      something else first. Nobody questions the right. They question the number of birds, and
-      they have been questioning it politely since 1074.
+      Four hundred birds from the house dovecote eat its tenants' seed. The reeve asks
+      whether all four hundred are necessary. Sending half to a cadet hall would make that
+      hall feed them instead. The house has the legal right to keep them.
   - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=cull_the_flight].label"
     of: "8d741a627d3a966e"
     plainenglish: >-
@@ -853,3 +883,15 @@ proseVariants:
       Wick notices. Everyone drinks weak beer, children included, because the water cannot be
       trusted and this year it is river water as well. By Harvest, two of the maids and a groom
       have dysentery.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=send_half_to_the_cadet].label"
+    of: "004842522b86e9be"
+    plainenglish: "Send half the birds to an available cadet hall and make it feed them."
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=send_half_to_the_cadet].outcomes[id=birds_sent].text"
+    of: "a177d8924d1b7e96"
+    plainenglish: >-
+      {CADET} receives two hundred birds and a letter calling them a gift. The hall must
+      feed birds it never asked for. The tenants are pleased to see fewer birds eating their
+      seed. The cadet hall keeps the letter.
+  - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=send_half_to_the_cadet].outcomes[id=birds_sent].effects[2].text"
+    of: "af68bff3d4abd06f"
+    plainenglish: "{HEAD} sent two hundred birds to {CADET} and required that hall to feed them."

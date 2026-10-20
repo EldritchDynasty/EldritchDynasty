@@ -3605,6 +3605,129 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
   });
 });
 
+function withoutCadets(seed: number) {
+  const ctx = fixture(seed);
+  ctx.world.branches.clear();
+  for (const person of ctx.world.people.all()) {
+    const membership = person.membership.find((entry) => entry.to === undefined);
+    if (membership?.kind === 'cadet') {
+      membership.kind = 'blood';
+      membership.branch = 'main';
+    }
+  }
+  return ctx;
+}
+
+function pricedCadetFixture(seed: number) {
+  const ctx = withoutCadets(seed);
+  place(ctx, { sex: 'female', age: 72, name: 'Elder of the Main Hall' });
+  const cousin = place(ctx, { sex: 'male', age: 40, name: 'Cadet Recipient', branch: 'priced_hall' });
+  const membership = cousin.membership.find((entry) => entry.to === undefined)!;
+  membership.kind = 'cadet';
+  membership.branch = 'priced_hall';
+  ctx.world.branches.set('priced_hall', {
+    id: asId('priced_hall'), name: 'The Priced Hall', house: asId(ctx.world.playerHouse),
+    founder: cousin.id, splitFrom: 'main', foundedYear: ctx.world.year - 30,
+    speaker: cousin.id, grievance: 20,
+  });
+  return { ctx, cousin };
+}
+
+describe('cadet obligations and named prices in the final worklist (#1810)', () => {
+  const cadetOffers = [
+    { event: 'the_dovecote_and_the_seed', choice: 'send_half_to_the_cadet', outcome: 'birds_sent', grievance: 18 },
+    { event: 'the_old_man_at_the_board', choice: 'find_another_board', outcome: 'another_board', grievance: 16 },
+  ];
+
+  for (const offer of cadetOffers) {
+    it(`${offer.event} keeps its old choices playable without a cadet hall`, () => {
+      const ctx = withoutCadets(181040);
+      place(ctx, { sex: 'female', age: 72, name: 'Elder of the Main Hall' });
+      const event = content.mustEvent(offer.event);
+      const cast = resolveSlots(event, ctx, makeRng(181041));
+      expect(cast.ok).toBe(true);
+      if (!cast.ok) throw new Error('the optional cadet narrowed the parent event');
+      const pending = queueChoice(ctx, event, event.body, cast.fill, cast.playerCast);
+      expect(pending.choices.find((choice) => choice.id === offer.choice)?.available).toBe(false);
+      expect(pending.choices.filter((choice) => choice.id !== offer.choice).every((choice) => choice.available)).toBe(true);
+    });
+
+    it(`${offer.event} names the burdened hall and feeds the actual later accounts reader`, () => {
+      const { ctx, cousin } = pricedCadetFixture(181042);
+      const reader = content.mustEvent('the_accounts_of_the_smaller_house');
+      expect(evalCondition(reader.conditions, ctx)).toBe(false);
+      const result = executeOutcomeWitness(ctx, content.mustEvent(offer.event), {
+        choiceId: offer.choice, expectedOutcomeId: offer.outcome, rng: makeRng(181043),
+      });
+      expect(result.ok, result.reason).toBe(true);
+      expect(ctx.world.branches.get('priced_hall')?.grievance).toBe(20 + offer.grievance);
+      expect(ctx.world.chronicle.some((page) => page.text?.includes(cousin.epithet ?? cousin.name))).toBe(true);
+      const loaded = loadGame(saveGame(ctx), content);
+      expect(evalCondition(reader.conditions, loaded)).toBe(true);
+      if (reader.interaction.kind === 'narration') throw new Error('the accounts reader lost its decision');
+      const read = executeOutcomeWitnessRaw(loaded, reader, {
+        choiceId: 'praise_and_nothing', expectedOutcomeId: 'warmly', rng: makeRng(181044),
+      });
+      expect(read.ok, read.reason).toBe(true);
+    });
+  }
+
+  it.each([
+    { outcome: 'it_took', damage: 1 }, { outcome: 'it_rotted', damage: 3 },
+  ])('wet sowing $outcome damages the saved home holding by its actual price', ({ outcome, damage }) => {
+    const ctx = fixture(181045);
+    const home = [...ctx.world.parcels.values()].find((parcel) => parcel.defId === 'the_home_demesne')!;
+    const before = home.yieldBonus ?? 0;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent('a_wet_seedmonth'), {
+      choiceId: 'sow_now', expectedOutcomeId: outcome, targetWeightedOutcome: true, rng: makeRng(181046),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    const loaded = loadGame(saveGame(ctx), content);
+    const saved = [...loaded.world.parcels.values()].find((parcel) => parcel.defId === 'the_home_demesne')!;
+    expect(saved.yieldBonus).toBe(before - damage);
+  });
+
+  it.each(['levy_it', 'refuse_in_writing'])('the old licence certificate is proved when the successor chooses %s', (choiceId) => {
+    const ctx = fixture(181047);
+    const signed = executeOutcomeWitnessRaw(ctx, content.mustEvent('the_alewife_and_the_licence'), {
+      choiceId: 'assert_the_franchise', expectedOutcomeId: 'asserted', rng: makeRng(181048),
+    });
+    expect(signed.ok, signed.reason).toBe(true);
+    const loaded = loadGame(saveGame(ctx), content);
+    loaded.world.respect = 'eminent';
+    const instance = [...loaded.world.arcs.values()].find((arc) => content.arc(arc.arc)?.nodes.some((node) => node.event === 'the_file_a_clerk_went_looking_for'))!;
+    expect(instance.dueYear! - loaded.world.year).toBeGreaterThanOrEqual(70);
+    expect(instance.dueYear! - loaded.world.year).toBeLessThanOrEqual(95);
+    const oldHead = loaded.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    loaded.world.people.kill(oldHead.id, loaded.world.year, 'test successor reads the certificate');
+    const successor = place(loaded, { sex: 'female', age: 32, name: 'Successor to the Certificate' });
+    successor.castSlots = ['head'];
+    loaded.world.year = instance.dueYear!;
+    const step = dueArcSteps(loaded, makeRng(181049)).find((candidate) => candidate.instance.id === instance.id)!;
+    expect(step.fill.HEAD).toBe(successor.id);
+    const result = executeOutcomeWitnessRaw(loaded, content.mustEvent('the_file_a_clerk_went_looking_for'), {
+      choiceId, expectedOutcomeId: choiceId === 'levy_it' ? 'levied' : 'refused', rng: makeRng(181050), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(loaded.world.discrepancies.get('the_alewife_franchise_backdated')?.state).toBe('proven');
+    expect(loaded.world.respect).toBe('regarded');
+  });
+
+  it('lets the hall serve the guests its own rye and leaves the public account', () => {
+    const ctx = fixture(181051);
+    ctx.world.respect = 'eminent';
+    const treasury = ctx.world.treasury;
+    const result = executeOutcomeWitness(ctx, content.mustEvent('the_cook_and_the_second_kitchen'), {
+      choiceId: 'rye_at_every_table', expectedOutcomeId: 'one_rye_bread', rng: makeRng(181052),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(treasury);
+    expect(ctx.world.respect).toBe('regarded');
+    const loaded = loadGame(saveGame(ctx), content);
+    expect(loaded.world.rumours.has('rumour_rye_at_the_high_board')).toBe(true);
+  });
+});
+
 describe('the tinker reference enters the actual certificate file (#1810)', () => {
   it('preserves the named signature through save/load and is proved by the chapter-house reader', () => {
     const ctx = fixture(181030);
@@ -4728,6 +4851,18 @@ describe('authored choice-requirement witnesses', () => {
       place(ctx, { sex, age: 30, awakened: true, name: 'The New Reader' });
       const result = executeOutcomeWitness(ctx, event, {
         choiceId: 'prepare_next_time', expectedOutcomeId: 'a_reading_begins', rng: makeRng(1796),
+      });
+      expect(result.ok, result.reason).toBe(true);
+      if (result.key) witnessed.push(result.key);
+    }
+
+    for (const offer of [
+      { event: 'the_dovecote_and_the_seed', choice: 'send_half_to_the_cadet', outcome: 'birds_sent' },
+      { event: 'the_old_man_at_the_board', choice: 'find_another_board', outcome: 'another_board' },
+    ]) {
+      const { ctx } = pricedCadetFixture(181053);
+      const result = executeOutcomeWitness(ctx, content.mustEvent(offer.event), {
+        choiceId: offer.choice, expectedOutcomeId: offer.outcome, rng: makeRng(181054),
       });
       expect(result.ok, result.reason).toBe(true);
       if (result.key) witnessed.push(result.key);

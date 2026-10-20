@@ -319,19 +319,19 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
         - id: assert_the_franchise
-          label: Answer that the low justice here is ours and always has been.
+          label: "Seal the franchise claim with a false date predating the statute."
           outcomes:
             - id: asserted
               weight: 100
               text: >-
-                An advocate at two marks a day for four days and a reply that
-                is correct in law and is understood at Bramme as the hall
-                telling the town where the boundary is. The alewife brews on.
-                The reply is filed, and in about ninety years a clerk with a
-                grievance goes looking for exactly that kind of file.
+                The house copy acquires a date eleven years before the statute. Bramme
+                receives a sealed claim that the alehouse is exempt by prior franchise. The
+                alewife brews on, and the house gains its point in public. The bench keeps
+                the newer original.
               effects:
-                - { kind: treasury, delta: -8 }
-                - { kind: respect, delta: 1 }
+                - {kind: discrepancy, op: create, id: the_alewife_franchise_backdated, severity: minor, provableBy: [commons, the_church]}
+                - {kind: respect, delta: 1}
+                - {kind: chronicle, text: '{HEAD} certified a false early date for the alehouse franchise and sent the claim to Bramme.'}
               # On the outcome, where `next` lives (#995). Written on the choice it
               # was stripped without a word, and this scene fired ambiently instead.
               next:
@@ -352,14 +352,10 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      The alehouse at Wick has never had a licence, and the woman who keeps it
-      now is the old alewife's great-granddaughter. A clerk of the bench at
-      Bramme has been through the town's files and found the hall's reply
-      from ninety years back, and he has found it useful. If the low justice
-      at Wick is the house's, he writes, then so is the fine for brewing
-      without the town's leave. The house will levy it, or the house will say
-      in writing that it will not. Somebody at Bramme has waited a long time
-      to send it.
+      A clerk at Bramme has put the house's sealed alehouse claim beside the original
+      franchise. The dates do not agree. The present Head is asked to levy the old licensing
+      fine or refuse in writing; either reply will go into the same file. The alewife at
+      Wick has put a clean cup beside her licence box.
     interaction:
       kind: choice
       choices:
@@ -375,7 +371,8 @@ events:
                 works. The alehouse goes quiet when anybody from the hall
                 comes in, and stays quiet for a generation.
               effects:
-                - { kind: relationship, from: household, to: head, sentiment: -10 }
+                - {kind: discrepancy, op: prove, id: the_alewife_franchise_backdated}
+                - {kind: relationship, from: household, to: head, sentiment: -10}
         - id: refuse_in_writing
           label: Write that the house will not, and seal it.
           outcomes:
@@ -388,8 +385,9 @@ events:
                 it, which is the sort of pair a clerk carries to Cawdry when
                 he wants the Warden to look at something.
               effects:
-                - { kind: relationship, from: household, to: head, sentiment: 6 }
-                - { kind: rumour, op: seed, id: rumour_the_halls_justice_is_a_shelter, accuracy: 0.6 }
+                - {kind: discrepancy, op: prove, id: the_alewife_franchise_backdated}
+                - {kind: relationship, from: household, to: head, sentiment: 6}
+                - {kind: rumour, op: seed, id: rumour_the_halls_justice_is_a_shelter, accuracy: 0.6}
 
   - id: the_thatcher_from_the_lag
     title: A Thatcher, Down From the Lag
@@ -835,29 +833,25 @@ proseVariants:
       the rest of her life. Bramme's burgesses are satisfied. Every alehouse in the province now
       knows the hall pays.
   - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].label"
-    of: "f057ab395d44b49d"
-    plainenglish: >-
-      Reply that the low justice here is ours, as it always has been.
+    of: "3b18887fc8ad547b"
+    plainenglish: "Backdate the franchise claim and send the false certificate to Bramme."
   - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].outcomes[id=asserted].text"
-    of: "1860c51eca49ac52"
+    of: "0ee03156d5b0642a"
     plainenglish: >-
-      An advocate costs two marks a day for four days. His reply is correct in law, and Bramme
-      reads it as the hall telling the town where the boundary lies. The alewife keeps brewing.
-      The reply is filed, and in about ninety years a clerk with a grievance goes looking for
-      exactly that kind of file.
+      The house certifies that its alehouse franchise predates the statute. The date is
+      false. Bramme lets the claim stand for now but keeps the original document that can
+      disprove it. The house gains standing and the alewife keeps brewing.
   - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].title"
     of: "3d46d8545accfe60"
     plainenglish: >-
       The Hall's Own Letter Comes Back
   - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].body"
-    of: "faf84b593bf42c1d"
+    of: "2308f788a403161c"
     plainenglish: >-
-      The alehouse at Wick has never had a licence. The woman who runs it now is the old
-      alewife's great-granddaughter. A clerk of the bench at Bramme has been through the town's
-      files, found the hall's reply from ninety years ago, and found it useful. If the low
-      justice at Wick belongs to the house, he writes, then so does the fine for brewing without
-      the town's permission. The house will levy it, or the house will say in writing that it
-      will not. Someone at Bramme has waited a long time to send this.
+      A Bramme clerk compares the house's old sealed claim with the original alehouse
+      franchise. The conflicting dates prove the false certificate. The current Head must
+      levy the licensing fine or refuse in writing. Both replies will be kept in the same
+      file.
   - address: "content:events/wick_trades.yaml#events[id=the_file_a_clerk_went_looking_for].interaction.choices[id=levy_it].label"
     of: "6db57dabd47f585f"
     plainenglish: >-
@@ -1121,3 +1115,6 @@ proseVariants:
     plainenglish: >-
       {HEAD} changed the charcoal rate in the family copy and certified that the earlier
       signed rate had not been fixed.
+  - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].outcomes[id=asserted].effects[2].text"
+    of: "3341df6723dd1383"
+    plainenglish: "{HEAD} sent Bramme a falsely backdated certificate for the alehouse franchise."

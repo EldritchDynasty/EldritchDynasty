@@ -135,22 +135,21 @@ events:
             - id: it_took
               weight: 55
               text: >-
-                Three dry days in the last tenday of Seedmonth, which nobody
-                could have known about, and it takes on the high ground and
-                rots on the low. The yield comes in a fifth under and the
-                house has its seed back and nothing else.
+                Three dry days let the high ground take. The low ground loses its seed, and
+                the home demesne is worked into ruts to recover what can be lifted. The
+                damage stays in that ground after the water goes. No tenant is sent a
+                separate bill.
               effects:
-                - { kind: treasury, delta: -9 }
+                - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 1}
             - id: it_rotted
               weight: 45
               text: >-
-                Four more tendays of it, and what comes up comes up in
-                patches you could count from the gate. The tenants say nothing
-                whatsoever about whose decision it was, which is how the
-                house knows they have all worked out whose decision it was.
+                Four more tendays of rain leave the crop in patches. The house sends the
+                teams back through its own wet demesne, and the ruts run deep enough to take
+                yield from later years. The tenants know who ordered the sowing.
               effects:
-                - { kind: treasury, delta: -26 }
-                - { kind: relationship, from: household, to: head, sentiment: -5 }
+                - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 3}
+                - {kind: relationship, from: household, to: head, sentiment: -5}
         - id: hold_the_seed
           label: Hold the seed. Sow when the ground takes a boot.
           outcomes:
@@ -163,8 +162,9 @@ events:
                 certain one. The reeve, asked twice, had said exactly this,
                 and never once says so afterwards.
               effects:
-                - { kind: treasury, delta: -14 }
-                - { kind: relationship, from: household, to: head, sentiment: 4 }
+                - {kind: treasury, delta: -14}
+                - {kind: relationship, from: household, to: head, sentiment: 4}
+                - {kind: chronicle, text: '{HEAD} held back the Seedmonth corn until the ground dried, accepting a late harvest.'}
 
   - id: the_clip_and_the_factors
     title: The Men Who Price Your Year
@@ -599,17 +599,16 @@ proseVariants:
     plainenglish: >-
       Sow now. Risk flooded seed rather than planting too late.
   - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_took].text"
-    of: "898c2a08af1125bc"
+    of: "f657330d7691bf51"
     plainenglish: >-
-      Three unexpected dry days arrive in the last ten days of Seedmonth. The seed grows on
-      high ground but rots on low ground. The harvest is one-fifth smaller than usual. The
-      house gets back enough to replace the seed it planted, and nothing more.
+      Some seed grows on the high ground. Recovering what remains damages the house's own
+      demesne and reduces its later yield. The tenants are not charged another fee.
   - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_rotted].text"
-    of: "ada3e049ab6e3df5"
+    of: "26d64272f13206b6"
     plainenglish: >-
-      The rain continues for another four ten-day periods. Only scattered patches of seed
-      grow, thin enough to count from the gate. The tenants do not say whose decision caused
-      the failure, but their silence tells the house that they know.
+      The seed mostly rots. Recovery work damages the wet home demesne more heavily,
+      reducing future yield. The household loses confidence in the Head who ordered the
+      sowing.
   - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].label"
     of: "b9f20af20693899e"
     plainenglish: >-
@@ -873,3 +872,6 @@ proseVariants:
       The dish is passed round, and the spoon is picked up again. The argument goes back into
       hiding, a generation deeper. The household learns that this Head will not ask about it
       either.
+  - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].outcomes[id=late_and_short].effects[2].text"
+    of: "ab651a671d6ae9eb"
+    plainenglish: "{HEAD} waited for dry ground before sowing, accepting a late harvest."

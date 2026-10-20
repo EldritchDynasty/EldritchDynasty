@@ -459,28 +459,30 @@ events:
       kind: choice
       choices:
         - id: cut_on_the_ninth
-          label: Cut on the ninth. Forty harvests is an instrument.
+          label: "Walk the ground with him, then cut on the ninth."
           outcomes:
             - id: he_was_right
               weight: 72
               text: >-
-                It breaks on the eleventh and does not stop for two tendays,
-                and this parish has its corn in and the four parishes around it
-                do not. The reeve is not smug about it and is not thanked
-                either, and goes back to the same work the following morning.
+                {HEAD} spends three nights walking the wet ground with the reeve, learning
+                which dry light means rain. It breaks on the eleventh and the corn is in.
+                The gain is twenty-six crowns; the Head has a cough and one more thing to
+                look for next year.
               effects:
-                - { kind: treasury, delta: 26 }
-                - { kind: relationship, from: household, to: head, sentiment: 8 }
+                - {kind: treasury, delta: 26}
+                - {kind: relationship, from: household, to: head, sentiment: 8}
+                - {kind: attribute, target: head, attr: health, delta: -2}
+                - {kind: attribute, target: head, attr: mind, delta: 1}
             - id: he_was_wrong
               weight: 28
               text: >-
-                Four days of the best weather of the year after the corn is
-                cut, and a yield about a twelfth under what standing another
-                four days would have given. It is not a disaster. It is
-                twenty-two crowns, and a steward who says nothing and does not
-                need to.
+                {HEAD} spends the same three nights learning the ground. Four clear days
+                follow the cutting, and the early yield costs twenty-two crowns. The cough
+                is real and so is the lesson. The reeve points out what he misread.
               effects:
-                - { kind: treasury, delta: -22 }
+                - {kind: treasury, delta: -22}
+                - {kind: attribute, target: head, attr: health, delta: -2}
+                - {kind: attribute, target: head, attr: mind, delta: 1}
         - id: wait_the_four_days
           label: Wait. The steward can count and the light on a fell cannot.
           outcomes:
@@ -796,21 +798,20 @@ proseVariants:
       it further. The steward points out that the reeve has been wrong twice in the last nine
       years. His record is better than anyone else's, but those two mistakes cost two harvests.
   - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].label
-    of: 8c2fd484105b9dc0
-    plainenglish: >-
-      Cut on the ninth. Trust the reeve's forty years of experience.
+    of: "3ea334f0c21fad84"
+    plainenglish: "Spend three nights learning from the reeve and cut early."
   - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].outcomes[id=he_was_right].text
-    of: 2a0ea09711e1aa53
+    of: "05e62c2fd7fb2b73"
     plainenglish: >-
-      Rain begins on the eleventh and lasts two tendays. This parish has already brought in its
-      corn, while four neighbouring parishes have not. The reeve does not boast, nobody thanks
-      him, and he returns to his usual work the next morning.
+      {HEAD} walks the wet fields with the reeve for three nights, learning how he predicts
+      rain. Rain arrives after the corn is cut, gaining the house twenty-six crowns. The
+      Head loses Health to the cold nights and gains Mind from the instruction.
   - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].outcomes[id=he_was_wrong].text
-    of: f12eb39141bbd1a5
+    of: "ac8f92686ee4a09c"
     plainenglish: >-
-      The weather stays excellent for four days after the early harvest. Waiting would have
-      increased the yield by about one twelfth. The mistake costs twenty-two crowns, though it
-      is not a disaster. The steward has no need to say anything.
+      {HEAD} spends three cold nights learning from the reeve. The weather stays dry after
+      the cutting, and the early harvest costs twenty-two crowns. The Head loses Health but
+      still learns from the mistake.
   - address: content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=wait_the_four_days].label
     of: 55f0b6ee7e21da4a
     plainenglish: >-

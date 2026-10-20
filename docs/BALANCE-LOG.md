@@ -13114,3 +13114,44 @@ All351 execution-witness tests pass and the generated index contains1,159
 outcomes. All128 existing Record/prose/relationship tests and core type checking
 pass. Content validation passes47rules, zero errors and three existing warnings.
 Eight primary scenes remain. No nineteen-scene campaign result is claimed.
+
+## 2026-10-20 — #1810: twenty-seven primary scenes ready for actual replay
+
+The remaining eight primary scenes complete the bounded27-event draft. The
+bird flight and the elder's second chair each offer a third bargain with an
+actual cadet representative: the smaller hall must feed the birds or make a
+place for the elder. Existing options remain available with no cadet present;
+the optional cast and existing requirement vocabulary close only the new
+option. Each order names its recipient in the saved Chronicle and adds to that
+hall's real grievance. Integration witnesses begin below the existing smaller-
+house accounts threshold, cross it by imposing the obligation, save/load, and
+execute that actual later accounts scene. The elder's revised prose also stops
+inventing a previous Head's tenure for an arbitrary older family member.
+
+Walking the harvest ground with the reeve costs the actual Head2Health and
+teaches1Mind on either of the original72/28 outcomes; the financial harvest
+results remain fixed. The boar hunt now leaves a shoulder wound and a named
+account on success, or the original worse wound with a personal grudge against
+the Head on failure. Those replace the hunt's immediate coin movements; the
+paid compensation alternative remains. Giving the old household member the
+still-room keys now names that responsibility in the Chronicle alongside the
+existing Health and relationship effects.
+
+Sowing wet ground damages the actual home demesne by1 or3 yield instead of
+charging9 or26 immediate crowns. Waiting retains its14-crown cost and goodwill
+and records the delayed sowing. Both saved holding prices are execution-tested.
+The alehouse's franchise alternative now certifies a false early date, gaining
+standing without the old eight-crown fee. Its existing70–95-year clerk callback
+proves that exact discrepancy whichever answer a successor gives. Tests cover
+the actual scheduled due year, successor casting, both replies and full-tier
+standing loss. The kitchen adds a third bread: rye for guests as well as
+servants, with household goodwill, a public rumour and a standing price.
+
+All360 execution-witness tests pass; the generated index contains1,162
+outcomes. Core type checking passes. All27 primary drafts pass47-rule content
+validation, zero errors and the same three existing warnings. Original/Plain
+variants are reviewed together. No new effect, condition, world field, memory
+flag or knowledge key is introduced. Existing parent frequencies and weights
+remain fixed. The final real48-pair replay and integration guards have not yet
+answered: the actual seventeen-scene familiarity failure remains the latest
+campaign verdict, and no threshold or instrument has changed.
