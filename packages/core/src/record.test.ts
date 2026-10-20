@@ -4,14 +4,61 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { asId, ClaimS, proseOriginalHash } from '@ed/schema';
-import { queueRecord, resolveRecord, type RecordOption } from './events/decisions.js';
+import { queueChoice, queueRecord, resolveChoice, resolveRecord, type RecordOption } from './events/decisions.js';
+import { makeRng } from './rng.js';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry, missingPlainEnglish,
   pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, setProseMode,
-  setProseVariants, visibleRecordView,
+  setProseVariants, visibleRecordView, saveGame, loadGame,
 } from '@ed/core';
 
 const bundle = loadContent();
+
+describe('the refused Unmaking records a refusal (#1818)', () => {
+  const variants = parse(readFileSync(join(CONTENT_ROOT, 'events/rites.yaml'), 'utf8')).proseVariants;
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it.each(['record', 'omit', 'embellish'] as const)(`${mode}: %s survives the saved docket without inventing a killing`, (option) => {
+      const ctx = bootstrap(bundle, 1818, 1042);
+      setProseVariants(ctx, variants);
+      setProseMode(ctx, mode);
+      const elder = place(ctx, { sex: 'male', age: 70 });
+      const younger = place(ctx, { sex: 'male', age: 27 });
+      const event = ctx.content.mustEvent('the_unmaking');
+      ctx.world.respect = 'eminent';
+      const pending = queueChoice(ctx, event, event.body, { ELDER: elder.id, ASCENDANT: younger.id }, []);
+      const result = resolveChoice(ctx, pending.id, 'let_him_be', makeRng(181801));
+      expect(result.ok, result.reason).toBe(true);
+      const docket = ctx.world.pendingDecisions.find((entry) => entry.kind === 'record');
+      if (!docket || docket.kind !== 'record') throw new Error('refusal did not queue its Record');
+      expect(docket.recordChoiceId).toBe('let_him_be');
+      const loaded = loadGame(saveGame(ctx), bundle);
+      setProseVariants(loaded, variants);
+      setProseMode(loaded, mode);
+      expect(resolveRecord(loaded, docket.id, option).ok).toBe(true);
+      expect(loaded.world.people.get(elder.id)?.status).toBe('alive');
+      expect(loaded.world.people.get(younger.id)?.rites).not.toContain('unmaking');
+      expect(loaded.world.respect).toBe(option === 'embellish' ? 'exalted' : 'eminent');
+      expect(loaded.world.discrepancies.has('the_small_hall_omission')).toBe(false);
+      expect(loaded.world.discrepancies.has('the_small_hall_lie')).toBe(false);
+      const page = loaded.world.chronicle.find((entry) => entry.id === docket.entryId)!;
+      expect(page.claims?.some((claim) => claim.kind === 'death')).not.toBe(true);
+      if (option === 'omit') {
+        expect(page.text).toBeNull();
+        expect(loaded.world.discrepancies.size).toBe(0);
+      } else if (option === 'record') {
+        expect(page.claims).toMatchObject([{ kind: 'deed', person: younger.id }]);
+        expect(page.text).toContain(mode === 'original' ? 'put it back' : 'returned it');
+        expect(loaded.world.discrepancies.size).toBe(0);
+      } else {
+        expect(loaded.world.discrepancies.get('the_small_hall_refusal_made_public')).toMatchObject({
+          severity: 'major', state: 'open', provableBy: ['the_church', 'house_marrow', 'house_ilm'],
+        });
+        expect(page.claims).toMatchObject([{ kind: 'deed', person: younger.id }]);
+        expect(page.text).toContain('eleven');
+      }
+    });
+  }
+});
 
 /**
  * Record decisions are externally answerable. The TypeScript RecordOption

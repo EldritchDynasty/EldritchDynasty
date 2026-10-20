@@ -1119,6 +1119,33 @@ events:
             id: the_small_hall_lie
             severity: total
             provableBy: [the_church, house_marrow, house_ilm]
+    # Refusing the act is not an unrecorded killing. Keep the paid rite's
+    # account above; the decision's own Record must describe what happened.
+    recordByChoice:
+      - id: let_him_be
+        subject: the book put back on the shelf
+        options:
+          record:
+            chronicle: >-
+              {ASCENDANT} closed the book and put it back. {ELDER} was not
+              unmade, and the two left the room together.
+            claims:
+              - { kind: deed, target: { slot: ASCENDANT }, text: closed the book without unmaking the elder }
+          omit:
+            chronicle: null
+          embellish:
+            chronicle: >-
+              {ASCENDANT} read the four lines before eleven witnesses and
+              refused them aloud, with the chapter-house clerk beside him.
+              {ELDER} left the room alive.
+            effects:
+              - { kind: respect, delta: 1 }
+            claims:
+              - { kind: deed, target: { slot: ASCENDANT }, text: publicly refused the Unmaking before eleven witnesses and a chapter-house clerk }
+            discrepancy:
+              id: the_small_hall_refusal_made_public
+              severity: major
+              provableBy: [the_church, house_marrow, house_ilm]
     rumour: { id: rumour_the_small_hall, accuracy: 0.2, spread: 3 }
     accounts: [homily_on_the_small_hall, the_householders_account_of_that_winter]
 
@@ -1983,3 +2010,23 @@ proseVariants:
   - address: "content:events/rites.yaml#events[id=the_drowning_repeated].interaction.outcomes[id=nothing].text"
     of: "7ee294b735a67b43"
     plainenglish: "They pay the price again, all of it, two hundred years after it was first paid. Nobody wrote it down then."
+
+  - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].subject"
+    of: "cee9c27bd1c3ff57"
+    plainenglish: "the book returned to its shelf"
+
+  - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].options.record.chronicle"
+    of: "f51e7f278646e3fb"
+    plainenglish: "{ASCENDANT} closed the book and returned it to the shelf. {ELDER} was not unmade. They left the room together."
+
+  - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].options.record.claims[0].text"
+    of: "c6e5939cf455f470"
+    plainenglish: "closed the book without performing the Unmaking on the elder"
+
+  - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].options.embellish.chronicle"
+    of: "795a2a9f36ff1793"
+    plainenglish: "{ASCENDANT} read the four lines and publicly refused the rite before eleven witnesses and a chapter-house clerk. {ELDER} left alive."
+
+  - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].options.embellish.claims[0].text"
+    of: "522b39aa97cb4216"
+    plainenglish: "refused the Unmaking in public, before eleven witnesses and a chapter-house clerk"
