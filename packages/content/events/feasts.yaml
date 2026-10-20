@@ -277,19 +277,118 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: LADY }, to: head, sentiment: 9 }
+                - { kind: arc, op: cancel, arc: arc_the_empty_glove }
         - id: no_bird
-          label: No bird. It is eleven crowns for a thing that flies away.
+          label: No bird. Leave the glove empty and answer for it in two years.
           outcomes:
             - id: no_bird_bought
               weight: 100
               text: >-
-                It is entirely correct and it is understood by nobody. {LADY}
-                rides to the Greening fair with an empty glove for two years
-                and then stops wearing the glove, and that is the year the
-                matter is actually settled.
+                {LADY} puts the empty glove on its block where the visitors
+                can see it. The household leaves a line in the fair accounts
+                for the second Greening after this one, when the missing bird
+                will have become a choice the house has kept. The glove stays.
               effects:
                 - { kind: relationship, from: { slot: LADY }, to: head, sentiment: -11 }
+                - { kind: arc, op: start, arc: arc_the_empty_glove }
+
+  - id: the_glove_kept_for_the_fair
+    title: The First Empty Glove
+    tier: family
+    frequency: common
+    weight: 70
+    tags: [feast, hawks, records]
+    purposes: [buy_patience, force_record_choice, plant_rumour]
+    arc: { of: arc_the_empty_glove, node: the_first_fair }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The first Greening fair has come since the merlin was lost. The
+      household brings the empty glove out with the riding clothes, and
+      the clerk marks the fair account for a house still without a bird.
+      There is another fair to come.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: not_replaced
+          weight: 100
+          text: >-
+            The glove goes back to the press after the fair. The account
+            stays open for the next Greening.
+          effects: []
+
+  - id: the_empty_glove_at_greening
+    title: The Empty Glove
+    tier: family
+    frequency: common
+    weight: 70
+    tags: [feast, status, hawks, records]
+    purposes: [buy_patience, change_relationship, force_record_choice]
+    arc: { of: arc_the_empty_glove, node: the_glove }
+    slots:
+      HEAD: { role: head }
+      LADY:
+        role: family_member
+        bind: arc
+        optional: true
+        onMissing: continue_absent
+        filters: [{ sex: female }, { status: [alive] }]
+    body: >-
+      {LADY} has brought the empty glove down for the Greening fair.
+      Two years have passed since the house declined to replace the merlin,
+      and the falconer at Cawdry now asks fourteen crowns. {HEAD} can make
+      the loss good, acknowledge the refusal before the visitors, or have
+      the loss struck from the old fair account. The glove lies on the block.
+    absentBody: >-
+      The empty glove is fetched from the press for the Greening fair.
+      Two years have passed since the house declined to replace the merlin;
+      the woman who wore it is not at this table. The falconer at Cawdry
+      now asks fourteen crowns. {HEAD} can make the loss good, acknowledge
+      the refusal before the visitors, or change the old fair account.
+      The glove lies on the block.
+    interaction:
+      kind: choice
+      choices:
+        - id: buy_the_bird_now
+          label: Buy it now. Fourteen crowns.
+          outcomes:
+            - id: replaced
+              weight: 100
+              text: >-
+                Fourteen crowns and a bird on the block before the visitors
+                arrive. Somebody takes the empty glove back to the press,
+                and the house has paid three crowns for two years of keeping
+                its first answer. The jesses are new.
+              effects:
+                - { kind: treasury, delta: -14 }
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
+        - id: acknowledge_the_refusal
+          label: Leave it empty. Say plainly why we did not replace the bird.
+          outcomes:
+            - id: acknowledged
+              weight: 100
+              text: >-
+                The visitors hear that the house chose not to spend eleven
+                crowns, and hear it from the seal-holder rather than the
+                servants. The glove goes to the press before dinner.
+                Everybody knows whose answer it was.
+              effects:
                 - { kind: respect, delta: -1 }
+                - { kind: relationship, from: household, to: head, sentiment: -4 }
+        - id: deny_the_loss
+          label: Amend the fair account. Certify that no merlin was lost.
+          outcomes:
+            - id: denied
+              weight: 100
+              text: >-
+                The old entry is crossed out and a clean copy is shown to
+                the visitors. Two of the falconer's men were at that fair,
+                and there are households at Wick that remember the empty
+                glove coming home. The ink is dry before dinner.
+              effects:
+                - { kind: discrepancy, op: create, id: the_merlin_was_never_lost, severity: minor, provableBy: [commons, house_marrow] }
+                - { kind: relationship, from: household, to: head, sentiment: -8 }
+                - { kind: chronicle, text: "{HEAD} had the lost merlin struck from the old fair account and certified that no bird had been lost there." }
 
   - id: the_hiring_at_bramme_fair
     title: The Hiring at Bramme
@@ -746,15 +845,14 @@ proseVariants:
       houses in the province notice that the loss was replaced within the season, and that is
       the whole point of a merlin.
   - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=no_bird].label"
-    of: "d9a91493ab74b4cf"
-    plainenglish: >-
-      No new bird. Eleven crowns is too much for something that flies away.
+    of: "effd9af1e134c5c5"
+    plainenglish: "Do not buy a bird. Answer for the empty glove in two years."
   - address: "content:events/feasts.yaml#events[id=the_merlin_on_the_block].interaction.choices[id=no_bird].outcomes[id=no_bird_bought].text"
-    of: "3ecf237d52a9b4d1"
+    of: "ff8396ffc4ce16c3"
     plainenglish: >-
-      It is completely sensible, and nobody understands it. {LADY} rides to the Greening fair
-      with an empty glove for two years, then stops wearing the glove. That is the year the
-      matter is really settled.
+      {LADY} leaves the empty glove where visitors will see it. The household puts a
+      reminder in the fair accounts for two years from now. By then, refusing the
+      replacement will be a choice the family has maintained. The glove stays.
   - address: "content:events/feasts.yaml#events[id=the_hiring_at_bramme_fair].title"
     of: "3ea87e2696ba1aba"
     plainenglish: >-
@@ -935,3 +1033,74 @@ proseVariants:
       proper, but the house has not done it in living memory, because the chapel is the one room
       here nobody likes. On the fourth night the priest from Wick comes up without being asked
       and says the prayer with them. He does not explain why he came.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].title"
+    of: "0b1b7b1841501114"
+    plainenglish: "Deciding About the Lost Bird"
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].body"
+    of: "a72165ec8738b7d8"
+    plainenglish: >-
+      {LADY} brings the empty glove out for the Greening fair. It has been two years since
+      the family refused a replacement merlin. A new bird now costs fourteen crowns. {HEAD}
+      can buy one, publicly acknowledge the refusal, or change the record of the original
+      loss. The glove is on the block.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].absentBody"
+    of: "2c99355d03f8c251"
+    plainenglish: >-
+      The empty glove is brought out for the Greening fair. Two years have passed since the
+      family refused to replace the merlin, and the woman who wore it is absent. A
+      replacement now costs fourteen crowns. {HEAD} can buy it, publicly acknowledge the
+      refusal, or alter the old fair account. The glove is on the block.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=buy_the_bird_now].label"
+    of: "d5d0c81030785e4c"
+    plainenglish: "Buy the replacement for fourteen crowns."
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=buy_the_bird_now].outcomes[id=replaced].text"
+    of: "a471094d33c0a531"
+    plainenglish: >-
+      The replacement costs fourteen crowns and is on its block before the visitors arrive.
+      The empty glove goes back to the press. Waiting two years has cost the house three
+      extra crowns.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=acknowledge_the_refusal].label"
+    of: "669fb0c4e36c7880"
+    plainenglish: "Keep the glove empty and explain why no replacement was bought."
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=acknowledge_the_refusal].outcomes[id=acknowledged].text"
+    of: "80ef99b69ad9ed4a"
+    plainenglish: >-
+      The seal-holder tells the visitors that the family chose not to spend eleven crowns.
+      They hear the decision directly from the house. The glove is put away before dinner,
+      and everybody knows who made the choice.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=deny_the_loss].label"
+    of: "1b733d6c4d6c11f0"
+    plainenglish: "Alter the old fair record to say that no merlin was lost."
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=deny_the_loss].outcomes[id=denied].text"
+    of: "b913cfad3fb6c3e9"
+    plainenglish: >-
+      The original entry is removed from the copy shown to visitors. Two of the falconer's
+      men witnessed the loss, and people at Wick remember the empty glove coming back. The
+      revised entry is dry before dinner.
+
+  - address: "content:events/feasts.yaml#events[id=the_empty_glove_at_greening].interaction.choices[id=deny_the_loss].outcomes[id=denied].effects[2].text"
+    of: "b42ad5ad0ac29bf1"
+    plainenglish: >-
+      {HEAD} removed the lost merlin from the old fair account and falsely certified that no
+      bird had been lost.
+
+  - address: "content:events/feasts.yaml#events[id=the_glove_kept_for_the_fair].title"
+    of: "71a153d2f6eaebbe"
+    plainenglish: "The First Fair Without a Bird"
+
+  - address: "content:events/feasts.yaml#events[id=the_glove_kept_for_the_fair].body"
+    of: "0950c4793300de3d"
+    plainenglish: "It is the first Greening fair since the merlin was lost. The household takes out the empty glove with the riding clothes, and the clerk notes that the family still has no bird. The next fair is still to come."
+
+  - address: "content:events/feasts.yaml#events[id=the_glove_kept_for_the_fair].interaction.outcomes[id=not_replaced].text"
+    of: "72a634263e1f97da"
+    plainenglish: "After the fair, the empty glove is put away. Its entry in the accounts remains open until the next Greening fair."

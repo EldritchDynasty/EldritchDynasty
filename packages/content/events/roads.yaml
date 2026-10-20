@@ -89,7 +89,9 @@ events:
       this and nobody defends it. What he has this year, along with the pots,
       is a small flat box of blackened iron with a lid that will not lift, out
       of the peat at the Lag, and he says four marks, and then two, and then he
-      looks at {BUYER} for a while and says eleven.
+      looks at {BUYER} for a while and says eleven. He will also take a
+      reference saying he has mended the house's pots for three winters.
+      Nobody here has seen him before.
     interaction:
       kind: choice
       choices:
@@ -118,6 +120,20 @@ events:
                 has a hand in it.
               effects:
                 - { kind: rumour, op: seed, id: rumour_the_box_out_of_the_peat, accuracy: 0.15 }
+        - id: sign_the_reference
+          label: Sign for three winters of work. Take the box without coin.
+          outcomes:
+            - id: referenced
+              weight: 100
+              text: >-
+                {BUYER} puts a name beneath three winters of work that
+                never happened. The tinker takes the paper to Bramme and
+                leaves the box. Its lid comes off over supper, with nothing
+                beneath it but dry peat. The kitchen accounts are in the press.
+              effects:
+                - { kind: discrepancy, op: create, id: the_tinker_given_three_winters, severity: minor, provableBy: [commons, the_church] }
+                - { kind: relationship, from: household, to: { slot: BUYER }, sentiment: -6 }
+                - { kind: chronicle, text: "{BUYER} certified three winters of work at the house for a tinker first seen that morning, taking an iron box in return." }
 
   - id: the_colliers_are_awake
     title: The Colliers Are Awake
@@ -423,14 +439,13 @@ proseVariants:
     plainenglish: >-
       The Tinker's Third Price
   - address: "content:events/roads.yaml#events[id=the_third_price].body"
-    of: 71d11690b93da034
+    of: "ac00aa5df2feaeb1"
     plainenglish: >-
-      A tinker always names three prices. Custom says the third is the true price, and
-      bargaining after that brings bad luck. Refusing him water is considered worse.
-      Everyone follows the custom, even though nobody explains why. This year he brings his
-      pots and a small flat box of blackened iron. He found it in the peat at the Lag, and
-      its lid will not open. He first asks four marks, then two. After watching {BUYER}, he
-      asks eleven.
+      The tinker names three prices. People say the third is the true price and it is bad
+      luck to haggle further or refuse him water. He offers a sealed iron box from the Lag
+      peat: first four marks, then two, then eleven after looking at {BUYER}. He will also
+      accept a reference saying he has worked for the house for three winters. Nobody here
+      has met him before.
   - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=pay_the_third].label"
     of: 85179269dbcb677d
     plainenglish: >-
@@ -632,3 +647,15 @@ proseVariants:
     plainenglish: >-
       The family falsely certified that the stranger from Coln had lived at Wick for three
       winters, with {KIN} named as witness.
+
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=sign_the_reference].label"
+    of: "c21e57e1bfb9ee7d"
+    plainenglish: "Falsely certify three winters of work and take the box without paying coin."
+
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=sign_the_reference].outcomes[id=referenced].text"
+    of: "3d557991082d1cd5"
+    plainenglish: "{BUYER} signs for three winters of work the tinker never did. He takes the reference to Bramme and leaves the iron box. The lid is opened that evening and the box contains only dry peat. The kitchen records can disprove the reference."
+
+  - address: "content:events/roads.yaml#events[id=the_third_price].interaction.choices[id=sign_the_reference].outcomes[id=referenced].effects[2].text"
+    of: "5f2b3b53670d5357"
+    plainenglish: "{BUYER} falsely certified that a stranger had worked at the house for three winters, receiving an iron box in exchange."
