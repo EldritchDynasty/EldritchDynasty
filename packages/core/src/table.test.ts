@@ -2110,6 +2110,26 @@ describe('authored forcing odds and paid failures (#1817)', () => {
       .toBe(outcomes.find((outcome) => outcome.id === 'nothing_mundane')!.text);
   });
 
+  it.each(rites)('$id keeps the public docket identical before the rite is paid for', (rite) => {
+    const expressive = forcingHouse();
+    const boy = boyWho(expressive, true, 12, 'Ash');
+    const mundane = loadGame(JSON.parse(JSON.stringify(saveGame(expressive))), forcingBundle);
+    const counterpart = mundane.world.people.mustGet(boy.id);
+    const genome = genomeOf(counterpart, mundane.genetics);
+    for (const index of mundane.genetics.table.fontIndices) {
+      const zero = mundane.genetics.table.xAlleles[index]!.findIndex((allele) => allele.effect === 0);
+      if (zero < 0) throw new Error('font locus has no mundane allele');
+      genome.sex[0][index] = zero;
+    }
+    counterpart.phenotype = undefined;
+    expect(phenotypeOf(counterpart, mundane.genetics, mundane.world.year).eldritch.canExpress).toBe(false);
+    expect(viewOf(mundane)).toEqual(viewOf(expressive));
+    for (const ctx of [expressive, mundane]) {
+      expect(order(ctx, { kind: 'forcingRite', rite: rite.id, person: boy.id }).ok).toBe(true);
+    }
+    expect(viewOf(mundane)).toEqual(viewOf(expressive));
+  });
+
   it.each(rites)('$id calls, saves and resolves a surviving failure without revealing hidden capacity', (rite) => {
     for (const expresses of [true, false]) {
       const ctx = forcingHouse();
