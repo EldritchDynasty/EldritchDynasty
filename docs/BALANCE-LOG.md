@@ -12563,3 +12563,63 @@ The canonical 800 × 500-year batch reached Drowning/repeated Drowning/Vigil/Fas
 Validation completed: **ladder scales**, canonical **2,048-pair blood** and **512-pair endings** passed. Blood concentration beat dilution on late font by **5.3 standard errors**. Chronicler endings were broken line **146/512**, forgotten **231/512**, devoured **135/512**; ascendant Apotheosis remained **0/512** and Unmade **38/512**. The summit floor remains a separate #1818 gap.
 
 **Full fire/outcome acceptance is red; #1817 remains a draft.** Gate 4 found the Codex invoice in **3/800** houses, below the unchanged 0.5% floor. Gate 8 found seven zero outcomes: `waking_early/say_nothing/quiet`, the learned Terra/Death/Darkness successes (#1830), the Codex invoice’s purchase, and the Fast’s two expressive outcomes. The Fast’s full choice fired **25** times with **zero expressive casts**; its mundane failure/death outcomes resolved in **16/9** houses. The Vigil had **one expressive opportunity** in 25 full choices, giving conditional expected resolutions **0.58/0.10** for awakening/failure; these and the repeated Drowning failure were reported unproven at the unchanged expectation threshold of five. Thus wider public casts preserved overall appearances but left the Fast’s expressive ambient funnel unobserved. Deterministic built-state witnesses prove those guarded outcomes execute, and the public calling comparison exercises the intervention, but neither substitutes for the requested full sampled acceptance. Further work must diagnose that cast supply and the existing rare-source/learned-reader funnels without weakening their gates. Exact-head CI `39236188076` on `45b7fe51` passes typecheck, validation and all 177 files / 5,165 fast tests. The local rite-content preflight passed 177 / 5,163 before adding the two legacy-cast migration cases; all 54 save tests pass afterwards. Eight 400-year current-format saved digests and byte lengths match the frozen measurement source after that legacy-only change. Targeted actual odds/UI and 336 execution witnesses pass; 1,150 authored keys have deterministic execution witnesses.
+
+## 2026-10-20 — #1817: fresh forcing measurements after the reader and rare-story repairs
+
+**Method and controls.** Frozen implementation `0f91295bb6d3133d53145c5b8a5d262f76b4dfdb` is based on merged main `e99904d9`. Each arm has **72 actual Long Lines × 500 years campaigns**, seeds **5100–5123 × chronicler / bid / ascendant**. Original-engine controls use frozen `bfbcc9c3`, whose operational tree exactly equals merged main apart from BALANCE documentation. The before-content arm on the new engine matches **all 72 complete saved worlds and pacing readings** from that original engine. Ambient-only and called arms each pass eight complete-save/pacing controls with cost listeners disabled; eight further canonical 500-year controls show that combined public-offer and guarded-outcome observations leave saves unchanged.
+
+**Policy and costs.** The called policy takes at most one full forcing attempt after ordinary decisions each year, choosing the oldest publicly eligible boy and rotating the available books by seed/year. It calls whenever a boy is available, including years when another man is already awake. It never reads hidden capacity. Table offers count boy/rite visits, including repeated availability; they are not unique boys. Before/ambient policies do not collect a Table-offer census. Resolutions include ambient visits and aborted rites. Direct Madness and child deaths are read immediately around the sole commit path, before Record effects and later life consequences.
+
+### Frozen years and longest stretches
+
+| Policy | Before frozen share | Ambient only | Called |
+|---|---:|---:|---:|
+| chronicler | 28.77% | 28.72% | 23.61% |
+| bid | 28.76% | 30.04% | 26.21% |
+| ascendant | 25.74% | 24.68% | 33.31% |
+
+Shares above use all actually played years. The three columns contain respectively **30,324 / 29,990 / 28,785** played years across their 72 campaigns; forcing can change when a campaign ends. Read the shares with the ending and best-rung distributions.
+
+| Policy | Before longest: median / worst | Ambient only | Called |
+|---|---:|---:|---:|
+| chronicler | 63 / 192 | 60.5 / 333 | 57.5 / 294 |
+| bid | 59.5 / 216 | 59 / 333 | 50 / 294 |
+| ascendant | 53 / 270 | 40.5 / 352 | 74 / 221 |
+
+Paired household frozen-share changes for called versus ambient are **−4.66 / −3.15 / +5.01 percentage points**, in policy order. Their two-standard-error intervals are **[−17.18,+7.87] / [−16.92,+10.62] / [−4.43,+14.44]**. Under existing `expectMean`, using paired house differences and the unchanged zero floor/two-SE requirement, none of the three samples supports a reduction. The called-versus-original comparisons also fail to support a reduction. The weighted ascendant share rises 24.68%→33.31%; the yearly-calling policy has mixed outcomes with wide uncertainty. No sample or gate threshold changes follow from these results.
+
+### Best-rung distributions
+
+Counts are households out of 24 in each row.
+
+| Policy | Arm | None | Touched | Adept | Hierophant | Vessel | Demigod | God |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| chronicler | before | 2 | 1 | 13 | 8 | 0 | 0 | 0 |
+| chronicler | ambient | 3 | 1 | 11 | 8 | 1 | 0 | 0 |
+| chronicler | called | 3 | 0 | 14 | 7 | 0 | 0 | 0 |
+| bid | before | 2 | 1 | 13 | 8 | 0 | 0 | 0 |
+| bid | ambient | 3 | 1 | 11 | 8 | 1 | 0 | 0 |
+| bid | called | 3 | 0 | 11 | 9 | 1 | 0 | 0 |
+| ascendant | before | 3 | 0 | 8 | 3 | 5 | 5 | 0 |
+| ascendant | ambient | 4 | 0 | 7 | 2 | 7 | 4 | 0 |
+| ascendant | called | 5 | 0 | 7 | 6 | 4 | 2 | 0 |
+
+### Observed rite use and direct costs
+
+| Policy | Arm | Table offers | Calls | All rite resolutions | Madness added | Child deaths |
+|---|---|---:|---:|---:|---:|---:|
+| chronicler | before | — | 0 | 9 | 82 | 1 |
+| chronicler | ambient | — | 0 | 8 | 0 | 0 |
+| chronicler | called | 8018 | 2220 | 2220 | 4312 | 378 |
+| bid | before | — | 0 | 4 | 0 | 1 |
+| bid | ambient | — | 0 | 8 | 0 | 0 |
+| bid | called | 9067 | 2410 | 2410 | 4436 | 390 |
+| ascendant | before | — | 0 | 7 | 19 | 1 |
+| ascendant | ambient | — | 0 | 8 | 0 | 0 |
+| ascendant | called | 7483 | 2217 | 2218 | 3950 | 364 |
+
+The Drowning discrepancy appears in **1/1/3** before houses, **0/0/2** ambient houses and **21/21/20** called houses. Its actual full 800-house supply and frame readers remain part of the full gates. The 72-house G1 sample is not a replacement for that population check.
+
+**Implementation checks and open acceptance.** The integrated branch passes 852 targeted checks, 338 execution-witness tests, all typechecks and 47 validation rules with zero errors and three existing warnings. Three additional built-state tests swap only the font and compare the entire public SessionView both before and after docketing each real rite; all pass, so the docket does not become a free capacity test. These test-only additions leave the measured engine/content unchanged. Canonical 800-house fire/outcome telemetry, every default gate, and full canonical blood/endings remain running; final acceptance stays open.
+
+**Artifacts.** `scratch/eldritch-1817-rare-refresh-{before-control,before,ambient,called}.json` retain every row and complete-save control. `eldritch-1817-rare-refresh-summary.json` retains the paired household standard errors, all existing-helper findings, every rite-specific cost count and ending mix. Gate controls/results use `eldritch-1817-rare-refresh-*`; canonical blood/endings use `eldritch-1817-rare-canonical-*`. Original pre-repair measurements remain in the earlier entry.
