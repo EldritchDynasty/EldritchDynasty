@@ -77,18 +77,30 @@ describe('a session plays the game', () => {
   });
 
   it('runs to the Long-Line term with the chronicler holding the pen, and stops there', () => {
-    // 1042 no longer reliably reaches the term: under the corrected blood
-    // count (issue #42) its own line breaks in 1136, well short of 2042,
-    // which is exactly the OTHER way this file's own stepYear now stops the
-    // clock — testing that would be a different, real test, not this one.
-    // 910 survived that fix but broke its own line at 1133 once issue #27's
-    // fortune-shaped fertility landed on `main`; 901 is confirmed to clear
-    // the full Long Line against the current `main`.
-    const game = newGame(content, { seed: 901, decider: 'chronicler' });
-    const result = game.advance(CAMPAIGN_YEARS);
-    expect(result.years).toHaveLength(CAMPAIGN_YEARS);
-    expect(result.stoppedBy).toBeUndefined();
-    expect(game.year).toBe(END_YEAR);
+    // A content change can legitimately end a particular house early. Keep
+    // that ending's clock checks, then require a full-term house from this
+    // fixed, bounded sample instead of assuming one named seed survives.
+    let game: ReturnType<typeof newGame> | undefined;
+    const reached: { seed: number; year: number }[] = [];
+    for (const seed of [901, 5007, 5014, 5021, 5035, 5042, 5049, 5056]) {
+      const candidate = newGame(content, { seed, decider: 'chronicler' });
+      const result = candidate.advance(CAMPAIGN_YEARS);
+      expect(result.years).toHaveLength(CAMPAIGN_YEARS);
+      expect(result.stoppedBy).toBeUndefined();
+      expect(candidate.year).toBeLessThanOrEqual(END_YEAR);
+      reached.push({ seed, year: candidate.year });
+      if (candidate.year === END_YEAR) {
+        game = candidate;
+        break;
+      }
+      const ending = candidate.view().ending;
+      expect(ending?.id).toBe('broken_line');
+      expect(ending?.year).toBe(candidate.year);
+      candidate.advance(5);
+      expect(candidate.year).toBe(ending!.year);
+    }
+    expect(game, `no full-term clock exercised: ${JSON.stringify(reached)}`).toBeDefined();
+    if (!game) throw new Error('The fixed sample did not exercise the Long-Line term');
 
     // The term. `stepYear` used to run past it forever; now the ledger closes
     // on the next turn of the handle and the clock does not move again.
