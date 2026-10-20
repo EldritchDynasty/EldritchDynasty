@@ -1142,7 +1142,7 @@ events:
     purposes:
       - buy_patience
       - change_relationship
-      - plant_rumour
+      - force_record_choice
     slots:
       HEAD:
         role: head
@@ -1150,36 +1150,45 @@ events:
       all:
         - knowledge: knows_the_third_room
           has: true
-    body: The chapter house asks to compare the old cellar list with the room the family recorded
-      beneath the east cellar. The family’s own page gives the clerk a place to start. He asks for a
-      witnessed plan rather than another list.
+    body: >-
+      Cold from the east cellar follows the keeper up the stair. The chapter
+      house has the old cellar list and the family's own account of the third
+      room. The clerk wants a plan bearing the house's seal, and he will
+      compare it with the other certificates his office keeps. The steward
+      offers a clean copy of the older, two-room drawing instead. There is
+      space beneath it for a signature.
     interaction:
       kind: choice
       choices:
         - id: answer_the_account
-          label: Commission the witnessed plan.
+          label: File the true plan. Let him compare the certificates.
           outcomes:
             - id: answered
               weight: 100
-              text: A surveyor draws the third room and files the plan with the cellar list. The family pays for
-                both copies.
+              text: >-
+                The clerk puts the new plan beside the old papers and reads
+                an earlier certificate aloud. The people who carry the keys
+                are told that they may show him the doors, without first
+                asking which account he has read. The old paper stays on top.
               effects:
-                - kind: treasury
-                  delta: -10
+                - { kind: discrepancy, op: prove, provableBy: [the_church] }
+                - { kind: relationship, from: household, to: head, sentiment: 4 }
         - id: keep_our_terms
-          label: Refuse the plan.
+          label: Certify the old drawing. Say no third room remains.
           outcomes:
             - id: stood
               weight: 100
-              text: The clerk attaches the refusal to the old list. The room the family wrote down is now the room
-                it will not show.
+              text: >-
+                The seal goes below the older drawing. The clerk files it
+                against the family's earlier account, and the people who
+                bring the cellar keys are told not to speak of the third
+                door. The certificate is carried out past that door.
               effects:
-                - kind: respect
-                  delta: -1
-                - kind: rumour
-                  op: seed
-                  id: rumour_the_old_list_reaches_the_cellar
-                  accuracy: 0.7
+                # #1810: a dated false certificate, read by the existing
+                # Church proof and creditor paths, with a recoverable act.
+                - { kind: discrepancy, op: create, id: the_third_room_removed_on_paper, severity: minor, provableBy: [the_church] }
+                - { kind: relationship, from: household, to: head, sentiment: -8 }
+                - { kind: chronicle, text: "The house sent the chapter house an older cellar plan and certified that no third room remained." }
   - id: the_ward_answers_cawdry
     title: The Ward Answers Cawdry
     tier: head
@@ -1931,24 +1940,30 @@ proseVariants:
     of: 3dd7f366271ea562
     plainenglish: The Church Asks for a Plan of the Third Room
   - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].body
-    of: 6a70eb4ad39d41ae
-    plainenglish: The chapter house compares the old cellar list with the third room mentioned in the
-      family’s own record. The written page tells its clerk where to start. He asks for a witnessed
-      plan rather than another list.
+    of: "e3587f5756351e8b"
+    plainenglish: >-
+      The keeper comes up from the cold east cellar. The chapter house has its old list and
+      the family record of a third room. The clerk wants a sealed plan to compare with the
+      other certificates in his office. The steward could instead send the older drawing,
+      which shows only two rooms. There is space below it for a signature.
   - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=answer_the_account].label
-    of: 26c49df608f47c6a
-    plainenglish: Pay for a witnessed plan of the room.
+    of: "61c62126e28007d2"
+    plainenglish: "Send the true plan and allow the clerk to compare the certificates."
   - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=answer_the_account].outcomes[id=answered].text
-    of: 5cfee2662fc3c3c2
-    plainenglish: A surveyor draws the third room and files its plan with the old cellar list. The
-      family pays for both copies.
+    of: "944d1739fef1030d"
+    plainenglish: >-
+      The clerk puts the true plan beside an earlier certificate and reads that certificate
+      aloud. The people with the keys are allowed to show him the doors without checking
+      which version of the account he knows. The old certificate is left on top.
   - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=keep_our_terms].label
-    of: df46ca71c189be6d
-    plainenglish: Do not supply a plan.
+    of: "9ec825fa7fcd9a56"
+    plainenglish: "Certify the older plan and state that no third room remains."
   - address: content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=keep_our_terms].outcomes[id=stood].text
-    of: 9020b0695def7fe5
-    plainenglish: The clerk files the refusal with the old list. The record now shows that the family
-      wrote about a room it will not show.
+    of: "963074f800811ee4"
+    plainenglish: >-
+      The older plan is sealed and filed beside the family record of the third room. The
+      people with the keys are told not to mention the third door. The clerk carries the
+      certificate past that door as he leaves.
   - address: content:events/remembered_accounts.yaml#events[id=the_ward_answers_cawdry].title
     of: ef3e0cf93d605a2d
     plainenglish: Cawdry Questions the Married-In Ward
@@ -2059,3 +2074,9 @@ proseVariants:
     of: 3da641db1be15a57
     plainenglish: The family said that nobody had raised a later question about this matter or asked it
       to provide evidence.
+
+  - address: "content:events/remembered_accounts.yaml#events[id=the_old_list_reaches_the_cellar].interaction.choices[id=keep_our_terms].outcomes[id=stood].effects[2].text"
+    of: "7487f40cee7ad6c8"
+    plainenglish: >-
+      The family sent the chapter house an old cellar plan and certified that the third room
+      no longer existed.

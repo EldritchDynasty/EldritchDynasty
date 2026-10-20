@@ -92,7 +92,7 @@ events:
     weight: 260
     cooldownYears: 70
     tags: [ladder, madness, money, wick]
-    purposes: [test_magic_rule, change_standing, worldbuild_through_action]
+    purposes: [test_magic_rule, change_relationship, worldbuild_through_action]
     conditions: { ascension: { atLeast: adept } }
     # ONE SLOT. The head of the house is very often the foremost expresser
     # himself, and a body with both tokens in it renders "Daveed puts it to
@@ -101,48 +101,43 @@ events:
     slots:
       ASCENDANT: { role: foremost, filters: [{ trait: asked_for_in_wick, has: false }] }
     body: >-
-      The race silted through above the mill in the spring and Wick has been
-      carrying water uphill since Greening. Two hundred crowns hires a gang and
-      most of a season, and the house does not have two hundred crowns this
-      year, and everybody at the table knows what it has instead. Somebody says
-      it the way you say a thing that has already been decided: it would take
-      {ASCENDANT} an afternoon.
-      Nobody says what an afternoon costs, because nobody has ever written it
-      down. They have all seen it, though. A man comes in from doing a thing
-      like that, sits by the fire a long while without saying anything, and is
-      himself again by the third day. A different himself each time.
+      Cold water stands above the mill at Wick, and no water turns the wheel.
+      The race has silted shut. {ASCENDANT} could clear it in an afternoon
+      without putting his hands in it. The mill men offer another way: two
+      tendays with spades, baskets and someone strong enough to lift what the
+      water has packed hard. The men wait.
     interaction:
       kind: choice
       choices:
         - id: ask_him
-          label: Ask him. It is an afternoon.
+          label: Ask him to open it by his gift.
           outcomes:
             - id: done_by_evening
               weight: 100
               text: >-
-                The race runs by evening. Wick is grateful the way a village is
-                grateful, which is thoroughly and for about four years, and the
-                reeve tells the story at the alehouse until the story is better
-                than the afternoon was. {ASCENDANT} eats very little at supper
-                and goes up early. On the third day he is himself again, and
-                the house takes that for the whole of the bill.
+                The water reaches the wheel before supper. He leaves his food
+                untouched and sits at the cold hearth until someone brings in
+                wood. On the third morning he takes his place at the table.
+                The miller sends thanks.
               effects:
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 5 }
-                - { kind: respect, delta: 1 }
                 - { kind: trait, target: { slot: ASCENDANT }, trait: asked_for_in_wick, op: add }
         - id: hire_the_gang
-          label: Hire the gang. Keep him out of it.
+          label: Have him work beside the mill men.
           outcomes:
             - id: paid_for
               weight: 100
               text: >-
-                Two hundred crowns, eleven men and most of a season, and the
-                race runs by Ingathering instead. Nobody of the house goes near
-                the water. That is the entire thing the money bought, and it is
-                not nothing, and it is a great deal to have paid for nothing
-                happening.
+                The men bring a spare spade. He works beside them until the
+                channel runs, and they pass the baskets from hand to hand
+                without asking what else he could have done. At Ardwen someone
+                cuts his meat for him. The cuts on his palms have closed.
+                His hands still hurt.
               effects:
-                - { kind: treasury, delta: -200 }
+                # #1810: physical wear and the family's regard for the man,
+                # against Madness and the existing later requests from Wick.
+                - { kind: attribute, target: { slot: ASCENDANT }, attr: health, delta: -6 }
+                - { kind: relationship, from: household, to: { slot: ASCENDANT }, sentiment: 8 }
 
   - id: past_what_the_book_says
     title: The Part With Anything In It
@@ -387,35 +382,29 @@ proseVariants:
     plainenglish: >-
       The Mill Race Is Blocked
   - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].body"
-    of: e2d644240a78f2f8
+    of: "1923623811ceb03c"
     plainenglish: >-
-      The water channel above Wick's mill has filled with silt. Since Greening, villagers
-      have carried water uphill. Hiring workers would cost 200 crowns and most of a season,
-      and the house cannot afford it this year. Someone suggests that {ASCENDANT} could
-      clear the channel in an afternoon. Everyone knows the work would affect him, although
-      nobody has recorded the cost. After using his power this way, he sits silently by the
-      fire and seems himself again after three days. Each time, though, he has changed.
+      Cold water has collected above the mill at Wick because silt blocks the millrace.
+      {ASCENDANT} could clear it with his power in an afternoon. The mill men could instead
+      clear it in two tendays if he helped them dig and lift the heavy baskets. The men wait
+      for an answer.
   - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].label"
-    of: 81511a3aeb6e1e1e
-    plainenglish: >-
-      Ask him to do the work. It will take one afternoon.
+    of: "95225491fc42a085"
+    plainenglish: "Ask him to clear it with his power."
   - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=ask_him].outcomes[id=done_by_evening].text"
-    of: b784ad5c7df49eb8
+    of: "f7e921083754e3ac"
     plainenglish: >-
-      The mill's water channel is clear by evening. Wick is grateful, and the reeve tells
-      the story in the alehouse for about four years. {ASCENDANT} barely eats supper and
-      goes to bed early. By the third day he seems himself again. The house decides that
-      means he has paid the full cost.
+      The mill runs before supper. He cannot eat and sits apart for two days. On the third
+      morning he returns to breakfast. The miller sends his thanks.
   - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=hire_the_gang].label"
-    of: c565eb7e4648ac1a
-    plainenglish: >-
-      Hire the workers. Do not ask him.
+    of: "ea7237a3c3d5d9bf"
+    plainenglish: "Have him dig with the mill men."
   - address: "content:events/the_ladder.yaml#events[id=the_race_silted_through].interaction.choices[id=hire_the_gang].outcomes[id=paid_for].text"
-    of: 702fad1ea6e7ba22
+    of: "b9fc1ea51d484391"
     plainenglish: >-
-      The house pays 200 crowns to eleven workers. They spend most of a season clearing the
-      mill channel, which runs again by Ingathering. No one from the house has to work near
-      the water. The money has bought protection from an unknown cost.
+      He spends two tendays digging with the mill men. The work hurts his hands, but his
+      family sees him take an ordinary share of it. They help him at table while the cuts
+      close. His hands still hurt.
   - address: "content:events/the_ladder.yaml#events[id=past_what_the_book_says].title"
     of: 9fb1f213db9f8ecf
     plainenglish: >-

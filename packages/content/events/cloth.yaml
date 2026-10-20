@@ -229,49 +229,48 @@ events:
     frequency: common
     weight: 70
     tags: [cloth, money, secrecy, household]
-    purposes: [change_relationship, change_standing, force_record_choice]
+    purposes: [change_relationship, force_record_choice, worldbuild_through_action]
     slots:
       HEAD: { role: head }
     body: >-
-      A tailor comes up from Bramme about every four years and measures the
-      whole family in one afternoon, which is efficient and is also the only
-      occasion on which anybody from outside this house puts hands on every
-      member of it. He writes the measurements in a book he keeps, because a
-      tailor keeps his book for thirty years and that is how he knows what a
-      customer was. Two of the family have marks that a tailor would have to
-      notice. He has never remarked on anything.
+      The tailor warms his cord at the hall fire before he puts it round
+      anybody. He has brought the old book up from Bramme. The measurements
+      stay in it when the clothes have worn out, and the book goes with the
+      shop when the man who made them dies. The household could send its own
+      figures, but no one who takes them would be there to help him fit the
+      cloth. Two of the family have marks he could not miss in the course of
+      that work. He has never asked.
     interaction:
       kind: choice
       choices:
         - id: let_him_measure_everybody
-          label: Let him. Four years of clothes in one afternoon.
+          label: Let him measure everyone, and keep his book.
           outcomes:
             - id: measured
               weight: 100
               text: >-
-                An afternoon, eleven fittings, and a book at Bramme with this
-                family's shoulders and reach in it going back thirty years,
-                which is not a document anybody has ever thought of as a
-                document. He is a good tailor and a discreet man. His book is
-                sold with the shop when he dies.
+                The clothes fit. At supper the talk turns to who was made to
+                stand in a shift before the servants, and which of those
+                servants will still be here next winter. His book goes back
+                to Bramme.
               effects:
-                - { kind: treasury, delta: -14 }
-                - { kind: respect, delta: 1 }
+                - { kind: relationship, from: household, to: head, sentiment: -6 }
         - id: the_womens_side_measures_its_own
-          label: The women of the house measure their own. He takes the men.
+          label: Take the measurements at home. Accept the first fit for winter.
           outcomes:
             - id: split
               weight: 100
               text: >-
-                Half the family is measured by the household, which is
-                perfectly normal in a poorer house and is faintly odd in this
-                one, and the tailor accepts it without a flicker because a
-                tailor accepts everything. The clothes fit slightly worse. His
-                book has a gap in it that a later reader would find more
-                interesting than anything that is in it.
+                The first coats pull at the shoulder and gape below the
+                throat. They are worn through Frostfall while the household
+                marks the seams for the next cutting. Nobody has been measured
+                by a stranger, and nobody has to explain why that mattered.
+                The draught gets in.
               effects:
-                - { kind: treasury, delta: -14 }
-                - { kind: rumour, op: seed, id: rumour_who_the_tailor_was_not_shown, accuracy: 0.35 }
+                # #1810: protecting the whole household's privacy has a
+                # physical price, rather than the same coin on both sides.
+                - { kind: attribute, target: household, attr: health, delta: -2 }
+                - { kind: relationship, from: household, to: head, sentiment: 4 }
 
   - id: the_eleven_days_of_undyed_wool
     title: Undyed Wool, and the House Cancels Nothing
@@ -651,36 +650,30 @@ proseVariants:
     plainenglish: >-
       The Tailor Measures Everyone
   - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].body"
-    of: "c906a90f11be387b"
+    of: "b27ba46277a6a18e"
     plainenglish: >-
-      About every four years a tailor comes up from Bramme and measures the whole family in one
-      afternoon. It is efficient, and it is also the only time anyone from outside the house
-      touches every member of the family. He writes the measurements in a book he keeps for
-      thirty years, which is how a tailor knows what a customer used to look like. Two of the
-      family have marks on their bodies that a tailor could not fail to notice. He has never
-      said anything about them.
+      The tailor warms his measuring cord by the hall fire. He has brought his old notebook
+      from Bramme. The measurements will stay in it after the clothes wear out, and the book
+      will be sold with his shop when he dies. The family could send measurements taken at
+      home, but nobody would be there to help him fit the clothes. Two family members have
+      marks he would have to notice while measuring. He has never asked about them.
   - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=let_him_measure_everybody].label"
-    of: "10a68022ca16791e"
-    plainenglish: >-
-      Let him measure everyone. Four years of clothes in one afternoon.
+    of: "dc1eaeca552f0f3e"
+    plainenglish: "Let him measure everyone and keep the measurements in his book."
   - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=let_him_measure_everybody].outcomes[id=measured].text"
-    of: "bfaefb28c8455154"
+    of: "f500c49ebea38d32"
     plainenglish: >-
-      One afternoon and eleven fittings. A book in Bramme now holds this family's shoulder and
-      arm measurements going back thirty years, and nobody has ever thought of it as a record.
-      He is a good tailor and a discreet man. When he dies, his book is sold along with the
-      shop.
+      The clothes fit, but the family resents being made to undress before servants who may
+      later leave the house. The tailor takes his notebook back to Bramme.
   - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=the_womens_side_measures_its_own].label"
-    of: "ef52808c905905b0"
-    plainenglish: >-
-      The women of the house measure each other. He only measures the men.
+    of: "d8578b905d069b5c"
+    plainenglish: "Measure the family at home and accept the first fit through winter."
   - address: "content:events/cloth.yaml#events[id=the_tailor_comes_up_from_bramme].interaction.choices[id=the_womens_side_measures_its_own].outcomes[id=split].text"
-    of: "113e3f819ed8e385"
+    of: "387a97991993179d"
     plainenglish: >-
-      Half the family is measured by the household. That is normal in a poorer house and a
-      little odd in this one, and the tailor accepts it without a flicker, because tailors
-      accept everything. The clothes fit slightly worse. His book now has a gap in it, and a
-      later reader would find that gap more interesting than anything written there.
+      The first coats fit badly and let cold air in. They have to be worn through Frostfall
+      while the family works out where to alter them. Their privacy has been respected, but
+      they suffer for the poor fit.
   - address: "content:events/cloth.yaml#events[id=the_eleven_days_of_undyed_wool].title"
     of: "e7df37ffed549afb"
     plainenglish: >-
