@@ -77,6 +77,7 @@ describe('a session plays the game', () => {
   });
 
   it('runs to the Long-Line term with the chronicler holding the pen, and stops there', () => {
+    // #1856: seed 901 broke in 1359 on scheduled main e99904d9.
     // A content change can legitimately end a particular house early. Keep
     // that ending's clock checks, then require a full-term house from this
     // fixed, bounded sample instead of assuming one named seed survives.
