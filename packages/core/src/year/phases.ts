@@ -738,7 +738,13 @@ function chroniclerBranch(
   if (withCast.choice) return withCast.choice;
 
   const open = choices.filter((c) => choiceAvailability(c, ctx, cast, e).available);
-  return rng.pick(open.length ? open : choices);
+  const pool = open.length ? open : choices;
+  // Reuse the actual selector's pool, including its existing all-closed
+  // fallback. Observation must neither re-evaluate a condition nor spend a
+  // draw; gate expectations describe this canonical chronicler alone.
+  ctx.observeSelection?.({ kind: 'choice_offered', year: ctx.world.year,
+    event: String(e.id), choices: pool.map(candidate => candidate.id) });
+  return rng.pick(pool);
 }
 
 function afterRecord(

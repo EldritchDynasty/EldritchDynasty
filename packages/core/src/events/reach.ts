@@ -672,6 +672,30 @@ export interface Reach {
    * and two firings in one run are two chances (issue #80).
    */
   firings: Map<string, number>;
+  /** Actual available player answers at resolved dockets in a canonical
+   * uniform-chronicler batch. Missing means this evidence was not collected. */
+  choiceOffers?: {
+    counts: Map<string, number>;
+    expectedSelections: Map<string, number>;
+  };
+}
+
+export interface ChoiceExposure {
+  offered: number;
+  expectedSelections: number;
+}
+
+/** Read existing docket availability without a new cast, condition read or
+ * RNG draw. This expectation belongs only to the uniform chronicler used by
+ * the gate batch, not to a human or a deliberate ladder policy. */
+export function recordChoiceOffers(into: Reach, event: string, choices: readonly string[]): void {
+  if (!choices.length) return;
+  const offered = into.choiceOffers ??= { counts: new Map(), expectedSelections: new Map() };
+  for (const choice of choices) {
+    const key = choiceKey(event, choice);
+    offered.counts.set(key, (offered.counts.get(key) ?? 0) + 1);
+    offered.expectedSelections.set(key, (offered.expectedSelections.get(key) ?? 0) + 1 / choices.length);
+  }
 }
 
 /**

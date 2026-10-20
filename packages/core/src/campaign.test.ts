@@ -3,16 +3,20 @@ import { loadContent } from '@ed/content';
 import { EventTemplateS, FREQUENCY_PROFILES, eventInCampaign } from '@ed/schema';
 import { bootstrap } from './sim.js';
 import { phase, testWorld } from './testing.js';
+import { present } from './year/phases.js';
+import { emptyReport } from './year/report.js';
 import { makeRng } from './rng.js';
 import { tickAges } from './ages/scheduler.js';
-import { resolveRecord } from './events/decisions.js';
+import { queueChoice, resolveChoice, resolveRecord } from './events/decisions.js';
+import { resolveSlots } from './events/slots.js';
 import { framePool, presentFrame, selectFrame } from './events/frame.js';
 import { dueArcSteps } from './events/arcs.js';
 import { ambientExclusionReason, ambientPool, selectEvents, type SelectionObservation } from './events/selection.js';
 import { PersonStore } from './people/store.js';
 import { genomeOf } from './people/factory.js';
 import { classifyFunnelPoint, FunnelObserver, funnelSources, privateFunnelContext, summariseFunnel } from './tools/funnel.js';
-import { executeOutcomeWitness } from './events/reach.js';
+import { emptyReach, executeOutcomeWitness, readRun, recordChoiceOffers } from './events/reach.js';
+import { choiceExposure } from './tools/outcome-reach-verdict.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import {
   CAMPAIGNS,
@@ -47,6 +51,75 @@ describe('pre-effect selection observations (#1811)', () => {
     ctx.world.generation = 6;
     return { ctx, missing, ready };
   }
+
+  it.each([false, true])('reads real available answers without changing a resolved world (headless=%s)', (headless) => {
+    const authored = event('offered_answers', { interaction: { kind: 'choice', choices: [
+      { id: 'taken', label: 'Read it.', outcomes: [{ id: 'read', weight: 100, text: 'Read.', effects: [] }] },
+      { id: 'unselected', label: 'Leave it.', outcomes: [{ id: 'left', weight: 100, text: 'Left.', effects: [] }] },
+      { id: 'blocked', label: 'Read the impossible hand.', requires: [{ slot: 'HEAD', attr: 'mind', op: 'gte', value: 1_000_000 }],
+        outcomes: [{ id: 'paid', weight: 100, text: 'Paid.', effects: [] }] },
+    ] } });
+    function run(trace: boolean) {
+      const ctx = testWorld({ ...content.bundle, events: [authored] }, 18118);
+      const reach = emptyReach();
+      const beforeCommits: number[] = [];
+      if (trace) ctx.observeSelection = observation => {
+        if (observation.kind !== 'choice_offered') return;
+        beforeCommits.push(ctx.world.decisionLog.filter(entry => entry.kind === 'outcome').length);
+        recordChoiceOffers(reach, observation.event, observation.choices);
+      };
+      for (let index = 0; index < 6; index++) {
+        const rng = makeRng(18118 + index);
+        const cast = resolveSlots(authored, ctx, rng);
+        expect(cast.ok).toBe(true);
+        if (headless) {
+          const report = emptyReport(ctx.world.year);
+          present(ctx, authored, cast.fill, cast.playerCast, {
+            ...rng, pick: choices => { rng.pick(choices); return choices[0]!; },
+          }, report, true);
+          expect(report.resolved).toHaveLength(1);
+        } else {
+          const pending = queueChoice(ctx, authored, authored.body, cast.fill, cast.playerCast);
+          const result = resolveChoice(ctx, pending.id, 'taken', rng);
+          expect(result.ok, result.reason).toBe(true);
+        }
+      }
+      readRun(ctx, reach);
+      return { saved: canonical(saveGame(ctx)), reach, beforeCommits };
+    }
+    const traced = run(true);
+    expect(traced.saved).toBe(run(false).saved);
+    expect(traced.beforeCommits).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(choiceExposure(traced.reach, 'offered_answers|unselected')).toEqual({ offered: 6, expectedSelections: 3 });
+    expect(choiceExposure(traced.reach, 'offered_answers|blocked')).toEqual({ offered: 0, expectedSelections: 0 });
+    expect(traced.reach.firings.get('offered_answers|taken')).toBe(6);
+    expect(traced.reach.firings.get('offered_answers|unselected')).toBeUndefined();
+  });
+
+  it.each([
+    ['chance', 'chance'],
+    ['state', { state: [{ take: 'one' }] }],
+  ])('does not give %s branches a uniform player-choice expectation', (name, decidedBy) => {
+    const authored = event(`automatic_${name}`, { interaction: { kind: 'choice', decidedBy, choices: [
+      { id: 'one', label: 'One.', outcomes: [{ id: 'read', weight: 100, text: 'Read.', effects: [] }] },
+      { id: 'two', label: 'Two.', outcomes: [{ id: 'left', weight: 100, text: 'Left.', effects: [] }] },
+    ] } });
+    for (const headless of [false, true]) {
+      const ctx = testWorld({ ...content.bundle, events: [authored] }, 18119);
+      const observed: SelectionObservation[] = [];
+      ctx.observeSelection = observation => observed.push(observation);
+      const rng = makeRng(18119);
+      const cast = resolveSlots(authored, ctx, rng);
+      expect(cast.ok).toBe(true);
+      if (headless) present(ctx, authored, cast.fill, cast.playerCast, rng, emptyReport(ctx.world.year), true);
+      else {
+        const pending = queueChoice(ctx, authored, authored.body, cast.fill, cast.playerCast);
+        expect(resolveChoice(ctx, pending.id, undefined, rng).ok).toBe(true);
+      }
+      expect(observed.filter(observation => observation.kind === 'choice_offered')).toEqual([]);
+      expect(ctx.world.decisionLog.some(entry => entry.kind === 'outcome')).toBe(true);
+    }
+  });
 
   it('uses the same first refusals as the production pool and leaves casts unproven', () => {
     const { ctx, missing, ready } = fixture();

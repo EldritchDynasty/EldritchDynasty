@@ -94,4 +94,36 @@ describe('scoped blocking outcome reach (#502)', () => {
     expect(judgeZeroReach(10, 0.5, 250).kind).toBe('dead');
     expect(judgeZeroReach(10, 0.49, 250).kind).toBe('unproven');
   });
+
+  it('distinguishes six available but unselected answers from an unavailable answer', () => {
+    const zero = judgeZeroReach(0, 1, 800, { offered: 6, expectedSelections: 3 });
+    expect(zero.kind).toBe('unproven');
+    expect(zero.why).toContain('offered 6 times');
+    expect(zero.why).toContain('~3.0 selections');
+    expect(zero.why).toContain('would need ~1334 runs');
+    expect(judgeZeroReach(0, 1, 800, { offered: 0, expectedSelections: 0 }).kind).toBe('dead');
+  });
+
+  it('keeps the same five-expected proof boundary for an unselected answer', () => {
+    expect(judgeZeroReach(0, 0.01, 800, { offered: 10, expectedSelections: 5 }).kind).toBe('dead');
+    expect(judgeZeroReach(0, 1, 800, { offered: 9, expectedSelections: 4.5 }).kind).toBe('unproven');
+  });
+
+  it('uses actual firings for outcome rarity once the answer has been selected', () => {
+    expect(judgeZeroReach(7, 0.2, 250, { offered: 100, expectedSelections: 50 }).kind).toBe('unproven');
+  });
+
+  it('uses the same available-choice evidence in the scoped verdict', () => {
+    const sampled = Object.assign(reach(), { choiceOffers: {
+      counts: new Map([['visitation|lent', 6]]),
+      expectedSelections: new Map([['visitation|lent', 3]]),
+    } });
+    const verdict = scopedOutcomeReachVerdict(
+      declared('visitation|lent|said', 'visitation/lent -> said', 'visitation|lent'),
+      sampled, new Set(), 800,
+    );
+    expect(verdict.ok).toBe(true);
+    expect(verdict.dead).toEqual([]);
+    expect(verdict.unproven[0]).toContain('offered 6 times');
+  });
 });
