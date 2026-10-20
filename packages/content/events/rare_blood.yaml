@@ -20,7 +20,11 @@ events:
     title: Two in One Year
     tier: family
     frequency: rare
-    weight: 130
+    # Two distinct, still-unwoken expressers must overlap before declaration.
+    # A broad rare's flat weight left this pair at 2/800 houses after #1817.
+    # Buy selection within that existing cast window, not a wider window or
+    # another route to a guaranteed Awakening. See BALANCE-LOG, 2026-10-20.
+    weight: 600
     tags: [awakening, blood, signs, records]
     purposes: [establish_magic_rule, force_record_choice, test_magic_rule]
     slots:
