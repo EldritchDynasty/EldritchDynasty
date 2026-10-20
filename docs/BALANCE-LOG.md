@@ -12623,3 +12623,73 @@ The Drowning discrepancy appears in **1/1/3** before houses, **0/0/2** ambient h
 **Implementation checks and open acceptance.** The integrated branch passes 852 targeted checks, 338 execution-witness tests, all typechecks and 47 validation rules with zero errors and three existing warnings. Three additional built-state tests swap only the font and compare the entire public SessionView both before and after docketing each real rite; all pass, so the docket does not become a free capacity test. These test-only additions leave the measured engine/content unchanged. Canonical 800-house fire/outcome telemetry, every default gate, and full canonical blood/endings remain running; final acceptance stays open.
 
 **Artifacts.** `scratch/eldritch-1817-rare-refresh-{before-control,before,ambient,called}.json` retain every row and complete-save control. `eldritch-1817-rare-refresh-summary.json` retains the paired household standard errors, all existing-helper findings, every rite-specific cost count and ending mix. Gate controls/results use `eldritch-1817-rare-refresh-*`; canonical blood/endings use `eldritch-1817-rare-canonical-*`. Original pre-repair measurements remain in the earlier entry.
+
+## 2026-10-20 — #1817: population results and the remaining natural-pair failure
+
+The frozen implementation `0f91295bb6d3133d53145c5b8a5d262f76b4dfdb`
+completed the canonical 800-house, 500-year telemetry, all twelve default
+`GATES`, canonical blood, and canonical endings. Eight combined offer/guard
+observation controls preserve the complete saved world. These runs follow the
+fresh G1 measurements above; they do not reuse the earlier pre-reader results.
+
+All twelve default gates pass, including ladder scales. Full outcome reach
+passes. Four zero outcomes remain statistically unproven at this sample:
+Cawdry/Darkness `held` (~1 expected from two firings), natural pair `it_holds`
+(~0.8 from two), natural pair `four_miles_off` (two real offers, one expected
+selection, none selected), and repeated Drowning `nothing` (~0.9 from nine
+eligible casts). The existing five-expected boundary and real guarded cast
+accounting are unchanged; deterministic witness coverage is separately
+1,152/1,152.
+
+**Fire rate fails:** `the_year_two_woke` reaches only 2/800 houses (0.25%),
+below the unchanged 0.5% floor, and none of the twelve climbing controls.
+The other 498 non-frame templates pass. This is the remaining acceptance
+failure, not a reason to exempt the scene or lower the gate. A paired,
+predeclared 200-house funnel sample on frozen main `bfbcc9c3` and this
+implementation is collecting actual cast, eligibility, selection and commit
+readings before a repair. Its eight full-save controls per arm are retained.
+
+Canonical blood passes at 2,048 paired Long Lines: concentrate minus dilute
+late font is +0.75, 5.2 standard errors. Endings pass at 512 runs per policy.
+The chronicler ends with 142 broken lines (27.7%), 233 forgotten (45.5%),
+and 137 devoured (26.8%). The ascendant reaches Apotheosis in 1/512 (0.2%)
+and Unmade in 27/512 (5.3%); the 8% Apotheosis floor remains reported, not
+judged. The 78 Unmaking takers include sixteen who attain Demigod. Fourteen
+houses retain a taker after attainment (1,209 years); fourteen also have years
+below current Demigod afterwards (1,098 years). These observations remain
+inputs to #1818, not evidence that its summit work is finished.
+
+The scheduled nightly on actual main `e99904d9`, run39394320348, additionally
+exposed a stale session test assumption: seed901 now legitimately breaks its
+bloodline in1359. The public-session test checks and preserves an early
+ending, then requires a genuinely full-term house from a fixed bounded
+sample. Its full 500-year, term-closing and epilogue assertions remain in
+place. All eight session slow tests pass. This repair changes no simulation
+or content, and does not change the frozen population measurements above.
+
+## 2026-10-20 — #1817: natural-pair selection candidate (measurement pending)
+
+The single candidate for the remaining fire-rate miss raises
+`the_year_two_woke`'s template weight from130 to600. The scene needs two
+distinct, unwoken, undeclared male expressers aged9–29 concurrently; every
+answer naturally awakens both. The diagnostic has demonstrated valid casts
+that pass normal ambient eligibility without being selected. A narrow cast
+therefore receives additional selection weight, following the content
+manual's explicit exception for cast-constrained scenes. Six hundred matches
+the original Drowning's narrow-cast precedent. No frequency profile, cast,
+age window, outcome, forced-Awakening promise or gate changes.
+
+This is one candidate, not a measured success. The paired200-house samples
+on actual main and the unmodified forcing implementation retain all completed
+rows. Their continuation watches only the two natural-awakening templates,
+removing four incidental rite probes to reduce diagnostic cost; seeds,
+requested sample, production simulation and target readings are unchanged.
+Eight full-save controls were completed in each original prefix and eight
+additional controls accompany each continuation. A third200-house sample
+will measure this candidate with the same observer and seeds. Full800-house
+fire/outcome telemetry, all default gates, fresh G1 ambient/called arms and
+canonical blood/endings must be accepted before closing#1817. The original
+G1 before-engine controls stay available and the before arm will be replayed
+against them. Content validation passes47rules with zero errors and three
+existing frequency-obligation warnings. The session repair's core typecheck
+also passes.
