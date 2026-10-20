@@ -12739,3 +12739,38 @@ call. A corrected formatter uses the same preserved rows and existing
 floor0/two-SE implementation; no campaign was rerolled. The original queue
 failure remains in its log. Canonical blood2048 paired houses and endings512
 per policy are still running and must pass before closure.
+
+## 2026-10-20 — #1817: canonical population gates and final source integration
+
+Both canonical population gates pass on frozen `5f82c4ae`:2,048 paired
+concentrate/dilute Long500 houses, and512 played Long500 houses per ending
+policy. Late font differs by+0.77 in favour of concentrate,5.4 standard
+errors. Chronicler broken/forgotten/devoured is144/238/129 of512, with one
+Unmade and no Apotheosis. Ascendant has one Apotheosis (0.2%) and31 Unmade;
+the8% floor remains report-only and the29% ceiling remains fixed. Actual
+process exit0 and final completion are retained under
+`scratch/eldritch-1817-pair-repair-canonical-*`.
+
+The G1 longest frozen stretch (median/worst years), before→ambient→called,
+is63/192→48/311→57.5/294 for chronicler,59.5/216→59/301→50/294 for bid,
+and53/270→36/301→75/221 for ascendant. Called Drowning/Vigil/Fast offer
+visits are3,730/3,730/744;4,224/4,224/955;3,529/3,529/653 respectively.
+Actual takes are1,117/1,115/72;1,199/1,196/91;1,079/1,098/62. Offer visits
+are not unique boys; each boy still commits at most one attempt.
+
+Best-rung distributions (counts) are retained without collapsing failures:
+chronicler before adept13/hierophant8/none2/touched1, ambient11/10/3/0,
+called14/7/3/0; bid before adept13/hierophant8/none2/touched1,
+ambient13/9/2/0, called adept11/hierophant9/none3/vessel1; ascendant
+before and ambient adept8/demigod5/hierophant3/none3/vessel5,
+called adept7/demigod2/hierophant6/none5/vessel4. These describe the fixed
+sample rather than evidence of an overall ladder benefit.
+
+Main's P0 session repair landed separately as#1858 and#1856 is closed.
+This branch rebases onto `df0e23baf01365e8358968b9ef3b675042c17cdb`,
+retaining main's session-test comment and avoiding a second copy of the
+repair. Compared with the measured candidate, all package files are exact
+except that explanatory comment; content tree`83c8257e1c6cbdad1de9fdc511022c188eedd1b9`
+and schema tree`56f65e38570d8e0919652b3509ca4f37c21f1142` match exactly.
+No simulation or content change occurred after measurement. Final landing
+preflight and exact-head native CI still govern integration.
