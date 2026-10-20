@@ -21,12 +21,13 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      The smith at Wick buys his charcoal from the colliers in the house's own
-      wood on a handshake that is older than either of them, and he would like
-      it written down now, at a fixed rate, for twenty years. He has a reason
-      and will not give it. A written rate is a rate that cannot be raised
-      when charcoal is short, and charcoal has been short twice in this Head's
-      lifetime. Without a smith this parish has no ploughs.
+      The smith sets a sack of damp charcoal on the hall floor. Wick buys it
+      from the colliers in the house's wood on a handshake older than either
+      man. He wants that rate fixed in writing for twenty years, with a copy
+      at Bramme that the next Head will have to answer. Charcoal has been
+      short twice in living memory. The smith says his apprentice will still
+      be here when the men who made the handshake are gone. The sack has
+      stained the boards.
     interaction:
       kind: choice
       choices:
@@ -36,27 +37,77 @@ events:
             - id: written
               weight: 100
               text: >-
-                One mark for the notary and a document that both men are
-                pleased with for entirely different reasons. In the eleventh
-                year charcoal doubles and the house eats the difference for
-                nine years, and the smith stays, and every plough in this
-                parish is mended for a generation by a man who trusts the
-                hall.
+                The smith pays for the notary's copy. The house keeps the
+                other, with the rate set above the signatures and no space
+                left for a later figure. The paper is put where the accounts
+                for the wood are kept. Both men have a copy.
               effects:
-                - { kind: treasury, delta: -13 }
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
+                - { kind: chronicle, text: "{HEAD} bound the house to a twenty-year charcoal rate witnessed at Bramme." }
+              # #1810: the written obligation has an actual later reader.
+              # No HEAD binding: the contract belongs to the house.
+              next:
+                event: the_charcoal_price_returns
+                after: { minYears: 11, maxYears: 11 }
         - id: keep_the_handshake
           label: Keep the handshake. It has held for forty years.
           outcomes:
             - id: handshake
               weight: 100
               text: >-
-                It has held for forty years and it holds for nine more, and
-                then charcoal doubles and the rate goes up and the smith says
-                nothing at all about it, which is the loudest thing he has ever
-                done. His son apprentices at Bramme instead of here.
+                The smith carries the sack away at the old rate. When the
+                apprentice asks what he is to promise after the smith is gone,
+                the answer is that the old word has always been enough. The
+                apprentice looks towards Bramme.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -8 }
+
+  - id: the_charcoal_price_returns
+    title: The Price Written Down
+    tier: head
+    frequency: common
+    weight: 80
+    tags: [charcoal, tenants, contracts, records]
+    purposes: [buy_patience, change_relationship, force_record_choice]
+    slots:
+      HEAD: { role: head }
+    body: >-
+      Charcoal cracks under the collier's boot in the yard. The collier has
+      the Bramme copy of the twenty-year rate, and today's charge is twice the
+      one under the seal. {HEAD} is offered a settlement: thirteen crowns from
+      the house will keep the smith supplied at the old figure until the term
+      is out. The house's copy lies on the table.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_the_rate
+          label: Keep the written rate. Pay thirteen crowns.
+          outcomes:
+            - id: kept
+              weight: 100
+              text: >-
+                The collier takes the money and writes the settlement under
+                the old signatures. The smith gets the load at the price fixed
+                before this shortage, and the two copies will still agree
+                when either of them is read again. The seal stays where it was.
+              effects:
+                - { kind: treasury, delta: -13 }
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
+                - { kind: chronicle, text: "The house kept the signed charcoal rate after the price rose, paying thirteen crowns to cover the rest of the term." }
+        - id: change_our_copy
+          label: Change our copy. Claim the rate was never fixed.
+          outcomes:
+            - id: altered
+              weight: 100
+              text: >-
+                The new figure is entered in the house copy without disturbing
+                the seal. At Bramme the other copy still has the older figure,
+                and at Wick the smith reads both aloud before the colliers.
+                The old signatures have not moved.
+              effects:
+                - { kind: discrepancy, op: create, id: the_charcoal_rate_rewritten, severity: major, provableBy: [commons, the_church] }
+                - { kind: relationship, from: household, to: head, sentiment: -12 }
+                - { kind: chronicle, text: "{HEAD} had a higher charcoal rate entered in the house copy and certified that the signed rate had never been fixed." }
 
   - id: the_miller_and_the_thumb
     title: What Everybody Says About Every Miller
@@ -692,34 +743,33 @@ proseVariants:
     plainenglish: >-
       The Smith Wants It Written Down
   - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].body"
-    of: "86ddeb6362367abf"
+    of: "cc8fed558707de91"
     plainenglish: >-
-      The smith at Wick buys his charcoal from the colliers who work the house's own wood. The
-      deal rests on a handshake older than either of them. Now he wants it written down, at a
-      fixed rate, for twenty years. He has a reason, but he will not say what it is. A written
-      rate cannot be raised when charcoal is scarce, and charcoal has been scarce twice in this
-      Head's lifetime. Without a smith, this parish has no ploughs.
+      The smith brings a damp sack of charcoal into the hall. He has always bought from the
+      colliers in the house wood on an unwritten agreement. He wants the rate fixed for
+      twenty years, with a witnessed copy at Bramme that a future Head must honour. There
+      have already been two shortages in living memory. The smith wants the agreement to
+      protect his apprentice after he is gone. The sack has stained the floor.
   - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=write_it].label"
     of: "6b2b0dc0f200035c"
     plainenglish: >-
       Put it in writing: twenty years, a fixed rate, notarised at Bramme.
   - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=write_it].outcomes[id=written].text"
-    of: "85cb76b0c75b68b4"
+    of: "d98ff2a3a1b48cdf"
     plainenglish: >-
-      One mark goes to the notary, for a document both men are pleased with for completely
-      different reasons. In the eleventh year the price of charcoal doubles, and the house
-      absorbs the difference for nine years. The smith stays. For a generation, every plough in
-      this parish is mended by a man who trusts the hall.
+      The smith pays the notary and both sides keep a signed copy of the fixed rate. The
+      house puts its copy with the wood accounts. The signatures leave no space for another
+      figure.
   - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=keep_the_handshake].label"
     of: "59b78c256b1706f1"
     plainenglish: >-
       Stick with the handshake. It has lasted forty years.
   - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=keep_the_handshake].outcomes[id=handshake].text"
-    of: "29ed5f2565085669"
+    of: "cfb41903380bf147"
     plainenglish: >-
-      It has lasted forty years, and it lasts nine more. Then charcoal doubles and the rate goes
-      up. The smith says nothing about it at all, which is the loudest thing he has ever done.
-      His son is apprenticed at Bramme instead of here.
+      The smith leaves with the charcoal at the old price. His apprentice is told that the
+      same unwritten promise should be enough after the smith dies. The apprentice starts
+      looking towards Bramme.
   - address: "content:events/wick_trades.yaml#events[id=the_miller_and_the_thumb].title"
     of: "3fcbb67f793252ab"
     plainenglish: >-
@@ -1022,3 +1072,52 @@ proseVariants:
       Four crowns are charged to the smith, and he pays without a word. From the next Frostfall,
       the forge door is shut to anyone without business there. It is entirely correct. Wick
       spends that winter in its own cottages and works out for itself which change came first.
+
+  - address: "content:events/wick_trades.yaml#events[id=the_smith_wants_the_charcoal_contract].interaction.choices[id=write_it].outcomes[id=written].effects[1].text"
+    of: "48e5ef0d6dea0331"
+    plainenglish: "{HEAD} signed a twenty-year fixed charcoal rate, witnessed at Bramme."
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].title"
+    of: "b107d1b29947a5d6"
+    plainenglish: "The Written Charcoal Price"
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].body"
+    of: "27fb16faeb5c45fe"
+    plainenglish: >-
+      Charcoal cracks under the collier's boot in the yard. The collier brings the Bramme
+      copy of the twenty-year agreement. Charcoal now costs twice the fixed rate. {HEAD} can
+      pay thirteen crowns to cover the difference for the rest of the term. The house copy
+      is on the table.
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=keep_the_rate].label"
+    of: "7e2cf483924cdd67"
+    plainenglish: "Honour the agreement and pay thirteen crowns."
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=keep_the_rate].outcomes[id=kept].text"
+    of: "2a9b9412c1ef5fbe"
+    plainenglish: >-
+      The collier takes payment and records the settlement beneath the old signatures, so
+      the smith gets charcoal at the agreed price. The two copies still agree.
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=keep_the_rate].outcomes[id=kept].effects[2].text"
+    of: "518b2937b0a1894b"
+    plainenglish: >-
+      The family honoured the signed charcoal agreement after the price rose, paying
+      thirteen crowns for the rest of the term.
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=change_our_copy].label"
+    of: "15da62d672f3dc4a"
+    plainenglish: "Alter the house copy and deny that the rate was fixed."
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=change_our_copy].outcomes[id=altered].text"
+    of: "7c0284def0efe5ba"
+    plainenglish: >-
+      The house copy is altered without removing its seal. The Bramme copy still shows the
+      older rate, and the smith reads both versions to the colliers. The signatures are
+      unchanged.
+
+  - address: "content:events/wick_trades.yaml#events[id=the_charcoal_price_returns].interaction.choices[id=change_our_copy].outcomes[id=altered].effects[2].text"
+    of: "670bad1a2e20388e"
+    plainenglish: >-
+      {HEAD} changed the charcoal rate in the family copy and certified that the earlier
+      signed rate had not been fixed.

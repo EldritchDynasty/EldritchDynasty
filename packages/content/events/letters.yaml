@@ -865,4 +865,6 @@ proseVariants:
 
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].outcomes[id=ours_first].effects[2].text"
     of: "36d4e9d2d72a9c46"
-    plainenglish: "The family registered only its own offer and certified that no answering letter from Cawdry had arrived."
+    plainenglish: >-
+      The family registered only its own offer and certified that no answering letter from
+      Cawdry had arrived.

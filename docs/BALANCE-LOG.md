@@ -12973,3 +12973,22 @@ existing warnings. The record/prose subset was rerun after these two edits:
 108 tests pass, in addition to the earlier273-check six-scene checkpoint.
 Nineteen worklist events and actual after replay/guards remain; this is still
 a draft, not an accepted reduction in replay concentration.
+
+## 2026-10-20 — #1810: the charcoal promise reaches a successor (nine of27 drafted)
+
+The written twenty-year charcoal rate now schedules an actual bill eleven
+calendar years later. The current Head answers it, even after succession:
+keep the signed rate for13 crowns and household goodwill, or alter the house
+copy and leave a major Church/commons-provable discrepancy against the Bramme
+copy. The original commitment costs no immediate crowns. The handshake still
+loses goodwill and starts no written obligation. Parent frequency, weight,
+casts, choice/outcome ids and outcome weights remain unchanged; the new common
+follow-up is an inline arc node, excluded from the ambient draw.
+
+Three integration witnesses cover the actual writer-to-reader path, save/load,
+the exact eleven-year due date, a successor casting, both settlements, and
+absence of a bill after the handshake. The complete witness generator passes
+341 tests and records1,154 witnessed outcomes, including both new settlements.
+Validation still passes47rules with zero errors and three existing warnings.
+Eighteen primary worklist scenes and the actual48-pair after replay remain;
+this ninth draft is not an accepted concentration result.
