@@ -12847,3 +12847,36 @@ completion, and `scratch/eldritch-1818-refusal-tuition-trace.json`. Rebase onto
 forcing closing head`432eed9d` changes no measured content or simulation:
 the only package difference against this frozen candidate is main's session
 test comment. Further joint-gate work and final integration gates remain.
+
+## 2026-10-20 — #1818 Route1 closeout: remaining joint gap stated
+
+The issue permits Route1 to end when the band is met or the gap is stated.
+This closeout takes the latter condition explicitly: the8% Apotheosis target
+is not achieved, and this is not a declaration that the summit is mythic.
+The actual72-house paired measurement above reports all three rung reaches,
+all endings, and all concurrent blockers. The refusal Record is the only
+changed gameplay mechanism; it improves factual integrity and produces no
+measured summit improvement. The three actual recipients' saved timelines
+confirm five or six clauses and standing below Exalted throughout their15
+recipient-years, jointly with overflow and, in13years, insufficient Mind.
+There is no evidence here that changing any one threshold would make the
+summit reachable. Personal Mind remains personal, the childhood tuition
+window remains22, God-Madness remains90, and the29% ceiling and report-only
+8% floor stay fixed. No achievement or destination copy has been changed.
+
+The recipient Record trace also preserves all three complete saves and pacing
+rows: `scratch/eldritch-1818-refusal-recipient-records.json`. It records the
+actual rite decisions and each recipient's Respect/clauses transitions rather
+than inferring them from a single first blocker. The tuition trace above
+separately establishes why an already-paid childhood term can occupy the
+remaining admission window. Neither trace justifies silently changing the
+canonical player or copying an elder's Mind into an Unmaking recipient.
+
+The fresh integration at frozen`ed7fc2b8d08735bc3f960f007fd608ca365d4499`
+completed all14 default/telemetry gates with eight complete-save controls,
+actual process exit0 at21:59:26UTC. Its full gate artifacts carry that source
+revision. Rebase onto main`8fa6b5d5` after the forcing merge preserved the
+candidate's entire operational tree. At this checkpoint the separate
+canonical2,048-pair blood and512-per-policy ending checks are still running;
+no verdict is inferred from elapsed time. PR1859 remains draft until those
+population checks and its exact closing-head landing preflight are green.
