@@ -215,7 +215,7 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       break;
     }
     case 'chronicle': w.chronicle.push({
-      year: w.year, weight: 'line', text: renderProse(ctx, scope.proseAddress, eff.text), named: false,
+      year: w.year, weight: 'line', text: renderBody(renderProse(ctx, scope.proseAddress, eff.text), fill, ctx), named: false,
     }); break;
     case 'schedule': w.scheduled.push({ event: eff.event, year: w.year + eff.inYears }); break;
     case 'relationship': {

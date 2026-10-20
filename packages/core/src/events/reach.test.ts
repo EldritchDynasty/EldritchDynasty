@@ -3605,6 +3605,130 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
   });
 });
 
+describe('the tinker reference enters the actual certificate file (#1810)', () => {
+  it('preserves the named signature through save/load and is proved by the chapter-house reader', () => {
+    const ctx = fixture(181030);
+    const treasury = ctx.world.treasury;
+    const event = content.mustEvent('the_third_price');
+    const signed = executeOutcomeWitness(ctx, event, {
+      choiceId: 'sign_the_reference', expectedOutcomeId: 'referenced', rng: makeRng(181031),
+    });
+    expect(signed.ok, signed.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(treasury);
+    const outcome = ctx.world.decisionLog.find((row) => row.kind === 'outcome' && row.event === event.id);
+    if (!outcome || outcome.kind !== 'outcome' || typeof outcome.fill.BUYER !== 'string') {
+      throw new Error('the reference has no actual named signatory');
+    }
+    const buyer = ctx.world.people.get(outcome.fill.BUYER)!;
+    expect(ctx.world.chronicle.some((page) =>
+      page.text?.includes(buyer.epithet ?? buyer.name) && page.text.includes('certified three winters'))).toBe(true);
+    const loaded = loadGame(saveGame(ctx), content);
+    loaded.world.knowledge.add('knows_the_third_room');
+    loaded.world.respect = 'eminent';
+    const read = executeOutcomeWitnessRaw(loaded, content.mustEvent('the_old_list_reaches_the_cellar'), {
+      choiceId: 'answer_the_account', expectedOutcomeId: 'answered', rng: makeRng(181032),
+    });
+    expect(read.ok, read.reason).toBe(true);
+    expect(loaded.world.discrepancies.get('the_tinker_given_three_winters')?.state).toBe('proven');
+    expect(loaded.world.respect).toBe('regarded');
+  });
+});
+
+describe('the empty glove has a dated reader (#1810)', () => {
+  const rootId = 'the_merlin_on_the_block';
+  const billId = 'the_empty_glove_at_greening';
+  function refuseTheBird() {
+    const ctx = fixture(181019);
+    ctx.world.respect = 'eminent';
+    const year = ctx.world.year;
+    const treasury = ctx.world.treasury;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'no_bird', expectedOutcomeId: 'no_bird_bought', rng: makeRng(181020),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.respect).toBe('eminent');
+    expect(ctx.world.treasury).toBe(treasury);
+    const instance = [...ctx.world.arcs.values()].find((arc) => arc.arc === 'arc_the_empty_glove');
+    if (!instance) throw new Error('refusing the bird left no dated reader');
+    // An authored arc's entry is immediate. In the ordinary year pipeline
+    // it runs at the following year's arc phase, before that year's ambient
+    // scenes; its next node then waits for the second Greening.
+    ctx.world.year += 1;
+    const opening = dueArcSteps(ctx, makeRng(1810201)).find((step) => step.instance.id === instance.id)!;
+    const firstFair = executeOutcomeWitness(ctx, content.mustEvent('the_glove_kept_for_the_fair'), {
+      expectedOutcomeId: 'not_replaced', rng: makeRng(1810202), arcStep: opening,
+    });
+    expect(firstFair.ok, firstFair.reason).toBe(true);
+    expect(instance.dueYear).toBe(year + 2);
+    return { ctx, instance };
+  }
+
+  it.each([
+    { choice: 'buy_the_bird_now', outcome: 'replaced', cost: 14, respect: 'eminent' },
+    { choice: 'acknowledge_the_refusal', outcome: 'acknowledged', cost: 0, respect: 'regarded' },
+    { choice: 'deny_the_loss', outcome: 'denied', cost: 0, respect: 'eminent' },
+  ])('answers the saved fair account through $choice', ({ choice, outcome, cost, respect }) => {
+    const { ctx, instance } = refuseTheBird();
+    const loaded = loadGame(saveGame(ctx), content);
+    const restored = loaded.world.arcs.get(instance.id)!;
+    loaded.world.year = restored.dueYear! - 1;
+    expect(dueArcSteps(loaded, makeRng(181021)).some((step) => step.instance.id === restored.id)).toBe(false);
+    loaded.world.year += 1;
+    expect(ambientPool(loaded).some((event) => event.id === billId)).toBe(false);
+    const step = dueArcSteps(loaded, makeRng(181022)).find((entry) => entry.instance.id === restored.id)!;
+    expect(step.fill.LADY).toBe(restored.bindings.LADY);
+    const treasury = loaded.world.treasury;
+    const result = executeOutcomeWitness(loaded, content.mustEvent(billId), {
+      choiceId: choice, expectedOutcomeId: outcome, rng: makeRng(181023), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(loaded.world.treasury).toBe(treasury - cost);
+    expect(loaded.world.respect).toBe(respect);
+    expect(loaded.world.discrepancies.has('the_merlin_was_never_lost')).toBe(outcome === 'denied');
+    expect(restored.status).toBe('ended');
+  });
+
+  it('still asks the successor when the original woman is absent', () => {
+    const { ctx, instance } = refuseTheBird();
+    ctx.world.people.kill(instance.bindings.LADY!, ctx.world.year, 'test absence');
+    const oldHead = ctx.world.people.living().find((p) => p.castSlots.includes('head'))!;
+    ctx.world.people.kill(oldHead.id, ctx.world.year, 'test succession');
+    const successor = place(ctx, { sex: 'female', age: 32, castSlots: ['head'] });
+    ctx.world.year = instance.dueYear!;
+    const step = dueArcSteps(ctx, makeRng(181024)).find((entry) => entry.instance.id === instance.id)!;
+    expect(step.fill.HEAD).toBe(successor.id);
+    expect(step.absent).toBe(true);
+    expect(step.fill.LADY).toBe(instance.bindings.LADY);
+    expect(ctx.world.people.get(instance.bindings.LADY!)?.status).toBe('dead');
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(billId), {
+      choiceId: 'acknowledge_the_refusal', expectedOutcomeId: 'acknowledged', rng: makeRng(181025), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(instance.status).toBe('ended');
+  });
+
+  it('starts no empty-glove account when the bird is replaced immediately', () => {
+    const ctx = fixture(181026);
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'buy_the_bird', expectedOutcomeId: 'bought', rng: makeRng(181027),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect([...ctx.world.arcs.values()].some((arc) => arc.arc === 'arc_the_empty_glove')).toBe(false);
+  });
+
+  it('cancels the outstanding fair account if the house buys a replacement before it falls due', () => {
+    const { ctx, instance } = refuseTheBird();
+    ctx.world.year = instance.dueYear! - 1;
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'buy_the_bird', expectedOutcomeId: 'bought', rng: makeRng(181028),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(instance.status).toBe('cancelled');
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, makeRng(181029)).some((step) => step.instance.id === instance.id)).toBe(false);
+  });
+});
+
 describe('the omitted petition has an institutional reader (#1810)', () => {
   const lie = 'the_fourth_petition_left_out';
   it.each([

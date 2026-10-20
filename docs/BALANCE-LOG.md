@@ -13068,3 +13068,49 @@ same-seed48-pair before/after checkpoint will now test their real campaign
 effect. The original27-event selection remains a cap on the worklist;
 remaining rewrites will be chosen from it if actual evidence requires them.
 No static projection is acceptance evidence and neither guard is relaxed.
+
+## 2026-10-20 — #1810: actual seventeen-scene replay and the next two scenes
+
+Both fresh fixed48-pair arms completed all96 real Short Lines on seeds901–996,
+against frozen summit-refusal ed7fc2b8 before and seventeen-scene26a7f543 after.
+Familiar choices fall from1,162/3,572 (32.5308%) to1,081/3,675 (29.4150%),
+still above the unchanged27.1% guard. The leading shape falls from434/7,050
+(6.1560%) to323/7,199 (4.4867%), clearing4.7%; money appears in7/10 leading
+shapes rather than9/10. Each arm's eight observer controls preserve the whole
+canonical choice stream and every density field. Mapping hash1abc60d7ff56d530
+and density instrument hashcdcd0f43b788e1b6 match across arms. These are actual
+campaign results; the earlier static forecasts underestimated familiarity.
+
+The ten unedited events from the original ranking now contribute only82
+familiar presentations. Even removing all82 without collisions would leave
+27.1837%, so the unedited ten are reselected from this actual after ranking,
+retaining the seventeen authored scenes and the cap of27 primary scenes.
+The fresh selection is: the dovecote, the merlin, the reeve's forecast, the
+boar in the oats, the old man at the board, the third price, the old household's
+work, the wet seedmonth, the alewife's licence, and the second kitchen.
+This selection bound predicts no final result; the actual final replay and
+unchanged density, attention, library and outcome guards remain required.
+
+The eighteenth scene gives the merlin refusal an account across two fairs.
+It starts an authored arc, marks the first fair in the following year, then
+asks the current Head at the second Greening: buy a replacement for14 crowns,
+acknowledge the public refusal for standing and goodwill, or falsely deny the
+loss with a minor commons/Marrow-provable discrepancy and dated Chronicle.
+The original purchase cancels an outstanding account. The LADY stays bound;
+her absence and a successor Head remain playable. Six integration witnesses
+cover both calendar steps, all three saved settlements, absent Lady/succession,
+and both immediate purchase and later cancellation. The arc's two child events
+are excluded from ambient selection; the parent cast and frequency stay fixed.
+
+The nineteenth scene adds a third price to the peat tinker: the actual BUYER
+signs a false certificate of three winters' reliable work, costing household
+confidence and leaving a minor Church/commons-provable discrepancy. Existing
+coin and refusal choices stay available. Its writer-to-saved-Chronicle-to-proof
+witness exposed an engine bug: authored Chronicle effects retained raw slot
+markers. Rendering the reviewed prose through the existing slot renderer now
+records the actual signer. No new state, RNG draw, or effect kind is added.
+
+All351 execution-witness tests pass and the generated index contains1,159
+outcomes. All128 existing Record/prose/relationship tests and core type checking
+pass. Content validation passes47rules, zero errors and three existing warnings.
+Eight primary scenes remain. No nineteen-scene campaign result is claimed.

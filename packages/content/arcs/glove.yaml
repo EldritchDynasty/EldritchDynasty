@@ -1,0 +1,25 @@
+# The empty glove is answered at the second Greening fair, by whoever then
+# holds the seal. The woman remains the same if she is still at the table.
+arcs:
+  - id: arc_the_empty_glove
+    title: Two Fairs Without a Bird
+    entry: the_first_fair
+    bindings: [LADY]
+    maxConcurrentInstances: 1
+    nodes:
+      - id: the_first_fair
+        event: the_glove_kept_for_the_fair
+        schedule: immediate
+        successors:
+          - to: the_glove
+      - id: the_glove
+        event: the_empty_glove_at_greening
+        schedule: { minYears: 1, maxYears: 1 }
+        successors:
+          - to: end
+
+proseVariants:
+
+  - address: "content:arcs/glove.yaml#arcs[id=arc_the_empty_glove].title"
+    of: "75a9d24cf76e82e0"
+    plainenglish: "A Bird Not Replaced"
