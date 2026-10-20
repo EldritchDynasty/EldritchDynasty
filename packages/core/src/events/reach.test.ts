@@ -3605,6 +3605,74 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
   });
 });
 
+describe('the written charcoal rate has a later reader (#1810)', () => {
+  const rootId = 'the_smith_wants_the_charcoal_contract';
+  const billId = 'the_charcoal_price_returns';
+
+  function signTheRate() {
+    const ctx = fixture(181001);
+    const treasury = ctx.world.treasury;
+    const year = ctx.world.year;
+    const signed = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'write_it', expectedOutcomeId: 'written', rng: makeRng(181002),
+    });
+    expect(signed.ok, signed.reason).toBe(true);
+    expect(ctx.world.treasury).toBe(treasury);
+    expect(ctx.world.chronicle.some((entry) => entry.text?.includes('twenty-year charcoal rate'))).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((entry) =>
+      content.arc(entry.arc)?.nodes.some((node) => node.event === billId));
+    if (!instance) throw new Error('the written charcoal rate has no scheduled reader');
+    expect(instance.dueYear).toBe(year + 11);
+    return { ctx, instance };
+  }
+
+  it.each([
+    { choice: 'keep_the_rate', outcome: 'kept', cost: 13 },
+    { choice: 'change_our_copy', outcome: 'altered', cost: 0 },
+  ])('reads the saved promise through $choice under the successor', ({ choice, outcome, cost }) => {
+    const { ctx, instance } = signTheRate();
+    const loaded = loadGame(saveGame(ctx), content);
+    const restored = loaded.world.arcs.get(instance.id)!;
+    expect(restored.dueYear).toBe(instance.dueYear);
+    expect(ambientPool(loaded).some((event) => event.id === billId)).toBe(false);
+    loaded.world.year = restored.dueYear! - 1;
+    expect(dueArcSteps(loaded, makeRng(181003)).some((step) => step.instance.id === restored.id)).toBe(false);
+    loaded.world.year += 1;
+    const oldHead = loaded.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    loaded.world.people.kill(oldHead.id, loaded.world.year, 'test succession');
+    const successor = place(loaded, { sex: 'male', age: 27, castSlots: ['head'] });
+    const step = dueArcSteps(loaded, makeRng(181004)).find((entry) => entry.instance.id === restored.id);
+    if (!step) throw new Error('the charcoal contract did not become due');
+    expect(step.fill.HEAD).toBe(successor.id);
+    const treasury = loaded.world.treasury;
+    const result = executeOutcomeWitness(loaded, content.mustEvent(billId), {
+      choiceId: choice, expectedOutcomeId: outcome, rng: makeRng(181005), arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(loaded.world.treasury).toBe(treasury - cost);
+    expect(restored.status).toBe('ended');
+    if (outcome === 'kept') {
+      expect(loaded.world.discrepancies.has('the_charcoal_rate_rewritten')).toBe(false);
+      expect(loaded.world.chronicle.some((entry) => entry.text?.includes('kept the signed charcoal rate'))).toBe(true);
+    } else {
+      expect(loaded.world.discrepancies.get('the_charcoal_rate_rewritten')).toMatchObject({
+        state: 'open', severity: 'major', provableBy: ['commons', 'the_church'],
+      });
+      expect(loaded.world.chronicle.some((entry) => entry.text?.includes('higher charcoal rate'))).toBe(true);
+    }
+  });
+
+  it('does not invent a written obligation after the handshake', () => {
+    const ctx = fixture(181006);
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent(rootId), {
+      choiceId: 'keep_the_handshake', expectedOutcomeId: 'handshake', rng: makeRng(181007),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect([...ctx.world.arcs.values()].some((instance) =>
+      content.arc(instance.arc)?.nodes.some((node) => node.event === billId))).toBe(false);
+  });
+});
+
 describe('Wick carpenter consequence witnesses (#1276, #334)', () => {
   const rootId = 'the_carpenter_is_getting_old';
   const billId = 'the_price_of_no_carpenter';
