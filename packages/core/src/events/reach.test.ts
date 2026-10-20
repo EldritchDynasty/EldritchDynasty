@@ -3605,6 +3605,52 @@ describe('authored generation-gated Head-only outcome witnesses', () => {
   });
 });
 
+describe('the omitted petition has an institutional reader (#1810)', () => {
+  const lie = 'the_fourth_petition_left_out';
+  it.each([
+    { outcome: 'warmed', state: 'buried', respect: 'eminent' },
+    { outcome: 'unmoved', state: 'proven', respect: 'regarded' },
+  ])('reads the saved chapel copy through $outcome', ({ outcome, state, respect }) => {
+    const ctx = fixture(181013);
+    const written = executeOutcomeWitnessRaw(ctx, content.mustEvent('what_the_liturgy_wards_against'), {
+      choiceId: 'say_nothing_about_it', expectedOutcomeId: 'nothing_said', rng: makeRng(181014),
+    });
+    expect(written.ok, written.reason).toBe(true);
+    expect(ctx.world.discrepancies.get(lie)?.state).toBe('open');
+    const loaded = loadGame(saveGame(ctx), content);
+    loaded.world.respect = 'eminent';
+    const head = loaded.world.people.living().find((p) => p.castSlots.includes('head'))!;
+    const health = head.acquired.health ?? 0;
+    const treasury = loaded.world.treasury;
+    const read = executeOutcomeWitnessRaw(loaded, content.mustEvent('the_priest_in_the_west_wing'), {
+      choiceId: 'house_him_well', expectedOutcomeId: outcome,
+      targetWeightedOutcome: true, rng: makeRng(181015),
+    });
+    expect(read.ok, read.reason).toBe(true);
+    expect(loaded.world.discrepancies.get(lie)?.state).toBe(state);
+    expect(loaded.world.respect).toBe(respect);
+    expect(head.acquired.health).toBe(health - 2);
+    expect(loaded.world.treasury).toBe(treasury);
+  });
+
+  it('does not invent an omitted line after the honest question', () => {
+    const ctx = fixture(181016);
+    const asked = executeOutcomeWitnessRaw(ctx, content.mustEvent('what_the_liturgy_wards_against'), {
+      choiceId: 'ask_the_keeper', expectedOutcomeId: 'he_answers', rng: makeRng(181017),
+    });
+    expect(asked.ok, asked.reason).toBe(true);
+    expect(ctx.world.discrepancies.has(lie)).toBe(false);
+    ctx.world.respect = 'eminent';
+    const read = executeOutcomeWitnessRaw(ctx, content.mustEvent('the_priest_in_the_west_wing'), {
+      choiceId: 'house_him_well', expectedOutcomeId: 'unmoved',
+      targetWeightedOutcome: true, rng: makeRng(181018),
+    });
+    expect(read.ok, read.reason).toBe(true);
+    expect(ctx.world.discrepancies.has(lie)).toBe(false);
+    expect(ctx.world.respect).toBe('eminent');
+  });
+});
+
 describe('the written charcoal rate has a later reader (#1810)', () => {
   const rootId = 'the_smith_wants_the_charcoal_contract';
   const billId = 'the_charcoal_price_returns';

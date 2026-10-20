@@ -178,27 +178,27 @@ events:
                 He says it is a figure. He says it four times, in three
                 different ways, none of them the same length, and he is a
                 pleasant man who has never lied to this family about anything
-                else. Then he asks who was reading over the household's
-                shoulder, and writes nothing down, and remembers it for
-                thirty years.
+                else. He makes {LISTENER} translate the fourth petition back
+                to him, word by word. Then he asks who taught this house to
+                read Old Ambric. He remembers the answer.
               effects:
-                - { kind: treasury, delta: -10 }
                 - { kind: attribute, target: { slot: LISTENER }, attr: mind, delta: 2 }
                 - { kind: rumour, op: seed, id: rumour_who_reads_the_liturgy, accuracy: 0.3 }
         - id: say_nothing_about_it
-          label: Say nothing. Nine nights, and home.
+          label: Say nothing. Leave the fourth petition out of our chapel copy.
           outcomes:
             - id: nothing_said
               weight: 100
               text: >-
                 The family goes on the second night and the seventh and is
-                seen, which is the entire purpose of going. Eleven hundred
-                years of organisation have been warding against this household
-                every winter evening since before the kingdom, free of charge,
-                without ever once being told.
+                seen. At home the fourth petition is left out of the chapel
+                copy, with a note that the text follows Bramme's without
+                alteration. The keeper praises the house's care when the
+                rest of the copy is shown to him. He has his own book.
               effects:
-                - { kind: treasury, delta: -7 }
                 - { kind: respect, delta: 1 }
+                - { kind: discrepancy, op: create, id: the_fourth_petition_left_out, severity: minor, provableBy: [the_church] }
+                - { kind: chronicle, text: "The house certified its chapel copy as Bramme's unaltered Quieting, with the fourth petition left out." }
 
   - id: the_signs_disagree
     title: Three Brokers, Three Theories
@@ -412,17 +412,20 @@ proseVariants:
     plainenglish: >-
       Ask the keeper afterward what the fourth request means.
   - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=ask_the_keeper].outcomes[id=he_answers].text"
-    of: a6eb35aea58d5662
+    of: "e7d036bdfd0d7691"
     plainenglish: >-
-      The keeper says the words are a figure of speech. He repeats that explanation four times in three different ways. He is a kind man who has never lied to this family about anything else. Then he asks who was reading the prayer over the household's shoulder. He writes nothing down but remembers the conversation for thirty years.
+      The keeper repeatedly calls it a figure of speech. He makes {LISTENER} translate the
+      fourth petition back to him, then asks who taught the family Old Ambric. He remembers
+      the answer.
   - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=say_nothing_about_it].label"
-    of: 09a16490a9172454
-    plainenglish: >-
-      Say nothing about the prayer. Attend and then go home.
+    of: "8f7d68b8c693e1fc"
+    plainenglish: "Ask nothing and omit the fourth petition from the family chapel copy."
   - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=say_nothing_about_it].outcomes[id=nothing_said].text"
-    of: fb0bf5ca980c89c6
+    of: "f3fe0d96a1eaf132"
     plainenglish: >-
-      The family attends on the second and seventh nights, so everyone sees that they came. For eleven hundred years, the Church has performed this protection every winter evening, since before the kingdom was founded. The Church has never been told that it is protecting this particular family.
+      The family attends twice and is seen there. Its chapel copy leaves out the fourth
+      petition but is certified as an unaltered copy of the Bramme text. The keeper praises
+      the rest of the work. His own book still includes the missing line.
   - address: "content:events/the_trade.yaml#events[id=the_signs_disagree].title"
     of: 33dc2b80bd61d174
     plainenglish: >-
@@ -483,3 +486,7 @@ proseVariants:
     of: 6caa1ff36c3ccb77
     plainenglish: >-
       The house pays nine crowns in advance for work the smith has not yet done. No other house in the Nethering has ever paid a village smith that way. He is pleased, but also a little offended, and stops keeping count. About forty years later, his son starts counting from the beginning and discovers more.
+
+  - address: "content:events/the_trade.yaml#events[id=what_the_liturgy_wards_against].interaction.choices[id=say_nothing_about_it].outcomes[id=nothing_said].effects[2].text"
+    of: "4e503d8f3455b593"
+    plainenglish: "The family certified its chapel copy as the complete Bramme Quieting while omitting the fourth petition."
