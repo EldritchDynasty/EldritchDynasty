@@ -24,35 +24,35 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      It comes up from Sarrow in a factor's satchel, eleven months out of
-      Yssanne, in a hand nobody at Ardwen can read and an Ambric translation
-      pinned to it that somebody was paid two marks a day to make. A Yssene
-      house is asking after a marriage that this family's records place four
-      generations back and theirs place five. An answer will take another
-      eleven months and will arrive after the man who asked is dead. The
-      difference between four and five is the difference between a cousin and
-      a stranger, in a law that Aubren does not recognise and cannot quite
-      dismiss.
+      The paper smells of salt and the wool around the factor's packet. It
+      has come eleven months from Yssanne, where a house counts an old marriage
+      one generation farther back than Ardwen does. That difference makes
+      strangers of cousins under their law. The translation is plain about
+      what they want: every descent from that marriage, with the living names
+      set beside the dead. By the time an answer has spent another eleven
+      months at sea and on the road, the man who asked may be dead. The copyist
+      has left room for the children.
     interaction:
       kind: choice
       choices:
         - id: answer_it_properly
-          label: Answer it, with the descent set out in full.
+          label: Send the full descent, including the living names.
           outcomes:
             - id: answered
               weight: 100
               text: >-
-                Nine crowns for a copyist, an advocate and the carriage, and a
-                document leaves this house stating what this house says its
-                own descent is, in writing, to a party abroad. It is the
-                fullest account of the line the family has ever put on paper.
-                Somebody in Yssanne files it, and Yssene houses do not lose
-                paper either.
+                A notice comes back through Sarrow in the second winter. It
+                names the reply under the old question, so that the charge of
+                silence can no longer stand by itself. At Ardwen the living
+                names had been read out before the letter went. Nobody had
+                asked their leave.
               effects:
-                - { kind: treasury, delta: -9 }
-                - { kind: respect, delta: 1 }
+                # #1810: answer the existing foreign claim at the price of
+                # sending the family's living names beyond its keeping.
+                - { kind: discrepancy, op: bury, id: the_unanswered_yssene_descent }
+                - { kind: relationship, from: household, to: head, sentiment: -6 }
         - id: let_it_lie
-          label: Let it lie. He will be dead before an answer lands.
+          label: Let the unanswered question stand.
           outcomes:
             - id: unanswered
               weight: 100
@@ -665,30 +665,26 @@ proseVariants:
     plainenglish: >-
       A Letter Eleven Months on the Road
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].body"
-    of: "84277a0df24d0ef9"
+    of: "f74f90fc9b5e4488"
     plainenglish: >-
-      It arrives from Sarrow in a factor's bag, eleven months after it left Yssanne. Nobody at
-      Ardwen can read the handwriting. Pinned to it is an Ambric translation, made by someone
-      who was paid two marks a day for it. A Yssene house is asking about a marriage. This
-      family's records put it four generations back; theirs put it five. A reply will take
-      another eleven months, and the man who asked will be dead before it arrives. The gap
-      between four and five is the gap between a cousin and a stranger, under a law that Aubren
-      does not recognise and cannot quite ignore.
+      The paper smells of salt and wool. It has taken eleven months to come from Yssanne. A
+      family there counts an old marriage one generation farther back than this house does,
+      which would make cousins into strangers under their law. They want a full list of the
+      descendants, including the living family. A reply would take another eleven months and
+      might reach them after the man who asked has died. The copyist has left room for the
+      children.
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=answer_it_properly].label"
-    of: "fc4cc1d1dda615ad"
-    plainenglish: >-
-      Reply, and set out the full descent.
+    of: "b2422da4e7c50b40"
+    plainenglish: "Send the full family line, including the living names."
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=answer_it_properly].outcomes[id=answered].text"
-    of: "237db873536781ff"
+    of: "ab85ba3c30d30df8"
     plainenglish: >-
-      It costs nine crowns for a copyist, an advocate and the carriage. A document leaves this
-      house stating, in writing, to a party abroad, what this house says its own descent is. It
-      is the fullest account of the line the family has ever written down. Someone in Yssanne
-      files it, and Yssene houses do not lose paper either.
+      An acknowledgement comes back through Sarrow in the second winter. The old unanswered
+      question now has a reply attached to it. The living family had heard their names read
+      out before the letter went. Nobody had asked their permission.
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=let_it_lie].label"
-    of: "7c8733c9baac1ddd"
-    plainenglish: >-
-      Leave it. He will be dead before any reply arrives.
+    of: "10bfa8c1df242add"
+    plainenglish: "Leave the question unanswered."
   - address: "content:events/neighbours.yaml#events[id=the_letter_from_yssanne].interaction.choices[id=let_it_lie].outcomes[id=unanswered].text"
     of: "8f89ac444aae7c60"
     plainenglish: >-

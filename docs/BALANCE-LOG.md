@@ -12925,3 +12925,33 @@ density formatter with the wrong wrapper shape; its exit1/log remain in
 exactly matched concentration from the preserved streams, printed the correct
 density table and exited0. No campaign was rerolled or row discarded.
 `scratch/eldritch-1810-worklist.json` records the exact ranked selection.
+
+## 2026-10-20 — #1810: first six authored trade-offs (worklist still in progress)
+
+Six of the27 common scenes are drafted in both prose modes. The replay
+instrument, frequency/tier, template weights, cooldowns, repeatability, cast
+filters, choice ids/availability and outcome ids/weights are unchanged.
+
+| Scene | New price | Existing mechanical reader |
+|---|---|---|
+| `the_race_silted_through` | original5Madness and later requests from Wick, or6Health and household loyalty | Madness overflow/ladder; the actual man's Health/relationships; `asked_for_in_wick` later scene |
+| `the_man_on_the_shelf` | leave the Scholar career, or keep the post and lose his goodwill | career study-speed multiplier (0.7; this post has no income or Respect yield); relationships |
+| `the_letter_from_yssanne` | send living names abroad and answer the existing silence claim, or leave that claim open | exact-id Discrepancy bury/create; household relationships; creditor's standing-lie reading |
+| `the_tailor_comes_up_from_bramme` | allow the outsider's measurements and lose goodwill, or keep privacy through a winter of poor-fitting clothes | household Health and relationships |
+| `the_old_list_reaches_the_cellar` | prove an older Church-provable claim, or sign a new false cellar certificate | existing Church proof/creditor readers; a dated Chronicle entry records the new certificate |
+| `the_hedge_across_the_common` | encroach on the actual100-acre `wick_common` parcel, or relinquish it and retain household goodwill | land income/holdings; existing delayed `bit_the_common` Bearing readers; relationships |
+
+The new false-certificate id is `the_third_room_removed_on_paper`. The Church
+can prove it, and the creditor reads it as a standing lie; its paired Chronicle
+entry preserves what was certified. No new write-only flag or knowledge key
+is introduced. Enclosure uses the existing encroachment act and its delayed
+readers, with no change to Bearing's delay or warning floor. Relinquishing
+land does not erase an earlier encroachment from that history.
+
+Validation passes47rules, zero errors, and the same three frequency-obligation
+warnings. All273 existing targeted land/career/library/record/prose checks
+pass. The Original/Plain variants name the actual reviewed Original hashes;
+there are no new prose warnings. This is a reviewable draft, **not closure**:
+21 worklist events and a full same-seed48-pair after measurement remain.
+Static replacement of event shapes in old streams is only a planning aid;
+it cannot account for changed consequences and is not acceptance evidence.

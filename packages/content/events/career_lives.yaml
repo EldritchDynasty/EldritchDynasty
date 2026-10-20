@@ -424,31 +424,42 @@ events:
     weight: 105
     cooldownYears: 22
     tags: [career, scholar, library]
-    purposes: [establish_magic_rule, test_magic_rule, worldbuild_through_action]
+    purposes: [buy_patience, change_relationship, force_record_choice]
     slots:
       SCHOLAR: { role: family_member, filters: [{ career: [scholar] }, { status: [alive] }] }
     body: >-
       The shelf is cold enough to numb the fingers through cloth. {SCHOLAR}
-      has spent nine years there and can now find a hand by the way it leaves
-      space around a capital letter. He sets two family copies side by side.
-      One of them has gained a page.
+      lays two family copies beside the lamp. One of them has gained a page.
+      Corran expects his catalogue before Frostfall, and the College will not
+      keep his place while he spends a year comparing two books that are no
+      business of theirs. He can go back with the difference unsettled, or
+      bring both copies home. The room at Corran goes with the post.
     interaction:
       kind: choice
       choices:
         - id: keep_both
-          label: Keep both copies together.
+          label: Bring him home to compare them. Give up the College post.
           outcomes:
             - id: compared
               weight: 100
-              text: He rules a place for the difference in the index. Nothing is corrected.
+              text: >-
+                He finds the older stitch holes under the binding. The page
+                was added after the first owner died. While he spends the
+                winter tracing that hand through the household papers, another
+                man takes his chair at Corran. The books stay together.
               effects:
-                - { kind: treasury, delta: -3 }
+                # #1810: the scholarly post's study-speed benefit is given up;
+                # this career pays neither income nor standing.
+                - { kind: career, target: { slot: SCHOLAR }, op: leave }
         - id: separate_them
-          label: Put the changed copy back alone.
+          label: Send him back to his post. Put the changed copy away.
           outcomes:
             - id: shelved
               weight: 100
-              text: The new page remains where it was found. The other copy goes upstairs.
+              text: >-
+                He goes back with his catalogue complete. The changed copy
+                stays in the family press, without his notes, and the older
+                one goes upstairs. The next letter is addressed to the house.
               effects:
                 - { kind: relationship, from: { slot: SCHOLAR }, to: head, sentiment: -5 }
 
@@ -1254,28 +1265,30 @@ proseVariants:
     plainenglish: >-
       The Man in the Book Store
   - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].body"
-    of: 40b13248e46ba8c4
+    of: "e246021901fc846d"
     plainenglish: >-
-      The book store is cold enough to numb your fingers through your gloves. {SCHOLAR} has worked
-      there for nine years and can now recognise a copyist by how much space they leave around a
-      capital letter. He lays two of the family's copies side by side. One of them has an extra
-      page.
+      The archive is cold. {SCHOLAR} finds an extra page in one of two family copies.
+      Comparing them would take the year he owes to his College work. He must either return
+      to Corran and leave the question open, or give up the post and bring both copies home.
+      His room belongs to the post.
   - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=keep_both].label"
-    of: ce64d1d4b93470a0
-    plainenglish: >-
-      Keep the two copies side by side.
+    of: "968d379e968f7aea"
+    plainenglish: "Give up his College post so he can compare the copies at home."
   - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=keep_both].outcomes[id=compared].text"
-    of: 5d1e53804c326414
+    of: "bf59703991275ebd"
     plainenglish: >-
-      He notes the difference in the index. Nothing is corrected.
+      He proves that the page was added after the first owner died. The work takes the
+      winter, and someone else takes his College post. Both copies remain in the family
+      archive.
   - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=separate_them].label"
-    of: 922863e40cf75468
-    plainenglish: >-
-      Shelve the altered copy on its own.
+    of: "640032c01ce27b2c"
+    plainenglish: "Send him back to his post and put the changed copy away."
   - address: "content:events/career_lives.yaml#events[id=the_man_on_the_shelf].interaction.choices[id=separate_them].outcomes[id=shelved].text"
-    of: 54f3c0aee8cc04fa
+    of: "53449ec1e87bdb1d"
     plainenglish: >-
-      The new page stays where it was found. The other copy goes upstairs.
+      He returns to his College work. The changed copy stays in the family archive without
+      his notes, and the older copy goes upstairs. His next letter is addressed to the
+      house.
   - address: "content:events/career_lives.yaml#events[id=the_brass_warrant].title"
     of: 87c64281609203cd
     plainenglish: >-

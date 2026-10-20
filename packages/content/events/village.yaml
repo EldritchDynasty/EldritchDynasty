@@ -301,43 +301,46 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      The common is the reason Wick tolerates the house, and forty acres of it
-      on the Bramme side would carry sheep for the factors and pay for the west
-      wing twice. The steward has the figures and has plainly had them for
-      months. The village has grazed that ground since the Empire and has
-      exactly as much paper for it as the fell-graziers have for the tops,
-      which is none.
+      The stakes are being driven along the edge of Wick Common. The steward
+      has worked out what a hundred acres of fenced grazing would feed, and
+      has left a place on his plan for a gate the village could not open.
+      Generations of the household have grazed animals there beside their
+      neighbours, with nothing in writing to say which right came first.
+      The stakes are still loose.
     interaction:
       kind: choice
       choices:
         - id: hedge_it
-          label: Hedge it. Forty acres, and the roof gets done.
+          label: Close the common. Keep the grazing for the house.
           outcomes:
             - id: hedged
               weight: 100
               tags: [hard]
               text: >-
-                Thorn and ditch, two hundred yards, and it is up before
-                Ingathering. The wool pays. The hedge is broken twice in the
-                first year by nobody at all, and the house rebuilds it twice,
-                and the third time it stands. Nobody at Wick has ever needed to
-                write any of this down to remember it.
+                Thorn and ditch go up around the common. The new gate holds
+                the house's mark, and the village goes round it with its
+                beasts. The people who remember carrying their own hurdles
+                through that ground now have to ask a servant for the key.
+                The hedge stays.
               effects:
-                - { kind: treasury, delta: 18 }
-                - { kind: respect, delta: -1 }
+                # #1810: an actual holding; land income and the existing
+                # delayed Bearing readers carry the price of encroachment.
+                - { kind: land, op: encroach, parcel: wick_common }
                 - { kind: rumour, op: seed, id: rumour_the_forty_acres, accuracy: 0.7 }
         - id: leave_the_common
-          label: Leave it. The common is cheaper than the village.
+          label: Take down the hedge. Give up our claim to the common.
           outcomes:
             - id: left_open
               weight: 100
               text: >-
-                The steward puts the figures away without comment and produces
-                them again for the next Head, and the one after that, in the
-                same hand, with the total corrected upward. Wick never learns
-                that the question was asked.
+                The stakes are pulled and the older thorn is cut where it
+                crosses the track. The house's animals go out with the
+                village's, and the people who work in both places no longer
+                have to choose which gate to use. The ground comes off the
+                steward's reckoning.
               effects:
-                - { kind: respect, delta: 1 }
+                - { kind: land, op: seize, parcel: wick_common }
+                - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: the_adder_on_the_high_pasture
     title: A Fortnight of Fever
@@ -565,34 +568,31 @@ proseVariants:
     plainenglish: >-
       A Hedge Across the Village Common
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].body"
-    of: d0f196f6b5b95632
+    of: "19e500a7bc81bacb"
     plainenglish: >-
-      Wick tolerates the house because villagers can graze the common land. If the house fenced off
-      forty acres on the Bramme side, its factors could raise sheep there and earn enough to pay twice
-      for the west wing. The steward has prepared figures and seems to have held them for months. The
-      village has grazed the land since the Empire but has no documents proving that right, just as
-      the hill graziers have none.
+      Stakes are being driven around Wick Common. The steward has calculated what a hundred
+      acres of fenced grazing would feed and has planned a gate the village could not open.
+      The household and the village have grazed animals there for generations, without
+      written proof of whose right came first. The stakes can still be pulled out.
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].label"
-    of: 9f3c79f41a3d4758
-    plainenglish: >-
-      Fence off forty acres and use the income to repair the roof.
+    of: "7281f5732a01f7af"
+    plainenglish: "Enclose the common for the house."
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].outcomes[id=hedged].text"
-    of: c0be12ad8399ec21
+    of: "52f440e9e2235165"
     plainenglish: >-
-      Workers put up two hundred yards of thorn hedge and ditch before Ingathering. The wool earns
-      money. Someone breaks the hedge twice in the first year, and the house rebuilds it both times.
-      The third hedge stays standing. The people of Wick remember what happened without needing to
-      write it down.
+      The hedge goes up and the gate carries the house mark. Villagers have to take their
+      animals around it. People who used to carry their hurdles across the ground must now
+      ask a servant for the key. The hedge stays.
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].label"
-    of: 70560b172db7026b
-    plainenglish: >-
-      Leave the common open. Keeping peace with Wick costs less.
+    of: "3ccc4aada2b85951"
+    plainenglish: "Remove the hedge and give up the house claim to the common."
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].outcomes[id=left_open].text"
-    of: 3e2d3a916251b415
+    of: "874089dcdbc5dce0"
     plainenglish: >-
-      The steward files away the figures without comment. He shows them to the next Head and the one
-      after that, in the same handwriting, with larger totals each time. Wick never learns that the
-      house considered taking the land.
+      The stakes are pulled and any older thorn across the track is cut away. The household
+      animals graze with the village animals again. People who work for the house and live
+      in the village no longer have to choose sides. The steward stops counting the common
+      as house land.
   - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].title"
     of: 3ce13db4b7b4c138
     plainenglish: >-
