@@ -13045,3 +13045,26 @@ same three existing warnings. Existing parent casts, scheduling and outcome
 weights are unchanged. Thirteen primary scenes and the actual final replay,
 density/attention/library/outcome checks remain. Earlier static projections
 are planning aids and are not acceptance evidence for this source.
+
+## 2026-10-20 — #1810: ground and labour (seventeen of27 drafted)
+
+The pannage reversal now feeds the surplus pigs on the home demesne,
+damaging that actual parcel's yield by2 instead of charging six crowns.
+The land-income and improvement systems read the resulting holding state;
+the existing household goodwill remains. The wet harvest's own-ground-first
+option costs household confidence rather than a separate rent-book debit.
+Choosing the tenants first makes the Head actually work the wet harvest and
+night drying, at4Health, alongside the original62/38 financial and loyalty
+results. The millrace's manual alternative similarly puts the Head into
+three weeks of digging for6Health and a public account; the original68/32
+success/failure split stays fixed. Failure still needs the actual eleven-crown
+warranted repair. Hiring the practitioner directly remains eleven crowns.
+
+These scenes change existing effects and outcomes only. No parent cast,
+frequency, weight, cooldown, choice availability, outcome id or outcome weight
+changes. Original and Plain variants are paired. All seventeen scenes pass
+47-rule validation with zero errors and three existing warnings. A fresh
+same-seed48-pair before/after checkpoint will now test their real campaign
+effect. The original27-event selection remains a cap on the worklist;
+remaining rewrites will be chosen from it if actual evidence requires them.
+No static projection is acceptance evidence and neither guard is relaxed.

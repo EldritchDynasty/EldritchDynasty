@@ -483,19 +483,19 @@ events:
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: -6 }
         - id: split_it_by_need
-          label: Reverse it. The four thinnest go in first.
+          label: Put the four thinnest first. Take the surplus onto the home ground.
           outcomes:
             - id: by_need
               weight: 100
               text: >-
-                Four families that needed it get it and the wood is overrun
-                anyway and every pig in it comes out lean, and the total weight
-                of pork in this parish that winter is lower than it would have
-                been under the woodward's order. Everybody eats a little.
-                Nobody eats well. The woodward is not asked for an order again.
+                Four families get their pigs into the wood, and the surplus
+                are turned onto the home demesne. They eat what is left in
+                the crofts and root through the beds laid for next year's
+                crop. Wick has pork for winter. The house's seed ground
+                has been turned over twice.
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
-                - { kind: treasury, delta: -6 }
+                - { kind: land, op: damage, parcel: the_home_demesne, magnitude: 2 }
 
 # Plain English alternatives for the horse, mill-cat and dovecote scenes (#1094).
 # Reviewed against the Original; mechanics and original words are unchanged.
@@ -808,13 +808,11 @@ proseVariants:
       Frostfall without a pig to kill. They will not starve, but it is the difference between a
       winter and a bad winter. The order is right. Everyone it affects knows it is right.
   - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=split_it_by_need].label"
-    of: "fcc60d01c5cd65e5"
-    plainenglish: >-
-      Reverse it. The four poorest families go in first.
+    of: "d33843d34cd309b7"
+    plainenglish: "Put the four poorest families first and feed the surplus pigs on the home demesne."
   - address: "content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=split_it_by_need].outcomes[id=by_need].text"
-    of: "3ccb2f226e1baf96"
+    of: "6b553f003206bc44"
     plainenglish: >-
-      The four families that needed it get their place, but the wood is overcrowded anyway and
-      every pig comes out thin. The parish has less pork that winter than it would have had
-      under the woodward's order. Everyone eats a little. Nobody eats well. The woodward is
-      never asked to draw up an order again.
+      The four poorest families get their pigs into the wood. Extra pigs feed on the home
+      demesne and damage the seedbeds for next year. Wick has pork for winter, but the house
+      ground will yield less.
