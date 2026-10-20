@@ -12880,3 +12880,48 @@ candidate's entire operational tree. At this checkpoint the separate
 canonical2,048-pair blood and512-per-policy ending checks are still running;
 no verdict is inferred from elapsed time. PR1859 remains draft until those
 population checks and its exact closing-head landing preflight are green.
+
+## 2026-10-20 — #1810: fresh replay baseline and bounded authoring worklist
+
+The starting content is frozen forcing candidate `5f82c4ae477c7567ef187a0dc2c8fe267fb6c867`.
+Its landing is still pending; this remains a provisional parent baseline until
+the operational tree is verified on main. Higher-priority summit changes may
+also require a fresh baseline after rebase. No after-result is claimed here.
+
+All **48 real Short-Line pairs** completed: seeds901–996, consecutive pairs,
+300-year campaign, canonical density-player answers. Original `shapeOf`,
+`categoryOf` and `shapeConcentration` are unchanged. Eight streams exactly
+match canonical `shortLineChoices`; all eight density readings exactly match
+observer-disabled readings. There are7,050 choices. New-event/familiar-shape
+choices are **1,162/3,572 (32.53%)**; the top shape is **434/7,050 (6.156%)**.
+Money appears on a side of **9/10** leading shapes. The retained limits are
+**27.1% familiarity and4.7% top shape**, and money must decrease from9/10.
+The fresh baseline exceeds both limits; the old#341 closeout is not a current
+measurement and its adopted guards are not lowered.
+
+The bounded worklist is the first24 **common, non-frame** templates in the
+fresh familiar-event contribution ranking, plus three common contributors to
+the leading `[money | money+record]` bucket: `the_tailor_comes_up_from_bramme`,
+`the_old_list_reaches_the_cellar`, and `the_hedge_across_the_common`. The prefix
+already includes `the_race_silted_through` (220 choices in the second-largest
+bucket). This is27 events across several kinds of price; uncommon witnesses
+and arc scenes in the unfiltered worklist are excluded. Every rewritten memory
+needs an actual later reader and named consequence; existing effect vocabulary
+and Original/Plain parity apply. No event is made rarer to improve the report.
+
+The first24 common contributions total268 familiar presentations. Removing
+all of those with no new shape collisions would leave25.03% familiarity.
+That is a theoretical bound for sizing the work, **not an after prediction
+or acceptance result**; actual mechanics, collisions, policy effects and the
+full same-seed replay must still be measured. The three extra common scenes
+contribute77 choices to the leading bucket, alongside48 from the horse and
+post-relay scenes already in the prefix.
+
+Artifacts: `scratch/eldritch-1810-before48.json` retains all96 density rows,
+choice streams,48 pair readings and all concentration/event contributions.
+The initial runner completed every campaign and analysis but called the final
+density formatter with the wrong wrapper shape; its exit1/log remain in
+`eldritch-1810-candidate-before48-*`. A separate renderer recomputed and
+exactly matched concentration from the preserved streams, printed the correct
+density table and exited0. No campaign was rerolled or row discarded.
+`scratch/eldritch-1810-worklist.json` records the exact ranked selection.
