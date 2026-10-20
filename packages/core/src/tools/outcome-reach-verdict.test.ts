@@ -30,11 +30,30 @@ describe('scoped blocking outcome reach (#502)', () => {
     const key = 'rite|try|woke';
     const outcome: DeclaredOutcome = { label: 'woke', choice: 'rite|try', share: 0.5, guarded: true };
     const observed = reach({}, { 'rite|try': 1000 });
+    observed.choiceOffers = {
+      counts: new Map([['rite|try', 2000]]),
+      expectedSelections: new Map([['rite|try', 1000]]),
+    };
     observed.guarded = { opportunities: new Map([[key, 2]]), expected: new Map([[key, 1]]) };
     expect(judgeOutcomeReachZero(key, outcome, observed, 200).kind).toBe('unproven');
     observed.guarded.opportunities.set(key, 20);
     observed.guarded.expected.set(key, 10);
     expect(judgeOutcomeReachZero(key, outcome, observed, 200).kind).toBe('dead');
+  });
+
+  it('retains thin offer evidence when a guarded answer has no selections', () => {
+    const key = 'rite|try|woke';
+    const outcome: DeclaredOutcome = { label: 'woke', choice: 'rite|try', share: 0.5, guarded: true };
+    const observed = reach();
+    observed.choiceOffers = {
+      counts: new Map([['rite|try', 6]]),
+      expectedSelections: new Map([['rite|try', 3]]),
+    };
+    const verdict = scopedOutcomeReachVerdict(new Map([[key, outcome]]), observed, new Set(), 800);
+    expect(verdict.ok).toBe(true);
+    expect(verdict.dead).toEqual([]);
+    expect(verdict.unproven[0]).toContain('offered 6 times');
+    expect(verdict.unproven[0]).toContain('expected ~3.0 selections');
   });
 
   it('distinguishes absent guarded observations from a cast that never qualified', () => {
