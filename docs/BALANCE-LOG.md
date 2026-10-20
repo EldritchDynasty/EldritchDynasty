@@ -12955,3 +12955,21 @@ there are no new prose warnings. This is a reviewable draft, **not closure**:
 21 worklist events and a full same-seed48-pair after measurement remain.
 Static replacement of event shapes in old streams is only a planning aid;
 it cannot account for changed consequences and is not acceptance evidence.
+
+## 2026-10-20 — #1810: crossed letters and the drovers (eight of27 drafted)
+
+The crossed-letter scene now offers an honest receipt at a cost in household
+confidence, or borrowed standing backed by a false denial of receipt.
+`the_received_letter_denied` is created by that denial and can be buried by
+a later honest entry in the same correspondence. Existing Church-proof and
+creditor readers consume it; a dated Chronicle entry preserves the act.
+The drovers' inquiry instead costs the living Head4Health for the journey,
+with the original60/40 information outcomes. Success steadies household
+confidence; declining still lets the existing public rumour circulate.
+No outcome weights, casts or scheduling fields change.
+
+All eight scenes pass47-rule validation with zero errors and the same three
+existing warnings. The record/prose subset was rerun after these two edits:
+108 tests pass, in addition to the earlier273-check six-scene checkpoint.
+Nineteen worklist events and actual after replay/guards remain; this is still
+a draft, not an accepted reduction in replay concentration.

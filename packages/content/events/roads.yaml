@@ -221,41 +221,44 @@ events:
     frequency: common
     weight: 75
     tags: [drovers, news, money, roads]
-    purposes: [advance_clause, plant_rumour, test_magic_rule]
+    purposes: [buy_patience, change_relationship, plant_rumour]
     slots:
       HEAD: { role: head }
     body: >-
-      The Wayfolk carry the song and the drovers carry the fact, and the fact
-      travels at ten miles a day with the cattle and arrives about two months
-      after it happened. This year it arrives as a question. A man on the green
-      road two hundred miles south has been asking after a family in the
-      Nethering by a description rather than a name, and paying for answers,
-      and the drover repeating it clearly does not think it is worth anything
-      and has repeated it anyway.
+      The hall smells of wet hides long after the drovers have gone. A man two
+      hundred miles down the green road has been paying for news of a
+      Nethering family, and asking by its habits rather than its name. The
+      drovers can remember his weights better than his face. {HEAD} could
+      follow their route and ask at the three markets where he stopped, if the
+      house can spare a head for most of the summer. The cattle are already
+      on the road.
     interaction:
       kind: choice
       choices:
         - id: pay_for_more
-          label: Pay him to ask on the way back down.
+          label: Follow the road. Ask at the markets yourself.
           outcomes:
             - id: he_asks
               weight: 60
               text: >-
-                Two marks now and two in Highsun. What comes back up the road
-                the following year is that the man was Braccish, or dressed
-                like it, and paid in weighed coin, and stopped asking in Smoke.
-                Nobody remembers his face and three men remember the weights.
+                At the third market a keeper remembers weighed Braccish coin
+                and a traveller who stopped asking in Smoke. Nobody can give a
+                name, but the three accounts agree on the places and the
+                months. The journey leaves its marks under the riding clothes.
+                At home the questions are asked in a quieter voice.
               effects:
-                - { kind: treasury, delta: -4 }
+                - { kind: attribute, target: { slot: HEAD }, attr: health, delta: -4 }
+                - { kind: relationship, from: household, to: head, sentiment: 6 }
             - id: nothing_comes_back
               weight: 40
               text: >-
-                Two marks now and two in Highsun and nothing at all in between.
-                The drover is apologetic about it in the way of a man who has
-                been paid, and comes back up every year afterwards with
-                something not quite worth four marks.
+                The men remember the cattle, the weather and a dozen ordinary
+                sales. Each sends the question to another stall, and after
+                three markets there is no stall left to ask. Most of the
+                summer has gone on the road, with nothing brought home but
+                a saddle sore that will not close. The scar stays.
               effects:
-                - { kind: treasury, delta: -4 }
+                - { kind: attribute, target: { slot: HEAD }, attr: health, delta: -4 }
         - id: let_it_go
           label: Let it go. A description is not a name.
           outcomes:
@@ -521,30 +524,29 @@ proseVariants:
     plainenglish: >-
       News From the Cattle Drovers
   - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].body"
-    of: 6ac044a670ec745a
+    of: "9f5f7a13ef4681ff"
     plainenglish: >-
-      The Wayfolk carry songs, but cattle drovers carry news. Their herds travel ten miles a
-      day, so news usually arrives two months after an event. This year's news is a
-      question. Two hundred miles south, a man has been paying people to identify a family
-      in the Nethering from a description rather than a name. The drover does not think the
-      question is important, but repeats it anyway.
+      The hall still smells of wet cattle hides after the drovers leave. Two hundred miles
+      south, a man has been paying for information about a Nethering family, describing its
+      habits without giving a name. The drovers remember his weights better than his face.
+      {HEAD} could follow their route and ask at the three markets he visited, but the
+      journey would take most of the summer. The cattle are already on their way.
   - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].label"
-    of: f8810bf3115cd59f
-    plainenglish: >-
-      Pay the drover to investigate on his return journey.
+    of: "e184a22070655034"
+    plainenglish: "Travel down the road and ask at the markets yourself."
   - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].outcomes[id=he_asks].text"
-    of: 10dfc40ceb8102c0
+    of: "6188a28ade3e4176"
     plainenglish: >-
-      The house pays two marks now and two in Highsun. The following year the drover reports
-      that the man was Braccish, or dressed that way. He paid with weighed coins and stopped
-      asking questions in Smoke. Nobody remembers his face, but three people remember his
-      coin weights.
+      A keeper at the third market remembers Braccish weights and a traveller who stopped
+      asking in Smoke. Nobody knows his name, but the three accounts agree about the places
+      and months. The journey has hurt the traveller from this house. At home the family is
+      reassured that the questions were followed up.
   - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=pay_for_more].outcomes[id=nothing_comes_back].text"
-    of: c3ffcaa77d1c6633
+    of: "150efd0fdc6e8c0b"
     plainenglish: >-
-      The house pays two marks now and two in Highsun, but receives no information. The
-      drover apologises after taking the money. He returns each year with more news that is
-      barely worth four marks.
+      Each market sends the question to another stall until there is nobody left to ask.
+      Most of the summer is spent travelling and nothing is learned. The only lasting result
+      is a saddle sore that leaves a scar.
   - address: "content:events/roads.yaml#events[id=the_drovers_bring_the_fact].interaction.choices[id=let_it_go].label"
     of: f7d0e277a0a6b8eb
     plainenglish: >-

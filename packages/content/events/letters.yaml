@@ -22,43 +22,45 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      A letter went to Cawdry in the first tenday of Frostfall proposing terms
-      and a letter came from Cawdry in the second proposing different ones, and
-      the two crossed somewhere near the ford at Ockleigh. Each was written by
-      somebody who did not know the other existed. There are now two offers on
-      one table, both current, both sincere, and no way to establish which was
-      first except by the date, and the dates are four days apart.
+      The first seal cracks under the keeper's thumb. A letter proposing terms
+      went to Cawdry in the first tenday of Frostfall, and one proposing
+      different terms came back in the second, the two crossing near Ockleigh.
+      The dates are four days apart. The house can withdraw its own offer and
+      enter both letters in the register. It can also seal a declaration that
+      no answering letter reached the hall, leaving its earlier offer to
+      stand alone. The keeper has kept both covers.
     interaction:
       kind: choice
       choices:
         - id: take_theirs_as_first
-          label: Treat theirs as the standing offer and answer it.
+          label: Withdraw ours. Enter both letters in the register.
           outcomes:
             - id: theirs_first
               weight: 100
               text: >-
-                One letter, courteously withdrawing this house's own and
-                answering theirs, which is generous and is read at Cawdry as
-                generous and costs about four crowns against what the house
-                had proposed. A generous crossing is worth more than four
-                crowns to a correspondence that will run for thirty years.
+                The household hears the withdrawal read out before both covers
+                are sewn into the register. The keeper strikes through the old
+                claim that no answering letter reached the house, and the new
+                receipt is copied below it. The steward folds our draft.
               effects:
-                - { kind: treasury, delta: -4 }
-                - { kind: respect, delta: 1 }
+                - { kind: discrepancy, op: bury, id: the_received_letter_denied }
+                - { kind: relationship, from: household, to: head, sentiment: -4 }
         - id: insist_on_ours
-          label: Ours is dated first. Say so and hold to it.
+          label: Register ours alone. Certify that no answer arrived.
           outcomes:
             - id: ours_first
               weight: 100
               text: >-
-                Four days is four days and the point is correct and is made
-                correctly, and it is answered eleven days later by a house that
-                now understands exactly what kind of correspondent it has. The
-                terms are this house's. Every letter between the two houses for
-                the next thirty years is dated with unusual care.
+                The entry gives the house a single, unanswered offer under its
+                own earlier date. When a copy goes to Cawdry in the next post,
+                the other cover is still threaded beside it. Both dates can
+                be read.
               effects:
-                - { kind: treasury, delta: 4 }
-                - { kind: relationship, from: household, to: head, sentiment: -3 }
+                # #1810: borrowed standing against a specific, recoverable
+                # false receipt. A later honest entry can answer this claim.
+                - { kind: discrepancy, op: create, id: the_received_letter_denied, severity: minor, provableBy: [the_church] }
+                - { kind: respect, delta: 1 }
+                - { kind: chronicle, text: "The house certified that no answering letter from Cawdry had reached it, and registered only its own offer." }
 
   - id: the_post_relay_will_take_it
     title: Sixty Miles a Day, and What It Costs
@@ -525,33 +527,31 @@ proseVariants:
     plainenglish: >-
       Two Letters Cross on the Road
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].body"
-    of: 3448f2baf693c356
+    of: "f57dfa6e057e3262"
     plainenglish: >-
-      In the first ten days of Frostfall, the house sent Cawdry a letter proposing terms.
-      Cawdry sent a different offer in the second ten days. The letters crossed near the
-      ford at Ockleigh, so neither writer knew about the other offer. Both proposals are
-      sincere and still open. The only evidence of which came first is their dates, four
-      days apart.
+      The keeper breaks the first seal. The house sent terms to Cawdry, but a letter
+      proposing different terms crossed it on the road. The dates are four days apart. The
+      house could withdraw its offer and record both letters. It could instead certify that
+      no answering letter arrived, so its own offer would appear to stand alone. The keeper
+      still has both envelopes.
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=take_theirs_as_first].label"
-    of: a41a0eb9048d043d
-    plainenglish: >-
-      Accept Cawdry's offer as the first and reply to it.
+    of: "87d2200dd87e5a31"
+    plainenglish: "Withdraw the house offer and record both letters."
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=take_theirs_as_first].outcomes[id=theirs_first].text"
-    of: ced0d4037f5f47ff
+    of: "6580bfa77752dbcb"
     plainenglish: >-
-      The house politely withdraws its own offer and accepts Cawdry's. Cawdry sees this as
-      generous. It costs the house about four crowns compared with its original proposal,
-      but helps build goodwill in a correspondence that will last thirty years.
+      The household hears its offer withdrawn. Both envelopes are sewn into the register,
+      and the keeper crosses out the claim that no answer arrived. The new receipt is
+      entered below it. The steward folds the old draft.
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].label"
-    of: 42c5d10fc8dc8823
-    plainenglish: >-
-      Our letter was dated four days earlier. Insist on our terms.
+    of: "59b4909939e09525"
+    plainenglish: "Record only the house offer and certify that no answer arrived."
   - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].outcomes[id=ours_first].text"
-    of: 927b2a2556c5b0a1
+    of: "5c8c14cd5aa22d29"
     plainenglish: >-
-      The house insists on its earlier offer and is correct about the dates. Cawdry replies
-      eleven days later and now knows how strictly this house negotiates. Our terms are
-      accepted. Both houses date their letters with great care for the next thirty years.
+      The register shows only the house offer, under its earlier date, as though no answer
+      arrived. A copy is sent to Cawdry, but both envelopes are still kept together. Both
+      dates remain readable.
   - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].title"
     of: 51c55b71e38f9ded
     plainenglish: >-
@@ -862,3 +862,7 @@ proseVariants:
       A visitor from Cawdry recognises the wall marks in about a minute. He is impressed,
       although he seems reluctant to admit it. He mentions them at three tables that winter.
       People spread the strange news that a house in the Nethering keeps track of the hour.
+
+  - address: "content:events/letters.yaml#events[id=the_letter_that_crossed].interaction.choices[id=insist_on_ours].outcomes[id=ours_first].effects[2].text"
+    of: "36d4e9d2d72a9c46"
+    plainenglish: "The family registered only its own offer and certified that no answering letter from Cawdry had arrived."
