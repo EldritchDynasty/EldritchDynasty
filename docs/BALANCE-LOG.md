@@ -12693,3 +12693,49 @@ G1 before-engine controls stay available and the before arm will be replayed
 against them. Content validation passes47rules with zero errors and three
 existing frequency-obligation warnings. The session repair's core typecheck
 also passes.
+
+## 2026-10-20 — #1817: complete refreshed gates and paired campaign evidence
+
+The frozen candidate is `5f82c4ae477c7567ef187a0dc2c8fe267fb6c867`.
+All14 checks in the fresh full-gate run pass: the unchanged800-house fire
+and outcome samples, plus all12 default blocking gates. `the_year_two_woke`
+now fires in18/800 houses. Its only scheduling change is the previously
+recorded narrow-cast weight130→600; no frequency, cast, awakening result,
+threshold or seed change was made. Eight complete-save observer controls pass.
+Three zero-count guarded outcomes remain correctly unproven: short Drowning
+partial1.3 expected/5 actual eligible opportunities, Vigil failure0.1/1, and
+Fast failure0.3/3. An offered but unchosen answer is not an eligible cast.
+
+The fixed200-house natural-awakening diagnostic is complete for original
+main `bfbcc9c3`, forcing before the weight repair `0f91295b`, and this
+candidate. The Year Two scene has eligible houses108/118/103, eligible years
+1,366/1,563/1,191 and actual firing houses3/1/4 respectively. Waking Early
+has110/110/109 eligible houses and1/1/2 firing houses. Every retained prefix
+row is included; each arm has at least eight complete-save observer controls.
+The repaired Year Two difference versus forcing is+1.5 percentage points,
+two-SE interval−0.73 to+3.73pp. The diagnostic supports no reliable increase
+in either natural scene's firing-house rate. The complete800-house fire gate
+is the accepted reach check, not a substituted200-house threshold.
+
+Fresh G1 has all72 actual Long500 rows per arm: old content on the new
+engine, ambient forcing, and one deliberate public full attempt each year.
+All72 before rows match the actual original engine's complete saves and
+pacing; ambient and called arms each have eight new observer on/off controls.
+Weighted frozen-year shares (before/ambient/called) are28.77/26.25/23.01%
+for chronicler,28.76/33.70/26.30% for bid and25.74/22.00/34.10% for ascendant.
+Paired house-share called-minus-ambient differences are−3.69pp (two-SE
+interval−14.36 to+6.99),−7.35pp (−21.03 to+6.33), and+8.32pp (−0.78 to+17.43).
+None supports a reduction under the existing floor0/two-SE test. God remains
+zero in every arm. Calling has material costs:389/405/370 direct child deaths
+and4,518/4,588/3,808 Madness points, respectively. These are observed effects,
+not a claim of safe or reliable awakening; natural Never remains possible.
+
+Artifacts retain each actual run, offers, eligible casts, costs, longest
+freeze, rung and ending mix: `scratch/eldritch-1817-pair-repair-{gates,counts,
+controls,summary}.json`, its before/ambient/called reports and the three
+natural-funnel reports. The initial natural-funnel formatter failed after
+all campaigns completed because it used an obsolete positional `expectMean`
+call. A corrected formatter uses the same preserved rows and existing
+floor0/two-SE implementation; no campaign was rerolled. The original queue
+failure remains in its log. Canonical blood2048 paired houses and endings512
+per policy are still running and must pass before closure.
