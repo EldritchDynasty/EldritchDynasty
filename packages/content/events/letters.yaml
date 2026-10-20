@@ -96,28 +96,29 @@ events:
                 - { kind: treasury, delta: 26 }
                 - { kind: rumour, op: seed, id: rumour_who_pays_for_the_relay, accuracy: 0.4 }
         - id: send_a_rider
-          label: Send our own man. Nine days is what nine days is.
+          label: Carry it yourself. Keep the letter out of the postmaster's hands.
           outcomes:
             - id: nine_days
               weight: 62
               text: >-
-                Nine days each way and a groom who is glad of the trip, and a
-                letter that arrives in good time because the matter at Caster
-                takes four tendays rather than two, as matters at Caster
-                generally do. The house saves four marks and learns nothing it
-                did not know.
+                Eighteen days in the saddle leave {HEAD} walking stiffly
+                across the hall. The letter arrived in time: the matter at
+                Caster took four tendays rather than two, and thirty crowns
+                are entered on the right side of the account. The postmaster
+                has never seen the seal.
               effects:
                 - { kind: treasury, delta: 30 }
+                - { kind: attribute, target: head, attr: health, delta: -4 }
             - id: four_days_late
               weight: 38
               text: >-
-                Nine days, and the matter was decided on the eleventh, and this
-                family's position is a letter in a clerk's tray under a
-                decision that has already been taken. Nobody is at fault.
-                Nothing can be done. That is what distance is and this house
-                has just paid thirty crowns to be reminded.
+                The clerk accepts the letter from {HEAD} and puts it beneath
+                a decision already signed. Thirty crowns are charged to the
+                house. There are nine days of bad road still to ride, and
+                the skin under the saddle sores has not healed.
               effects:
                 - { kind: treasury, delta: -30 }
+                - { kind: attribute, target: head, attr: health, delta: -4 }
 
   - id: the_wayfolk_have_it_first
     title: The Song Is Here Before the Fact
@@ -576,21 +577,20 @@ proseVariants:
       at Bramme learns that the family pays for fast messages. Within a year, everyone he
       drinks with knows it too.
   - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].label"
-    of: 09aeb9e1cabd604d
-    plainenglish: >-
-      Send our own rider. The journey takes nine days.
+    of: "d20a66b290d239ae"
+    plainenglish: "Carry the letter yourself and keep its seal private from the postmaster."
   - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].outcomes[id=nine_days].text"
-    of: be6d62c816892d74
+    of: "dbe6e409bda7ae55"
     plainenglish: >-
-      The rider takes nine days each way and enjoys the journey. The decision at Caster is
-      delayed from two ten-day periods to four, so the letter arrives in time. The house
-      saves four marks and learns nothing new.
+      {HEAD} returns stiff and sore after eighteen days riding. The hearing at Caster was
+      delayed, so the letter arrived in time and the family gains thirty crowns. The
+      postmaster has not seen the seal.
   - address: "content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].outcomes[id=four_days_late].text"
-    of: a6b902f72610d34b
+    of: "ddbb668827bb1124"
     plainenglish: >-
-      The rider takes nine days, but the decision is made on day eleven. The family's letter
-      arrives after the decision and cannot change it. Nobody made a mistake. The house
-      loses thirty crowns because of the distance.
+      {HEAD} delivers the letter after the decision has been signed. The family is charged
+      thirty crowns. The return journey takes another nine days over bad roads, with saddle
+      sores still unhealed.
   - address: "content:events/letters.yaml#events[id=the_wayfolk_have_it_first].title"
     of: ebc4273d871e9119
     plainenglish: >-

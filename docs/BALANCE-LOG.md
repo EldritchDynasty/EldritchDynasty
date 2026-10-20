@@ -13016,3 +13016,32 @@ survival and the new charcoal follow-up. It is not an after replay or acceptance
 claim. The actual16 remaining primary scenes and a fresh48-pair after batch
 remain. This branch now stacks on the summit refusal candidate; final baseline
 and acceptance must use the content that actually lands first.
+
+## 2026-10-20 — #1810: the chapel copy and the private ride (fourteen of27 drafted)
+
+The Quieting's question now costs institutional notice while teaching the
+actual LISTENER2Mind; the old ten-crown fee is removed. Silence instead
+certifies an altered chapel copy as the unaltered Bramme text, earning the
+existing standing tier with a minor Church-provable discrepancy. The existing
+quartered priest actually reads this exact id when the Head spends three
+nights comparing the books: the original68/32 outcomes bury the corrected
+copy or prove its false certificate, while costing2Health and changing the
+priest's relationship. The cold reception remains unchanged. This is an
+actual institutional reader of a specific paper claim, not a new memory key.
+
+Three writer/reader witnesses prove both saved-copy resolutions, the exact
+Respect cost of proof, the Head's Health price, and absence of an invented
+omission after the honest question. All344 execution-witness tests pass at
+this thirteen-scene checkpoint; the generated outcome index remains1,154.
+A filtered run passed the three new tests but could not satisfy the suite's
+whole-manifest afterAll check; the complete generator run then passed. Core
+type checking passes. The subsequent relay revision edits content only:
+the Head can carry the letter privately for4Health on either original62/38
+financial result, rather than sending an unpriced groom. The relay's public
+rumour and all monetary results are unchanged.
+
+All fourteen primary scenes pass47-rule validation with zero errors and the
+same three existing warnings. Existing parent casts, scheduling and outcome
+weights are unchanged. Thirteen primary scenes and the actual final replay,
+density/attention/library/outcome checks remain. Earlier static projections
+are planning aids and are not acceptance evidence for this source.

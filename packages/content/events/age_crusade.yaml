@@ -37,24 +37,31 @@ events:
       kind: choice
       choices:
         - id: house_him_well
-          label: House him well. A guest writes differently from a lodger.
+          label: Give him the good room. Work through the chapel copy beside him.
           outcomes:
             - id: warmed
               weight: 68
               text: >-
-                He is given the good room and the good wine and a chair at the
-                third night, and what he writes that winter is dull, and dull
-                is the best outcome available.
+                Three nights of reading leave {HEAD} with a cough and
+                {PRIEST} with the household copy open beside his own book.
+                Where a line is missing, it is put back before he signs the
+                comparison. He writes that the copy has been corrected.
               effects:
-                - { kind: treasury, delta: -10 }
+                - { kind: attribute, target: head, attr: health, delta: -2 }
                 - { kind: relationship, from: head, to: { slot: PRIEST }, sentiment: 12 }
+                - { kind: discrepancy, op: bury, id: the_fourth_petition_left_out }
             - id: unmoved
               weight: 32
               text: >-
-                He thanks the house for the room and goes on writing exactly
-                what he was going to write, which is what a serious man does.
+                Three nights of reading leave {HEAD} with a cough and
+                {PRIEST} making a separate list of every difference between
+                the two books. He will not sign a clean comparison for a
+                copy that needed correcting. The good room is entered
+                in his account as well.
               effects:
-                - { kind: treasury, delta: -10 }
+                - { kind: attribute, target: head, attr: health, delta: -2 }
+                - { kind: relationship, from: { slot: PRIEST }, to: head, sentiment: -8 }
+                - { kind: discrepancy, op: prove, id: the_fourth_petition_left_out }
         - id: arms_length
           label: Correct, cold, and nothing offered.
           outcomes:
@@ -348,20 +355,20 @@ proseVariants:
       unused chapel and once about the second cellar. He has not told {HEAD} what he came to
       investigate. Nobody has officially said the house is under watch.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].label"
-    of: "030d3f6ef01b0eb2"
-    plainenglish: >-
-      Give him a comfortable welcome. A well-treated guest may write a kinder report.
+    of: "950b829621ae903a"
+    plainenglish: "Give him the good room and compare the chapel copy with him."
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].outcomes[id=warmed].text"
-    of: "ed5b91ed3351a3a9"
+    of: "c0b1472dfa982089"
     plainenglish: >-
-      He gets the best room, good wine, and a place at the table on the third night. His
-      report that winter says very little of interest. That is the best result the house
-      could hope for.
+      After three nights of reading, {HEAD} has a cough. {PRIEST} compares the family copy
+      with his own book. Missing lines are restored before he signs, and he certifies that
+      the copy has been corrected.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=house_him_well].outcomes[id=unmoved].text"
-    of: "11eb7bfa4a1800e6"
+    of: "4891c3f9ae89eef5"
     plainenglish: >-
-      He thanks the house for the room, then writes exactly the report he had already
-      planned. The welcome has not changed his mind.
+      After three nights of reading, {HEAD} has a cough. {PRIEST} lists every difference
+      between the books and refuses to certify that a copy needing correction was accurate.
+      He also notes the comfortable room he was given.
   - address: "content:events/age_crusade.yaml#events[id=the_priest_in_the_west_wing].interaction.choices[id=arms_length].label"
     of: "19a84cc896cb46d4"
     plainenglish: >-
