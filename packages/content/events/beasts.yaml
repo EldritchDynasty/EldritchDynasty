@@ -41,26 +41,25 @@ events:
               weight: 100
               text: >-
                 Seven crowns at Bramme to a buyer who rides him out of the
-                market straight through the town gate without a check, and the
-                house has a smaller problem and four fewer crowns and one
-                fewer thing to think about. He is a good horse for somebody
-                else for eleven years.
+                market straight through the town gate without a check. The
+                groom brings back the money and an empty halter. At Wick the
+                buyer is already telling the story.
               effects:
                 - { kind: treasury, delta: 7 }
                 - { kind: rumour, op: seed, id: rumour_the_horse_they_sold, accuracy: 0.35 }
         - id: give_him_to_the_groom
-          label: Keep him. Let the groom ride him and take another for the house.
+          label: Give him to the groom. Let the yard see who keeps a good horse.
           outcomes:
             - id: kept
               weight: 100
               text: >-
-                Eight crowns for a second horse and the first one kept, which
-                is expensive and sentimental and is the decision made, and a
-                groom who now rides a better animal than his master. He never
-                tries the gate with {RIDER} up again and nobody asks him to.
-                Nothing is ever said about any of it aloud in that yard.
+                The groom takes the halter before the whole yard. Nobody
+                buys a replacement, and the horse goes on hauling sacks and
+                carrying the one person he will take through the gate. The
+                stable hands stop calling him the house's bad bargain. The
+                halter stays in the yard.
               effects:
-                - { kind: treasury, delta: -8 }
+                - { kind: relationship, from: household, to: head, sentiment: 8 }
 
   - id: the_mill_cat
     title: The Mill Cat Is Always Named the Same Thing
@@ -517,22 +516,20 @@ proseVariants:
     plainenglish: >-
       Sell the horse at Bramme. It is no use if it will not pass through the gate.
   - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=sell_the_horse].outcomes[id=sold].text"
-    of: df0bf055cf331ed1
+    of: "0b461d920895a68e"
     plainenglish: >-
-      A buyer at Bramme pays seven crowns, then rides the horse straight through the town gate without
-      difficulty. The house now has a smaller problem, four fewer crowns and one less worry. The horse
-      serves its new owner well for eleven years.
+      The horse sells for seven crowns at Bramme. The buyer rides through the town gate
+      without trouble, and the groom returns with the money and an empty halter. The buyer
+      tells the story at Wick.
   - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=give_him_to_the_groom].label"
-    of: ccff6d53174bb7b7
-    plainenglish: >-
-      Keep the horse for the groom to ride. Buy another horse for the house.
+    of: "72375752729ad58e"
+    plainenglish: "Give the horse to the groom in front of the yard."
   - address: "content:events/beasts.yaml#events[id=the_horse_that_will_not_pass_the_gate].interaction.choices[id=give_him_to_the_groom].outcomes[id=kept].text"
-    of: 9d84dffce06a8ab8
+    of: "2e6c09e6c12350aa"
     plainenglish: >-
-      The family spends eight crowns on a second horse and keeps the first one. It is an expensive
-      choice, made partly out of affection. The groom now rides a better horse than his master. Nobody
-      tries to take the first horse through the gate with {RIDER} riding it again. Nobody asks the groom
-      to try, and no one talks about it in the yard.
+      The groom is given the horse in front of the servants. No replacement is bought. The
+      horse keeps working for the groom, who can ride him through the gate. The stable hands
+      stop treating him as a bad purchase. The halter stays in the yard.
   - address: "content:events/beasts.yaml#events[id=the_mill_cat].title"
     of: be11378d6125ba71
     plainenglish: >-

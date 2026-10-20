@@ -12992,3 +12992,27 @@ absence of a bill after the handshake. The complete witness generator passes
 Validation still passes47rules with zero errors and three existing warnings.
 Eighteen primary worklist scenes and the actual48-pair after replay remain;
 this ninth draft is not an accepted concentration result.
+
+## 2026-10-20 — #1810: the horse and the parish witness (eleven of27 drafted)
+
+The horse's second choice gives the animal to the groom without buying a
+replacement. It sacrifices the seven-crown sale and steadies household
+confidence, instead of presenting a second immediate coin price. Selling
+still pays seven crowns and spreads the existing public account. The licensed
+stranger's meal instead puts a specific false three-winter Wick residency
+certificate on the house's paper, with the living KIN named as witness.
+Church/commons proof and creditor readers consume the minor discrepancy.
+Sending him to the stocks makes the same KIN testify and leaves a personal
+grudge against the Head, read by the existing relationship/quarrel consumers;
+the existing public rumour still spreads. No new flag, knowledge key, outcome,
+cast restriction or scheduling change is introduced.
+
+Both scenes have reviewed Original/Plain variants. Validation passes47rules,
+zero errors and three existing warnings. All128 Record, prose and relationship
+tests pass after these edits. The unchanged canonical shape projection on
+old streams suggests money in7/10 leading shapes and a top share4.737%,
+but this is only a planning counterfactual: it omits changed consequences,
+survival and the new charcoal follow-up. It is not an after replay or acceptance
+claim. The actual16 remaining primary scenes and a fresh48-pair after batch
+remain. This branch now stacks on the summit refusal candidate; final baseline
+and acceptance must use the content that actually lands first.

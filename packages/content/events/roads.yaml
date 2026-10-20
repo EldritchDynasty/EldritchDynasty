@@ -346,19 +346,20 @@ events:
       kind: choice
       choices:
         - id: feed_and_ask
-          label: Feed him and find out who told him to ask that.
+          label: Feed him. Vouch for a Wick badge with {KIN} named as witness.
           outcomes:
             - id: he_tells
               weight: 100
               text: >-
-                Nobody told him. He heard it in a stave at Coln from a Wayfolk
-                girl who had it from her father, and he has walked forty miles
-                up a bad road on the strength of a song, because a song is the
-                only kind of map a man with a badge is ever given. He is fed
-                and sent back and he goes.
+                He heard the question in a song at Coln, from a Wayfolk girl
+                who had it from her father. The reeve is sent a certificate
+                saying the man has lived at Wick for three winters, with
+                {KIN} named as witness. He has never slept here. He eats in
+                the kitchen while the new badge is cut.
               effects:
-                - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 8 }
+                - { kind: discrepancy, op: create, id: the_beggar_entered_as_wick_resident, severity: minor, provableBy: [commons, the_church] }
+                - { kind: chronicle, text: "The house certified three winters of residence at Wick for the stranger from Coln, naming {KIN} as witness." }
         - id: the_stocks
           label: Hand him to the reeve. Out of parish is out of parish.
           outcomes:
@@ -367,12 +368,13 @@ events:
               tags: [hard]
               text: >-
                 Two days in the Wick stocks and then walked to the parish line
-                by a man who is embarrassed about it. It is exactly the law and
-                the whole village watches it happen. What he was asking gets
-                repeated at the alehouse every night he is out there, which is
-                two nights, in front of everyone.
+                by a man who is embarrassed about it. The reeve calls {KIN}
+                forward to confirm where the stranger was found. What he
+                asked is repeated at the alehouse for both nights. Back at
+                the hall, the witness's stool is left empty.
               effects:
-                - { kind: respect, delta: -1 }
+                - { kind: relationship, from: head, to: { slot: KIN }, grudge: { severity: 20, inheritance: none } }
+                - { kind: relationship, from: { slot: KIN }, to: head, sentiment: -8 }
                 - { kind: rumour, op: seed, id: rumour_the_man_who_asked_at_the_gate, accuracy: 0.55 }
 
 proseVariants:
@@ -605,23 +607,28 @@ proseVariants:
       whether this is the house whose grates went cold during the great frost. He has asked
       the same question at gates along the road.
   - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=feed_and_ask].label"
-    of: 291d938ddd9bd1f1
-    plainenglish: >-
-      Feed him and ask where he heard the story.
+    of: "764d028b94998e47"
+    plainenglish: "Feed him and falsely certify him for a Wick badge, naming {KIN} as witness."
   - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=feed_and_ask].outcomes[id=he_tells].text"
-    of: a3dfafa35f4f6117
+    of: "cdc661b63e382a0a"
     plainenglish: >-
-      Nobody sent him. He heard the story in a Wayfolk song at Coln, from a girl who learned
-      it from her father. He walked forty miles along a bad road because the song was his
-      only guide. The family feeds him and sends him back, and he leaves.
+      He heard the question in a song at Coln, from a travelling girl who learned it from
+      her father. The family certifies to the reeve that the stranger has lived at Wick for
+      three winters, naming {KIN} as witness. He has never slept here. He eats in the
+      kitchen while a new badge is made.
   - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=the_stocks].label"
     of: 187fcab34427b11f
     plainenglish: >-
       Hand him to the reeve for begging outside his parish.
   - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=the_stocks].outcomes[id=stocked].text"
-    of: e0c3ca467a988382
+    of: "1b62388c13da9a18"
     plainenglish: >-
-      He spends two days in the stocks at Wick. Afterwards, an embarrassed man escorts him
-      to his parish boundary. The punishment follows the law exactly, and the whole village
-      sees it. For both nights he is held, people repeat his question at the alehouse in
-      front of everyone.
+      The man spends two days in the Wick stocks, then is escorted to the parish boundary.
+      The reeve makes {KIN} confirm where he was found. People repeat his question at the
+      alehouse on both nights. At home, the witness leaves an empty stool at the table.
+
+  - address: "content:events/roads.yaml#events[id=the_licensed_poor].interaction.choices[id=feed_and_ask].outcomes[id=he_tells].effects[2].text"
+    of: "9d3a6a326b3b344e"
+    plainenglish: >-
+      The family falsely certified that the stranger from Coln had lived at Wick for three
+      winters, with {KIN} named as witness.
