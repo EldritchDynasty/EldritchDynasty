@@ -326,7 +326,11 @@ Fully legible. Costs stated in years and coin. The player can plan four generati
 A character has perhaps 40 productive years. **Every spell learned is a generation not advanced.**
 
 ### Eldritch Power is given — the numinous system
-Arrives unbidden, costs nothing, cannot be sought. Spells manifest spontaneously: affinity profile determines *which* are possible, Eldritch Power determines *which tier* is rolled, Madness determines *how often* the roll happens.
+Arrives unbidden, costs nothing, cannot be sought. In an authored emergency, after the ordinary result is selected and before it is committed, awakened men of the family physically present may manifest without being asked. Each present expresser rolls independently at `min(EP / 100, 0.9)`, in a seeded shuffled order; the first success supplies one authored response. There is no preliminary crisis roll, pooled EP, player order, payment or new Madness gate. A single actor can fail even at 100 EP. Several local actors compound to `1 − product(1 − pᵢ)`; absent relatives contribute nothing.
+
+The emergency must threaten a current family life or liberty, unexpected financial shock (at least half recurring gross income or 50 crowns, whichever is greater, or first crossing below zero), a quarter of estate income or the seat, Regalia/a Named Art/a third of library titles, or two Respect tiers. Agreed purchases, tribute, contractual fees and rite sacrifices are effect-specific prices. A dangerous choice does not exempt its unforeseen casualty. Only one final result is applied, and the private account names the actor and the actual harm prevented. Annual mortality, military attrition and ordinary economic upkeep require separate incident adapters; they are outside this event rule. There is no typed incapacitating-injury or captivity effect yet.
+
+Other spontaneous manifestations remain a future design: affinity profile determines *which* spells are possible, Eldritch Power determines *which tier* is rolled, Madness determines *how often* that roll happens. The emergency rule does not add that second system.
 
 **Design rule, non-negotiable:** the player must never gain reliable control of it. No cooldown, no button, no manifest-on-demand at any tier. The moment Eldritch Power becomes a tool, the wonder dies and the game becomes a spreadsheet with a skull on it. Manifestations are always narrated as events that happened *to* the family, and are among the few things the chronicle can be wrong about in the player's favour.
 
