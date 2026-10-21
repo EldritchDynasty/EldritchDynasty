@@ -13305,3 +13305,33 @@ still running on the frozen corrected source. The PR stays draft until those
 results are assessed and the final landing preflight passes. These new replay,
 land and attention passes do not turn the earlier telemetry finding into a
 pass.
+
+## 2026-10-21 — #1810: blocking integration complete; telemetry kept separate
+
+The frozen corrected source completes all twelve merge-blocking gates at
+06:00:05 UTC, all passing. This includes library neutrality, the real Short
+campaign, both ladder checks, clauses, bottleneck, complete land evidence,
+slot/post casting, and all 1,162 deterministic outcome witnesses. Its unchanged
+800-by-500 fire-rate measurement also passes: 502 non-frame events, with all
+30 authored Effect kinds reached. Eight whole-save observer controls pass.
+The subsequent published checkpoint changes only tests and this log; production
+simulation, content, mapping and instruments remain byte-identical to `bc3e17c1`.
+
+The separate finite-sample all-outcome telemetry is **red**, and its wrapper
+therefore exits **1**, despite the twelve green blocking results. The pilgrimage
+non-return result resolves zero times in fourteen paid two-year choices, with
+about 5.3 expected; its existing deterministic execution witness passes. The
+Vigil now has an expressive paid cast, so its former zero-eligible-cast finding
+is superseded; its 10% surviving expressive failure has only 0.1 expected
+resolutions. Drowning partial and repeated-Drowning failure have about 2.3 and
+1.3 expected resolutions and remain explicitly underpowered. No rite odds,
+pilgrimage odds, hidden-capacity cast preference, witness scope or statistical
+threshold changes to obtain a different sample result. The Monte Carlo miss
+is recorded separately from the repository's authoritative blocking outcome
+scope, which requires a legal execution witness for every declared result.
+
+Hosted draft CI on `433ecb30138a0479de0bd1550c04238e9846af45` passes
+(`39551935756`), including all types, validation and the complete fast lane.
+The closing commit now proceeds through `npm run land` and ready-PR native
+queue admission; neither this local gate report nor the draft CI bypasses the
+queue's full integration check.
