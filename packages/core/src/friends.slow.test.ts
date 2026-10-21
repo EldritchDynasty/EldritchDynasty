@@ -150,6 +150,7 @@ describe('the five names, over a played batch', () => {
   // cannot carry the unchanged 12% ceiling at two standard errors. Retain
   // every original seed and add a fixed, independent 28-run prefix for this
   // rate only. Other pacing, blessing and per-run claims keep their cohort.
+  // No run is filtered by survival, arrival count, or observed delay.
   const arrivalRuns = [...runs, ...Array.from({ length: 28 }, (_, i) => play(9001 + 17 * i))];
 
   /**
