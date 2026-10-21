@@ -1,0 +1,6344 @@
+[
+  {
+    "path": "a_berth_at_sarrow/buy_the_berth/bought_berth",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_book_that_names_the_family/find_out_what_the_heading_says/it_is_a_list_of_creditors",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_book_that_names_the_family/find_out_what_the_heading_says/it_is_a_list_of_debtors",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_coat_for_the_heir/buy_the_coat/coated",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_coat_for_the_heir/spend_it_on_the_tutor/tutored",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_company_outside_bramme/bar_the_gate/refused",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_company_outside_bramme/take_eleven/hired",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_death_in_the_hollow_days/bury_within_two_days/buried",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_death_in_the_hollow_days/wait_for_the_keeper/waited",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_different_office_asks/send_an_account/accounted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_frost_in_greening/remit_at_thaw/said_now",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_frost_in_greening/wait_and_see/waited",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_grandmother_good_enough_for_caster/buy_nothing/bought_nothing",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_grandmother_good_enough_for_caster/buy_the_caster_grade/caster_grade",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_head_at_the_top_of_it/keep_him_in_the_chair/an_order_gets_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_letter_from_the_chapter_house/act_on_it/acted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_letter_from_the_chapter_house/act_on_it/acted_and_seen",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_letter_to_cawdry_about_a_book/send_a_rider/recalled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_man_who_drinks_standing/fill_it_again/he_stays_up",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_man_who_drinks_standing/fill_it_again/seated",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_man_who_drinks_standing/let_him_stand/counted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_month_before_the_market/wait_for_haying/late",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_murrain_year/remit_the_rents/remitted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_name_at_the_gate/send_him_on/sent",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_name_at_the_gate/take_him_in/cost_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_name_at_the_gate/take_him_in/sheltered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_neighbour_short_before_michaelmas/buy_it_now/sowerhay_bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_page_in_our_own_hand/ask_for_it_closed/left_closed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_seat_near_it/take_the_seat/placed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_second_hand_that_agrees/have_it_made/two_papers_now",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_servant_gives_notice/let_her_go_well/gone_well",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_share_called_in_sarrow/meet_the_call/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_wet_seedmonth/hold_the_seed/late_and_short",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_wet_seedmonth/sow_now/it_rotted",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "a_wet_seedmonth/sow_now/it_took",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "archive_the_bookseller_at_cawdry/buy_the_lot/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "black_cloth_at_the_fair/_/fined",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "blood_on_our_own_land/hand_him_to_cawdry/sent_to_the_assize",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "blood_on_our_own_land/keep_it_in_the_parish/cawdry_hears_of_it",
+    "candidates": [
+      "financial",
+      "political"
+    ],
+    "harms": [
+      "financial",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "blood_on_our_own_land/keep_it_in_the_parish/kept_in_the_parish",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "both_books_open/declare_short_again/short_again",
+    "candidates": [
+      "financial",
+      "political"
+    ],
+    "harms": [
+      "financial",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "both_books_open/make_it_good/made_good",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "corran_the_letters_stop/send_a_man/sent",
+    "candidates": [
+      "liberty",
+      "financial"
+    ],
+    "harms": [
+      "liberty",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "corran_the_letters_stop/write_again/wrote",
+    "candidates": [
+      "liberty",
+      "financial"
+    ],
+    "harms": [
+      "liberty",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "corran_what_came_back/pay_him_off/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "cousins_from_the_rimefell/send_them_away/sent_away",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "cousins_from_the_rimefell/take_them_in/told_them",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "cradlemoor_first_season/_/channel_cut",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "cradlemoor_the_ditches_hold/keep_paying/kept_paying",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "cradlemoor_wants_draining/commit_to_draining/bought_and_begun",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "demo_the_empty_chair/_/the_hand_remains",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "eight_days_and_then_it_did/change_the_practice/changed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "eight_days_which_one_we_keep/keep_the_thing/the_thing",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "eleven_days_of_grey/keep_the_days/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "formula_another_house_uses_it/distinguish_it/precedent_narrowed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "formula_returns_to_ardwen/accept_the_reading/accepted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "formula_returns_to_ardwen/fight_our_words/fought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "hard_winter/generous/remembered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "hard_winter/generous/wasted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "he_cannot_be_left_alone_now/hire_somebody/hired",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "he_swears_on_the_roll/let_him_swear/he_swore",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "iron_will_not_hold_an_edge/rebuild_the_room/rebuilt",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "it_does_not_come_when_called/_/nothing_at_all",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "leave_bought_in_winter/buy_the_leave/home",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "lightning_on_the_chapel/_/rebuilt_by_slaughter",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "news_before_the_seal/fill_the_bins/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "news_before_the_seal/leave_no_trace/waited",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "nine_years_and_no_child/send_for_the_physician/a_child_at_last",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "nine_years_and_no_child/send_for_the_physician/he_has_no_answer",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "pannage_in_smoke/let_the_number_stand/sixty_one",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "precedence_at_greening/blood_above_money/blood_seated",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "riding_the_rents/two_holdings_stand_empty/empty",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "rushes_or_boards/board_it/boarded",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "rushes_or_boards/fresh_rushes/rushes",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "said_at_the_wrong_assize/answer_it/answered_at_the_assize",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "said_at_the_wrong_assize/let_it_stand/it_stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "salt_in_the_pay_packet/return_the_extra/returned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "seal_our_own_letter_returns/buy_the_lot/bought_the_bundle",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "seal_the_grandson_presses/answer_in_writing/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "seal_the_grandson_presses/buy_it_back/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "second_table_the_accounts_return/make_it_material/work_given",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "second_table_the_road_between_them/meet_halfway/road_mended",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "servants_petition/raise/loyal",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "seven_hundred_miles/keep_him/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "seven_hundred_miles/send_him/sent",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "something_the_church_wants_more/endow_it/the_other_matter_closed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "somewhere_quiet_to_be_old/take_her_in/kept_warm",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "song_two_versions_at_greening/buy_the_old_ending/bought_again",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "tables_for_a_farm/honour_it/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "tallow_and_wax/buy_wax/waxed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "telling_the_bees/tell_them_plainly/they_go",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "ten_questions_instead_of_eleven/_/covered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_account_nineteen_years_later/open_the_packet/the_other_copy_held",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_adder_on_the_high_pasture/send_to_bramme/humoral",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_adder_on_the_high_pasture/the_graziers_cure/the_ninth_cure",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_advocate_on_retainer/keep_hiring/hired_again",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_advocate_on_retainer/send_them_to_cawdry/trained",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ague_out_of_the_lag/turn_them_back/turned_back",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_alewife_and_the_licence/buy_her_a_licence/licensed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_answer_was_a_refusal/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_answer_was_a_refusal/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_archdeacon_comes_back_early/say_they_were_lent/said_lent",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_archive_and_the_wage_roll/keep_her_on/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_archive_and_the_wage_roll/pension_her/pensioned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_assessor_at_the_door/argue/shaved",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_assessor_at_the_door/argue/worse",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_assessor_at_the_door/pay_it/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bed_in_the_kitchen/partition_the_west_wing/partitioned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_berth_becomes_a_share/buy_the_eighth/shared",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_better_tutor/raise_the_allowance/lit",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bleeding_or_not/keep_what_he_has/waited",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bleeding_or_not/let_him_bleed/bled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bleeding_or_not/let_him_bleed/bled_and_worse",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boar_in_the_oats/pay_for_the_oats/paid_for",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boar_in_the_west_wood/let_him_go/taken",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boar_in_the_west_wood/let_him_go/the_blade_that_would_not",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boar_in_the_west_wood/pay_the_colliers/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boat_that_does_not_open_it/send_it_down/carried",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bonesetter_or_the_physician/send_for_the_bonesetter/set_at_wick",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bonesetter_or_the_physician/send_to_bramme/the_physician_comes",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_comes_down/sell_it/sold",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_is_wrong/burn_it/burned",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_is_wrong/sell_it_on/sold_on",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_needs_a_reader/have_it_copied/copied",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_needs_a_reader/leave_it/left",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_was_returned/wash_the_margins/the_wash_takes_the_text",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_book_that_was_returned/wash_the_margins/washed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boy_they_send_us/keep_him_apart/kept_apart",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_boy_they_send_us/raise_him_as_ours/raised",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bramme_margin_returns/acknowledge_the_correction/bramme_knows",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_branches_combine/give_them_the_table/seated",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_branches_combine/refuse_the_three/they_go_to_law",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_brewing_goes_wrong/buy_from_the_alewife/bought_in",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bride_out_of_the_rimefell/buy_her_a_descent/papered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_bride_out_of_the_rimefell/take_her/married_in",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_broker_who_is_right/buy_the_list/bought_the_list",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_broker_who_is_right/buy_the_list/she_keeps_a_copy",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_broker_who_is_right/send_her_away/sent_away",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_burgesses_answer_is_no/feed_the_forty/fed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_burning_at_cawdry/go_down_and_claim_them/claimed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_burning_at_cawdry/let_them_burn/burned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_business_without_the_seal/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_business_without_the_seal/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_butts_have_rotted/put_them_right/shooting_again",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_carpenter_is_getting_old/apprentice_a_boy/apprenticed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_carpenter_is_getting_old/apprentice_a_boy/the_boy_leaves",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_carpenter_is_getting_old/pay_bramme_rates/bramme_rates",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cart_from_the_chapter_house/refuse/refused",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_case_book_is_cited/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/family_work/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/family_work/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/prepare_next_time/a_reading_begins",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/send_specialist/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/send_specialist/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/use_darkness/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/use_darkness/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/use_light/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cawdry_copy/use_light/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cellar_shelf_is_found/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cellar_shelf_is_found/keep_our_terms/stood",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_chapter_house_closes_its_door/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_chapter_house_closes_its_door/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_chapter_houses_price/pay_for_the_roof/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_charcoal_price_returns/keep_the_rate/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_child_with_no_name/enter_it_at_wick/entered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_child_with_no_name/keep_the_iron_longer/waited",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_clause_about_the_butts/pay_in_coin/paid_in_coin",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_clause_read_back/keep_the_word/chain_down",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_clip_the_house_keeps/sell_it_all_and_buy/sold_and_bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_clipped_coin/take_the_loss/loss_taken",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_codex_in_the_eastern_invoice/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_college_agent_takes_the_order/order_plainly/ordered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_college_agent_takes_the_order/order_through_bramme/through_a_third_hand",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_colliers_are_awake/pay_them_off/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_commission/buy_it/sworn",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_common_is_grazed_thin/move_the_marker/marker_moved",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cook_and_the_second_kitchen/keep_the_two_breads/two_breads",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cook_and_the_second_kitchen/wheat_for_the_hall/wheat_throughout",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copy_comes_back_open/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copy_comes_back_open/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copyist_who_understood_it/ask_him_what_he_read/he_says_nothing_useful",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copyist_who_understood_it/ask_him_what_he_read/he_tells_you",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copyist_who_understood_it/pay_him_off_early/ended_early",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_copyists_half_year/buy_the_copy/copied",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_coroners_view/plain_account/plain",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_coroners_view/settle_with_the_kin/settled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cousin_who_woke_four_miles_off/send_the_tutor_down/taught_there",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_cross_reference/pay_him/the_page_unfindable",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dark_year_fast/break_the_fast/fed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dark_year_fast/keep_the_fast/died",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_daughter_who_shows_a_sign/send_her_to_coln/a_year_away",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_daybook_has_a_witness/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_debt_that_outlives_him/strike_it_out/struck_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_deed_nobody_can_find/concede_it/conceded",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_deed_nobody_can_find/fight_it/held_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_deed_nobody_can_find/fight_it/lost_it_anyway",
+    "candidates": [
+      "estate",
+      "financial"
+    ],
+    "harms": [
+      "estate",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_desperate_offer/take_it/taken",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dovecote_and_the_hawk/net_the_cote/netted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dovecote_and_the_seed/cull_the_flight/culled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dowry_that_is_paper/ask_for_coin/asked_for_coin",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dowry_that_is_paper/take_the_paper/the_sixth_is_wrong",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_dowry_that_is_paper/take_the_paper/took_the_paper",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_drovers_bring_the_price/sell_early_on_his_word/he_was_wrong",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_eleven_days/keep_the_gate/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_eleven_days/open_for_the_village/opened_and_spared",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_eleven_days/open_for_the_village/opened_and_took_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_empty_glove_at_greening/buy_the_bird_now/replaced",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_exhumation/let_them_lift_it/lifted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_exhumation/let_them_lift_it/nothing_under_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_exhumation/refuse_the_ground/refused",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_eyes_go/order_the_lens/lens_ordered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_factor_remembers_the_receipt/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_factor_remembers_the_receipt/keep_our_terms/stood",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fair_copy/send_it_to_bramme/came_back",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fair_copy/send_it_to_bramme/read_before_returned",
+    "candidates": [
+      "inheritance",
+      "financial"
+    ],
+    "harms": [
+      "inheritance",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_farrow_line_ends/accept_the_reassignment/farrowmere_accepted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_favour_asked_in_the_corridor/find_the_stalls/stabled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/family_work/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/family_work/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/prepare_next_time/a_reading_begins",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/send_specialist/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/send_specialist/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/use_death/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/use_death/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/use_life/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fever_and_the_vigil/use_life/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_first_boar/the_boar_in_our_wood/it_goes_wrong",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_flat_market/buy_cheap/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ford_below_wick/build_it/built",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_forge_fire_in_deepwinter/say_nothing_and_pay_it/covered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_fourth_yssene_clause/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_gate_is_shut_for_a_month/feed_them_all/all_fed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_gate_is_shut_for_a_month/ration_by_household/rationed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_gate_is_shut_for_a_month/ration_by_household/they_go_over_the_wall",
+    "candidates": [
+      "financial",
+      "political"
+    ],
+    "harms": [
+      "financial",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_gatehouse_nobody_has_shut/hang_new_gates/hung",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_gatehouse_nobody_has_shut/leave_it_open/left",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_generation_with_no_son/marry_outward/married_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_great_rite/do_it_unasked/defied",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_greater_working_bought_too_soon/buy_it/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_greater_working_bought_too_soon/buy_lesser/two_books",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_grey_in_the_upper_fold/go_up/a_clean_week",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_grey_in_the_upper_fold/pay_the_bounty/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_grievance_reaches_the_assembly/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_grievance_reaches_the_assembly/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_groom_and_the_bramme_road/have_him_followed/followed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_guardian_disagrees/defy/ruined",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hall_burns/get_everyone_out/nineteen_in_the_yard",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hall_burns/save_the_press/the_press_and_the_stair",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hall_burns/save_the_press/the_press_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hall_is_answered/give_them_something_real/given",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hearth_tax_assessment/pay_on_seven/paid_on_seven",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_herald_asks_for_her_mother/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_herald_asks_for_her_mother/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_herald_opens_the_old_question/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_heralds_open_the_descent/buy_the_fourth/bought_the_fourth",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_heralds_open_the_descent/send_what_we_have/they_go_looking",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_heralds_visitation/full_descent/full",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hiring_at_bramme_fair/take_the_reeves_daughter/reeves_girl",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hollow_days_at_bramme/ride_to_bramme/counted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_hostage_asked_for/refuse_the_surety/refused_surety",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_house_next_door_attainted/buy_the_land/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_index_has_our_page/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_index_has_our_page/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_inquest_of_names/concede_a_little/bought_off",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_inquest_that_sits_for_nine_days/claim_the_wardens_court/jurisdiction",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_interdict/hold_out/it_holds_too_long",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_interdict/pay_the_composition/composed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_invitation_from_cawdry/go_to_cawdry/went",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_invitation_from_cawdry/write_the_regrets/regrets",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_king_passes_within_a_day/ride_out/seated_badly",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_king_passes_within_a_day/ride_out/seen",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_knife_everybody_wears/_/a_horn_handle",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ladder_gets_crowded/buy_in/enrolled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ladys_merlin_on_the_glove/get_her_a_better_bird/better_bird",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ladys_merlin_on_the_glove/get_her_a_better_bird/somebody_does_correct",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_last_of_the_cheese/send_it_back_down/sent_back",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_last_of_the_line/recall_everyone/nobody_comes",
+    "candidates": [
+      "financial",
+      "political"
+    ],
+    "harms": [
+      "financial",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_last_of_the_line/recall_everyone/recalled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_lessons_stop_at_twelve/keep_her_at_the_table/kept_at_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_comes_and_is_expected/pay_for_the_quiet/arranged",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_comes_and_is_not/_/at_the_same_time",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_nobody_answered/write_again/written_again",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_of_credit_called/ask_for_terms/terms_given",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_of_credit_called/ask_for_terms/terms_refused",
+    "candidates": [
+      "financial",
+      "political"
+    ],
+    "harms": [
+      "financial",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_of_credit_called/pay_it_whole/paid_whole",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_letter_of_credit_fails/cover_the_paper/covered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_levy_at_the_door/pay/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_levy_at_the_door/send_the_son/gone",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_levy_in_earnest/commute_it/commuted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_levy_in_earnest/send_them/he_does_not",
+    "candidates": [
+      "liberty"
+    ],
+    "harms": [
+      "liberty"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_licensed_colour/good_green_instead/green",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_licensed_colour/order_the_black/corrected",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_licensed_colour/order_the_black/ordered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_looted_library/buy/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_lot_not_in_the_catalogue/bid_on_it/bought_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_lot_not_in_the_catalogue/bid_on_it/outbid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_lot_not_in_the_catalogue/do_not_go_into_the_room/declined_the_room",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_low_ground_floods/dig_it_out/dug_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_low_ground_floods/let_it_sit/went_under",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_marriage_that_cannot_answer/put_it_to_the_church/annulled",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_marrow_codex_offered/buy_the_codex/bought_the_codex",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_marrow_codex_offered/decline_and_lend_them_money/lent_instead",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_mason_reaches_the_turn/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_merlin_on_the_block/buy_the_bird/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_midwife_who_is_owed_a_year/pay_and_raise_her/raised",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_muster_is_called/commute_it/commuted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_name_said_aloud/apologise_properly/apologised",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_night_the_wind_came_round/_/patched_by_greening",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_north_wall_is_dealt_with/_/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_north_wall_is_found_out/_/the_quires_are_gone",
+    "candidates": [
+      "inheritance",
+      "financial"
+    ],
+    "harms": [
+      "inheritance",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_north_wind_finds_the_patch/patch_it_once_more/patched_once_more",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_north_wind_finds_the_patch/slate_it_now/slated_at_last",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_notarised_pedigree/have_it_checked/genuine",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_notarised_pedigree/take_the_terms/accepted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_notarys_book/buy_the_register/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_nurse_from_wick/put_it_out_to_nurse/to_the_nurse",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_oath_men_at_the_assize/buy_the_four/bought_four",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_offer_from_across_the_grey/keep_her_here/refused",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_offer_in_another_room/raise_him/raised",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_one_permutation/make_the_match/it_concentrates",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_one_permutation/make_the_match/it_does_not_concentrate",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_one_permutation/marry_them_outward/outward",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_orchard_in_a_good_year/open_the_orchard/opened",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_oxen_and_the_plough_team/buy_two/bought_two",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_packet_at_bramme/close_the_packet/closed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_parish_roll_called_in/send_a_fair_copy/copied",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pay_list_returns_short/make_it_whole/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_permission_is_read_back/keep_our_terms/stood",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_from_bramme/pay_the_visit/sent_on",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_from_bramme/retain_him/retained",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_shuts_the_gate/keep_it_open/open_and_not",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_shuts_the_gate/shut_it/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_writes_it_down/ask_to_see_ours/he_shows",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_physician_writes_it_down/buy_the_book_eventually/bought_later",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pigs_go_into_the_wood/split_it_by_need/by_need",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pilgrimage_to_coln/a_fortnight/went_and_returned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pilgrimage_to_coln/two_years/does_not_come_back",
+    "candidates": [
+      "liberty"
+    ],
+    "harms": [
+      "liberty"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pilgrimage_to_coln/two_years/gone_long",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pit_on_our_own_ground/refuse_the_ground/the_church_takes_it_anyway",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pit_on_our_own_ground/refuse_the_ground/the_low_meadow",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_pledge_in_the_box/give_them_back/given_back",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ploughs_go_out_late/_/the_house_pays_bramme",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ploughs_go_out_late/_/they_sow_late",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_portion_of_agelessness/buy/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_portion_of_fertility/buy/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_position_offered/buy_the_banner/bought_banner",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_position_offered/buy_the_captaincy/bought_captaincy",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_position_offered/buy_the_serjeanty/bought_serjeanty",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_post_relay_will_take_it/send_a_rider/four_days_late",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_price_after_the_fires/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_price_at_the_mill/_/only",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_price_of_no_carpenter/bring_a_carpenter_to_wick/settled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_price_of_no_carpenter/pay_the_bill/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_quarrel_nobody_started/send_word/mended",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_quarry_match/decline_politely/declined",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_question_at_assize/ask_for_the_book/adjourned",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_quire_beside_the_descent/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_reeve_at_ingathering/forgive/forgiven",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_reeve_at_ingathering/take_in_kind/taken_in_kind",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_reeve_reads_the_sky/cut_on_the_ninth/he_was_wrong",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_reeve_reads_the_sky/wait_the_four_days/it_breaks",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_relic_offered/take_the_relic/installed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_relief_falls_due/ask_for_terms/terms",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_relief_falls_due/pay_it_from_the_box/paid_whole",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_relief_on_inheritance/declare_short/short_return",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_relief_on_inheritance/declare_true/true_return",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_rimefell_men_in_frostfall/buy_the_quarter/bought_the_leaves",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ring_from_the_line/_/came_back",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_road_nobody_mends/mend_it/mended",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_salt_before_slaughter/buy_half/half_bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_salt_before_slaughter/buy_it_all/bought_whole",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_salt_fish_from_sarrow/_/he_comes_at_last",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_salt_fish_from_sarrow/_/he_does_not_come",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_seal_is_not_in_the_box/search_the_household/not_found",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_seal_questioned/strike/fell",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_seal_questioned/strike/struck",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_second_cellar_again/brick_it/bricked",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_second_cellar_again/open_it/opened",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_second_signature/put_the_seal_to_it/the_seals_agreed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_second_widening/widen_him_quietly/widened",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_settlement_with_banner/make_it_noticed/made_noticed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_seven_lamp_vigil/keep_the_lamps/died",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_seven_lamp_vigil/put_out_the_lamps/spared",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shelf_that_has_to_go/burn_them/burned",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shelf_that_has_to_go/hide_them/hidden",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shelf_that_has_to_go/offer_them_as_tribute/offered_to_bramme",
+    "candidates": [
+      "inheritance",
+      "financial"
+    ],
+    "harms": [
+      "inheritance",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shelf_that_has_to_go/sell_them/sold",
+    "candidates": [
+      "inheritance"
+    ],
+    "harms": [
+      "inheritance"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shepherd_who_is_worth_more/buy_the_pup/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ship_is_late/send_the_cart/sent",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_shoes_the_household_wears/shoe_the_household/shod",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_sideways_seal_on_the_lease/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_sideways_seal_on_the_lease/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_signs_disagree/buy_all_three/all_three",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_signs_disagree/buy_the_best_reading/bought_reading",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smith_and_the_dull_edge/give_him_the_jug/he_tests_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smith_and_the_dull_edge/pay_him_to_stop_counting/paid_forward",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/family_work/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/family_work/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/send_specialist/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/send_specialist/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/use_fluid/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/use_fluid/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/use_thermal/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_smoke_above_the_store/use_thermal/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_son_brings_the_written_terms/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_spice_box/fill_the_box/filled",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_steward_asks_for_a_boy/give_him_a_boy/a_boy_behind_him",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_steward_of_nineteen_years/buy_the_second_book/bought_the_book",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_steward_of_nineteen_years/dismiss_him/dismissed_and_sells_it",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_stewards_list_of_doors/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_stewards_list_of_doors/keep_our_terms/stood",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_still_room_in_greening/show_the_physician/he_reads_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_summer_that_does_not_rain/open_the_hay/opened",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tanner_downwind/move_him/moved",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tenant_who_cannot_pay/evict_them/evicted",
+    "candidates": [
+      "estate"
+    ],
+    "harms": [
+      "estate"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tenant_who_cannot_pay/forgive_the_arrears/arrears_forgiven",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tenant_who_wants_it_written/sign_it/written",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_terrier_and_the_barn/_/both",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_thatcher_from_the_lag/back_the_reeve/he_goes_home",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_thatcher_from_the_lag/give_him_the_barn/the_barn",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_thaw_that_comes_too_fast/take_them_in/taken_in",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_thaw_that_comes_too_fast/the_barn_and_the_stores/the_barn",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_third_night/pay_him_out/paid_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_third_price/pay_the_third/bought_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_third_reading_of_the_roll/send_a_man_to_caster/corrected",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_third_reading_of_the_roll/send_a_man_to_caster/it_was_not_an_error",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_three_volumes_are_sorted/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_threshold_four_at_the_fair/buy_her_an_hour/an_hour",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_threshold_four_at_the_fair/take_her_home/home_early",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tinker_and_the_third_price/mend_the_pot_only/pot_only",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tinker_and_the_third_price/pay_the_third_price/heard_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tinker_and_the_third_price/pay_the_third_price/it_is_about_us",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_toll_on_the_plank_bridge/halve_the_rate/halved",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_toll_on_the_plank_bridge/hold_the_chain/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tooth/the_physician/physician_did_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_torn_letter/draw_another/redrawn",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_torn_letter/send_him_to_bracc/proved",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_turn_of_the_stave/mend_the_verse/mended",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_tutor_with_nothing_to_teach/keep_him/kept",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_two_days_of_birth/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_unmaking/go_through_with_it/failed_at_the_last_step",
+    "candidates": [
+      "life",
+      "political"
+    ],
+    "harms": [
+      "life",
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_unmaking/go_through_with_it/taken",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_unmirrored_eye_offered/buy/bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wage_roll_in_a_thin_year/pay_it_whole/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wall_nobody_mends/mend_it_ourselves/mended",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wall_nobody_mends/take_it_to_cawdry/found_against",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wall_nobody_mends/take_it_to_cawdry/heard_at_cawdry",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ward_answers_cawdry/answer_the_account/answered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_ward_who_grew_up_here/marry_her_in/married_in_ward",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wardenship_falls_vacant/put_the_name_forward/chosen",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wardenship_falls_vacant/put_the_name_forward/not_chosen",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_warrant_on_the_wall/_/read_it",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_warranted_healer_at_the_fair/pay_the_six/she_attends",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_warranted_healer_at_the_fair/pay_the_six/within_the_warrant",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_warranted_healer_at_the_fair/the_physician_is_cheaper/the_physician_again",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_water_was_fine_last_time/buy_in_this_time/bought_in_this_time",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wayfolk_at_the_gate/hall_and_supper/sung_well",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wayfolk_at_the_gate/the_barn/barn",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wayfolk_at_the_gate/the_barn/the_stave_that_travels",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wayfolk_have_it_first/pay_them_to_get_it_right/corrected_version",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_weighers_ledger/the_house_name/plainly",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_weighers_ledger/through_a_factor/at_one_remove",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_well_in_a_dry_year/cart_from_the_river/carted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_well_in_a_dry_year/sink_it_deeper/nothing_down_there",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_well_in_a_dry_year/sink_it_deeper/struck_water",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_west_wing_roof/hesk_properly/slated",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_west_wing_roof/patch_it_again/patched",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wet_harvest/theirs_first/the_fourth_day_never_comes",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wet_harvest/theirs_first/theirs_in",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wheel_stops/they_come_back_wet/not_shifted",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wick_bridge_load/lifted/clear",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wick_bridge_load/paid/wet",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_widow_who_declines/press_her/she_holds",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/family_work/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/family_work/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/prepare_next_time/a_reading_begins",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/send_specialist/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/send_specialist/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/use_aero/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/use_aero/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/use_terra/held",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wind_under_the_slates/use_terra/lost",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_winter_advance/make_it_a_gift/given",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_withdrawal/call_them_home/called_home",
+    "candidates": [
+      "political"
+    ],
+    "harms": [
+      "political"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_witness_at_the_wall/pay_him_off/he_stays_bought",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_witness_at_the_wall/pay_him_off/paid",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_witness_at_the_wall/the_third_night/of_the_household",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wool_factors_book/hold_the_clip/it_rains",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wool_factors_book/take_the_offer/taken",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_wrestling_at_bramme/let_him_go_on/he_is_broken",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_year_of_no_summer/buy_for_the_hall/bought_for_the_hall",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_year_of_no_summer/buy_now_for_the_parish/bought_for_all",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "the_yssene_house_at_cawdry/open_the_question/opened",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "three_grates_of_seven/buy_charcoal/warm",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "three_rooms_at_the_gaol/let_him_sit/he_sits",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "three_rooms_at_the_gaol/pay_and_speak_for_him/bailed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "three_words_of_old_ambric/take_the_term/bound",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "too_many_at_the_table/portion_them_out/placed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "two_in_three_reach_five/keep_the_room_warm/it_breaks",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "two_in_three_reach_five/keep_the_room_warm/it_does_not_break",
+    "candidates": [
+      "life"
+    ],
+    "harms": [
+      "life"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "two_in_three_reach_five/send_for_bramme/he_comes",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "two_in_three_reach_five/send_for_bramme/he_comes_too_late",
+    "candidates": [
+      "life",
+      "financial"
+    ],
+    "harms": [
+      "life",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "under_the_chapel_floor/extend_the_churchyard/to_the_churchyard",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "under_the_chapel_floor/lift_and_reset/reset",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_a_warranted_man_costs/do_it_ourselves/failed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_a_warranted_man_costs/hire_him/hired",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_bramme_calls_a_thin_year/pay_for_the_blessing/blessed",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_came_up_the_river_road/bar_the_doors/found_the_side_door",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_came_up_the_river_road/bar_the_doors/waited_out",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_came_up_the_river_road/hold_the_gate/broken_through",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_hangs_in_smoke/buy_the_difference/bought_and_locked",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_chapel_is_for/open_it/opened",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_flood_brings_up/put_the_ground_back/ground_put_back",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_flood_brings_up/send_for_the_keeper/entered",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_flood_brings_up/send_for_the_keeper/he_dates_them",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_hounds_will_not_pass/brick_the_turn/bricked",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_hounds_will_not_pass/go_down_and_look/nothing_down_there",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_hounds_will_not_pass/go_down_and_look/the_drain",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "what_the_years_wore_down/put_it_right/worn_down_no_longer",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "who_gets_the_physician/the_strong_one/spent_badly",
+    "candidates": [
+      "life",
+      "financial"
+    ],
+    "harms": [
+      "life",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "who_gets_the_physician/the_strong_one/spent_well",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "who_gets_the_physician/the_weak_one/bought_days",
+    "candidates": [
+      "life",
+      "financial"
+    ],
+    "harms": [
+      "life",
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "who_gets_the_physician/the_weak_one/kept_them_both",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "whoever_the_house_is_buying_this_decade/hire_the_ninth/hired",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "word_from_the_field/_/it_is_going_badly",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  },
+  {
+    "path": "word_from_the_field/_/it_is_going_nowhere",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [
+      "financial"
+    ],
+    "site": null,
+    "agreedPrices": [],
+    "response": null
+  }
+]

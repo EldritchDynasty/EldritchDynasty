@@ -46,3 +46,5 @@ export * from './reference.js';
 export * from './validate.js';
 
 export * from './user-content.js';
+
+export * from './primordial.js';

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AgreedPriceS, SceneSiteS } from './primordial.js';
 import { ALL_AFFINITIES } from './attributes.js';
 import { ConditionS, CompareOpS, DiscrepancyStateS, FilterS } from './conditions.js';
 import { FrequencyS } from './frequency.js';
@@ -613,10 +614,55 @@ export function outcomeDrawSets<O extends { onlyIf?: OutcomeGuard }>(outcomes: r
   return guarded.size === 1 && open.length ? [open, ...sets] : sets;
 }
 
+export const RecordBlockS = z.object({
+  subject: z.string(),
+  options: z.object({
+    record: z.object({
+      chronicle: z.string(),
+      grantsKnowledge: z.string().optional(),
+      effects: z.array(EffectS).default([]),
+      claims: z.array(ClaimS).default([]),
+    }),
+    omit: z.object({
+      /** null prints as a dated blank line. The blank is a designed artefact. */
+      chronicle: z.null().default(null),
+      effects: z.array(EffectS).default([]),
+    }),
+    embellish: z.object({
+      chronicle: z.string(),
+      effects: z.array(EffectS).default([]),
+      claims: z.array(ClaimS).default([]),
+      discrepancy: z.object({
+        id: z.string(),
+        severity: z.enum(['minor', 'major', 'total']),
+        provableBy: z.array(z.string()).min(1),
+      }),
+    }),
+  }),
+});
+export type RecordBlock = z.infer<typeof RecordBlockS>;
+
+/** Complete final bundle; it cannot contain a second intervention. */
+export const PrimordialResponseS = z.object({
+  id: z.string().regex(/^[a-z0-9_]+$/),
+  text: z.string().min(1),
+  plainEnglish: z.string().min(1),
+  effects: z.array(EffectS),
+  tags: z.array(z.string()).default([]),
+  /** Explicitly replace the normal public account, including a deliberate absence. */
+  record: RecordBlockS.nullable(),
+  triggers: z.object({ arc: z.string(), op: z.enum(['start', 'advance']) }).optional(),
+  next: z.object({ event: z.string(), after: ScheduleS.default('next_generation'), keep: z.array(z.string()).default([]) }).optional(),
+}).strict();
+export type PrimordialResponse = z.infer<typeof PrimordialResponseS>;
+
 export const OutcomeS = z.object({
   id: z.string(),
   weight: z.number().default(100),
   onlyIf: OutcomeGuardS.optional(),
+  site: SceneSiteS.optional(),
+  agreedPrices: z.array(AgreedPriceS).optional(),
+  primordial: PrimordialResponseS.optional(),
   text: z.string(),
   tags: z.array(z.string()).default([]),
   effects: z.array(EffectS).default([]),
@@ -683,33 +729,6 @@ export type Interaction = z.infer<typeof InteractionS>;
  * and `deriveRecordView` in `core/src/record.ts` never need to ask whether an
  * embellished claim is true, only whether a recorded one happens to be.
  */
-export const RecordBlockS = z.object({
-  subject: z.string(),
-  options: z.object({
-    record: z.object({
-      chronicle: z.string(),
-      grantsKnowledge: z.string().optional(),
-      effects: z.array(EffectS).default([]),
-      claims: z.array(ClaimS).default([]),
-    }),
-    omit: z.object({
-      /** null prints as a dated blank line. The blank is a designed artefact. */
-      chronicle: z.null().default(null),
-      effects: z.array(EffectS).default([]),
-    }),
-    embellish: z.object({
-      chronicle: z.string(),
-      effects: z.array(EffectS).default([]),
-      claims: z.array(ClaimS).default([]),
-      discrepancy: z.object({
-        id: z.string(),
-        severity: z.enum(['minor', 'major', 'total']),
-        provableBy: z.array(z.string()).min(1),
-      }),
-    }),
-  }),
-});
-export type RecordBlock = z.infer<typeof RecordBlockS>;
 
 /**
  * Age scoping is a DECLARATIVE FIELD rather than a condition, for three
@@ -799,6 +818,7 @@ export const EventTemplateS = z.object({
   tags: z.array(z.string()).default([]),
   purposes: z.array(PurposeS).length(3, 'exactly three declared purposes'),
 
+  site: SceneSiteS.optional(),
   ages: AgeScopeS.optional(),
   /** Product scope; absent means the same scene can occur in any campaign. */
   campaigns: z.array(CampaignIdS).min(1).optional(),
