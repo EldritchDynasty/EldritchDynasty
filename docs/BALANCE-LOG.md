@@ -13382,3 +13382,107 @@ attested rung. Match-receipt controls preserve the complete saved world,
 dealt cards and RNG at both budget extremes. The corrected-policy campaign
 sweep follows this checkpoint. All game odds, proof prices, warning strength,
 and the 50-year memory delay remain fixed while that contrast is measured.
+
+## 2026-10-21 — #1809: corrected paired policies support the late spread
+
+The corrected runner at `4f7c59f765b66a780b037044fa78e8ba5d946f3b`
+completed all **1,440** actual histories, exit 0 at **07:22:22 UTC**. It uses
+the identical four 60-seed sets and three carriages at both terms as the
+historical `bc3e17c1d2e817765239db78d78d30a3c04b46d9` sweep above.
+All **480 unattended complete-save hashes match across sources**, and all
+sixteen complete-save/complete-result observer controls pass. Every actual
+Record answer agrees with its receipt: the 480 modest histories answer
+**6,769 Record / 0 Omit / 0 Embellish**; the 480 proud histories answer
+**0 / 0 / 6,532**. This repairs an experiment, with no game price increase.
+
+For reproduction, call the canonical `playOnce` for each seed and carriage,
+then `verdictOver`. The four sets remain `4000+13i`, `9001+17i`,
+`20011+29i`, `31013+37i`, `i=0..59`. Before stable mean-carriage binning,
+order the saved rows exactly like `gateBearing`: proud, modest, unattended,
+then input seed order. A separate pure reduction checks that ordering against
+the canonical verdict; it leaves these results unchanged. Broken Line stays
+in every ending report and is excluded only from the creditor-proof judgment.
+Variance below is the existing population variance of substantiated rung.
+
+| Term / runner | Creditor histories | Low / high mean best rung | Low / high outcome variance | Pooled spread gap | Four-set mean gap ± SE | Existing `expectMean`, zero floor |
+| --- | ---: | --- | --- | ---: | --- | --- |
+| 300 historical policy bug | 584/720 | 2.25773 / 2.34021 | 0.61292 / 0.41800 | −0.19492 | −0.16726 ± 0.12731 | FAIL |
+| 300 corrected policies | 581/720 | 2.28497 / 2.33679 | 0.42138 / 0.77022 | +0.34884 | +0.34348 ± 0.05308 | PASS, 6.47 SE |
+| 500 historical policy bug | 572/720 | 2.34211 / 2.42632 | 0.34429 / 0.44366 | +0.09936 | +0.08597 ± 0.05975 | FAIL, 1.44 SE |
+| 500 corrected policies | 568/720 | 2.31746 / 2.45503 | 0.42832 / 0.72719 | +0.29887 | +0.29511 ± 0.10670 | PASS, 2.77 SE |
+
+The four corrected spread gaps are Short **+0.48889, +0.27720, +0.25323,
++0.35460** and Long **+0.39111, +0.02083, +0.51895, +0.24953**. Both pooled
+canonical verdicts pass the unchanged 240-creditor-history minimum and
+zero spread floor; the four independent sets separately support the variance
+claim through the existing two-SE helper. These are paired *runner* reports,
+not evidence that an unchanged game became harsher. The old policy labels
+cannot support an honest-versus-embellished causal claim.
+
+**Keep the remaining mean gap explicit.** Short's independent-set mean-best
+gap is +0.07138 ± 0.05845 SE, only **1.22 SE** above zero; one set is negative.
+Long's is +0.13321 ± 0.04357, **3.06 SE**. The Short mean-ascent half of §29.7
+is therefore not a supported two-SE claim. No floor, bin rule or seed is
+changed to hide that uncertainty. The issue's variance acceptance is supported;
+this closeout does not claim every part of §29.7 is established.
+
+All-policy ending counts retain every run:
+
+| Term / runner | Broken Line | Devoured | Forgotten | Settled | Unmade |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 300 historical | 136 | 196 | 264 | 124 | 0 |
+| 300 corrected | 139 | 146 | 269 | 166 | 0 |
+| 500 historical | 148 | 209 | 362 | 0 | 1 |
+| 500 corrected | 152 | 155 | 412 | 0 | 1 |
+
+The corrected instrument exposes each existing bite. The following are
+**low / high creditor-bin means per run**, with actual run counts where shown.
+The old outside-budget observer missed unattended hands and exposed only
+already queued manual-policy hands, so its frequencies are incomplete and
+are not a valid before column; the canonical receipt repairs that gap.
+
+| Term | Outside slots withheld | Narrowed hands | Warning scenes presented / suppressed | Attested rungs refused | Runs with actual proof refusal | Runs whose proof falls below achieved rung |
+| --- | --- | --- | --- | --- | --- | --- |
+| 300 | 0.492 / 12.948 | 0.492 / 10.736 | 1.570 / 0.803; 1.876 / 1.212 | 0.088 / 1.984 | 17/193 / 191/193 | 0/193 / 143/193 |
+| 500 | 0.968 / 25.989 | 0.968 / 21.243 | 3.090 / 1.672; 3.249 / 2.132 | 0.042 / 2.206 | 8/189 / 189/189 | 0/189 / 163/189 |
+
+Across the actual **proud / modest policy columns**, narrowed markets occur
+in **208/240 versus 76/240** Short histories and **210/240 versus 94/240**
+Long histories. Proud houses lose 10.408 / 20.913 outside slots per run,
+against modest 0.733 / 0.967. Proud warning presentations/suppressions are
+1.508/0.975 Short and 2.663/1.733 Long; modest 1.258/0.638 and 2.496/1.375.
+Proud proof refusal occurs in **189/240 Short and 193/240 Long**, versus
+**zero** modest histories at either term. Both modest columns prove exactly
+their mean achieved rung, **2.18333 Short / 2.22083 Long**, and pay no book
+discount. The quiet-house counter-example is preserved.
+
+**Warning recovery remains thin in Short.** The ledger reader fires in
+2/720 corrected Short histories and 45/720 Long, with the witness scene in
+the same counts; the proud column has 0/240 Short and 16/240 Long. This is
+not a claim that every withheld warning becomes a player-visible trace.
+The saved six-run funnel in the historical audit found eligible years and
+positive reader weights without a firing, so reducing the warning floor or
+raising a reader weight is not justified by its raw count. The supported
+variance is already supplied by the existing market and final book reading.
+No new warning tags or stronger consequences are needed to meet this
+issue's variance acceptance on the corrected contrast.
+
+**A reconstructable failure, not just a private ledger.** Actual Short seed
+4000 records the embellished Great Rite page `chr_2p` in **1229**, claiming
+Vessel. Its `wrote_it_larger` act names that exact page. In **1254** Chronicle
+page `chr_32` reads, “The page of 1229 was read aloud at somebody else's
+table, from somebody else's copy,” with cause `{year:1229,page:'chr_2p'}`.
+The final **1342** book attests Vessel, carries 14 unsupportable weight,
+substantiates Adept, and ends Forgotten. In the same run an outside room of
+three cards receives budgets two in 1113 and one in 1146, following the
+dated refusal/cousin echoes. The saved built-state test independently follows
+an actual policy Embellish through its page-linked 25-year echo, zero
+carriage until year 50, then final reading; the honest control keeps Adept.
+
+Verification before the closeout: **95 focused tests** (29 Bearing-policy/
+verdict, 66 Match), core types, sixteen observer controls, 480 cross-source
+unattended-save controls, and all 960 manual-policy receipts pass. Restoring
+the old catch-all fails 15/16 saved-policy regressions. Game odds, all
+ending constraints, `WARNING_FLOOR=0.2`, proof prices, and
+`REMEMBERED_AFTER=50` stay fixed. There is no new game state, on-the-day tax,
+humility control, translated prose, or player-facing flaw name.
