@@ -13155,3 +13155,43 @@ flag or knowledge key is introduced. Existing parent frequencies and weights
 remain fixed. The final real48-pair replay and integration guards have not yet
 answered: the actual seventeen-scene familiarity failure remains the latest
 campaign verdict, and no threshold or instrument has changed.
+
+## 2026-10-20 — #1810: complete twenty-seven-scene paired result
+
+The final draft at`d6a37f3a05b931d150343050bce9055a0c88ee5f` completed all96
+real Short campaigns, seeds901–996 as48 consecutive pairs, actual process
+exit0 at23:08:34UTC. Before remains the complete frozen summit-refusal
+`ed7fc2b8` arm on those exact seeds. Familiar choices fall from1,162/3,572
+(32.5308%) to994/3,679 (27.0182%), clearing the unchanged27.1% guard.
+The leading shape falls from434/7,050 (6.1560%) to321/7,189 (4.4652%),
+clearing4.7%. Money appears in7/10 leading shapes rather than9/10.
+The mean choices per generation is7.32465 after versus7.30833 before;
+total choices rise from7,050 to7,189. The separate attention regression
+still owns its own verdict rather than inferring one from those counts.
+
+Both arms' eight observer controls preserve every canonical choice visit and
+density field. The complete shape-mapping SHA256 is
+`1abc60d7ff56d530ba49744a9c3074cff01e197203f6da24c4257429721c06e9`;
+the unchanged density-instrument SHA256 is
+`cdcd0f43b788e1b62aa081033a9e41f2d5dec134584854f3c51f210f84c1f2a6`.
+Artifacts are `scratch/eldritch-1810-summit-before48.json`,
+`scratch/eldritch-1810-twentyseven-after48.json`, their actual process
+completions, and the compact`-paired-summary.json`. The subsequent rebase
+onto the summit closing commit preserved all packages and tools exactly;
+only the new summit closeout was added to this log.
+
+This passes concentration, not all integration. The full played fire-rate
+measurement passes. Eleven of twelve merge-blocking gates pass, including
+library neutrality and execution-witness outcome reach. Land fails: its
+first-land-choice policy never chooses the alternative return of Wick Common,
+and the new enclosure/pannage/wet-seed land routes have under2SE of reach
+margin in its90-house sample. A larger fixed512-house diagnostic preserves
+those90 and appends42103+37i, with no survival filtering or changed floor.
+No corrective policy, sample or content change is claimed at this checkpoint.
+
+The separate800-run all-outcome telemetry reports no expressive Vigil cast
+in17 paid choices; its awake/expressive-failure outcomes therefore never had
+an eligible cast. Its other three tails have insufficient expected mass to
+judge. Those findings remain visible alongside the green blocking witness
+gate. They do not justify capacity-aware casting or changing paid rite odds.
+PR1857 remains draft while the land and attention checks are resolved.
