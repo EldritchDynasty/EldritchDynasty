@@ -13335,3 +13335,50 @@ Hosted draft CI on `433ecb30138a0479de0bd1550c04238e9846af45` passes
 The closing commit now proceeds through `npm run land` and ready-PR native
 queue admission; neither this local gate report nor the draft CI bypasses the
 queue's full integration check.
+
+## 2026-10-21 — #1809: audit the policy contrast before changing its prices
+
+The first shipped-term sweep completed all 1,440 canonical histories on
+`bc3e17c1`: four independent 60-seed sets, three carriages, both 300/500-year
+campaigns. The exact sets are 4000+13i, 9001+17i, 20011+29i and 31013+37i.
+Actual process exit 0 at 06:02:03 UTC; sixteen complete-save/complete-result
+observer controls pass. Short's pooled creditor-reading spread gap is
+−0.19492, while Long's is +0.09936. Across the four independent sets, Long's
+mean spread gap is +0.08597 with SE 0.05975, only 1.4 SE above zero. These
+are historical measurements of the existing runner, not a supported contrast
+between consistently honest and consistently embellished books.
+
+A saved-world audit found why that distinction matters. `playOnce` first
+answers queued Matches and Records, then calls `autoResolveAll` for ordinary
+choices. That catch-all also answers any Record a choice creates before the
+carriage policy regains control. Four exact-save reproductions of supposedly
+modest houses have 6/13, 4/10, 14/19 and 13/28 Record answers that are Omit or
+Embellish. Their proof debt is real, but the experimental label is wrong.
+The docket now answers one ordinary decision at a time, allowing the policy
+to answer its newly created Record. Actual Record/Omit/Embellish counts are
+reported, and a mislabeled policy makes the verdict fail.
+
+The instrument also gains a passive scalar receipt from `dealMatch` itself:
+the real outside room, budget and cards, before an answer can withdraw a hand.
+This counts all dealt hands, including the unattended policy's hands, and
+separates a budget restriction from a shortage of available recipes. The old
+unattended column reported zero hands because its counter lived only inside
+the manual policy. Declines now come from actual decision logs; cousin
+choices come from the act that records an available outside alternative.
+The outside slots withheld and narrowed hands are reported per carriage and
+per Bearing bin, without a new population threshold.
+
+The reported rung refusal is now attested minus substantiated. The previous
+column copied nominal proof-debt capacity, which could claim several rungs
+were lost even when the book attested none. The unchanged game reading still
+owns the actual debt, truth cap and ending; this corrects its measurement.
+
+Saved two-choice dockets test both policies across eight seeds each. Restoring
+the old catch-all makes fifteen of those sixteen cases fail, and the source
+is restored exactly afterwards. A built-state saved-book test follows an
+actual Embellish act to its dated 25-year echo, keeps carriage at zero before
+50 years, and reaches the final proof reading; the honest book keeps its
+attested rung. Match-receipt controls preserve the complete saved world,
+dealt cards and RNG at both budget extremes. The corrected-policy campaign
+sweep follows this checkpoint. All game odds, proof prices, warning strength,
+and the 50-year memory delay remain fixed while that contrast is measured.

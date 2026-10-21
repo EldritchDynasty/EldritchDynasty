@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest';
+import { loadContent } from '@ed/content';
+import { EventTemplateS } from '@ed/schema';
 import {
-  SPREAD_FLOOR, SPREAD_MIN_RUNS, campaignForYears, verdictOver, type BearingRun, type Carriage,
+  SPREAD_FLOOR, SPREAD_MIN_RUNS, campaignForYears, resolveBearingDocket, verdictOver, type BearingRun, type Carriage,
 } from './tools/bearing-gate.js';
 import { campaignDef } from './campaign.js';
+import { bootstrap } from './sim.js';
+import { loadGame, saveGame } from './save.js';
+import { queueChoice } from './events/decisions.js';
+import { bearingOf, echoBearing, ECHO_AFTER, REMEMBERED_AFTER } from './bearing.js';
+import { readTheChronicle } from './ending.js';
+import { chronicleEntryId } from './world.js';
 
 /**
  * ISSUE #45'S ACCEPTANCE, AS A JUDGMENT.
@@ -52,6 +60,9 @@ function run(
     cardsPerHand: 2.5,
     handsDeclined: 10,
     cousinsTaken: 5,
+    outsideCardsWithheld: 0,
+    narrowedHands: 0,
+    recordChoices: { record: 0, omit: 0, embellish: 0 },
     bestRung: 'adept',
     bestRungIndex,
     attestedRungIndex: bestRungIndex,
@@ -76,6 +87,15 @@ function batch(rungAt: (meanCarriage: number) => number): BearingRun[] {
 }
 
 describe('the bearing gate', () => {
+  it('refuses a policy contrast whose modest column embellished', () => {
+    const runs = batch((carriage) => carriage < 0.5 ? 1 : 3);
+    expect(verdictOver(runs).ok).toBe(true);
+    runs.find((row) => row.carriage === 'modest')!.recordChoices.embellish = 1;
+    const result = verdictOver(runs);
+    expect(result.ok).toBe(false);
+    expect(result.lines.join('\n')).toMatch(/Records against their declared carriage policy/);
+  });
+
   it('uses the real shipped campaign profile at each shipped term', () => {
     expect(campaignForYears(campaignDef('short').years)).toBe('short');
     expect(campaignForYears(campaignDef('long').years)).toBe('long');
@@ -274,5 +294,104 @@ describe('the bearing gate', () => {
       expect(SPREAD_MIN_RUNS % 3, 'the bins are thirds; a batch that does not divide is a ragged bin')
         .toBe(0);
     });
+  });
+});
+
+describe('the Bearing policy answers Records created by choices', () => {
+  const events = [0, 1].map((index) => EventTemplateS.parse({
+    id: `bearing_policy_probe_${index}`,
+    title: 'A Receipt at the Table',
+    tier: 'family', frequency: 'rare',
+    purposes: ['force_record_choice', 'change_standing', 'worldbuild_through_action'],
+    body: 'The steward puts a receipt on the table.',
+    interaction: {
+      kind: 'choice',
+      choices: [
+        { id: 'pay', label: 'Pay the crown.', outcomes: [{
+          id: 'paid', weight: 100, text: 'The crown is paid.', effects: [{ kind: 'treasury', delta: -1 }],
+        }] },
+        { id: 'refuse', label: 'Refuse the fee.', outcomes: [{
+          id: 'refused', weight: 100, text: 'The steward leaves without the crown.', effects: [{ kind: 'respect', delta: -1 }],
+        }] },
+      ],
+    },
+    record: {
+      subject: 'the receipt',
+      options: {
+        record: { chronicle: 'The steward brought a receipt to the table.' },
+        omit: { chronicle: null },
+        embellish: {
+          chronicle: 'The steward gave the house two crowns.',
+          discrepancy: { id: `bearing_policy_lie_${index}`, severity: 'minor', provableBy: ['the_church'] },
+        },
+      },
+    },
+  }));
+  const bundle = loadContent();
+  const source = { ...bundle, events: [...bundle.events, ...events] };
+
+  for (const carriage of ['modest', 'proud'] as const) {
+    it.each([0, 1, 2, 3, 4, 5, 6, 7])(`${carriage}: keeps control of both saved choices' Records, seed %i`, (seed) => {
+      const ctx = bootstrap(source, seed, 1042);
+      for (const event of events) queueChoice(ctx, event, event.body, {}, []);
+      expect(ctx.world.pendingDecisions.map((decision) => decision.kind)).toEqual(['choice', 'choice']);
+      const loaded = loadGame(saveGame(ctx), source);
+
+      resolveBearingDocket(loaded, seed, carriage);
+
+      const records = loaded.world.decisionLog.filter((decision) => decision.kind === 'record');
+      expect(records.map((record) => record.option)).toEqual(carriage === 'proud'
+        ? ['embellish', 'embellish'] : ['record', 'record']);
+      expect(loaded.world.pendingDecisions).toHaveLength(0);
+      expect(loaded.world.bearing.acts.filter((act) => act.kind === 'wrote_it_larger'))
+        .toHaveLength(carriage === 'proud' ? 2 : 0);
+      for (const index of [0, 1]) {
+        expect(loaded.world.discrepancies.has(`bearing_policy_lie_${index}`)).toBe(carriage === 'proud');
+      }
+    });
+  }
+
+  it('carries a saved policy act through its dated echo to the final proof reading', () => {
+    const claims = Array.from({ length: 6 }, (_, index) => {
+      const event = structuredClone(events[0]!);
+      event.id = `bearing_chain_${index}` as typeof event.id;
+      event.record!.options.embellish.discrepancy.id = `bearing_chain_lie_${index}`;
+      return event;
+    });
+    const chainSource = { ...bundle, events: [...bundle.events, ...claims] };
+    for (const carriage of ['modest', 'proud'] as const) {
+      const ctx = bootstrap(chainSource, 1809, campaignDef('short').startYear, 'short');
+      ctx.world.ascension.best = 'adept';
+      ctx.world.ascension.rung = 'adept';
+      ctx.world.chronicle.push({
+        id: chronicleEntryId(ctx), year: ctx.world.year, weight: 'page',
+        text: 'The house reached Adept.', named: true, rung: 'adept',
+      });
+      for (const event of claims) queueChoice(ctx, event, event.body, {}, []);
+      resolveBearingDocket(ctx, 1809, carriage);
+      const loaded = loadGame(saveGame(ctx), chainSource);
+      const act = loaded.world.bearing.acts.find((entry) => entry.kind === 'wrote_it_larger');
+      expect(bearingOf(loaded).carriage).toBe(0);
+      loaded.world.year += ECHO_AFTER;
+      echoBearing(loaded);
+      expect(bearingOf(loaded).carriage).toBe(0);
+      if (carriage === 'proud') {
+        expect(act?.page).toBeDefined();
+        expect(loaded.world.chronicle.find((page) => page.echoFrame?.startsWith('bearing:wrote_it_larger'))?.cause)
+          .toEqual({ year: ctx.world.year, page: act!.page });
+      } else expect(act).toBeUndefined();
+      loaded.world.year = ctx.world.year + REMEMBERED_AFTER;
+      expect(bearingOf(loaded).carriage > 0).toBe(carriage === 'proud');
+      loaded.world.year = campaignDef('short').endYear;
+      const reading = readTheChronicle(loaded);
+      expect(reading.attested).toBe('adept');
+      if (carriage === 'proud') {
+        expect(reading.unsupportable).toBe(6);
+        expect(reading.substantiated).not.toBe('adept');
+      } else {
+        expect(reading.unsupportable).toBe(0);
+        expect(reading.substantiated).toBe('adept');
+      }
+    }
   });
 });

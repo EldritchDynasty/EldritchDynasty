@@ -8,7 +8,7 @@ import {
   beget, bootstrap, genomeOf, hashSeed, loadGame, makeRng, marry, newGame, order, phase, place, runYears,
   saveGame, testRng, testWorld,
 } from '@ed/core';
-import type { MatchCard, SimCtx } from '@ed/core';
+import type { MatchCard, MatchOfferObservation, SimCtx } from '@ed/core';
 import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 import { canonical } from './save.js';
 import { coreMessageAddress } from './messages.js';
@@ -17,6 +17,36 @@ import { coreMessageEntries } from './tools/core-message-audit.js';
 import { plainEnglishCoreWorkItems } from './tools/string-audit.js';
 
 const bundle = loadContent();
+
+describe('a Match deal exposes its actual outside budget without changing the deal', () => {
+  it.each([0, 1])('preserves the complete save and RNG at a reading of %i', (score) => {
+    const make = () => {
+      const ctx = testWorld(bundle, 1809);
+      ctx.world.bearing.score = score;
+      const subject = place(ctx, { sex: 'male', age: 20, name: 'Offer Observer Son' });
+      return { ctx, subject, rng: makeRng(1809) };
+    };
+    const observed = make();
+    const plain = make();
+    const receipts: MatchOfferObservation[] = [];
+    observed.ctx.observeMatchOffer = (receipt) => { receipts.push(Object.freeze(receipt)); };
+
+    const offer = dealMatch(observed.ctx, observed.subject, observed.rng);
+    const control = dealMatch(plain.ctx, plain.subject, plain.rng);
+
+    expect(offer).toEqual(control);
+    expect(canonical(saveGame(observed.ctx))).toBe(canonical(saveGame(plain.ctx)));
+    expect(observed.rng.next()).toBe(plain.rng.next());
+    expect(receipts).toHaveLength(1);
+    const receipt = receipts[0]!;
+    expect(receipt.subject).toBe(offer.subject.id);
+    expect(receipt.availableCards).toBe(offer.cards.filter((card) => card.available).length);
+    expect(receipt.householdCards).toBe(offer.cards.filter((card) => card.kind === 'household').length);
+    expect(receipt.outsideCards).toBe(offer.cards.filter((card) => card.kind === 'outsider').length);
+    if (score === 0) expect(receipt.outsideBudget).toBe(receipt.outsideRoom);
+    else expect(receipt.outsideBudget).toBe(receipt.householdCards ? 0 : 1);
+  });
+});
 
 describe('prospective character-template prose on Match cards (#646)', () => {
   const original = bundle.characterTemplates.find((template) => template.id === 'suitor_common_stock')!;
