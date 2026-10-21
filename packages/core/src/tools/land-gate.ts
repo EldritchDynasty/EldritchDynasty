@@ -20,6 +20,10 @@ import { landRiskRoutes } from './land-routes.js';
 import { expectMean, expectRate } from '../testing.js';
 import { END_YEAR, START_YEAR } from '../campaign.js';
 import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
+import {
+  gatePartitionWorkerCount, partitionGateInputs, reduceGatePartitions, runGatePartitionsInWorkers,
+  type GatePartition, type GatePartitionResult,
+} from './gate-partition.js';
 
 type Source = ContentBundle | Content;
 export interface LandGateResult { ok: boolean; lines: string[] }
@@ -43,6 +47,8 @@ export interface LandGateResult { ok: boolean; lines: string[] }
 // full 500-year campaign, and every route this gate checks clears 3+ SE
 // against the combined ninety.
 // The exact seed corpus lives in gate-registry.ts so #441 proves the sample it executes.
+// #1810 retains these ninety and adds a fixed, unfiltered sequence through512.
+// Bounded workers return raw rows; the unchanged25%/2SE claim judges the whole batch.
 
 export interface HoldingPortrait {
   acres: number;
@@ -231,9 +237,23 @@ function declaredRoutes(source: Source): { acquisition: string[]; loss: string[]
   return { acquisition: [...acquisition], loss: [...loss] };
 }
 
+/** Raw observations only: a worker never judges a smaller statistical batch. */
+export function runLandGatePartition(
+  source: ContentBundle,
+  partition: GatePartition<number>,
+  years: number,
+): GatePartitionResult<LandRun> {
+  return {
+    id: partition.id,
+    observations: partition.items.map(({ index, input }) => ({
+      index, value: runLand(source, input, years),
+    })),
+  };
+}
+
 export function gateLand(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number } = {},
+  opts: { seeds?: number[]; years?: number; workers?: number } = {},
 ): LandGateResult {
   const content = indexContent(source);
   const lines: string[] = [];
@@ -245,7 +265,16 @@ export function gateLand(
   const seeds = opts.seeds ?? [...config.seeds];
   const years = opts.years ?? config.years;
   if (seeds.length < 8) return { ok: false, lines: [`LAND BATCH needs at least 8 seeds; got ${seeds.length}`] };
-  const runs = seeds.map((seed) => runLand(content, seed, years));
+  const plan = partitionGateInputs(seeds, opts.workers ?? gatePartitionWorkerCount());
+  const results = plan.length === 1
+    ? plan.map((partition) => runLandGatePartition(content.bundle, partition, years))
+    : runGatePartitionsInWorkers<number, LandRun>(plan, {
+      moduleUrl: import.meta.url,
+      exportName: 'runLandGatePartition',
+      argsBefore: [content.bundle],
+      argsAfter: [years],
+    });
+  const runs = reduceGatePartitions(plan, results);
   const routes = declaredRoutes(content);
   let ok = true;
   const judge = (f: () => number, label: string) => {

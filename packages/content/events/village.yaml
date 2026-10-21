@@ -301,46 +301,44 @@ events:
     slots:
       HEAD: { role: head }
     body: >-
-      The stakes are being driven along the edge of Wick Common. The steward
-      has worked out what a hundred acres of fenced grazing would feed, and
-      has left a place on his plan for a gate the village could not open.
-      Generations of the household have grazed animals there beside their
-      neighbours, with nothing in writing to say which right came first.
-      The stakes are still loose.
+      Wick Common is on the house's roll for grazing, and on the villagers' memory for the
+      same thing. The steward has planned a fence with one gate, for which the house alone
+      would keep a key. He has also drawn up a certificate saying Wick agreed at a parish
+      meeting. It needs the Head's seal. The stakes are still loose.
     interaction:
       kind: choice
       choices:
         - id: hedge_it
-          label: Close the common. Keep the grazing for the house.
+          label: "Fence our grazing. Seal that Wick has agreed."
           outcomes:
             - id: hedged
               weight: 100
               tags: [hard]
               text: >-
-                Thorn and ditch go up around the common. The new gate holds
-                the house's mark, and the village goes round it with its
-                beasts. The people who remember carrying their own hurdles
-                through that ground now have to ask a servant for the key.
-                The hedge stays.
+                The gate takes the house's mark, and the steward puts a larger yield
+                against the common on his roll. {HEAD} seals a certificate saying Wick
+                assented at a parish meeting. No such meeting was held. The village keeps
+                its own reckoning.
               effects:
-                # #1810: an actual holding; land income and the existing
-                # delayed Bearing readers carry the price of encroachment.
-                - { kind: land, op: encroach, parcel: wick_common }
-                - { kind: rumour, op: seed, id: rumour_the_forty_acres, accuracy: 0.7 }
+                # #1810: develop the existing grazing; Wick Common is already
+                # held at founding. The false assent has an institutional reader.
+                - {kind: land, op: restore, parcel: wick_common, magnitude: 2}
+                - {kind: discrepancy, op: create, id: the_common_enclosure_assent, severity: major, provableBy: [commons, the_church]}
+                - {kind: rumour, op: seed, id: rumour_the_forty_acres, accuracy: 0.7}
+                - {kind: chronicle, text: '{HEAD} sealed a certificate falsely claiming that Wick had agreed to the enclosure of its common grazing.'}
         - id: leave_the_common
-          label: Take down the hedge. Give up our claim to the common.
+          label: "Walk the boundary with Wick. Leave this enclosure unbuilt."
           outcomes:
             - id: left_open
               weight: 100
               text: >-
-                The stakes are pulled and the older thorn is cut where it
-                crosses the track. The house's animals go out with the
-                village's, and the people who work in both places no longer
-                have to choose which gate to use. The ground comes off the
-                steward's reckoning.
+                The Head spends a wet week walking the proposed line with the tenants and
+                pulling the loose stakes. The ditch stays uncut. The people who work at
+                both hall and village can use the track together, and remember who came out
+                to mark it with them. The cough comes home with the Head.
               effects:
-                - { kind: land, op: seize, parcel: wick_common }
-                - { kind: relationship, from: household, to: head, sentiment: 8 }
+                - {kind: attribute, target: head, attr: health, delta: -2}
+                - {kind: relationship, from: household, to: head, sentiment: 8}
 
   - id: the_adder_on_the_high_pasture
     title: A Fortnight of Fever
@@ -568,31 +566,30 @@ proseVariants:
     plainenglish: >-
       A Hedge Across the Village Common
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].body"
-    of: "19e500a7bc81bacb"
+    of: "3152bc52312c7dfe"
     plainenglish: >-
-      Stakes are being driven around Wick Common. The steward has calculated what a hundred
-      acres of fenced grazing would feed and has planned a gate the village could not open.
-      The household and the village have grazed animals there for generations, without
-      written proof of whose right came first. The stakes can still be pulled out.
+      The house and the villagers both have grazing rights on Wick Common. The steward
+      proposes fencing it for the house's exclusive use. He has prepared a certificate
+      falsely saying that Wick agreed at a parish meeting. The Head must decide whether to
+      seal it. The fence has not been built.
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].label"
-    of: "7281f5732a01f7af"
-    plainenglish: "Enclose the common for the house."
+    of: "629ba7b6aedc40c2"
+    plainenglish: "Fence the common for the house and sign the false certificate of consent."
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].outcomes[id=hedged].text"
-    of: "52f440e9e2235165"
+    of: "45dda375cc9bf039"
     plainenglish: >-
-      The hedge goes up and the gate carries the house mark. Villagers have to take their
-      animals around it. People who used to carry their hurdles across the ground must now
-      ask a servant for the key. The hedge stays.
+      Fencing increases the yield from the house's existing common holding. {HEAD} signs a
+      certificate saying Wick agreed at a parish meeting that never took place. The village
+      has records that can disprove it.
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].label"
-    of: "3ccc4aada2b85951"
-    plainenglish: "Remove the hedge and give up the house claim to the common."
+    of: "90c99973116d562f"
+    plainenglish: "Spend a week marking the boundary with Wick and leave this enclosure unbuilt."
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=leave_the_common].outcomes[id=left_open].text"
-    of: "874089dcdbc5dce0"
+    of: "72adf4797856f9f5"
     plainenglish: >-
-      The stakes are pulled and any older thorn across the track is cut away. The household
-      animals graze with the village animals again. People who work for the house and live
-      in the village no longer have to choose sides. The steward stops counting the common
-      as house land.
+      The Head spends a wet week walking the proposed boundary with the tenants and removing
+      the loose stakes. The track stays open. The household appreciates the work, but the
+      Head loses Health to the cold and rain.
   - address: "content:events/village.yaml#events[id=the_adder_on_the_high_pasture].title"
     of: 3ce13db4b7b4c138
     plainenglish: >-
@@ -625,3 +622,7 @@ proseVariants:
       The physician arrives after two days and charges three crowns. He bleeds the unbitten arm, but
       correctly treats the leg. Recovery still takes fourteen days. His treatment seems worth the
       price, though nobody can explain why. The graziers continue talking about the beer.
+
+  - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].outcomes[id=hedged].effects[3].text"
+    of: "dffa061bd00ebe97"
+    plainenglish: "{HEAD} falsely certified that Wick had agreed to the enclosure of its common grazing."

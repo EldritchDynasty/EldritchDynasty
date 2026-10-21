@@ -13195,3 +13195,47 @@ an eligible cast. Its other three tails have insufficient expected mass to
 judge. Those findings remain visible alongside the green blocking witness
 gate. They do not justify capacity-aware casting or changing paid rite odds.
 PR1857 remains draft while the land and attention checks are resolved.
+
+## 2026-10-21 — #1810: correct the owned common and power the coverage samples
+
+The first enclosure draft used encroach on Wick Common, but that parcel is
+already in the founding estate. The effect usually did nothing; its claimed
+new acreage and delayed encroachment bill were therefore incorrect. This
+candidate instead raises the existing holding's yield by2 and seals a specific
+false certificate of Wick's consent. The major discrepancy is provable by the
+commons and Church; the existing chapter-house account reader can prove it.
+The alternative costs the current Head2Health for a wet week walking the
+boundary with tenants, and improves household confidence. It makes no claim
+to erase earlier deeds. Three execution tests cover a saved income increase
+without invented acreage, the saved certificate's later institutional proof,
+and the personal price with and without a previously-held common parcel.
+All363 execution witnesses passed before the runtime replacement; restored
+checks will be run again. Original/Plain variants are paired.
+
+The unchanged90-house land check lacked two-SE margin for the new pannage
+and wet-sowing prices. A fixed diagnostic kept all90 and appended42103+37i,
+without filtering survival. At256houses pannage80/256 cleared2.2SE but wet
+sowing78/256 cleared only1.9SE. At512houses both routes reached151/512,
+clearing2.2 and2.0SE respectively. The old enclosure still had under2SE
+margin and its return route reached just1/512; those drafts are superseded
+by the correction to an already-owned holding above. The default land sample
+now keeps the same512 fixed houses and the same25%/two-SE requirement.
+It uses the existing bounded partition runner: workers return raw observations
+and one ordered reducer feeds the unchanged statistical verdict. A parity
+test compares complete serial/worker holding observations, including Sets.
+
+The original25-house attention sample passed eight of nine assertions. Its
+Short within-Age category-repeat mean was6.3192%, above the unchanged5%
+floor but only by1.68485SE. The helper prescribed about43houses. The test
+therefore preserves all25 and appends the remaining seeds in ascending order
+from901 until48 distinct houses are included. Both terms and every original
+floor/ceiling stay fixed. No survival filtering is introduced.
+
+The execution environment was replaced at05:08UTC. Published commits and
+PR1859's completed native landing survived; local uncommitted files and raw
+measurement artifacts did not. This correction was restored from the recorded
+patch, and the branch was rebased onto main65ee7996 with the published
+package/tool tree otherwise identical. The earlier numbers are historical
+checkpoints. Fresh acceptance will use a complete new before/after comparison
+on public commits, plus the new512-house land check,48-house attention check,
+and all merge-blocking gates. The PR remains draft; no guard has been lowered.

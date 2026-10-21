@@ -18,7 +18,7 @@ import {
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool, selectEvents } from './selection.js';
-import { grantParcel, heldAcres, seizeParcel } from '../land.js';
+import { grantParcel, heldAcres, landIncome, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
 import { campaignDef } from '../campaign.js';
 import { missingPlainEnglish, proseForEventBody, setProseMode, setProseVariants } from '../prose.js';
@@ -3725,6 +3725,46 @@ describe('cadet obligations and named prices in the final worklist (#1810)', () 
     expect(ctx.world.respect).toBe('regarded');
     const loaded = loadGame(saveGame(ctx), content);
     expect(loaded.world.rumours.has('rumour_rye_at_the_high_board')).toBe(true);
+  });
+});
+
+describe('walking the common boundary has a real personal price (#1810)', () => {
+  it('improves the existing holding and leaves the saved false assent open to proof', () => {
+    const ctx = fixture(181057);
+    const acres = heldAcres(ctx);
+    const income = landIncome(ctx);
+    const sealed = executeOutcomeWitness(ctx, content.mustEvent('the_hedge_across_the_common'), {
+      choiceId: 'hedge_it', expectedOutcomeId: 'hedged', rng: makeRng(181058),
+    });
+    expect(sealed.ok, sealed.reason).toBe(true);
+    const loaded = loadGame(saveGame(ctx), content);
+    expect(heldAcres(loaded)).toBe(acres);
+    expect(landIncome(loaded)).toBeGreaterThan(income);
+    expect(loaded.world.discrepancies.get('the_common_enclosure_assent')?.state).toBe('open');
+    loaded.world.knowledge.add('knows_the_third_room');
+    loaded.world.respect = 'eminent';
+    const read = executeOutcomeWitnessRaw(loaded, content.mustEvent('the_old_list_reaches_the_cellar'), {
+      choiceId: 'answer_the_account', expectedOutcomeId: 'answered', rng: makeRng(181059),
+    });
+    expect(read.ok, read.reason).toBe(true);
+    expect(loaded.world.discrepancies.get('the_common_enclosure_assent')?.state).toBe('proven');
+    expect(loaded.world.respect).toBe('regarded');
+  });
+  it.each([false, true])('charges the saved Head even when an earlier common holding is %s', (alreadyHeld) => {
+    const ctx = fixture(181055);
+    if (alreadyHeld) grantParcel(ctx, 'wick_common');
+    else seizeParcel(ctx, 'wick_common');
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'))!;
+    const health = head.acquired.health ?? 0;
+    const treasury = ctx.world.treasury;
+    const result = executeOutcomeWitness(ctx, content.mustEvent('the_hedge_across_the_common'), {
+      choiceId: 'leave_the_common', expectedOutcomeId: 'left_open', rng: makeRng(181056),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    const saved = loadGame(saveGame(ctx), content);
+    expect(saved.world.people.get(head.id)?.acquired.health).toBe(health - 2);
+    expect(saved.world.treasury).toBe(treasury);
+    expect([...saved.world.parcels.values()].some((parcel) => parcel.defId === 'wick_common')).toBe(alreadyHeld);
   });
 });
 
