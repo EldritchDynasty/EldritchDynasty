@@ -5,8 +5,26 @@ import {
   runYears, sellParcel, setRentsPolicy, testRng, testWorld, tickLandImprovements, tickLandRisks,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
+import { indexContent } from '@ed/schema';
+import { runLandGatePartition } from './tools/land-gate.js';
+import { partitionGateInputs, reduceGatePartitions, runGatePartitionsInWorkers } from './tools/gate-partition.js';
 
 const bundle = loadContent();
+
+describe('land gate partitions (#1810)', () => {
+  it('preserves complete ordered holding observations through isolated workers', () => {
+    const source = indexContent(bundle).bundle;
+    const plan = partitionGateInputs([901, 902, 903, 904], 2);
+    const serial = plan.map((partition) => runLandGatePartition(source, partition, 12));
+    const parallel = runGatePartitionsInWorkers(plan, {
+      moduleUrl: new URL('./tools/land-gate.ts', import.meta.url).href,
+      exportName: 'runLandGatePartition',
+      argsBefore: [source],
+      argsAfter: [12],
+    });
+    expect(reduceGatePartitions(plan, parallel)).toEqual(reduceGatePartitions(plan, serial));
+  });
+});
 const SEEDS = [
   1042, 77, 909, 5150, 2201, 6600, 3311, 8842, 4455, 1919,
   10000, 10791, 11582, 12373, 13164, 13955, 14746, 15537, 16328, 17119,

@@ -46,6 +46,9 @@ const LAND_SEEDS = [
   70545, 70579, 70613, 70630, 70647, 70664, 70698, 70766, 70800, 70817,
   70834, 70851, 70868, 70885, 70936, 70953, 70970, 70987, 71021, 71055,
   71072, 71089, 71106, 71123, 71140, 71157, 71174, 71191, 71208, 71225,
+  // #1810: retain the legacy90; add a fixed, unfiltered sequence through512.
+  // The ordinary land prices need this sample for the unchanged25%/2SE floor.
+  ...Array.from({ length: 422 }, (_, i) => 42103 + 37 * i),
 ] as const;
 
 /**

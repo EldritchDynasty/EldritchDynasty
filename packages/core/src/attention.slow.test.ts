@@ -63,10 +63,18 @@ describe('what the player is asked across A Long Line', () => {
   // way without the marginal share (65% choice, comfortably under the
   // per-seed ceiling); this is the reshuffle issue #113 describes, not a
   // regression in what the game asks.
-  const SEEDS = [
+  const ORIGINAL_SEEDS = [
     901, 902, 903, 904, 905, 913, 914, 916, 918, 919, 920, 921, 924, 927, 928, 930,
     931, 932, 934, 940, 941, 942, 943, 947, 951,
   ];
+  // #1810: preserve the original25 and extend blindly to48 distinct houses.
+  // The Short category-repeat floor still holds at25, but only by1.7SE;
+  // the unchanged helper prescribes about43 houses. No survival filtering.
+  const SEEDS = [...ORIGINAL_SEEDS];
+  for (let seed = 901; SEEDS.length < 48; seed++) {
+    if (!SEEDS.includes(seed)) SEEDS.push(seed);
+  }
+
   /**
    * A SHORT LINE IS 300 YEARS (#66), AND IT IS A DIFFERENT PRODUCT-LOAD
    * QUESTION FROM THE SAME GAME. Read off the campaign definition, and PLAYED
