@@ -13239,3 +13239,69 @@ package/tool tree otherwise identical. The earlier numbers are historical
 checkpoints. Fresh acceptance will use a complete new before/after comparison
 on public commits, plus the new512-house land check,48-house attention check,
 and all merge-blocking gates. The PR remains draft; no guard has been lowered.
+
+## 2026-10-21 — #1810: corrected public source passes the fresh paired replay
+
+The complete replacement measurement compares public main
+`65ee79962733143733f6e087ad017f88f47a0ed2` with corrected draft
+`bc3e17c1d2e817765239db78d78d30a3c04b46d9`. Both clean frozen checkouts
+played every real Short campaign from 901 through 996, paired consecutively
+into 48 pairs. Both processes exited0, at 05:36:00 and 05:36:13 UTC respectively.
+Eight exact canonical choice-stream and complete density-field observer
+controls pass in each arm. The shape mapping and density instrument retain
+the SHA256 values recorded above.
+
+| Reading | Before | Corrected draft | Retained guard |
+| --- | ---: | ---: | ---: |
+| Familiar choices across paired runs | 1,162/3,572 (32.5308%) | 978/3,675 (26.6122%) | at most 27.1% |
+| Leading category shape | 434/7,050 (6.1560%) | 318/7,178 (4.4302%) | at most 4.7% |
+| Top-ten shapes containing money | 9/10 | 7/10 | reduction from fresh baseline |
+| Mean choices per generation | 7.30833 | 7.32743 | density preserved |
+
+The leading shape remains `[money | money+record]`, carried by 36 events
+before and 32 after. Its heaviest contributors after the rewrite are
+`somewhere_quiet_to_be_old` (68 fires), `what_he_did_with_the_key` (35), and
+`the_tinker_and_the_third_price` (25). The old
+`[lasting+money | money]` shape falls from 430 to 212 choices. Two distinct
+non-money shapes now enter the top ten: `[lasting | lasting+relationship]`
+at 225/7,178 and `[lasting+record | relationship]` at 188/7,178. The largest
+remaining event contributors to paired familiarity are `the_tally_stick_split`
+(12), `the_grey_in_the_upper_fold` (11), `what_a_warranted_man_costs` (11),
+`a_share_called_in_sarrow` (10), and `the_drovers_bring_the_price` (10).
+These are observations from the unchanged canonical mapping, not renamed
+categories. Complete rows and process completions are retained in
+`scratch/eldritch-1810-recovered-before48.json`,
+`scratch/eldritch-1810-corrected-after48.json`, and their paired summary;
+compressed copies are also backed up outside the replaceable execution VM.
+
+The exact corrected default 512-house land invocation exits0. Pannage reaches
+150/512 houses (2.1 SE above the unchanged25% floor); wet sowing reaches155/512
+(2.4 SE). Every declared acquisition/loss route, holding-record reader, acreage
+loss and treasury guard passes. The complete measurement takes 496.316s on
+this two-CPU workspace while the paired campaigns run alongside it; this is
+local verification, not a replacement hosted duration baseline.
+
+The first attention extension unnecessarily applied 48 houses to every guard.
+It passed eight assertions but exposed an existing early-ended-line outlier:
+seed 936 has 18 choice prompts out of19 total across three generations. An
+actual before/after Long replay confirms exactly the same counts in both
+sources. The correction therefore extends only the underpowered Short
+category-repeat claim to 48 fixed houses. It keeps every original 25 and blindly
+appends missing seeds, including936; every other guard keeps its established
+25-house sample. All nine assertions now pass, with every floor and ceiling
+unchanged. The new repeat sample is not filtered by survival or outcome.
+
+Hosted fast CI also exposed a fixture assumption: its "plain choice" helper
+excluded inline follow-ups and arc membership, but allowed schedule/arc
+effects. One rewritten scene legitimately carries such a callback, so the
+test's negative callback assertion was no longer about a plain choice. The
+helper now excludes those effects too; all 179 schema-rule tests pass. No
+production audit rule or callback was removed. Restored checks also pass 363
+execution witnesses,92 gate/proof tests, complete serial/worker land parity,
+core types, and 47-rule validation with zero errors and three existing warnings.
+
+The full 800-run fire-rate/all-outcome telemetry and twelve blocking gates are
+still running on the frozen corrected source. The PR stays draft until those
+results are assessed and the final landing preflight passes. These new replay,
+land and attention passes do not turn the earlier telemetry finding into a
+pass.

@@ -63,16 +63,19 @@ describe('what the player is asked across A Long Line', () => {
   // way without the marginal share (65% choice, comfortably under the
   // per-seed ceiling); this is the reshuffle issue #113 describes, not a
   // regression in what the game asks.
-  const ORIGINAL_SEEDS = [
+  const SEEDS = [
     901, 902, 903, 904, 905, 913, 914, 916, 918, 919, 920, 921, 924, 927, 928, 930,
     931, 932, 934, 940, 941, 942, 943, 947, 951,
   ];
-  // #1810: preserve the original25 and extend blindly to48 distinct houses.
+  // #1810: extend only the underpowered Short shape-repeat claim to48 houses.
   // The Short category-repeat floor still holds at25, but only by1.7SE;
-  // the unchanged helper prescribes about43 houses. No survival filtering.
-  const SEEDS = [...ORIGINAL_SEEDS];
-  for (let seed = 901; SEEDS.length < 48; seed++) {
-    if (!SEEDS.includes(seed)) SEEDS.push(seed);
+  // the unchanged helper prescribes about43 houses. Keep every original seed,
+  // append blindly, and preserve the other guards' established25-house sample.
+  // No survival filtering:936 remains in this repeat sample even though its
+  // early-ended line has18/19 choices both before and after the content change.
+  const SHORT_REPEAT_SEEDS = [...SEEDS];
+  for (let seed = 901; SHORT_REPEAT_SEEDS.length < 48; seed++) {
+    if (!SHORT_REPEAT_SEEDS.includes(seed)) SHORT_REPEAT_SEEDS.push(seed);
   }
 
   /**
@@ -90,11 +93,16 @@ describe('what the player is asked across A Long Line', () => {
 
   let runs: { seed: number; b: DensityRun }[] = [];
   let short: DensityRun[] = [];
+  let shortShapeRepeat: DensityRun[] = [];
   let shares: { seed: number; of: (kind: string) => number }[] = [];
 
   beforeAll(() => {
     runs = SEEDS.map((seed) => ({ seed, b: budget(seed, CAMPAIGN_YEARS) }));
     short = SEEDS.map((seed) => budget(seed, SHORT_YEARS));
+    shortShapeRepeat = [
+      ...short,
+      ...SHORT_REPEAT_SEEDS.slice(SEEDS.length).map((seed) => budget(seed, SHORT_YEARS)),
+    ];
     shares = runs.map(({ seed, b }) => {
       const total = b.choices + b.matches + b.records + b.names;
       const count: Record<string, number> = {
@@ -317,7 +325,7 @@ describe('what the player is asked across A Long Line', () => {
 
   for (const [term, get] of [
     ['a 500-year Long Line', () => runs.map(({ b }) => b.shapeRepeat.category.age)],
-    ['a 300-year Short Line', () => short.map((b) => b.shapeRepeat.category.age)],
+    ['a 300-year Short Line', () => shortShapeRepeat.map((b) => b.shapeRepeat.category.age)],
   ] as const) {
     it(`keeps repeated interaction shapes bounded inside each Age across ${term}`, () => {
       expectMean({ values: get(), floor: SHAPE_REPEAT_AGE.floor, what: `category-shape repeat within Age, ${term}` });

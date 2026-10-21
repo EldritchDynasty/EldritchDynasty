@@ -2055,7 +2055,8 @@ describe('choices/consequence', () => {
 
   /**
    * A plain player choice: two or more options, no arc anywhere near it, no
-   * inline follow-up, and a first option that does something that lasts.
+   * inline or scheduled follow-up, no arc effects, and a first option that
+   * does something that lasts.
    */
   const plain = (b: ContentBundle): Ev => {
     const e = b.events.find((x) => x.tier !== 'frame'
@@ -2063,7 +2064,8 @@ describe('choices/consequence', () => {
       && x.interaction.decidedBy === 'player'
       && !x.arc
       && !inAnyArc.has(String(x.id))
-      && choicesOf(x).every((c) => c.outcomes.every((o) => !o.next && !o.triggers))
+      && choicesOf(x).every((c) => c.outcomes.every((o) => !o.next && !o.triggers
+        && o.effects.every((f) => f.kind !== 'schedule' && f.kind !== 'arc')))
       && choicesOf(x)[0]!.outcomes.some((o) => o.effects.some((f) => f.kind === 'treasury' || f.kind === 'respect')));
     if (!e) throw new Error('the shipped content has no plain player choice to break');
     return e;
