@@ -13486,3 +13486,61 @@ the old catch-all fails 15/16 saved-policy regressions. Game odds, all
 ending constraints, `WARNING_FLOOR=0.2`, proof prices, and
 `REMEMBERED_AFTER=50` stay fixed. There is no new game state, on-the-day tax,
 humility control, translated prose, or player-facing flaw name.
+
+## 2026-10-21 — #1823: a hosted fire-rate reference after the optimizations
+
+Four actual post-#1822 **scheduled main** nightlies now retain host evidence.
+All four fire-rate jobs pass the unchanged **800 runs × 500 years**, event
+reach and authored-vocabulary assertions. Their enclosing workflows also have
+unrelated slow-test failures; those workflows are not reported as green.
+The timing reference uses the three agreeing hosts below, rather than the
+fastest night or an average across different CPU classes.
+
+| Date | Scheduled run / successful fire-rate job | Exact main SHA | Gate seconds / wrapper total | Non-frame events | Artifact |
+| --- | --- | --- | --- | ---: | --- |
+| Oct 18 | [39109974745 / 117623821152](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/39109974745/job/117623821152) | `d673c362606b5047c8d810a348e110a54cc4c85c` | 905.202 / 905.203 | 493 | 12130721187 |
+| Oct 19 | [39226180630 / 117972962606](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/39226180630/job/117972962606) | `4be805b3337760b8350cf08d019fc4306c48e323` | 927.108 / 927.109 | 499 | 12176565049 |
+| Oct 21 | [39570505898 / 119123205190](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/39570505898/job/119123205190) | `af6ed40873b60224f75dc3a60e8cc764e477b7d7` | 959.478 / 959.479 | 502 | 12332532976 |
+
+Each of those artifacts records the same complete host block:
+
+```json
+{"cpuModel":"AMD EPYC 7763 64-Core Processor","logicalCpus":4,"node":"v22.23.3","platform":"linux","arch":"x64"}
+```
+
+The original job-log lines are, respectively:
+
+```text
+gate-duration: fire-rate 15.1m; committed 25.5m; 0.59x (limit 1.25x / 31.9m)
+gate-duration: fire-rate 15.5m; committed 25.5m; 0.61x (limit 1.25x / 31.9m)
+gate-duration: fire-rate 16.1m; committed 25.5m; 0.63x (limit 1.25x / 31.9m)
+```
+
+The shell guard includes process-launch overhead, so its rounded log line
+can differ from the structured gate-body stopwatch. Both the gate and wrapper
+measurements are retained above and exercised against the new reference.
+
+**Keep the other host visible.** Oct 20 scheduled main run
+[39394320348 / job 118533182603](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/39394320348/job/118533182603),
+SHA `e99904d94a6d92e9d46e0f6797874f3df64a7dd9`, artifact 12251851723,
+reaches 499 events in **561.401s** (wrapper 561.402s). Its host is
+`{"cpuModel":"AMD EPYC 9V45 96-Core Processor","logicalCpus":4,"node":"v22.23.3","platform":"linux","arch":"x64"}`.
+That is about **40% faster** than the agreeing 7763-host mean and exceeds
+the issue's 15% host-outlier criterion. It is excluded from the reference,
+with a third comparable host collected on Oct 21. No manual dispatch, branch
+run, or merge-group measurement is counted as one of the three.
+
+The three gate-body measurements average **930.596s = 15.5099 minutes**;
+wrapper totals average **930.597s**. Round to **930s = 15.5 minutes**, only
+**0.064% below** the measured mean, and set the measured date to 2026-10-21.
+The unchanged **1.25** factor now gives a **1162.5s = 19.375-minute** guard,
+instead of 1912.5s = 31.875 minutes. All three ordinary hosts clear it.
+
+The exact CI command, `node tools/gate-duration.mjs --check fire-rate <s>`,
+returns **exit 0** for each of **905.202, 905.203, 927.108, 927.109, 959.478,
+959.479** seconds with the new config. A hypothetical **1.5 × 930.596 =
+1395.894s** regression exceeds **1162.5s**; the same command returns
+**exit 1** and the existing exceeded-duration diagnostic. Thus a 50%
+slowdown is caught while the actual measurements pass. The 800×500 sample,
+all gate assertions, `maxFactor`, and every other lane reference are unchanged.
+This issue changes only `tools/gate-durations.json` and this evidence entry.
