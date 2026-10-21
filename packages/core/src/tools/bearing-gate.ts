@@ -95,7 +95,7 @@ import { bootstrap, clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { makeRng, hashSeed } from '../rng.js';
 import {
-  autoResolveAll, declineMatch, resolveMatch, resolveRecord,
+  autoResolveDecision, declineMatch, resolveMatch, resolveRecord,
   type PendingMatch, type PendingRecord,
 } from '../events/decisions.js';
 import { REMEMBERED_AFTER, WARNING_TAG, bearingOf } from '../bearing.js';
@@ -149,6 +149,12 @@ export interface BearingRun {
   handsDeclined: number;
   /** Hands answered by taking a household card with an outsider on the table. */
   cousinsTaken: number;
+  /** Outside card slots the actual deal budget withheld, not missing recipes. */
+  outsideCardsWithheld: number;
+  /** Dealt hands whose outside budget was narrower than their room. */
+  narrowedHands: number;
+  /** Actual Record answers, so the experiment's policy labels can be audited. */
+  recordChoices: { record: number; omit: number; embellish: number };
 
   // ── The ladder, which is what the acceptance is actually about ──────────
   /** The highest rung anybody of the house ever stood on. */
@@ -187,7 +193,7 @@ export interface BearingRun {
    * incapable of moving in the direction a conclusion was drawn about.
    */
   substantiatedRungIndex: number;
-  /** Rungs the reading would not take. Zero for a house with an honest book. */
+  /** Attested minus substantiated: actual rungs refused, not nominal proof-debt capacity. */
   rungsWithheld: number;
   /** Weighted standing lies at the term — what the book could not hold up. */
   unsupportable: number;
@@ -239,15 +245,11 @@ function answerMatch(
   ctx: SimCtx,
   pending: PendingMatch,
   carriage: Carriage,
-  tally: { hands: number; cards: number; declined: number; kin: number },
 ): void {
   const open = pending.cards.filter((c) => c.available);
-  tally.hands += 1;
-  tally.cards += open.length;
 
   if (!open.length) {
     declineMatch(ctx, pending.id);
-    tally.declined += 1;
     return;
   }
 
@@ -259,11 +261,9 @@ function answerMatch(
     const cousin = [...kin].sort((a, b) => b.kinship - a.kinship)[0];
     if (!cousin) {
       declineMatch(ctx, pending.id);
-      tally.declined += 1;
       return;
     }
-    if (resolveMatch(ctx, pending.id, cousin.id).ok) tally.kin += 1;
-    else { declineMatch(ctx, pending.id); tally.declined += 1; }
+    if (!resolveMatch(ctx, pending.id, cousin.id).ok) declineMatch(ctx, pending.id);
     return;
   }
 
@@ -271,8 +271,21 @@ function answerMatch(
   const outward = [...open].sort((a, b) => (a.kinship - b.kinship) || (a.id < b.id ? -1 : 1))[0]!;
   if (!resolveMatch(ctx, pending.id, outward.id).ok) {
     declineMatch(ctx, pending.id);
-    tally.declined += 1;
-  } else if (outward.person) tally.kin += 1;
+  }
+}
+
+/** A choice can enqueue a Record. Return it to the policy before answering another scene. */
+export function resolveBearingDocket(ctx: SimCtx, seed: number, carriage: Carriage): void {
+  const w = ctx.world;
+  let guard = 0;
+  while (w.pendingDecisions.length && guard++ < 200) {
+    const rng = makeRng(hashSeed(seed, 'bearing-batch', w.year, guard));
+    const match = w.pendingDecisions.find((d): d is PendingMatch => d.kind === 'match');
+    if (match) { answerMatch(ctx, match, carriage); continue; }
+    const record = w.pendingDecisions.find((d): d is PendingRecord => d.kind === 'record');
+    if (record) { resolveRecord(ctx, record.id, carriage === 'proud' ? 'embellish' : 'record'); continue; }
+    autoResolveDecision(ctx, w.pendingDecisions[0]!, rng);
+  }
 }
 
 export function playOnce(
@@ -289,7 +302,14 @@ export function playOnce(
   if (carriage === 'modest') w.marriagePolicy = 'out';
   if (carriage === 'proud') w.marriagePolicy = 'in';
 
-  const tally = { hands: 0, cards: 0, declined: 0, kin: 0 };
+  const offers = { hands: 0, cards: 0, withheld: 0, narrowed: 0 };
+  ctx.observeMatchOffer = (offer) => {
+    offers.hands += 1;
+    offers.cards += offer.availableCards;
+    const withheld = offer.outsideRoom - offer.outsideBudget;
+    offers.withheld += withheld;
+    if (withheld > 0) offers.narrowed += 1;
+  };
   let peakCarriage = 0;
   let carriageSum = 0;
   let sampledYears = 0;
@@ -301,20 +321,7 @@ export function playOnce(
     if (carriage !== 'unattended') holdTheCarriers(ctx, carriage === 'proud');
     stepYear(ctx, carriage === 'unattended');
 
-    let guard = 0;
-    while (w.pendingDecisions.length && guard++ < 200) {
-      const rng = makeRng(hashSeed(seed, 'bearing-batch', w.year, guard));
-
-      const match = w.pendingDecisions.find((d): d is PendingMatch => d.kind === 'match');
-      if (match) { answerMatch(ctx, match, carriage, tally); continue; }
-
-      // The Embellish is the loudest of the four acts and the only one the
-      // player takes with a pen. A modest house never reaches for it.
-      const record = w.pendingDecisions.find((d): d is PendingRecord => d.kind === 'record');
-      if (record) { resolveRecord(ctx, record.id, carriage === 'proud' ? 'embellish' : 'record'); continue; }
-
-      autoResolveAll(ctx, rng);
-    }
+    resolveBearingDocket(ctx, seed, carriage);
     clearNamingQueue(ctx);
 
     const read = bearingOf(ctx).carriage;
@@ -336,6 +343,10 @@ export function playOnce(
   // batch was measuring for.
   if (w.year >= def.endYear || w.ending) closeTheLedger(ctx);
   const reckoning = readTheChronicle(ctx);
+  const recordChoices = { record: 0, omit: 0, embellish: 0 };
+  for (const decision of w.decisionLog) {
+    if (decision.kind === 'record') recordChoices[decision.option] += 1;
+  }
 
   return {
     seed,
@@ -343,15 +354,18 @@ export function playOnce(
     peakCarriage,
     meanCarriage: sampledYears ? carriageSum / sampledYears : 0,
     finalCarriage: bearingOf(ctx).carriage,
-    handsDealt: tally.hands,
-    cardsPerHand: tally.hands ? tally.cards / tally.hands : 0,
-    handsDeclined: tally.declined,
-    cousinsTaken: tally.kin,
+    handsDealt: offers.hands,
+    cardsPerHand: offers.hands ? offers.cards / offers.hands : 0,
+    handsDeclined: w.decisionLog.filter((decision) => decision.kind === 'match' && decision.card === null).length,
+    cousinsTaken: w.bearing.acts.filter((act) => act.kind === 'took_the_cousin').length,
+    outsideCardsWithheld: offers.withheld,
+    narrowedHands: offers.narrowed,
+    recordChoices,
     bestRung: w.ascension.best,
     bestRungIndex: rungIndex(w.ascension.best),
     attestedRungIndex: rungIndex(reckoning.attested),
     substantiatedRungIndex: rungIndex(reckoning.substantiated),
-    rungsWithheld: reckoning.rungsWithheld,
+    rungsWithheld: rungIndex(reckoning.attested) - rungIndex(reckoning.substantiated),
     unsupportable: reckoning.unsupportable,
     // Never defaulted: a run that reaches the term without an ending is a
     // broken measurement, not a `forgotten`.
@@ -508,6 +522,12 @@ function allOutcomesOf(e: { interaction: EventTemplate['interaction'] }): Outcom
 
 export function verdictOver(runs: BearingRun[]): BearingVerdict {
   const lines: string[] = [];
+  const wrongPolicy = runs.filter((run) => run.carriage === 'modest'
+    ? run.recordChoices.omit + run.recordChoices.embellish > 0
+    : run.carriage === 'proud' && run.recordChoices.record + run.recordChoices.omit > 0);
+  if (wrongPolicy.length) {
+    lines.push(`  FAIL: ${wrongPolicy.length} run(s) answered Records against their declared carriage policy`);
+  }
   const byCarriage = new Map<Carriage, BearingRun[]>();
   for (const r of runs) byCarriage.set(r.carriage, [...(byCarriage.get(r.carriage) ?? []), r]);
   for (const [carriage, rs] of byCarriage) {
@@ -518,6 +538,10 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
       + `  hands ${mean(rs.map((r) => r.handsDealt)).toFixed(0)}`
       + `  declined ${mean(rs.map((r) => r.handsDeclined)).toFixed(0)}`
       + `  cousins ${mean(rs.map((r) => r.cousinsTaken)).toFixed(0)}`
+      + `  outside slots withheld ${mean(rs.map((r) => r.outsideCardsWithheld)).toFixed(1)}`
+      + `  narrowed hands ${mean(rs.map((r) => r.narrowedHands)).toFixed(1)}`
+      + `  Records R/O/E ${(['record', 'omit', 'embellish'] as const)
+        .map((option) => mean(rs.map((r) => r.recordChoices[option])).toFixed(1)).join('/')}`
       + `  warnings heard ${mean(rs.map((r) => r.warningsHeard)).toFixed(1)}`
       + `  withheld ${mean(rs.map((r) => r.warningsWithheld)).toFixed(1)}`,
     );
@@ -536,6 +560,9 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
       + `  withheld ${mean(b.runs.map((r) => r.rungsWithheld)).toFixed(2)}`
       + `  unsupportable ${mean(b.runs.map((r) => r.unsupportable)).toFixed(1)}`
       + `  warnings heard ${mean(b.runs.map((r) => r.warningsHeard)).toFixed(1)}`
+      + `  warnings withheld ${mean(b.runs.map((r) => r.warningsWithheld)).toFixed(1)}`
+      + `  outside slots withheld ${mean(b.runs.map((r) => r.outsideCardsWithheld)).toFixed(1)}`
+      + `  narrowed hands ${mean(b.runs.map((r) => r.narrowedHands)).toFixed(1)}`
       + `  standing ${mean(b.runs.map((r) => r.respectTierIndex)).toFixed(2)}`
       + `  clauses ${mean(b.runs.map((r) => r.clausesRecovered)).toFixed(1)}`
       + `  household ${mean(b.runs.map((r) => r.householdAtEnd)).toFixed(1)}`
@@ -611,7 +638,7 @@ export function verdictOver(runs: BearingRun[]): BearingVerdict {
       + ' and a bearing that only shifts the average is a modifier rather than a moral');
   }
 
-  return { ok: higher && spreadOk, lines };
+  return { ok: wrongPolicy.length === 0 && higher && spreadOk, lines };
 }
 
 export function gateBearing(

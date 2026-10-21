@@ -14,6 +14,7 @@ import type { FriendName } from './people/friends.js';
 import type { DelegationPreferences } from './delegation.js';
 import type { ProseRuntime } from './prose.js';
 import type { SelectionObservation } from './events/selection.js';
+import type { MatchOfferObservation } from './people/match.js';
 
 export interface ChronicleEntry {
   /**
@@ -785,6 +786,8 @@ export interface SimCtx {
   observeDecision?: (observation: DecisionObservation) => void;
   /** Measurement-only selection listener before effects. Never saved. */
   observeSelection?: (observation: SelectionObservation) => void;
+  /** Measurement-only scalar receipt of a dealt Match hand. Never saved. */
+  observeMatchOffer?: (observation: MatchOfferObservation) => void;
 }
 
 /**

@@ -144,6 +144,17 @@ export interface MatchOffer {
   cards: MatchCard[];
 }
 
+/** Scalar receipt from the actual deal, before any answer can withdraw a hand. */
+export interface MatchOfferObservation {
+  readonly year: Year;
+  readonly subject: string;
+  readonly availableCards: number;
+  readonly householdCards: number;
+  readonly outsideRoom: number;
+  readonly outsideBudget: number;
+  readonly outsideCards: number;
+}
+
 /**
  * THE FUTURE ON THE FACE OF THE CARD (issue #214).
  *
@@ -896,6 +907,16 @@ export function dealMatch(ctx: SimCtx, subject: Person, rng: Rng): MatchOffer {
     if (thread) c.callback = thread.origin.detail;
     priceIn(ctx, c, subject);
   }
+
+  if (cards.length) ctx.observeMatchOffer?.({
+    year: w.year,
+    subject: subject.id,
+    availableCards: cards.filter((card) => card.available).length,
+    householdCards: CARDS_DEALT - room,
+    outsideRoom: room,
+    outsideBudget: offered,
+    outsideCards: cards.filter((card) => card.kind === 'outsider').length,
+  });
 
   return {
     subject: {
