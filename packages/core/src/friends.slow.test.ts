@@ -146,6 +146,11 @@ function liftsIn(ctx: SimCtx): { attr: string; points: number }[] {
 
 describe('the five names, over a played batch', () => {
   const runs = SEEDS.map(play);
+  // #1861: the original 60 arrivals still contain four >75y delays, but
+  // cannot carry the unchanged 12% ceiling at two standard errors. Retain
+  // every original seed and add a fixed, independent 28-run prefix for this
+  // rate only. Other pacing, blessing and per-run claims keep their cohort.
+  const arrivalRuns = [...runs, ...Array.from({ length: 28 }, (_, i) => play(9001 + 17 * i))];
 
   /**
    * THE WHOLE POINT, AND THE ONLY THING THAT CANNOT BE INFERRED FROM THE UNIT
@@ -217,13 +222,12 @@ describe('the five names, over a played batch', () => {
      * a rate claim over the same samples is not.
      */
     const band = FRIEND_SPAN_YEARS / MAX_FRIENDS + A_GENERATION;
-    const lags = runs.flatMap((r) => r.spent.map((f) => f.spentIn! - f.dueFrom));
+    const lags = arrivalRuns.flatMap((r) => r.spent.map((f) => f.spentIn! - f.dueFrom));
     expectRate({
       hits: lags.filter((lag) => lag > band).length,
       n: lags.length,
-      // A legitimate draw-order shift measured 3/60 = 5%. That is healthy,
-      // but 10% is only 1.8 SE away; 12% restores the helper's required
-      // two-SE margin while remaining far above the measured ~1% tail.
+      // Keep the existing ceiling and two-SE helper; widen the measured
+      // sample rather than admitting a larger delayed-arrival rate.
       ceiling: 0.12,
       what: `arrivals landing more than a window-and-a-generation (${band}y) after they came due`,
     });
