@@ -646,8 +646,8 @@ export type RecordBlock = z.infer<typeof RecordBlockS>;
 export const PrimordialResponseS = z.object({
   id: z.string().regex(/^[a-z0-9_]+$/),
   text: z.string().min(1),
-  plainEnglish: z.string().min(1),
   effects: z.array(EffectS),
+  agreedPrices: z.array(AgreedPriceS).optional(),
   tags: z.array(z.string()).default([]),
   /** Explicitly replace the normal public account, including a deliberate absence. */
   record: RecordBlockS.nullable(),

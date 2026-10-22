@@ -2,8 +2,9 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
+import { previewPrimordial, rollPrimordial } from './primordial.js';
 import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
-import { makeRng, type Rng } from '../rng.js';
+import { makeRng, streamFor, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, phase, place, testWorld } from '../testing.js';
 import { resolveSlots, renderBody, type SlotFill } from './slots.js';
@@ -112,6 +113,31 @@ const witnessedOutcomeKeys = new Set<string>();
 function executeOutcomeWitness(
   ...args: Parameters<typeof executeOutcomeWitnessRaw>
 ): ReturnType<typeof executeOutcomeWitnessRaw> {
+  const [ctx, event, request] = args;
+  const group = event.interaction.kind === 'narration' ? event.interaction.outcomes
+    : event.interaction.choices.find(choice => choice.id === request.choiceId)?.outcomes ?? [];
+  const normal = group.find(outcome => outcome.id === request.expectedOutcomeId);
+  if (!request.expectedFinalOutcomeId && normal?.primordial
+    && (normal.site ?? event.site)?.kind === 'hall'
+    && ((normal.site ?? event.site) as { hall?: unknown }).hall === 'main') {
+    // These are normal-result witnesses. Choose an actual failed emergency
+    // stream, preserving the cast and outcome RNG, rather than disabling the
+    // feature or crediting a rescued result as its ordinary catastrophe.
+    const reading = previewPrimordial(ctx, event, normal, request.cast ?? {});
+    if (reading.candidates.length) {
+      const occurrence = `chr_${(ctx.world.counters.chronicle + 1).toString(36)}`;
+      const initialSeed = ctx.world.seed;
+      let found = false;
+      for (let offset = 0; offset < 100_000; offset++) {
+        const seed = initialSeed + offset;
+        if (!rollPrimordial(reading.candidates, streamFor({ seed, year: ctx.world.year }, `primordial:${occurrence}`))) {
+          ctx.world.seed = seed;
+          found = true; break;
+        }
+      }
+      if (!found) throw new Error(`no normal intervention miss for ${event.id}/${normal.id}`);
+    }
+  }
   const result = executeOutcomeWitnessRaw(...args);
   if (result.ok && result.key && declaredOutcomeKeys.has(result.key)) {
     witnessedOutcomeKeys.add(result.key);

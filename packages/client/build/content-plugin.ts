@@ -2,6 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, posix, sep } from 'node:path';
 import { parse } from 'yaml';
 import type { Plugin } from 'vite';
+import { packContentDocument } from '../../schema/src/packed-content.js';
 
 /**
  * THE CONTENT, PARSED AT BUILD TIME (issue #109).
@@ -104,10 +105,10 @@ export function readContentDocs(dir: string): Record<string, string> {
 export function readStartupDocs(dir: string): Record<string, string> {
   return Object.fromEntries(Object.entries(readContentDocs(dir)).map(([file, text]) => {
     const doc = JSON.parse(text) as Record<string, unknown> | null;
-    if (!doc || typeof doc !== 'object' || !Array.isArray(doc.proseVariants)) return [file, text];
+    if (!doc || typeof doc !== 'object') return [file, text];
     const original = { ...doc };
     delete original.proseVariants;
-    return [file, JSON.stringify(original)];
+    return [file, JSON.stringify(packContentDocument(original))];
   }));
 }
 

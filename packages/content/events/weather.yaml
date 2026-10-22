@@ -45,6 +45,9 @@ events:
               effects:
                 - { kind: treasury, delta: -44 }
                 - { kind: relationship, from: household, to: head, sentiment: 16 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: wait_and_see
           label: Wait. It may not be as bad as it looks in Greening.
           outcomes:
@@ -58,6 +61,21 @@ events:
               effects:
                 - { kind: treasury, delta: -44 }
                 - { kind: relationship, from: household, to: head, sentiment: -6 }
+              site:
+                kind: elsewhere
+                slots: []
+              primordial:
+                id: waited_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} walks beneath the frosted trees. The white on the lower boughs lifts
+                  away without melting, leaving part of the blossom whole. The far end of the orchard
+                  stays black.
+                effects:
+                  - {kind: treasury, delta: -22}
+                  - {kind: relationship, from: household, to: head, sentiment: -6}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_summer_that_does_not_rain
     title: Nine Tendays Without
@@ -94,6 +112,9 @@ events:
                 - { kind: treasury, delta: -38 }
                 - { kind: relationship, from: household, to: head, sentiment: 18 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: hold_the_hay
           label: Hold the hay. The house's own beasts have to eat in Frostfall.
           outcomes:
@@ -138,6 +159,19 @@ events:
             door rehung.
           effects:
             - { kind: treasury, delta: -4 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: patched_by_greening_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} wakes under the west roof. The falling slates hang against the wind
+              long enough for the room to be cleared and covered. Some still break in the yard.
+            effects:
+              - {kind: treasury, delta: -2}
+            tags:
+              - primordial
+            record: null
 
   - id: the_wet_harvest
     title: Getting It In Between Showers
@@ -187,6 +221,22 @@ events:
                 - { kind: treasury, delta: -8 }
                 - { kind: attribute, target: head, attr: health, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 20 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: theirs_in_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} works beside the last standing corn. The rain stops at the edge of
+                  his shadow while the nearest rows are cut. Beyond them the wet ground keeps its loss.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {kind: attribute, target: head, attr: health, delta: -4}
+                  - {kind: relationship, from: household, to: head, sentiment: 20}
+                tags:
+                  - primordial
+                record: null
             - id: the_fourth_day_never_comes
               weight: 38
               text: >-
@@ -199,6 +249,22 @@ events:
                 - { kind: treasury, delta: -60 }
                 - { kind: attribute, target: head, attr: health, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 22 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: the_fourth_day_never_comes_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} works beside the last standing corn. The rain stops at the edge of
+                  his shadow while the nearest rows are cut. Beyond them the wet ground keeps its loss.
+                effects:
+                  - {kind: treasury, delta: -30}
+                  - {kind: attribute, target: head, attr: health, delta: -4}
+                  - {kind: relationship, from: household, to: head, sentiment: 22}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_comet
     title: Something in the Sky for Nine Nights
@@ -283,6 +349,9 @@ events:
               effects:
                 - { kind: treasury, delta: -13 }
                 - { kind: relationship, from: household, to: head, sentiment: 20 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: the_barn_and_the_stores
           label: The barn, and send stores down. The hall is not a shelter.
           outcomes:
@@ -297,6 +366,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: rumour, op: seed, id: rumour_the_eleven_days_in_the_barn, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_year_of_no_summer
     title: It Does Not Get Warm
@@ -332,6 +404,9 @@ events:
                 - { kind: treasury, delta: -110 }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: household, to: head, sentiment: 24 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: buy_for_the_hall
           label: Buy for the hall only. The house cannot feed a parish.
           outcomes:
@@ -347,6 +422,9 @@ events:
                 - { kind: treasury, delta: -30 }
                 - { kind: relationship, from: household, to: head, sentiment: -12 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: lightning_on_the_chapel
     title: It Takes the Chapel and Nothing Else
@@ -378,6 +456,20 @@ events:
           effects:
             - { kind: treasury, delta: -9 }
             - { kind: rumour, op: seed, id: rumour_what_the_lightning_chose, accuracy: 0.45 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: rebuilt_by_slaughter_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} is under the chapel arch when the gable breaks. The stones stay above
+              the empty doorway until men have braced it. The upper courses still need a mason.
+            effects:
+              - {kind: treasury, delta: -4}
+              - {kind: rumour, op: seed, id: rumour_what_the_lightning_chose, accuracy: 0.45}
+            tags:
+              - primordial
+            record: null
 
   - id: the_ice_on_the_wend
     title: Thick Enough to Walk On
@@ -483,6 +575,23 @@ events:
                 - {kind: treasury, delta: -22}
                 - {kind: attribute, target: head, attr: health, delta: -2}
                 - {kind: attribute, target: head, attr: mind, delta: 1}
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: he_was_wrong_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the reeve in the wet corn. A dry swath opens across the
+                  nearest field without a wind, and the men cut what they can. The rest goes black where
+                  it stands.
+                effects:
+                  - {kind: treasury, delta: -11}
+                  - {kind: attribute, target: head, attr: health, delta: -2}
+                  - {kind: attribute, target: head, attr: mind, delta: 1}
+                tags:
+                  - primordial
+                record: null
         - id: wait_the_four_days
           label: Wait. The steward can count and the light on a fell cannot.
           outcomes:
@@ -506,6 +615,22 @@ events:
               effects:
                 - { kind: treasury, delta: -48 }
                 - { kind: relationship, from: household, to: head, sentiment: -10 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: it_breaks_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the reeve in the wet corn. A dry swath opens across the
+                  nearest field without a wind, and the men cut what they can. The rest goes black where
+                  it stands.
+                effects:
+                  - {kind: treasury, delta: -24}
+                  - {kind: relationship, from: household, to: head, sentiment: -10}
+                tags:
+                  - primordial
+                record: null
 
 # Plain English alternatives for every narrative field above (#714).
 proseVariants:
@@ -828,3 +953,31 @@ proseVariants:
       Rain begins on the eleventh while the corn is still standing. It continues for two tendays
       and ruins about a third of the year's crop in the fields. The reeve works alongside
       everyone else without saying a word.
+  - address: >-
+      content:events/weather.yaml#events[id=a_frost_in_greening].interaction.choices[id=wait_and_see].outcomes[id=waited].primordial.text
+    of: f7e158cb8d9188b7
+    plainenglish: "{PRIMORDIAL_ACTOR} walks under the frozen trees. The white on the lower boughs lifts away without melting, leaving part of the blossom whole. The far end of the orchard stays black."
+  - address: >-
+      content:events/weather.yaml#events[id=the_night_the_wind_came_round].interaction.outcomes[id=patched_by_greening].primordial.text
+    of: 7acbce802d78eb94
+    plainenglish: "{PRIMORDIAL_ACTOR} wakes beneath the west roof. The falling slates hang against the wind long enough for the room to be cleared and covered. Some still break in the yard."
+  - address: >-
+      content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=theirs_in].primordial.text
+    of: 97de060a44296d66
+    plainenglish: "{PRIMORDIAL_ACTOR} works next to the last corn still standing. The rain stops at the edge of his shadow while the nearest rows are cut. Beyond them the wet ground keeps its loss."
+  - address: >-
+      content:events/weather.yaml#events[id=the_wet_harvest].interaction.choices[id=theirs_first].outcomes[id=the_fourth_day_never_comes].primordial.text
+    of: 97de060a44296d66
+    plainenglish: "{PRIMORDIAL_ACTOR} works next to the last corn still standing. The rain stops at the edge of his shadow while the nearest rows are cut. Beyond them the wet ground keeps its loss."
+  - address: >-
+      content:events/weather.yaml#events[id=lightning_on_the_chapel].interaction.outcomes[id=rebuilt_by_slaughter].primordial.text
+    of: bf3d1442e8ffda96
+    plainenglish: "When the gable breaks, {PRIMORDIAL_ACTOR} is beneath the chapel arch. The stones stay above the empty doorway until men have braced it. The upper courses still need a mason."
+  - address: >-
+      content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=cut_on_the_ninth].outcomes[id=he_was_wrong].primordial.text
+    of: a8ae13a18cb4cd95
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the reeve in the wet corn. A dry swath opens across the nearest field without a wind, and the men cut what they can. The rest goes black where it stands."
+  - address: >-
+      content:events/weather.yaml#events[id=the_reeve_reads_the_sky].interaction.choices[id=wait_the_four_days].outcomes[id=it_breaks].primordial.text
+    of: a8ae13a18cb4cd95
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the reeve in the wet corn. A dry swath opens across the nearest field without a wind, and the men cut what they can. The rest goes black where it stands."

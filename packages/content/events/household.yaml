@@ -45,6 +45,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: wasted
               weight: 30
               text: >-
@@ -53,6 +56,9 @@ events:
                 cost more.
               effects:
                 - { kind: treasury, delta: -40 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: tutors_lesson
     title: A Lesson in the Long Room
@@ -109,6 +115,9 @@ events:
               text: He says nothing at all, and stays another thirty years.
               effects:
                 - { kind: treasury, delta: -18 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: refuse
           label: Refuse. There is a war on somewhere, there always is.
           outcomes:

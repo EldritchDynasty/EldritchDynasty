@@ -94,6 +94,9 @@ events:
                 - { kind: treasury, delta: -13 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
                 - { kind: chronicle, text: "The house kept the signed charcoal rate after the price rose, paying thirteen crowns to cover the rest of the term." }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: change_our_copy
           label: Change our copy. Claim the rate was never fixed.
           outcomes:
@@ -204,6 +207,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: the_boy_leaves
               weight: 38
               text: >-
@@ -213,6 +219,9 @@ events:
                 anything down about. The old man's hands do not come back.
               effects:
                 - { kind: treasury, delta: -9 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: pay_bramme_rates
           label: Pay Bramme rates when we need one. It is cheaper than seven years.
           outcomes:
@@ -230,6 +239,9 @@ events:
               next:
                 event: the_price_of_no_carpenter
                 after: { minYears: 40, maxYears: 50 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # #1276 / #334: the four-crown saving promised a bill two generations later.
   # This follows only that purchase, rather than competing for an ambient draw.
@@ -269,6 +281,9 @@ events:
                 There is still no bench at Wick.
               effects:
                 - { kind: treasury, delta: -28 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: bring_a_carpenter_to_wick
           label: Give him a cottage and a bench. Thirty-six crowns, including the work.
           outcomes:
@@ -284,6 +299,9 @@ events:
                 - { kind: treasury, delta: -36 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
                 - { kind: flag, flag: no_carpenter_at_wick, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: the_alewife_and_the_licence
     title: The Alewife Has No Licence and Never Has
@@ -318,6 +336,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: assert_the_franchise
           label: "Seal the franchise claim with a false date predating the statute."
           outcomes:
@@ -422,6 +443,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: relationship, from: household, to: head, sentiment: -5 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: back_the_reeve
           label: Back the reeve. He has to live here and the Lag man does not.
           outcomes:
@@ -436,6 +460,21 @@ events:
               effects:
                 - { kind: treasury, delta: -22 }
                 - { kind: rumour, op: seed, id: rumour_who_the_hall_would_not_house, accuracy: 0.35 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: he_goes_home_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beneath the first open roof. The reed rises from its fallen
+                  bundle and holds against the rafters until the bindings are made. The thatcher still
+                  leaves; fewer cottages are left to buy work twice.
+                effects:
+                  - {kind: treasury, delta: -11}
+                  - {kind: rumour, op: seed, id: rumour_who_the_hall_would_not_house, accuracy: 0.35}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_tanner_downwind
     title: Downwind, and Not Far Enough
@@ -471,6 +510,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: leave_him_where_he_is
           label: Leave him. A tanner has to be somewhere and that is somewhere.
           outcomes:
@@ -520,6 +562,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: rumour, op: seed, id: rumour_where_the_dogs_stop_at_the_beck, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: ask_about_the_beck
           label: Never mind the pup. Ask him about the beck.
           outcomes:
@@ -564,6 +609,21 @@ events:
           effects:
             - { kind: treasury, delta: -5 }
             - { kind: relationship, from: household, to: head, sentiment: 6 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: the_house_pays_bramme_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} takes up the worn share in the yard. Its edge holds through a pass on
+              the stone that should have taken the last of it. Some of the ploughs can go out without
+              the extra Bramme work.
+            effects:
+              - {kind: treasury, delta: -2}
+              - {kind: relationship, from: household, to: head, sentiment: 6}
+            tags:
+              - primordial
+            record: null
         - id: they_sow_late
           weight: 45
           text: >-
@@ -573,6 +633,20 @@ events:
             of them says why.
           effects:
             - { kind: treasury, delta: -7 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: they_sow_late_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} takes up the worn share in the yard. Its edge holds through a pass on
+              the stone that should have taken the last of it. Some of the ploughs can go out without
+              the extra Bramme work.
+            effects:
+              - {kind: treasury, delta: -3}
+            tags:
+              - primordial
+            record: null
 
   - id: the_cottager_who_can_read
     title: One of Them Can Read
@@ -654,6 +728,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 7 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: charge_it_to_him
           label: Charge it to him. The wood is the house's.
           outcomes:
@@ -1118,3 +1195,15 @@ proseVariants:
   - address: "content:events/wick_trades.yaml#events[id=the_alewife_and_the_licence].interaction.choices[id=assert_the_franchise].outcomes[id=asserted].effects[2].text"
     of: "3341df6723dd1383"
     plainenglish: "{HEAD} sent Bramme a falsely backdated certificate for the alehouse franchise."
+  - address: >-
+      content:events/wick_trades.yaml#events[id=the_thatcher_from_the_lag].interaction.choices[id=back_the_reeve].outcomes[id=he_goes_home].primordial.text
+    of: 5fa69a7d862dc191
+    plainenglish: "{PRIMORDIAL_ACTOR} is beneath the first roof opened for rethatching. The reed rises from its fallen bundle and holds against the rafters until the bindings are made. The thatcher still leaves; fewer cottages are left to buy work twice."
+  - address: >-
+      content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].interaction.outcomes[id=the_house_pays_bramme].primordial.text
+    of: f194b636a5a4408a
+    plainenglish: "In the yard, {PRIMORDIAL_ACTOR} picks up the worn ploughshare. Its edge holds through a pass on the stone that should have taken the last of it. Some of the ploughs can go out without the extra Bramme work."
+  - address: >-
+      content:events/wick_trades.yaml#events[id=the_ploughs_go_out_late].interaction.outcomes[id=they_sow_late].primordial.text
+    of: f194b636a5a4408a
+    plainenglish: "In the yard, {PRIMORDIAL_ACTOR} picks up the worn ploughshare. Its edge holds through a pass on the stone that should have taken the last of it. Some of the ploughs can go out without the extra Bramme work."

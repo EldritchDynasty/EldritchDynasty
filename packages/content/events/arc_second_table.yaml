@@ -78,6 +78,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: branch, op: appease, slot: COUSIN, amount: 24 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: praise_it_again
           label: Praise it again. Ardwen has its own officers.
           outcomes:
@@ -132,6 +135,9 @@ events:
                 - { kind: treasury, delta: -18 }
                 - { kind: branch, op: appease, slot: COUSIN, amount: 20 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: their_road
           label: It serves their hall. Let them mend what they use.
           outcomes:

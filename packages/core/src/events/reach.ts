@@ -119,6 +119,19 @@ export function declaredOutcomes(
   return out;
 }
 
+/** Conditional results have their own identities and never count as normal branch reach. */
+export function declaredInterventions(source: ContentBundle | Content) {
+  const content = indexContent(source);
+  return content.events.flatMap(event => {
+    const groups = event.interaction.kind === 'narration'
+      ? [{ id: undefined, outcomes: event.interaction.outcomes }] : event.interaction.choices;
+    return groups.flatMap(choice => choice.outcomes.flatMap(normal => normal.primordial
+      ? [{ key: outcomeKey(event.id, choice.id, normal.primordial.id),
+        normalKey: outcomeKey(event.id, choice.id, normal.id),
+        label: outcomeLabel(event.id, choice.id, normal.primordial.id) }] : []));
+  });
+}
+
 /**
  * ONE DETERMINISTIC EXECUTION WITNESS, THROUGH THE REAL EVENT PIPELINE (#442).
  *
@@ -136,6 +149,8 @@ export function declaredOutcomes(
  * teaching tests a second definition of event semantics.
  */
 export interface OutcomeWitnessRequest {
+  /** Assert a committed rescue separately from the normally selected outcome. */
+  expectedFinalOutcomeId?: string;
   expectedOutcomeId: string;
   /** Required for player-decided interactions; for automatic deciders this is an assertion. */
   choiceId?: string;
@@ -560,7 +575,7 @@ export function executeOutcomeWitness(
       return { ok: false, reason: resolved.reason ?? 'production docket refused the witness cast' };
     }
     const logged = ctx.world.decisionLog[ctx.world.decisionLog.length - 1];
-    const key = outcomeKey(String(e.id), request.choiceId, request.expectedOutcomeId);
+    const key = outcomeKey(String(e.id), request.choiceId, request.expectedFinalOutcomeId ?? request.expectedOutcomeId);
     if (
       ctx.world.decisionLog.length !== before + 1
       || logged?.kind !== 'outcome'
@@ -656,7 +671,7 @@ export function executeOutcomeWitness(
   const before = ctx.world.decisionLog.length;
   commitOutcome(ctx, e, outcome, fill, choiceId, request.rng, arcStep);
   const logged = ctx.world.decisionLog[ctx.world.decisionLog.length - 1];
-  const key = outcomeKey(String(e.id), choiceId, outcome.id);
+  const key = outcomeKey(String(e.id), choiceId, request.expectedFinalOutcomeId ?? outcome.id);
   if (
     ctx.world.decisionLog.length !== before + 1
     || logged?.kind !== 'outcome'

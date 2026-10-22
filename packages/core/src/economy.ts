@@ -232,7 +232,7 @@ const EXACTION_SURCHARGE = 1.35;
  */
 const LIVING_UP = 0.03;
 
-export function tickEconomy(ctx: SimCtx): EconomyReport {
+export function economyReading(ctx: SimCtx): EconomyReport {
   const w = ctx.world;
   const roster = hall(w, MAIN_BRANCH, w.year);
 
@@ -328,7 +328,21 @@ export function tickEconomy(ctx: SimCtx): EconomyReport {
   const war = musterUpkeep(ctx);
 
   const net = income + tithe + labour + resource - upkeep - wages - war;
-  w.treasury += net;
+  return { income, upkeep, wages, tithe, labour, resource, war, net };
+}
+
+/** Recurring gross receipts before a shock; careers have their own year phase. */
+export function recurringGrossIncome(ctx: SimCtx): number {
+  const r = economyReading(ctx);
+  const career = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+    .reduce((sum, p) => sum + Math.max(0, p.career ? ctx.content.career(p.career.career)?.income.base ?? 0 : 0), 0);
+  return r.income + r.tithe + r.labour + Math.max(0, r.resource) + career;
+}
+
+export function tickEconomy(ctx: SimCtx): EconomyReport {
+  const w = ctx.world;
+  const report = economyReading(ctx);
+  w.treasury += report.net;
 
   // A house cannot borrow forever. Debt bites standing rather than stopping
   // the clock — being visibly broke is how a great house stops being one.
@@ -339,5 +353,5 @@ export function tickEconomy(ctx: SimCtx): EconomyReport {
   }
 
   tickRespect(ctx);
-  return { income, upkeep, wages, tithe, labour, resource, war, net };
+  return report;
 }

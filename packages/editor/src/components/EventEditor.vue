@@ -321,7 +321,7 @@ const byFrequency = computed(() => {
       </template>
 
       <label>Branches &amp; outcomes</label>
-      <OutcomeGraph :event="current" :event-ids="eventIds" @change="touched" />
+      <OutcomeGraph :content="content" :event="current" :event-ids="eventIds" @change="touched" />
 
       <label>Checks</label>
       <CheckEditor :event="current" @change="touched" />

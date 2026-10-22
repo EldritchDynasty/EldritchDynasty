@@ -59,6 +59,48 @@ events:
                 - { kind: respect, delta: -2 }
                 - { kind: flag, flag: married_without_paper, set: true }
                 - { kind: schedule, event: the_herald_asks_for_her_mother, inYears: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: married_in_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the marriage roll. An old seal rises in its blank
+                  margin while the ink is still wet. It proves no invented descent, but the keeper records
+                  what he saw beside the gap.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: flag, flag: married_without_paper, set: true}
+                  - {kind: schedule, event: the_herald_asks_for_her_mother, inYears: 1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands beside the marriage roll. An old seal rises in its blank
+                        margin while the ink is still wet. It proves no invented descent, but the keeper
+                        records what he saw beside the gap.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_northern_house_of_good_standing
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - house_ilm
         - id: buy_her_a_descent
           label: Take her, and buy her three generations at Bramme first.
           outcomes:
@@ -74,6 +116,9 @@ events:
               effects:
                 - { kind: treasury, delta: -25 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     record:
       subject: where the bride came from
       options:
@@ -136,6 +181,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: she_keeps_a_copy
               weight: 45
               text: >-
@@ -147,6 +195,9 @@ events:
                 name on it.
               effects:
                 - { kind: treasury, delta: -40 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: send_her_away
           label: Send her away. This family is not a subject of study.
           outcomes:
@@ -161,6 +212,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_what_the_broker_was_selling, accuracy: 0.45 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the broker's nine matches
       options:
@@ -234,6 +288,9 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: treasury, delta: -4 }
                 - { kind: knowledge, op: grant, flag: knows_what_the_permutation_costs }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
             - id: it_does_not_concentrate
               weight: 58
               text: >-
@@ -246,6 +303,9 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: { slot: COUSIN }, to: head, sentiment: -12 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
         - id: marry_them_outward
           label: Marry them both outward, as this house always has.
           outcomes:
@@ -262,6 +322,9 @@ events:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: SON }, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the cousin match
       options:
@@ -332,6 +395,9 @@ events:
                 - { kind: trait, target: { slot: SUBJECT }, trait: bought_grandmother, op: add }
                 - { kind: respect, delta: 2 }
                 - { kind: discrepancy, op: create, id: the_caster_grade_descent, severity: total, provableBy: [the_church, house_calder, house_ilm] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: buy_nothing
           label: Buy nothing. This family's descent is what it is.
           outcomes:
@@ -347,6 +413,9 @@ events:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_specialist_who_keeps_two_lists, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     record:
       subject: the Caster-grade descent
       options:
@@ -414,6 +483,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: the_sixth_is_wrong
               weight: 45
               text: >-
@@ -426,6 +498,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: ask_for_coin
           label: Ask for coin as well. Paper does not roof a wing.
           outcomes:
@@ -442,6 +517,9 @@ events:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: SON }, to: head, sentiment: -10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the six generations
       options:
@@ -526,6 +604,48 @@ events:
                 - { kind: knowledge, op: grant, flag: knows_what_the_yssene_terms_were }
                 - { kind: relationship, from: { slot: DAUGHTER }, to: head, sentiment: 14 }
                 - { kind: schedule, event: the_fourth_yssene_clause, inYears: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: refused_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} folds the refused terms. A second impression appears through the
+                  backing, showing the payment already entered. Part of the forfeiture can be recovered;
+                  the match remains refused.
+                effects:
+                  - {kind: treasury, delta: -30}
+                  - {kind: knowledge, op: grant, flag: knows_what_the_yssene_terms_were}
+                  - {kind: relationship, from: {slot: DAUGHTER}, to: head, sentiment: 14}
+                  - {kind: schedule, event: the_fourth_yssene_clause, inYears: 1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} folds the refused terms. A second impression appears through
+                        the backing, showing the payment already entered. Part of the forfeiture can be
+                        recovered; the match remains refused.
+                      grantsKnowledge: knows_what_the_yssene_terms_were
+                      effects:
+                        - {kind: schedule, event: the_fourth_yssene_clause, inYears: 1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: what_the_grey_offer_was_worth
+                        severity: major
+                        provableBy:
+                          - house_yssanne
+                          - house_bracc
     record:
       subject: the offer out of Yssanne
       options:
@@ -597,6 +717,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: { slot: WIFE }, to: head, sentiment: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: a_child_at_last
               weight: 38
               text: >-
@@ -609,6 +732,9 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: WIFE }, to: head, sentiment: 10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: bring_a_cadet_in
           label: Stop counting. Bring a cadet cousin into the succession and say so.
           outcomes:
@@ -719,6 +845,48 @@ events:
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -18 }
                 - { kind: rumour, op: seed, id: rumour_what_they_did_to_the_widow, accuracy: 0.6 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: she_holds_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} moves the chair the widow has left empty. Its shadow stays at the
+                  table after it is carried away. The pressing is still remembered, with an account nobody
+                  can make ordinary.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -18}
+                  - {kind: rumour, op: seed, id: rumour_what_they_did_to_the_widow, accuracy: 0.6}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} moves the chair the widow has left empty. Its shadow stays at
+                        the table after it is carried away. The pressing is still remembered, with an
+                        account nobody can make ordinary.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: how_the_widow_was_treated
+                        severity: major
+                        provableBy:
+                          - commons
+                          - house_calder
+                          - the_church
     record:
       subject: the widow, and what was done about her
       options:
@@ -787,6 +955,9 @@ events:
                 - { kind: treasury, delta: -30 }
                 - { kind: knowledge, op: grant, flag: knows_the_ward_was_married_in }
                 - { kind: schedule, event: the_ward_answers_cawdry, inYears: 1 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
         - id: send_her_home
           label: Send her home. She was a ward and the ward is over.
           outcomes:
@@ -1405,3 +1576,51 @@ proseVariants:
     of: "fcecb36ea4fdd1c2"
     plainenglish: >-
       was sent back to her family with the alliance intact
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].outcomes[id=married_in].primordial.text
+    of: 062f9408c0c84b34
+    plainenglish: "{PRIMORDIAL_ACTOR} is beside the marriage register. An old seal rises in its blank margin while the ink is still wet. It proves no invented descent, but the keeper records what he saw beside the gap."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].outcomes[id=married_in].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].outcomes[id=married_in].primordial.record.options.record.chronicle
+    of: 062f9408c0c84b34
+    plainenglish: "{PRIMORDIAL_ACTOR} is beside the marriage register. An old seal rises in its blank margin while the ink is still wet. It proves no invented descent, but the keeper records what he saw beside the gap."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_bride_out_of_the_rimefell].interaction.choices[id=take_her].outcomes[id=married_in].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].outcomes[id=refused].primordial.text
+    of: 640407c0895ffadc
+    plainenglish: "{PRIMORDIAL_ACTOR} folds up the terms the house refused. A second impression appears through the backing, showing the payment already entered. Part of the forfeiture can be recovered; the match remains refused."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].outcomes[id=refused].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].outcomes[id=refused].primordial.record.options.record.chronicle
+    of: 640407c0895ffadc
+    plainenglish: "{PRIMORDIAL_ACTOR} folds up the terms the house refused. A second impression appears through the backing, showing the payment already entered. Part of the forfeiture can be recovered; the match remains refused."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].interaction.choices[id=keep_her_here].outcomes[id=refused].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=she_holds].primordial.text
+    of: 2758c66df889a509
+    plainenglish: "{PRIMORDIAL_ACTOR} moves the widow's empty chair. Its shadow stays at the table after it is carried away. The pressing is still remembered, with an account nobody can make ordinary."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=she_holds].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=she_holds].primordial.record.options.record.chronicle
+    of: 2758c66df889a509
+    plainenglish: "{PRIMORDIAL_ACTOR} moves the widow's empty chair. Its shadow stays at the table after it is carried away. The pressing is still remembered, with an account nobody can make ordinary."
+  - address: >-
+      content:events/rare_match.yaml#events[id=the_widow_who_declines].interaction.choices[id=press_her].outcomes[id=she_holds].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

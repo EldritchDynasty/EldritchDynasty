@@ -51,6 +51,9 @@ events:
                 carries that whether it went up the hill or not.
               effects:
                 - { kind: treasury, delta: -24 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: go_up
           label: Go up with them.
           outcomes:
@@ -78,6 +81,25 @@ events:
                 - { kind: attribute, target: { slot: KIN }, attr: health, delta: -3 }
                 - { kind: treasury, delta: -19 }
                 - { kind: rumour, op: seed, id: rumour_the_house_went_up_the_hill, accuracy: 0.6 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+                  - KIN
+              primordial:
+                id: a_clean_week_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands above the fold in the wet. The broken hurdle rises and holds
+                  without a post while the surviving beasts are brought down. The dead stock and spent
+                  days are still lost.
+                effects:
+                  - {kind: respect, delta: 1}
+                  - {kind: attribute, target: {slot: KIN}, attr: health, delta: -3}
+                  - {kind: treasury, delta: -9}
+                  - {kind: rumour, op: seed, id: rumour_the_house_went_up_the_hill, accuracy: 0.6}
+                tags:
+                  - primordial
+                record: null
 
   - id: a_murrain_year
     title: A Murrain Year
@@ -112,6 +134,9 @@ events:
               effects:
                 - { kind: treasury, delta: -52 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: hold_the_terms
           label: Hold the terms. A murrain is not the house's weather.
           outcomes:
@@ -166,6 +191,23 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: 2 }
                 - { kind: attribute, target: { slot: HUNTER }, attr: strength, delta: 3 }
+              site:
+                kind: party
+                slots:
+                  - HUNTER
+              primordial:
+                id: taken_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at the closing when the knife fails. The boar's weight stops
+                  against an empty space beside the hunter, long enough for the spear to be reset. The
+                  broken gear still needs replacing.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {kind: respect, delta: 2}
+                  - {kind: attribute, target: {slot: HUNTER}, attr: strength, delta: 3}
+                tags:
+                  - primordial
+                record: null
             - id: the_blade_that_would_not
               weight: 38
               tags: [signs, iron]
@@ -181,6 +223,26 @@ events:
                 - { kind: attribute, target: { slot: HUNTER }, attr: health, delta: -8 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_dull_iron, accuracy: 0.2 }
+              site:
+                kind: party
+                slots:
+                  - HUNTER
+              primordial:
+                id: the_blade_that_would_not_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at the closing when the knife fails. The boar's weight stops
+                  against an empty space beside the hunter, long enough for the spear to be reset. The
+                  broken gear still needs replacing.
+                effects:
+                  - {kind: treasury, delta: -8}
+                  - {kind: attribute, target: {slot: HUNTER}, attr: health, delta: -8}
+                  - {kind: respect, delta: 1}
+                  - {kind: rumour, op: seed, id: rumour_the_dull_iron, accuracy: 0.2}
+                tags:
+                  - signs
+                  - iron
+                  - primordial
+                record: null
         - id: pay_the_colliers
           label: Pay the colliers to take it and keep the family out of the wood.
           outcomes:
@@ -194,6 +256,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: relationship, from: { slot: HUNTER }, to: head, sentiment: -12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_ford_below_wick
     title: The Crossing Below Wick
@@ -229,6 +294,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_the_story
           label: Leave it. The story is doing the work of a bridge.
           outcomes:
@@ -278,6 +346,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: the_customary_terms_were_written, set: true }
                 - { kind: schedule, event: the_son_brings_the_written_terms, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: refuse_the_paper
           label: Refuse. Custom is stronger without a document to argue with.
           outcomes:
@@ -375,6 +446,9 @@ events:
                 - { kind: treasury, delta: -1 }
                 - { kind: attribute, target: { slot: BITTEN }, attr: health, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_the_tenth_cure, accuracy: 0.15 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: send_to_bramme
           label: Send to Bramme for the physician.
           outcomes:
@@ -389,6 +463,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: attribute, target: { slot: BITTEN }, attr: health, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 proseVariants:
   - address: "content:events/village.yaml#events[id=the_grey_in_the_upper_fold].title"
     of: 39fb34ecac6b4538
@@ -626,3 +703,15 @@ proseVariants:
   - address: "content:events/village.yaml#events[id=the_hedge_across_the_common].interaction.choices[id=hedge_it].outcomes[id=hedged].effects[3].text"
     of: "dffa061bd00ebe97"
     plainenglish: "{HEAD} falsely certified that Wick had agreed to the enclosure of its common grazing."
+  - address: >-
+      content:events/village.yaml#events[id=the_grey_in_the_upper_fold].interaction.choices[id=go_up].outcomes[id=a_clean_week].primordial.text
+    of: 9a3f6cd3f6f7e357
+    plainenglish: "{PRIMORDIAL_ACTOR} is in the wet ground above the sheep fold. The broken hurdle rises and holds without a post while the surviving beasts are brought down. The dead stock and spent days are still lost."
+  - address: >-
+      content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=let_him_go].outcomes[id=taken].primordial.text
+    of: 21bd7447ce13529b
+    plainenglish: "When the knife breaks, {PRIMORDIAL_ACTOR} is close to the boar. The boar's weight stops against an empty space beside the hunter, long enough for the spear to be reset. The broken gear still needs replacing."
+  - address: >-
+      content:events/village.yaml#events[id=the_boar_in_the_west_wood].interaction.choices[id=let_him_go].outcomes[id=the_blade_that_would_not].primordial.text
+    of: 21bd7447ce13529b
+    plainenglish: "When the knife breaks, {PRIMORDIAL_ACTOR} is close to the boar. The boar's weight stops against an empty space beside the hunter, long enough for the spear to be reset. The broken gear still needs replacing."

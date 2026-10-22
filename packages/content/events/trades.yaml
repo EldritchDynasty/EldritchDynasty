@@ -51,6 +51,9 @@ events:
               effects:
                 - { kind: treasury, delta: -260 }
                 - { kind: rumour, op: seed, id: rumour_what_the_north_room_holds, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: buy_lesser
           label: Buy two lesser books instead and have them read this century.
           outcomes:
@@ -65,6 +68,9 @@ events:
               effects:
                 - { kind: treasury, delta: -200 }
                 - { kind: spellbook, op: gain, target: head, book: lesser_workings_of_light }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     rumour: { id: rumour_what_the_north_room_holds, accuracy: 0.35, spread: 1 }
 
   - id: the_threshold_year
@@ -168,6 +174,9 @@ events:
                 what they were hoping to see.
               effects:
                 - { kind: treasury, delta: -11 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: do_it_ourselves
           label: Take a shovel yourself. Three weeks of work instead of the warrant.
           outcomes:
@@ -194,6 +203,22 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: attribute, target: head, attr: health, delta: -6 }
                 - { kind: rumour, op: seed, id: rumour_the_house_that_dug_the_race, accuracy: 0.75 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: failed_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands in the failing mill race. The water leaves a dry wall beside
+                  his hand until the gang can wedge the bank. Part of the work still has to be done again.
+                effects:
+                  - {kind: treasury, delta: -5}
+                  - {kind: attribute, target: head, attr: health, delta: -6}
+                  - {kind: rumour, op: seed, id: rumour_the_house_that_dug_the_race, accuracy: 0.75}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_book_that_needs_a_reader
     title: Nobody Has Opened It in Sixty Years
@@ -236,6 +261,9 @@ events:
                 and both of those go on being true for three hundred years.
               effects:
                 - { kind: treasury, delta: -22 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it
           label: Leave it. It has kept sixty years and the roof has not.
           outcomes:
@@ -248,6 +276,42 @@ events:
                 nobody notices for another forty years.
               effects:
                 - { kind: spellbook, op: degrade, target: { slot: READER }, book: greater_workings_of_darkness }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: left_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches past the inward-turned spine. The loose leaves gather against
+                  his hand without a thread holding them. The old volume keeps the knowledge that was
+                  about to wear away.
+                effects: []
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches past the inward-turned spine. The loose leaves gather
+                        against his hand without a thread holding them. The old volume keeps the knowledge
+                        that was about to wear away.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_state_of_the_north_room
+                        severity: minor
+                        provableBy:
+                          - house_ilm
+                          - commons
+                      claims: []
     record:
       subject: the state of the north room
       options:
@@ -334,6 +398,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_slate_wedding, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     rumour: { id: rumour_the_slate_wedding, accuracy: 0.5, spread: 1 }
 
   - id: a_berth_at_sarrow
@@ -379,6 +446,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: career, target: { slot: YOUNGER }, op: assign, career: sea }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: the_counting_house_instead
           label: The counting house at Bramme. The same trade, on land, at a desk.
           outcomes:
@@ -478,6 +548,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: career, target: { slot: KIN }, op: assign, career: advocate }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_hiring
           label: Keep hiring. A stranger who is paid is a stranger who leaves.
           outcomes:
@@ -492,6 +565,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_what_the_advocate_read, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     rumour: { id: rumour_what_the_advocate_read, accuracy: 0.35, spread: 1 }
 
 proseVariants:
@@ -772,3 +848,23 @@ proseVariants:
       read more of the contract in a week than three family members have read in their lives. He
       keeps professional secrets and says nothing about it. But he remembers what he read for
       thirty years, and he still enjoys telling stories over dinner.
+  - address: >-
+      content:events/trades.yaml#events[id=what_a_warranted_man_costs].interaction.choices[id=do_it_ourselves].outcomes[id=failed].primordial.text
+    of: ead0190cbca7f778
+    plainenglish: "{PRIMORDIAL_ACTOR} is in the mill's failing water channel. The water leaves a dry wall beside his hand until the gang can wedge the bank. Part of the work still has to be done again."
+  - address: >-
+      content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].outcomes[id=left].primordial.text
+    of: 100870db2e7bdab7
+    plainenglish: "{PRIMORDIAL_ACTOR} reaches past the book with its spine turned inwards. The loose leaves gather against his hand without a thread holding them. The old volume keeps the knowledge that was about to wear away."
+  - address: >-
+      content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].outcomes[id=left].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].outcomes[id=left].primordial.record.options.record.chronicle
+    of: 100870db2e7bdab7
+    plainenglish: "{PRIMORDIAL_ACTOR} reaches past the book with its spine turned inwards. The loose leaves gather against his hand without a thread holding them. The old volume keeps the knowledge that was about to wear away."
+  - address: >-
+      content:events/trades.yaml#events[id=the_book_that_needs_a_reader].interaction.choices[id=leave_it].outcomes[id=left].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

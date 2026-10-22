@@ -97,6 +97,26 @@ describe('replay reconstructs a run from its decision log', () => {
     }
   });
 
+  it('rebuilds successful interventions, preserves their saved words and rejects changed facts (#1868)', () => {
+    // This campaign witness reaches two ordinary emergencies with local actors;
+    // no outcome or actor is injected into the replay's bootstrap inputs.
+    const seed = 186800;
+    const years = 175;
+    const original = bootstrap(bundle, seed, 1042, 'short');
+    runYears(original, years);
+    const intervention = original.world.decisionLog.find(row => row.kind === 'outcome' && row.primordial);
+    if (intervention?.kind !== 'outcome' || !intervention.primordial) throw Error('campaign did not exercise an intervention');
+    intervention.primordial.receipt = 'The words retained in the earlier private account.';
+    intervention.primordial.manifestation = 'The manifestation as it was first written.';
+    const rebuilt = replay(bundle, original.world.decisionLog, seed, 1042, years, 'short');
+    expect(digestOf(rebuilt)).toBe(digestOf(original));
+    const altered = structuredClone(original.world.decisionLog);
+    const row = altered.find(row => row.kind === 'outcome' && row.primordial);
+    if (row?.kind !== 'outcome' || !row.primordial) throw Error('missing copied intervention');
+    row.primordial.actor = 'a_person_who_was_not_there';
+    expect(() => replay(bundle, altered, seed, 1042, years, 'short')).toThrow(ReplayMismatchError);
+  });
+
   it('replays inherited Library memories using the original prior-run input (#1601)', () => {
     // The installation's Library is external bootstrap input, not a decision
     // reconstructed from the current run. One witnessed historical page is

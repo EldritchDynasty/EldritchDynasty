@@ -115,6 +115,9 @@ events:
               effects:
                 - { kind: treasury, delta: -120 }
                 - { kind: discrepancy, op: bury, provableBy: [the_church] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: refuse_them
           label: Refuse. The book is the family's and always has been.
           outcomes:
@@ -156,6 +159,21 @@ events:
           effects:
             - { kind: respect, delta: -2 }
             - { kind: rumour, op: seed, id: rumour_what_the_clerks_took, accuracy: 0.5 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: at_the_same_time_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} is in the muniment room when the oldest sheet is lifted. Its missing
+              seal leaves an impression in the air. The clerks take their copies, with a witnessed
+              mark the house can cite beside them.
+            effects:
+              - {kind: respect, delta: -1}
+              - {kind: rumour, op: seed, id: rumour_what_the_clerks_took, accuracy: 0.5}
+            tags:
+              - primordial
+            record: null
 
   - id: the_ledger_at_marrow
     title: A Line in Somebody Else's Ledger
@@ -324,3 +342,7 @@ proseVariants:
     plainenglish: >-
       We bought a day-book at auction. It contained nothing worth noting about this
       house. That fact is worth recording.
+  - address: >-
+      content:events/the_word_nobody_had.yaml#events[id=the_letter_comes_and_is_not].interaction.outcomes[id=at_the_same_time].primordial.text
+    of: fbde731febe2b3eb
+    plainenglish: "When the oldest sheet is picked up, {PRIMORDIAL_ACTOR} is in the records room. Its missing seal leaves an impression in the air. The clerks take their copies, with a witnessed mark the house can cite beside them."

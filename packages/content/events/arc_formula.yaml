@@ -77,6 +77,9 @@ events:
                 sentences instead of one.
               effects:
                 - { kind: treasury, delta: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: formula_returns_to_ardwen
     title: What the Last Clause Meant
@@ -111,6 +114,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: fight_our_words
           label: Fight it again. A precedent is not a surrender.
           outcomes:
@@ -125,6 +131,9 @@ events:
               effects:
                 - { kind: treasury, delta: -24 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the jurisdiction formula and what it eventually permitted
       options:

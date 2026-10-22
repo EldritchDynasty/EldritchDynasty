@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { SlotFillS } from './slot-fill.js';
 import { SexS } from './attributes.js';
 import { SigningIdS } from './signing.js';
+import { PrimordialRecordS } from './primordial.js';
 
 /**
  * THE DECISION LOG (issue #8, phase 1).
@@ -38,6 +39,9 @@ export const LoggedDecisionS = z.discriminatedUnion('kind', [
     event: z.string(),
     choiceId: z.string().optional(),
     outcomeId: z.string(),
+    /** Final identity differs from the normal selection only on intervention. */
+    selectedOutcomeId: z.string().optional(),
+    primordial: PrimordialRecordS.optional(),
     fill: SlotFillS,
   }),
   /** Record / Omit / Embellish. Not a choice outcome — `applyRecord` never runs through `commitOutcome`. */

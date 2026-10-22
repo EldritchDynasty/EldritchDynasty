@@ -48,6 +48,9 @@ events:
                 - { kind: treasury, delta: -16 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_open_hall, accuracy: 0.7 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: the_barn
           label: The barn, bread, and the road in the morning.
           outcomes:
@@ -59,6 +62,9 @@ events:
                 years. They go at first light without a word out of place.
               effects:
                 - { kind: treasury, delta: -2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: the_stave_that_travels
               weight: 30
               tags: [folklore]
@@ -71,6 +77,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_the_cold_house, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_third_price
     title: The Third Price
@@ -107,6 +116,9 @@ events:
                 nothing inside it but dry peat. The house keeps the box.
               effects:
                 - { kind: treasury, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: send_him_on
           label: Give him water and send him on.
           outcomes:
@@ -184,6 +196,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_before_dawn_in_the_west_wood, accuracy: 0.25 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
 
   - id: the_boat_that_does_not_open_it
     title: The Boat That Does Not Open It
@@ -217,6 +232,9 @@ events:
                 it. That is the whole of the service and it is worth the money.
               effects:
                 - { kind: treasury, delta: -4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_it_here
           label: Keep it. What leaves the house is out of the house's hands.
           outcomes:
@@ -323,6 +341,9 @@ events:
                 - { kind: treasury, delta: -31 }
                 - { kind: heirloom, op: grant, heirloom: the_forty_leaves }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: send_him_to_cawdry
           label: Send him to the bookseller at Cawdry.
           outcomes:

@@ -154,6 +154,9 @@ events:
               effects:
                 - { kind: treasury, delta: -7 }
                 - { kind: chronicle, text: "The house mended the march wall on the high pasture with its own men, and said nothing about whose wall it was." }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: take_it_to_cawdry
           label: Take it to the assize and make them produce something.
           outcomes:
@@ -171,6 +174,27 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: chronicle, text: "The march wall was found for the house at Cawdry, on the word of its own tenants." }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: heard_at_cawdry_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sets a hand on the disputed boundary stone. The old cut shows beneath
+                  the newer one for the whole bench to see. The advocate still takes a fee, but part of
+                  the charge falls away.
+                effects:
+                  - {kind: treasury, delta: -2}
+                  - {kind: respect, delta: 1}
+                  - {
+                      kind: chronicle,
+                      text: "The march wall was found for the house at Cawdry, on the word of its own tenants."
+                    }
+                  - {kind: relationship, from: household, to: head, sentiment: 6}
+                tags:
+                  - primordial
+                record: null
             - id: found_against
               weight: 38
               text: >-
@@ -184,6 +208,26 @@ events:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: -1 }
                 - { kind: chronicle, text: "The march wall was found against the house at Cawdry, and the line entered." }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: found_against_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sets a hand on the disputed boundary stone. The old cut shows beneath
+                  the newer one for the whole bench to see. The advocate still takes a fee, but part of
+                  the charge falls away.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {kind: respect, delta: -1}
+                  - {
+                      kind: chronicle,
+                      text: "The march wall was found against the house at Cawdry, and the line entered."
+                    }
+                tags:
+                  - primordial
+                record: null
 
   - id: the_invitation_from_cawdry
     title: What It Costs to Be Seen There
@@ -227,6 +271,9 @@ events:
               effects:
                 - { kind: treasury, delta: -26 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: write_the_regrets
           label: Write the regrets. Four lines and a mark for the rider.
           outcomes:
@@ -241,6 +288,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_yssene_house_at_cawdry
     title: Immaculate, Poor, and Entirely Unimpressed
@@ -281,6 +331,9 @@ events:
                 - { kind: treasury, delta: -5 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_yssene_terms, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: stay_clear
           label: Stay clear. We cannot read their law and they can read ours.
           outcomes:
@@ -332,6 +385,9 @@ events:
               effects:
                 - { kind: treasury, delta: -44 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: bar_the_gate
           label: Refuse, and put the tenants' beasts inside the wall.
           outcomes:
@@ -346,6 +402,20 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: refused_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at the barred gate. The beasts fall quiet when his hand touches
+                  the wood and stop breaking their stalls. The hay already eaten is still gone.
+                effects:
+                  - {kind: treasury, delta: -3}
+                  - {kind: relationship, from: household, to: head, sentiment: 6}
+                tags:
+                  - primordial
+                record: null
             - id: they_take_it_anyway
               weight: 38
               text: >-
@@ -528,6 +598,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # #1812: a former rival survives a settlement; annual cast maintenance can
   # mint a new opponent instead of waiting for that person to die.
@@ -565,6 +638,9 @@ events:
                 - { kind: relationship, from: head, to: { slot: RIVAL }, sentiment: 12 }
                 - { kind: recast, slot: RIVAL }
               next: { event: the_name_under_the_second_signature, after: { minYears: 3, maxYears: 6 }, keep: [RIVAL] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_the_claim_stand
           label: Leave the claim standing. Do not buy peace with precedence.
           outcomes:
@@ -1005,3 +1081,23 @@ proseVariants:
       The rider catches him at the ford, and the letter comes back with its seal unbroken. The
       steward's grandson is told why, and he does not like it. The record stays in the archive
       for someone else to find.
+  - address: >-
+      content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=heard_at_cawdry].primordial.text
+    of: 0048a02112edef75
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the boundary stone they are disputing. The old cut shows beneath the newer one for the whole bench to see. The advocate still takes a fee, but part of the charge falls away."
+  - address: >-
+      content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=heard_at_cawdry].primordial.effects[2].text
+    of: 70f3db155eb7f3e1
+    plainenglish: "At Cawdry, the court accepted the house's tenants as witnesses and ruled that the boundary wall belonged to the house."
+  - address: >-
+      content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=found_against].primordial.text
+    of: 0048a02112edef75
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the boundary stone they are disputing. The old cut shows beneath the newer one for the whole bench to see. The advocate still takes a fee, but part of the charge falls away."
+  - address: >-
+      content:events/neighbours.yaml#events[id=the_wall_nobody_mends].interaction.choices[id=take_it_to_cawdry].outcomes[id=found_against].primordial.effects[2].text
+    of: 91b12d50bb9879cc
+    plainenglish: "At Cawdry, the court ruled against the house over the boundary wall and entered the boundary in the record."
+  - address: >-
+      content:events/neighbours.yaml#events[id=a_company_outside_bramme].interaction.choices[id=bar_the_gate].outcomes[id=refused].primordial.text
+    of: bff27acbe28c9357
+    plainenglish: "{PRIMORDIAL_ACTOR} stands at the gate while it is barred. The beasts fall quiet when his hand touches the wood and stop breaking their stalls. The hay already eaten is still gone."

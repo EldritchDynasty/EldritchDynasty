@@ -244,6 +244,7 @@ export function outcomeTextAddress(
   if (base === undefined) return undefined;
 
   if (event.interaction.kind === 'narration') {
+    if (!event.interaction.outcomes.includes(outcome)) return undefined;
     return `${base}.interaction.outcomes[id=${encodeURIComponent(outcome.id)}].text`;
   }
 

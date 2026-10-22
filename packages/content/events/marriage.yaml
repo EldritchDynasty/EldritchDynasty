@@ -47,6 +47,9 @@ events:
                     claimedAs: NAMED_ANCESTOR, generations: 3,
                     notarisedBy: a house that stopped existing in the war before last,
                   }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: have_it_checked
           label: Have the seal checked. Quietly.
           outcomes:
@@ -65,6 +68,9 @@ events:
                 and everyone in the room understands that at the same moment.
               effects:
                 - { kind: treasury, delta: -140 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the provenance of the match
       options:
@@ -327,6 +333,28 @@ events:
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: { slot: SPOUSE }, to: head, sentiment: -8 }
                 - { kind: chronicle, text: "The Church set the marriage aside, and the house went back to market for the only name it has left." }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: annulled_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lifts the returned marriage paper. The two seals separate without
+                  tearing the skin between them. The annulment stands, but those who see the unbroken
+                  parchment speak less harshly of it.
+                effects:
+                  - {kind: marriage, op: end, target: {slot: SOLE_HEIR}}
+                  - {kind: priorityMatch, target: {slot: SOLE_HEIR}}
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: {slot: SPOUSE}, to: head, sentiment: -8}
+                  - {
+                      kind: chronicle,
+                      text: "The Church set the marriage aside, and the house went back to market for the only
+                        name it has left."
+                    }
+                tags:
+                  - primordial
+                record: null
         - id: let_it_stand
           label: Let the marriage stand.
           outcomes:
@@ -576,3 +604,11 @@ proseVariants:
       No one brings the problem to an outside authority. The couple remains married the
       next morning. Without saying it openly, the house has decided what it is prepared
       to lose to preserve the marriage.
+  - address: >-
+      content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=put_it_to_the_church].outcomes[id=annulled].primordial.text
+    of: dc0adb484d18560c
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the marriage paper that was returned. The two seals separate without tearing the skin between them. The annulment stands, but those who see the unbroken parchment speak less harshly of it."
+  - address: >-
+      content:events/marriage.yaml#events[id=the_marriage_that_cannot_answer].interaction.choices[id=put_it_to_the_church].outcomes[id=annulled].primordial.effects[4].text
+    of: dbe94f2f922df8a3
+    plainenglish: "The Church annulled the marriage. The house returned to the marriage market for its only remaining family member."

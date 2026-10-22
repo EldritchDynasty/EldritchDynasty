@@ -199,7 +199,9 @@ import { CommitmentS } from './muster.js';
 /** Format 32 protects the guarded templates embedded in pending questions
  * (#1817). The loader explicitly upgrades format 31; absent attempt markers
  * retain their original meaning of no recorded forcing attempt. */
-export const SAVE_FORMAT = 32;
+/** Format 33 records automatic interventions beside their selected and final outcomes.
+ * Formats 31/32 upgrade without inventing any past interventions. */
+export const SAVE_FORMAT = 33;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).

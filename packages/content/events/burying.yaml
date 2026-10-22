@@ -134,6 +134,9 @@ events:
                 - { kind: treasury, delta: -200 }
                 - { kind: discrepancy, op: bury }
                 - { kind: chronicle, text: A sum was paid at Bramme for a service the ledger records as copying. }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: refuse_him
           label: Refuse. A man paid once is a man who knows he can be paid.
           outcomes:
@@ -183,6 +186,9 @@ events:
                 - { kind: treasury, delta: -60 }
                 - { kind: discrepancy, op: bury, provableBy: [commons, the_church] }
                 - { kind: chronicle, text: "An old woman of the village was given a room at the house, and kept in it, and buried from it." }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_her
           label: Leave her to the parish. She has said nothing in forty years.
           outcomes:
@@ -249,6 +255,9 @@ events:
                 - { kind: treasury, delta: -140 }
                 - { kind: discrepancy, op: bury }
                 - { kind: discrepancy, op: create, id: the_cawdry_instrument, severity: major, provableBy: [house_bracc, the_church] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_stand_alone
           label: Let it stand alone. One paper is one thing to defend.
           outcomes:
@@ -299,6 +308,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: bury, provableBy: [the_church] }
                 - { kind: chronicle, text: "The house endowed a chantry, and the name is said there twice a year." }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: decline_politely
           label: Decline. A roof is a roof and the house has its own.
           outcomes:

@@ -103,13 +103,27 @@ export function replay(
 
   runYears(ctx, years);
 
-  const got = canonical(ctx.world.decisionLog);
-  const want = canonical(log);
+  // Rendered private prose is a saved artefact, like Chronicle wording. The
+  // replay independently verifies the actor, site, outcomes and assessed facts.
+  const semantics = (rows: readonly LoggedDecision[]) => rows.map(row => {
+    if (row.kind !== 'outcome' || !row.primordial) return row;
+    const { receipt, manifestation, ...facts } = row.primordial;
+    return { ...row, primordial: facts };
+  });
+  const got = canonical(semantics(ctx.world.decisionLog));
+  const want = canonical(semantics(log));
   if (got !== want) {
     throw new ReplayMismatchError(
       `replay diverged from the recorded log at seed ${seed}: rebuilt `
       + `${ctx.world.decisionLog.length} decisions, expected ${log.length}`,
     );
+  }
+  for (const [index, row] of ctx.world.decisionLog.entries()) {
+    const recorded = log[index];
+    if (row.kind === 'outcome' && row.primordial && recorded?.kind === 'outcome' && recorded.primordial) {
+      row.primordial.receipt = recorded.primordial.receipt;
+      row.primordial.manifestation = recorded.primordial.manifestation;
+    }
   }
   return ctx;
 }

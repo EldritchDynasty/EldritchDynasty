@@ -104,6 +104,9 @@ events:
                 that they are down there and that they stay down there.
               effects:
                 - { kind: treasury, delta: -9 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: let_it_go
           label: Let it go. Bidding for it tells eleven houses it is worth having.
           outcomes:

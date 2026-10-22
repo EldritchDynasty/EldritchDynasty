@@ -42,6 +42,20 @@ events:
               effects:
                 - { kind: status, target: { slot: SON }, status: dead, cause: the levy }
                 - { kind: respect, delta: 1 }
+              site:
+                kind: party
+                slots:
+                  - SON
+              primordial:
+                id: gone_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} falls on the march and the ground gives under the falling blades. The
+                  men find a hollow where there was level earth. The son comes out breathing.
+                effects:
+                  - {kind: respect, delta: 1}
+                tags:
+                  - primordial
+                record: null
         - id: pay
           label: Pay it out. Coin is cheaper than sons.
           outcomes:
@@ -53,6 +67,9 @@ events:
               effects:
                 - { kind: treasury, delta: -120 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_looted_library
     title: Somebody Else's Library
@@ -88,6 +105,9 @@ events:
                 - { kind: treasury, delta: -220 }
                 - { kind: flag, flag: looted_library, set: true }
                 - { kind: schedule, event: the_three_volumes_are_sorted, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: walk
           label: Walk past. There is a war on and coin is a wall.
           outcomes:
@@ -133,6 +153,27 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: discrepancy, op: create, id: the_thin_papers, severity: minor, provableBy: [the_church] }
                 - { kind: discrepancy, op: prove, id: the_thin_papers }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: cracked_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} keeps a hand on the account while the assessors read it. The older
+                  ink rises through the newer line without tearing the sheet. The lie is proved, but the
+                  witnesses leave with a second account of the house.
+                effects:
+                  - {
+                      kind: discrepancy,
+                      op: create,
+                      id: the_thin_papers,
+                      severity: minor,
+                      provableBy: [ the_church ]
+                    }
+                  - { kind: discrepancy, op: prove, id: the_thin_papers }
+                tags:
+                  - primordial
+                record: null
         - id: concede_a_little
           label: Concede a small thing to protect a large one.
           outcomes:
@@ -146,6 +187,9 @@ events:
                 - { kind: respect, delta: -1 }
                 - { kind: discrepancy, op: create, id: the_thin_papers, severity: minor, provableBy: [the_church] }
                 - { kind: discrepancy, op: bury, id: the_thin_papers }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: nothing_gained
     title: A Generation With Nothing In It
@@ -207,6 +251,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: wait
           label: Wait. Desperation deepens.
           outcomes:
@@ -281,6 +328,46 @@ events:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: -1 }
                 - { kind: attribute, target: { slot: HEAD }, attr: strength, delta: -6 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: broken_through_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs in the
+                  air long enough for the store door to shut. They still take what lies in the yard.
+                effects:
+                  - {kind: treasury, delta: -30}
+                  - {kind: respect, delta: -1}
+                  - {kind: attribute, target: {slot: HEAD}, attr: strength, delta: -6}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs
+                        in the air long enough for the store door to shut. They still take what lies in
+                        the yard.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: the_river_road_lie
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                          - commons
         - id: bar_the_doors
           label: Bar the doors and wait for the garrison.
           outcomes:
@@ -293,6 +380,45 @@ events:
                 to arrive for.
               effects:
                 - { kind: treasury, delta: -25 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: waited_out_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs in the
+                  air long enough for the store door to shut. They still take what lies in the yard.
+                effects:
+                  - {kind: treasury, delta: -12}
+                tags:
+                  - vigilance
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs
+                        in the air long enough for the store door to shut. They still take what lies in
+                        the yard.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: the_river_road_lie
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                          - commons
             - id: found_the_side_door
               weight: 30
               text: >-
@@ -301,6 +427,45 @@ events:
               effects:
                 - { kind: treasury, delta: -70 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: found_the_side_door_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs in the
+                  air long enough for the store door to shut. They still take what lies in the yard.
+                effects:
+                  - {kind: treasury, delta: -35}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is inside the gate when the bar breaks. The loose grain hangs
+                        in the air long enough for the store door to shut. They still take what lies in
+                        the yard.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: the_river_road_lie
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                          - commons
     checks:
       - id: gate_stand
         pool: { kind: slot, slot: HEAD, attrs: [{ attr: strength, weight: 1 }] }
@@ -383,6 +548,9 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: relationship, from: head, to: { slot: ENVOY }, sentiment: 30 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: keep_him_apart
           label: Keep him fed, housed, and separate.
           outcomes:
@@ -395,6 +563,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: relationship, from: head, to: { slot: ENVOY }, sentiment: -25 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the boy held as surety
       options:
@@ -588,3 +759,58 @@ proseVariants:
   - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].outcomes[id=gone].effects[0].cause"
     of: 08025d3e222bf67a
     plainenglish: "the military levy"
+  - address: >-
+      content:events/age_scoped.yaml#events[id=the_levy_at_the_door].interaction.choices[id=send_the_son].outcomes[id=gone].primordial.text
+    of: 181f9027801e454b
+    plainenglish: "On the march, {PRIMORDIAL_ACTOR} falls and the ground sinks beneath the blades. The men find a hollow where there was level earth. The son comes out breathing."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=broken_through].primordial.text
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=broken_through].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=broken_through].primordial.record.options.record.chronicle
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=hold_the_gate].outcomes[id=broken_through].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=waited_out].primordial.text
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=waited_out].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=waited_out].primordial.record.options.record.chronicle
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=waited_out].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=found_the_side_door].primordial.text
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=found_the_side_door].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=found_the_side_door].primordial.record.options.record.chronicle
+    of: f66323693b78dded
+    plainenglish: "When the gate bar breaks, {PRIMORDIAL_ACTOR} is inside it. The loose grain hangs in the air long enough for the store door to shut. They still take what lies in the yard."
+  - address: >-
+      content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].interaction.choices[id=bar_the_doors].outcomes[id=found_the_side_door].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: "content:events/age_scoped.yaml#events[id=the_inquest_of_names].interaction.choices[id=stand_on_it].outcomes[id=cracked].primordial.text"
+    of: "df0c946334e4fb3f"
+    plainenglish: "As the assessors read the account, {PRIMORDIAL_ACTOR} keeps a hand on it. The older ink rises through the newer line without tearing the sheet. The lie is proved, but the witnesses leave with a second account of the house."

@@ -108,6 +108,46 @@ events:
               effects:
                 - { kind: treasury, delta: -260 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: ruined_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches for the order on the table. The seal splits before the last
+                  copy can leave, and part of the ruined bargain cannot be carried through. The earlier
+                  losses stand.
+                effects:
+                  - {kind: treasury, delta: -130}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches for the order on the table. The seal splits before the
+                        last copy can leave, and part of the ruined bargain cannot be carried through. The
+                        earlier losses stand.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_empty_chair_lie
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_marrow
     record:
       subject: who actually rules the house
       options:
@@ -211,3 +251,19 @@ proseVariants:
     of: 2fb6a7c0d31a8df4
     plainenglish: >-
       wisely changed his own mind, which helped the house prosper
+  - address: >-
+      content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].primordial.text
+    of: 26bfe06470189a40
+    plainenglish: "{PRIMORDIAL_ACTOR} reaches for the written order lying on the table. The seal splits before the last copy can leave, and part of the ruined bargain cannot be carried through. The earlier losses stand."
+  - address: >-
+      content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].primordial.record.options.record.chronicle
+    of: 26bfe06470189a40
+    plainenglish: "{PRIMORDIAL_ACTOR} reaches for the written order lying on the table. The seal splits before the last copy can leave, and part of the ruined bargain cannot be carried through. The earlier losses stand."
+  - address: >-
+      content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

@@ -206,6 +206,9 @@ events:
                 - { kind: arc_flag, flag: account_published, set: false }
                 - { kind: discrepancy, op: bury, id: the_names_in_the_old_account }
                 - { kind: treasury, delta: -90 }
+              agreedPrices:
+                - effect: 2
+                  reason: contract
 
   - id: the_account_nineteen_years_later
     title: Nineteen Years After the Chest
@@ -267,6 +270,43 @@ events:
               effects:
                 - { kind: discrepancy, op: prove, id: the_names_in_the_old_account }
                 - { kind: respect, delta: -2 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: the_other_copy_held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the opened packet while the clerk reads. The lost impression of
+                  the receipt rises through its backing. The other copy still exists, but the house can
+                  show what it paid for.
+                effects:
+                  - {kind: discrepancy, op: prove, id: the_names_in_the_old_account}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the opened packet while the clerk reads. The lost
+                        impression of the receipt rises through its backing. The other copy still exists,
+                        but the house can show what it paid for.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_account_needed_no_correction
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
 
     record:
       subject: the comparison nineteen years after the chest
@@ -436,3 +476,19 @@ proseVariants:
     of: 6f5cdc0ad8595426
     plainenglish: The clerk found the household book unchanged and complete. No branch had
       ever needed to ask for a missing name to be restored.
+  - address: >-
+      content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].outcomes[id=the_other_copy_held].primordial.text
+    of: a71a8719ed1b2555
+    plainenglish: "While the clerk reads, {PRIMORDIAL_ACTOR} holds the packet open. The lost impression of the receipt rises through its backing. The other copy still exists, but the house can show what it paid for."
+  - address: >-
+      content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].outcomes[id=the_other_copy_held].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].outcomes[id=the_other_copy_held].primordial.record.options.record.chronicle
+    of: a71a8719ed1b2555
+    plainenglish: "While the clerk reads, {PRIMORDIAL_ACTOR} holds the packet open. The lost impression of the receipt rises through its backing. The other copy still exists, but the house can show what it paid for."
+  - address: >-
+      content:events/late_long.yaml#events[id=the_account_nineteen_years_later].interaction.choices[id=open_the_packet].outcomes[id=the_other_copy_held].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

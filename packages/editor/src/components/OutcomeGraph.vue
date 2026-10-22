@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { Choice, EventTemplate, Outcome } from '@ed/schema';
+import type { Choice, Content, EventTemplate, Outcome } from '@ed/schema';
 import EffectEditor from './EffectEditor.vue';
+import PrimordialEditor from './PrimordialEditor.vue';
 import Mark from './Mark.vue';
 import { valenceOf, type Valence } from '../lib/valence';
 
@@ -21,7 +22,7 @@ import { valenceOf, type Valence } from '../lib/valence';
  *   Weights that do not sum to 100 are legal and almost always a slip, so the
  *   sum is shown against every unchecked group rather than only failing later.
  */
-const props = defineProps<{ event: EventTemplate; eventIds: string[] }>();
+const props = defineProps<{ event: EventTemplate; eventIds: string[]; content?: Content }>();
 const emit = defineEmits<{ change: [] }>();
 
 const slotNames = computed(() => Object.keys(props.event.slots));
@@ -190,6 +191,7 @@ function setSchedule(o: Outcome, kind: string) {
         <EffectEditor :model-value="o.effects" :slot-names="slotNames"
                       @update:model-value="(v) => { o.effects = v; touch(); }" />
 
+        <PrimordialEditor :event="event" :outcome="o" :content="content" @change="touch" />
         <div class="nextline">
           <button class="btn tiny" @click="toggleNext(o)">
             {{ o.next ? 'remove follow-up' : '+ follow-up scene' }}

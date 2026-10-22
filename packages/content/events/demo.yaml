@@ -32,6 +32,18 @@ events:
                 slot: FOUNDER
               status: dead
               cause: the closing of the first account
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: the_hand_remains_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} stands beside the chair while the last candle gutters. Breath returns
+              before the keeper can close the book. The page waits.
+            effects: []
+            tags:
+              - primordial
+            record: null
     arc:
       of: arc_the_first_account
       node: the_empty_chair
@@ -170,3 +182,7 @@ proseVariants:
       waits with a patience that the written account has not kept. The tree is gone, but its painted
       flower remains in the margin and loses a little colour whenever the paper is touched. Nobody
       turns the page."
+  - address: >-
+      content:events/demo.yaml#events[id=demo_the_empty_chair].interaction.outcomes[id=the_hand_remains].primordial.text
+    of: da6f505d38485671
+    plainenglish: "The last candle flickers while {PRIMORDIAL_ACTOR} stands by the chair. Breath returns before the keeper can close the book. The page waits."

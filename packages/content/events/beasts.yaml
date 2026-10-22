@@ -146,6 +146,9 @@ events:
                 which four.
               effects:
                 - { kind: treasury, delta: -2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_boar_in_the_oats
     title: It Is Not the Wolves This Year
@@ -208,6 +211,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_oxen_and_the_plough_team
     title: Three Crowns Each, and the Whole Year Turns On Them
@@ -240,6 +246,9 @@ events:
                 simply happened as it was supposed to.
               effects:
                 - { kind: treasury, delta: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: sow_with_six
           label: Sow with six. It will be slower and it will be done.
           outcomes:
@@ -288,6 +297,9 @@ events:
           effects:
             - { kind: treasury, delta: -1 }
             - { kind: relationship, from: household, to: head, sentiment: 6 }
+          agreedPrices:
+            - effect: 0
+              reason: contract
 
   - id: telling_the_bees_again
     title: Somebody Has to Go to the Hives
@@ -390,6 +402,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: relationship, from: { slot: LADY }, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: somebody_does_correct
               weight: 38
               text: >-
@@ -400,6 +415,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_feral_pack_after_the_winter
     title: Masterless Dogs
@@ -495,6 +513,21 @@ events:
               effects:
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
                 - { kind: land, op: damage, parcel: the_home_demesne, magnitude: 2 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: by_need_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} steps between the pigs and the wet beds. Their tracks stop at his
+                  boots, though the pigs keep walking. Only the outer strip is rooted up.
+                effects:
+                  - {kind: relationship, from: household, to: head, sentiment: 10}
+                  - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 1}
+                tags:
+                  - primordial
+                record: null
 
 # Plain English alternatives for the horse, mill-cat and dovecote scenes (#1094).
 # Reviewed against the Original; mechanics and original words are unchanged.
@@ -815,3 +848,7 @@ proseVariants:
   - address: "content:events/beasts.yaml#events[id=the_boar_in_the_oats].interaction.choices[id=hunt_it].outcomes[id=killed].effects[2].text"
     of: "d3370ebdff92e689"
     plainenglish: "{HUNTER} killed the boar and returned with a shoulder wound."
+  - address: >-
+      content:events/beasts.yaml#events[id=the_pigs_go_into_the_wood].interaction.choices[id=split_it_by_need].outcomes[id=by_need].primordial.text
+    of: 18191d26fe3fa33a
+    plainenglish: "{PRIMORDIAL_ACTOR} moves between the pigs and the wet planting beds. Their tracks stop at his boots, though the pigs keep walking. Only the outer strip is rooted up."

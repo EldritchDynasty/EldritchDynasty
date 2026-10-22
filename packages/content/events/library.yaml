@@ -65,6 +65,9 @@ events:
                 - { kind: treasury, delta: 70 }
                 - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_life }
                 - { kind: relationship, from: { slot: READER }, to: head, sentiment: -18 }
+              agreedPrices:
+                - effect: 1
+                  reason: purchase
 
   - id: the_fair_copy
     title: Half a Year of Somebody's Life
@@ -130,6 +133,9 @@ events:
                 # The corrected page has consequences. The clerk is due a generation
                 # later; he must not compete with unrelated uncommon encounters.
                 - { kind: schedule, event: the_bramme_margin_returns, inYears: 20 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: read_before_returned
               weight: 32
               text: >-
@@ -144,6 +150,27 @@ events:
                 - { kind: treasury, delta: -14 }
                 - { kind: spellbook, op: remove_copy, target: { slot: COPYIST }, book: lesser_workings_of_life }
                 - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.6 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
+              site:
+                kind: elsewhere
+                slots: []
+              primordial:
+                id: read_before_returned_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beside the opened crate on the Bramme road. The stolen volume will
+                  not pass its broken lid. The cart reaches the chapter house with the book still inside
+                  and the copying fee still due.
+                effects:
+                  - {kind: treasury, delta: -14}
+                  - {kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.6}
+                agreedPrices:
+                  - effect: 0
+                    reason: purchase
+                tags:
+                  - primordial
+                record: null
     rumour: { id: rumour_the_window_in_the_long_room, accuracy: 0.35, spread: 1 }
 
   - id: the_fourth_shelf
@@ -269,6 +296,21 @@ events:
                 - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_thermal }
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: attribute, target: { slot: READER }, attr: mind, delta: 4 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: burned_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches toward the grate. The book shuts against the fire and falls
+                  cold into the ash. It is still a wrong book, and nobody puts it back among the sound
+                  ones.
+                effects:
+                  - {kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong}
+                  - {kind: attribute, target: {slot: READER}, attr: mind, delta: 4}
+                tags:
+                  - primordial
+                record: null
         - id: sell_it_on
           label: Sell it on. Somebody at the next sale will want a beautiful Thermal book.
           outcomes:
@@ -286,6 +328,9 @@ events:
                 - { kind: spellbook, op: remove_copy, target: { slot: READER }, book: lesser_workings_of_thermal }
                 - { kind: knowledge, op: grant, flag: knows_a_book_can_be_wrong }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 1
+                  reason: purchase
 
 
   - id: the_bramme_margin_returns
@@ -325,6 +370,22 @@ events:
                 - { kind: respect, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.8 }
                 - { kind: flag, flag: bramme_copied_a_book, set: false }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: bramme_knows_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the corrected page to the lamp. A second line rises in its
+                  shadow and the clerk copies it beside the admission. Bramme keeps both; the house's fall
+                  in standing is smaller.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_what_the_presses_hold, accuracy: 0.8}
+                  - {kind: flag, flag: bramme_copied_a_book, set: false}
+                tags:
+                  - primordial
+                record: null
         - id: refuse_the_answer
           label: Say nothing about the working, and send the clerk away.
           outcomes:
@@ -485,3 +546,15 @@ proseVariants:
       He writes down that the house refused. The chapter house keeps the corrected page, with a
       dated note of the house's silence next to it. The family keeps its answer to itself, but
       the price is being remembered as a house that would not give one.
+  - address: >-
+      content:events/library.yaml#events[id=the_fair_copy].interaction.choices[id=send_it_to_bramme].outcomes[id=read_before_returned].primordial.text
+    of: 4973e8ec721d02e8
+    plainenglish: "On the Bramme road, {PRIMORDIAL_ACTOR} is beside the opened crate. The stolen volume will not pass its broken lid. The cart reaches the chapter house with the book still inside and the copying fee still due."
+  - address: >-
+      content:events/library.yaml#events[id=the_book_that_is_wrong].interaction.choices[id=burn_it].outcomes[id=burned].primordial.text
+    of: 4e55ba2c3cb11960
+    plainenglish: "{PRIMORDIAL_ACTOR} reaches towards the fireplace. The book shuts against the fire and falls cold into the ash. It is still a wrong book, and nobody puts it back among the sound ones."
+  - address: >-
+      content:events/library.yaml#events[id=the_bramme_margin_returns].interaction.choices[id=acknowledge_the_correction].outcomes[id=bramme_knows].primordial.text
+    of: c3fd330f2219b023
+    plainenglish: "{PRIMORDIAL_ACTOR} raises the corrected page to the lamp. A second line rises in its shadow and the clerk copies it beside the admission. Bramme keeps both; the house's fall in standing is smaller."

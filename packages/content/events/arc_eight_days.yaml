@@ -108,6 +108,9 @@ events:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: create, id: the_second_obligation_lie, severity: major, provableBy: [the_church, house_marrow] }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: keep_to_the_thing
           label: The eight-days hand. Keep to the third thing — a term, obeyed.
           outcomes:
@@ -187,6 +190,9 @@ events:
                 - { kind: treasury, delta: -160 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_autumn_they_changed_everything, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
         - id: hold_the_line
           label: Hold. Four generations cannot have been wrong and we cannot prove they were.
           outcomes:

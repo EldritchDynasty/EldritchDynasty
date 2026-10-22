@@ -46,7 +46,7 @@ describe('a run survives being written down', () => {
     const legacy = { ...saveGame(before), format: 31 };
     for (const person of legacy.people) delete person.awakening.forcingTried;
     const after = loadGame(JSON.parse(JSON.stringify(legacy)), content);
-    expect(saveGame(after).format).toBe(32);
+    expect(saveGame(after).format).toBe(SAVE_FORMAT);
     expect(digestOf(after)).toBe(digestOf(before));
     expect(after.world.people.all().some((person) => person.awakening.forcingTried)).toBe(false);
     expect(legacy.format).toBe(31);

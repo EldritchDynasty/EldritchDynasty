@@ -23,6 +23,8 @@ export type CareerRespectYield = z.infer<typeof CareerRespectYieldS>;
 export const CareerDefS = z.object({
   id: CareerIdS,
   name: z.string(),
+  /** Physical residence while holding this post; unknown posts never count as home. */
+  resident: z.enum(['home', 'away']).optional(),
   respectYield: CareerRespectYieldS,
   /** Crowns/year to the treasury. `variance` widens a random per-year swing — Military income is "variable". */
   income: z.object({ base: z.number(), variance: z.number().min(0).default(0) }),

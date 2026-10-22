@@ -48,6 +48,9 @@ events:
                 - { kind: treasury, delta: -35 }
                 - { kind: land, op: grant, parcel: cradlemoor }
                 - { kind: arc, op: start, arc: arc_cradlemoor_drained }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: leave_it_be
           label: Let Renn find some other family to sell his weather to.
           outcomes:
@@ -94,6 +97,9 @@ events:
             is, at least, begun.
           effects:
             - { kind: treasury, delta: -15 }
+          agreedPrices:
+            - effect: 0
+              reason: contract
     rumour: { id: rumour_cradlemoor_being_drained, accuracy: 0.55, spread: 1 }
 
   - id: cradlemoor_the_ditches_hold
@@ -134,6 +140,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: land, op: restore, parcel: cradlemoor, magnitude: 2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_lapse
           label: Let the ditches silt up. The house has paid enough into a hole in the ground.
           outcomes:

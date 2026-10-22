@@ -94,6 +94,9 @@ events:
             round the crates.
           effects:
             - { kind: treasury, delta: -90 }
+          agreedPrices:
+            - effect: 0
+              reason: contract
 
   - id: the_north_wall_is_found_out
     title: What Was Behind the North Wall
@@ -126,6 +129,20 @@ events:
             - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_darkness }
             - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_terra }
             - { kind: treasury, delta: -40 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: the_quires_are_gone_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} opens the damp book against the wall. Water gathers above the inner
+              margin and runs away without taking the ink. The spoiled backing still has to be
+              replaced.
+            effects:
+              - {kind: treasury, delta: -20}
+            tags:
+              - primordial
+            record: null
     rumour: { id: rumour_the_damp_at_ardwen, accuracy: 0.45, spread: 2 }
 
 proseVariants:
@@ -189,3 +206,7 @@ proseVariants:
       Those corrections were the part of the book that the house actually owned. Nobody
       blames {KEEPER}, and he finds that worse than being blamed. He had spoken the warning
       on the stairs, but no one was there to hear it.
+  - address: >-
+      content:events/the_keeper_of_the_long_room.yaml#events[id=the_north_wall_is_found_out].interaction.outcomes[id=the_quires_are_gone].primordial.text
+    of: 330821d8321ad25c
+    plainenglish: "{PRIMORDIAL_ACTOR} opens the damp book by the wall. Water gathers above the inner margin and runs away without taking the ink. The spoiled backing still has to be replaced."

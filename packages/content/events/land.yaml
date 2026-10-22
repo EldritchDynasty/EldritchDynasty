@@ -77,6 +77,9 @@ events:
                 only argument a ditch has ever needed to win.
               effects:
                 - { kind: treasury, delta: -50 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_sit
           label: Let the low field go under this year. There is other ground.
           outcomes:
@@ -93,6 +96,21 @@ events:
               # same talk twice. The price is the ground, which is the choice.
               effects:
                 - { kind: land, op: damage, parcel: longmere }
+              site:
+                kind: elsewhere
+                slots: []
+              primordial:
+                id: went_under_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands in Longmere's flooded ditch. The water parts around his boots
+                  and leaves a narrow run behind him. Half the threatened ground is still under water.
+                effects:
+                  - {kind: land, op: damage, parcel: longmere, magnitude: 1}
+                tags:
+                  - land
+                  - hazard
+                  - primordial
+                record: null
     rumour: { id: rumour_longmere_flooded_again, accuracy: 0.6, spread: 2 }
 
   - id: what_the_years_wore_down
@@ -130,6 +148,9 @@ events:
               effects:
                 - { kind: treasury, delta: -80 }
                 - { kind: land, op: restore, parcel: coldharbour }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it
           label: Leave it as it has always been. It still pays.
           outcomes:
@@ -180,6 +201,25 @@ events:
                 - { kind: treasury, delta: 18 }
                 - { kind: land, op: damage, parcel: wick_common }
                 - { kind: relationship, from: household, to: head, sentiment: -4 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: marker_moved_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} takes hold of the shifted marker. Grass rises where its old socket
+                  lay, and the grazed strip recovers some of its yield. Wick still knows the stone was
+                  moved.
+                effects:
+                  - {kind: treasury, delta: 18}
+                  - {kind: land, op: damage, parcel: wick_common, magnitude: 1}
+                  - {kind: relationship, from: household, to: head, sentiment: -4}
+                tags:
+                  - land
+                  - discontent
+                  - primordial
+                record: null
         - id: leave_the_stone
           label: Leave the stone where it stands.
           outcomes:
@@ -230,6 +270,9 @@ events:
               effects:
                 - { kind: treasury, delta: -84 }
                 - { kind: land, op: grant, parcel: sowerhay }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_go
           label: Let it go. There will be other ground.
           outcomes:
@@ -281,6 +324,9 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: lost_it_anyway
               weight: 30
               tags: [land, litigation]
@@ -292,6 +338,29 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: land, op: seize, parcel: ashcroft }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: lost_it_anyway_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays a hand beside the deed at the assize. An older boundary appears
+                  through the skin, visible on both sides at once. Ashcroft stays with the house; the
+                  costs of the hearing stand.
+                effects:
+                  - {kind: treasury, delta: -60}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - land
+                  - litigation
+                  - primordial
+                record: null
         - id: concede_it
           label: Concede rather than pay to fight a case that may go against the house anyway.
           outcomes:
@@ -306,6 +375,23 @@ events:
               effects:
                 - { kind: land, op: seize, parcel: ashcroft }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: conceded_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays a hand beside the deed at the assize. An older boundary appears
+                  through the skin, visible on both sides at once. Ashcroft stays with the house; the
+                  costs of the hearing stand.
+                effects:
+                  - {kind: relationship, from: household, to: head, sentiment: 6}
+                tags:
+                  - land
+                  - prudent
+                  - primordial
+                record: null
 
   - id: the_tenant_who_cannot_pay
     title: Redmoor's Rent Is Short Again
@@ -344,6 +430,30 @@ events:
                 - { kind: land, op: damage, parcel: redmoor }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: head, to: { slot: TENANT }, grudge: { severity: 36, inheritance: house_wide } }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: evicted_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at Redmoor when the last cart leaves. The ruts close behind it
+                  without a spade, leaving part of the ground fit for the next tenant. The eviction is not
+                  undone.
+                effects:
+                  - {kind: land, op: damage, parcel: redmoor, magnitude: 1}
+                  - {kind: respect, delta: 1}
+                  - {
+                      kind: relationship,
+                      from: head,
+                      to: {slot: TENANT},
+                      grudge: {severity: 36, inheritance: house_wide}
+                    }
+                tags:
+                  - land
+                  - grudge
+                  - primordial
+                record: null
         - id: forgive_the_arrears
           label: Let the arrears stand another year. The ground is not going anywhere.
           outcomes:
@@ -359,6 +469,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: head, to: { slot: TENANT }, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # STAGE G (issue #91) — three of the five missing routes below need no
   # engine vocabulary that was not already built for the six above; the other
@@ -461,6 +574,9 @@ events:
                 - { kind: treasury, delta: -20 }
                 - { kind: land, op: grant, parcel: farrowmere }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: decline_it
           label: Let the Warden find another house for it.
           outcomes:
@@ -697,3 +813,23 @@ proseVariants:
   - address: content:events/land.yaml#events[id=the_marker_stays_moved].interaction.choices[id=walk_it_back].outcomes[id=farthing_returned].text
     of: "83a1c3e374cc3a07"
     plainenglish: "{HEAD} sends a man to return the stone before the spring grazing begins. By the time the villagers check, the common has its original boundary."
+  - address: >-
+      content:events/land.yaml#events[id=the_low_ground_floods].interaction.choices[id=let_it_sit].outcomes[id=went_under].primordial.text
+    of: 9a9904a0b35b2a04
+    plainenglish: "{PRIMORDIAL_ACTOR} is in the flooded ditch at Longmere. The water parts around his boots and leaves a narrow run behind him. Half the threatened ground is still under water."
+  - address: >-
+      content:events/land.yaml#events[id=the_common_is_grazed_thin].interaction.choices[id=move_the_marker].outcomes[id=marker_moved].primordial.text
+    of: ceb924f7ee5e62d3
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the boundary marker that was moved. Grass rises where its old socket lay, and the grazed strip recovers some of its yield. Wick still knows the stone was moved."
+  - address: >-
+      content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=fight_it].outcomes[id=lost_it_anyway].primordial.text
+    of: a9cab5823df6de86
+    plainenglish: "At the court hearing, {PRIMORDIAL_ACTOR} puts a hand next to the deed. An older boundary appears through the skin, visible on both sides at once. Ashcroft stays with the house; the costs of the hearing stand."
+  - address: >-
+      content:events/land.yaml#events[id=the_deed_nobody_can_find].interaction.choices[id=concede_it].outcomes[id=conceded].primordial.text
+    of: a9cab5823df6de86
+    plainenglish: "At the court hearing, {PRIMORDIAL_ACTOR} puts a hand next to the deed. An older boundary appears through the skin, visible on both sides at once. Ashcroft stays with the house; the costs of the hearing stand."
+  - address: >-
+      content:events/land.yaml#events[id=the_tenant_who_cannot_pay].interaction.choices[id=evict_them].outcomes[id=evicted].primordial.text
+    of: 10fc202a2edd56ee
+    plainenglish: "When the final cart leaves Redmoor, {PRIMORDIAL_ACTOR} is there. The ruts close behind it without a spade, leaving part of the ground fit for the next tenant. The eviction is not undone."

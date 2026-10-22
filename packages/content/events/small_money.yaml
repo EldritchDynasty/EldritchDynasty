@@ -95,6 +95,9 @@ events:
                 house again for nineteen years.
               effects:
                 - { kind: treasury, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: send_the_four_to_bramme
           label: Send the four to the magistrate. Clipping is his business.
           outcomes:
@@ -146,6 +149,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 16 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: sell_them_at_bramme
           label: Sell them at Bramme. Three years is three years.
           outcomes:
@@ -226,6 +232,9 @@ events:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 20 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: carry_it_against_the_holding
           label: Carry it against the holding. It is good in law.
           outcomes:
@@ -274,6 +283,9 @@ events:
               effects:
                 - { kind: treasury, delta: -62 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: ask_for_terms
           label: Ask for terms. Four years, and the Crown has had worse.
           outcomes:
@@ -289,6 +301,9 @@ events:
               effects:
                 - { kind: treasury, delta: -18 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_toll_and_the_tenth_mite
     title: A Mite a Wheel
@@ -462,6 +477,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
 # Direct-language counterparts for the first common small-money event (#415).
 proseVariants:

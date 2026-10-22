@@ -90,3 +90,8 @@ export * from './testing.js';
  * Their few consumers (`corpus-warm.ts`, `corpus.slow.test.ts`,
  * `record.slow.test.ts`) import the file directly instead of through here.
  */
+
+export * from './presence.js';
+
+export * from './events/harm.js';
+export * from './events/primordial.js';

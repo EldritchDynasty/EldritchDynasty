@@ -37,6 +37,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -8
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Let the discrepancy stand.
           outcomes:
@@ -111,6 +114,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -12
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Refuse the comparison.
           outcomes:
@@ -125,6 +131,46 @@ events:
                   op: seed
                   id: rumour_the_copy_comes_back_open
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} flattens the returned copy. The older impression shows beneath the
+                  disputed words. The chapter house keeps its questions, but the house can answer one of
+                  them.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_copy_comes_back_open, accuracy: 0.7}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} flattens the returned copy. The older impression shows beneath
+                        the disputed words. The chapter house keeps its questions, but the house can
+                        answer one of them.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_copy_comes_back_open_denied
+                        severity: minor
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
     record:
       subject: The Copy Comes Back Open
       options:
@@ -185,6 +231,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -24
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Use the papers without a witness.
           outcomes:
@@ -199,6 +248,46 @@ events:
                   op: seed
                   id: rumour_the_chapter_house_closes_its_door
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lifts the unwitnessed papers. The cord rises through the closed seal
+                  without cutting it. The missing Church witness remains a fault, though the keeper adds
+                  what he saw.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_chapter_house_closes_its_door, accuracy: 0.7}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} lifts the unwitnessed papers. The cord rises through the closed
+                        seal without cutting it. The missing Church witness remains a fault, though the
+                        keeper adds what he saw.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_chapter_house_closes_its_door_denied
+                        severity: minor
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
     record:
       subject: The Chapter House Closes Its Door
       options:
@@ -269,6 +358,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -9
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: The Permission Is Read Back
       options:
@@ -329,6 +421,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -6
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Send it with the refusal left out.
           outcomes:
@@ -343,6 +438,46 @@ events:
                   op: seed
                   id: rumour_the_answer_was_a_refusal
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the covering letter. The omitted answer shows through the
+                  fold before anyone opens it. The refusal is still a refusal, but the house's own
+                  witnesses can attest how it was recovered.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_answer_was_a_refusal, accuracy: 0.7}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} touches the covering letter. The omitted answer shows through
+                        the fold before anyone opens it. The refusal is still a refusal, but the house's
+                        own witnesses can attest how it was recovered.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_answer_was_a_refusal_denied
+                        severity: minor
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
     record:
       subject: The Answer Was a Refusal
       options:
@@ -415,6 +550,9 @@ events:
                   op: acquire_copy
                   target: head
                   book: lesser_workings_of_darkness
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Sell the loose gatherings to a binder.
           outcomes:
@@ -461,6 +599,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -28
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Enter the gap as it stands.
           outcomes:
@@ -475,6 +616,21 @@ events:
                   op: seed
                   id: rumour_the_herald_asks_for_her_mother
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the descent to the light. An old impression appears beneath the
+                  blank without adding a name. The gap stays unproved; the herald also has to record the
+                  mark.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_herald_asks_for_her_mother, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_factor_remembers_the_receipt
     title: The Factor Remembers the Receipt
     tier: head
@@ -511,6 +667,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -7
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Ask for a certified copy of the favourable terms.
           outcomes:
@@ -523,6 +682,9 @@ events:
                   delta: -1
                 - kind: respect
                   delta: 1
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
   - id: the_sideways_seal_on_the_lease
     title: The Sideways Seal on the Lease
     tier: head
@@ -559,6 +721,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -16
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Demand that the impression be accepted alone.
           outcomes:
@@ -572,6 +737,20 @@ events:
                   op: seed
                   id: rumour_the_sideways_seal_on_the_lease
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} turns the rejected impression. Its shadow stays upright on the board.
+                  The lease still needs enrolling, but the clerk cannot dismiss everything he has seen.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_sideways_seal_on_the_lease, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_stewards_list_of_doors
     title: The Steward’s List of Doors
     tier: head
@@ -608,6 +787,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -11
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Bar the clerk from the rooms.
           outcomes:
@@ -622,6 +804,21 @@ events:
                   op: seed
                   id: rumour_the_stewards_list_of_doors
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} passes the clerk's list across the table. A shut door sounds behind
+                  the wall where there is no room. The refused inspection remains on the list, beside the
+                  clerk's own account of the sound.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_stewards_list_of_doors, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_index_has_our_page
     title: The Index Has Our Page
     tier: head
@@ -658,6 +855,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -14
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: keep_our_terms
           label: Leave the reference unanswered.
           outcomes:
@@ -672,6 +872,21 @@ events:
                   op: seed
                   id: rumour_the_index_has_our_page
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays the family page beside the index. The two sheets cast one
+                  shadow, with an older entry clear along its edge. The rival reference still circulates;
+                  it is no longer the only thing read beside the page.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_index_has_our_page, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_grievance_reaches_the_assembly
     title: The Grievance Reaches the Assembly
     tier: head
@@ -708,6 +923,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -20
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Insist on the earlier ruling.
           outcomes:
@@ -722,6 +940,21 @@ events:
                   op: seed
                   id: rumour_the_grievance_reaches_the_assembly
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lifts the delegate's returned petition. The seal rings against an
+                  empty hand. The grievance still precedes the house's answer, but the people in the hall
+                  send their own witnessed account with it.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_grievance_reaches_the_assembly, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_son_brings_the_written_terms
     title: The Son Brings the Written Terms
     tier: head
@@ -758,6 +991,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -8
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Keep the charge and contest the document.
           outcomes:
@@ -808,6 +1044,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -18
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Carry the unproved line into the new descent.
           outcomes:
@@ -859,6 +1098,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -8
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Refuse to certify the inventory.
           outcomes:
@@ -909,6 +1151,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -16
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Surrender the named hidden copies.
           outcomes:
@@ -927,6 +1172,20 @@ events:
                   book: lesser_workings_of_darkness
                 - kind: respect
                   delta: 1
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the named copies. The crate will not close over them,
+                  though the same lid fits when it is empty. The clerk leaves the books under the house's
+                  seal and takes a record of the refusal.
+                effects:
+                  - {kind: respect, delta: 1}
+                tags:
+                  - primordial
+                record: null
   - id: the_mason_reaches_the_turn
     title: The Mason Reaches the Turn
     tier: head
@@ -966,6 +1225,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -12
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Leave the opening and let the household see it.
           outcomes:
@@ -1020,6 +1282,9 @@ events:
                   op: acquire_copy
                   target: head
                   book: the_marrow_codex
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Sell the shipment information.
           outcomes:
@@ -1066,6 +1331,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -15
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Declare the unresolved disagreement.
           outcomes:
@@ -1116,6 +1384,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -18
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Admit that the seal cannot be produced.
           outcomes:
@@ -1130,6 +1401,21 @@ events:
                   op: seed
                   id: rumour_the_business_without_the_seal
                   accuracy: 0.7
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} puts the empty regalia box on the table. The old impression stands in
+                  the air above the lining. The clerk still records that the seal cannot be produced; he
+                  also records what was there instead.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_business_without_the_seal, accuracy: 0.7}
+                tags:
+                  - primordial
+                record: null
   - id: the_old_list_reaches_the_cellar
     title: The Old List Reaches the Cellar
     tier: head
@@ -1225,6 +1511,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -8
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Refuse to send an answer.
           outcomes:
@@ -1274,6 +1563,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -7
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Refuse to answer the cited entry.
           outcomes:
@@ -1327,6 +1619,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -9
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: keep_our_terms
           label: Lodge the disputed terms without a translation.
           outcomes:
@@ -1402,6 +1697,9 @@ events:
               effects:
                 - kind: treasury
                   delta: -6
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_our_terms
           label: Leave Marrow’s account unanswered.
           outcomes:
@@ -2080,3 +2378,79 @@ proseVariants:
     plainenglish: >-
       The family sent the chapter house an old cellar plan and certified that the third room
       no longer existed.
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 9f42dcd7e14f61b3
+    plainenglish: "{PRIMORDIAL_ACTOR} lays the returned copy flat. The older impression shows beneath the disputed words. The chapter house keeps its questions, but the house can answer one of them."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.record.chronicle
+    of: 9f42dcd7e14f61b3
+    plainenglish: "{PRIMORDIAL_ACTOR} lays the returned copy flat. The older impression shows beneath the disputed words. The chapter house keeps its questions, but the house can answer one of them."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_copy_comes_back_open].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: db91bd097a665725
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the papers that lack a witness. The cord rises through the closed seal without cutting it. The missing Church witness remains a fault, though the keeper adds what he saw."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.record.chronicle
+    of: db91bd097a665725
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the papers that lack a witness. The cord rises through the closed seal without cutting it. The missing Church witness remains a fault, though the keeper adds what he saw."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_chapter_house_closes_its_door].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 4fc56dd58a3e6f71
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the covering letter. The omitted answer shows through the fold before anyone opens it. The refusal is still a refusal, but the house's own witnesses can attest how it was recovered."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.record.chronicle
+    of: 4fc56dd58a3e6f71
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the covering letter. The omitted answer shows through the fold before anyone opens it. The refusal is still a refusal, but the house's own witnesses can attest how it was recovered."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_answer_was_a_refusal].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_herald_asks_for_her_mother].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 7827128a8d4d4fc6
+    plainenglish: "{PRIMORDIAL_ACTOR} raises the ancestry document to the light. An old impression appears beneath the blank without adding a name. The gap stays unproved; the herald also has to record the mark."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_sideways_seal_on_the_lease].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: c57111c422b26e20
+    plainenglish: "{PRIMORDIAL_ACTOR} turns the seal impression the clerk rejected. Its shadow stays upright on the board. The lease still needs enrolling, but the clerk cannot dismiss everything he has seen."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_stewards_list_of_doors].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: d4c672d0802ba794
+    plainenglish: "{PRIMORDIAL_ACTOR} slides the clerk's list across the table. A shut door sounds behind the wall where there is no room. The refused inspection remains on the list, beside the clerk's own account of the sound."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_index_has_our_page].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: e6e7bd3c8e168c00
+    plainenglish: "{PRIMORDIAL_ACTOR} puts the family page next to the index. The two sheets cast one shadow, with an older entry clear along its edge. The rival reference still circulates; it is no longer the only thing read beside the page."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_grievance_reaches_the_assembly].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 6053763d25fd0521
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the petition returned by the delegate. The seal rings against an empty hand. The grievance still precedes the house's answer, but the people in the hall send their own witnessed account with it."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_cellar_shelf_is_found].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 7d24904007d9681c
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the books named by the clerk. The crate will not close over them, though the same lid fits when it is empty. The clerk leaves the books under the house's seal and takes a record of the refusal."
+  - address: >-
+      content:events/remembered_accounts.yaml#events[id=the_business_without_the_seal].interaction.choices[id=keep_our_terms].outcomes[id=stood].primordial.text
+    of: 0effb4325f4cc27e
+    plainenglish: "{PRIMORDIAL_ACTOR} sets the empty regalia box on the table. The old impression stands in the air above the lining. The clerk still records that the seal cannot be produced; he also records what was there instead."

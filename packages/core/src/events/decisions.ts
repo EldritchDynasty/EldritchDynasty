@@ -6,6 +6,7 @@ import { candidatesFor, castIn, castPeople, renderBody, type SlotFill } from './
 import { decideBranch } from './deciders.js';
 import { choiceAvailability, type DecisionChoice } from './availability.js';
 import { applyEffect, applyOutcome, type ResolvedEvent } from './effects.js';
+import { resolvePrimordial } from './primordial.js';
 import { resolveChoiceOutcome } from './checks.js';
 import { advanceArc, startArc, type ArcStep } from './arcs.js';
 import { resolveClaim } from '../record.js';
@@ -211,6 +212,13 @@ export function recordEventForChoice(
   choiceId?: string,
   outcomeId?: string,
 ): { event: EventTemplate; recordChoiceId?: string; recordOutcomeId?: string } | undefined {
+  const ordinary = e.interaction.kind === 'narration' ? e.interaction.outcomes
+    : e.interaction.choices.find(choice => choice.id === choiceId)?.outcomes ?? [];
+  const rescue = outcomeId === undefined ? undefined : ordinary.find(o => o.primordial?.id === outcomeId)?.primordial;
+  if (rescue) return rescue.record ? {
+    event: { ...e, record: rescue.record },
+    ...(choiceId !== undefined ? { recordChoiceId: choiceId } : {}), recordOutcomeId: outcomeId,
+  } : undefined;
   // Outcome identity is the PAIR: outcome ids may repeat across different choices.
   // Prefer its exact authored account before the choice-wide fallback.
   const key = choiceId === undefined || outcomeId === undefined
@@ -237,6 +245,14 @@ function recordProseBase(
 ): string | undefined {
   const base = eventTitleAddress(ctx, e)?.replace(/\.title$/, '');
   if (base === undefined) return undefined;
+  if (recordOutcomeId !== undefined) {
+    const ordinary = e.interaction.kind === 'narration' ? e.interaction.outcomes
+      : e.interaction.choices.find(choice => choice.id === recordChoiceId)?.outcomes ?? [];
+    const normal = ordinary.find(o => o.primordial?.id === recordOutcomeId);
+    if (normal) return `${base}.interaction.${e.interaction.kind === 'narration'
+      ? `outcomes[id=${encodeURIComponent(normal.id)}]`
+      : `choices[id=${encodeURIComponent(recordChoiceId!)}].outcomes[id=${encodeURIComponent(normal.id)}]`}.primordial.record`;
+  }
   if (recordChoiceId !== undefined && recordOutcomeId !== undefined) {
     return `${base}.recordByOutcome[id=${encodeURIComponent(`${recordChoiceId}/${recordOutcomeId}`)}]`;
   }
@@ -309,6 +325,8 @@ export function queueMatch(ctx: SimCtx, offer: MatchOffer): PendingMatch {
 export interface OutcomeObservation {
   readonly event: EventTemplate;
   readonly outcome: Outcome;
+  /** The ordinary selection, before the involuntary response. */
+  readonly selectedOutcome: Outcome;
   /** A private copy: an instrument cannot change the actual cast through this value. */
   readonly fill: SlotFill;
   readonly choiceId?: string;
@@ -330,11 +348,17 @@ export function commitOutcome(
   rng: Rng,
   arcStep?: ArcStep,
 ): ResolvedEvent {
+  const selectedOutcome = outcome;
+  const intervention = resolvePrimordial(ctx, e, selectedOutcome, fill,
+    `chr_${(ctx.world.counters.chronicle + 1).toString(36)}`, choiceId);
+  e = intervention.event;
+  outcome = intervention.outcome;
+  fill = intervention.fill;
   // Observe the actual cast and selected result while the check's inputs still
   // exist. A later Health/death/knowledge effect cannot become its own cause.
   // No listener means no snapshot allocation, and observation draws no dice.
   const observation = ctx.observeOutcome || ctx.observeAppliedOutcome
-    ? { event: e, outcome, fill: structuredClone(fill),
+    ? { event: e, outcome, selectedOutcome, fill: structuredClone(fill),
       ...(choiceId !== undefined ? { choiceId } : {}) }
     : undefined;
   if (observation) ctx.observeOutcome?.(observation);
@@ -342,6 +366,7 @@ export function commitOutcome(
   // story-local memory, and a node that sets a flag its own successors read has
   // to have written it before `advanceArc` asks.
   const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
+  if (intervention.record) resolved.primordial = { ...intervention.record, page: resolved.entryId };
   if (observation) ctx.observeAppliedOutcome?.(observation);
 
   // A boy goes through one forcing rite (§11, #1817), whatever came of it and
@@ -366,6 +391,7 @@ export function commitOutcome(
     event: e.id,
     ...(choiceId !== undefined ? { choiceId } : {}),
     outcomeId: outcome.id,
+    ...(resolved.primordial ? { selectedOutcomeId: selectedOutcome.id, primordial: resolved.primordial } : {}),
     fill: { ...fill },
   };
   ctx.world.decisionLog.push(entry);
@@ -472,7 +498,7 @@ export function resolveChoice(
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
   const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep);
-  queueRecord(ctx, e, resolved.entryId, fill, choice.id, outcome.id);
+  queueRecord(ctx, resolved.event, resolved.entryId, resolved.fill, choice.id, resolved.outcome.id);
   return { ok: true, resolved };
 }
 

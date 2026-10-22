@@ -123,6 +123,27 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: status, target: { slot: SON }, status: missing, cause: the Colleges at Corran }
                 - { kind: rumour, op: seed, id: rumour_the_one_who_went_to_anvary, accuracy: 0.45 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: party
+                slots:
+                  - SON
+              primordial:
+                id: sent_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} puts a hand against the door at Corran. It opens onto the road he
+                  came by, though the room has no outer wall. He takes it, and sends his own account home.
+                effects:
+                  - {kind: treasury, delta: -11}
+                  - {kind: arc, op: cancel, arc: arc_nine_years_at_corran}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record: null
         - id: write_again
           label: Write again. Twice more if we must. Eleven crowns is a horse.
           outcomes:
@@ -140,6 +161,28 @@ events:
                 - { kind: status, target: { slot: SON }, status: missing, cause: the Colleges at Corran }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_one_who_went_to_anvary, accuracy: 0.6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: party
+                slots:
+                  - SON
+              primordial:
+                id: wrote_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} puts a hand against the door at Corran. It opens onto the road he
+                  came by, though the room has no outer wall. He takes it, and sends his own account home.
+                effects:
+                  - {kind: treasury, delta: -1}
+                  - {kind: respect, delta: -1}
+                  - {kind: arc, op: cancel, arc: arc_nine_years_at_corran}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record: null
 
   - id: corran_what_came_back
     title: What Came Back
@@ -210,6 +253,9 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_one_who_went_to_anvary, accuracy: 0.8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the man who came up from Bramme
       options:
@@ -408,3 +454,11 @@ proseVariants:
     plainenglish: >-
       returned from Bramme nine years later, qualified in Terra, but nobody could prove he was
       the same man
+  - address: >-
+      content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=send_a_man].outcomes[id=sent].primordial.text
+    of: 07c3f2bcb40114f8
+    plainenglish: "At Corran, {PRIMORDIAL_ACTOR} presses a hand against the door. It opens onto the road he came by, though the room has no outer wall. He takes it, and sends his own account home."
+  - address: >-
+      content:events/arc_corran.yaml#events[id=corran_the_letters_stop].interaction.choices[id=write_again].outcomes[id=wrote].primordial.text
+    of: 07c3f2bcb40114f8
+    plainenglish: "At Corran, {PRIMORDIAL_ACTOR} presses a hand against the door. It opens onto the road he came by, though the room has no outer wall. He takes it, and sends his own account home."

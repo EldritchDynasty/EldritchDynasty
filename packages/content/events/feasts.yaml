@@ -116,6 +116,21 @@ events:
               effects:
                 - { kind: treasury, delta: -7 }
                 - { kind: branch, op: appease, amount: 14 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: blood_seated_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} draws back the disputed chair. The floor under it rings like a struck
+                  bell, and the argument stops long enough for the broken dishes to be gathered. The feast
+                  still costs more than it should.
+                effects:
+                  - {kind: treasury, delta: -3}
+                  - {kind: branch, op: appease, amount: 14}
+                tags:
+                  - primordial
+                record: null
         - id: money_above_blood
           label: The factor sits on the right. He prices our year.
           outcomes:
@@ -165,6 +180,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_the_hawthorn
           label: Leave them. Nobody has called a levy in forty years.
           outcomes:
@@ -226,6 +244,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: flag, flag: butts_at_wick_unkept, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: send_them_as_they_are
           label: Send Wick's men as they are.
           outcomes:
@@ -278,6 +299,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: LADY }, to: head, sentiment: 9 }
                 - { kind: arc, op: cancel, arc: arc_the_empty_glove }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: no_bird
           label: No bird. Leave the glove empty and answer for it in two years.
           outcomes:
@@ -362,6 +386,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: acknowledge_the_refusal
           label: Leave it empty. Say plainly why we did not replace the bird.
           outcomes:
@@ -433,6 +460,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: take_the_lag_man
           label: Take the Lag man. Two mites under is two mites under.
           outcomes:
@@ -487,6 +517,9 @@ events:
                 - { kind: treasury, delta: -31 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: PLAYER }, to: head, sentiment: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: refuse_it
           label: Refuse it. A tally in the small hours is not a bond.
           outcomes:
@@ -619,6 +652,20 @@ events:
               effects:
                 - { kind: attribute, target: { slot: SON }, attr: health, delta: -5 }
                 - { kind: treasury, delta: -2 }
+              site:
+                kind: elsewhere
+                slots: []
+              primordial:
+                id: he_is_broken_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beside the ring when the two men fall. The ground yields beneath
+                  the injured shoulder. The bonesetter still has work to do, but less of it.
+                effects:
+                  - {kind: attribute, target: {slot: SON}, attr: health, delta: -5}
+                  - {kind: treasury, delta: -1}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_hollow_days_at_bramme
     title: Nine Nights, and Who Is Counted
@@ -655,6 +702,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: say_it_at_ardwen
           label: Say it here. The chapel is thirty feet from the door.
           outcomes:
@@ -1104,3 +1154,11 @@ proseVariants:
   - address: "content:events/feasts.yaml#events[id=the_glove_kept_for_the_fair].interaction.outcomes[id=not_replaced].text"
     of: "72a634263e1f97da"
     plainenglish: "After the fair, the empty glove is put away. Its entry in the accounts remains open until the next Greening fair."
+  - address: >-
+      content:events/feasts.yaml#events[id=precedence_at_greening].interaction.choices[id=blood_above_money].outcomes[id=blood_seated].primordial.text
+    of: 98c6f3912d90c33d
+    plainenglish: "{PRIMORDIAL_ACTOR} pulls back the chair they are arguing over. The floor under it rings like a struck bell, and the argument stops long enough for the broken dishes to be gathered. The feast still costs more than it should."
+  - address: >-
+      content:events/feasts.yaml#events[id=the_wrestling_at_bramme].interaction.choices[id=let_him_go_on].outcomes[id=he_is_broken].primordial.text
+    of: 993c768d01ba42c1
+    plainenglish: "When the two men fall, {PRIMORDIAL_ACTOR} is by the wrestling ring. The ground yields beneath the injured shoulder. The bonesetter still has work to do, but less of it."

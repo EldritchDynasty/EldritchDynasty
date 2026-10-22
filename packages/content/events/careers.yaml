@@ -92,6 +92,9 @@ events:
                 - { kind: treasury, delta: -140 }
                 - { kind: career, target: { slot: SON }, op: assign, career: military }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: send_him_off
           label: Send the captain down the road with his ledger shut.
           outcomes:
@@ -258,6 +261,9 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: career, target: { slot: COURTIER }, op: assign, career: court }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: not_this_year
           label: Ninety crowns to stand in a hallway. No.
           outcomes:

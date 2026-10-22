@@ -48,6 +48,9 @@ events:
                 his life.
               effects:
                 - { kind: treasury, delta: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: it_is_a_list_of_creditors
               weight: 48
               text: >-
@@ -59,6 +62,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: madness, target: { slot: READER }, delta: 0 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: burn_the_leaf
           label: Take out the leaf and burn it. The rest is husbandry.
           outcomes:
@@ -134,6 +140,9 @@ events:
                 two hundred years.
               effects:
                 - { kind: treasury, delta: -12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: he_says_nothing_useful
               weight: 45
               text: >-
@@ -144,6 +153,9 @@ events:
                 places, quietly improved.
               effects:
                 - { kind: treasury, delta: -12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: pay_him_off_early
           label: Pay him the whole fee and end it this afternoon.
           outcomes:
@@ -159,6 +171,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: rumour, op: seed, id: rumour_the_copy_that_stops_mid_page, accuracy: 0.45 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the eleven leaves in another hand
       options:
@@ -220,6 +235,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_two_they_came_for, accuracy: 0.65 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: refused_at_the_square
               weight: 45
               text: >-
@@ -246,6 +264,52 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: discrepancy, op: create, id: what_the_day_book_lists, severity: major, provableBy: [the_church, house_calder] }
+              site:
+                kind: elsewhere
+                slots: []
+              primordial:
+                id: burned_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands by the fire at Cawdry. One bound parcel drops outside the heat
+                  without a hand throwing it. Some of the house's paid paper is recovered, though the rest
+                  has burned.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {
+                      kind: discrepancy,
+                      op: create,
+                      id: what_the_day_book_lists,
+                      severity: major,
+                      provableBy: [the_church, house_calder]
+                    }
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands by the fire at Cawdry. One bound parcel drops outside
+                        the heat without a hand throwing it. Some of the house's paid paper is recovered,
+                        though the rest has burned.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: whose_names_are_in_the_day_book
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_ilm
+                          - house_calder
     record:
       subject: the burning, and the day-book
       options:
@@ -390,6 +454,9 @@ events:
               effects:
                 - { kind: treasury, delta: -440 }
                 - { kind: spellbook, op: gain, target: head, book: the_drowned_calendar }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: outbid
               weight: 55
               text: >-
@@ -401,6 +468,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: rumour, op: seed, id: rumour_who_bid_on_the_unprinted_lot, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: do_not_go_into_the_room
           label: Decline the invitation. Do not be one of the eleven.
           outcomes:
@@ -416,6 +486,45 @@ events:
               effects:
                 - { kind: treasury, delta: -70 }
                 - { kind: respect, delta: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: declined_the_room_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the closed catalogue. A missed entry presses through from the
+                  facing leaf, with the house's earlier terms still legible. Part of what was forfeited is
+                  returned; the invitation remains declined.
+                effects:
+                  - {kind: treasury, delta: -35}
+                  - {kind: respect, delta: 1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} touches the closed catalogue. A missed entry presses through
+                        from the facing leaf, with the house's earlier terms still legible. Part of what
+                        was forfeited is returned; the invitation remains declined.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: who_was_in_the_room_off_the_hall
+                        severity: total
+                        provableBy:
+                          - house_bracc
+                          - house_ilm
+                          - house_calder
     record:
       subject: the room off the hall at Sarrow
       options:
@@ -491,6 +600,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: rumour, op: seed, id: rumour_the_washed_margins, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: the_wash_takes_the_text
               weight: 38
               text: >-
@@ -503,6 +615,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: what was in the margins
       options:
@@ -570,6 +685,9 @@ events:
                 - { kind: spellbook, op: gain, target: head, book: the_marrow_codex }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -22, grudge: { severity: 20, inheritance: heir_only } }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: decline_and_lend_them_money
           label: Decline the book. Offer them the money instead.
           outcomes:
@@ -585,6 +703,9 @@ events:
               effects:
                 - { kind: treasury, delta: -140 }
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: 30 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: they_sell_it_east
               weight: 45
               text: >-
@@ -1223,3 +1344,35 @@ proseVariants:
     of: "60dd07fc75da5bd8"
     plainenglish: >-
       checked the oldest volume and found every gathering complete
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].outcomes[id=burned].primordial.text
+    of: 2c671aebb2eb07f7
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the fire at Cawdry. One bound parcel drops outside the heat without a hand throwing it. Some of the house's paid paper is recovered, though the rest has burned."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].outcomes[id=burned].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].outcomes[id=burned].primordial.record.options.record.chronicle
+    of: 2c671aebb2eb07f7
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the fire at Cawdry. One bound parcel drops outside the heat without a hand throwing it. Some of the house's paid paper is recovered, though the rest has burned."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_burning_at_cawdry].interaction.choices[id=let_them_burn].outcomes[id=burned].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].outcomes[id=declined_the_room].primordial.text
+    of: edb24ef239196e8e
+    plainenglish: "{PRIMORDIAL_ACTOR} places a hand on the closed catalogue. A missed entry presses through from the facing leaf, with the house's earlier terms still legible. Part of what was forfeited is returned; the invitation remains declined."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].outcomes[id=declined_the_room].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].outcomes[id=declined_the_room].primordial.record.options.record.chronicle
+    of: edb24ef239196e8e
+    plainenglish: "{PRIMORDIAL_ACTOR} places a hand on the closed catalogue. A missed entry presses through from the facing leaf, with the house's earlier terms still legible. Part of what was forfeited is returned; the invitation remains declined."
+  - address: >-
+      content:events/rare_books.yaml#events[id=the_lot_not_in_the_catalogue].interaction.choices[id=do_not_go_into_the_room].outcomes[id=declined_the_room].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

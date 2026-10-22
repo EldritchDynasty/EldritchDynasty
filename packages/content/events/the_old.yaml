@@ -349,6 +349,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: the_family_takes_turns
           label: The family takes turns. He is ours.
           outcomes:

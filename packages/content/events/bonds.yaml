@@ -95,6 +95,9 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: { slot: SERVANT }, to: { slot: HEAD }, sentiment: 14 }
               tags: [service]
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: refuse
           label: The house is not a counting-house.
           outcomes:

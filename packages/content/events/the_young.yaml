@@ -100,6 +100,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: he_comes_too_late
               weight: 45
               tags: [hard]
@@ -111,6 +114,27 @@ events:
               effects:
                 - { kind: status, target: { slot: SICK }, status: dead, cause: fever }
                 - { kind: treasury, delta: -2 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
+              site:
+                kind: hall
+                hall:
+                  slot: SICK
+              primordial:
+                id: he_comes_too_late_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits beside the fever bed. The water in the cup turns cold while the
+                  child's hands grow warm. By morning there is breath enough to ask for a drink.
+                effects:
+                  - {kind: treasury, delta: -2}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - hard
+                  - primordial
+                record: null
         - id: keep_the_room_warm
           label: Keep the room warm and quiet. The midwife has seen more of these.
           outcomes:
@@ -124,6 +148,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: it_does_not_break
               weight: 45
               tags: [hard]
@@ -135,6 +162,21 @@ events:
               effects:
                 - { kind: status, target: { slot: SICK }, status: dead, cause: fever }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: hall
+                hall:
+                  slot: SICK
+              primordial:
+                id: it_does_not_break_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits beside the fever bed. The water in the cup turns cold while the
+                  child's hands grow warm. By morning there is breath enough to ask for a drink.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - hard
+                  - primordial
+                record: null
 
   - id: the_fostering_offer
     title: A Ward, and What a Ward Is For
@@ -292,6 +334,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: 4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: she_feeds_it
           label: She feeds it herself. The midwife has a reason.
           outcomes:
@@ -408,6 +453,22 @@ events:
               effects:
                 - { kind: attribute, target: { slot: SON }, attr: agility, delta: -6 }
                 - { kind: treasury, delta: -4 }
+              site:
+                kind: party
+                slots:
+                  - SON
+              primordial:
+                id: it_goes_wrong_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is within the line when the boar turns. The broken spear holds
+                  against nothing for one breath, and the boy is dragged clear. The torn gear and the
+                  nursing still cost the house.
+                effects:
+                  - {kind: attribute, target: {slot: SON}, attr: agility, delta: -6}
+                  - {kind: treasury, delta: -2}
+                tags:
+                  - primordial
+                record: null
         - id: the_deer_in_our_oats
           label: The deer. They are eating our oats and the boundary is a rumour.
           outcomes:
@@ -465,6 +526,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: attribute, target: { slot: GIRL }, attr: mind, delta: 5 }
                 - { kind: relationship, from: { slot: GIRL }, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: household_management
           label: Household management, as it has always been.
           outcomes:
@@ -789,3 +853,15 @@ proseVariants:
       mother. By nineteen she runs the indoor side of this house better than the last three
       women who did it. That is no small thing, and this family has never once written it down.
       The tutor keeps the folded page, and it is found in his cupboard when he dies.
+  - address: >-
+      content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=send_for_bramme].outcomes[id=he_comes_too_late].primordial.text
+    of: 439373f43bbdc728
+    plainenglish: "{PRIMORDIAL_ACTOR} sits next to the feverish child's bed. The water in the cup turns cold while the child's hands grow warm. By morning there is breath enough to ask for a drink."
+  - address: >-
+      content:events/the_young.yaml#events[id=two_in_three_reach_five].interaction.choices[id=keep_the_room_warm].outcomes[id=it_does_not_break].primordial.text
+    of: 439373f43bbdc728
+    plainenglish: "{PRIMORDIAL_ACTOR} sits next to the feverish child's bed. The water in the cup turns cold while the child's hands grow warm. By morning there is breath enough to ask for a drink."
+  - address: >-
+      content:events/the_young.yaml#events[id=the_first_boar].interaction.choices[id=the_boar_in_our_wood].outcomes[id=it_goes_wrong].primordial.text
+    of: 991fc4616d6014bd
+    plainenglish: "When the boar turns back, {PRIMORDIAL_ACTOR} is among the hunters. The broken spear holds against nothing for one breath, and the boy is dragged clear. The torn gear and the nursing still cost the house."

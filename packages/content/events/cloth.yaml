@@ -45,6 +45,9 @@ events:
               effects:
                 - { kind: treasury, delta: -36 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: corrected
               weight: 38
               text: >-
@@ -56,6 +59,9 @@ events:
               effects:
                 - { kind: treasury, delta: -36 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: good_green_instead
           label: Good green. Nobody has ever been corrected for green.
           outcomes:
@@ -71,6 +77,9 @@ events:
               effects:
                 - { kind: branch, op: slight, amount: 6 }
                 - { kind: treasury, delta: -11 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
 
   - id: the_clip_the_house_keeps
     title: Enough Fleece to Clothe Ourselves
@@ -119,6 +128,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: attribute, target: household, attr: mind, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: the_wool_that_will_not_take
     title: One Fleece in Nine
@@ -340,6 +352,9 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: attribute, target: { slot: HEIR }, attr: charm, delta: 3 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: spend_it_on_the_tutor
           label: The tutor. A coat is a coat and a mind is forty years.
           outcomes:
@@ -355,6 +370,9 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: attribute, target: { slot: HEIR }, attr: mind, delta: 4 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_shoes_the_household_wears
     title: Nobody Counts the Shoes
@@ -389,6 +407,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it_to_them
           label: Leave it. Their wage is theirs to spend.
           outcomes:
@@ -487,6 +508,9 @@ events:
             conversation.
           effects:
             - { kind: treasury, delta: -1 }
+          agreedPrices:
+            - effect: 0
+              reason: contract
         - id: he_keeps_it
           weight: 45
           text: >-

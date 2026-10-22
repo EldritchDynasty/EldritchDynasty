@@ -48,6 +48,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: head, to: { slot: TUTOR }, sentiment: 10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_him_go
           label: Let him go. A house pays for what it uses.
           outcomes:

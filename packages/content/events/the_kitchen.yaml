@@ -44,6 +44,9 @@ events:
                 weather or the brewer.
               effects:
                 - { kind: treasury, delta: -9 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: drink_the_water
           label: Drink the water. It is a fortnight.
           outcomes:
@@ -106,6 +109,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: flag, flag: the_house_drank_the_water, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: drink_the_well_again
           label: Drink the water. It was fine last time.
           outcomes:
@@ -152,6 +158,9 @@ events:
               effects:
                 - { kind: treasury, delta: -19 }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_the_two_breads
           label: Two breads. That is how every house in the province does it.
           outcomes:
@@ -166,6 +175,9 @@ events:
                 either.
               effects:
                 - { kind: treasury, delta: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
         - id: rye_at_every_table
           label: Rye for the guests as well. Let them tell Bramme what we eat.
@@ -225,6 +237,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: attribute, target: household, attr: health, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: keep_it_in_the_press
           label: Keep it in the press. It has done for four generations.
           outcomes:
@@ -281,6 +296,9 @@ events:
                 would have been.
               effects:
                 - { kind: treasury, delta: -14 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: find_out_who
           label: Find out who. Eleven people and a short winter.
           outcomes:
@@ -381,6 +399,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: the_fast_before_the_hollow_days
     title: Nine Days of Not Much
@@ -463,6 +484,9 @@ events:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: press_it_all
           label: Press the lot. Cider keeps better than goodwill.
           outcomes:
@@ -511,6 +535,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: make_it_last
           label: Make it last. Nobody has ever complained.
           outcomes:
@@ -555,6 +582,20 @@ events:
             fish on the fast days as it always has.
           effects:
             - { kind: treasury, delta: -8 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: he_comes_at_last_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} is at the store door when the last cask is opened. The brine holds
+              clear around the sound fish, leaving the spoiled part apart. The missing load still
+              leaves a bill at Bramme.
+            effects:
+              - {kind: treasury, delta: -4}
+            tags:
+              - primordial
+            record: null
         - id: he_does_not_come
           weight: 38
           text: >-
@@ -565,6 +606,21 @@ events:
           effects:
             - { kind: treasury, delta: -14 }
             - { kind: rumour, op: seed, id: rumour_the_drover_who_did_not_come, accuracy: 0.35 }
+          site:
+            kind: hall
+            hall: main
+          primordial:
+            id: he_does_not_come_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} is at the store door when the last cask is opened. The brine holds
+              clear around the sound fish, leaving the spoiled part apart. The missing load still
+              leaves a bill at Bramme.
+            effects:
+              - {kind: treasury, delta: -7}
+              - {kind: rumour, op: seed, id: rumour_the_drover_who_did_not_come, accuracy: 0.35}
+            tags:
+              - primordial
+            record: null
 
 proseVariants:
   - address: "content:events/the_kitchen.yaml#events[id=the_brewing_goes_wrong].title"
@@ -941,3 +997,11 @@ proseVariants:
       Guests and servants eat the same rye bread. The cook makes it well. Guests tell Bramme
       what the house served, costing standing. The household appreciates sharing the high
       table's bread.
+  - address: >-
+      content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].interaction.outcomes[id=he_comes_at_last].primordial.text
+    of: 9c6962b4656a6500
+    plainenglish: "When the final cask is opened, {PRIMORDIAL_ACTOR} is at the store door. The brine holds clear around the sound fish, leaving the spoiled part apart. The missing load still leaves a bill at Bramme."
+  - address: >-
+      content:events/the_kitchen.yaml#events[id=the_salt_fish_from_sarrow].interaction.outcomes[id=he_does_not_come].primordial.text
+    of: 9c6962b4656a6500
+    plainenglish: "When the final cask is opened, {PRIMORDIAL_ACTOR} is at the store door. The brine holds clear around the sound fish, leaving the spoiled part apart. The missing load still leaves a bill at Bramme."

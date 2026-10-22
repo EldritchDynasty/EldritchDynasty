@@ -175,6 +175,9 @@ events:
               effects:
                 - { kind: branch, op: appease, amount: 14 }
                 - { kind: treasury, delta: -30 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
             - id: refused
               weight: 55
               text: >-

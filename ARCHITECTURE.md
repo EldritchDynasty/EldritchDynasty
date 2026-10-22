@@ -94,6 +94,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **The Long Wait / Late Waking** — declaring an unwoken man mundane, learning and scripted waking after thirty | `core/src/table.ts`, `core/src/people/library.ts`, `core/src/people/factory.ts`, `packages/content/events/rare_blood.yaml`, `packages/client/src/components/Table.vue` | `table.test.ts`, `library.test.ts`, `core/src/events/reach.test.ts` |
 | The physical **library** — wear, restoration, sale, burn, tribute and theft | `core/src/people/library.ts`, `core/src/table.ts` | `library.test.ts`, `table.test.ts` |
 | Money and standing | `core/src/economy.ts` | `economy.slow.test.ts`, `ledger.slow.test.ts` |
+| Emergency Primordial interventions | `core/src/events/harm.ts`, `events/primordial.ts`, `presence.ts`; `schema/src/primordial.ts` | `events/primordial.test.ts`, `events/primordial-catalogue.test.ts`, `presence.test.ts`; `tools/primordial-report.mjs` |
 | The Ledger — Ages and clauses | `core/src/ages/scheduler.ts` | `ledger.slow.test.ts` |
 | The **prologue** — the signing, and its two choices | `core/src/prologue.ts` + `packages/content/prologue.yaml` | `prologue.test.ts` |
 | The **ending** — the last night, and the ring | `core/src/ending.ts` + `packages/content/endings.yaml` | `ending.test.ts` |
