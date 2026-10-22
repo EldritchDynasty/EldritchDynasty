@@ -168,7 +168,7 @@ describe('who signed, persisted', () => {
       houseName: 'The House of Salt', heirloom: p.heirlooms[0]!.heirloom, grudge: p.grudges[0]!.house,
       founder: { gender: 'nonbinary' },
     });
-    expect(result.ok).toBe(false);
+    expect(result).toEqual({ ok: false, reason: 'choose whether the founder is the blood father or the blood mother' });
     expect(g.ctx).toBe(before);
     expect(g.ctx.world.founding).toBeUndefined();
   });
