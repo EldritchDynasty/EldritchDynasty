@@ -31,6 +31,7 @@ import { LibraryMemoryS, type LibraryMemory } from './run-library.js';
 import { RentPolicyS, type ParcelState } from './parcel.js';
 import type { MusterState } from './muster.js';
 import { CommitmentS } from './muster.js';
+import { emptyMysticState, MysticStateS } from './mystic.js';
 
 /**
  * THE SAVE FORMAT.
@@ -201,7 +202,10 @@ import { CommitmentS } from './muster.js';
  * retain their original meaning of no recorded forcing attempt. */
 /** Format 33 records automatic interventions beside their selected and final outcomes.
  * Formats 31/32 upgrade without inventing any past interventions. */
-export const SAVE_FORMAT = 33;
+/** Format 34 stores standing Mystic duties and the studies set down for them
+ * (#1873). Formats 31–33 load with no duties and nothing paused, which is
+ * what every house before it had. */
+export const SAVE_FORMAT = 34;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -979,6 +983,8 @@ export const SavedGameS = z.object({
   parcels: z.array(z.tuple([z.string(), ParcelStateS])),
   /** The Muster (issue #89, Stage 2 — #95). See `WorldState.muster`. */
   muster: MusterStateS,
+  /** Standing Mystic duties and paused studies (#1873). See `WorldState.mystic`. */
+  mystic: MysticStateS.default(emptyMysticState),
   /** The Library's shelf, by spellbook id (issue #15). */
   library: z.array(z.tuple([z.string(), LibraryBookStateS])),
   /** The auction (issue #17). */
@@ -1080,6 +1086,7 @@ export const SavedGameS = z.object({
     person: z.number(), mint: z.number(), arc: z.number(),
     branch: z.number(), decision: z.number(), grudge: z.number(), chronicle: z.number(), lot: z.number(),
     parcel: z.number(), muster: z.number(), library: z.number().default(0), rival: z.number().default(0),
+    mystic: z.number().default(0),
   }),
 });
 export type SavedGame = z.infer<typeof SavedGameS>;

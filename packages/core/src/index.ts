@@ -92,6 +92,7 @@ export * from './testing.js';
  */
 
 export * from './presence.js';
+export * from './mystic.js';
 
 export * from './events/harm.js';
 export * from './events/primordial.js';

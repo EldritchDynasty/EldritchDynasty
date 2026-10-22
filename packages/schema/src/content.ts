@@ -17,6 +17,7 @@ import { EndingDefS } from './ending.js';
 import { TaleDefS } from './tale.js';
 import { ParcelDefS } from './parcel.js';
 import { PositionDefS } from './position.js';
+import { MysticWorkingDefS } from './mystic.js';
 import { ProseCatalogueS } from './prose.js';
 
 /** Authored starting cast. Genomes are rolled from the seed, never authored. */
@@ -86,6 +87,8 @@ export const ContentBundleS = z.object({
   parcels: z.array(ParcelDefS).default([]),
   /** What a war can buy the house in writing, separate from what it costs in men (issue #89, Stage 3). */
   positions: z.array(PositionDefS).default([]),
+  /** Learned workings a practitioner can be assigned to as a standing duty (#1866 B). */
+  mysticWorkings: z.array(MysticWorkingDefS).default([]),
   /** Authored Plain English counterparts, stored beside the source prose they answer. */
   proseVariants: ProseCatalogueS.default([]),
 });

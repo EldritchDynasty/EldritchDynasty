@@ -212,6 +212,11 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   // create a ghost study or acquire a shelf copy for someone the world never
   // taught. Dead and guardian records cannot take up new books either.
   if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
+  // A standing Mystic duty is the reader's one intensive occupation (#1873).
+  // Their book waits in `world.mystic.pauses` and resumes when the duty ends.
+  if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id)) {
+    return { ok: false, reason: msg(ctx, 'library.refuse.on_duty', 'they are keeping a Mystic duty') };
+  }
   if (ctx.world.library.get(def.id)?.restoresAt !== undefined) {
     return { ok: false, reason: msg(ctx, 'library.refuse.binder', 'the copy is with the binder') };
   }

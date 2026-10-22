@@ -10,6 +10,8 @@ export const SceneSiteS = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('party'), slots: z.array(z.string()).min(1) }).strict(),
   z.object({ kind: z.literal('muster') }).strict(),
   z.object({ kind: z.literal('elsewhere'), slots: z.array(z.string()) }).strict(),
+  /** One held parcel (#1873). Attendance is the named party; ownership alone puts nobody there. */
+  z.object({ kind: z.literal('parcel'), parcel: z.string(), slots: z.array(z.string()) }).strict(),
 ]);
 export type SceneSite = z.infer<typeof SceneSiteS>;
 

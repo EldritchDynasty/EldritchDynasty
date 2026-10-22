@@ -100,6 +100,7 @@ export const primordialSite: ValidationRule = {
         : site.kind === 'muster' ? [] : site.slots;
       for (const slot of slots) if (!event.slots[slot] || event.slots[slot]!.optional) issues.push(fail(this.id, where, `site requires an existing required person slot: ${slot}`));
       for (const slot of slots) if (['heirloom', 'spellbook', 'rival_house', 'guardian'].includes(event.slots[slot]?.role ?? '')) issues.push(fail(this.id, where, `site slot ${slot} is not physical person attendance`));
+      if (site.kind === 'parcel' && !content.parcel(site.parcel)) issues.push(fail(this.id, where, `site names an unknown parcel: ${site.parcel}`));
     }
     return issues;
   },

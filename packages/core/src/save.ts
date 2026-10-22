@@ -1,5 +1,5 @@
 import type {
-  Content, ContentBundle, Genome, Person, PersonId, RivalLineageState, SavedGame, StoredGenome, StoredPerson,
+  Content, ContentBundle, Genome, MysticAssignment, Person, PersonId, RivalLineageState, SavedGame, StoredGenome, StoredPerson,
   SpellbookId, TraitId,
 } from '@ed/schema';
 import { asId, indexContent, SAVE_FORMAT, SavedGameS } from '@ed/schema';
@@ -111,6 +111,10 @@ export function saveGame(ctx: SimCtx): SavedGame {
       tide: w.muster.tide,
       ...(w.muster.lastSettled !== undefined ? { lastSettled: w.muster.lastSettled } : {}),
     },
+    mystic: {
+      assignments: w.mystic.assignments.map(copyAssignment),
+      pauses: w.mystic.pauses.map((p) => ({ ...p })),
+    },
     library: [...w.library.entries()],
     auction: w.auction,
     marriagePromises: w.marriagePromises,
@@ -204,6 +208,10 @@ export type SavedMatchAgrees = Same<
 >;
 export const SAVED_MATCH_AGREES: SavedMatchAgrees = true;
 
+function copyAssignment(a: MysticAssignment): MysticAssignment {
+  return { ...a, target: structuredClone(a.target), bindings: { ...a.bindings }, service: { ...a.service } };
+}
+
 export class SaveFormatError extends Error {
   constructor(message: string) {
     super(message);
@@ -222,11 +230,13 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   const format = (raw as { format?: unknown } | null)?.format;
   const legacyForcing = format === 31;
   const legacyPrimordial = format === 32;
-  if (format !== SAVE_FORMAT && !legacyForcing && !legacyPrimordial) {
+  // Format 33 predates standing Mystic duties (#1873): it loads with none.
+  const legacyMystic = format === 33;
+  if (format !== SAVE_FORMAT && !legacyForcing && !legacyPrimordial && !legacyMystic) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
-  const parsed = SavedGameS.safeParse(legacyForcing || legacyPrimordial
+  const parsed = SavedGameS.safeParse(legacyForcing || legacyPrimordial || legacyMystic
     ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT }
     : raw);
   if (!parsed.success) {
@@ -327,6 +337,10 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
     commitments: s.muster.commitments.map((c) => ({ ...c, from: { ...c.from }, officers: [...c.officers] })),
     tide: s.muster.tide,
     ...(s.muster.lastSettled !== undefined ? { lastSettled: s.muster.lastSettled } : {}),
+  };
+  world.mystic = {
+    assignments: s.mystic.assignments.map(copyAssignment),
+    pauses: s.mystic.pauses.map((p) => ({ ...p })),
   };
   world.library = new Map(s.library);
   world.auction = s.auction;
@@ -597,6 +611,16 @@ export function digest(save: SavedGame): string {
   }
   // #1817's version protects readers of embedded guarded templates. The tag
   // itself adds no simulation state; guards and attempt facts stay hashed.
+  // #1873: a house that never assigned a duty owns no Mystic state.
+  // Like the other additive envelopes below, the empty state is peeled
+  // whatever format the caller wrote, so older-format comparisons still agree.
+  if ((save.mystic?.assignments.length ?? 0) === 0 && (save.mystic?.pauses.length ?? 0) === 0
+    && (save.counters.mystic ?? 0) === 0) {
+    delete value.mystic;
+    const { mystic: _mystic, ...legacyCounters } = save.counters;
+    value.counters = legacyCounters;
+    if (value.format === 34) value.format = 33;
+  }
   if (value.format === 33 && !save.decisionLog.some(row => row.kind === 'outcome' && row.primordial)) value.format = 32;
   if (value.format === 32) value.format = 31;
   // #1581: when every attempt lived, the counter is exactly the true-child

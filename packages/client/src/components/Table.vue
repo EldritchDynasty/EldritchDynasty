@@ -250,6 +250,44 @@ function confirmForcing(): void {
  * folds. Nothing is hidden: the player can still open it, and knows it is
  * there and empty, which is a different fact from it not existing.
  */
+/**
+ * MYSTIC DUTIES (#1873). One reader and one place per order; both selects are
+ * drawn from what the engine says it would accept, and cleared when a choice
+ * stops being on offer rather than left pointing at somebody who left.
+ */
+const dutyWho = ref<Record<string, string>>({});
+const dutyWhere = ref<Record<string, string>>({});
+watch(() => props.table.mystic.offers, (offers) => {
+  for (const offer of offers) {
+    const who = dutyWho.value[offer.working] ?? '';
+    dutyWho.value[offer.working] = offer.practitioners.some((r) => r.person === who) ? who : '';
+    const where = Number(dutyWhere.value[offer.working] ?? '');
+    dutyWhere.value[offer.working] = Number.isInteger(where) && dutyWhere.value[offer.working] !== '' && where < offer.targets.length
+      ? String(where) : '';
+  }
+}, { immediate: true });
+function assignDuty(offer: TableView['mystic']['offers'][number]): void {
+  const target = offer.targets[Number(dutyWhere.value[offer.working])];
+  const person = dutyWho.value[offer.working];
+  if (!target || !person) return;
+  props.actions.order({ kind: 'mysticAssign', person, working: offer.working, target: target.target, bindings: target.bindings });
+}
+function dutyStatus(duty: TableView['mystic']['duties'][number]): string {
+  switch (duty.status) {
+    case 'preparing': return local(`making ready until ${duty.ready}`, `preparing until ${duty.ready}`);
+    case 'serving': return local('kept', 'active');
+    case 'suspended': return local(`lapsed — ${duty.reason ?? ''}`, `stopped: ${duty.reason ?? ''}`);
+  }
+}
+function dutyRecord(duty: TableView['mystic']['duties'][number]): string {
+  const s = duty.service;
+  const parts = [local(`${s.servedYears} years kept`, `${s.servedYears} years active`)];
+  if (s.livesKept) parts.push(local(`${s.livesKept} ${s.livesKept === 1 ? 'life' : 'lives'} kept`, `${s.livesKept} ${s.livesKept === 1 ? 'person' : 'people'} saved`));
+  if (s.yieldKept) parts.push(local(`${s.yieldKept.toFixed(1)} of yield held`, `${s.yieldKept.toFixed(1)} yield saved`));
+  parts.push(local(`${Math.round(s.spent)} crowns spent`, `${Math.round(s.spent)} crowns paid`));
+  return parts.join(' · ');
+}
+
 const shut = ref<Record<string, boolean>>({});
 function idle(panel: string, hasWork: boolean): boolean {
   return !hasWork && !shut.value[panel];
@@ -594,6 +632,39 @@ const MARRIAGE_ORDERS = [
         </div>
         <p v-if="refusedIn('seekBook')" class="small rubric">{{ refusedIn('seekBook') }}</p>
       </div>
+    </div>
+
+    <!-- MYSTIC DUTIES (#1873). A finished book is a reader who can be set to
+         keep something: one hall's sick, one parcel's banks. It is paid for
+         every year and asked about never. -->
+    <div class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0) }">
+      <h3 class="label">
+        <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0)" @click="shut['duties'] = !shut['duties']">{{ local('Standing duties', 'Mystic duties') }}</button>
+      </h3>
+      <p v-if="!table.mystic.duties.length" class="small dim">{{ local('Nobody keeps a working for the house.', 'No one has a Mystic duty.') }}</p>
+      <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
+        <div class="small"><strong>{{ duty.name }}</strong> · {{ duty.workingName }} · {{ duty.place }} <span class="dim">· {{ dutyStatus(duty) }}</span></div>
+        <p class="small dim">{{ duty.upkeep }} {{ local('crowns a year', 'crowns per year') }} · {{ dutyRecord(duty) }}</p>
+        <p v-if="duty.paused" class="small dim">{{ local('Set down for it:', 'Reading paused:') }} {{ duty.paused.name }}, {{ duty.paused.remainingYears }} {{ duty.paused.remainingYears === 1 ? 'year' : 'years' }} {{ local('left', 'remaining') }}</p>
+        <button class="small" :aria-label="local('Release', 'End duty') + ' ' + duty.name" @click="actions.order({ kind: 'mysticRelease', assignment: duty.id })">{{ local('Release', 'End duty') }}</button>
+      </div>
+      <p v-if="refusedIn('mysticRelease')" class="small rubric">{{ refusedIn('mysticRelease') }}</p>
+      <div v-for="offer in table.mystic.offers" :key="offer.working" class="line">
+        <div class="small"><strong>{{ offer.name }}</strong> <span class="dim">· {{ offer.affinity }} · {{ offer.preparation }} {{ local('crowns to make ready', 'crowns to prepare') }}<template v-if="offer.preparationYears">, {{ offer.preparationYears }} {{ offer.preparationYears === 1 ? 'year' : 'years' }}</template> · {{ offer.upkeep }} {{ local('a year', 'per year') }}</span></div>
+        <p class="small dim blurb">{{ offer.description }}</p>
+        <div class="row">
+          <select v-model="dutyWho[offer.working]" :disabled="!offer.practitioners.length" :aria-label="local('Choose who keeps', 'Choose who does') + ' ' + offer.name">
+            <option value="">{{ offer.practitioners.length ? local('— whom —', '— choose reader —') : local('— nobody has read for it —', '— no qualified reader —') }}</option>
+            <option v-for="r in offer.practitioners" :key="r.person" :value="r.person">{{ r.name }}{{ r.studying ? local(' (sets a book down)', ' (pauses reading)') : '' }}</option>
+          </select>
+          <select v-model="dutyWhere[offer.working]" :disabled="!offer.targets.length" :aria-label="local('Choose where for', 'Choose the place for') + ' ' + offer.name">
+            <option value="">{{ offer.targets.length ? local('— where —', '— choose place —') : local('— nowhere it can reach —', '— no suitable place —') }}</option>
+            <option v-for="(t, i) in offer.targets" :key="t.name" :value="String(i)">{{ t.name }}</option>
+          </select>
+          <button class="small" :disabled="!dutyWho[offer.working] || !dutyWhere[offer.working]" @click="assignDuty(offer)">{{ local('Set them to it', 'Assign') }}</button>
+        </div>
+      </div>
+      <p v-if="refusedIn('mysticAssign')" class="small rubric">{{ refusedIn('mysticAssign') }}</p>
     </div>
 
     <!-- §13's price table. The money is gone the day it is spent, and the

@@ -17,6 +17,7 @@ import { deleteriousLoad } from '../genetics/expression.js';
 import { musterMortality } from '../muster.js';
 import { acquiredFamilySize } from './condition.js';
 import { msg } from '../messages.js';
+import { lifeCareFor, noteLifeKept } from '../mystic.js';
 
 /**
  * WHO DIES, WHO MARRIES, WHO IS BORN.
@@ -93,35 +94,52 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   // hazard at the ceiling is about 18% a year, so a fifth of every cohort
   // would pile up and die exactly ON their maxAge — the same cliff the
   // fertility curve was rewritten to avoid, in the other direction.
-  let hazard = 0.004 + 0.6 * Math.max(0, spent - 0.45) ** 2;
-  if (spent > 0.8) hazard += 0.5 * ((spent - 0.8) / 0.2) ** 3;
+  let base = 0.004 + 0.6 * Math.max(0, spent - 0.45) ** 2;
+  if (spent > 0.8) base += 0.5 * ((spent - 0.8) / 0.2) ** 3;
 
   // Deliberate infant mortality, tapering to nothing by five. Period-correct,
   // and it gives the physician's presence effect something to actually suppress.
-  if (age < 5) hazard += 0.03 * (1 - age / 5);
-
-  hazard *= 1 - Math.min(0.5, strength / 220);
-
-  // Military: kills people. A career's own extra hazard plus the muster hazard
-  // are the violence term Demigods retain above.
-  hazard += violenceHazard;
-
-  // Madness overflow takes people. Only ever those who could express.
-  hazard += madnessHazard;
+  const infant = age < 5 ? 0.03 * (1 - age / 5) : 0;
 
   // A PHYSICIAN IN THE HOUSE (`assize.ts`). When the world has decided the
   // family is worth steadying, somebody competent is in the building and
   // fewer people die of the ordinary things.
-  if (assizeFavour(ctx, 'mercy')) hazard *= MERCY_HAZARD;
-
+  const mercy = assizeFavour(ctx, 'mercy');
   // THE AGE THE HOUSE IS LIVING THROUGH (issue #42). Multiplicative across
   // stacked Ages, because two catastrophes at once are worse than either — and
   // `world.age.active` is a list precisely because they stack.
-  hazard *= ageMortality(ctx);
+  const ages = ageMortality(ctx);
+  const thin = thinBloodMortality(ctx, p);
 
-  hazard *= thinBloodMortality(ctx, p);
+  // The terms in their historical order, so an uncared-for body's hazard is
+  // the same float it always was and every existing run digests unchanged.
+  const hazardOf = (ordinary: number, frail: number): number => {
+    let hazard = ordinary;
+    if (age < 5) hazard += frail;
+    hazard *= 1 - Math.min(0.5, strength / 220);
+    // Military: kills people. A career's own extra hazard plus the muster hazard
+    // are the violence term Demigods retain above.
+    hazard += violenceHazard;
+    // Madness overflow takes people. Only ever those who could express.
+    hazard += madnessHazard;
+    if (mercy) hazard *= MERCY_HAZARD;
+    hazard *= ages;
+    hazard *= thin;
+    return hazard;
+  };
+  const hazard = hazardOf(base, infant);
 
-  if (!rng.bool(hazard)) return false;
+  // A MYSTIC CARER IN THE HALL (#1873). Care reaches the ordinary terms only —
+  // never violence, Madness or the wall above — and reuses this one draw, so
+  // a life is "kept" exactly when the same roll falls between the two hazards.
+  const care = lifeCareFor(ctx, p);
+  if (care) {
+    const roll = rng.next();
+    if (roll >= hazardOf(base * (1 - care.mortality), infant * (1 - care.infant))) {
+      if (roll < hazard) noteLifeKept(ctx, care, p);
+      return false;
+    }
+  } else if (!rng.bool(hazard)) return false;
 
   // kill() returns false for the Narrator: his death is redirected, not
   // applied, so he never appears in the year's death list.

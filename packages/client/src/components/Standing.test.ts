@@ -934,6 +934,7 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
       ledgerSearch: { ready: false, reason: 'Not ready' },
       shelf: [],
       studying: [],
+      mystic: { duties: [], offers: [] },
       missingPrimers: [],
       pupils: [],
       teachable: [],

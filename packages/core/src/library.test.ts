@@ -994,6 +994,7 @@ describe('study and the posts refuse in the reader\'s setting (#805)', () => {
 
   it('keys every refusal', () => {
     expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'library.refuse.on_duty': 'they are keeping a Mystic duty',
       'library.refuse.binder': 'the copy is with the binder',
       'library.refuse.not_woken': 'not woken',
       'library.refuse.not_hers': 'not hers to learn',

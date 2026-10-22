@@ -1,4 +1,4 @@
-import type { EventTemplate, Person, RentPolicy, Year } from '@ed/schema';
+import type { EventTemplate, Person, RentPolicy, SceneSite, Year } from '@ed/schema';
 import { assertNever, canBeTaught } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
@@ -24,6 +24,7 @@ import { buyBackWardship, knownSuccession, ofTheLine, WARDSHIP_BUYBACK_YEARS } f
 import { ageCareerFactor } from './ages/strategy.js';
 import { proseForClause, proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 import { msg } from './messages.js';
+import { assignDuty, mysticView, releaseDuty, type MysticView } from './mystic.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -107,6 +108,14 @@ export type TableOrder =
   | { kind: 'forcingRite'; rite: string; person: string }
   /** Keep somebody off the marriage market, or put them back on it. */
   | { kind: 'withhold'; person: string; hold: boolean }
+  /**
+   * NAME A LEARNED READER TO A STANDING MYSTIC DUTY (#1873): one working, one
+   * real place. Pays the preparation now, sets their book down, and serves
+   * every year it is paid for and they are there — no renewal, no question.
+   */
+  | { kind: 'mysticAssign'; person: string; working: string; target: SceneSite; bindings?: Record<string, string> }
+  /** End a standing duty. Their book resumes if the copy is still on the shelf. */
+  | { kind: 'mysticRelease'; assignment: string }
   /**
    * WHO THE HOUSE MARRIES WHEN THE PLAYER IS NOT ASKED (issue #41).
    *
@@ -888,6 +897,10 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       return { ok: true };
     }
 
+    case 'mysticAssign':
+      return assignDuty(ctx, { person: o.person, working: o.working, target: o.target, ...(o.bindings ? { bindings: o.bindings } : {}) });
+    case 'mysticRelease':
+      return releaseDuty(ctx, o.assignment);
     case 'withhold': {
       const p = ours(ctx, o.person);
       if (!p) return { ok: false, reason: msg(ctx, 'table.order.withhold.unknown', 'nobody of this house by that name') };
@@ -1086,6 +1099,8 @@ export interface TableView {
   tutoring: { person: string; name: string; attr: string; completes: Year }[];
   /** Studies under way. */
   studying: { person: string; name: string; book: string; completes: Year }[];
+  /** Standing Mystic duties, and every working the house could set somebody to (#1873). */
+  mystic: MysticView;
   /**
    * WHO THE MARKET MAY BE SHOWN, and which of them the house is keeping off
    * it. Built from the engine's own `eligibleToMarry` and `onTheMarket`: §7's
@@ -1371,6 +1386,7 @@ export function tableView(ctx: SimCtx): TableView {
     }),
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
+    mystic: mysticView(ctx),
     longWait: (() => {
       const possible = new Set(knownSuccession(ctx).possible);
       return household
