@@ -6,7 +6,7 @@ Pure. Zero DOM, no filesystem, no `Math.random`. Everything is a function of
 ## The shape
 
 ```
-sim.ts            bootstrap, and the player's verbs (rename, snapshot)
+sim.ts            bootstrap, founding rebuilds, rename and snapshot
 world.ts          WorldState — the only thing that mutates. SimCtx.
 session.ts        GameSession — what a client is allowed to touch
 save.ts           world <-> SavedGame, and `digest` for comparing runs
@@ -14,12 +14,13 @@ rng.ts            streamFor(world, system) — one stream per system per year
 year/phases.ts    YEAR_PHASES: what a year IS, in order
 year/step.ts      the clock that runs them
 people/           store, factory, demography, branches, succession, minting…
-events/           selection, slots, conditions, effects, decisions, arcs
+events/           selection, slots, checks, effects, decisions, arcs, interventions
 genetics/         loci, meiosis, expression
 ages/scheduler.ts Ages as a hazard process; the Ledger pays out here
 economy.ts        income, upkeep, tithes, standing decay
 assize.ts, land.ts, muster.ts, campaign.ts, record.ts, replay.ts, …
                   one file per system — ARCHITECTURE.md's table names each
+presence.ts       physical attendance at an authored emergency's scene site
 testing.ts        testWorld / place / marry / beget / phase — build the state you mean
 tools/            validate, digest, gates, the measured sessions, gen-docs —
                   all runnable via npm scripts
@@ -29,7 +30,8 @@ tools/            validate, digest, gates, the measured sessions, gen-docs —
 
 ```bash
 npm run test:fast         # the loop
-npm run check             # everything. Before you claim it works.
+npm run check             # typecheck + validate + all tests; excludes gates
+npm run land              # preflight the rebased head before a ready PR
 npm run digest -- 8 400   # before AND after a refactor: the block must not move
 ```
 
@@ -54,6 +56,13 @@ grep -rn "INVARIANT " packages --include=*.ts
 - **A new field on `WorldState` needs a line in the save format**, or it resets
   silently on load. See `ARCHITECTURE.md` → "Add a field to the world".
 - **Closed unions end in `assertNever`.** Never a permissive default.
+- **Completed study is distinct from the shelf and raw affinity.** Practical
+  Mystic checks use `knowsAffinity` in `people/library.ts`; `family_knows`
+  reads living household readers. A physical copy alone cannot cast a spell.
+- **Outcome selection and commitment are separate.** `onlyIf` filters weighted
+  draws against the actual cast. `events/primordial.ts` may then replace an
+  eligible emergency result; only `commitOutcome` applies the final bundle.
+  Ordinary annual mortality and upkeep do not pass through that event adapter.
 
 ## Adding a system
 
