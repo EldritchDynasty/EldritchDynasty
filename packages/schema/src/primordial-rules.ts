@@ -2,7 +2,7 @@ import { proseOriginalHash } from './prose-variants.js';
 import type { EventTemplate, Outcome } from './event.js';
 import type { Issue, ValidationRule } from './validate.js';
 import { effectHarmPolicy, potentialHarms, PRIMORDIAL_ACTOR_SLOT } from './primordial.js';
-import { slotTokens } from './forms.js';
+import { NARRATOR_TOKEN, slotTokens } from './forms.js';
 
 export function primordialOutcomes(event: EventTemplate) {
   return event.interaction.kind === 'narration'
@@ -78,7 +78,7 @@ export const primordialCoverage: ValidationRule = {
         issues.push(fail(this.id, where, 'both response texts must name {PRIMORDIAL_ACTOR}'));
       }
       if (JSON.stringify(tokenSet(response.text)) !== JSON.stringify(tokenSet(english))) issues.push(fail(this.id, where, 'response prose modes have different tokens'));
-      for (const token of slotSet(response.text)) if (token !== PRIMORDIAL_ACTOR_SLOT && !event.slots[token]) issues.push(fail(this.id, where, `unresolved response token {${token}}`));
+      for (const token of slotSet(response.text)) if (token !== PRIMORDIAL_ACTOR_SLOT && token !== NARRATOR_TOKEN && !event.slots[token]) issues.push(fail(this.id, where, `unresolved response token {${token}}`));
       if ((event.record || event.recordByChoice || event.recordByOutcome) && !response.record) issues.push(fail(this.id, where, 'response must preserve the existing Record choices with its own account'));
       if (response.next && !content.event(response.next.event)) issues.push(fail(this.id, where, `missing response successor ${response.next.event}`));
       if (response.triggers && !content.arc(response.triggers.arc)) issues.push(fail(this.id, where, `missing response arc ${response.triggers.arc}`));

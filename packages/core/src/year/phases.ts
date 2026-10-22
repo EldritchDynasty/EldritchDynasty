@@ -1,5 +1,6 @@
 import type { Choice, EventTemplate, Person } from '@ed/schema';
-import { MAIN_BRANCH } from '@ed/schema';
+import { MAIN_BRANCH, renderForm } from '@ed/schema';
+import { grammarOf } from '../people/grammar.js';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { streamFor } from '../rng.js';
@@ -229,8 +230,8 @@ export const YEAR_PHASES: readonly Phase[] = [
         weight: 'illuminated',
         title: msg(ctx, 'guardian.crossed_title', 'The House Does Not Empty'),
         text: msg(ctx, 'guardian.crossed',
-          'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. He had not gone anywhere. He had only stopped being someone they had to feed.',
-          { NARRATOR: g.name }),
+          'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. {NARRATOR} had not gone anywhere. {NARRATOR_THEY} had only stopped being someone the house had to feed.',
+          { NARRATOR: g.name, NARRATOR_THEY: renderForm(grammarOf(g), 'They') ?? g.name }),
         named: true,
       });
     },

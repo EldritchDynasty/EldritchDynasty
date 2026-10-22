@@ -188,7 +188,7 @@ const wanted = computed(() => {
   if (props.prologue.examination.some((question) => !answers.value[question.id])) {
     out.push('an answer to each Examination question');
   }
-  if (!heirloom.value) out.push('the thing he asked for by name');
+  if (!heirloom.value) out.push('the thing you asked for by name');
   if (!grudge.value) out.push('who paid for the rest of it');
   if (!houseName.value.trim()) out.push('what the family will be called');
   return out;
@@ -203,7 +203,7 @@ function waitingText(): string {
     'who signed it': 'your gender',
     'whose blood the house carries': 'which parent carries the family blood',
     'an answer to each Examination question': 'an answer to every question',
-    'the thing he asked for by name': 'a selected heirloom',
+    'the thing you asked for by name': 'a selected heirloom',
     'who paid for the rest of it': 'a selected rival house',
     'what the family will be called': 'a family name',
   };
@@ -354,7 +354,7 @@ function signOnEnter(event: KeyboardEvent): void {
            the house's hands and the grudge into the world, and at the term the ending
            names which of them the selected line changed. -->
       <section class="choice">
-        <h3 class="label">{{ plain ? 'Choose an heirloom' : 'He asked for one thing by name' }}</h3>
+        <h3 class="label">{{ plain ? 'Choose an heirloom' : 'You asked for one thing by name' }}</h3>
         <button
           v-for="option in prologue.heirlooms"
           :key="option.heirloom"
@@ -388,7 +388,7 @@ function signOnEnter(event: KeyboardEvent): void {
            one place the game reaches outside itself, so it is asked in the
            frame's own voice and never explained. -->
       <section class="choice friends">
-        <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of his blood' }}</h3>
+        <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of your blood' }}</h3>
         <p class="prompt">{{ prologue.friendsPrompt }}</p>
         <div v-for="(friend, i) in friends" :key="i" class="friend">
           <input

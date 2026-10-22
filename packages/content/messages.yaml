@@ -2506,9 +2506,9 @@ proseVariants:
     plainenglish: >-
       the name is too long
   - address: "core:messages#founding.refuse.heirloom"
-    of: "cb34cc7565016a11"
+    of: "8605c3c3d96c467f"
     plainenglish: >-
-      that was not what he requested
+      that was not what you requested
   - address: "core:messages#founding.refuse.grudge"
     of: "c0bb50fa885bc5c6"
     plainenglish: >-
@@ -3402,11 +3402,12 @@ proseVariants:
     plainenglish: >-
       The House Is Not Left Empty
   - address: "core:messages#guardian.crossed"
-    of: "68ab1a7f40143ba3"
+    of: "4f1d523971ba4aed"
     plainenglish: >-
-      They buried {NARRATOR} in spring. Everyone noticed that the house did not feel emptier, but nobody
-      said it. Fires were prepared before anyone did the work. The accounts balanced all year without
-      anyone balancing them. He had not left. They simply no longer had to feed him.
+      They buried {NARRATOR} in spring. Everyone noticed that the house did not feel emptier, but
+      nobody said it. Fires were prepared before anyone did the work. The accounts balanced all year
+      without anyone balancing them. {NARRATOR} had not left. {NARRATOR_THEY} simply no longer
+      needed the house to feed them.
   - address: "core:messages#library.first_reading"
     of: "064ac4c545026729"
     plainenglish: >-

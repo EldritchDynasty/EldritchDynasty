@@ -288,7 +288,7 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   }
 
   const heirloom = def.heirlooms.find((h) => String(h.heirloom) === choice.heirloom);
-  if (!heirloom) return { ok: false, reason: msg(ctx, 'founding.refuse.heirloom', 'he did not ask for that') };
+  if (!heirloom) return { ok: false, reason: msg(ctx, 'founding.refuse.heirloom', 'you did not ask for that') };
   const grudge = def.grudges.find((g) => String(g.house) === choice.grudge);
   if (!grudge) return { ok: false, reason: msg(ctx, 'founding.refuse.grudge', 'nobody was wronged in that direction') };
 
