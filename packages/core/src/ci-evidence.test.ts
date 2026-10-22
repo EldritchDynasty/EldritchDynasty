@@ -354,6 +354,18 @@ describe('CI evidence inventory', () => {
     expect(checkWorkflow).toContain("name === 'ios' && job.result === 'skipped' && !iosRequired");
 
     expect(nightlyWorkflow).toContain('name: nightly iOS simulator build');
+    // A costly cold CoreSimulator migration must overlap native compilation,
+    // and the runtime smoke must reuse that same prewarmed device.
+    const startBoot = nightlyWorkflow.indexOf('- name: start an iPhone simulator while the app builds');
+    const startBuild = nightlyWorkflow.indexOf('- name: build unsigned iPhone simulator app');
+    const startSmoke = nightlyWorkflow.indexOf('- name: install and launch on an iPhone simulator');
+    expect(startBoot).toBeGreaterThan(-1);
+    expect(startBuild).toBeGreaterThan(startBoot);
+    expect(startSmoke).toBeGreaterThan(startBuild);
+    const prewarm = nightlyWorkflow.slice(startBoot, startBuild);
+    expect(prewarm).toContain('echo "IOS_SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"');
+    expect(prewarm).toContain('xcrun simctl boot "$UDID" 2>/dev/null || true');
+    expect(nightlyWorkflow.slice(startSmoke)).toContain('UDID="$IOS_SIMULATOR_UDID"');
     expect(nightlyWorkflow).toContain('xcrun simctl bootstatus "$UDID" -b');
     expect(nightlyWorkflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
 
