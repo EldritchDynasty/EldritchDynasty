@@ -171,6 +171,9 @@ events:
               effects:
                 - { kind: treasury, delta: -31 }
                 - { kind: rumour, op: seed, id: rumour_the_room_they_rebuilt, accuracy: 0.55 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: move_him
           label: Move him, and say nothing about why.
           outcomes:
@@ -288,6 +291,9 @@ events:
                 - { kind: treasury, delta: -9 }
                 - { kind: rumour, op: seed, id: rumour_the_year_she_was_away, accuracy: 0.3 }
                 - { kind: relationship, from: { slot: DAUGHTER }, to: head, sentiment: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the signs around the girl
       options:
@@ -363,6 +369,48 @@ events:
                 - { kind: madness, target: { slot: HEAD }, delta: 14 }
                 - { kind: treasury, delta: -38 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: an_order_gets_out_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} catches the order as it leaves the table. Its wax breaks into two
+                  clean halves without breaking the cord. Part of the order cannot be enforced, though the
+                  earlier copies have gone.
+                effects:
+                  - {kind: madness, target: {slot: HEAD}, delta: 14}
+                  - {kind: treasury, delta: -19}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} catches the order as it leaves the table. Its wax breaks into
+                        two clean halves without breaking the cord. Part of the order cannot be enforced,
+                        though the earlier copies have gone.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: how_the_seal_left_his_hand
+                        severity: major
+                        provableBy:
+                          - commons
+                          - house_ilm
+                          - the_church
         - id: take_it_off_him
           label: Take the seal off him, in the long room, in front of the household.
           outcomes:
@@ -442,6 +490,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: rumour, op: seed, id: rumour_the_man_who_was_paid_to_go, accuracy: 0.65 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: he_stays_bought
               weight: 45
               text: >-
@@ -451,6 +502,9 @@ events:
                 counted on.
               effects:
                 - { kind: treasury, delta: -11 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: the_third_night
           label: Feed him. Let him stay a third night.
           outcomes:
@@ -467,6 +521,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     record:
       subject: the man at the wall
       options:
@@ -545,6 +602,9 @@ events:
               effects:
                 - { kind: treasury, delta: -22 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: it_does_not_come_back
               weight: 38
               text: >-
@@ -619,6 +679,44 @@ events:
                 spring they do not, and nobody can tell you what changed.
               effects:
                 - { kind: treasury, delta: -2 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: nothing_down_there_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches the turn below the stair. The fallen stones move enough to
+                  uncover the old drain, and the men get out without breaking the whole flight. The lower
+                  steps still need repair.
+                effects:
+                  - {kind: treasury, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches the turn below the stair. The fallen stones move enough
+                        to uncover the old drain, and the men get out without breaking the whole flight.
+                        The lower steps still need repair.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: the_stair_below_the_turn
+                        severity: major
+                        provableBy:
+                          - house_hesk
+                          - commons
             - id: the_drain
               weight: 52
               text: >-
@@ -630,6 +728,45 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: rumour, op: seed, id: rumour_the_drain_below_the_stair, accuracy: 0.5 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: the_drain_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches the turn below the stair. The fallen stones move enough to
+                  uncover the old drain, and the men get out without breaking the whole flight. The lower
+                  steps still need repair.
+                effects:
+                  - {kind: treasury, delta: -3}
+                  - {kind: rumour, op: seed, id: rumour_the_drain_below_the_stair, accuracy: 0.5}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches the turn below the stair. The fallen stones move enough
+                        to uncover the old drain, and the men get out without breaking the whole flight.
+                        The lower steps still need repair.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: the_stair_below_the_turn
+                        severity: major
+                        provableBy:
+                          - house_hesk
+                          - commons
         - id: brick_the_turn
           label: Brick the stair below the turn and be done with it.
           outcomes:
@@ -646,6 +783,9 @@ events:
                 - { kind: flag, flag: the_stair_below_the_turn_bricked, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_wall_where_a_stair_was, accuracy: 0.45 }
                 - { kind: schedule, event: the_mason_reaches_the_turn, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: what is below the turn in the stair
       options:
@@ -1438,3 +1578,51 @@ proseVariants:
     of: "18622f38b37484fc"
     plainenglish: >-
       awakened as a boy, and was kept out of public view until he was ready
+  - address: >-
+      content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=an_order_gets_out].primordial.text
+    of: 9d0ff44f5731a95b
+    plainenglish: "{PRIMORDIAL_ACTOR} catches the order before it leaves the table. Its wax breaks into two clean halves without breaking the cord. Part of the order cannot be enforced, though the earlier copies have gone."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=an_order_gets_out].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=an_order_gets_out].primordial.record.options.record.chronicle
+    of: 9d0ff44f5731a95b
+    plainenglish: "{PRIMORDIAL_ACTOR} catches the order before it leaves the table. Its wax breaks into two clean halves without breaking the cord. Part of the order cannot be enforced, though the earlier copies have gone."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=a_head_at_the_top_of_it].interaction.choices[id=keep_him_in_the_chair].outcomes[id=an_order_gets_out].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=nothing_down_there].primordial.text
+    of: c7165d5c51380a28
+    plainenglish: "{PRIMORDIAL_ACTOR} comes to the bend below the stairs. The fallen stones move enough to uncover the old drain, and the men get out without breaking the whole flight. The lower steps still need repair."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=nothing_down_there].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=nothing_down_there].primordial.record.options.record.chronicle
+    of: c7165d5c51380a28
+    plainenglish: "{PRIMORDIAL_ACTOR} comes to the bend below the stairs. The fallen stones move enough to uncover the old drain, and the men get out without breaking the whole flight. The lower steps still need repair."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=nothing_down_there].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=the_drain].primordial.text
+    of: c7165d5c51380a28
+    plainenglish: "{PRIMORDIAL_ACTOR} comes to the bend below the stairs. The fallen stones move enough to uncover the old drain, and the men get out without breaking the whole flight. The lower steps still need repair."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=the_drain].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=the_drain].primordial.record.options.record.chronicle
+    of: c7165d5c51380a28
+    plainenglish: "{PRIMORDIAL_ACTOR} comes to the bend below the stairs. The fallen stones move enough to uncover the old drain, and the men get out without breaking the whole flight. The lower steps still need repair."
+  - address: >-
+      content:events/rare_blood.yaml#events[id=what_the_hounds_will_not_pass].interaction.choices[id=go_down_and_look].outcomes[id=the_drain].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

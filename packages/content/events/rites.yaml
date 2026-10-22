@@ -276,6 +276,43 @@ events:
                 dawn the lamps are still burning and he cannot be woken.
               effects:
                 - { kind: status, target: { slot: CHILD }, status: dead, cause: the seven-lamp Vigil }
+              site:
+                kind: hall
+                hall:
+                  slot: CHILD
+              primordial:
+                id: died_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} comes to the child's bed in the sixth night. Every lamp goes cold
+                  without going out. The boy draws a breath and opens his eyes before dawn.
+                effects: []
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} comes to the child's bed in the sixth night. Every lamp goes
+                        cold without going out. The boy draws a breath and opens his eyes before dawn.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_vigil_safety_lie
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
         - id: put_out_the_lamps
           label: Put out the lamps and send for a physician.
           outcomes:
@@ -286,6 +323,9 @@ events:
                 treatment no one claims was needed, and leaves the lamps cold.
               effects:
                 - { kind: treasury, delta: -25 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the price of the seven-lamp Vigil
       options:
@@ -358,6 +398,43 @@ events:
                 dark. The key turns easily and does him no good.
               effects:
                 - { kind: status, target: { slot: CHILD }, status: dead, cause: the Dark Year fast }
+              site:
+                kind: hall
+                hall:
+                  slot: CHILD
+              primordial:
+                id: died_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} takes hold of the shut door. The key falls through the solid wood
+                  into his hand. The child is brought to the table alive, and the fast is over.
+                effects: []
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} takes hold of the shut door. The key falls through the solid
+                        wood into his hand. The child is brought to the table alive, and the fast is over.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_dark_year_fast_lie
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_ilm
+                      claims: []
         - id: break_the_fast
           label: Break the fast and bring him to the table.
           outcomes:
@@ -368,6 +445,9 @@ events:
                 physician anyway and buys the first food he will take.
               effects:
                 - { kind: treasury, delta: -30 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the Dark Year fast
       options:
@@ -432,12 +512,95 @@ events:
                 - { kind: status, target: { slot: CHALLENGER }, status: dead, cause: the question of the Seal }
                 - { kind: respect, delta: -1 }
                 - { kind: arc, op: start, arc: arc_the_given_seal }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+                  - CHALLENGER
+              primordial:
+                id: struck_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is within reach when the blade comes down. It stops against the air
+                  between the two men and drops flat. Both leave the room alive; neither withdraws the
+                  question.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: arc, op: start, arc: arc_the_given_seal}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is within reach when the blade comes down. It stops against the
+                        air between the two men and drops flat. Both leave the room alive; neither
+                        withdraws the question.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: seal_gift_lie
+                        severity: major
+                        provableBy:
+                          - house_marrow
+                          - the_church
             - id: fell
               weight: 32
               text: It is over quickly.
               effects:
                 - { kind: status, target: { slot: HEAD }, status: dead, cause: the question of the Seal }
                 - { kind: arc, op: start, arc: arc_the_given_seal }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+                  - CHALLENGER
+              primordial:
+                id: fell_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is within reach when the blade comes down. It stops against the air
+                  between the two men and drops flat. Both leave the room alive; neither withdraws the
+                  question.
+                effects:
+                  - {kind: arc, op: start, arc: arc_the_given_seal}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is within reach when the blade comes down. It stops against the
+                        air between the two men and drops flat. Both leave the room alive; neither
+                        withdraws the question.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: seal_gift_lie
+                        severity: major
+                        provableBy:
+                          - house_marrow
+                          - the_church
         - id: concede
           label: Give up the Seal.
           outcomes:
@@ -906,6 +1069,56 @@ events:
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
                 - { kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: defied_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} closes the shutter after the working. The light remains on its inner
+                  face, where the witnesses can still see it. Bramme hears what was done without leave,
+                  but the account carries more than defiance.
+                effects:
+                  - {kind: rite, rite: great_rite, ascendant: ASCENDANT}
+                  - {kind: flag, flag: church_hostile, set: true}
+                  - {kind: respect, delta: -1}
+                  - {kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} closes the shutter after the working. The light remains on its
+                        inner face, where the witnesses can still see it. Bramme hears what was done
+                        without leave, but the account carries more than defiance.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                      effects:
+                        - {
+                            kind: discrepancy,
+                            op: create,
+                            id: the_long_room_omission,
+                            severity: major,
+                            provableBy: [the_church, house_marrow]
+                          }
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_long_room_lie
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
         - id: let_him_carry_it
           label: Let him carry it. He has carried it this long.
           outcomes:
@@ -1056,6 +1269,55 @@ events:
               effects:
                 - { kind: rite, rite: unmaking, ascendant: ASCENDANT, subject: ELDER }
                 - { kind: respect, delta: -2 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: taken_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beside the circle when the last seal cracks. Its impression stays
+                  above the broken wax until it has been witnessed. The working and its agreed sacrifice
+                  stand; the house loses less standing in the telling.
+                effects:
+                  - {kind: rite, rite: unmaking, ascendant: ASCENDANT, subject: ELDER}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beside the circle when the last seal cracks. Its impression
+                        stays above the broken wax until it has been witnessed. The working and its agreed
+                        sacrifice stand; the house loses less standing in the telling.
+                      effects:
+                        - {kind: respect, delta: -2}
+                      claims: []
+                    omit:
+                      chronicle: null
+                      effects:
+                        - {
+                            kind: discrepancy,
+                            op: create,
+                            id: the_small_hall_omission,
+                            severity: total,
+                            provableBy: [the_church, house_marrow, house_ilm]
+                          }
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_small_hall_lie
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                          - house_ilm
             - id: failed_at_the_last_step
               weight: 36
               # THE RUN, LOST AT THE FINAL STEP (§22, §23's `unmade`). The flag
@@ -1073,6 +1335,70 @@ events:
                 - { kind: status, target: { slot: ELDER }, status: dead, cause: the last step of the Great Work }
                 - { kind: madness, target: { slot: ASCENDANT }, delta: 40 }
                 - { kind: respect, delta: -2 }
+              agreedPrices:
+                - effect: 1
+                  reason: sacrifice
+                  rite: unmaking
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: failed_at_the_last_step_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beside the circle when the last seal cracks. Its impression stays
+                  above the broken wax until it has been witnessed. The working and its agreed sacrifice
+                  stand; the house loses less standing in the telling.
+                effects:
+                  - {kind: flag, flag: god_rite_failed, set: true}
+                  - {
+                      kind: status,
+                      target: {slot: ELDER},
+                      status: dead,
+                      cause: the last step of the Great Work
+                    }
+                  - {kind: madness, target: {slot: ASCENDANT}, delta: 40}
+                  - {kind: respect, delta: -1}
+                agreedPrices:
+                  - effect: 1
+                    reason: sacrifice
+                    rite: unmaking
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beside the circle when the last seal cracks. Its impression
+                        stays above the broken wax until it has been witnessed. The working and its agreed
+                        sacrifice stand; the house loses less standing in the telling.
+                      effects:
+                        - {kind: respect, delta: -2}
+                      claims: []
+                    omit:
+                      chronicle: null
+                      effects:
+                        - {
+                            kind: discrepancy,
+                            op: create,
+                            id: the_small_hall_omission,
+                            severity: total,
+                            provableBy: [the_church, house_marrow, house_ilm]
+                          }
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_small_hall_lie
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                          - house_ilm
         - id: let_him_be
           label: Let him be. There will be another year and another way.
           outcomes:
@@ -1353,6 +1679,56 @@ events:
                 - { kind: flag, flag: church_hostile, set: true }
                 - { kind: respect, delta: -2 }
                 - { kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: widened_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} moves the counting bowl after the working. Its shadow holds the old
+                  count for a breath longer. The widening still went unasked, but the witnesses have
+                  something to put beside that fault.
+                effects:
+                  - {kind: rite, rite: great_rite, ascendant: ASCENDANT}
+                  - {kind: flag, flag: church_hostile, set: true}
+                  - {kind: respect, delta: -1}
+                  - {kind: schedule, event: the_chapter_house_closes_its_door, inYears: 1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} moves the counting bowl after the working. Its shadow holds the
+                        old count for a breath longer. The widening still went unasked, but the witnesses
+                        have something to put beside that fault.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                      effects:
+                        - {
+                            kind: discrepancy,
+                            op: create,
+                            id: the_second_name_omitted,
+                            severity: total,
+                            provableBy: [the_church, house_marrow]
+                          }
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      discrepancy:
+                        id: the_second_name_lie
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - house_marrow
+                      claims: []
         - id: leave_him_as_he_is
           label: Leave him as he is. He was filled; he was not promised more.
           outcomes:
@@ -2030,3 +2406,135 @@ proseVariants:
   - address: "content:events/rites.yaml#events[id=the_unmaking].recordByChoice[id=let_him_be].options.embellish.claims[0].text"
     of: "522b39aa97cb4216"
     plainenglish: "refused the Unmaking in public, before eleven witnesses and a chapter-house clerk"
+  - address: >-
+      content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].primordial.text
+    of: fbadd967d3643cbb
+    plainenglish: "On the sixth night, {PRIMORDIAL_ACTOR} comes to the child's bed. Every lamp goes cold without going out. The boy draws a breath and opens his eyes before dawn."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].primordial.record.options.record.chronicle
+    of: fbadd967d3643cbb
+    plainenglish: "On the sixth night, {PRIMORDIAL_ACTOR} comes to the child's bed. Every lamp goes cold without going out. The boy draws a breath and opens his eyes before dawn."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seven_lamp_vigil].interaction.choices[id=keep_the_lamps].outcomes[id=died].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].primordial.text
+    of: 8bc28f3d83789489
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the closed door. The key falls through the solid wood into his hand. The child is brought to the table alive, and the fast is over."
+  - address: >-
+      content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].primordial.record.options.record.chronicle
+    of: 8bc28f3d83789489
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the closed door. The key falls through the solid wood into his hand. The child is brought to the table alive, and the fast is over."
+  - address: >-
+      content:events/rites.yaml#events[id=the_dark_year_fast].interaction.choices[id=keep_the_fast].outcomes[id=died].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].primordial.text
+    of: a9f14f8a7ef1c4b6
+    plainenglish: "When the blade falls, {PRIMORDIAL_ACTOR} is close enough to reach it. It stops against the air between the two men and drops flat. Both leave the room alive; neither withdraws the question."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].primordial.record.options.record.chronicle
+    of: a9f14f8a7ef1c4b6
+    plainenglish: "When the blade falls, {PRIMORDIAL_ACTOR} is close enough to reach it. It stops against the air between the two men and drops flat. Both leave the room alive; neither withdraws the question."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=struck].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].primordial.text
+    of: a9f14f8a7ef1c4b6
+    plainenglish: "When the blade falls, {PRIMORDIAL_ACTOR} is close enough to reach it. It stops against the air between the two men and drops flat. Both leave the room alive; neither withdraws the question."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].primordial.record.options.record.chronicle
+    of: a9f14f8a7ef1c4b6
+    plainenglish: "When the blade falls, {PRIMORDIAL_ACTOR} is close enough to reach it. It stops against the air between the two men and drops flat. Both leave the room alive; neither withdraws the question."
+  - address: >-
+      content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].outcomes[id=fell].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].outcomes[id=defied].primordial.text
+    of: 4770dcb69d7a8b9a
+    plainenglish: "After the working, {PRIMORDIAL_ACTOR} shuts the shutter. The light remains on its inner face, where the witnesses can still see it. Bramme hears what was done without leave, but the account carries more than defiance."
+  - address: >-
+      content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].outcomes[id=defied].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].outcomes[id=defied].primordial.record.options.record.chronicle
+    of: 4770dcb69d7a8b9a
+    plainenglish: "After the working, {PRIMORDIAL_ACTOR} shuts the shutter. The light remains on its inner face, where the witnesses can still see it. Bramme hears what was done without leave, but the account carries more than defiance."
+  - address: >-
+      content:events/rites.yaml#events[id=the_great_rite].interaction.choices[id=do_it_unasked].outcomes[id=defied].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=taken].primordial.text
+    of: 20d8fb7b4945a7b7
+    plainenglish: "When the last seal breaks, {PRIMORDIAL_ACTOR} is beside the circle. Its impression stays above the broken wax until it has been witnessed. The working and its agreed sacrifice stand; the house loses less standing in the telling."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=taken].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=taken].primordial.record.options.record.chronicle
+    of: 20d8fb7b4945a7b7
+    plainenglish: "When the last seal breaks, {PRIMORDIAL_ACTOR} is beside the circle. Its impression stays above the broken wax until it has been witnessed. The working and its agreed sacrifice stand; the house loses less standing in the telling."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=taken].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].primordial.text
+    of: 20d8fb7b4945a7b7
+    plainenglish: "When the last seal breaks, {PRIMORDIAL_ACTOR} is beside the circle. Its impression stays above the broken wax until it has been witnessed. The working and its agreed sacrifice stand; the house loses less standing in the telling."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].primordial.effects[1].cause
+    of: 696d7dfa7e9709fe
+    plainenglish: "the final stage of the Great Work"
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].primordial.record.options.record.chronicle
+    of: 20d8fb7b4945a7b7
+    plainenglish: "When the last seal breaks, {PRIMORDIAL_ACTOR} is beside the circle. Its impression stays above the broken wax until it has been witnessed. The working and its agreed sacrifice stand; the house loses less standing in the telling."
+  - address: >-
+      content:events/rites.yaml#events[id=the_unmaking].interaction.choices[id=go_through_with_it].outcomes[id=failed_at_the_last_step].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].outcomes[id=widened].primordial.text
+    of: 485927fd4cc12d89
+    plainenglish: "After the working, {PRIMORDIAL_ACTOR} moves the bowl used for counting. Its shadow holds the old count for a breath longer. The widening still went unasked, but the witnesses have something to put beside that fault."
+  - address: >-
+      content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].outcomes[id=widened].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].outcomes[id=widened].primordial.record.options.record.chronicle
+    of: 485927fd4cc12d89
+    plainenglish: "After the working, {PRIMORDIAL_ACTOR} moves the bowl used for counting. Its shadow holds the old count for a breath longer. The widening still went unasked, but the witnesses have something to put beside that fault."
+  - address: >-
+      content:events/rites.yaml#events[id=the_second_widening].interaction.choices[id=widen_him_quietly].outcomes[id=widened].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

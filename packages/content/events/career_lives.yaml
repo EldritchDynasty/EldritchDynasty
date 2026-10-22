@@ -41,6 +41,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: relationship, from: { slot: OFFICER }, to: head, sentiment: 5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: return_the_list
           label: Send the account back as it came.
           outcomes:
@@ -74,6 +77,21 @@ events:
           effects:
             - { kind: status, target: { slot: OFFICER }, status: dead, cause: "on the line, in a night march" }
             - { kind: respect, delta: 1 }
+          site:
+            kind: party
+            slots:
+              - OFFICER
+          primordial:
+            id: came_back_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} hears the ring strike a stone in the night march. The falling man
+              comes down beside the road, out of reach of the blades. The coat is ruined; its owner
+              lives.
+            effects:
+              - {kind: respect, delta: 1}
+            tags:
+              - primordial
+            record: null
 
   - id: leave_bought_in_winter
     title: A Winter's Leave
@@ -102,6 +120,9 @@ events:
               effects:
                 - { kind: treasury, delta: -20 }
                 - { kind: career, target: { slot: OFFICER }, op: leave }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_the_commission
           label: The commission cost more. Send him back.
           outcomes:
@@ -136,6 +157,9 @@ events:
           text: This is what a son in the Church buys. It is not forgiveness.
           effects:
             - { kind: treasury, delta: -4 }
+          agreedPrices:
+            - effect: 0
+              reason: contract
 
   - id: the_parish_roll_waits
     title: The Roll Waits
@@ -201,6 +225,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: relationship, from: { slot: PRIEST }, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: file_the_account
           label: File the account unanswered.
           outcomes:
@@ -238,6 +265,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: count_to_six
           label: The request named six. Return two.
           outcomes:
@@ -309,6 +339,9 @@ events:
               text: The grain costs ten crowns now and would have cost twenty by winter.
               effects:
                 - { kind: treasury, delta: -10 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: leave_no_trace
           label: Do nothing that needs explaining.
           outcomes:
@@ -317,6 +350,20 @@ events:
               text: The notice arrives on time. So does the higher price.
               effects:
                 - { kind: treasury, delta: -20 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: waited_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} rests a hand on the bin lid. The spoiled grain runs out first,
+                  leaving dry grain beneath it where the rot should have reached. The house still buys the
+                  shortfall.
+                effects:
+                  - {kind: treasury, delta: -10}
+                tags:
+                  - primordial
+                record: null
 
   # -- MERCHANT -------------------------------------------------------------
   - id: the_letter_of_credit_fails
@@ -346,6 +393,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: relationship, from: { slot: MERCHANT }, to: head, sentiment: 7 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: let_it_be_entered
           label: Let the refusal stand.
           outcomes:
@@ -381,6 +431,9 @@ events:
               text: The share survives the season. Three others do not.
               effects:
                 - { kind: treasury, delta: -20 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: sell_the_share
           label: Bring him home with what remains.
           outcomes:
@@ -415,6 +468,21 @@ events:
           effects:
             - { kind: treasury, delta: -2 }
             - { kind: respect, delta: -1 }
+          site:
+            kind: elsewhere
+            slots: []
+          primordial:
+            id: fined_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} stands before the magistrate's clerk. The black cloth pales under the
+              clerk's fingers and darkens when he lets go. He reduces the fine and leaves the colour
+              unnamed.
+            effects:
+              - {kind: treasury, delta: -1}
+              - {kind: respect, delta: -1}
+            tags:
+              - primordial
+            record: null
 
   # -- SCHOLAR --------------------------------------------------------------
   - id: the_man_on_the_shelf
@@ -525,6 +593,9 @@ events:
               text: The volume arrives seven months later. It is ordinary until the final quire.
               effects:
                 - { kind: treasury, delta: -11 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it_there
           label: Leave the book at Corran.
           outcomes:
@@ -570,6 +641,9 @@ events:
               text: The assize adjourns for an hour. The fourth book changes the answer.
               effects:
                 - { kind: treasury, delta: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: three_words_of_old_ambric
     title: Three Words
@@ -610,6 +684,9 @@ events:
               effects:
                 - { kind: treasury, delta: -18 }
                 - { kind: relationship, from: { slot: ADVOCATE }, to: head, sentiment: -10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_advocates_day
     title: Two Marks a Day
@@ -671,6 +748,20 @@ events:
               text: The buyers are pleasant. They always are when the price is theirs.
               effects:
                 - { kind: treasury, delta: -12 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: late_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the wet sample on the table. Water runs from it without
+                  wetting the board, and the remaining stock can be sold before the next fair. The earlier
+                  price is still gone.
+                effects:
+                  - {kind: treasury, delta: -6}
+                tags:
+                  - primordial
+                record: null
 
   - id: sworn_on_the_weight
     title: The Weight on the Table
@@ -732,6 +823,9 @@ events:
               text: The second letter arrives after the payment and before the argument.
               effects:
                 - { kind: treasury, delta: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: send_him_to_bracc
           label: Send him with both halves.
           outcomes:
@@ -741,6 +835,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: { slot: FACTOR }, to: head, sentiment: -4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # -- SEA ------------------------------------------------------------------
   - id: the_ship_is_late
@@ -770,6 +867,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: relationship, from: { slot: SAILOR }, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: wait_at_ardwen
           label: Wait for Sarrow to send another word.
           outcomes:
@@ -806,6 +906,9 @@ events:
               effects:
                 - { kind: treasury, delta: -24 }
                 - { kind: relationship, from: { slot: SAILOR }, to: head, sentiment: 7 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: keep_the_berth
           label: Keep the wage and leave the ship to its captain.
           outcomes:
@@ -848,6 +951,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # -- SCHOOLING ------------------------------------------------------------
   - id: the_first_slate
@@ -961,6 +1067,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: relationship, from: { slot: PUPIL }, to: head, sentiment: 5 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: keep_the_allowance
           label: A contract has hours as well as wages.
           outcomes:
@@ -1653,3 +1762,19 @@ proseVariants:
     of: 2f6e618dd21d8789
     plainenglish: >-
       The fire is banked at the usual time. The unfinished sum waits for morning.
+  - address: >-
+      content:events/career_lives.yaml#events[id=the_ring_from_the_line].interaction.outcomes[id=came_back].primordial.text
+    of: 0dbc401414eb0320
+    plainenglish: "During the night march, {PRIMORDIAL_ACTOR} hears the ring hit a stone. The falling man comes down beside the road, out of reach of the blades. The coat is ruined; its owner lives."
+  - address: >-
+      content:events/career_lives.yaml#events[id=news_before_the_seal].interaction.choices[id=leave_no_trace].outcomes[id=waited].primordial.text
+    of: e1ad6ee7e797d68b
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the grain bin's lid. The spoiled grain runs out first, leaving dry grain beneath it where the rot should have reached. The house still buys the shortfall."
+  - address: >-
+      content:events/career_lives.yaml#events[id=black_cloth_at_the_fair].interaction.outcomes[id=fined].primordial.text
+    of: 1d956ce7cd3ce993
+    plainenglish: "{PRIMORDIAL_ACTOR} is in front of the magistrate's clerk. The black cloth pales under the clerk's fingers and darkens when he lets go. He reduces the fine and leaves the colour unnamed."
+  - address: >-
+      content:events/career_lives.yaml#events[id=a_month_before_the_market].interaction.choices[id=wait_for_haying].outcomes[id=late].primordial.text
+    of: 876b005c73644250
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the wet sample lying on the table. Water runs from it without wetting the board, and the remaining stock can be sold before the next fair. The earlier price is still gone."

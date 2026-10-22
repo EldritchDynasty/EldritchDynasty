@@ -1,5 +1,6 @@
 import { ContentBundleS, type ContentBundle } from './content.js';
 import { CORE_MESSAGE_ADDRESS_PREFIX, CORE_MESSAGE_VARIANTS_FILE } from './prose.js';
+import { unpackContentDocument } from './packed-content.js';
 
 /**
  * WHERE THE CONTENT LIVES, declared once.
@@ -138,6 +139,7 @@ export function assembleBundle(
   const foundSources: ContentSources = new Map();
   // The same YAML file may contribute to several CONTENT_LAYOUT collections.
   const inspected = new Set<string>();
+  const parsedDocs = new Map<string, Record<string, unknown> | null>();
 
   for (const spec of CONTENT_LAYOUT) {
     let matching: string[];
@@ -155,7 +157,8 @@ export function assembleBundle(
 
     const out: unknown[] = [];
     for (const path of matching) {
-      const doc = parse(files[path]!) as Record<string, unknown> | null;
+      if (!parsedDocs.has(path)) parsedDocs.set(path, unpackContentDocument(parse(files[path]!)) as Record<string, unknown> | null);
+      const doc = parsedDocs.get(path);
       if (!inspected.has(path)) {
         assertNoTruncatedFlowProse(path, parse.flowProseIssues?.(files[path]!) ?? []);
         inspected.add(path);

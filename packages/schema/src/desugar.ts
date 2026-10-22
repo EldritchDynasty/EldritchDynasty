@@ -69,8 +69,8 @@ export function desugarInline(events: EventTemplate[], arcs: ArcDef[]): Desugare
   // A chain that is wholly a cycle (`a -> b -> a`) has no root and compiles to
   // nothing, which is correct: there is no beat the ambient pool could ever
   // start it from.
-  const followUps = new Set(events.flatMap((e) => outcomesOf(e).flatMap((o) => (o.next ? [o.next.event] : []))));
-  const roots = events.filter((e) => !followUps.has(e.id) && outcomesOf(e).some((o) => o.next));
+  const followUps = new Set(events.flatMap((e) => outcomesOf(e, true).flatMap((o) => (o.next ? [o.next.event] : []))));
+  const roots = events.filter((e) => !followUps.has(e.id) && outcomesOf(e, true).some((o) => o.next));
   if (!roots.length) return { events, arcs };
 
   const already = new Set(arcs.filter((a) => a.inline).map((a) => a.id));
@@ -82,9 +82,17 @@ export function desugarInline(events: EventTemplate[], arcs: ArcDef[]): Desugare
   const compiled: ArcDef[] = [];
 
   for (const root of roots) {
-    for (const outcome of outcomesOf(root)) {
+    for (const outcome of outcomesOf(root, true)) {
       if (!outcome.next) continue;
-      const arcId = inlineArcId(root.id, outcome.id);
+      const normal = outcomesOf(root).find(o => o.primordial?.id === outcome.id
+        && o.next && JSON.stringify(o.next) === JSON.stringify(outcome.next));
+      const arcId = inlineArcId(root.id, normal?.id ?? outcome.id);
+      if (normal) {
+        const perOutcome = starts.get(root.id) ?? new Map<string, string>();
+        perOutcome.set(outcome.id, arcId);
+        starts.set(root.id, perOutcome);
+        continue;
+      }
       if (already.has(arcId)) continue;
 
       const chain = walk(root, outcome, byId);
@@ -173,7 +181,7 @@ function walk(
       nodeOf.set(target.id, node.id);
       if (parent) parent.successors.push(successorFor(outcome, node.id));
 
-      for (const o of outcomesOf(target)) if (o.next) nextFrontier.push([o, node]);
+      for (const o of outcomesOf(target, true)) if (o.next) nextFrontier.push([o, node]);
     }
     frontier = nextFrontier;
   }
@@ -196,8 +204,9 @@ function successorFor(outcome: Outcome, to: string) {
 }
 
 /** Every outcome an event can produce, across every branch. */
-export function outcomesOf(e: EventTemplate): Outcome[] {
-  return e.interaction.kind === 'narration' ? e.interaction.outcomes : e.interaction.choices.flatMap((c) => c.outcomes);
+export function outcomesOf(e: EventTemplate, includePrimordial = false): Outcome[] {
+  const ordinary = e.interaction.kind === 'narration' ? e.interaction.outcomes : e.interaction.choices.flatMap((c) => c.outcomes);
+  return includePrimordial ? [...ordinary, ...ordinary.flatMap(o => o.primordial ? [{ ...o.primordial, weight: o.weight, onlyIf: o.onlyIf }] : [])] : ordinary;
 }
 
 /**
@@ -211,8 +220,10 @@ export function outcomesOf(e: EventTemplate): Outcome[] {
 function withTriggers(e: EventTemplate, starts: Map<string, string>): EventTemplate['interaction'] {
   const patch = (o: Outcome): Outcome => {
     const arc = starts.get(o.id);
-    if (!arc || o.triggers) return o;
-    return { ...o, triggers: { arc, op: 'start' as const } };
+    const rescueArc = o.primordial ? starts.get(o.primordial.id) : undefined;
+    const primordial = o.primordial && rescueArc && !o.primordial.triggers
+      ? { ...o.primordial, triggers: { arc: rescueArc, op: 'start' as const } } : o.primordial;
+    return { ...o, ...(primordial ? { primordial } : {}), ...(!arc || o.triggers ? {} : { triggers: { arc, op: 'start' as const } }) };
   };
   const i = e.interaction;
   if (i.kind === 'narration') return { ...i, outcomes: i.outcomes.map(patch) };

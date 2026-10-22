@@ -72,6 +72,9 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: take_in_kind
           label: Take it in kind, and take less of it.
           outcomes:
@@ -83,6 +86,9 @@ events:
                 nobody is ruined, which the reeve seems to have expected.
               effects:
                 - { kind: treasury, delta: -20 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: take_it_whole
           label: Take it whole. The roof does not care about the weather.
           outcomes:
@@ -201,6 +207,22 @@ events:
               effects:
                 - { kind: treasury, delta: -45 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: party
+                slots:
+                  - SENT_A
+              primordial:
+                id: not_shifted_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} puts a hand against the stopped wheel. The broken teeth hold together
+                  above the race long enough to bring the grain through. The wheel must still be repaired.
+                effects:
+                  - {kind: treasury, delta: -22}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - failure
+                  - primordial
+                record: null
 
   # ── The two-beat scene ───────────────────────────────────────────────────
   - id: the_boy_and_the_east_cellar
@@ -507,3 +529,7 @@ proseVariants:
     of: "af970d010041c94d"
     plainenglish: >-
       gave the chapter house a full list of the cellars
+  - address: >-
+      content:events/wend.yaml#events[id=the_wheel_stops].interaction.choices[id=they_come_back_wet].outcomes[id=not_shifted].primordial.text
+    of: 5b1a80c87cc773ac
+    plainenglish: "{PRIMORDIAL_ACTOR} touches the wheel that has stopped turning. The broken teeth hold together above the race long enough to bring the grain through. The wheel must still be repaired."

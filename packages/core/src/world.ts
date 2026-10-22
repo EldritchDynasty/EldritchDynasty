@@ -1,3 +1,4 @@
+import type { PrimordialObservation } from './events/primordial.js';
 import type {
   AgeState, ArcInstance, AuctionState, BranchState, CampaignId, Content, EndingId, FrameEntry, FrequencyLedger, HeirloomState, HouseDef,
   LibraryBookState, LibraryMemory, LoggedDecision, LooseSecret, MarriagePromise, MusterState, ParcelState, PersonId, Relationship,
@@ -779,6 +780,7 @@ export interface SimCtx {
   /** Prospective wording preference; deliberately not part of WorldState/save. */
   prose: ProseRuntime;
   /** Measurement-only listener before an authored outcome applies. Never saved or called by previews. */
+  observePrimordial?: (observation: PrimordialObservation) => void;
   observeOutcome?: (observation: OutcomeObservation) => void;
   /** Measurement-only listener immediately after those authored effects. Never saved. */
   observeAppliedOutcome?: (observation: OutcomeObservation) => void;

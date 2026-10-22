@@ -81,6 +81,9 @@ events:
                 arguments a hundred years from now.
               effects:
                 - { kind: treasury, delta: -400 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         # The branch the arc REMEMBERS. `arc_flag` writes onto this run of
         # the story and onto nothing else, which is what lets the fourth beat
         # below exist at all without a world flag every event in the game can
@@ -111,6 +114,9 @@ events:
                 # last-night frame reads, and adding a third branch to this scene halved
                 # how often the only branch that created it was taken.
                 - { kind: discrepancy, op: create, id: seal_gift_lie, severity: major, provableBy: [house_marrow] }
+              agreedPrices:
+                - effect: 1
+                  reason: purchase
         - id: let_it_lie
           label: Let it lie. It has lain this long.
           outcomes:
@@ -233,6 +239,9 @@ events:
                 for himself.
               effects:
                 - { kind: treasury, delta: -220 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: let_it_go
           label: Let it go. It is forty years of somebody else's letters.
           outcomes:

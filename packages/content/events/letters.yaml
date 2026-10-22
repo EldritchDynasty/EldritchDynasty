@@ -119,6 +119,22 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: attribute, target: head, attr: health, delta: -4 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: four_days_late_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the letter beneath the signed decision. Its seal leaves an
+                  impression on the sheet below before the wax touches it. The clerk accepts part of the
+                  appeal; a charge remains.
+                effects:
+                  - {kind: treasury, delta: -15}
+                  - {kind: attribute, target: head, attr: health, delta: -4}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_wayfolk_have_it_first
     title: The Song Is Here Before the Fact
@@ -156,6 +172,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: the_song_arc_started, set: true }
                 - { kind: arc, op: start, arc: arc_the_song_we_taught_them }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_the_song_stand
           label: Let it stand. It is not our house in the song.
           outcomes:
@@ -202,6 +221,9 @@ events:
                 establishes which.
               effects:
                 - { kind: treasury, delta: -9 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: let_it_close
           label: Let it close. Two years of silence is an answer.
           outcomes:
@@ -298,6 +320,9 @@ events:
                 exactly what this house pays to know things.
               effects:
                 - { kind: treasury, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
             - id: it_is_about_us
               weight: 38
               text: >-
@@ -309,6 +334,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_what_the_tinker_was_carrying, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: mend_the_pot_only
           label: The pot only. This house does not buy talk.
           outcomes:
@@ -323,6 +351,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: the_letter_read_aloud
     title: Who Is in the Room When It Is Opened
@@ -415,6 +446,20 @@ events:
                 shame rather than resentment.
               effects:
                 - { kind: treasury, delta: -11 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: he_was_wrong_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lifts the wet fleece brought as a sample. Water leaves it in a single
+                  thread and the next lots dry before they lose all their weight. The first sale still
+                  stands.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
         - id: wait_for_the_factors
           label: Wait for the factors. They set the price and they always have.
           outcomes:
@@ -868,3 +913,11 @@ proseVariants:
     plainenglish: >-
       The family registered only its own offer and certified that no answering letter from
       Cawdry had arrived.
+  - address: >-
+      content:events/letters.yaml#events[id=the_post_relay_will_take_it].interaction.choices[id=send_a_rider].outcomes[id=four_days_late].primordial.text
+    of: ee59dbe5460746f1
+    plainenglish: "{PRIMORDIAL_ACTOR} touches the letter lying under the signed decision. Its seal leaves an impression on the sheet below before the wax touches it. The clerk accepts part of the appeal; a charge remains."
+  - address: >-
+      content:events/letters.yaml#events[id=the_drovers_bring_the_price].interaction.choices[id=sell_early_on_his_word].outcomes[id=he_was_wrong].primordial.text
+    of: 0bb39b171d67465b
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the wet sample fleece. Water leaves it in a single thread and the next lots dry before they lose all their weight. The first sale still stands."

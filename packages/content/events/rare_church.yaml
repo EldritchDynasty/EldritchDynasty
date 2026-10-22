@@ -76,6 +76,9 @@ events:
                 - { kind: treasury, delta: -34 }
                 - { kind: flag, flag: the_jurisdiction_formula, set: true }
                 - { kind: arc, op: start, arc: arc_the_formula_on_two_desks }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the nine days at Bramme
       options:
@@ -135,6 +138,9 @@ events:
                 a woman lies there and has said so since 1071.
               effects:
                 - { kind: treasury, delta: -12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: nothing_under_it
               weight: 42
               text: >-
@@ -146,6 +152,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: rumour, op: seed, id: rumour_the_empty_stone, accuracy: 0.55 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: refuse_the_ground
           label: Refuse. The chapel is this house's building.
           outcomes:
@@ -161,6 +170,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the stone the Church asked for
       options:
@@ -224,6 +236,9 @@ events:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: 1 }
                 - { kind: discrepancy, op: create, id: the_four_lines_at_bramme, severity: major, provableBy: [the_church] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: hold_out
           label: Hold out. Bury them in the orchard and let the province watch.
           outcomes:
@@ -252,6 +267,46 @@ events:
                 - { kind: treasury, delta: -140 }
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: -10 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: it_holds_too_long_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands in the orchard while the gravediggers wait. The broken well
+                  rope rises from the water and knots itself to the beam. The house can keep more of its
+                  remaining stores through the next winter.
+                effects:
+                  - {kind: treasury, delta: -70}
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -10}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands in the orchard while the gravediggers wait. The broken
+                        well rope rises from the water and knots itself to the beam. The house can keep
+                        more of its remaining stores through the next winter.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: how_long_the_interdict_ran
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - commons
     record:
       subject: the interdict, and what was done about it
       options:
@@ -312,6 +367,9 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 2 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: decline_the_bone
           label: Decline. This chapel does not open.
           outcomes:
@@ -474,6 +532,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: relationship, from: { slot: PRIEST }, to: head, sentiment: 14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: acted_and_seen
               weight: 38
               text: >-
@@ -485,6 +546,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: burn_the_letter
           label: Burn it. He should never have sent it and we should never have had it.
           outcomes:
@@ -583,6 +647,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: rumour, op: seed, id: rumour_the_copy_that_went_to_cawdry, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     record:
       subject: the roll at Wick, and which of it went down
       options:
@@ -757,6 +824,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: send_the_letter_back
           label: Send the letter back unanswered. The accounts are the house's own.
           outcomes:
@@ -1358,3 +1428,19 @@ proseVariants:
     of: "95098e0c2acca2d0"
     plainenglish: >-
       exchanged polite letters with the chapter house at Bramme about the parish accounts
+  - address: >-
+      content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=it_holds_too_long].primordial.text
+    of: 73b7ec19cc9581f5
+    plainenglish: "{PRIMORDIAL_ACTOR} is in the orchard as the gravediggers wait. The broken well rope rises from the water and knots itself to the beam. The house can keep more of its remaining stores through the next winter."
+  - address: >-
+      content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=it_holds_too_long].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=it_holds_too_long].primordial.record.options.record.chronicle
+    of: 73b7ec19cc9581f5
+    plainenglish: "{PRIMORDIAL_ACTOR} is in the orchard as the gravediggers wait. The broken well rope rises from the water and knots itself to the beam. The house can keep more of its remaining stores through the next winter."
+  - address: >-
+      content:events/rare_church.yaml#events[id=the_interdict].interaction.choices[id=hold_out].outcomes[id=it_holds_too_long].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

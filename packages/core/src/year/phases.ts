@@ -687,7 +687,7 @@ export function present(
     const cast = autoCast(e, ctx, fill, playerCast, rng);
     const resolved = commitOutcome(ctx, e, outcome, cast, undefined, rng, arcStep);
     report.resolved.push(resolved);
-    afterRecord(ctx, e, resolved.entryId, cast, rng, report, autoResolve);
+    afterRecord(ctx, resolved.event, resolved.entryId, resolved.fill, rng, report, autoResolve, undefined, resolved.outcome.id);
     return;
   }
 
@@ -708,7 +708,7 @@ export function present(
   const outcome = resolveChoiceOutcome(ctx, e, choice, cast, rng);
   const resolved = commitOutcome(ctx, e, outcome, cast, choice.id, rng, arcStep);
   report.resolved.push(resolved);
-  afterRecord(ctx, e, resolved.entryId, cast, rng, report, autoResolve, choice.id, outcome.id);
+  afterRecord(ctx, resolved.event, resolved.entryId, resolved.fill, rng, report, autoResolve, choice.id, resolved.outcome.id);
 }
 
 /**

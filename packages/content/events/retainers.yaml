@@ -210,6 +210,9 @@ events:
               effects:
                 - { kind: rumour, op: seed, id: rumour_the_eleventh_stave, accuracy: 0.3 }
                 - { kind: treasury, delta: -4 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
             - id: the_room_notices
               weight: 36
               text: >-
@@ -386,6 +389,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: { slot: ARCHIVIST }, to: head, sentiment: 18 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: pension_her
           label: Pension her off. Half wages, the cottage at the ford, and thanks in the hall.
           outcomes:
@@ -401,6 +407,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: arc, op: start, arc: arc_what_went_with_her }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_her_go
           label: Let her go at the quarter. It is what a wage roll is for.
           outcomes:

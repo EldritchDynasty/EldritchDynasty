@@ -105,6 +105,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: 14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: carry_it_to_harvest
           label: Carry it to Harvest. They are fed and housed.
           outcomes:
@@ -177,6 +180,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: -18 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_steward_asks_for_a_boy
     title: He Would Like Somebody Behind Him
@@ -211,6 +217,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: not_this_year
           label: Not this year. The roof is this year.
           outcomes:
@@ -340,6 +349,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 10 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_her_go_badly
           label: Let her go. No character. She is choosing to leave.
           outcomes:
@@ -448,6 +460,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: eight_will_do
           label: Eight will do. The maids can carry.
           outcomes:
@@ -497,6 +512,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_the_arrangements
           label: Leave it. It has done since the founding.
           outcomes:

@@ -119,6 +119,20 @@ events:
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_death }
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_darkness }
                 - { kind: spellbook, op: remove_copy, target: head, book: the_marrow_codex }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: burned_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the laid-out books. The leaves turn against the draught
+                  and shut themselves; neither the flame nor the cellar damp takes hold. The question from
+                  Bramme remains.
+                effects:
+                  - {kind: respect, delta: 1}
+                tags:
+                  - primordial
+                record: null
         - id: hide_them
           label: The second cellar. It has held worse.
           outcomes:
@@ -133,6 +147,21 @@ events:
                 - { kind: spellbook, op: degrade, target: head, book: lesser_workings_of_darkness }
                 - { kind: flag, flag: the_second_cellar_shelf, set: true }
                 - { kind: schedule, event: the_cellar_shelf_is_found, inYears: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: hidden_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands beside the laid-out books. The leaves turn against the draught
+                  and shut themselves; neither the flame nor the cellar damp takes hold. The question from
+                  Bramme remains.
+                effects:
+                  - {kind: flag, flag: the_second_cellar_shelf, set: true}
+                  - {kind: schedule, event: the_cellar_shelf_is_found, inYears: 1}
+                tags:
+                  - primordial
+                record: null
         - id: sell_them
           label: Sell them east while there is still a buyer.
           outcomes:
@@ -150,6 +179,17 @@ events:
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_death }
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_darkness }
                 - { kind: spellbook, op: remove_copy, target: head, book: the_marrow_codex }
+              agreedPrices:
+                - effect: 2
+                  reason: purchase
+                - effect: 3
+                  reason: purchase
+                - effect: 4
+                  reason: purchase
+                - effect: 5
+                  reason: purchase
+                - effect: 6
+                  reason: purchase
 
         - id: offer_them_as_tribute
           label: Give the second row to Bramme as tribute. Pay the cartage and keep the receipt.
@@ -168,6 +208,19 @@ events:
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_death }
                 - { kind: spellbook, op: remove_copy, target: head, book: greater_workings_of_darkness }
                 - { kind: spellbook, op: remove_copy, target: head, book: the_marrow_codex }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
+                - effect: 2
+                  reason: tribute
+                - effect: 3
+                  reason: tribute
+                - effect: 4
+                  reason: tribute
+                - effect: 5
+                  reason: tribute
+                - effect: 6
+                  reason: tribute
 
   - id: what_the_chapel_is_for
     title: The Stone in the Chapel
@@ -219,6 +272,9 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_it_shut
           label: Keep it shut. A swept chapel invites a visitor.
           outcomes:
@@ -559,3 +615,11 @@ proseVariants:
       The Church sends a cart and a clerk to collect the Death and Darkness books under its seal.
       The steward pays twenty crowns for transport and a receipt. The Church records the books
       as a gift given freely, not a surrender. Those copies are no longer on the shelves.
+  - address: >-
+      content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=burn_them].outcomes[id=burned].primordial.text
+    of: 989fbd0b69967d27
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the books laid out in rows. The leaves turn against the draught and shut themselves; neither the flame nor the cellar damp takes hold. The question from Bramme remains."
+  - address: >-
+      content:events/age_crusade.yaml#events[id=the_shelf_that_has_to_go].interaction.choices[id=hide_them].outcomes[id=hidden].primordial.text
+    of: 989fbd0b69967d27
+    plainenglish: "{PRIMORDIAL_ACTOR} is next to the books laid out in rows. The leaves turn against the draught and shut themselves; neither the flame nor the cellar damp takes hold. The question from Bramme remains."

@@ -100,6 +100,9 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: GUEST }, to: head, sentiment: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: he_stays_up
               weight: 35
               text: >-
@@ -112,6 +115,9 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_smoke_at_greening, accuracy: 0.2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_him_stand
           label: Let him stand. The room can count as well as anyone.
           outcomes:
@@ -128,6 +134,9 @@ events:
                 - { kind: flag, flag: the_man_who_drank_standing, set: true }
               # #334: "Nobody says a word about it for thirty years, and then somebody says it at exactly the wrong assize."
               next: { event: said_at_the_wrong_assize, after: { minYears: 28, maxYears: 32 } }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # #334: the reader of the_man_who_drank_standing.
   - id: said_at_the_wrong_assize
@@ -166,6 +175,9 @@ events:
               effects:
                 - { kind: treasury, delta: -15 }
                 - { kind: flag, flag: the_man_who_drank_standing, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_stand
           label: Let it stand. The boundary is what matters.
           outcomes:
@@ -178,6 +190,21 @@ events:
                 are told to.
               effects:
                 - { kind: respect, delta: -2 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: it_stood_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sets down the cup before the bench. Its shadow stays in his hand. The
+                  men repeat what was said, but they repeat what they saw with it, and the house loses
+                  less standing.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_third_night
     title: The Third Night
@@ -227,6 +254,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: telling_the_bees
     title: Telling the Bees
@@ -273,6 +303,22 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: rumour, op: seed, id: rumour_the_hives_that_left, accuracy: 0.3 }
+              site:
+                kind: party
+                slots:
+                  - TELLER
+              primordial:
+                id: they_go_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays a hand against the first empty skep. The departing swarm turns
+                  in the still air and settles back into the straw. The second skep stays empty.
+                effects:
+                  - {kind: treasury, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_hives_that_left, accuracy: 0.3}
+                tags:
+                  - omen
+                  - primordial
+                record: null
         - id: send_the_cook
           label: Send the cook. She has done it before and she is not blood.
           outcomes:
@@ -322,6 +368,9 @@ events:
                 - { kind: treasury, delta: -16 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: { slot: BEREAVED }, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: fill_the_place
           label: Fill the place at the board now. The living eat.
           outcomes:
@@ -372,6 +421,9 @@ events:
               effects:
                 - { kind: treasury, delta: -5 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_the_iron_longer
           label: Keep the iron down and the keeper waiting another tenday.
           outcomes:
@@ -389,6 +441,9 @@ events:
                 - { kind: flag, flag: a_late_entry_on_the_roll, set: true }
                 - { kind: rumour, op: seed, id: rumour_the_late_naming, accuracy: 0.4 }
                 - { kind: schedule, event: the_two_days_of_birth, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_last_of_the_bread
     title: The Last of the Bread
@@ -710,3 +765,11 @@ proseVariants:
       The boundary case goes the house's way. The story spreads everywhere else. By Ingathering
       people are telling it at Bramme, with the cup getting bigger each time, and fewer men sit
       down in this hall when they are told to.
+  - address: >-
+      content:events/customs.yaml#events[id=said_at_the_wrong_assize].interaction.choices[id=let_it_stand].outcomes[id=it_stood].primordial.text
+    of: 8d7ceb6f6d2693e3
+    plainenglish: "In front of the court, {PRIMORDIAL_ACTOR} puts the cup down. Its shadow stays in his hand. The men repeat what was said, but they repeat what they saw with it, and the house loses less standing."
+  - address: >-
+      content:events/customs.yaml#events[id=telling_the_bees].interaction.choices[id=tell_them_plainly].outcomes[id=they_go].primordial.text
+    of: 72378c2370e90b8f
+    plainenglish: "{PRIMORDIAL_ACTOR} touches the first empty straw hive. The departing swarm turns in the still air and settles back into the straw. The second skep stays empty."

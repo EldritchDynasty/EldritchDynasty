@@ -45,6 +45,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_it_ride
           label: Let it ride. A full hall is not a crisis.
           outcomes:
@@ -128,6 +131,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: branch, op: appease, amount: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it
           label: Leave it. There is always next year.
           outcomes:
@@ -179,6 +185,9 @@ events:
                 purchase nobody is ever impressed by.
               effects:
                 - { kind: treasury, delta: -10 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: hold_out
           label: Hold out. A match should cost the other house something.
           outcomes:

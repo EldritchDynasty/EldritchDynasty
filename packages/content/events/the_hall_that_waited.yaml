@@ -114,6 +114,9 @@ events:
               effects:
                 - { kind: treasury, delta: -140 }
                 - { kind: branch, op: appease, slot: COUSIN, amount: 30 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: promise_them
           label: Promise them. It costs nothing this year.
           outcomes:

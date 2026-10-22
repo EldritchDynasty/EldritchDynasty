@@ -1,4 +1,4 @@
-import type { Effect, EventTemplate, Outcome, Person, Target } from '@ed/schema';
+import type { Effect, EventTemplate, Outcome, Person, PrimordialRecord, Target } from '@ed/schema';
 import { assertNever, canHoldPost, FREQUENCY_PROFILES, MAIN_BRANCH, RESPECT_ORDER, isActiveBranch } from '@ed/schema';
 import { chronicleEntryId, type SimCtx, type WorldState } from '../world.js';
 import type { SlotFill } from './slots.js';
@@ -83,10 +83,10 @@ export function resolveTargets(t: Target, ctx: SimCtx, fill: SlotFill): Person[]
  */
 type OpenLie = WorldState['discrepancies'] extends Map<string, infer V> ? V : never;
 
-function openLie(ctx: SimCtx, provableBy?: readonly string[]): OpenLie | undefined {
+export function openLie(ctx: SimCtx, provableBy?: readonly string[], discrepancies = ctx.world.discrepancies): OpenLie | undefined {
   const want = provableBy ?? [];
   let best: OpenLie | undefined;
-  for (const d of ctx.world.discrepancies.values()) {
+  for (const d of discrepancies.values()) {
     if (d.state !== 'open') continue;
     if (want.length && d.provableBy.length && !d.provableBy.some((h) => want.includes(h))) continue;
     if (!best || rank(d.severity) > rank(best.severity)) best = d;
@@ -556,6 +556,7 @@ export interface ResolvedEvent {
   fill: SlotFill;
   /** The chronicle entry this outcome created. See `applyRecord` (issue #8). */
   entryId: string;
+  primordial?: PrimordialRecord;
 }
 
 export function applyOutcome(

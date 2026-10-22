@@ -3,6 +3,7 @@
 # bought with descendants (issue #16).
 careers:
   - id: military
+    resident: away
     name: Military
     respectYield: high
     income: { base: 6, variance: 10 }     # variable, as advertised
@@ -10,6 +11,7 @@ careers:
     blurb: A commission bought, not earned. It pays in standing and it collects in bodies.
 
   - id: clergy
+    resident: away
     name: Clergy
     respectYield: high
     income: { base: 14, variance: 0 }     # steady
@@ -20,6 +22,7 @@ careers:
       a great deal of room to be strange behind closed doors.
 
   - id: court
+    resident: away
     name: Court
     respectYield: moderate
     income: { base: 4, variance: 0 }      # low
@@ -27,12 +30,14 @@ careers:
     blurb: A seat near enough to power to be seen at it. Better suitor cards, slowly.
 
   - id: merchant
+    resident: away
     name: Merchant
     respectYield: none
     income: { base: 22, variance: 4 }     # high
     blurb: No standing in it whatsoever, and the treasury does not care.
 
   - id: scholar
+    resident: away
     name: Scholar
     respectYield: none
     income: { base: 0, variance: 0 }
@@ -46,6 +51,7 @@ careers:
   # survives the assize, a factor is how coin crosses a border, and the sea is
   # what Sarrow does with the sons nobody else has a use for.
   - id: advocate
+    resident: away
     name: Advocate
     respectYield: moderate
     income: { base: 11, variance: 3 }
@@ -57,6 +63,7 @@ careers:
       question it cannot afford to answer badly.
 
   - id: factor
+    resident: away
     name: Factor
     respectYield: low
     income: { base: 26, variance: 9 }
@@ -68,6 +75,7 @@ careers:
       two per cent and hears things a month early.
 
   - id: sea
+    resident: away
     name: The Sea
     respectYield: low
     income: { base: 17, variance: 16 }

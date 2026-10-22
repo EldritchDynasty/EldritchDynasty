@@ -51,6 +51,49 @@ events:
                 - { kind: attribute, target: { slot: KIN }, attr: health, delta: -8 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_what_they_carried_out_first, accuracy: 0.6 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: the_press_out_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends around
+                  the occupied rooms and the passage stays cold long enough to empty it. The outer wing
+                  still burns.
+                effects:
+                  - {kind: treasury, delta: -80}
+                  - {kind: attribute, target: {slot: KIN}, attr: health, delta: -8}
+                  - {kind: respect, delta: 1}
+                  - {kind: rumour, op: seed, id: rumour_what_they_carried_out_first, accuracy: 0.6}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends
+                        around the occupied rooms and the passage stays cold long enough to empty it. The
+                        outer wing still burns.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: what_came_out_of_the_fire
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - house_ilm
             - id: the_press_and_the_stair
               weight: 42
               text: >-
@@ -62,6 +105,47 @@ events:
               effects:
                 - { kind: treasury, delta: -160 }
                 - { kind: attribute, target: { slot: KIN }, attr: health, delta: -14 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: the_press_and_the_stair_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends around
+                  the occupied rooms and the passage stays cold long enough to empty it. The outer wing
+                  still burns.
+                effects:
+                  - {kind: treasury, delta: -80}
+                  - {kind: attribute, target: {slot: KIN}, attr: health, delta: -14}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends
+                        around the occupied rooms and the passage stays cold long enough to empty it. The
+                        outer wing still burns.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: what_came_out_of_the_fire
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - house_ilm
         - id: get_everyone_out
           label: People. Count them in the yard and let the wing go.
           outcomes:
@@ -78,6 +162,47 @@ events:
               effects:
                 - { kind: treasury, delta: -160 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: nineteen_in_the_yard_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends around
+                  the occupied rooms and the passage stays cold long enough to empty it. The outer wing
+                  still burns.
+                effects:
+                  - {kind: treasury, delta: -80}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beneath the west lintel when the roof goes. The fire bends
+                        around the occupied rooms and the passage stays cold long enough to empty it. The
+                        outer wing still burns.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: what_came_out_of_the_fire
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - house_ilm
     record:
       subject: the fire, and what came out of it
       options:
@@ -142,6 +267,9 @@ events:
                 - { kind: branch, op: appease, amount: 40 }
                 - { kind: respect, delta: 2 }
                 - { kind: treasury, delta: -45 }
+              agreedPrices:
+                - effect: 2
+                  reason: gift
         - id: refuse_the_three
           label: Refuse. The seal does not divide and never has.
           outcomes:
@@ -170,6 +298,46 @@ events:
               effects:
                 - { kind: branch, op: slight, amount: 30 }
                 - { kind: treasury, delta: -55 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: they_go_to_law_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} opens the smaller halls' petition. Three old seal marks rise through
+                  the table beneath it, and the advocate has to read the earlier settlement again. Part of
+                  the new expense is avoided; the grievance remains.
+                effects:
+                  - {kind: branch, op: slight, amount: 30}
+                  - {kind: treasury, delta: -27}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} opens the smaller halls' petition. Three old seal marks rise
+                        through the table beneath it, and the advocate has to read the earlier settlement
+                        again. Part of the new expense is avoided; the grievance remains.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: whether_the_halls_were_satisfied
+                        severity: major
+                        provableBy:
+                          - house_calder
+                          - commons
     record:
       subject: the letter the three halls signed
       options:
@@ -248,6 +416,49 @@ events:
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -24 }
                 - { kind: rumour, op: seed, id: rumour_the_pit_in_the_low_meadow, accuracy: 0.7 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: the_low_meadow_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands at the edge of the open ground. Water rises above the spade
+                  cut without spilling into it. The witnesses still dispute the refusal, but fewer of them
+                  call it heedless.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -24}
+                  - {kind: rumour, op: seed, id: rumour_the_pit_in_the_low_meadow, accuracy: 0.7}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands at the edge of the open ground. Water rises above the
+                        spade cut without spilling into it. The witnesses still dispute the refusal, but
+                        fewer of them call it heedless.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: whose_ground_the_pit_went_into
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - commons
+                          - house_calder
             - id: the_church_takes_it_anyway
               weight: 38
               text: >-
@@ -259,6 +470,47 @@ events:
                 register as having refused.
               effects:
                 - { kind: respect, delta: -2 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: the_church_takes_it_anyway_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands at the edge of the open ground. Water rises above the spade
+                  cut without spilling into it. The witnesses still dispute the refusal, but fewer of them
+                  call it heedless.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands at the edge of the open ground. Water rises above the
+                        spade cut without spilling into it. The witnesses still dispute the refusal, but
+                        fewer of them call it heedless.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: whose_ground_the_pit_went_into
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - commons
+                          - house_calder
     record:
       subject: where the pit went
       options:
@@ -323,6 +575,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: relationship, from: { slot: STEWARD }, to: head, sentiment: 26 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: dismiss_him
           label: Dismiss him. A man who keeps a second book has a second employer somewhere.
           outcomes:
@@ -346,6 +601,43 @@ events:
                 Nothing in the book is false. That is the entire problem.
               effects:
                 - { kind: respect, delta: -2 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: dismissed_and_sells_it_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the steward's abandoned blotter. The missing page shows
+                  through it, in reverse, and the house makes a copy before it fades. The steward still
+                  leaves with his book; he no longer holds the only account.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} touches the steward's abandoned blotter. The missing page shows
+                        through it, in reverse, and the house makes a copy before it fades. The steward
+                        still leaves with his book; he no longer holds the only account.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects: []
+                      claims: []
+                      discrepancy:
+                        id: why_the_steward_left
+                        severity: major
+                        provableBy:
+                          - house_bracc
+                          - commons
     record:
       subject: the steward's second book
       options:
@@ -406,6 +698,9 @@ events:
               effects:
                 - { kind: treasury, delta: -18 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: he_dates_them
               weight: 45
               text: >-
@@ -417,6 +712,9 @@ events:
                 anybody of anything and he has written it down.
               effects:
                 - { kind: treasury, delta: -18 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: put_the_ground_back
           label: Put the ground back before anybody else walks down there.
           outcomes:
@@ -432,6 +730,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: rumour, op: seed, id: rumour_why_they_planted_the_orchard, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: what came up in the orchard
       options:
@@ -507,6 +808,49 @@ events:
               effects:
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -30 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: not_found_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lifts the empty box. Its old impression remains in the air above the
+                  lining until everyone in the room has seen it. The seal is still missing, and the search
+                  still cost the household's trust.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -30}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} lifts the empty box. Its old impression remains in the air
+                        above the lining until everyone in the room has seen it. The seal is still
+                        missing, and the search still cost the household's trust.
+                      grantsKnowledge: knows_the_seal_is_gone
+                      effects:
+                        - {kind: respect, delta: -2}
+                        - {kind: schedule, event: the_business_without_the_seal, inYears: 1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: whether_the_seal_was_in_the_box
+                        severity: total
+                        provableBy:
+                          - house_marrow
+                          - house_calder
+                          - the_church
         - id: say_nothing_and_look
           label: Say nothing. Lock the press and look for it quietly.
           outcomes:
@@ -589,6 +933,9 @@ events:
                 - { kind: treasury, delta: -110 }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: household, to: head, sentiment: 30 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: ration_by_household
           label: Ration by household. Ours first, and say so plainly.
           outcomes:
@@ -605,6 +952,9 @@ events:
                 - { kind: treasury, delta: -50 }
                 - { kind: relationship, from: household, to: head, sentiment: -18 }
                 - { kind: rumour, op: seed, id: rumour_the_two_rations_in_one_yard, accuracy: 0.65 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: they_go_over_the_wall
               weight: 45
               text: >-
@@ -618,6 +968,53 @@ events:
                 - { kind: treasury, delta: -50 }
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -30 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: they_go_over_the_wall_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is beside the wall when the first rope breaks. It hangs without a
+                  knot until the people on it reach the ground. They still leave, but the departure is
+                  remembered with the hands that were spared.
+                effects:
+                  - {kind: treasury, delta: -50}
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -30}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is beside the wall when the first rope breaks. It hangs without
+                        a knot until the people on it reach the ground. They still leave, but the
+                        departure is remembered with the hands that were spared.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: how_the_yard_was_fed
+                        severity: total
+                        provableBy:
+                          - commons
+                          - house_calder
     record:
       subject: the month the gate was shut
       options:
@@ -684,6 +1081,9 @@ events:
                 - { kind: respect, delta: 2 }
                 - { kind: flag, flag: paid_bracc_whole, set: true }
                 - { kind: schedule, event: the_factor_remembers_the_receipt, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: ask_for_terms
           label: Ask for terms. Nineteen years is a relationship.
           outcomes:
@@ -699,6 +1099,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: terms_refused
               weight: 42
               text: >-
@@ -712,6 +1115,54 @@ events:
                 - { kind: treasury, delta: -70 }
                 - { kind: respect, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: terms_refused_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} puts a hand beside the signed instrument. The erased endorsement
+                  shows through the skin and can be copied. The debt is still due; the factor's account no
+                  longer stands alone.
+                effects:
+                  - {kind: treasury, delta: -70}
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: -14}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} puts a hand beside the signed instrument. The erased
+                        endorsement shows through the skin and can be copied. The debt is still due; the
+                        factor's account no longer stands alone.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: how_the_braccish_account_went
+                        severity: total
+                        provableBy:
+                          - house_bracc
+                          - house_calder
+                          - commons
     record:
       subject: what was owed to Bracc, and how it went
       options:
@@ -775,6 +1226,9 @@ events:
                 - { kind: treasury, delta: -90 }
                 - { kind: branch, op: appease, amount: 24 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: nobody_comes
               weight: 38
               text: >-
@@ -786,6 +1240,52 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: -2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: nobody_comes_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the unanswered letters together. Their seals sound against one
+                  another though his hands are still. Nobody comes, but the witnesses carry more home than
+                  the refusals.
+                effects:
+                  - {kind: treasury, delta: -90}
+                  - {kind: respect, delta: -1}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the unanswered letters together. Their seals sound
+                        against one another though his hands are still. Nobody comes, but the witnesses
+                        carry more home than the refusals.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: how_many_were_left
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - commons
         - id: write_it_all_down
           label: Write it all down. Everything, in one place, for whoever comes.
           outcomes:
@@ -1412,3 +1912,179 @@ proseVariants:
     of: "b55be36972a0154d"
     plainenglish: >-
       restored the house to full strength by calling back its relatives
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_out].primordial.text
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_out].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_out].primordial.record.options.record.chronicle
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_out].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_and_the_stair].primordial.text
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_and_the_stair].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_and_the_stair].primordial.record.options.record.chronicle
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=save_the_press].outcomes[id=the_press_and_the_stair].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].outcomes[id=nineteen_in_the_yard].primordial.text
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].outcomes[id=nineteen_in_the_yard].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].outcomes[id=nineteen_in_the_yard].primordial.record.options.record.chronicle
+    of: ab1bfcddd40ad419
+    plainenglish: "When the roof falls, {PRIMORDIAL_ACTOR} is under the west doorway. The fire bends around the occupied rooms and the passage stays cold long enough to empty it. The outer wing still burns."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_hall_burns].interaction.choices[id=get_everyone_out].outcomes[id=nineteen_in_the_yard].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=they_go_to_law].primordial.text
+    of: 273a21ec5234da60
+    plainenglish: "{PRIMORDIAL_ACTOR} opens the petition sent by the smaller halls. Three old seal marks rise through the table beneath it, and the advocate has to read the earlier settlement again. Part of the new expense is avoided; the grievance remains."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=they_go_to_law].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=they_go_to_law].primordial.record.options.record.chronicle
+    of: 273a21ec5234da60
+    plainenglish: "{PRIMORDIAL_ACTOR} opens the petition sent by the smaller halls. Three old seal marks rise through the table beneath it, and the advocate has to read the earlier settlement again. Part of the new expense is avoided; the grievance remains."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_branches_combine].interaction.choices[id=refuse_the_three].outcomes[id=they_go_to_law].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_low_meadow].primordial.text
+    of: e11dda086ec9c3c4
+    plainenglish: "{PRIMORDIAL_ACTOR} is at the edge of the opened ground. Water rises above the spade cut without spilling into it. The witnesses still dispute the refusal, but fewer of them call it heedless."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_low_meadow].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_low_meadow].primordial.record.options.record.chronicle
+    of: e11dda086ec9c3c4
+    plainenglish: "{PRIMORDIAL_ACTOR} is at the edge of the opened ground. Water rises above the spade cut without spilling into it. The witnesses still dispute the refusal, but fewer of them call it heedless."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_low_meadow].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_church_takes_it_anyway].primordial.text
+    of: e11dda086ec9c3c4
+    plainenglish: "{PRIMORDIAL_ACTOR} is at the edge of the opened ground. Water rises above the spade cut without spilling into it. The witnesses still dispute the refusal, but fewer of them call it heedless."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_church_takes_it_anyway].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_church_takes_it_anyway].primordial.record.options.record.chronicle
+    of: e11dda086ec9c3c4
+    plainenglish: "{PRIMORDIAL_ACTOR} is at the edge of the opened ground. Water rises above the spade cut without spilling into it. The witnesses still dispute the refusal, but fewer of them call it heedless."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_pit_on_our_own_ground].interaction.choices[id=refuse_the_ground].outcomes[id=the_church_takes_it_anyway].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed_and_sells_it].primordial.text
+    of: ed07e98d36146571
+    plainenglish: "{PRIMORDIAL_ACTOR} touches the blotter the steward left behind. The missing page shows through it, in reverse, and the house makes a copy before it fades. The steward still leaves with his book; he no longer holds the only account."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed_and_sells_it].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed_and_sells_it].primordial.record.options.record.chronicle
+    of: ed07e98d36146571
+    plainenglish: "{PRIMORDIAL_ACTOR} touches the blotter the steward left behind. The missing page shows through it, in reverse, and the house makes a copy before it fades. The steward still leaves with his book; he no longer holds the only account."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_steward_of_nineteen_years].interaction.choices[id=dismiss_him].outcomes[id=dismissed_and_sells_it].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=not_found].primordial.text
+    of: 46fbbe82a50e6d06
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the empty seal box. Its old impression remains in the air above the lining until everyone in the room has seen it. The seal is still missing, and the search still cost the household's trust."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=not_found].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=not_found].primordial.record.options.record.chronicle
+    of: 46fbbe82a50e6d06
+    plainenglish: "{PRIMORDIAL_ACTOR} picks up the empty seal box. Its old impression remains in the air above the lining until everyone in the room has seen it. The seal is still missing, and the search still cost the household's trust."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_seal_is_not_in_the_box].interaction.choices[id=search_the_household].outcomes[id=not_found].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=they_go_over_the_wall].primordial.text
+    of: 79a9a1311eb2b17d
+    plainenglish: "When the first rope breaks, {PRIMORDIAL_ACTOR} is by the wall. It hangs without a knot until the people on it reach the ground. They still leave, but the departure is remembered with the hands that were spared."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=they_go_over_the_wall].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=they_go_over_the_wall].primordial.record.options.record.chronicle
+    of: 79a9a1311eb2b17d
+    plainenglish: "When the first rope breaks, {PRIMORDIAL_ACTOR} is by the wall. It hangs without a knot until the people on it reach the ground. They still leave, but the departure is remembered with the hands that were spared."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_gate_is_shut_for_a_month].interaction.choices[id=ration_by_household].outcomes[id=they_go_over_the_wall].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_refused].primordial.text
+    of: b3f547bc74cf5b38
+    plainenglish: "{PRIMORDIAL_ACTOR} places a hand next to the signed agreement. The erased endorsement shows through the skin and can be copied. The debt is still due; the factor's account no longer stands alone."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_refused].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_refused].primordial.record.options.record.chronicle
+    of: b3f547bc74cf5b38
+    plainenglish: "{PRIMORDIAL_ACTOR} places a hand next to the signed agreement. The erased endorsement shows through the skin and can be copied. The debt is still due; the factor's account no longer stands alone."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_letter_of_credit_called].interaction.choices[id=ask_for_terms].outcomes[id=terms_refused].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=nobody_comes].primordial.text
+    of: 1133191bf2dac857
+    plainenglish: "{PRIMORDIAL_ACTOR} holds together the letters that received no answer. Their seals sound against one another though his hands are still. Nobody comes, but the witnesses carry more home than the refusals."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=nobody_comes].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=nobody_comes].primordial.record.options.record.chronicle
+    of: 1133191bf2dac857
+    plainenglish: "{PRIMORDIAL_ACTOR} holds together the letters that received no answer. Their seals sound against one another though his hands are still. Nobody comes, but the witnesses carry more home than the refusals."
+  - address: >-
+      content:events/rare_house.yaml#events[id=the_last_of_the_line].interaction.choices[id=recall_everyone].outcomes[id=nobody_comes].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

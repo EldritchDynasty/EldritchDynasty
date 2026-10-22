@@ -53,6 +53,9 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: heirloom, op: grant, heirloom: the_bramme_register }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: leave_it
           label: Leave it. A register nobody has read is a register nobody has read.
           outcomes:
@@ -119,6 +122,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: through_a_factor
           label: Through a Bramme factor, under his name.
           outcomes:
@@ -133,6 +139,9 @@ events:
               effects:
                 - { kind: treasury, delta: -22 }
                 - { kind: rumour, op: seed, id: rumour_who_paid_the_corran_fees, accuracy: 0.35 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     rumour: { id: rumour_the_weighed_entry, accuracy: 0.5, spread: 1 }
     record:
       subject: who paid, and in whose name
@@ -188,6 +197,9 @@ events:
               effects:
                 - { kind: respect, delta: 2 }
                 - { kind: treasury, delta: -12 }
+              agreedPrices:
+                - effect: 1
+                  reason: gift
         - id: the_short_descent
           label: Four generations and the acreage. He can have what he needs.
           outcomes:
@@ -256,6 +268,9 @@ events:
                 somebody than the wool was.
               effects:
                 - { kind: treasury, delta: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: hold_the_clip
           label: Hold the clip and sell at the Ingathering fair.
           outcomes:
@@ -277,6 +292,44 @@ events:
                 and goes on pricing accordingly for eleven years.
               effects:
                 - { kind: treasury, delta: -14 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: it_rains_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands in the wet wool barn. The water gathers along the rafters
+                  instead of dropping onto the last bales. Those bales keep their weight; the spoiled ones
+                  do not.
+                effects:
+                  - {kind: treasury, delta: -7}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stands in the wet wool barn. The water gathers along the
+                        rafters instead of dropping onto the last bales. Those bales keep their weight;
+                        the spoiled ones do not.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_clip_that_went_over
+                        severity: minor
+                        provableBy:
+                          - commons
+                          - house_bracc
     record:
       subject: what the clip was worth
       options:
@@ -335,6 +388,9 @@ events:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: bring_the_deed
           label: Bring the deed instead and let the mouths say what they like.
           outcomes:
@@ -475,6 +531,9 @@ events:
                 answer, which is a distinction his office makes on purpose.
               effects:
                 - { kind: treasury, delta: -11 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: settle_with_the_kin
           label: Settle with his people before the man from Cawdry arrives.
           outcomes:
@@ -489,6 +548,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_body_moved_early, accuracy: 0.45 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     accounts: [the_wick_rhyme_of_the_shut_gate, the_cawdry_view_minute]
     record:
       subject: the man found inside the yard wall
@@ -543,6 +605,9 @@ events:
               effects:
                 - { kind: treasury, delta: -64 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: declare_short
           label: Declare short. The fold had a bad murrain and the roof is out.
           outcomes:
@@ -558,6 +623,9 @@ events:
                 - { kind: flag, flag: the_short_return, set: true }
               # #334: "assessed against this afternoon's number by somebody who has both books open"
               next: { event: both_books_open, after: { minYears: 25, maxYears: 35 } }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: what the house declared at the relief
       options:
@@ -616,6 +684,9 @@ events:
                 - { kind: treasury, delta: -87 }
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: the_short_return, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: declare_short_again
           label: Declare short again. The fold had a bad year.
           outcomes:
@@ -628,6 +699,27 @@ events:
               effects:
                 - { kind: treasury, delta: -44 }
                 - { kind: respect, delta: -2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: short_again_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the second roll open. The first roll's missing impression shows
+                  through the table beneath it. The clerk enters the discrepancy, but the house can answer
+                  part of the demand.
+                effects:
+                  - {kind: treasury, delta: -44}
+                  - {kind: respect, delta: -1}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record: null
 
 proseVariants:
   - address: "content:events/papers.yaml#events[id=the_notarys_book].title"
@@ -1117,3 +1209,23 @@ proseVariants:
       Forty-four crowns, and he accepts them, and he writes the house's name on a different list
       from the one he arrived with. Nobody tells the house what that list is for. Nobody needs
       to.
+  - address: >-
+      content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=it_rains].primordial.text
+    of: 6fb8ae38f8cf5074
+    plainenglish: "{PRIMORDIAL_ACTOR} is inside the wet wool barn. The water gathers along the rafters instead of dropping onto the last bales. Those bales keep their weight; the spoiled ones do not."
+  - address: >-
+      content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=it_rains].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=it_rains].primordial.record.options.record.chronicle
+    of: 6fb8ae38f8cf5074
+    plainenglish: "{PRIMORDIAL_ACTOR} is inside the wet wool barn. The water gathers along the rafters instead of dropping onto the last bales. Those bales keep their weight; the spoiled ones do not."
+  - address: >-
+      content:events/papers.yaml#events[id=the_wool_factors_book].interaction.choices[id=hold_the_clip].outcomes[id=it_rains].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/papers.yaml#events[id=both_books_open].interaction.choices[id=declare_short_again].outcomes[id=short_again].primordial.text
+    of: 787e9ee2e55fcf7e
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the second roll open. The first roll's missing impression shows through the table beneath it. The clerk enters the discrepancy, but the house can answer part of the demand."

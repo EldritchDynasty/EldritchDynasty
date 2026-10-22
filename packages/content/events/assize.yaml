@@ -47,6 +47,21 @@ events:
               effects:
                 - { kind: treasury, delta: -70 }
                 - { kind: respect, delta: 1 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: paid_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} catches the measuring cord as it falls. It knots itself around an
+                  empty space the assessor cannot measure. The disputed rooms come off the charge; the
+                  rest must be paid.
+                effects:
+                  - {kind: treasury, delta: -35}
+                  - {kind: respect, delta: 1}
+                tags:
+                  - primordial
+                record: null
         - id: argue
           label: Send the steward to argue it line by line.
           outcomes:
@@ -59,6 +74,9 @@ events:
               effects:
                 - { kind: treasury, delta: -30 }
                 - { kind: branch, op: slight, amount: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: worse
               weight: 40
               text: >-
@@ -66,6 +84,20 @@ events:
                 been prepared to forget about.
               effects:
                 - { kind: treasury, delta: -95 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: worse_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} catches the measuring cord as it falls. It knots itself around an
+                  empty space the assessor cannot measure. The disputed rooms come off the charge; the
+                  rest must be paid.
+                effects:
+                  - {kind: treasury, delta: -47}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_cart_from_the_chapter_house
     title: Grain, and Not a Word About It
@@ -123,6 +155,21 @@ events:
               effects:
                 - { kind: respect, delta: 1 }
                 - { kind: treasury, delta: -10 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: refused_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at the gate when the cart turns. Its axle comes free of the rut
+                  without a horse pulling, and the gatepost stays whole. The refusal still goes back to
+                  Bramme.
+                effects:
+                  - {kind: respect, delta: 1}
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_offer_in_another_room
     title: What the Steward Was Offered
@@ -154,6 +201,9 @@ events:
                 learned exactly what he costs.
               effects:
                 - { kind: treasury, delta: -25 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: say_nothing
           label: Say nothing at all.
           outcomes:
@@ -196,6 +246,20 @@ events:
             the mill uses it.
           effects:
             - { kind: treasury, delta: -18 }
+          site:
+            kind: elsewhere
+            slots: []
+          primordial:
+            id: only_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} stands beside the loaded sacks. The balance settles before the
+              weights are put on it, at the old measure. The miller cannot charge for grain the beam
+              refuses to count.
+            effects:
+              - {kind: treasury, delta: -9}
+            tags:
+              - primordial
+            record: null
 
 # Plain English alternatives for the Assize scenes (#617, #415).
 proseVariants:
@@ -314,3 +378,19 @@ proseVariants:
     plainenglish: >-
       The house pays the higher price. The mill is taking advantage of the house, but
       nobody there will admit it.
+  - address: >-
+      content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=pay_it].outcomes[id=paid].primordial.text
+    of: d8c26072c0fb33d6
+    plainenglish: "The measuring cord falls, and {PRIMORDIAL_ACTOR} catches it. It knots itself around an empty space the assessor cannot measure. The disputed rooms come off the charge; the rest must be paid."
+  - address: >-
+      content:events/assize.yaml#events[id=the_assessor_at_the_door].interaction.choices[id=argue].outcomes[id=worse].primordial.text
+    of: d8c26072c0fb33d6
+    plainenglish: "The measuring cord falls, and {PRIMORDIAL_ACTOR} catches it. It knots itself around an empty space the assessor cannot measure. The disputed rooms come off the charge; the rest must be paid."
+  - address: >-
+      content:events/assize.yaml#events[id=the_cart_from_the_chapter_house].interaction.choices[id=refuse].outcomes[id=refused].primordial.text
+    of: b8d959504e267244
+    plainenglish: "As the cart turns, {PRIMORDIAL_ACTOR} is at the gate. Its axle comes free of the rut without a horse pulling, and the gatepost stays whole. The refusal still goes back to Bramme."
+  - address: >-
+      content:events/assize.yaml#events[id=the_price_at_the_mill].interaction.outcomes[id=only].primordial.text
+    of: 5d61461090ecefbc
+    plainenglish: "{PRIMORDIAL_ACTOR} is beside the full sacks. The balance settles before the weights are put on it, at the old measure. The miller cannot charge for grain the beam refuses to count."

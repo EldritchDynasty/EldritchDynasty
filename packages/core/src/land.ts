@@ -102,12 +102,19 @@ export function landIncome(ctx: SimCtx): number {
     // (issue #98's `damage` can now push it negative): a flooded farm can
     // stop paying, never pay the house to hold it.
     if (def) {
-      let contribution = Math.max(0, def.baseYield + (state.yieldBonus ?? 0)) * (state.yieldFactor ?? 1);
-      if (def.kind === 'tenant_farm' || def.kind === 'mill') contribution *= RENT_MULTIPLIER[w.rentsPolicy];
-      held += contribution;
+      held += parcelRecurringYield(ctx, state);
     }
   }
   return held * (INCOME_BY_RESPECT[w.respect] / TOTAL_1042_YIELD);
+}
+
+/** Same physical contribution used by emergency assessment, including cadet ground. */
+export function parcelRecurringYield(ctx: SimCtx, state: ParcelState): number {
+  const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
+  if (!def) return 0;
+  let yieldValue = Math.max(0, def.baseYield + (state.yieldBonus ?? 0)) * (state.yieldFactor ?? 1);
+  if (def.kind === 'tenant_farm' || def.kind === 'mill') yieldValue *= RENT_MULTIPLIER[ctx.world.rentsPolicy];
+  return yieldValue;
 }
 
 // ── Phase B: buying, selling, rents and improvement (issue #91, #94) ───────

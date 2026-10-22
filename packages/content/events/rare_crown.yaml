@@ -48,6 +48,9 @@ events:
               effects:
                 - { kind: treasury, delta: -41 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: it_was_not_an_error
               weight: 48
               text: >-
@@ -59,6 +62,9 @@ events:
               effects:
                 - { kind: treasury, delta: -41 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_the_reading_stand
           label: Let it stand. Three years is three years.
           outcomes:
@@ -186,6 +192,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: household, to: head, sentiment: -14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_it_in_the_parish
           label: Keep it here. Fine, eviction, and the man walks south.
           outcomes:
@@ -202,6 +211,9 @@ events:
                 - { kind: treasury, delta: -26 }
                 - { kind: relationship, from: household, to: head, sentiment: 18 }
                 - { kind: discrepancy, op: create, id: the_man_who_went_south, severity: total, provableBy: [commons, house_calder] }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: cawdry_hears_of_it
               weight: 45
               text: >-
@@ -213,6 +225,46 @@ events:
               effects:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: -2 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: cawdry_hears_of_it_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} rests a hand on the returned charge. The receipt beneath it leaves a
+                  second, dry impression on the clerk's copy. The Warden's jurisdiction stands, but the
+                  house can answer part of the accusation and cost.
+                effects:
+                  - {kind: treasury, delta: -45}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} rests a hand on the returned charge. The receipt beneath it
+                        leaves a second, dry impression on the clerk's copy. The Warden's jurisdiction
+                        stands, but the house can answer part of the accusation and cost.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: which_court_had_the_killing
+                        severity: total
+                        provableBy:
+                          - commons
+                          - house_calder
     record:
       subject: which court had the killing
       options:
@@ -316,6 +368,48 @@ events:
                 - { kind: status, target: { slot: SON }, status: missing, cause: the levy }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: household, to: head, sentiment: -14 }
+              site:
+                kind: party
+                slots:
+                  - SON
+              primordial:
+                id: he_does_not_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} falls behind the returning line. A path opens through the flooded
+                  ground beneath his feet and closes after him. The son reaches the road with the
+                  survivors.
+                effects:
+                  - {kind: respect, delta: 2}
+                  - {kind: relationship, from: household, to: head, sentiment: -14}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} falls behind the returning line. A path opens through the
+                        flooded ground beneath his feet and closes after him. The son reaches the road
+                        with the survivors.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 2}
+                      claims: []
+                      discrepancy:
+                        id: the_missing_son_declared_home
+                        severity: total
+                        provableBy:
+                          - commons
+                          - house_calder
+                          - the_marches
         - id: commute_it
           label: Commute it. A hundred and twenty crowns and nobody goes.
           outcomes:
@@ -332,6 +426,9 @@ events:
                 - { kind: treasury, delta: -120 }
                 - { kind: relationship, from: household, to: head, sentiment: 14 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the levy, and who went
       options:
@@ -470,6 +567,9 @@ events:
                 - { kind: treasury, delta: -64 }
                 - { kind: respect, delta: 2 }
                 - { kind: attribute, target: { slot: DAUGHTER }, attr: charm, delta: 3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: seated_badly
               weight: 38
               text: >-
@@ -483,6 +583,9 @@ events:
                 - { kind: treasury, delta: -64 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_where_they_stood_in_the_line, accuracy: 0.55 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: stay_at_ardwen
           label: Stay here. Sixty-four crowns is a roof.
           outcomes:
@@ -613,6 +716,9 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: chosen
               weight: 34
               text: >-
@@ -630,6 +736,9 @@ events:
               # (#334). Chained rather than drawn: an ambient reader of a flag only
               # this outcome sets fired in 0 of 200 runs, under gate 4's floor.
               next: { event: a_page_in_our_own_hand, after: next_generation }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
         - id: stay_out_of_it
           label: Stay out of it. This family cannot afford to be looked at.
           outcomes:
@@ -754,6 +863,9 @@ events:
                 - { kind: treasury, delta: -180 }
                 - { kind: respect, delta: 2 }
                 - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -30, grudge: { severity: 30, inheritance: heir_only } }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: stay_clear_of_it
           label: Buy nothing. An attainder is a thing that happens to somebody.
           outcomes:
@@ -885,6 +997,9 @@ events:
                 - { kind: treasury, delta: -90 }
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_house_that_would_not_give_a_child, accuracy: 0.55 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the surety this house did not give
       options:
@@ -983,6 +1098,52 @@ events:
               # The Rimefell answers back, years later (#334). Chained for the same
               # reason as the Wardenship's page: drawn ambiently it fired in 1 run of 200.
               next: { event: cousins_from_the_rimefell, after: { minYears: 5, maxYears: 30 } }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: they_go_looking_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the third paper against the window. An older seal appears in
+                  the light through it, clear enough for the herald to describe. It does not supply the
+                  missing generation, but the house loses less credit.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: knowledge, op: grant, flag: knows_the_rimefell_entry}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the third paper against the window. An older seal appears
+                        in the light through it, clear enough for the herald to describe. It does not
+                        supply the missing generation, but the house loses less credit.
+                      effects:
+                        - {kind: respect, delta: -1}
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: what_the_rimefell_parish_answered
+                        severity: total
+                        provableBy:
+                          - the_church
+                          - house_calder
+                          - house_ilm
+                next:
+                  event: cousins_from_the_rimefell
+                  after:
+                    minYears: 5
+                    maxYears: 30
         - id: buy_the_fourth
           label: Buy the fourth. Twenty-five crowns at Bramme, and it is done.
           outcomes:
@@ -999,6 +1160,9 @@ events:
               effects:
                 - { kind: treasury, delta: -25 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     record:
       subject: the fourth generation of the descent
       options:
@@ -1134,6 +1298,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: rumour, op: seed, id: rumour_what_the_house_paid_at_cawdry, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the case heard again at Cawdry
       options:
@@ -1220,6 +1387,9 @@ events:
               effects:
                 - { kind: treasury, delta: -5 }
                 - { kind: rumour, op: seed, id: rumour_the_rimefell_story, accuracy: 0.6 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: send_them_away
           label: Give them a meal at the gate, and nothing else.
           outcomes:
@@ -1233,6 +1403,45 @@ events:
               effects:
                 - { kind: respect, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_the_woman_who_never_left, accuracy: 0.4 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: sent_away_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is at the gate when the cousins leave. Their empty cups fill with
+                  clear water while no jug is lifted. They still tell Wick how they were received; they
+                  also tell what stood in their hands.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: rumour, op: seed, id: rumour_the_woman_who_never_left, accuracy: 0.4}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} is at the gate when the cousins leave. Their empty cups fill
+                        with clear water while no jug is lifted. They still tell Wick how they were
+                        received; they also tell what stood in their hands.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: what_the_rimefell_men_came_to_ask
+                        severity: major
+                        provableBy:
+                          - commons
+                          - house_calder
     record:
       subject: the men who came down from the Rimefell
       options:
@@ -2255,3 +2464,67 @@ proseVariants:
     of: a169ac475f55177b
     plainenglish: >-
       was not asked anything by the Rimefell men
+  - address: >-
+      content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=cawdry_hears_of_it].primordial.text
+    of: 780388cf45e93223
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the charge returned to the house. The receipt beneath it leaves a second, dry impression on the clerk's copy. The Warden's jurisdiction stands, but the house can answer part of the accusation and cost."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=cawdry_hears_of_it].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=cawdry_hears_of_it].primordial.record.options.record.chronicle
+    of: 780388cf45e93223
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the charge returned to the house. The receipt beneath it leaves a second, dry impression on the clerk's copy. The Warden's jurisdiction stands, but the house can answer part of the accusation and cost."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=blood_on_our_own_land].interaction.choices[id=keep_it_in_the_parish].outcomes[id=cawdry_hears_of_it].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].primordial.text
+    of: fc1fb76430cbc668
+    plainenglish: "{PRIMORDIAL_ACTOR} drops behind the men returning from the levy. A path opens through the flooded ground beneath his feet and closes after him. The son reaches the road with the survivors."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].primordial.record.options.record.chronicle
+    of: fc1fb76430cbc668
+    plainenglish: "{PRIMORDIAL_ACTOR} drops behind the men returning from the levy. A path opens through the flooded ground beneath his feet and closes after him. The son reaches the road with the survivors."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_levy_in_earnest].interaction.choices[id=send_them].outcomes[id=he_does_not].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=they_go_looking].primordial.text
+    of: d9eab3ea97c937a6
+    plainenglish: "{PRIMORDIAL_ACTOR} raises the third paper against the window. An older seal appears in the light through it, clear enough for the herald to describe. It does not supply the missing generation, but the house loses less credit."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=they_go_looking].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=they_go_looking].primordial.record.options.record.chronicle
+    of: d9eab3ea97c937a6
+    plainenglish: "{PRIMORDIAL_ACTOR} raises the third paper against the window. An older seal appears in the light through it, clear enough for the herald to describe. It does not supply the missing generation, but the house loses less credit."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=the_heralds_open_the_descent].interaction.choices[id=send_what_we_have].outcomes[id=they_go_looking].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].outcomes[id=sent_away].primordial.text
+    of: 02f0085870cf85f4
+    plainenglish: "As the cousins leave, {PRIMORDIAL_ACTOR} is at the gate. Their empty cups fill with clear water while no jug is lifted. They still tell Wick how they were received; they also tell what stood in their hands."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].outcomes[id=sent_away].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].outcomes[id=sent_away].primordial.record.options.record.chronicle
+    of: 02f0085870cf85f4
+    plainenglish: "As the cousins leave, {PRIMORDIAL_ACTOR} is at the gate. Their empty cups fill with clear water while no jug is lifted. They still tell Wick how they were received; they also tell what stood in their hands."
+  - address: >-
+      content:events/rare_crown.yaml#events[id=cousins_from_the_rimefell].interaction.choices[id=send_them_away].outcomes[id=sent_away].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

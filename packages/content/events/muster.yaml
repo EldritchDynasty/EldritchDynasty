@@ -173,6 +173,9 @@ events:
                 - { kind: treasury, delta: -120 }
                 - { kind: respect, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     rumour: { id: rumour_what_the_house_did_at_the_muster, accuracy: 0.55, spread: 3 }
     accounts: [the_captains_letter_home, the_wick_list_the_reeve_wrote]
 
@@ -355,6 +358,9 @@ events:
                 - { kind: treasury, delta: -25 }
                 - { kind: arc_flag, flag: position, set: serjeanty }
                 - { kind: muster, op: set_position, position: serjeanty }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: buy_the_captaincy
           label: The captaincy. Ninety crowns, and the dispatches name a man.
           requires: [{ slot: HEAD, attr: charm, op: gte, value: 40 }]
@@ -372,6 +378,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: arc_flag, flag: position, set: a_captaincy }
                 - { kind: muster, op: set_position, position: a_captaincy }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: buy_the_banner
           label: A banner of the house's own. Two hundred and sixty, and it is nobody else's name but this one's.
           # 50, not 60 — measured against a played population (charm-dist
@@ -398,6 +407,9 @@ events:
                 - { kind: respect, delta: 2 }
                 - { kind: arc_flag, flag: position, set: a_banner }
                 - { kind: muster, op: set_position, position: a_banner }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: buy_nothing
           label: Nothing. The men are already gone; the letter changes none of that.
           outcomes:
@@ -468,6 +480,9 @@ events:
           effects:
             - { kind: treasury, delta: -35 }
             - { kind: arc_flag, flag: the_tide, set: flat }
+          agreedPrices:
+            - effect: 0
+              reason: contract
         - id: it_is_going_badly
           weight: 26
           tags: [war, bad]
@@ -482,6 +497,23 @@ events:
             - { kind: treasury, delta: -55 }
             - { kind: relationship, from: household, to: head, sentiment: -10 }
             - { kind: arc_flag, flag: the_tide, set: falling }
+          site:
+            kind: muster
+          primordial:
+            id: it_is_going_badly_primordial
+            text: >-
+              {PRIMORDIAL_ACTOR} is beside the wagons when the crossing gives way. A wheel stops above
+              the water until men can get a rope beneath it. Some supplies are saved; the losses
+              already taken stay on the roll.
+            effects:
+              - {kind: treasury, delta: -27}
+              - {kind: relationship, from: household, to: head, sentiment: -10}
+              - {kind: arc_flag, flag: the_tide, set: falling}
+            tags:
+              - war
+              - bad
+              - primordial
+            record: null
 
   # ── Arc node: the good decision, and it is always available ──────────────
   - id: the_withdrawal
@@ -534,6 +566,24 @@ events:
                 - { kind: relationship, from: household, to: head, sentiment: 16 }
                 - { kind: branch, op: appease, amount: 12 }
                 - { kind: muster, op: withdraw }
+              site:
+                kind: muster
+              primordial:
+                id: called_home_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} crosses behind the last returning men. Their tracks remain dry
+                  through the rain, and the witnesses carry that account home with the withdrawal. The
+                  Crown's lost credit is still lost.
+                effects:
+                  - {kind: respect, delta: -1}
+                  - {kind: relationship, from: household, to: head, sentiment: 16}
+                  - {kind: branch, op: appease, amount: 12}
+                  - {kind: muster, op: withdraw}
+                tags:
+                  - prudent
+                  - standing
+                  - primordial
+                record: null
         - id: leave_them_in
           label: Leave them in. It has cost too much to be worth nothing.
           outcomes:
@@ -727,6 +777,9 @@ events:
                 - { kind: relationship, from: household, to: head, sentiment: 4 }
                 - { kind: flag, flag: house_is_in_the_field, set: false }
                 - { kind: muster, op: settle }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
 
 proseVariants:
   - address: "content:events/muster.yaml#events[id=the_muster_is_called].title"
@@ -1045,3 +1098,11 @@ proseVariants:
       The same men and the same command, with a copy sent to a second clerk who owes this house
       nothing but reads slowly and reads everything. Nothing on the page is untrue. It is simply
       read by more people than the first clerk would ever have shown it to.
+  - address: >-
+      content:events/muster.yaml#events[id=word_from_the_field].interaction.outcomes[id=it_is_going_badly].primordial.text
+    of: cfce7a755b098dd9
+    plainenglish: "When the river crossing breaks, {PRIMORDIAL_ACTOR} is beside the wagons. A wheel stops above the water until men can get a rope beneath it. Some supplies are saved; the losses already taken stay on the roll."
+  - address: >-
+      content:events/muster.yaml#events[id=the_withdrawal].interaction.choices[id=call_them_home].outcomes[id=called_home].primordial.text
+    of: 0be292ce25e550c2
+    plainenglish: "{PRIMORDIAL_ACTOR} crosses after the last men returning home. Their tracks remain dry through the rain, and the witnesses carry that account home with the withdrawal. The Crown's lost credit is still lost."

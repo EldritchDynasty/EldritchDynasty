@@ -280,6 +280,7 @@ export function advanceArc(
     if (who) instance.bindings[slotId] = who;
   }
 
+  if (instance.status !== 'active') return;
   const next = chooseSuccessor(node, outcome, choiceId, instance, ctx, rng);
   if (next === 'end') { instance.status = 'ended'; return; }
 

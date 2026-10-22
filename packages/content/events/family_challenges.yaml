@@ -118,6 +118,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: No living reader in the house has learned the fluid working. By morning the grain has swollen
@@ -125,6 +139,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: use_thermal
           label: Draw the heat from the wet sacks before they spoil.
           check: practised_working
@@ -136,6 +164,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
@@ -143,6 +185,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: family_work
           label: Put the family on the bucket line.
           check: family_work
@@ -154,6 +210,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
@@ -161,6 +231,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: send_specialist
           label: Let the strongest relative break open the side door.
           check: specialist_work
@@ -172,6 +256,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: By morning the grain has swollen into a black lump. The miller at Wick charges for another
@@ -179,6 +277,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} is on the bucket line when the smoke stops at the door. The sacks
+                  nearest the wall come out dry and cold. The scorched grain and broken door still cost
+                  the house.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
   - id: the_wind_under_the_slates
     title: Wind Under the Slates
     tier: family
@@ -309,6 +421,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: No living reader in the house has learned the aero working. The family clears the room before
@@ -316,6 +442,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: use_terra
           label: Set the cracked stone beneath the main beam.
           check: practised_working
@@ -328,6 +468,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
@@ -335,6 +489,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: family_work
           label: Ask the clearest head in the house to plan the shoring.
           check: family_work
@@ -346,6 +514,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
@@ -353,6 +535,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: send_specialist
           label: Let the best planner lead the work at the beam.
           check: specialist_work
@@ -364,6 +560,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The family clears the room before the beam falls. Rebuilding it costs more than the mason's
@@ -371,6 +581,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} braces the open door. The falling beam hangs above the bed until it
+                  has been carried out, then settles across the empty room. Some slates and timber are
+                  lost.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: prepare_next_time
           label: Pay 115 crowns for shoring and a Terra primer; begin a reading.
           requires:
@@ -387,6 +611,9 @@ events:
                 - { kind: spellbook, op: acquire_copy, target: household, book: lesser_workings_of_terra }
                 - { kind: spellbook, op: study, target: { slot: APPRENTICE }, book: lesser_workings_of_terra }
                 - { kind: schedule, event: the_wind_under_the_slates, inYears: 4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
   - id: the_fever_and_the_vigil
     title: The Fever and the Vigil
     tier: family
@@ -518,6 +745,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: No living reader in the house has learned the life working. The nursing costs more than the
@@ -526,6 +767,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: use_death
           label: Ask a Death reader to prepare the vigil safely.
           check: practised_working
@@ -539,6 +794,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The nursing costs more than the household can supply in shifts. The house pays for help from
@@ -546,6 +815,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: family_work
           label: Ask whether anyone in the house can plan the fever watch.
           check: family_work
@@ -557,6 +840,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The nursing costs more than the household can supply in shifts. The house pays for help from
@@ -564,6 +861,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: send_specialist
           label: Let the most capable planner arrange the nursing.
           check: specialist_work
@@ -575,6 +886,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record: null
             - id: lost
               weight: 100
               text: The nursing costs more than the household can supply in shifts. The house pays for help from
@@ -582,6 +907,20 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} sits down beside the watch. The wash water stays warm through the
+                  night without a coal under it, and fewer cloths have to be burned. Paid help is still
+                  needed.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record: null
         - id: prepare_next_time
           label: Pay 125 crowns for the vigil and a Death primer; begin a reading.
           requires:
@@ -598,6 +937,9 @@ events:
                 - { kind: spellbook, op: acquire_copy, target: household, book: lesser_workings_of_death }
                 - { kind: spellbook, op: study, target: { slot: APPRENTICE }, book: lesser_workings_of_death }
                 - { kind: schedule, event: the_fever_and_the_vigil, inYears: 4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
   - id: the_cawdry_copy
     title: The Cawdry Copy
     tier: family
@@ -733,6 +1075,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
             - id: lost
               weight: 100
               text: No living reader in the house has learned the light working. The clerk returns to Cawdry
@@ -740,6 +1115,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
         - id: use_darkness
           label: Use Darkness to cover the private letter while the roll is opened.
           check: practised_working
@@ -753,6 +1161,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
             - id: lost
               weight: 100
               text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
@@ -760,6 +1201,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
         - id: family_work
           label: Let the family explain the entries together.
           check: family_work
@@ -771,6 +1245,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
             - id: lost
               weight: 100
               text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
@@ -778,6 +1285,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
         - id: send_specialist
           label: Let the most persuasive relative speak for the house.
           check: specialist_work
@@ -789,6 +1329,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -10
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: held_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -5}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
             - id: lost
               weight: 100
               text: The clerk returns to Cawdry without a usable copy. The house pays for his next journey as well
@@ -796,6 +1369,39 @@ events:
               effects:
                 - kind: treasury
                   delta: -35
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: lost_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the shadow
+                  of his hand, long enough to be copied. The clerk still charges for the work.
+                effects:
+                  - {kind: treasury, delta: -17}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} holds the damaged page flat. Its missing strokes show in the
+                        shadow of his hand, long enough to be copied. The clerk still charges for the
+                        work.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_cawdry_copy_fee
+                        severity: minor
+                        provableBy:
+                          - house_marrow
+                      claims: []
         - id: prepare_next_time
           label: Pay 125 crowns for the visit and a Darkness primer; start a reading.
           requires:
@@ -830,6 +1436,9 @@ events:
                 - kind: schedule
                   event: the_cawdry_copy
                   inYears: 12
+              agreedPrices:
+                - effect: 0
+                  reason: contract
     record:
       subject: the rent roll at Cawdry
       options:
@@ -926,6 +1535,41 @@ events:
                     slot: SENT
                   attr: health
                   delta: -1
+              site:
+                kind: party
+                slots:
+                  - SENT
+              primordial:
+                id: clear_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches down from the bridge. The broken load rises far enough out of
+                  the water for the ropes to hold. Some of the goods have already gone downstream.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {kind: attribute, target: {slot: SENT}, attr: health, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches down from the bridge. The broken load rises far enough
+                        out of the water for the ropes to hold. Some of the goods have already gone
+                        downstream.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_wick_bridge_boast
+                        severity: minor
+                        provableBy:
+                          - commons
+                      claims: []
         - id: paid
           label: The house buys the damaged load.
           outcomes:
@@ -940,6 +1584,41 @@ events:
                     slot: SENT
                   attr: health
                   delta: -3
+              site:
+                kind: party
+                slots:
+                  - SENT
+              primordial:
+                id: wet_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} reaches down from the bridge. The broken load rises far enough out of
+                  the water for the ropes to hold. Some of the goods have already gone downstream.
+                effects:
+                  - {kind: treasury, delta: -14}
+                  - {kind: attribute, target: {slot: SENT}, attr: health, delta: -3}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} reaches down from the bridge. The broken load rises far enough
+                        out of the water for the ropes to hold. Some of the goods have already gone
+                        downstream.
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      discrepancy:
+                        id: the_wick_bridge_boast
+                        severity: minor
+                        provableBy:
+                          - commons
+                      claims: []
 proseVariants:
   - address: content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].title
     of: 1f8ce7594c3d6ead
@@ -1207,3 +1886,259 @@ proseVariants:
   - address: "content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=prepare_next_time].outcomes[id=a_reading_begins].text"
     of: "86a0da65a35fdbd1"
     plainenglish: "The chapter house at Bramme charges ninety crowns for a Death book and thirty-five for the vigil. {APPRENTICE} begins studying after the burial. The next church review is in four years."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_fluid].outcomes[id=held].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_fluid].outcomes[id=lost].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_thermal].outcomes[id=held].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=use_thermal].outcomes[id=lost].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=family_work].outcomes[id=held].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=family_work].outcomes[id=lost].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=send_specialist].outcomes[id=held].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_smoke_above_the_store].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.text
+    of: c0e3cc4b17c473ff
+    plainenglish: "{PRIMORDIAL_ACTOR} is passing buckets when the smoke stops at the door. The sacks nearest the wall come out dry and cold. The scorched grain and broken door still cost the house."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_aero].outcomes[id=held].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_aero].outcomes[id=lost].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_terra].outcomes[id=held].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=use_terra].outcomes[id=lost].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=family_work].outcomes[id=held].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=family_work].outcomes[id=lost].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=send_specialist].outcomes[id=held].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wind_under_the_slates].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.text
+    of: a73e92e413350ae0
+    plainenglish: "{PRIMORDIAL_ACTOR} holds the open door steady. The falling beam hangs above the bed until it has been carried out, then settles across the empty room. Some slates and timber are lost."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_life].outcomes[id=held].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_life].outcomes[id=lost].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_death].outcomes[id=held].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=use_death].outcomes[id=lost].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].outcomes[id=held].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=family_work].outcomes[id=lost].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=send_specialist].outcomes[id=held].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_fever_and_the_vigil].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.text
+    of: 32d97defaa09f823
+    plainenglish: "{PRIMORDIAL_ACTOR} sits with those keeping watch. The wash water stays warm through the night without a coal under it, and fewer cloths have to be burned. Paid help is still needed."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=held].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=held].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=held].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=held].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=lost].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=lost].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=lost].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_light].outcomes[id=lost].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=held].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=held].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=held].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=held].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=lost].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=lost].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=lost].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=use_darkness].outcomes[id=lost].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=held].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=held].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=held].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=held].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=lost].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=lost].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=lost].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=family_work].outcomes[id=lost].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=held].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=held].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=held].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=held].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.text
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.record.options.record.chronicle
+    of: 7b4d82ccec4ea758
+    plainenglish: "{PRIMORDIAL_ACTOR} keeps the damaged page flat. Its missing strokes show in the shadow of his hand, long enough to be copied. The clerk still charges for the work."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_cawdry_copy].interaction.choices[id=send_specialist].outcomes[id=lost].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].outcomes[id=clear].primordial.text
+    of: f9062da784356b33
+    plainenglish: "From the bridge, {PRIMORDIAL_ACTOR} reaches down. The broken load rises far enough out of the water for the ropes to hold. Some of the goods have already gone downstream."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].outcomes[id=clear].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].outcomes[id=clear].primordial.record.options.record.chronicle
+    of: f9062da784356b33
+    plainenglish: "From the bridge, {PRIMORDIAL_ACTOR} reaches down. The broken load rises far enough out of the water for the ropes to hold. Some of the goods have already gone downstream."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=lifted].outcomes[id=clear].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].outcomes[id=wet].primordial.text
+    of: f9062da784356b33
+    plainenglish: "From the bridge, {PRIMORDIAL_ACTOR} reaches down. The broken load rises far enough out of the water for the ropes to hold. Some of the goods have already gone downstream."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].outcomes[id=wet].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].outcomes[id=wet].primordial.record.options.record.chronicle
+    of: f9062da784356b33
+    plainenglish: "From the bridge, {PRIMORDIAL_ACTOR} reaches down. The broken load rises far enough out of the water for the ropes to hold. Some of the goods have already gone downstream."
+  - address: >-
+      content:events/family_challenges.yaml#events[id=the_wick_bridge_load].interaction.choices[id=paid].outcomes[id=wet].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."

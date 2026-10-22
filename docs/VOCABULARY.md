@@ -250,6 +250,8 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | rule | what it is for |
 |---|---|
 | `ids/unique` | Two events with one id means one of them is unreachable, and save files name both. |
+| `primordial/coverage` | Every potentially major ordinary outcome has a material, non-recursive authored response and paired feedback. |
+| `primordial/site` | Potentially major incidents declare one physical site with resolvable participant slots. |
 | `event/purposes` | CI gate 6. Exactly three distinct purposes, from the closed vocabulary (editor brief §4.5). |
 | `frequency/obligations` | A tier is a set of duties, not a weight: Record blocks, folklore, caps, accounts. |
 | `record/claims` | Record and Embellish must either both carry claims or neither may, because both are pages about the same event. |

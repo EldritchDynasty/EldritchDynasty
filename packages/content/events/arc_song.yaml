@@ -66,6 +66,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: rumour, op: correct, id: rumour_the_stave_ardwen_helped_make, accuracy: 0.7 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_both_go
           label: Let both versions travel. Paying for truth once was lesson enough.
           outcomes:

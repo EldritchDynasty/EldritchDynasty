@@ -109,6 +109,23 @@ events:
               effects:
                 - { kind: treasury, delta: -24 }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: party
+                slots:
+                  - RIDER_A
+              primordial:
+                id: empty_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stops at the empty holding. The blocked watercourse opens beneath his
+                  boots and drains the spoiled yard. Some of the lost yield can be recovered before the
+                  next rent.
+                effects:
+                  - {kind: treasury, delta: -12}
+                  - {kind: respect, delta: -1}
+                tags:
+                  - failure
+                  - primordial
+                record: null
 
   - id: a_wet_seedmonth
     title: Sowing Into Mud
@@ -141,6 +158,20 @@ events:
                 separate bill.
               effects:
                 - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 1}
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: it_took_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} steps onto the wet ground. Water draws back from the seed behind his
+                  heel and leaves part of the demesne fit to work. The lower strips still lose their crop.
+                effects:
+                  - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 0.5}
+                tags:
+                  - primordial
+                record: null
             - id: it_rotted
               weight: 45
               text: >-
@@ -150,6 +181,21 @@ events:
               effects:
                 - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 3}
                 - {kind: relationship, from: household, to: head, sentiment: -5}
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: it_rotted_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} steps onto the wet ground. Water draws back from the seed behind his
+                  heel and leaves part of the demesne fit to work. The lower strips still lose their crop.
+                effects:
+                  - {kind: land, op: damage, parcel: the_home_demesne, magnitude: 1.5}
+                  - {kind: relationship, from: household, to: head, sentiment: -5}
+                tags:
+                  - primordial
+                record: null
         - id: hold_the_seed
           label: Hold the seed. Sow when the ground takes a boot.
           outcomes:
@@ -165,6 +211,26 @@ events:
                 - {kind: treasury, delta: -14}
                 - {kind: relationship, from: household, to: head, sentiment: 4}
                 - {kind: chronicle, text: '{HEAD} held back the Seedmonth corn until the ground dried, accepting a late harvest.'}
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: late_and_short_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} steps onto the wet ground. Water draws back from the seed behind his
+                  heel and leaves part of the demesne fit to work. The lower strips still lose their crop.
+                effects:
+                  - {kind: treasury, delta: -7}
+                  - {kind: relationship, from: household, to: head, sentiment: 4}
+                  - {
+                      kind: chronicle,
+                      text: "{HEAD} held back the Seedmonth corn until the ground dried, accepting a late
+                        harvest."
+                    }
+                tags:
+                  - primordial
+                record: null
 
   - id: the_clip_and_the_factors
     title: The Men Who Price Your Year
@@ -258,6 +324,22 @@ events:
               effects:
                 - { kind: treasury, delta: -8 }
                 - { kind: relationship, from: household, to: head, sentiment: 7 }
+              site:
+                kind: party
+                slots:
+                  - HEAD
+              primordial:
+                id: sixty_one_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stands by the open woodland gate. The loose hurdle rises out of the
+                  mud and holds until the scattered pigs have been counted back through it. Some of the
+                  loss remains.
+                effects:
+                  - {kind: treasury, delta: -4}
+                  - {kind: relationship, from: household, to: head, sentiment: 7}
+                tags:
+                  - primordial
+                record: null
         - id: take_the_thirty_one
           label: Take the excess. Thirty is the custom and the custom is the point.
           outcomes:
@@ -309,6 +391,9 @@ events:
               effects:
                 - { kind: treasury, delta: -11 }
                 - { kind: attribute, target: household, attr: health, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: buy_half
           label: Buy half. The price always comes back down.
           outcomes:
@@ -324,6 +409,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: attribute, target: household, attr: health, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: -4 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
 
   - id: a_death_in_the_hollow_days
     title: Nothing Is Decided in the Hollow Days
@@ -338,12 +426,12 @@ events:
         role: family_member
         filters: [{ status: [alive] }, { age: { op: gte, value: 40 } }, { relation: not, of: HEAD }]
     body: >-
-      {KIN} dies on the second of the Hollow Days, which is the one arrangement
-      the custom of this world has no clean answer for. The dead are buried
-      within two days. Nothing is decided during the Days, nothing is sealed,
-      and nobody travels, and the keeper is at Bramme until they are out. The
-      women of the household have done their part by dusk and the question in
-      the cold room is whether the ground is opened tomorrow or on the first of Thaw.
+      {KIN} falls cold and still on the second of the Hollow Days, which is the one arrangement
+      the custom of this world has no clean answer for. The dead are buried within two days.
+      Nothing is decided during the Days, nothing is sealed, and nobody travels, and the keeper
+      is at Bramme until they are out. The women of the household have done their part by dusk
+      and the question in the cold room is whether the ground is opened tomorrow or on the first
+      of Thaw.
     interaction:
       kind: choice
       choices:
@@ -362,6 +450,20 @@ events:
               effects:
                 - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
                 - { kind: rumour, op: seed, id: rumour_the_burial_in_the_hollow_days, accuracy: 0.4 }
+              site:
+                kind: hall
+                hall:
+                  slot: KIN
+              primordial:
+                id: buried_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays a hand against the cold chest before the keeper closes the
+                  entry. A breath lifts it. The candle is changed beside a living bed, and no grave is
+                  opened.
+                effects: []
+                tags:
+                  - primordial
+                record: null
         - id: wait_for_the_keeper
           label: Wait until the first of Thaw, and it is done properly.
           outcomes:
@@ -377,6 +479,22 @@ events:
                 - { kind: status, target: { slot: KIN }, status: dead, cause: death in the Hollow Days }
                 - { kind: respect, delta: 1 }
                 - { kind: attribute, target: household, attr: health, delta: -1 }
+              site:
+                kind: hall
+                hall:
+                  slot: KIN
+              primordial:
+                id: waited_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} lays a hand against the cold chest before the keeper closes the
+                  entry. A breath lifts it. The candle is changed beside a living bed, and no grave is
+                  opened.
+                effects:
+                  - {kind: respect, delta: 1}
+                  - {kind: attribute, target: household, attr: health, delta: -1}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_long_argument
     title: Smoke to Longnight
@@ -733,14 +851,9 @@ proseVariants:
     of: "410d5de408982978"
     plainenglish: >-
       A Relative Dies During the Hollow Days
-  - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].body"
-    of: "fede0eda63e0b606"
-    plainenglish: >-
-      {KIN} dies on the second of the Hollow Days. Custom says the dead must be buried within
-      two days, but the Hollow Days have their own rules: nobody makes decisions, seals
-      documents, or travels. The keeper is in Bramme until the Days are over. By dusk, the
-      women of the household have prepared the body. The family must decide whether to open
-      the grave tomorrow or wait until the first of Thaw.
+  - address: content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].body
+    of: 4ae2763605cb1c2a
+    plainenglish: "{KIN} becomes cold and motionless on the second of the Hollow Days. Custom requires burial within two days, but the Hollow Days have their own rules: nobody decides, seals documents or travels. The keeper is at Bramme until the Days end. The household women have prepared everything by dusk. Those in the cold room must decide whether to open the grave tomorrow or wait until the first of Thaw."
   - address: "content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].label"
     of: "4d12d2630baccccf"
     plainenglish: >-
@@ -875,3 +988,35 @@ proseVariants:
   - address: "content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].outcomes[id=late_and_short].effects[2].text"
     of: "ab651a671d6ae9eb"
     plainenglish: "{HEAD} waited for dry ground before sowing, accepting a late harvest."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=riding_the_rents].interaction.choices[id=two_holdings_stand_empty].outcomes[id=empty].primordial.text
+    of: 59b49ef7552d9943
+    plainenglish: "{PRIMORDIAL_ACTOR} stops at the holding that has been left empty. The blocked watercourse opens beneath his boots and drains the spoiled yard. Some of the lost yield can be recovered before the next rent."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_took].primordial.text
+    of: b3a4511636cb2332
+    plainenglish: "{PRIMORDIAL_ACTOR} steps onto the waterlogged ground. Water draws back from the seed behind his heel and leaves part of the demesne fit to work. The lower strips still lose their crop."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=sow_now].outcomes[id=it_rotted].primordial.text
+    of: b3a4511636cb2332
+    plainenglish: "{PRIMORDIAL_ACTOR} steps onto the waterlogged ground. Water draws back from the seed behind his heel and leaves part of the demesne fit to work. The lower strips still lose their crop."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].outcomes[id=late_and_short].primordial.text
+    of: b3a4511636cb2332
+    plainenglish: "{PRIMORDIAL_ACTOR} steps onto the waterlogged ground. Water draws back from the seed behind his heel and leaves part of the demesne fit to work. The lower strips still lose their crop."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_wet_seedmonth].interaction.choices[id=hold_the_seed].outcomes[id=late_and_short].primordial.effects[2].text
+    of: ab651a671d6ae9eb
+    plainenglish: "{HEAD} delayed sowing the Seedmonth corn until the soil dried, knowing that the harvest would be late."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=pannage_in_smoke].interaction.choices[id=let_the_number_stand].outcomes[id=sixty_one].primordial.text
+    of: a03850faf5ad1fb6
+    plainenglish: "{PRIMORDIAL_ACTOR} is by the open gate into the wood. The loose hurdle rises out of the mud and holds until the scattered pigs have been counted back through it. Some of the loss remains."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=bury_within_two_days].outcomes[id=buried].primordial.text
+    of: 6d1f2a0588b516f9
+    plainenglish: "Before the keeper closes the entry, {PRIMORDIAL_ACTOR} puts a hand on the cold chest. A breath lifts it. The candle is changed beside a living bed, and no grave is opened."
+  - address: >-
+      content:events/the_turning_year.yaml#events[id=a_death_in_the_hollow_days].interaction.choices[id=wait_for_the_keeper].outcomes[id=waited].primordial.text
+    of: 6d1f2a0588b516f9
+    plainenglish: "Before the keeper closes the entry, {PRIMORDIAL_ACTOR} puts a hand on the cold chest. A breath lifts it. The candle is changed beside a living bed, and no grave is opened."

@@ -41,6 +41,9 @@ events:
               effects:
                 - { kind: treasury, delta: -240 }
                 - { kind: heirloom, op: grant, heirloom: portion_of_agelessness }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: decline
           label: Leave it on the counter.
           outcomes:
@@ -117,6 +120,9 @@ events:
               effects:
                 - { kind: treasury, delta: -170 }
                 - { kind: heirloom, op: grant, heirloom: portion_of_fertility }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: refuse
           label: Send him away. A house that buys this is a house that needs it.
           outcomes:
@@ -200,6 +206,9 @@ events:
               effects:
                 - { kind: treasury, delta: -380 }
                 - { kind: heirloom, op: grant, heirloom: the_unmirrored_eye }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: decline
           label: Leave it on the dealer's table.
           outcomes:

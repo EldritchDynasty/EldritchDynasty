@@ -12,6 +12,7 @@ import { FRAME_PROSE_SENTENCE_THRESHOLD, PROSE_SENTENCE_THRESHOLD, proseIssues }
 import { isInlineArcId } from './desugar.js';
 import { ENDING_ORDER } from './ending.js';
 import { assertNever } from './exhaustive.js';
+import { primordialCoverage, primordialSite } from './primordial-rules.js';
 import { auditChoices, isProseOnly, SELF_EXPRESSION_TAG } from './choices.js';
 import { SIGNING_RATES, type SigningTerm } from './signing.js';
 
@@ -45,7 +46,8 @@ function outcomeGroups(e: EventTemplate) {
 }
 
 function allOutcomes(e: EventTemplate) {
-  return outcomeGroups(e).flat();
+  const ordinary = outcomeGroups(e).flat();
+  return [...ordinary, ...ordinary.flatMap(o => o.primordial ? [{ ...o.primordial, weight: o.weight, onlyIf: o.onlyIf }] : [])];
 }
 
 function choicesOf(e: EventTemplate) {
@@ -1287,6 +1289,10 @@ const inlineCollision: ValidationRule = {
     for (const e of content.events) {
       for (const o of allOutcomes(e)) {
         if (!o.next) continue;
+        // A replacement with the same declared continuation shares its normal
+        // branch's compiled chain; it does not create a second owner.
+        if (outcomeGroups(e).flat().some(normal => normal.primordial?.id === o.id
+          && normal.next && JSON.stringify(normal.next) === JSON.stringify(o.next))) continue;
         const from = reachedFrom.get(o.next.event) ?? [];
         from.push(`${e.id}/${o.id}`);
         reachedFrom.set(o.next.event, from);
@@ -2451,6 +2457,8 @@ const choiceConsequence: ValidationRule = {
 
 export const CONTENT_RULES: readonly ValidationRule[] = [
   uniqueIds,
+  primordialCoverage,
+  primordialSite,
   threePurposes,
   frequencyObligations,
   recordClaimSymmetry,

@@ -1,6 +1,6 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung,
+  SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung,
 } from '@ed/schema';
 import { MAIN_BRANCH, RUNG_ORDER, assertNever } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
@@ -959,6 +959,7 @@ export interface SessionView {
   ageRecordPriorities: AgeRecordPriority[];
   halls: HallView[];
   chronicle: ChronicleEntry[];
+  interventions?: InterventionView[];
   /** Names for people named by the windowed Chronicle, including those no longer in a living hall.
    * This is a read-model index, not a new saved-world record. */
   chroniclePeople: { id: string; name: string }[];
@@ -1332,6 +1333,25 @@ function presentedHouseName(ctx: SimCtx, id: string): string {
     : name;
 }
 
+export interface InterventionView {
+  year: number;
+  page: string;
+  actor: string;
+  actorName: string;
+  manifestation: string;
+  receipt: string;
+}
+
+function interventionViews(ctx: SimCtx): InterventionView[] {
+  return interventionsOf(ctx).map(({ year, record }) => ({ year, page: record.page,
+    actor: record.actor, actorName: record.actorName, manifestation: record.manifestation, receipt: record.receipt }));
+}
+
+export function interventionsOf(ctx: SimCtx): { year: number; event: string; record: PrimordialRecord }[] {
+  return ctx.world.decisionLog.flatMap(row => row.kind === 'outcome' && row.primordial
+    ? [{ year: row.year, event: row.event, record: structuredClone(row.primordial) }] : []);
+}
+
 export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): SessionView {
   const w = ctx.world;
   const guardian = w.people.guardian();
@@ -1530,6 +1550,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     ageRecordPriorities: activeRecordPriorities(ctx),
     halls: hallViews,
     chronicle,
+    interventions: interventionViews(ctx),
     chroniclePeople,
     // COPIED, like every other array on this object. This one line handed the
     // caller `world.frame.entries` itself, so a view taken before the clock

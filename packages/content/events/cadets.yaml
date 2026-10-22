@@ -148,6 +148,9 @@ events:
               effects:
                 - { kind: branch, op: appease, slot: COUSIN, amount: 14 }
                 - { kind: treasury, delta: -20 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
             - id: taught_badly
               weight: 42
               text: >-

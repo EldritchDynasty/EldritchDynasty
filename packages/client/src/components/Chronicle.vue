@@ -110,6 +110,15 @@ async function follow(id: string): Promise<void> {
       <button class="quiet small" @click="emit('open')">{{ plain ? 'Read full Chronicle' : 'Read it whole' }}</button>
     </h3>
     <AdviserHelp :ask="askAdviser" :prose-mode="proseMode" :reset-key="`chronicle:${view.house}:${snapshot}`" />
+    <details v-if="view.interventions?.length" class="interventions">
+      <summary>{{ plain ? 'Primordial interventions' : 'What the blood prevented' }} ({{ view.interventions.length }})</summary>
+      <article v-for="intervention in [...view.interventions].reverse()" :key="intervention.page" class="intervention">
+        <p class="small dim">{{ intervention.year }} · <button class="quiet small" @click="emit('person', intervention.actor)">{{ intervention.actorName }}</button></p>
+        <p>{{ intervention.manifestation }}</p>
+        <p>{{ intervention.receipt }}</p>
+        <button class="quiet small" @click="emit('open', intervention.page)">{{ plain ? 'Open the public Chronicle page' : 'Read what the house wrote' }}</button>
+      </article>
+    </details>
 
     <!-- FREQUENCY IS FELT HERE, as typography, and `Entry.vue` is where that
          lives now — one component for the panel, the reading pane and the
@@ -141,6 +150,8 @@ async function follow(id: string): Promise<void> {
 
 <style scoped>
 .chronicle { max-width: 46ch; }
+.interventions { margin-block: var(--sp-3, 1em); }
+.intervention { border-inline-start: 1px solid var(--rule); padding-inline-start: var(--sp-3, 1em); margin-block: var(--sp-3, 1em); }
 .top { justify-content: space-between; align-items: baseline; gap: 10px; }
 .frame-label { margin-top: 26px; border-top: 1px solid var(--rule); padding-top: 14px; }
 .entry.frame { margin: 0 0 14px; }

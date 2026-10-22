@@ -156,6 +156,9 @@ events:
               effects:
                 - { kind: treasury, delta: -95 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: stand_pat
           label: Stand pat. What this house has is not on that ladder.
           outcomes:

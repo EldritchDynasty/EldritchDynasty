@@ -120,6 +120,9 @@ events:
                 reads.
               effects:
                 - { kind: treasury, delta: -18 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: extend_the_churchyard
           label: Leave the chapel. Buy ground at Wick and put the next ones there.
           outcomes:
@@ -134,6 +137,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
     accounts: [the_bramme_masons_account, the_ardwen_chapel_register]
     record:
       subject: what is under the chapel floor
@@ -192,6 +198,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: two_years
           label: Let them go on to Vaunt. Two years, and the roads.
           outcomes:
@@ -206,6 +215,9 @@ events:
                 - { kind: treasury, delta: -14 }
                 - { kind: attribute, target: { slot: PILGRIM }, attr: health, delta: -4 }
                 - { kind: attribute, target: { slot: PILGRIM }, attr: mind, delta: 3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: does_not_come_back
               weight: 38
               text: >-
@@ -216,6 +228,45 @@ events:
               effects:
                 - { kind: status, target: { slot: PILGRIM }, status: missing, cause: pilgrimage }
                 - { kind: respect, delta: -1 }
+              site:
+                kind: party
+                slots:
+                  - PILGRIM
+              primordial:
+                id: does_not_come_back_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} stops before the road divides. His shadow walks across the wrong
+                  turning and comes back without him. The pilgrim takes the other road and reaches the
+                  next chapter house alive.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record:
+                  subject: The account of {PRIMORDIAL_ACTOR} at the incident.
+                  options:
+                    record:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} stops before the road divides. His shadow walks across the
+                        wrong turning and comes back without him. The pilgrim takes the other road and
+                        reaches the next chapter house alive.
+                      effects: []
+                      claims: []
+                    omit:
+                      chronicle: null
+                    embellish:
+                      chronicle: >-
+                        {PRIMORDIAL_ACTOR} was there, and they wrote that nothing at all had been lost.
+                        Nobody read the remaining charges aloud.
+                      effects:
+                        - {kind: respect, delta: 1}
+                      claims: []
+                      discrepancy:
+                        id: the_fortnight_that_was_two_years
+                        severity: major
+                        provableBy:
+                          - the_church
+                          - commons
     record:
       subject: where the pilgrim went and what came back
       options:
@@ -340,6 +391,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: { slot: CHILD }, to: head, sentiment: 12 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: it_is_a_skipping_rhyme
           label: It is a skipping rhyme. Say so, and go home.
           outcomes:
@@ -413,6 +467,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: flag, flag: the_rhyme_in_the_chapter_yard, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_the_entry_speak
           label: Say nothing. It was a skipping rhyme.
           outcomes:
@@ -625,6 +682,20 @@ events:
                 and the name of a second house to ask about them.
               effects:
                 - { kind: respect, delta: -2 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: said_lent_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} holds the lending receipt before the two clerks. The old seal presses
+                  through its backing without touching the table. They still ask for the volumes, but copy
+                  the mark beside the question.
+                effects:
+                  - {kind: respect, delta: -1}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_counting_rhyme
     title: The Rhyme Gets the Order Wrong
@@ -1215,3 +1286,23 @@ proseVariants:
       The entry goes to the cathedral city on its own, with nothing beside it. For a long time
       nothing comes of it. The house is recorded in a second book as one where the sacred names
       were spoken aloud.
+  - address: >-
+      content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=does_not_come_back].primordial.text
+    of: 7b80e3e4f34a91f8
+    plainenglish: "{PRIMORDIAL_ACTOR} stops before the fork in the road. His shadow walks across the wrong turning and comes back without him. The pilgrim takes the other road and reaches the next chapter house alive."
+  - address: >-
+      content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=does_not_come_back].primordial.record.subject
+    of: 00055dd740b59ec3
+    plainenglish: "What {PRIMORDIAL_ACTOR} did during the incident."
+  - address: >-
+      content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=does_not_come_back].primordial.record.options.record.chronicle
+    of: 7b80e3e4f34a91f8
+    plainenglish: "{PRIMORDIAL_ACTOR} stops before the fork in the road. His shadow walks across the wrong turning and comes back without him. The pilgrim takes the other road and reaches the next chapter house alive."
+  - address: >-
+      content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].interaction.choices[id=two_years].outcomes[id=does_not_come_back].primordial.record.options.embellish.chronicle
+    of: d7d9e7265d258b32
+    plainenglish: "They wrote that {PRIMORDIAL_ACTOR} prevented every loss. They did not read out the costs that remained."
+  - address: >-
+      content:events/the_quiet_names.yaml#events[id=the_archdeacon_comes_back_early].interaction.choices[id=say_they_were_lent].outcomes[id=said_lent].primordial.text
+    of: 5063fdb16125be25
+    plainenglish: "{PRIMORDIAL_ACTOR} holds up the lending receipt for both clerks. The old seal presses through its backing without touching the table. They still ask for the volumes, but copy the mark beside the question."

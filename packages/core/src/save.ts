@@ -221,11 +221,12 @@ export class SaveFormatError extends Error {
 export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx {
   const format = (raw as { format?: unknown } | null)?.format;
   const legacyForcing = format === 31;
-  if (format !== SAVE_FORMAT && !legacyForcing) {
+  const legacyPrimordial = format === 32;
+  if (format !== SAVE_FORMAT && !legacyForcing && !legacyPrimordial) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
-  const parsed = SavedGameS.safeParse(legacyForcing
+  const parsed = SavedGameS.safeParse(legacyForcing || legacyPrimordial
     ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT }
     : raw);
   if (!parsed.success) {
@@ -596,6 +597,7 @@ export function digest(save: SavedGame): string {
   }
   // #1817's version protects readers of embedded guarded templates. The tag
   // itself adds no simulation state; guards and attempt facts stay hashed.
+  if (value.format === 33 && !save.decisionLog.some(row => row.kind === 'outcome' && row.primordial)) value.format = 32;
   if (value.format === 32) value.format = 31;
   // #1581: when every attempt lived, the counter is exactly the true-child
   // count which seeded earlier formats. Only a lost conception adds state

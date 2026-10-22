@@ -156,6 +156,9 @@ events:
               effects:
                 - { kind: treasury, delta: -19 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: gift
         - id: over_their_heads
           label: Go over them. The magistrate can set a market day.
           outcomes:
@@ -208,6 +211,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: relationship, from: household, to: head, sentiment: 7 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_him_sit
           label: Let him sit. He knew the second time would be the second time.
           outcomes:
@@ -223,6 +229,9 @@ events:
                 - { kind: treasury, delta: -6 }
                 - { kind: relationship, from: household, to: head, sentiment: -5 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_toll_on_the_plank_bridge
     title: A Plank Bridge, a Chain, and a Rate
@@ -263,6 +272,9 @@ events:
               next:
                 event: the_clause_read_back
                 after: { minYears: 70, maxYears: 95 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: hold_the_chain
           label: Hold the chain. The clause is about a ford in another county.
           outcomes:
@@ -276,6 +288,9 @@ events:
                 right is intact, and the right is the asset.
               effects:
                 - { kind: treasury, delta: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
 
   # #341: `halved` said the house had agreed to something it "may need to
@@ -319,6 +334,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: chronicle, text: "The chain at the Wick bridge comes down on market days, because the house once said the Bramme charter bound it, and a house keeps what it said." }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: it_was_a_courtesy
           label: Say it was a courtesy then, and was never the law.
           outcomes:
@@ -369,6 +387,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: it_knits_crooked
               weight: 34
               text: >-
@@ -393,6 +414,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: rumour, op: seed, id: rumour_what_the_physician_asked, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_wardens_clerk_at_the_low_table
     title: Where the Warden's Clerk Sits
@@ -477,6 +501,9 @@ events:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
                 - { kind: relationship, from: household, to: head, sentiment: 6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: back_the_book
           label: The book stands. Nineteen years of it stands.
           outcomes:

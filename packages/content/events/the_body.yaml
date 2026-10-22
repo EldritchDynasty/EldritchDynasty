@@ -49,6 +49,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: bled_and_worse
               weight: 45
               text: >-
@@ -59,6 +62,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: attribute, target: { slot: SICK }, attr: health, delta: -3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_what_he_has
           label: No bleeding. Warm room, water, and wait.
           outcomes:
@@ -72,6 +78,9 @@ events:
                 costs him something.
               effects:
                 - { kind: treasury, delta: -3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: it_does_not_turn
               weight: 38
               text: >-
@@ -142,6 +151,9 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: -4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_green_hand
     title: They Say She Has a Green Hand
@@ -230,6 +242,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: { slot: READER }, to: head, sentiment: 18 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: let_the_maid_read
           label: Let the maid read to him. It is working.
           outcomes:
@@ -313,6 +328,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: attribute, target: { slot: SICK }, attr: health, delta: 3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: within_the_warrant
               weight: 38
               text: >-
@@ -323,6 +341,9 @@ events:
                 licensed trade actually is: a boundary somebody keeps.
               effects:
                 - { kind: treasury, delta: -2 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: the_physician_is_cheaper
           label: The physician is three and has known this family twenty years.
           outcomes:
@@ -336,6 +357,9 @@ events:
                 the following year or in any year after.
               effects:
                 - { kind: treasury, delta: -3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_midwife_who_is_owed_a_year
     title: Three Marks, and Everything the House Has
@@ -372,6 +396,9 @@ events:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: { slot: MIDWIFE }, to: head, sentiment: 24 }
                 - { kind: attribute, target: household, attr: health, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: pay_the_arrears_only
           label: Pay the arrears. Three marks is the rate and always has been.
           outcomes:
@@ -468,6 +495,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: let_them_come_up
           label: Let them come. Nobody knows how it moves and the peat is cheap.
           outcomes:
@@ -517,6 +547,9 @@ events:
                 - { kind: knowledge, op: grant, flag: knows_what_the_case_book_holds }
                 - { kind: treasury, delta: -1 }
                 - { kind: schedule, event: the_case_book_is_cited, inYears: 1 }
+              agreedPrices:
+                - effect: 1
+                  reason: contract
             - id: he_declines
               weight: 45
               text: >-
@@ -542,6 +575,9 @@ events:
                 - { kind: treasury, delta: -11 }
                 - { kind: knowledge, op: grant, flag: knows_what_the_case_book_holds }
                 - { kind: schedule, event: the_case_book_is_cited, inYears: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
 proseVariants:
   - address: "content:events/the_body.yaml#events[id=the_bleeding_or_not].title"

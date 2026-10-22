@@ -55,6 +55,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: west_wing_slated, set: true }
                 - { kind: flag, flag: west_wing_patched_again, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: patch_it_again
           label: Patch it again. It has held before.
           outcomes:
@@ -71,6 +74,9 @@ events:
               # #334: "until the wind comes round to the north". Chained, so the
               # patch is tested by the next hard winter rather than by the draw.
               next: { event: the_north_wind_finds_the_patch, after: { minYears: 3, maxYears: 8 } }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   # #334: the reader of west_wing_patched_again. It does not fire on a roof
   # that has since been slated. No HEAD binding: the wind finds whoever holds
@@ -115,6 +121,9 @@ events:
                 - { kind: respect, delta: 1 }
                 - { kind: flag, flag: west_wing_slated, set: true }
                 - { kind: flag, flag: west_wing_patched_again, set: false }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: patch_it_once_more
           label: Patch it once more. Twelve crowns.
           outcomes:
@@ -127,6 +136,9 @@ events:
               effects:
                 - { kind: treasury, delta: -12 }
                 - { kind: relationship, from: household, to: head, sentiment: -6 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: three_grates_of_seven
     title: Three Grates of Seven
@@ -162,6 +174,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: household, to: head, sentiment: 8 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: burn_green
           label: Burn what we cut. Three grates, as always.
           outcomes:
@@ -209,6 +224,9 @@ events:
                 - { kind: treasury, delta: -22 }
                 - { kind: respect, delta: 1 }
                 - { kind: rumour, op: seed, id: rumour_the_gate_was_shut, accuracy: 0.4 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: leave_it_open
           label: Leave it. Ninety years is an argument.
           outcomes:
@@ -222,6 +240,19 @@ events:
               effects:
                 - { kind: treasury, delta: -1 }
                 - { kind: relationship, from: household, to: head, sentiment: 5 }
+              site:
+                kind: hall
+                hall: main
+              primordial:
+                id: left_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} passes beneath the open gate. The loose hinge holds in the air until
+                  the last cart is through. What has already been damaged still needs mending.
+                effects:
+                  - {kind: relationship, from: household, to: head, sentiment: 5}
+                tags:
+                  - primordial
+                record: null
 
   - id: the_second_cellar_again
     title: Bricked, and Unbricked, and Bricked
@@ -260,6 +291,9 @@ events:
               effects:
                 - { kind: treasury, delta: -6 }
                 - { kind: rumour, op: seed, id: rumour_the_room_below_the_hall, accuracy: 0.3 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: brick_it
           label: Brick it. It was bricked for a reason and the reason is gone.
           outcomes:
@@ -273,6 +307,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: relationship, from: { slot: KIN }, to: head, sentiment: -8 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: tallow_and_wax
     title: Tallow, and What It Smells Like
@@ -306,6 +343,9 @@ events:
               effects:
                 - { kind: treasury, delta: -9 }
                 - { kind: relationship, from: household, to: head, sentiment: 7 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_tallow
           label: Tallow. The chapel gets the wax and always has.
           outcomes:
@@ -356,6 +396,9 @@ events:
               effects:
                 - { kind: treasury, delta: -4 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: hold_the_right
           label: Hold the right entire. A right unused is a right lost.
           outcomes:
@@ -480,6 +523,9 @@ events:
               effects:
                 - { kind: treasury, delta: -16 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: fresh_rushes
           label: Fresh rushes. It has been good enough since the founding.
           outcomes:
@@ -493,6 +539,9 @@ events:
               effects:
                 - { kind: treasury, delta: -2 }
                 - { kind: rumour, op: seed, id: rumour_the_rushes_at_ardwen, accuracy: 0.5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_well_in_a_dry_year
     title: The Well in a Dry Year
@@ -526,6 +575,9 @@ events:
               effects:
                 - { kind: treasury, delta: -20 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: nothing_down_there
               weight: 38
               text: >-
@@ -535,6 +587,9 @@ events:
                 agreement and this house keeps agreements.
               effects:
                 - { kind: treasury, delta: -20 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: cart_from_the_river
           label: Cart it up from the Wend and wait for rain.
           outcomes:
@@ -550,6 +605,9 @@ events:
                 - { kind: treasury, delta: -5 }
                 - { kind: attribute, target: household, attr: health, delta: -2 }
                 - { kind: relationship, from: household, to: head, sentiment: 5 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
 proseVariants:
   - address: "content:events/the_hall.yaml#events[id=the_west_wing_roof].title"
@@ -895,3 +953,7 @@ proseVariants:
   - address: "content:events/the_hall.yaml#events[id=the_dovecote_and_the_seed].interaction.choices[id=send_half_to_the_cadet].outcomes[id=birds_sent].effects[2].text"
     of: "af68bff3d4abd06f"
     plainenglish: "{HEAD} sent two hundred birds to {CADET} and required that hall to feed them."
+  - address: >-
+      content:events/the_hall.yaml#events[id=the_gatehouse_nobody_has_shut].interaction.choices[id=leave_it_open].outcomes[id=left].primordial.text
+    of: d6d89678cbe535cc
+    plainenglish: "{PRIMORDIAL_ACTOR} goes under the open gate. The loose hinge holds in the air until the last cart is through. What has already been damaged still needs mending."

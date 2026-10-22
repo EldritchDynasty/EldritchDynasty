@@ -292,9 +292,9 @@ describe('the content rules', () => {
         .filter((f) => !('canExpress' in f));
     });
     const issues = runRule('rites/wiring', b);
-    expect(issues).toHaveLength(1);
-    expect(issues[0]!.level).toBe('error');
-    expect(issues[0]!.message).toMatch(/no expression gate/);
+    expect(issues).toHaveLength(2);
+    expect(issues.every(issue => issue.level === 'error' && /no expression gate/.test(issue.message))).toBe(true);
+    expect(issues.some(issue => issue.where.includes('primordial'))).toBe(true);
   });
 
   it('accepts a rite whose ascendant is gated by filter rather than by role', () => {

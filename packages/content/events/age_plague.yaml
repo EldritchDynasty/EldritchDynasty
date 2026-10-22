@@ -45,6 +45,9 @@ events:
               effects:
                 - { kind: treasury, delta: -20 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: open_for_the_village
           label: Open to Wick. They are the house's people.
           outcomes:
@@ -57,6 +60,9 @@ events:
               effects:
                 - { kind: treasury, delta: -32 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: opened_and_took_it
               weight: 56
               text: >-
@@ -67,6 +73,9 @@ events:
               effects:
                 - { kind: treasury, delta: -32 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_physician_from_bramme
     title: Fourteen Crowns for a Lens
@@ -121,6 +130,9 @@ events:
               effects:
                 - { kind: treasury, delta: -28 }
                 - { kind: relationship, from: head, to: { slot: PHYSICIAN }, sentiment: 15 }
+              agreedPrices:
+                - effect: 0
+                  reason: purchase
         - id: pay_the_visit
           label: Pay for the visit and send him on to Wick.
           outcomes:
@@ -133,6 +145,9 @@ events:
               effects:
                 - { kind: treasury, delta: -3 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: who_gets_the_physician
     title: Saying It Aloud
@@ -194,6 +209,9 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: relationship, from: head, to: { slot: LEAST }, sentiment: -20 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
             - id: spent_badly
               weight: 45
               text: >-
@@ -203,6 +221,26 @@ events:
               effects:
                 - { kind: treasury, delta: -14 }
                 - { kind: status, target: { slot: LEAST }, status: dead, cause: the fever }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall:
+                  slot: LEAST
+              primordial:
+                id: spent_badly_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the cold bed rail. The smallest chest lifts once, then again,
+                  while the physician holds his own breath. The fee is still owed.
+                effects:
+                  - {kind: treasury, delta: -14}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record: null
         - id: the_weak_one
           label: The one least likely to live.
           outcomes:
@@ -216,6 +254,27 @@ events:
                 - { kind: treasury, delta: -14 }
                 - { kind: status, target: { slot: LEAST }, status: dead, cause: the fever }
                 - { kind: relationship, from: head, to: { slot: ELDEST }, sentiment: 15 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
+              site:
+                kind: hall
+                hall:
+                  slot: LEAST
+              primordial:
+                id: bought_days_primordial
+                text: >-
+                  {PRIMORDIAL_ACTOR} touches the cold bed rail. The smallest chest lifts once, then again,
+                  while the physician holds his own breath. The fee is still owed.
+                effects:
+                  - {kind: treasury, delta: -14}
+                  - {kind: relationship, from: head, to: {slot: ELDEST}, sentiment: 15}
+                agreedPrices:
+                  - effect: 0
+                    reason: contract
+                tags:
+                  - primordial
+                record: null
             - id: kept_them_both
               weight: 45
               text: >-
@@ -224,6 +283,9 @@ events:
                 build a rule out of one winter.
               effects:
                 - { kind: treasury, delta: -14 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
   - id: the_hall_after
     title: Six Grates of Seven
@@ -372,6 +434,9 @@ events:
               effects:
                 - { kind: treasury, delta: -60 }
                 - { kind: respect, delta: -1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
         - id: keep_it_open
           label: Keep it open. A house that shuts its door is remembered longer than a house that buries.
           outcomes:
@@ -391,6 +456,9 @@ events:
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: respect, delta: 1 }
+              agreedPrices:
+                - effect: 0
+                  reason: contract
 
 proseVariants:
   - address: "content:events/age_plague.yaml#events[id=the_eleven_days].title"
@@ -609,3 +677,11 @@ proseVariants:
     of: "eb58c81e60260f8a"
     plainenglish: >-
       fever
+  - address: >-
+      content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_strong_one].outcomes[id=spent_badly].primordial.text
+    of: 3ad048fe4c395a02
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the cold bed rail. The smallest chest lifts once, then again, while the physician holds his own breath. The fee is still owed."
+  - address: >-
+      content:events/age_plague.yaml#events[id=who_gets_the_physician].interaction.choices[id=the_weak_one].outcomes[id=bought_days].primordial.text
+    of: 3ad048fe4c395a02
+    plainenglish: "{PRIMORDIAL_ACTOR} puts a hand on the cold bed rail. The smallest chest lifts once, then again, while the physician holds his own breath. The fee is still owed."
