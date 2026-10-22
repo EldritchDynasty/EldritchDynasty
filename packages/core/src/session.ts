@@ -2,7 +2,7 @@ import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
   SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung,
 } from '@ed/schema';
-import { MAIN_BRANCH, RUNG_ORDER, assertNever } from '@ed/schema';
+import { FounderIdentityError, MAIN_BRANCH, RUNG_ORDER, assertNever, resolveFounder } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -672,6 +672,18 @@ export class GameSession {
     const hasSigning = choice.founder !== undefined
       || Object.keys(choice.answers ?? {}).length > 0;
     if (!hasSigning) return foundHouse(this.ctx, choice);
+
+    // An identity that cannot be completed is refused by `foundHouse`, in the
+    // reader's wording, before any rebuild is attempted. Bootstrap would throw
+    // the same refusal in English only.
+    if (choice.founder !== undefined) {
+      try {
+        resolveFounder(choice.founder);
+      } catch (error) {
+        if (error instanceof FounderIdentityError) return foundHouse(this.ctx, choice);
+        throw error;
+      }
+    }
 
     const restart = this.foundingBootstrap;
     if (!restart) {
