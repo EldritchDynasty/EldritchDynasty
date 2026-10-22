@@ -6,8 +6,9 @@ loader and the editor's read. Do not restate it here.
 
 ```
 attributes.yaml traits.yaml houses.yaml heirlooms.yaml clauses.yaml
-prologue.yaml     the signing (§3), and the two choices it collects
-endings.yaml      the five (§23), each ringing the prologue's triad
+prologue.yaml     founder name, Examination, house, heirloom, grudge and friends
+endings.yaml      six endings across the campaign profiles, each ringing the triad
+messages.yaml     Plain English counterparts of core's stable message ids
 loci.yaml         GENERATED. Edit tools/gen-loci.mjs and `npm run gen:loci`.
 ages/  events/  arcs/  characters/      split across as many files as you like
 ```
@@ -110,7 +111,7 @@ npm run validate     # every content rule; exits non-zero on any error
   follow-up casts with the same people. Longer than three beats, write an arc.
 - **Every option has to change something that lasts** (`choices/consequence`,
   issue #266). Two options with identical effects and callbacks are an error.
-  An option with no effect, or only memory nothing reads, is a warning. That
+  An option with no effect, or only memory nothing reads, is an error. That
   includes the passive "leave it", which otherwise teaches the player that
   inaction is free. If changing nothing is the point, tag every one of its
   outcomes `self_expression`. That is legitimate, because its Chronicle page
@@ -119,11 +120,33 @@ npm run validate     # every content rule; exits non-zero on any error
 - **A flag you set must be read somewhere.** Every `flag`, `knowledge`
   (including a Record's `grantsKnowledge`) and `arc_flag` needs a condition
   that reads it: a later event, a successor's `when`, a rite. Otherwise it is
-  a warning, and it is invariant 11. The outcome's own Chronicle page already
+  an error, and it is invariant 11. The outcome's own Chronicle page already
   remembers the act, so a flag that nothing will ever ask about is a delete,
   not a stub.
 - **Any body longer than five sentences is held to the prose contract.** Use the
   `rothfuss-prose` skill. `npm run validate` counts the countable half.
+- **Practical Mystic help requires a reader.** A `family_knows` check asks
+  whether a living household member completed a book of that affinity. Raw
+  affinity (`family_any`) and owning a copy are different questions. Use the
+  learned check when the scene says someone works magic.
+- **`onlyIf` guards an outcome, not an offered choice.** It names one required,
+  engine-cast slot and a conjunction of slot filters. Weighted draws remove
+  ineligible outcomes and renormalise the remainder. Supply an unguarded
+  fallback or complementary guards on that same slot; independent overlapping
+  guards and checked choices are refused by `outcomes/guard` and
+  `outcomes/cover`. Do not reveal hidden expression capability in an offer.
+- **Forcing rites share one lifetime attempt.** Declare `forcing` and follow
+  `rites/forcing`: cast an unwoken boy in a bounded age window with
+  `forcingTried: false`, without filtering `canExpress`. Guard the outcomes
+  instead. `forcing.called` makes the rite callable from the Table; ambient
+  and called resolutions both consume the same attempt.
+- **An emergency manifestation replaces the whole normal result.** Author
+  the scene's `site`, effect-specific `agreedPrices`, and a complete
+  `primordial` response including its Record (or explicit `null`). Core tests
+  serious unexpected harm and physical attendance before rolling. It never
+  applies both bundles. This event adapter does not cover annual mortality,
+  military attrition or ordinary upkeep. See brief §12 and
+  `schema/src/primordial.ts` for the contract.
 
 ## Characters — two different things
 
@@ -141,9 +164,10 @@ Nothing spawns people outside `core/src/people/minting.ts`.
 
 ## The two ends of the run
 
-`prologue.yaml` and `endings.yaml` are the only files here in the **Dunsanian**
-register — `.claude/skills/lovecraftian-prose`, never `rothfuss-prose`. Event
-bodies, outcome text and chronicle lines are plain; these two are not, and the
+`prologue.yaml` and `endings.yaml` use the **Dunsanian** register, as do frame
+interludes, Ledger clauses, nested tales and Age blurbs. Use
+`.claude/skills/lovecraftian-prose` for that layer. Ordinary event bodies,
+outcome text and chronicle lines are plain; the two ends are not, and the
 prologue is the single most likely place in the game for register bleed,
 because it is the one screen where the mythic layer and the tutorial impulse
 meet.
@@ -158,7 +182,8 @@ prologue's triad and every ending's substitution has to be re-read against it;
 nothing else in this directory has that coupling.
 
 **Which ending fires is read off the chronicle, not off the world** (§6): the
-highest rung any surviving page attests, plus whether anybody is at the table.
+attested rung, discounted by unresolved standing Discrepancies, plus the
+campaign's ending rules, recovered clauses and whether anybody is at the table.
 The one ending content can reach directly is *The Unmade* — set the world flag
 `god_rite_failed` (`{ kind: flag, flag: god_rite_failed, set: true }`) when the
 God rite fails at its last step, which is what #43 is for.
