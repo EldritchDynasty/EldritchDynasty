@@ -2,8 +2,8 @@
 
 Vue 3 + Vite, on port 5174. `npm run play`.
 
-The editor is a tool for making the game; this is the game. They share a
-palette and nothing else.
+The editor is a tool for making the game; this is the game. They share schemas,
+core and visual conventions, while their application state stays separate.
 
 ## The one rule
 
@@ -44,6 +44,11 @@ The first list comes off the prototype, the second off the store. Add a verb to
 `session.ts` and this package fails until it is wired all the way to something
 clickable — which is the only thing standing between the content's two `party`
 deciders and a `send` verb that silently never fires.
+
+The ladder's order, names and concurrent blockers come from `view.ascension`.
+Render its diagnosis and public evidence route rather than reproducing power,
+reading or rite predicates in a component. The Table likewise supplies forcing
+rite offers and refusals; an unwoken boy's hidden font is not UI information.
 
 ## The read model is a photograph
 
@@ -96,6 +101,11 @@ Both screens are in the **Dunsanian** register and both end on a plain line.
 The drop is the effect; do not smooth it out. The prologue's thesis gets a
 screen to itself for the same reason, which is what `openingSeen` is for — a
 line that lands under a family tree does nothing.
+
+The signing collects the founder's name and Examination answers before the
+house, heirloom, grudge and optional friends. `GameSession.found()` validates
+and rebuilds that start atomically. The founder is still the authored male
+signer; the gender/configuration work in #1867 is not shipped.
 
 ## Saves and hosts
 
