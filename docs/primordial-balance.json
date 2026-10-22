@@ -1,0 +1,3137 @@
+{
+  "rule": "min(EP/100, 0.9), shuffled independent local trials, stop at first success",
+  "seeds": [
+    186800,
+    186807,
+    186814,
+    186821,
+    186828,
+    186835,
+    186842,
+    186849,
+    186856,
+    186863,
+    186870,
+    186877,
+    186884,
+    186891,
+    186898,
+    186905,
+    186912,
+    186919,
+    186926,
+    186933,
+    186940,
+    186947,
+    186954,
+    186961,
+    186968,
+    186975,
+    186982,
+    186989,
+    186996,
+    187003,
+    187010,
+    187017,
+    187024,
+    187031,
+    187038,
+    187045,
+    187052,
+    187059,
+    187066,
+    187073,
+    187080,
+    187087,
+    187094,
+    187101,
+    187108,
+    187115,
+    187122,
+    187129,
+    187136,
+    187143,
+    187150,
+    187157,
+    187164,
+    187171,
+    187178,
+    187185,
+    187192,
+    187199,
+    187206,
+    187213,
+    187220,
+    187227,
+    187234,
+    187241
+  ],
+  "campaigns": {
+    "short": {
+      "qualifying": 102,
+      "knownSite": 102,
+      "eligible": 48,
+      "interventions": 25,
+      "expected": 26.36319786177284,
+      "variance": 8.161636642483947,
+      "remoteExcluded": 266,
+      "livesSaved": 2,
+      "missingPrevented": 0,
+      "crownsPreserved": 70,
+      "estateYieldPreserved": 0,
+      "lifeSavingHouses": 2,
+      "localPoolSizes": {
+        "0": 54,
+        "1": 33,
+        "2": 9,
+        "3": 2,
+        "4": 1,
+        "5": 3
+      },
+      "localEP": {
+        "n": 76,
+        "min": 8.65800865800866,
+        "median": 47.61904761904762,
+        "max": 99.04761904761908
+      },
+      "nonMitigating": 0,
+      "normalReach": 929,
+      "rescuedReach": [
+        "a_death_in_the_hollow_days/bury_within_two_days/buried_primordial",
+        "the_answer_was_a_refusal/keep_our_terms/stood_primordial",
+        "the_bride_out_of_the_rimefell/take_her/married_in_primordial",
+        "the_great_rite/do_it_unasked/defied_primordial",
+        "the_grievance_reaches_the_assembly/keep_our_terms/stood_primordial",
+        "the_index_has_our_page/keep_our_terms/stood_primordial",
+        "the_interdict/hold_out/it_holds_too_long_primordial",
+        "the_letter_comes_and_is_not/_/at_the_same_time_primordial",
+        "the_letter_of_credit_called/ask_for_terms/terms_refused_primordial",
+        "the_seal_questioned/strike/struck_primordial",
+        "the_second_widening/widen_him_quietly/widened_primordial",
+        "the_sideways_seal_on_the_lease/keep_our_terms/stood_primordial",
+        "the_stewards_list_of_doors/keep_our_terms/stood_primordial",
+        "the_widow_who_declines/press_her/she_holds_primordial"
+      ],
+      "expectedRate": 0.5492332887869341,
+      "observedRate": 0.5208333333333334,
+      "rateEvidence": {
+        "floor": 0.11659662925995107,
+        "ceiling": 0.9818699483139172,
+        "minimumMarginSE": 2,
+        "standardisedDifference": -0.47716685408358384
+      },
+      "neverAttempted": [
+        "a_company_outside_bramme/bar_the_gate/refused",
+        "a_death_in_the_hollow_days/wait_for_the_keeper/waited",
+        "a_frost_in_greening/wait_and_see/waited",
+        "a_head_at_the_top_of_it/keep_him_in_the_chair/an_order_gets_out",
+        "a_month_before_the_market/wait_for_haying/late",
+        "a_wet_seedmonth/hold_the_seed/late_and_short",
+        "a_wet_seedmonth/sow_now/it_rotted",
+        "a_wet_seedmonth/sow_now/it_took",
+        "black_cloth_at_the_fair/_/fined",
+        "blood_on_our_own_land/keep_it_in_the_parish/cawdry_hears_of_it",
+        "both_books_open/declare_short_again/short_again",
+        "cousins_from_the_rimefell/send_them_away/sent_away",
+        "demo_the_empty_chair/_/the_hand_remains",
+        "lightning_on_the_chapel/_/rebuilt_by_slaughter",
+        "news_before_the_seal/leave_no_trace/waited",
+        "pannage_in_smoke/let_the_number_stand/sixty_one",
+        "precedence_at_greening/blood_above_money/blood_seated",
+        "riding_the_rents/two_holdings_stand_empty/empty",
+        "said_at_the_wrong_assize/let_it_stand/it_stood",
+        "telling_the_bees/tell_them_plainly/they_go",
+        "the_account_nineteen_years_later/open_the_packet/the_other_copy_held",
+        "the_archdeacon_comes_back_early/say_they_were_lent/said_lent",
+        "the_assessor_at_the_door/argue/worse",
+        "the_assessor_at_the_door/pay_it/paid",
+        "the_boar_in_the_west_wood/let_him_go/taken",
+        "the_boar_in_the_west_wood/let_him_go/the_blade_that_would_not",
+        "the_book_that_is_wrong/burn_it/burned",
+        "the_book_that_needs_a_reader/leave_it/left",
+        "the_bramme_margin_returns/acknowledge_the_correction/bramme_knows",
+        "the_branches_combine/refuse_the_three/they_go_to_law",
+        "the_burning_at_cawdry/let_them_burn/burned",
+        "the_business_without_the_seal/keep_our_terms/stood",
+        "the_cart_from_the_chapter_house/refuse/refused",
+        "the_cawdry_copy/family_work/held",
+        "the_cawdry_copy/family_work/lost",
+        "the_cawdry_copy/send_specialist/held",
+        "the_cawdry_copy/send_specialist/lost",
+        "the_cawdry_copy/use_darkness/held",
+        "the_cawdry_copy/use_darkness/lost",
+        "the_cawdry_copy/use_light/held",
+        "the_cawdry_copy/use_light/lost",
+        "the_cellar_shelf_is_found/keep_our_terms/stood",
+        "the_chapter_house_closes_its_door/keep_our_terms/stood",
+        "the_common_is_grazed_thin/move_the_marker/marker_moved",
+        "the_dark_year_fast/keep_the_fast/died",
+        "the_deed_nobody_can_find/concede_it/conceded",
+        "the_deed_nobody_can_find/fight_it/lost_it_anyway",
+        "the_drovers_bring_the_price/sell_early_on_his_word/he_was_wrong",
+        "the_fair_copy/send_it_to_bramme/read_before_returned",
+        "the_fever_and_the_vigil/family_work/held",
+        "the_fever_and_the_vigil/family_work/lost",
+        "the_fever_and_the_vigil/send_specialist/held",
+        "the_fever_and_the_vigil/send_specialist/lost",
+        "the_fever_and_the_vigil/use_death/held",
+        "the_fever_and_the_vigil/use_death/lost",
+        "the_fever_and_the_vigil/use_life/held",
+        "the_fever_and_the_vigil/use_life/lost",
+        "the_first_boar/the_boar_in_our_wood/it_goes_wrong",
+        "the_gatehouse_nobody_has_shut/leave_it_open/left",
+        "the_grey_in_the_upper_fold/go_up/a_clean_week",
+        "the_guardian_disagrees/defy/ruined",
+        "the_hall_burns/save_the_press/the_press_and_the_stair",
+        "the_hall_burns/save_the_press/the_press_out",
+        "the_herald_asks_for_her_mother/keep_our_terms/stood",
+        "the_heralds_open_the_descent/send_what_we_have/they_go_looking",
+        "the_inquest_of_names/stand_on_it/cracked",
+        "the_last_of_the_line/recall_everyone/nobody_comes",
+        "the_levy_at_the_door/send_the_son/gone",
+        "the_levy_in_earnest/send_them/he_does_not",
+        "the_lot_not_in_the_catalogue/do_not_go_into_the_room/declined_the_room",
+        "the_low_ground_floods/let_it_sit/went_under",
+        "the_marriage_that_cannot_answer/put_it_to_the_church/annulled",
+        "the_night_the_wind_came_round/_/patched_by_greening",
+        "the_north_wall_is_found_out/_/the_quires_are_gone",
+        "the_offer_from_across_the_grey/keep_her_here/refused",
+        "the_pigs_go_into_the_wood/split_it_by_need/by_need",
+        "the_pilgrimage_to_coln/two_years/does_not_come_back",
+        "the_pit_on_our_own_ground/refuse_the_ground/the_low_meadow",
+        "the_ploughs_go_out_late/_/the_house_pays_bramme",
+        "the_ploughs_go_out_late/_/they_sow_late",
+        "the_post_relay_will_take_it/send_a_rider/four_days_late",
+        "the_price_at_the_mill/_/only",
+        "the_reeve_reads_the_sky/cut_on_the_ninth/he_was_wrong",
+        "the_ring_from_the_line/_/came_back",
+        "the_salt_fish_from_sarrow/_/he_comes_at_last",
+        "the_salt_fish_from_sarrow/_/he_does_not_come",
+        "the_seal_is_not_in_the_box/search_the_household/not_found",
+        "the_shelf_that_has_to_go/burn_them/burned",
+        "the_shelf_that_has_to_go/hide_them/hidden",
+        "the_smoke_above_the_store/family_work/held",
+        "the_smoke_above_the_store/family_work/lost",
+        "the_smoke_above_the_store/send_specialist/held",
+        "the_smoke_above_the_store/send_specialist/lost",
+        "the_smoke_above_the_store/use_fluid/held",
+        "the_smoke_above_the_store/use_fluid/lost",
+        "the_smoke_above_the_store/use_thermal/held",
+        "the_smoke_above_the_store/use_thermal/lost",
+        "the_steward_of_nineteen_years/dismiss_him/dismissed_and_sells_it",
+        "the_tenant_who_cannot_pay/evict_them/evicted",
+        "the_thatcher_from_the_lag/back_the_reeve/he_goes_home",
+        "the_threshold_four_at_the_fair/take_her_home/home_early",
+        "the_unmaking/go_through_with_it/failed_at_the_last_step",
+        "the_unmaking/go_through_with_it/taken",
+        "the_wall_nobody_mends/take_it_to_cawdry/found_against",
+        "the_wall_nobody_mends/take_it_to_cawdry/heard_at_cawdry",
+        "the_wet_harvest/theirs_first/the_fourth_day_never_comes",
+        "the_wet_harvest/theirs_first/theirs_in",
+        "the_wheel_stops/they_come_back_wet/not_shifted",
+        "the_wick_bridge_load/lifted/clear",
+        "the_wick_bridge_load/paid/wet",
+        "the_wind_under_the_slates/family_work/held",
+        "the_wind_under_the_slates/family_work/lost",
+        "the_wind_under_the_slates/send_specialist/held",
+        "the_wind_under_the_slates/send_specialist/lost",
+        "the_wind_under_the_slates/use_aero/held",
+        "the_wind_under_the_slates/use_aero/lost",
+        "the_wind_under_the_slates/use_terra/held",
+        "the_wind_under_the_slates/use_terra/lost",
+        "the_withdrawal/call_them_home/called_home",
+        "the_wool_factors_book/hold_the_clip/it_rains",
+        "the_wrestling_at_bramme/let_him_go_on/he_is_broken",
+        "two_in_three_reach_five/keep_the_room_warm/it_does_not_break",
+        "two_in_three_reach_five/send_for_bramme/he_comes_too_late",
+        "what_a_warranted_man_costs/do_it_ourselves/failed",
+        "what_came_up_the_river_road/bar_the_doors/found_the_side_door",
+        "what_came_up_the_river_road/bar_the_doors/waited_out",
+        "what_came_up_the_river_road/hold_the_gate/broken_through",
+        "what_the_hounds_will_not_pass/go_down_and_look/nothing_down_there",
+        "what_the_hounds_will_not_pass/go_down_and_look/the_drain",
+        "who_gets_the_physician/the_strong_one/spent_badly",
+        "who_gets_the_physician/the_weak_one/bought_days",
+        "word_from_the_field/_/it_is_going_badly"
+      ],
+      "rows": [
+        {
+          "seed": 186800,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1387.2471915551464,
+            "acres": 1445,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 118
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 47,
+            "treasury": 1334.8184163234257,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 118
+          }
+        },
+        {
+          "seed": 186807,
+          "control": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 657.6458178649491,
+            "acres": 1610,
+            "bestRung": "touched",
+            "endingReading": "settled",
+            "normalOutcomes": 120
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 657.6458178649491,
+            "acres": 1610,
+            "bestRung": "touched",
+            "endingReading": "settled",
+            "normalOutcomes": 120
+          }
+        },
+        {
+          "seed": 186814,
+          "control": {
+            "year": 1342,
+            "livingFamily": 54,
+            "treasury": 1573.9529861018607,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 127
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 54,
+            "treasury": 1573.9529861018607,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 127
+          }
+        },
+        {
+          "seed": 186821,
+          "control": {
+            "year": 1342,
+            "livingFamily": 56,
+            "treasury": 1802.781990746911,
+            "acres": 1610,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 107
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 56,
+            "treasury": 1802.781990746911,
+            "acres": 1610,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 107
+          }
+        },
+        {
+          "seed": 186828,
+          "control": {
+            "year": 1136,
+            "livingFamily": 5,
+            "treasury": 576.3763847176544,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 34
+          },
+          "interventions": {
+            "year": 1136,
+            "livingFamily": 4,
+            "treasury": 236.17051622584847,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 33
+          }
+        },
+        {
+          "seed": 186835,
+          "control": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 1872.3972257805824,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 99
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 1872.3972257805824,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 99
+          }
+        },
+        {
+          "seed": 186842,
+          "control": {
+            "year": 1149,
+            "livingFamily": 3,
+            "treasury": 1144.4647080204911,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 40
+          },
+          "interventions": {
+            "year": 1149,
+            "livingFamily": 3,
+            "treasury": 1144.4647080204911,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 40
+          }
+        },
+        {
+          "seed": 186849,
+          "control": {
+            "year": 1342,
+            "livingFamily": 83,
+            "treasury": 1052.2765901603145,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 119
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 83,
+            "treasury": 1052.2765901603145,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 119
+          }
+        },
+        {
+          "seed": 186856,
+          "control": {
+            "year": 1342,
+            "livingFamily": 53,
+            "treasury": 957.132349110332,
+            "acres": 1535,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 125
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 67,
+            "treasury": 767.4599411454867,
+            "acres": 1535,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 127
+          }
+        },
+        {
+          "seed": 186863,
+          "control": {
+            "year": 1342,
+            "livingFamily": 56,
+            "treasury": 800.1958439109474,
+            "acres": 1430,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 121
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 64,
+            "treasury": -96.41535488649731,
+            "acres": 1430,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 123
+          }
+        },
+        {
+          "seed": 186870,
+          "control": {
+            "year": 1342,
+            "livingFamily": 77,
+            "treasury": 634.5637791937924,
+            "acres": 1685,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 109
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 73,
+            "treasury": 603.258842766047,
+            "acres": 1685,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 108
+          }
+        },
+        {
+          "seed": 186877,
+          "control": {
+            "year": 1207,
+            "livingFamily": 7,
+            "treasury": 1522.7825748776263,
+            "acres": 1355,
+            "bestRung": "hierophant",
+            "endingReading": "broken_line",
+            "normalOutcomes": 64
+          },
+          "interventions": {
+            "year": 1207,
+            "livingFamily": 7,
+            "treasury": 1522.7825748776263,
+            "acres": 1355,
+            "bestRung": "hierophant",
+            "endingReading": "broken_line",
+            "normalOutcomes": 64
+          }
+        },
+        {
+          "seed": 186884,
+          "control": {
+            "year": 1290,
+            "livingFamily": 12,
+            "treasury": 2303.5978960658745,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 94
+          },
+          "interventions": {
+            "year": 1290,
+            "livingFamily": 12,
+            "treasury": 2303.5978960658745,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 94
+          }
+        },
+        {
+          "seed": 186891,
+          "control": {
+            "year": 1342,
+            "livingFamily": 80,
+            "treasury": 1259.0441753900388,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 109
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 80,
+            "treasury": 1451.1348684162035,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 107
+          }
+        },
+        {
+          "seed": 186898,
+          "control": {
+            "year": 1342,
+            "livingFamily": 69,
+            "treasury": 810.2020972041881,
+            "acres": 1515,
+            "bestRung": "none",
+            "endingReading": "forgotten",
+            "normalOutcomes": 113
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 69,
+            "treasury": 810.2020972041881,
+            "acres": 1515,
+            "bestRung": "none",
+            "endingReading": "forgotten",
+            "normalOutcomes": 113
+          }
+        },
+        {
+          "seed": 186905,
+          "control": {
+            "year": 1153,
+            "livingFamily": 8,
+            "treasury": 1048.6056398476621,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 37
+          },
+          "interventions": {
+            "year": 1153,
+            "livingFamily": 8,
+            "treasury": 1048.6056398476621,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 37
+          }
+        },
+        {
+          "seed": 186912,
+          "control": {
+            "year": 1146,
+            "livingFamily": 10,
+            "treasury": 363.21029577548154,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 39
+          },
+          "interventions": {
+            "year": 1146,
+            "livingFamily": 10,
+            "treasury": 363.21029577548154,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 39
+          }
+        },
+        {
+          "seed": 186919,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 728.3487433836658,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 126
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 728.3487433836658,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 126
+          }
+        },
+        {
+          "seed": 186926,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 497.74733215537685,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 117
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 497.74733215537685,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 117
+          }
+        },
+        {
+          "seed": 186933,
+          "control": {
+            "year": 1342,
+            "livingFamily": 67,
+            "treasury": 864.5891672380554,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 124
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 67,
+            "treasury": 864.5891672380554,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 124
+          }
+        },
+        {
+          "seed": 186940,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1545.9477878291357,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 125
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1545.9477878291357,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 125
+          }
+        },
+        {
+          "seed": 186947,
+          "control": {
+            "year": 1342,
+            "livingFamily": 64,
+            "treasury": 1984.4683894605294,
+            "acres": 1540,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 133
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 64,
+            "treasury": 1984.4683894605294,
+            "acres": 1540,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 133
+          }
+        },
+        {
+          "seed": 186954,
+          "control": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 1835.8513044168815,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 136
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 1835.8513044168815,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 136
+          }
+        },
+        {
+          "seed": 186961,
+          "control": {
+            "year": 1342,
+            "livingFamily": 69,
+            "treasury": 919.4557065392066,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 122
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 69,
+            "treasury": 919.4557065392066,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 122
+          }
+        },
+        {
+          "seed": 186968,
+          "control": {
+            "year": 1342,
+            "livingFamily": 87,
+            "treasury": 148.43110171386263,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 121
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 87,
+            "treasury": 167.3583787118492,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 120
+          }
+        },
+        {
+          "seed": 186975,
+          "control": {
+            "year": 1342,
+            "livingFamily": 59,
+            "treasury": 1956.8626227415384,
+            "acres": 1610,
+            "bestRung": "touched",
+            "endingReading": "settled",
+            "normalOutcomes": 124
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 59,
+            "treasury": 1956.8626227415384,
+            "acres": 1610,
+            "bestRung": "touched",
+            "endingReading": "settled",
+            "normalOutcomes": 124
+          }
+        },
+        {
+          "seed": 186982,
+          "control": {
+            "year": 1342,
+            "livingFamily": 69,
+            "treasury": 1545.9067717230384,
+            "acres": 1480,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 123
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 80,
+            "treasury": 194.46165765590487,
+            "acres": 1480,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 121
+          }
+        },
+        {
+          "seed": 186989,
+          "control": {
+            "year": 1342,
+            "livingFamily": 17,
+            "treasury": 1097.1079204031375,
+            "acres": 1410,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 112
+          },
+          "interventions": {
+            "year": 1329,
+            "livingFamily": 8,
+            "treasury": 187.13905822759153,
+            "acres": 1480,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 104
+          }
+        },
+        {
+          "seed": 186996,
+          "control": {
+            "year": 1342,
+            "livingFamily": 73,
+            "treasury": 1323.4230668830087,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 117
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 67,
+            "treasury": 903.4165550352069,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 118
+          }
+        },
+        {
+          "seed": 187003,
+          "control": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 3143.798239249937,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 134
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 3143.798239249937,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 134
+          }
+        },
+        {
+          "seed": 187010,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1627.971241976584,
+            "acres": 1425,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 121
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1627.971241976584,
+            "acres": 1425,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 121
+          }
+        },
+        {
+          "seed": 187017,
+          "control": {
+            "year": 1342,
+            "livingFamily": 37,
+            "treasury": 537.7291675493186,
+            "acres": 1480,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 125
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 37,
+            "treasury": 537.7291675493186,
+            "acres": 1480,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 124
+          }
+        },
+        {
+          "seed": 187024,
+          "control": {
+            "year": 1342,
+            "livingFamily": 47,
+            "treasury": 2068.6417285013,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 125
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 47,
+            "treasury": 2068.6417285013,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 125
+          }
+        },
+        {
+          "seed": 187031,
+          "control": {
+            "year": 1315,
+            "livingFamily": 9,
+            "treasury": 1970.6996299395912,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 99
+          },
+          "interventions": {
+            "year": 1315,
+            "livingFamily": 9,
+            "treasury": 1970.6996299395912,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 99
+          }
+        },
+        {
+          "seed": 187038,
+          "control": {
+            "year": 1342,
+            "livingFamily": 33,
+            "treasury": 2303.8430096063425,
+            "acres": 1465,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 116
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 33,
+            "treasury": 2303.8430096063425,
+            "acres": 1465,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 116
+          }
+        },
+        {
+          "seed": 187045,
+          "control": {
+            "year": 1342,
+            "livingFamily": 68,
+            "treasury": 49.188455688526574,
+            "acres": 1555,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 116
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 68,
+            "treasury": 49.188455688526574,
+            "acres": 1555,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 116
+          }
+        },
+        {
+          "seed": 187052,
+          "control": {
+            "year": 1342,
+            "livingFamily": 55,
+            "treasury": 123.64146967414813,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 113
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 55,
+            "treasury": 123.64146967414813,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 113
+          }
+        },
+        {
+          "seed": 187059,
+          "control": {
+            "year": 1342,
+            "livingFamily": 54,
+            "treasury": 636.2355162307804,
+            "acres": 1355,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 129
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 54,
+            "treasury": 501.78362592487264,
+            "acres": 1355,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 128
+          }
+        },
+        {
+          "seed": 187066,
+          "control": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 80.7023789338019,
+            "acres": 1445,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 131
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 80.7023789338019,
+            "acres": 1445,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 131
+          }
+        },
+        {
+          "seed": 187073,
+          "control": {
+            "year": 1111,
+            "livingFamily": 10,
+            "treasury": 1021.3545924743315,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          },
+          "interventions": {
+            "year": 1111,
+            "livingFamily": 10,
+            "treasury": 1021.3545924743315,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          }
+        },
+        {
+          "seed": 187080,
+          "control": {
+            "year": 1342,
+            "livingFamily": 45,
+            "treasury": 1209.8445561549902,
+            "acres": 1430,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 108
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 1097.3233125213737,
+            "acres": 1645,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 107
+          }
+        },
+        {
+          "seed": 187087,
+          "control": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 1422.6134418281372,
+            "acres": 1445,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 114
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 51,
+            "treasury": 1422.6410392474884,
+            "acres": 1445,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 113
+          }
+        },
+        {
+          "seed": 187094,
+          "control": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 1408.830835244346,
+            "acres": 1615,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 109
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 1408.830835244346,
+            "acres": 1615,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 109
+          }
+        },
+        {
+          "seed": 187101,
+          "control": {
+            "year": 1342,
+            "livingFamily": 53,
+            "treasury": 1613.693816793987,
+            "acres": 1535,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 114
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 53,
+            "treasury": 1613.693816793987,
+            "acres": 1535,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 114
+          }
+        },
+        {
+          "seed": 187108,
+          "control": {
+            "year": 1342,
+            "livingFamily": 73,
+            "treasury": -120,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 110
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 73,
+            "treasury": -120,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 110
+          }
+        },
+        {
+          "seed": 187115,
+          "control": {
+            "year": 1342,
+            "livingFamily": 40,
+            "treasury": 1108.778246655095,
+            "acres": 1705,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 140
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 58,
+            "treasury": 726.2166783808638,
+            "acres": 1685,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 139
+          }
+        },
+        {
+          "seed": 187122,
+          "control": {
+            "year": 1342,
+            "livingFamily": 71,
+            "treasury": 1870.2899889668367,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 111
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 71,
+            "treasury": 1870.2899889668367,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 111
+          }
+        },
+        {
+          "seed": 187129,
+          "control": {
+            "year": 1342,
+            "livingFamily": 68,
+            "treasury": 608.4554463290771,
+            "acres": 1615,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 114
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 68,
+            "treasury": 608.4554463290771,
+            "acres": 1615,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 114
+          }
+        },
+        {
+          "seed": 187136,
+          "control": {
+            "year": 1342,
+            "livingFamily": 62,
+            "treasury": 3255.4654454470365,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 123
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 62,
+            "treasury": 3255.4654454470365,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 123
+          }
+        },
+        {
+          "seed": 187143,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1235.4216892994393,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 117
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 83,
+            "treasury": 774.4354959952713,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 118
+          }
+        },
+        {
+          "seed": 187150,
+          "control": {
+            "year": 1099,
+            "livingFamily": 11,
+            "treasury": 13.738814598235702,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 25
+          },
+          "interventions": {
+            "year": 1099,
+            "livingFamily": 11,
+            "treasury": 13.738814598235702,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 25
+          }
+        },
+        {
+          "seed": 187157,
+          "control": {
+            "year": 1151,
+            "livingFamily": 5,
+            "treasury": 769.9878687247433,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 44
+          },
+          "interventions": {
+            "year": 1151,
+            "livingFamily": 5,
+            "treasury": 769.9878687247433,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 44
+          }
+        },
+        {
+          "seed": 187164,
+          "control": {
+            "year": 1137,
+            "livingFamily": 12,
+            "treasury": 603.0032723883338,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          },
+          "interventions": {
+            "year": 1137,
+            "livingFamily": 12,
+            "treasury": 603.0032723883338,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          }
+        },
+        {
+          "seed": 187171,
+          "control": {
+            "year": 1342,
+            "livingFamily": 45,
+            "treasury": 1228.4974740663665,
+            "acres": 1355,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 120
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 44,
+            "treasury": 975.8744610470546,
+            "acres": 1425,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 114
+          }
+        },
+        {
+          "seed": 187178,
+          "control": {
+            "year": 1342,
+            "livingFamily": 60,
+            "treasury": 1472.2159066393779,
+            "acres": 1500,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 129
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 72,
+            "treasury": 1330.88800527278,
+            "acres": 1500,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 126
+          }
+        },
+        {
+          "seed": 187185,
+          "control": {
+            "year": 1342,
+            "livingFamily": 37,
+            "treasury": 2257.231150875184,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 115
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 37,
+            "treasury": 2257.231150875184,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 115
+          }
+        },
+        {
+          "seed": 187192,
+          "control": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 812.5045837052995,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 117
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 70,
+            "treasury": 812.5045837052995,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 117
+          }
+        },
+        {
+          "seed": 187199,
+          "control": {
+            "year": 1080,
+            "livingFamily": 10,
+            "treasury": 797.3558646140898,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 13
+          },
+          "interventions": {
+            "year": 1080,
+            "livingFamily": 10,
+            "treasury": 797.3558646140898,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 13
+          }
+        },
+        {
+          "seed": 187206,
+          "control": {
+            "year": 1342,
+            "livingFamily": 56,
+            "treasury": 544.9185191988571,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 104
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 65,
+            "treasury": 571.6472559474097,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 106
+          }
+        },
+        {
+          "seed": 187213,
+          "control": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1045.2782024610538,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 111
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 52,
+            "treasury": 1045.2782024610538,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "settled",
+            "normalOutcomes": 111
+          }
+        },
+        {
+          "seed": 187220,
+          "control": {
+            "year": 1342,
+            "livingFamily": 21,
+            "treasury": 3379.850278441827,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 94
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 41,
+            "treasury": 595.6414705870836,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 93
+          }
+        },
+        {
+          "seed": 187227,
+          "control": {
+            "year": 1342,
+            "livingFamily": 65,
+            "treasury": 1470.7819832001592,
+            "acres": 1555,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 130
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 65,
+            "treasury": 1470.7819832001592,
+            "acres": 1555,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 130
+          }
+        },
+        {
+          "seed": 187234,
+          "control": {
+            "year": 1342,
+            "livingFamily": 63,
+            "treasury": 457.42550434781367,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 118
+          },
+          "interventions": {
+            "year": 1342,
+            "livingFamily": 58,
+            "treasury": 814.7363023549592,
+            "acres": 1500,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 115
+          }
+        },
+        {
+          "seed": 187241,
+          "control": {
+            "year": 1172,
+            "livingFamily": 6,
+            "treasury": 2029.5061474924603,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 50
+          },
+          "interventions": {
+            "year": 1172,
+            "livingFamily": 6,
+            "treasury": 2029.5061474924603,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 50
+          }
+        }
+      ]
+    },
+    "long": {
+      "qualifying": 192,
+      "knownSite": 192,
+      "eligible": 95,
+      "interventions": 46,
+      "expected": 46.418066603164284,
+      "variance": 15.728289401087437,
+      "remoteExcluded": 536,
+      "livesSaved": 3,
+      "missingPrevented": 0,
+      "crownsPreserved": 150,
+      "estateYieldPreserved": 0,
+      "lifeSavingHouses": 3,
+      "localPoolSizes": {
+        "0": 97,
+        "1": 63,
+        "2": 22,
+        "3": 5,
+        "4": 3,
+        "5": 2
+      },
+      "localEP": {
+        "n": 144,
+        "min": 8.65800865800866,
+        "median": 47.61904761904762,
+        "max": 99.04761904761908
+      },
+      "nonMitigating": 0,
+      "normalReach": 1042,
+      "rescuedReach": [
+        "a_death_in_the_hollow_days/wait_for_the_keeper/waited_primordial",
+        "said_at_the_wrong_assize/let_it_stand/it_stood_primordial",
+        "the_chapter_house_closes_its_door/keep_our_terms/stood_primordial",
+        "the_gate_is_shut_for_a_month/ration_by_household/they_go_over_the_wall_primordial",
+        "the_great_rite/do_it_unasked/defied_primordial",
+        "the_grievance_reaches_the_assembly/keep_our_terms/stood_primordial",
+        "the_hall_burns/save_the_press/the_press_and_the_stair_primordial",
+        "the_index_has_our_page/keep_our_terms/stood_primordial",
+        "the_interdict/hold_out/it_holds_too_long_primordial",
+        "the_letter_comes_and_is_not/_/at_the_same_time_primordial",
+        "the_levy_at_the_door/send_the_son/gone_primordial",
+        "the_pit_on_our_own_ground/refuse_the_ground/the_low_meadow_primordial",
+        "the_seal_questioned/strike/struck_primordial",
+        "the_second_widening/widen_him_quietly/widened_primordial",
+        "the_sideways_seal_on_the_lease/keep_our_terms/stood_primordial",
+        "the_stewards_list_of_doors/keep_our_terms/stood_primordial",
+        "the_widow_who_declines/press_her/she_holds_primordial"
+      ],
+      "expectedRate": 0.4886112274017293,
+      "observedRate": 0.4842105263157895,
+      "rateEvidence": {
+        "floor": 0.18097123050262093,
+        "ceiling": 0.7962512243008377,
+        "minimumMarginSE": 2,
+        "standardisedDifference": -0.10541556236612802
+      },
+      "neverAttempted": [
+        "a_company_outside_bramme/bar_the_gate/refused",
+        "a_death_in_the_hollow_days/bury_within_two_days/buried",
+        "a_frost_in_greening/wait_and_see/waited",
+        "a_head_at_the_top_of_it/keep_him_in_the_chair/an_order_gets_out",
+        "a_month_before_the_market/wait_for_haying/late",
+        "a_wet_seedmonth/hold_the_seed/late_and_short",
+        "a_wet_seedmonth/sow_now/it_rotted",
+        "a_wet_seedmonth/sow_now/it_took",
+        "black_cloth_at_the_fair/_/fined",
+        "both_books_open/declare_short_again/short_again",
+        "cousins_from_the_rimefell/send_them_away/sent_away",
+        "demo_the_empty_chair/_/the_hand_remains",
+        "lightning_on_the_chapel/_/rebuilt_by_slaughter",
+        "news_before_the_seal/leave_no_trace/waited",
+        "pannage_in_smoke/let_the_number_stand/sixty_one",
+        "precedence_at_greening/blood_above_money/blood_seated",
+        "riding_the_rents/two_holdings_stand_empty/empty",
+        "telling_the_bees/tell_them_plainly/they_go",
+        "the_answer_was_a_refusal/keep_our_terms/stood",
+        "the_archdeacon_comes_back_early/say_they_were_lent/said_lent",
+        "the_assessor_at_the_door/pay_it/paid",
+        "the_boar_in_the_west_wood/let_him_go/taken",
+        "the_boar_in_the_west_wood/let_him_go/the_blade_that_would_not",
+        "the_book_that_is_wrong/burn_it/burned",
+        "the_book_that_needs_a_reader/leave_it/left",
+        "the_bramme_margin_returns/acknowledge_the_correction/bramme_knows",
+        "the_branches_combine/refuse_the_three/they_go_to_law",
+        "the_burning_at_cawdry/let_them_burn/burned",
+        "the_business_without_the_seal/keep_our_terms/stood",
+        "the_cart_from_the_chapter_house/refuse/refused",
+        "the_cawdry_copy/family_work/held",
+        "the_cawdry_copy/family_work/lost",
+        "the_cawdry_copy/send_specialist/held",
+        "the_cawdry_copy/send_specialist/lost",
+        "the_cawdry_copy/use_darkness/held",
+        "the_cawdry_copy/use_darkness/lost",
+        "the_cawdry_copy/use_light/held",
+        "the_cawdry_copy/use_light/lost",
+        "the_cellar_shelf_is_found/keep_our_terms/stood",
+        "the_common_is_grazed_thin/move_the_marker/marker_moved",
+        "the_copy_comes_back_open/keep_our_terms/stood",
+        "the_dark_year_fast/keep_the_fast/died",
+        "the_deed_nobody_can_find/concede_it/conceded",
+        "the_deed_nobody_can_find/fight_it/lost_it_anyway",
+        "the_drovers_bring_the_price/sell_early_on_his_word/he_was_wrong",
+        "the_fair_copy/send_it_to_bramme/read_before_returned",
+        "the_fever_and_the_vigil/family_work/held",
+        "the_fever_and_the_vigil/family_work/lost",
+        "the_fever_and_the_vigil/send_specialist/held",
+        "the_fever_and_the_vigil/send_specialist/lost",
+        "the_fever_and_the_vigil/use_death/held",
+        "the_fever_and_the_vigil/use_death/lost",
+        "the_fever_and_the_vigil/use_life/held",
+        "the_fever_and_the_vigil/use_life/lost",
+        "the_first_boar/the_boar_in_our_wood/it_goes_wrong",
+        "the_gatehouse_nobody_has_shut/leave_it_open/left",
+        "the_grey_in_the_upper_fold/go_up/a_clean_week",
+        "the_guardian_disagrees/defy/ruined",
+        "the_hall_burns/save_the_press/the_press_out",
+        "the_herald_asks_for_her_mother/keep_our_terms/stood",
+        "the_last_of_the_line/recall_everyone/nobody_comes",
+        "the_letter_of_credit_called/ask_for_terms/terms_refused",
+        "the_levy_in_earnest/send_them/he_does_not",
+        "the_lot_not_in_the_catalogue/do_not_go_into_the_room/declined_the_room",
+        "the_low_ground_floods/let_it_sit/went_under",
+        "the_marriage_that_cannot_answer/put_it_to_the_church/annulled",
+        "the_night_the_wind_came_round/_/patched_by_greening",
+        "the_north_wall_is_found_out/_/the_quires_are_gone",
+        "the_pigs_go_into_the_wood/split_it_by_need/by_need",
+        "the_pilgrimage_to_coln/two_years/does_not_come_back",
+        "the_pit_on_our_own_ground/refuse_the_ground/the_church_takes_it_anyway",
+        "the_ploughs_go_out_late/_/the_house_pays_bramme",
+        "the_ploughs_go_out_late/_/they_sow_late",
+        "the_post_relay_will_take_it/send_a_rider/four_days_late",
+        "the_price_at_the_mill/_/only",
+        "the_reeve_reads_the_sky/cut_on_the_ninth/he_was_wrong",
+        "the_reeve_reads_the_sky/wait_the_four_days/it_breaks",
+        "the_ring_from_the_line/_/came_back",
+        "the_salt_fish_from_sarrow/_/he_comes_at_last",
+        "the_salt_fish_from_sarrow/_/he_does_not_come",
+        "the_seven_lamp_vigil/keep_the_lamps/died",
+        "the_shelf_that_has_to_go/burn_them/burned",
+        "the_shelf_that_has_to_go/hide_them/hidden",
+        "the_smoke_above_the_store/family_work/held",
+        "the_smoke_above_the_store/family_work/lost",
+        "the_smoke_above_the_store/send_specialist/held",
+        "the_smoke_above_the_store/send_specialist/lost",
+        "the_smoke_above_the_store/use_fluid/held",
+        "the_smoke_above_the_store/use_fluid/lost",
+        "the_smoke_above_the_store/use_thermal/held",
+        "the_smoke_above_the_store/use_thermal/lost",
+        "the_steward_of_nineteen_years/dismiss_him/dismissed_and_sells_it",
+        "the_tenant_who_cannot_pay/evict_them/evicted",
+        "the_thatcher_from_the_lag/back_the_reeve/he_goes_home",
+        "the_threshold_four_at_the_fair/take_her_home/home_early",
+        "the_unmaking/go_through_with_it/failed_at_the_last_step",
+        "the_unmaking/go_through_with_it/taken",
+        "the_wall_nobody_mends/take_it_to_cawdry/found_against",
+        "the_wall_nobody_mends/take_it_to_cawdry/heard_at_cawdry",
+        "the_wet_harvest/theirs_first/the_fourth_day_never_comes",
+        "the_wet_harvest/theirs_first/theirs_in",
+        "the_wheel_stops/they_come_back_wet/not_shifted",
+        "the_wick_bridge_load/lifted/clear",
+        "the_wick_bridge_load/paid/wet",
+        "the_wind_under_the_slates/family_work/held",
+        "the_wind_under_the_slates/family_work/lost",
+        "the_wind_under_the_slates/send_specialist/held",
+        "the_wind_under_the_slates/send_specialist/lost",
+        "the_wind_under_the_slates/use_aero/held",
+        "the_wind_under_the_slates/use_aero/lost",
+        "the_wind_under_the_slates/use_terra/held",
+        "the_wind_under_the_slates/use_terra/lost",
+        "the_withdrawal/call_them_home/called_home",
+        "the_wool_factors_book/hold_the_clip/it_rains",
+        "the_wrestling_at_bramme/let_him_go_on/he_is_broken",
+        "two_in_three_reach_five/keep_the_room_warm/it_does_not_break",
+        "what_a_warranted_man_costs/do_it_ourselves/failed",
+        "what_came_up_the_river_road/bar_the_doors/found_the_side_door",
+        "what_came_up_the_river_road/bar_the_doors/waited_out",
+        "what_came_up_the_river_road/hold_the_gate/broken_through",
+        "what_the_hounds_will_not_pass/go_down_and_look/nothing_down_there",
+        "what_the_hounds_will_not_pass/go_down_and_look/the_drain",
+        "who_gets_the_physician/the_strong_one/spent_badly",
+        "who_gets_the_physician/the_weak_one/bought_days",
+        "word_from_the_field/_/it_is_going_badly"
+      ],
+      "rows": [
+        {
+          "seed": 186800,
+          "control": {
+            "year": 1542,
+            "livingFamily": 66,
+            "treasury": 1436.3065441868307,
+            "acres": 1480,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 208
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 69,
+            "treasury": 1242.4514363508488,
+            "acres": 1410,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 198
+          }
+        },
+        {
+          "seed": 186807,
+          "control": {
+            "year": 1542,
+            "livingFamily": 44,
+            "treasury": 2017.9537440099439,
+            "acres": 1590,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 208
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 56,
+            "treasury": 692.4790995230837,
+            "acres": 1645,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 214
+          }
+        },
+        {
+          "seed": 186814,
+          "control": {
+            "year": 1542,
+            "livingFamily": 61,
+            "treasury": 1505.7199259993567,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 228
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 61,
+            "treasury": 1505.7199259993567,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 228
+          }
+        },
+        {
+          "seed": 186821,
+          "control": {
+            "year": 1542,
+            "livingFamily": 32,
+            "treasury": 1474.6685825275008,
+            "acres": 1505,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 185
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 32,
+            "treasury": 1474.6685825275008,
+            "acres": 1505,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 185
+          }
+        },
+        {
+          "seed": 186828,
+          "control": {
+            "year": 1136,
+            "livingFamily": 5,
+            "treasury": 153.94848384628673,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 36
+          },
+          "interventions": {
+            "year": 1138,
+            "livingFamily": 8,
+            "treasury": 167.81261737434733,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 34
+          }
+        },
+        {
+          "seed": 186835,
+          "control": {
+            "year": 1542,
+            "livingFamily": 46,
+            "treasury": 2490.1012901979016,
+            "acres": 1520,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 175
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 46,
+            "treasury": 2490.1012901979016,
+            "acres": 1520,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 175
+          }
+        },
+        {
+          "seed": 186842,
+          "control": {
+            "year": 1149,
+            "livingFamily": 3,
+            "treasury": 536.1389772214616,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 43
+          },
+          "interventions": {
+            "year": 1149,
+            "livingFamily": 3,
+            "treasury": 536.1389772214616,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 43
+          }
+        },
+        {
+          "seed": 186849,
+          "control": {
+            "year": 1542,
+            "livingFamily": 59,
+            "treasury": 356.1538288708138,
+            "acres": 1685,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 202
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 57,
+            "treasury": 1723.4276211737124,
+            "acres": 1595,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 201
+          }
+        },
+        {
+          "seed": 186856,
+          "control": {
+            "year": 1542,
+            "livingFamily": 60,
+            "treasury": 1182.205085248418,
+            "acres": 1535,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 203
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 74,
+            "treasury": 1990.4982653541588,
+            "acres": 1465,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 199
+          }
+        },
+        {
+          "seed": 186863,
+          "control": {
+            "year": 1542,
+            "livingFamily": 47,
+            "treasury": 1908.208244957742,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 206
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 47,
+            "treasury": 1908.208244957742,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 206
+          }
+        },
+        {
+          "seed": 186870,
+          "control": {
+            "year": 1542,
+            "livingFamily": 37,
+            "treasury": 642.33531314647,
+            "acres": 1595,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 197
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 54,
+            "treasury": 430.02826902757636,
+            "acres": 1520,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 193
+          }
+        },
+        {
+          "seed": 186877,
+          "control": {
+            "year": 1182,
+            "livingFamily": 5,
+            "treasury": 1128.3561191697272,
+            "acres": 1355,
+            "bestRung": "vessel",
+            "endingReading": "broken_line",
+            "normalOutcomes": 53
+          },
+          "interventions": {
+            "year": 1182,
+            "livingFamily": 5,
+            "treasury": 1128.3561191697272,
+            "acres": 1355,
+            "bestRung": "vessel",
+            "endingReading": "broken_line",
+            "normalOutcomes": 53
+          }
+        },
+        {
+          "seed": 186884,
+          "control": {
+            "year": 1163,
+            "livingFamily": 8,
+            "treasury": 473.9817606780775,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 48
+          },
+          "interventions": {
+            "year": 1163,
+            "livingFamily": 8,
+            "treasury": 473.9817606780775,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 48
+          }
+        },
+        {
+          "seed": 186891,
+          "control": {
+            "year": 1542,
+            "livingFamily": 83,
+            "treasury": 44.924761381460655,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 198
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 83,
+            "treasury": 48.1459074803376,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          }
+        },
+        {
+          "seed": 186898,
+          "control": {
+            "year": 1542,
+            "livingFamily": 76,
+            "treasury": 2744.6027094994297,
+            "acres": 1590,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 212
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 76,
+            "treasury": 2744.6027094994297,
+            "acres": 1590,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 212
+          }
+        },
+        {
+          "seed": 186905,
+          "control": {
+            "year": 1153,
+            "livingFamily": 8,
+            "treasury": 1146.4230895110243,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 37
+          },
+          "interventions": {
+            "year": 1153,
+            "livingFamily": 8,
+            "treasury": 1146.4230895110243,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 37
+          }
+        },
+        {
+          "seed": 186912,
+          "control": {
+            "year": 1146,
+            "livingFamily": 10,
+            "treasury": 355.9567834138787,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 39
+          },
+          "interventions": {
+            "year": 1146,
+            "livingFamily": 10,
+            "treasury": 355.9567834138787,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 39
+          }
+        },
+        {
+          "seed": 186919,
+          "control": {
+            "year": 1542,
+            "livingFamily": 72,
+            "treasury": 221.0320951694633,
+            "acres": 1635,
+            "bestRung": "none",
+            "endingReading": "forgotten",
+            "normalOutcomes": 209
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 72,
+            "treasury": 221.0320951694633,
+            "acres": 1635,
+            "bestRung": "none",
+            "endingReading": "forgotten",
+            "normalOutcomes": 209
+          }
+        },
+        {
+          "seed": 186926,
+          "control": {
+            "year": 1542,
+            "livingFamily": 52,
+            "treasury": 334.3254982459482,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 213
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 52,
+            "treasury": 334.3254982459482,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 212
+          }
+        },
+        {
+          "seed": 186933,
+          "control": {
+            "year": 1542,
+            "livingFamily": 42,
+            "treasury": 191.1966308559188,
+            "acres": 1705,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 214
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 53,
+            "treasury": 982.1270541067172,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 214
+          }
+        },
+        {
+          "seed": 186940,
+          "control": {
+            "year": 1542,
+            "livingFamily": 81,
+            "treasury": 621.1366914643716,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 215
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 81,
+            "treasury": 621.1366914643716,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 215
+          }
+        },
+        {
+          "seed": 186947,
+          "control": {
+            "year": 1542,
+            "livingFamily": 30,
+            "treasury": 1274.517552191788,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 221
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 30,
+            "treasury": 1274.517552191788,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 221
+          }
+        },
+        {
+          "seed": 186954,
+          "control": {
+            "year": 1542,
+            "livingFamily": 43,
+            "treasury": 590.2955804435032,
+            "acres": 1525,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 211
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 43,
+            "treasury": 1079.95642501165,
+            "acres": 1615,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 215
+          }
+        },
+        {
+          "seed": 186961,
+          "control": {
+            "year": 1542,
+            "livingFamily": 51,
+            "treasury": 637.0263218435263,
+            "acres": 1470,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 60,
+            "treasury": 412.1407366385655,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 187
+          }
+        },
+        {
+          "seed": 186968,
+          "control": {
+            "year": 1542,
+            "livingFamily": 67,
+            "treasury": 92.58122704053783,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 207
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 54,
+            "treasury": 486.146067697282,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 195
+          }
+        },
+        {
+          "seed": 186975,
+          "control": {
+            "year": 1542,
+            "livingFamily": 54,
+            "treasury": 2407.379665301038,
+            "acres": 1705,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 192
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 54,
+            "treasury": 2407.379665301038,
+            "acres": 1705,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 192
+          }
+        },
+        {
+          "seed": 186982,
+          "control": {
+            "year": 1542,
+            "livingFamily": 74,
+            "treasury": 1283.0158189861331,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 209
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 74,
+            "treasury": 1283.0158189861331,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 209
+          }
+        },
+        {
+          "seed": 186989,
+          "control": {
+            "year": 1335,
+            "livingFamily": 10,
+            "treasury": 1051.079395911701,
+            "acres": 1575,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 108
+          },
+          "interventions": {
+            "year": 1337,
+            "livingFamily": 12,
+            "treasury": 124.90790064362685,
+            "acres": 1480,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 105
+          }
+        },
+        {
+          "seed": 186996,
+          "control": {
+            "year": 1542,
+            "livingFamily": 50,
+            "treasury": 834.8523892701123,
+            "acres": 1505,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 218
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 55,
+            "treasury": 735.2909034472337,
+            "acres": 1505,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 215
+          }
+        },
+        {
+          "seed": 187003,
+          "control": {
+            "year": 1542,
+            "livingFamily": 80,
+            "treasury": 1508.6294778921692,
+            "acres": 1610,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 211
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 80,
+            "treasury": 1508.6294778921692,
+            "acres": 1610,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 211
+          }
+        },
+        {
+          "seed": 187010,
+          "control": {
+            "year": 1542,
+            "livingFamily": 61,
+            "treasury": 1675.3150242439556,
+            "acres": 1665,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 197
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 61,
+            "treasury": 1675.3150242439556,
+            "acres": 1665,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 197
+          }
+        },
+        {
+          "seed": 187017,
+          "control": {
+            "year": 1542,
+            "livingFamily": 58,
+            "treasury": 260.9050664289632,
+            "acres": 1590,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 206
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 47,
+            "treasury": -101.22450865940948,
+            "acres": 1590,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 206
+          }
+        },
+        {
+          "seed": 187024,
+          "control": {
+            "year": 1542,
+            "livingFamily": 66,
+            "treasury": 2111.66456453985,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 201
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 66,
+            "treasury": 2111.66456453985,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 201
+          }
+        },
+        {
+          "seed": 187031,
+          "control": {
+            "year": 1298,
+            "livingFamily": 10,
+            "treasury": 477.1112942323486,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 96
+          },
+          "interventions": {
+            "year": 1298,
+            "livingFamily": 10,
+            "treasury": 477.1112942323486,
+            "acres": 1520,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 96
+          }
+        },
+        {
+          "seed": 187038,
+          "control": {
+            "year": 1542,
+            "livingFamily": 56,
+            "treasury": 1095.665365118916,
+            "acres": 1575,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 203
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 56,
+            "treasury": 1095.665365118916,
+            "acres": 1575,
+            "bestRung": "vessel",
+            "endingReading": "devoured",
+            "normalOutcomes": 203
+          }
+        },
+        {
+          "seed": 187045,
+          "control": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": -37.77670360301434,
+            "acres": 1525,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 187
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": -37.77670360301434,
+            "acres": 1525,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 186
+          }
+        },
+        {
+          "seed": 187052,
+          "control": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": 663.1080425457657,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 183
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": 663.1080425457657,
+            "acres": 1425,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 182
+          }
+        },
+        {
+          "seed": 187059,
+          "control": {
+            "year": 1542,
+            "livingFamily": 55,
+            "treasury": 760.2797134052348,
+            "acres": 1485,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 209
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 29,
+            "treasury": 1055.5957184837193,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 192
+          }
+        },
+        {
+          "seed": 187066,
+          "control": {
+            "year": 1542,
+            "livingFamily": 70,
+            "treasury": 1061.7866340726987,
+            "acres": 1540,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 207
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 70,
+            "treasury": 1061.7866340726987,
+            "acres": 1540,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 207
+          }
+        },
+        {
+          "seed": 187073,
+          "control": {
+            "year": 1111,
+            "livingFamily": 10,
+            "treasury": 1087.758804903584,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          },
+          "interventions": {
+            "year": 1111,
+            "livingFamily": 10,
+            "treasury": 1087.758804903584,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          }
+        },
+        {
+          "seed": 187080,
+          "control": {
+            "year": 1542,
+            "livingFamily": 52,
+            "treasury": 650.9483062496521,
+            "acres": 1355,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 213
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 41,
+            "treasury": 739.3863941252717,
+            "acres": 1485,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 216
+          }
+        },
+        {
+          "seed": 187087,
+          "control": {
+            "year": 1542,
+            "livingFamily": 75,
+            "treasury": 1064.6404421485993,
+            "acres": 1500,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 188
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 57,
+            "treasury": 1258.7398035966169,
+            "acres": 1535,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 190
+          }
+        },
+        {
+          "seed": 187094,
+          "control": {
+            "year": 1542,
+            "livingFamily": 51,
+            "treasury": 698.6638001085394,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 51,
+            "treasury": 698.6638001085394,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          }
+        },
+        {
+          "seed": 187101,
+          "control": {
+            "year": 1542,
+            "livingFamily": 50,
+            "treasury": 952.6300630923201,
+            "acres": 1485,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 208
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 50,
+            "treasury": 992.5579605376341,
+            "acres": 1485,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 207
+          }
+        },
+        {
+          "seed": 187108,
+          "control": {
+            "year": 1542,
+            "livingFamily": 56,
+            "treasury": 516.207891101298,
+            "acres": 1355,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 189
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 81,
+            "treasury": 1537.4013679797552,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 193
+          }
+        },
+        {
+          "seed": 187115,
+          "control": {
+            "year": 1542,
+            "livingFamily": 57,
+            "treasury": 2015.2633349863058,
+            "acres": 1600,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 227
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 56,
+            "treasury": 1921.313319628722,
+            "acres": 1545,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 229
+          }
+        },
+        {
+          "seed": 187122,
+          "control": {
+            "year": 1542,
+            "livingFamily": 70,
+            "treasury": 1378.735333526691,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 196
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 70,
+            "treasury": 1378.735333526691,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 196
+          }
+        },
+        {
+          "seed": 187129,
+          "control": {
+            "year": 1542,
+            "livingFamily": 77,
+            "treasury": 178.70008709126168,
+            "acres": 1595,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 186
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 77,
+            "treasury": 178.70008709126168,
+            "acres": 1595,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 186
+          }
+        },
+        {
+          "seed": 187136,
+          "control": {
+            "year": 1542,
+            "livingFamily": 51,
+            "treasury": 698.199861874012,
+            "acres": 1575,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 208
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 78,
+            "treasury": 978.5657848465895,
+            "acres": 1555,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 208
+          }
+        },
+        {
+          "seed": 187143,
+          "control": {
+            "year": 1542,
+            "livingFamily": 43,
+            "treasury": 392.18782063629067,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 201
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 43,
+            "treasury": 392.18782063629067,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 201
+          }
+        },
+        {
+          "seed": 187150,
+          "control": {
+            "year": 1099,
+            "livingFamily": 11,
+            "treasury": -120,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 25
+          },
+          "interventions": {
+            "year": 1099,
+            "livingFamily": 11,
+            "treasury": -120,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 25
+          }
+        },
+        {
+          "seed": 187157,
+          "control": {
+            "year": 1151,
+            "livingFamily": 5,
+            "treasury": 754.991210657509,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 44
+          },
+          "interventions": {
+            "year": 1151,
+            "livingFamily": 5,
+            "treasury": 754.991210657509,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 44
+          }
+        },
+        {
+          "seed": 187164,
+          "control": {
+            "year": 1137,
+            "livingFamily": 12,
+            "treasury": 626.7175692481871,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          },
+          "interventions": {
+            "year": 1137,
+            "livingFamily": 12,
+            "treasury": 626.7175692481871,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 29
+          }
+        },
+        {
+          "seed": 187171,
+          "control": {
+            "year": 1542,
+            "livingFamily": 72,
+            "treasury": 610.9934848244241,
+            "acres": 1470,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 195
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 35,
+            "treasury": 643.281154194209,
+            "acres": 1595,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 187
+          }
+        },
+        {
+          "seed": 187178,
+          "control": {
+            "year": 1542,
+            "livingFamily": 55,
+            "treasury": 1940.1684160625316,
+            "acres": 1555,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 55,
+            "treasury": 1940.1684160625316,
+            "acres": 1555,
+            "bestRung": "hierophant",
+            "endingReading": "forgotten",
+            "normalOutcomes": 197
+          }
+        },
+        {
+          "seed": 187185,
+          "control": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": 520.0913719358931,
+            "acres": 1580,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 184
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": 520.0916240652834,
+            "acres": 1580,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 182
+          }
+        },
+        {
+          "seed": 187192,
+          "control": {
+            "year": 1542,
+            "livingFamily": 47,
+            "treasury": 1375.7587809753602,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 200
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 47,
+            "treasury": 1375.7587809753602,
+            "acres": 1445,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 200
+          }
+        },
+        {
+          "seed": 187199,
+          "control": {
+            "year": 1080,
+            "livingFamily": 10,
+            "treasury": 797.3558646140898,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 13
+          },
+          "interventions": {
+            "year": 1080,
+            "livingFamily": 10,
+            "treasury": 797.3558646140898,
+            "acres": 1425,
+            "bestRung": "adept",
+            "endingReading": "broken_line",
+            "normalOutcomes": 13
+          }
+        },
+        {
+          "seed": 187206,
+          "control": {
+            "year": 1542,
+            "livingFamily": 44,
+            "treasury": 488.78052182590227,
+            "acres": 1535,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 187
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 44,
+            "treasury": 488.78052182590227,
+            "acres": 1535,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 187
+          }
+        },
+        {
+          "seed": 187213,
+          "control": {
+            "year": 1542,
+            "livingFamily": 75,
+            "treasury": 702.1153315897506,
+            "acres": 1570,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 185
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 75,
+            "treasury": 702.1153315897506,
+            "acres": 1570,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 185
+          }
+        },
+        {
+          "seed": 187220,
+          "control": {
+            "year": 1542,
+            "livingFamily": 85,
+            "treasury": 2382.9133178037396,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 185
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 85,
+            "treasury": 2382.9133178037396,
+            "acres": 1500,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 185
+          }
+        },
+        {
+          "seed": 187227,
+          "control": {
+            "year": 1542,
+            "livingFamily": 57,
+            "treasury": 150.26880904411732,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 193
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 67,
+            "treasury": 1610.1957929432463,
+            "acres": 1450,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 189
+          }
+        },
+        {
+          "seed": 187234,
+          "control": {
+            "year": 1542,
+            "livingFamily": 65,
+            "treasury": 1073.2101146350137,
+            "acres": 1430,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 206
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 79,
+            "treasury": 192.84813076968294,
+            "acres": 1485,
+            "bestRung": "hierophant",
+            "endingReading": "devoured",
+            "normalOutcomes": 204
+          }
+        },
+        {
+          "seed": 187241,
+          "control": {
+            "year": 1542,
+            "livingFamily": 44,
+            "treasury": 1934.3273261306317,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 191
+          },
+          "interventions": {
+            "year": 1542,
+            "livingFamily": 37,
+            "treasury": 3504.260391629701,
+            "acres": 1515,
+            "bestRung": "adept",
+            "endingReading": "forgotten",
+            "normalOutcomes": 191
+          }
+        }
+      ]
+    }
+  },
+  "responses": 155,
+  "scope": "Authored outcomes only. Annual mortality, economy upkeep and muster attrition have no incident adapter."
+}
