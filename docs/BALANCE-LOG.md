@@ -13669,3 +13669,131 @@ schema validation; full bundle parity and the unchanged **1,600,000-byte**
 startup limit pass. Test-duration regeneration used the official cost writer,
 retaining existing measurements and adding actual measurements for previously
 unmeasured files; no timing or payload ceiling was raised.
+
+## 2026-10-22 — #1866 A / #1872: current Mystic exposure and priced payback
+
+**The four affinity-pair challenges provide few material uses across a whole
+campaign.** This is the baseline for the recurring-duty pilot, not its result.
+Child issues #1872–#1878 now hold stages A–G; #1873's Life/Terra pilot remains
+the go/no-go before warfare, security and repertoire expansion. The parent
+#1866 remains open. The shared `presence.ts` / `SceneSite` foundation from
+#1868 is already shipped and will be extended by that pilot, not duplicated.
+
+**Source and fixed sample.** Simulation observations are frozen at
+`4d1fd1aa42a77981c8724403e0a13dbb092931cd`, based on main `3231c5f9`.
+**384 houses:** seeds **186600–186663**, **64 per column**, the actual
+Short300 and Long500 campaigns, each under the unchanged #1813
+chronicler/narrow/broad policies. Normal automatic study remains enabled in
+all columns. Deliberate policies use the same inward marriage order, visible
+Match evidence, paid broker/auction access and at most one extra Table order
+per year. Early endings and houses with zero exposure stay in the denominator.
+The six columns lived **16,251 / 16,633 / 16,537 / 26,705 / 26,738 / 27,114**
+years; sampled reader-year counts agree with lived years in every run.
+
+```bash
+npm run gate:mystic -- 64 186600 mystic-baseline-1866.json
+```
+
+The report retains every seed's #1813/#1830 check observations, actual book
+purchase receipts, cash ledger, study years and complete-save SHA256. Its
+summary uses independent-house means and standard errors; house fractions
+use the existing `proportionSE`, including its `1/n` uncertainty floor at
+zero/all hits. Adding that summary floor did not change or replay any of the
+384 simulation rows. Raw report and command output are retained as
+`scratch/mystic-baseline-1866.json` and `.log` in the execution workspace.
+
+**Exposure is not conditional success.** Every column has a trained reader
+at some point in all 64 houses. Reader-years count living household members
+with completed, sex-permitted knowledge at the start of an actual year; they
+do not claim physical availability, selected work or assignments.
+
+| Campaign / policy | Houses seeing a family challenge | Visits per house, mean ± SE | Trained house-years, mean ± SE | Selected learned checks: success / attempts | Houses with a learned success |
+|---|---:|---:|---:|---:|---:|
+| Short / chronicler | 41/64 | 1.20 ± 0.15 | 217.7 ± 10.9 | 6/23 | 5/64 |
+| Short / narrow | 40/64 | 1.39 ± 0.19 | 223.1 ± 10.8 | 10/30 | 9/64 |
+| Short / broad | 39/64 | 1.14 ± 0.15 | 236.7 ± 10.6 | 23/32 | 20/64 |
+| Long / chronicler | 48/64 | 2.20 ± 0.26 | 357.8 ± 19.7 | 16/49 | 14/64 |
+| Long / narrow | 50/64 | 2.02 ± 0.21 | 358.4 ± 19.5 | 18/45 | 15/64 |
+| Long / broad | 48/64 | 2.03 ± 0.23 | 372.4 ± 18.8 | 25/49 | 20/64 |
+
+Visits include all five `family_challenge` templates and paid preparation;
+learned attempts require the actual `family_knows` or learned-slot choice.
+Raw affinity, owning a book and a counterfactual available reader are not
+selected workings. Repeated checks in one house are not independent trials.
+
+**A narrow coin ledger, not total Library return.** For each successful
+selected learned check, compare its ordinary result with the same choice's
+authored failure band: currently **10 rather than 35 crowns**, hence 25 saved.
+Subtract actual Library auction payments, paid book/study event bundles,
+challenge preparation, broker and binder fees. An auction bid is not a spend;
+only an actual win is charged, including the steward's automatic bid. A
+preparation that also buys and studies a primer is charged once. Study time
+and noncoin prices are kept separate instead of assigned an invented value.
+
+| Campaign / policy | Check loss avoided, crowns ± SE | Priced costs, crowns ± SE | Check-only net, crowns ± SE | Study person-years ± SE |
+|---|---:|---:|---:|---:|
+| Short / chronicler | 2.34 ± 1.07 | 1215.81 ± 113.51 | −1213.46 ± 113.49 | 259.3 ± 35.6 |
+| Short / narrow | 3.91 ± 1.27 | 1546.98 ± 114.73 | −1543.08 ± 114.60 | 280.0 ± 34.3 |
+| Short / broad | 8.98 ± 1.79 | 2635.30 ± 157.20 | −2626.32 ± 156.74 | 346.8 ± 42.0 |
+| Long / chronicler | 6.25 ± 1.57 | 2067.30 ± 155.69 | −2061.05 ± 155.47 | 444.5 ± 55.1 |
+| Long / narrow | 7.03 ± 1.71 | 2489.53 ± 145.88 | −2482.50 ± 145.67 | 493.4 ± 60.5 |
+| Long / broad | 9.77 ± 2.13 | 3687.06 ± 197.59 | −3677.30 ± 197.18 | 651.4 ± 74.1 |
+
+All numbers are **per house**, including zero-use houses. The claim that this
+check-only net is below zero passes `expectMean({ ceiling: 0 })` in all six
+columns, by **10.69 / 13.46 / 16.76 / 13.26 / 17.04 / 18.65 SE**. This charges
+the whole Library's costs to one narrow use while excluding its ascension,
+other-event and future-generation benefits; it cannot establish that the
+Library as a whole loses money, or that one breeding policy is superior.
+It is not a counterfactual final-treasury comparison. Physical copies retained
+at the ending have no credited resale value in this ledger.
+
+Cost means split as **auction / other book-event / preparation / broker**:
+Short chronicler **1173.60 / 25.41 / 16.80 / 0**; narrow
+**1177.78 / 33.34 / 19.06 / 316.80**; broad
+**2294.18 / 23.31 / 7.66 / 310.16**. Long chronicler
+**1986.78 / 59.19 / 21.33 / 0**; narrow
+**1893.37 / 39.13 / 36.33 / 520.70**; broad
+**3098.63 / 20.63 / 24.45 / 543.36**. No restoration or noncoin auction
+payment was observed; no successful learned check lacked a priced failure
+comparison. Parallel books count as separate study-commitment years, but
+their reader counts once in study person-years.
+
+**Paired differences retain the same seed.** Relative to chronicler,
+narrow/broad change this check-only net by **−329.61 ± 102.91 /
+−1412.85 ± 165.96** crowns in Short, and **−421.45 ± 147.81 /
+−1616.25 ± 237.73** in Long. They add **20.67 ± 23.74 / 87.56 ± 36.19**
+study person-years in Short and **48.98 ± 47.88 / 206.91 ± 70.43** in Long.
+These are paired descriptive differences, not a newly adopted balance gate.
+
+**Keep the two magics' receipts separate.** The old challenge observer looked
+up the replacement primordial outcome id in the ordinary check bands and
+could throw. It now reads success/failure from `selectedOutcome`, while
+retaining the actual committed outcome and material effects separately.
+The Long chronicler and narrow columns each contain **18 crowns** of separate
+primordial savings on other challenge responses. None of the selected learned
+attempts in this sample intervened, so ordinary and unintervened learned
+payback agree. Primordial savings never enter Mystic check benefits.
+
+**Noninterference and the next contract.** The first **two fixed seeds of
+every column** were played again without any observers: all **12 complete
+SavedGame hashes** match, blanking only `savedAt`. Built-state tests also
+compare complete saves around observation and actual automatic auction
+payment, preserve noncoin marriage obligations, distinguish normal and
+primordial outcomes, prevent duplicate preparation costs and exclude dead
+readers. The initial full fast run passes **184 files / 5,499 tests**; the
+additional rate-uncertainty witness passes with all **7** accounting tests.
+Type checks pass; content validation reports **49 rules / zero errors /
+three existing warnings**. Exact-head landing/hosted integration checks follow.
+
+`schema/src/mystic.ts` is explicitly a **proposed, types-only B contract**,
+not exported content or saved state. It specifies one primary duty per
+learned person, the shared scene-site vocabulary, setup/readiness/upkeep,
+finite nonstacking benefits, live availability checks, explicit remaining-time
+study pause/resume, loss-of-maintainer reporting, Table/session/editor reads,
+replayed orders and migration to the next save format. Save format stays **33**
+here. Invariants **2, 3, 8, 13 and 16** remain required: deaths through `kill`,
+no guardian targets, world-owned counters/stable streams, court reactions only
+in assize, and practice without `canHoldPost`. The pilot must measure actual
+useful effects within ten eligible years, costs and decision density; this
+baseline supplies no go decision for C–F and claims no recurring duty yet.

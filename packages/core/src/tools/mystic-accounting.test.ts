@@ -6,11 +6,17 @@ import { saveGame } from '../save.js';
 import { place, testWorld } from '../testing.js';
 import { observeFamilyChallenge } from './challenge-observation.js';
 import { attachMysticLedger, emptyMysticLedger, mysticPayback, noteMysticOrder, noteMysticOutcome, sampleMysticYear } from './mystic-accounting.js';
+import { rateEvidence } from './mystic-baseline.js';
 
 const content = loadContent();
 const snapshot = (ctx: ReturnType<typeof testWorld>) => ({ ...saveGame(ctx), savedAt: '' });
 
 describe('Mystic baseline accounting (#1872)', () => {
+  it('does not report certainty when a sample sees zero or all exposed houses', () => {
+    expect(rateEvidence(0, 64)).toEqual({ hits: 0, n: 64, rate: 0, standardError: 1 / 64 });
+    expect(rateEvidence(64, 64)).toEqual({ hits: 64, n: 64, rate: 1, standardError: 1 / 64 });
+    expect(rateEvidence(0, 0)).toEqual({ hits: 0, n: 0, rate: null, standardError: null });
+  });
   it('keeps the selected learned check distinct from a later primordial response', () => {
     const ctx = testWorld(content);
     const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
