@@ -66,7 +66,7 @@ export function replay(
     startYear,
     campaign,
     libraryRuns,
-    signed ? { answers: signed.answers, founderName: signed.founderName } : undefined,
+    signed ? { answers: signed.answers, founder: signed.founder } : undefined,
   );
 
   // Founding is the external answer made before the first year turns
@@ -92,7 +92,7 @@ export function replay(
       heirloom: first.heirloom,
       grudge: first.grudge,
       friends: first.friends.map((friend) => ({ ...friend })),
-      ...(signed ? { answers: { ...signed.answers }, founderName: signed.founderName } : {}),
+      ...(signed ? { answers: { ...signed.answers }, founder: signed.founder } : {}),
     });
     if (!result.ok) {
       throw new ReplayMismatchError(
@@ -140,7 +140,9 @@ export function describeDecision(d: LoggedDecision): string {
         ? `${d.year}  ${d.subject} married ${d.spouse} off ${d.card}`
         : `${d.year}  ${d.subject} was offered a hand and took none of it`;
     case 'signing':
-      return `${d.year}  signed as ${d.founderName?.trim() || 'the authored founder'}; ${Object.keys(d.answers).length} Examination answer(s)`;
+      return `${d.year}  signed as ${d.founder?.name?.trim() || 'the authored founder'}`
+        + `${d.founder ? ` (${d.founder.gender}, ${d.founder.configuration})` : ''}; `
+        + `${Object.keys(d.answers).length} Examination answer(s)`;
     case 'founding':
       return `${d.year}  founded ${d.houseName}; asked for ${d.heirloom}; wronged ${d.grudge}`;
     case 'name':

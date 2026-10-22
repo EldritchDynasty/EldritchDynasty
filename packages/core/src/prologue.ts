@@ -1,5 +1,5 @@
-import type { PrologueDef, PrologueOwed, Sex } from '@ed/schema';
-import { RESPECT_ORDER } from '@ed/schema';
+import type { FounderAnswer, FounderIdentity, PrologueDef, PrologueOwed, Sex } from '@ed/schema';
+import { FounderIdentityError, RESPECT_ORDER, resolveFounder } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { grantHeirloom } from './people/heirlooms.js';
 import { hashSeed, makeRng } from './rng.js';
@@ -100,8 +100,12 @@ export interface FoundingChoice {
   friends?: { name: string; sex: Sex }[];
   /** Stable Examination question id -> selected answer id. */
   answers?: Readonly<Record<string, string>>;
-  /** GameSession uses this to rebuild the founding cast before this verb runs. */
-  founderName?: string;
+  /**
+   * Who signed (#1867): name, gender, founding configuration. GameSession uses
+   * this to rebuild the founding cast before this verb runs; any part of it,
+   * a gender alone included, is a signing answer.
+   */
+  founder?: FounderAnswer;
 }
 
 /** A house name is a line on a page, not an essay. */
@@ -306,6 +310,19 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
     roster.push(...dealWindows(checked.friends, w.year, makeRng(hashSeed(w.seed, 'friend-windows'))));
   }
 
+  // WHO SIGNED, RESOLVED BEFORE THE FIRST MUTATION (#1867). A nonbinary
+  // founder with no configuration is the one unanswerable identity, and it is
+  // refused here as surely as bootstrap refuses it.
+  let founder: FounderIdentity | undefined;
+  if (choice.founder !== undefined) {
+    try {
+      founder = resolveFounder(choice.founder);
+    } catch (error) {
+      if (!(error instanceof FounderIdentityError)) throw error;
+      return { ok: false, reason: msg(ctx, 'founding.refuse.configuration', 'choose whether the founder is the blood father or the blood mother') };
+    }
+  }
+
   // THE EXAMINATION, RESOLVED BEFORE THE FIRST MUTATION. Rules validate the
   // shipped bundle, but user content may still disappear between selection
   // and this verb. Founding is all-or-nothing either way.
@@ -469,12 +486,12 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   // Log it here, at the one verb that applies it, after all validation has
   // succeeded. Replay calls this same verb so heirloom, grudge, friend windows,
   // founding state and the Chronicle page are rebuilt by their real owners.
-  const hasSigning = choice.founderName !== undefined || Object.keys(signingAnswers).length > 0;
+  const hasSigning = founder !== undefined || Object.keys(signingAnswers).length > 0;
   if (hasSigning) {
     w.decisionLog.push({
       kind: 'signing',
       year: w.year,
-      ...(choice.founderName !== undefined ? { founderName: choice.founderName } : {}),
+      ...(founder !== undefined ? { founder } : {}),
       answers: { ...signingAnswers },
     });
   }

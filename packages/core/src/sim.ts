@@ -7,9 +7,10 @@ import { chooseGenerationQuestion } from './generation.js';
  * it, and holds the handful of things the player does directly to a person.
  */
 import type {
-  CampaignId, Content, ContentBundle, GenePool, Genome, LibraryRun, Person, SeedPerson, SigningTerm,
+  CampaignId, Content, ContentBundle, FounderAnswer, FounderIdentity, GenePool, Genome, LibraryRun, Person, SeedPerson,
+  SigningTerm,
 } from '@ed/schema';
-import { PersonNameS, asId, indexContent } from '@ed/schema';
+import { PersonNameS, asId, indexContent, resolveFounder } from '@ed/schema';
 import { buildLocusTable } from './genetics/loci.js';
 import { applyBias, conceive, meiosis, randomGenome } from './genetics/meiosis.js';
 import { genomeOf, makePerson, phenotypeOf, type GeneticsCtx } from './people/factory.js';
@@ -18,6 +19,7 @@ import { expectedAttribute, mintShareByHouse } from './genetics/expression.js';
 import { createWorld, type SimCtx, type WorldState } from './world.js';
 import { conceptionSeed, hashSeed, makeRng, type Rng } from './rng.js';
 import { autoMarry } from './people/demography.js';
+import { configureFoundingCast } from './people/founding-cast.js';
 import { branchOf } from './people/branches.js';
 import { applyFriendBlessing, friendBlessing, releaseFriendName } from './people/friends.js';
 import { grantOpeningClause } from './ages/scheduler.js';
@@ -58,8 +60,11 @@ export function makeGeneticsCtx(content: Content, seed: number): GeneticsCtx {
 export interface BootstrapSigning {
   /** Question id -> answer id, in authored Examination vocabulary. */
   answers?: Readonly<Record<string, string>>;
-  /** Blank deliberately keeps the authored founder name. */
-  founderName?: string;
+  /**
+   * Who signed (#1867): name, gender and founding configuration, each part
+   * defaulted. A blank name deliberately keeps the authored founder's.
+   */
+  founder?: FounderAnswer;
 }
 
 export function selectedSigningTerms(content: Content, signing?: BootstrapSigning): SigningTerm[] {
@@ -209,8 +214,8 @@ function applySeedBias(
   }
 }
 
-function signingFounderName(signing?: BootstrapSigning): string | undefined {
-  const raw = signing?.founderName?.trim();
+function signingFounderName(founder: FounderIdentity): string | undefined {
+  const raw = founder.name?.trim();
   return raw ? PersonNameS.parse(raw) : undefined;
 }
 
@@ -240,11 +245,15 @@ export function bootstrap(
   const genetics = makeGeneticsCtx(content, seed);
   const ctx: SimCtx = { world, content, genetics, takenNames: new Set(), prose };
   const signingTerms = selectedSigningTerms(content, signing);
-  const founderName = signingFounderName(signing);
+  // Resolved before a genome is rolled: the configuration decides who bears
+  // the founding children, and so every draw that follows.
+  const founderIdentity = resolveFounder(signing?.founder);
+  const founderName = signingFounderName(founderIdentity);
+  const seeds = configureFoundingCast(content.characters, founderIdentity.configuration, seed);
 
   const byKey = new Map<string, Person>();
-  const ordered = orderSeeds(content.characters);
-  const conceptionOrdinals = seedConceptionOrdinals(content.characters);
+  const ordered = orderSeeds(seeds);
+  const conceptionOrdinals = seedConceptionOrdinals(seeds);
 
   for (const s of ordered) {
     const mother = s.motherKey ? byKey.get(s.motherKey) : undefined;
@@ -340,6 +349,11 @@ export function bootstrap(
       world.succession.push({ person: p.id, name: p.name, from: world.year });
     }
     if (s.becomesGuardian) p.becomesGuardian = true;
+    // Stored whenever the signing answered who signed at all, RESOLVED — the
+    // log records the resolved identity, and replay must rebuild the same
+    // person from it. A run that never asked carries nothing new and
+    // fingerprints exactly as it did.
+    if (s.becomesGuardian && signing?.founder !== undefined) p.gender = founderIdentity.gender;
     // COPIED, not referenced. The content bundle is shared by every world in
     // the process — the harness runs thousands — and a contract is now mutable
     // state: `driftLoyalty` moves `loyalty` every year (`people/secrets.ts`).
@@ -429,7 +443,7 @@ export function bootstrap(
  * ids and therefore many other deterministic streams. A change of father does
  * not restart the runtime count, so it must not restart this one either.
  */
-function seedConceptionOrdinals(seeds: SeedPerson[]): Map<string, number> {
+function seedConceptionOrdinals(seeds: readonly SeedPerson[]): Map<string, number> {
   const byMother = new Map<string, SeedPerson[]>();
   for (const s of seeds) {
     if (!s.motherKey) continue;
@@ -449,7 +463,7 @@ function seedConceptionOrdinals(seeds: SeedPerson[]): Map<string, number> {
   return ordinals;
 }
 
-function orderSeeds(seeds: SeedPerson[]): SeedPerson[] {
+function orderSeeds(seeds: readonly SeedPerson[]): SeedPerson[] {
   const out: SeedPerson[] = [];
   const placed = new Set<string>();
   let remaining = [...seeds];

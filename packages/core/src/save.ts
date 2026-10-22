@@ -2,7 +2,7 @@ import type {
   Content, ContentBundle, Genome, MysticAssignment, Person, PersonId, RivalLineageState, SavedGame, StoredGenome, StoredPerson,
   SpellbookId, TraitId,
 } from '@ed/schema';
-import { asId, indexContent, SAVE_FORMAT, SavedGameS } from '@ed/schema';
+import { asId, AUTHORED_FOUNDER, indexContent, SAVE_FORMAT, SavedGameS } from '@ed/schema';
 import { createWorld, type SimCtx } from './world.js';
 import { makeGeneticsCtx } from './sim.js';
 import { PersonStore } from './people/store.js';
@@ -223,6 +223,29 @@ export class SaveFormatError extends Error {
 }
 
 /**
+ * Formats 31–33 recorded who signed as a bare `founderName` (#1867). Those
+ * formats could express exactly one founder — a man, the blood father — so
+ * that is what a recorded name becomes, and an unrecorded one stays absent:
+ * the authored founder, as before. Nothing else in the save moves.
+ */
+function upgradeSigning(raw: Record<string, unknown>): Record<string, unknown> {
+  const log = Array.isArray(raw.decisionLog) ? raw.decisionLog : undefined;
+  return {
+    ...raw,
+    format: SAVE_FORMAT,
+    ...(log ? {
+      decisionLog: log.map((row: unknown) => {
+        if (!row || typeof row !== 'object' || (row as { kind?: unknown }).kind !== 'signing') return row;
+        const { founderName, ...rest } = row as Record<string, unknown>;
+        return typeof founderName === 'string'
+          ? { ...rest, founder: { name: founderName, ...AUTHORED_FOUNDER } }
+          : rest;
+      }),
+    } : {}),
+  };
+}
+
+/**
  * Rebuild a run from a save.
  *
  * `content` is passed in rather than stored, because the authored game is not
@@ -232,16 +255,15 @@ export class SaveFormatError extends Error {
 export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx {
   const format = (raw as { format?: unknown } | null)?.format;
   const legacyForcing = format === 31;
-  const legacyPrimordial = format === 32;
   // Format 33 predates standing Mystic duties (#1873): it loads with none.
-  const legacyMystic = format === 33;
-  if (format !== SAVE_FORMAT && !legacyForcing && !legacyPrimordial && !legacyMystic) {
+  // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
+  // turns a bare founder name into the authored founder under that name.
+  const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
+  if (format !== SAVE_FORMAT && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
-  const parsed = SavedGameS.safeParse(legacyForcing || legacyPrimordial || legacyMystic
-    ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT }
-    : raw);
+  const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>) : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -478,6 +500,7 @@ function storePerson(p: Person): StoredPerson {
     castSlots: p.castSlots,
     tier: p.tier,
     ...(p.becomesGuardian !== undefined ? { becomesGuardian: p.becomesGuardian } : {}),
+    ...(p.gender !== undefined ? { gender: p.gender } : {}),
     ...(p.mintedFrom !== undefined ? { mintedFrom: p.mintedFrom } : {}),
     // The phenotype cache is deliberately absent. It is derived, and a saved
     // one would be a stale one the moment the year moved.
@@ -528,6 +551,7 @@ function restorePerson(s: StoredPerson): Person {
   if (s.career) p.career = { career: asId(s.career.career), from: s.career.from };
   if (s.contract) p.contract = s.contract;
   if (s.becomesGuardian !== undefined) p.becomesGuardian = s.becomesGuardian;
+  if (s.gender !== undefined) p.gender = s.gender;
   if (s.mintedFrom !== undefined) p.mintedFrom = s.mintedFrom;
   return p;
 }
@@ -612,6 +636,11 @@ export function digest(save: SavedGame): string {
     // default here so adding the field does not move Long-Line digests.
     delete value.campaign;
   }
+  // #1867: a run whose signing said nothing about the founder holds no
+  // identity, so it keeps its format-34 fingerprint. A founder is new state.
+  if (value.format === 35
+    && !save.decisionLog.some(row => row.kind === 'signing' && row.founder)
+    && save.people.every(person => person.gender === undefined)) value.format = 34;
   // #1817's version protects readers of embedded guarded templates. The tag
   // itself adds no simulation state; guards and attempt facts stay hashed.
   // #1873: a house that never assigned a duty owns no Mystic state.

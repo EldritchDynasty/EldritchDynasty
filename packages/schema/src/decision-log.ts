@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { SlotFillS } from './slot-fill.js';
 import { SexS } from './attributes.js';
 import { SigningIdS } from './signing.js';
+import { FounderIdentityS } from './founder.js';
 import { PrimordialRecordS } from './primordial.js';
 
 /**
@@ -76,7 +77,12 @@ export const LoggedDecisionS = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('signing'),
     year: z.number(),
-    founderName: z.string().optional(),
+    /**
+     * Who signed (#1867), resolved: name as typed, gender, and which body
+     * carried the blood. Absent is the authored founder. Formats before 34
+     * held only `founderName`; `loadGame` upgrades that to a blood father.
+     */
+    founder: FounderIdentityS.optional(),
     answers: z.record(SigningIdS, SigningIdS),
   }),
   /**

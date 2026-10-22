@@ -14010,3 +14010,58 @@ has re-rolled it under 2) and `replay.slow`'s intervention test, which was
 pinned to seed 186800. The burying batch is widened 105 → 165 with seeds
 vetted to reach the term under both policies (2.8 SE). The replay test takes
 the first witness in 186800–186899, the same change #1881 makes for #1867.
+
+## 2026-10-22 — #1867 step 1: the blood mother's founding blood
+
+**What changed.** The founder is the player: name, gender and founding
+configuration. `people/founding-cast.ts` turns the authored cast around for a
+**blood mother** (the founder carries the font and bears the children; a
+married-in husband fathers them). Bias and every other seed fact are
+unchanged; `SeedPerson.byConfiguration` lets content give a configuration its
+own bias, and none is authored yet.
+
+**Founding blood, 40 seeds (5000–5039), authored bias 0.2, §22 scale.**
+
+| | founder font | founder power | heir expresses | heir power |
+|---|---|---|---|---|
+| blood father | 25.5 | 78.8 | 8 / 40 | 1.7 |
+| blood mother | 23.8 | 0 | **40 / 40** | **66.9** |
+
+The expressing man is a generation later and somewhat weaker, but certain:
+her sons draw her biased X directly, where a blood father's sons draw none of
+his.
+
+**Campaigns, 60 paired seeds (7000–7059) per cell, auto-resolved as the harness plays.**
+Played through bootstrap and `stepYear` from a scratch driver, NOT the
+harness or the gates, which still bootstrap unsigned. Rates are reached /
+60; medians are the year first reached.
+
+| term | configuration | founder bias | adept | hierophant | vessel | broken line |
+|---|---|---|---|---|---|---|
+| Long | father | 0.2 (authored) | 54 · 1072 | 16 · 1106 | 2 | 15 |
+| Long | mother | 0.2 | 57 · 1048 | 29 · 1102 | 7 | 14 |
+| Long | mother | 0.1 | 58 · 1049 | 31 · 1104 | 3 | 14 |
+| Long | mother | 0 | 59 · 1049 | 24 · 1125 | 2 | 15 |
+| Long | mother | −0.2 | 57 · 1049 | 24 · 1128.5 | 1 | 15 |
+| Long | mother | −0.4 | 58 · 1049 | 20 · 1136.5 | 3 | 14 |
+| Short | father | 0.2 (authored) | 51 · 1071 | 16 · 1106 | 1 | 15 |
+| Short | mother | 0.2 | 57 · 1048 | 28 · 1103 | 4 | 13 |
+| Short | mother | 0.1 | 58 · 1049 | 30 · 1104 | 3 | 14 |
+| Short | mother | 0 | 58 · 1049 | 23 · 1119 | 2 | 16 |
+| Short | mother | −0.2 | 57 · 1049 | 22 · 1128.5 | 2 | 13 |
+| Short | mother | −0.4 | 58 · 1049 | 19 · 1142 | 4 | 14 |
+
+**Reading.** At the authored 0.2 a blood mother reaches Hierophant about
+twice as often as a blood father (29 vs 16 of 60, Long). Bias closes that
+slowly: −0.4 is the nearest measured parity on Hierophant and Vessel at both
+terms (about one standard error above). Adept arrives some 23 years earlier
+under every bias, because Aldous expresses in every seed — that gap is
+structural, and no founder bias removes it. Line breaks and Regency years
+do not move outside noise.
+
+**Not decided here.** The value goes in `characters/founding.yaml` as
+`byConfiguration.blood_mother.bias`, which needs the content lane, and a
+negative founding bias is a design statement ("the mother's blood was
+thinner") the owner should make. `gate:blood`, `gate:ladder`,
+`gate:endings` and the harness still run unsigned; giving them a founding
+configuration is gates-lane work and the gate-level measurement follows it.

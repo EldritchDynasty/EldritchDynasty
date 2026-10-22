@@ -1,6 +1,6 @@
 import type { Person, RetainerRole } from '@ed/schema';
 import { RECURRING_CAST_ROLES, RetainerRoleS } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import { isRegent, type SimCtx } from '../world.js';
 import { formOf } from './grammar.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { landIncome } from '../land.js';
@@ -238,7 +238,8 @@ function seatHead(ctx: SimCtx, next: Person): boolean {
 
   // A woman holding the seat IS the Regency — invariant 1 means she cannot
   // express, and `ensureHead`'s early return above reads it the same way.
-  const regency = next.sex === 'female';
+  // The founder's charter is the one exemption, and `isRegent` holds it.
+  const regency = isRegent(w, next);
   if (regency) {
     w.chronicle.push({
       year: w.year,
@@ -255,7 +256,7 @@ export function ensureHead(ctx: SimCtx, rng: Rng): SuccessionResult {
   const w = ctx.world;
   const living = w.people.household(w.playerHouse, w.year);
   const current = living.find((p) => p.castSlots.includes('head') && p.status === 'alive');
-  if (current) return { newHead: undefined, regency: current.sex === 'female' };
+  if (current) return { newHead: undefined, regency: isRegent(w, current) };
 
   // WARDSHIP (world "Taxes": "If an heir is under 16, the Warden may take the
   // estate's management until majority"). The ward reaching sixteen, or dying

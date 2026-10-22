@@ -667,7 +667,9 @@ export class GameSession {
     // a finished founding merely because the caller supplied old form fields.
     if (this.ctx.world.founding) return foundHouse(this.ctx, choice);
 
-    const hasSigning = choice.founderName !== undefined
+    // A gender alone is a signing answer: it can turn the founding cast
+    // around, so it rebuilds exactly as a name or an Examination answer does.
+    const hasSigning = choice.founder !== undefined
       || Object.keys(choice.answers ?? {}).length > 0;
     if (!hasSigning) return foundHouse(this.ctx, choice);
 
@@ -690,7 +692,7 @@ export class GameSession {
       // screen. The rebuild writes the founding page, so it is handed the
       // setting as it stands now, not as it was when the run was created.
       const prose = createProseRuntime(this.ctx.prose.mode, [...this.ctx.prose.variants.values()]);
-      candidate = restart.build({ answers: choice.answers, founderName: choice.founderName }, prose);
+      candidate = restart.build({ answers: choice.answers, founder: choice.founder }, prose);
     } catch (error) {
       return {
         ok: false,

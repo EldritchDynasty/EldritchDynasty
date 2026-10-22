@@ -6,6 +6,7 @@ import { CampaignIdS } from './campaign.js';
 import { HouseAmbitionIdS } from './ambition.js';
 import { RespectTierS, RegisterS } from './conditions.js';
 import { SexS } from './attributes.js';
+import { GenderS } from './founder.js';
 import { BranchIdS, HouseIdS, PersonIdS } from './ids.js';
 import { EventTemplateS } from './event.js';
 import { DeciderS } from './decider.js';
@@ -205,7 +206,12 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
 /** Format 34 stores standing Mystic duties and the studies set down for them
  * (#1873). Formats 31–33 load with no duties and nothing paused, which is
  * what every house before it had. */
-export const SAVE_FORMAT = 34;
+/** Format 35 records who signed (#1867): the `signing` decision carries a
+ * resolved `founder` identity instead of a bare `founderName`, and the founder
+ * may carry a stated `gender`. Formats 31–34 upgrade: a recorded name becomes
+ * that name on the authored founder, a man and the blood father, which is
+ * exactly what those formats could express. */
+export const SAVE_FORMAT = 35;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -285,6 +291,8 @@ export const StoredPersonS = z.object({
   castSlots: z.array(z.string()).default([]),
   tier: StorageTierS,
   becomesGuardian: z.boolean().optional(),
+  /** #1867. Optional and absent unless the signing answered who signed. */
+  gender: GenderS.optional(),
   mintedFrom: z.string().optional(),
 });
 export type StoredPerson = z.infer<typeof StoredPersonS>;

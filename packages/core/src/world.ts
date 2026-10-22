@@ -1,7 +1,7 @@
 import type { PrimordialObservation } from './events/primordial.js';
 import type {
   AgeState, ArcInstance, AuctionState, BranchState, CampaignId, Content, EndingId, FrameEntry, FrequencyLedger, HeirloomState, HouseDef,
-  LibraryBookState, LibraryMemory, LoggedDecision, LooseSecret, MarriagePromise, MusterState, ParcelState, PersonId, Relationship,
+  LibraryBookState, LibraryMemory, LoggedDecision, LooseSecret, MarriagePromise, MusterState, ParcelState, Person, PersonId, Relationship,
   RentPolicy, ResolvedClaim, RespectTier, RivalLineageState, TaleCirculationState, Year,
 } from '@ed/schema';
 import { emptyAuctionState } from '@ed/schema';
@@ -836,5 +836,19 @@ export function head(w: WorldState): ReturnType<PersonStore['living']>[number] |
  * produced a wrong answer. Expression is computed in exactly one place.
  */
 export function inRegency(w: WorldState): boolean {
-  return head(w)?.sex === 'female';
+  const h = head(w);
+  return h !== undefined && isRegent(w, h);
+}
+
+/**
+ * THE FOUNDER'S CHARTER (#1867). A woman holding the seal is a Regent — with
+ * one exemption: the founder, who signed for the house and holds it in their
+ * own right. A blood mother founds the house; she does not keep it for a son.
+ * The charter is a matter of standing, not of blood: she still cannot express
+ * (invariant 1), so `hasExpressingHead` reads her exactly as before.
+ *
+ * Every "is this a Regency" question asks this, never `sex` directly.
+ */
+export function isRegent(w: WorldState, p: Person): boolean {
+  return p.sex === 'female' && p.id !== w.narrator;
 }

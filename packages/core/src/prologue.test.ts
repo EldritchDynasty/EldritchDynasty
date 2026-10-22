@@ -541,6 +541,7 @@ const FOUNDING_ORIGINALS: Record<string, string> = {
   'founding.refuse.heirloom': 'he did not ask for that',
   'founding.refuse.grudge': 'nobody was wronged in that direction',
   'founding.refuse.content_gone': 'the content no longer holds that',
+  'founding.refuse.configuration': 'choose whether the founder is the blood father or the blood mother',
   'founding.refuse.answer': 'the Examination answer was not understood',
   'founding.refuse.signing_retainer': "the signing names unavailable retainer '{RETAINER}'",
   'founding.refuse.signing_house': "the signing names missing house '{HOUSE}'",
@@ -623,7 +624,7 @@ describe('founding and Examination refusals in Plain English (#812)', () => {
   it('translates the session refusals for a late or resumed Examination', () => {
     const late = newGame(content, { seed: 8121, decider: 'chronicler' });
     late.advance(1);
-    const signed = { ...CHOICE, founderName: 'Arlen Gearithy' };
+    const signed = { ...CHOICE, founder: { name: 'Arlen Gearithy' } };
     expect(late.found(signed)).toEqual({ ok: false, reason: SESSION_ORIGINALS['founding.refuse.examination_late'] });
     translateFounding(late.ctx, SESSION_ORIGINALS);
     const lateCtx = late.ctx;

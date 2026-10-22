@@ -65,6 +65,13 @@ async function revealChoices(wrapper: VueWrapper): Promise<void> {
   }
 }
 
+/** Who signed (#1867): the gender row's buttons, in authored order. */
+async function answerFounder(wrapper: VueWrapper, gender = 0): Promise<void> {
+  const buttons = wrapper.findAll('.identity button');
+  expect(buttons.length, 'missing the founder identity row').toBe(3);
+  await buttons[gender]!.trigger('click');
+}
+
 function answerButton(wrapper: VueWrapper, question: number, answer = 1) {
   const label = `Answer ${question}.${answer}`;
   const button = wrapper.findAll('.examination button').find((candidate) => candidate.text().includes(label));
@@ -169,6 +176,7 @@ describe('founding submit single-flight (#1484)', () => {
 
     try {
       await revealChoices(wrapper);
+      await answerFounder(wrapper);
       for (let question = 1; question <= 4; question += 1) {
         await answerButton(wrapper, question).trigger('click');
       }
@@ -191,7 +199,7 @@ describe('founding submit single-flight (#1484)', () => {
         heirloom: 'seal',
         grudge: 'house_marrow',
         friends: [],
-        founderName: '',
+        founder: { name: '', gender: 'man', configuration: 'blood_father' },
         answers: {
           question_1: 'answer_1_1',
           question_2: 'answer_2_1',
@@ -222,6 +230,7 @@ describe('The Examination (#343)', () => {
       },
     });
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
 
     const founder = wrapper.get('input[aria-label="Name the founder"]');
     expect(founder.attributes('maxlength')).toBe(String(FOUNDER_NAME_MAX));
@@ -278,6 +287,7 @@ describe('The Examination (#343)', () => {
       },
     });
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
     const house = wrapper.get('input[aria-label="Name the house"]');
     await house.setValue('House Ash');
 
@@ -315,6 +325,7 @@ describe('The Examination (#343)', () => {
       },
     });
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
 
     await wrapper.get('input[aria-label="Name the founder"]').setValue('Alys');
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
@@ -337,7 +348,7 @@ describe('The Examination (#343)', () => {
       heirloom: 'seal',
       grudge: 'house_marrow',
       friends: [],
-      founderName: 'Alys',
+      founder: { name: 'Alys', gender: 'man', configuration: 'blood_father' },
       answers: {
         question_1: 'answer_1_1',
         question_2: 'answer_2_1',
@@ -345,6 +356,59 @@ describe('The Examination (#343)', () => {
         question_4: 'answer_4_1',
       },
     });
+  });
+});
+
+/**
+ * WHO SIGNED (#1867). Gender and the founding body are two answers. A man or a
+ * woman pre-selects the matching body, a nonbinary founder chooses, and
+ * anyone can change it — and the signing waits for both, by name.
+ */
+describe('who signed', () => {
+  async function ready(wrapper: VueWrapper): Promise<void> {
+    await revealChoices(wrapper);
+    for (let question = 1; question <= 4; question += 1) await answerButton(wrapper, question).trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+    await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+  }
+  const pressed = (wrapper: VueWrapper) => wrapper.findAll('.founding-configuration button')
+    .map((button) => button.attributes('aria-pressed'));
+
+  it('waits for both answers, and says so', async () => {
+    const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
+    await ready(wrapper);
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).toContain('who signed it');
+    expect(wrapper.text()).toContain('whose blood the house carries');
+  });
+
+  it('pre-selects the body for a woman, keeps a nonbinary founder\'s own choice, and lets anyone change it', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 } });
+    await ready(wrapper);
+
+    await answerFounder(wrapper, 1);
+    expect(pressed(wrapper)).toEqual(['false', 'true']);
+    await answerFounder(wrapper, 2);
+    expect(pressed(wrapper), 'nonbinary keeps the body already chosen').toEqual(['false', 'true']);
+    await wrapper.findAll('.founding-configuration button')[0]!.trigger('click');
+    expect(pressed(wrapper)).toEqual(['true', 'false']);
+
+    await wrapper.get('button.sign').trigger('click');
+    expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+      founder: { name: '', gender: 'nonbinary', configuration: 'blood_father' },
+    }));
+  });
+
+  it('asks a nonbinary founder to choose when nothing is chosen yet', async () => {
+    const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
+    await ready(wrapper);
+    await answerFounder(wrapper, 2);
+    expect(pressed(wrapper)).toEqual(['false', 'false']);
+    expect(wrapper.text()).not.toContain('who signed it');
+    expect(wrapper.text()).toContain('whose blood the house carries');
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
   });
 });
 
@@ -413,6 +477,7 @@ describe('Plain English prologue replay identity (#410)', () => {
     expect(wrapper.findAll('.triad li')).toHaveLength(0);
 
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
     await answerButton(wrapper, 1).trigger('click');
     await wrapper.get('input[aria-label="Name the house"]').setValue('House Cedar');
     expect(hasSeenProse(window.localStorage, keyFor(plain))).toBe(true);
@@ -838,6 +903,7 @@ describe('signing the founding with an input method (#1296)', () => {
       props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
     });
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
     for (let question = 1; question <= 4; question += 1) {
       await answerButton(wrapper, question).trigger('click');
     }
@@ -895,6 +961,7 @@ describe('signing the founding with an input method (#1296)', () => {
       props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
     });
     await revealChoices(wrapper);
+    await answerFounder(wrapper);
     const house = wrapper.get('input[aria-label="Name the house"]');
     await house.setValue('House Ash');
 
@@ -960,6 +1027,7 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
 
       await wrapper.setProps({ proseMode: 'original' });
       await revealChoices(wrapper);
+      await answerFounder(wrapper);
       await wrapper.get('input[aria-label="Name the founder"]').setValue('Daveed');
       const originalSign = wrapper.get('button.sign');
       expect(originalSign.attributes('disabled')).toBeDefined();
@@ -993,7 +1061,7 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
       expect(game.found).toHaveBeenCalledWith({
         houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow',
         friends: [{ name: 'Lena', sex: 'male' }],
-        founderName: 'Daveed',
+        founder: { name: 'Daveed', gender: 'man', configuration: 'blood_father' },
         answers: {
           question_1: 'answer_1_1', question_2: 'answer_2_1',
           question_3: 'answer_3_1', question_4: 'answer_4_1',

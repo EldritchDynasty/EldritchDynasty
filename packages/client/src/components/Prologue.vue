@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
-import type { ProseMode } from '@ed/schema';
+import type { FoundingConfiguration, Gender, ProseMode } from '@ed/schema';
+import { configurationFor } from '@ed/schema';
 import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
 import { initialProloguePresentation, initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
@@ -66,6 +67,41 @@ watch([replayText, () => props.skipSeenProse], ([text]) => {
   }
 });
 const founderName = ref('');
+
+/**
+ * WHO SIGNED (#1867). Two answers beside the name, and deliberately two: how
+ * the founder is referred to, and which parent carried the blood into the
+ * house. A man or a woman pre-selects the matching body; a nonbinary founder
+ * chooses; anyone can change it. Neither is ever guessed from the other or
+ * from the name, so both must be answered before the signing.
+ */
+const gender = ref<Gender | null>(null);
+const configuration = ref<FoundingConfiguration | null>(null);
+function chooseGender(next: Gender): void {
+  gender.value = next;
+  configuration.value = configurationFor(next) ?? configuration.value;
+}
+const GENDERS: readonly { id: Gender; original: string; plain: string }[] = [
+  { id: 'man', original: 'A man', plain: 'Man' },
+  { id: 'woman', original: 'A woman', plain: 'Woman' },
+  { id: 'nonbinary', original: 'Nonbinary', plain: 'Nonbinary' },
+];
+const CONFIGURATIONS: readonly { id: FoundingConfiguration; original: string; plain: string; line: string; plainLine: string }[] = [
+  {
+    id: 'blood_father',
+    original: 'The father of the house',
+    plain: 'You are the father of the family',
+    line: 'The blood is yours, and every daughter takes it from you. A wife of another house bears the children.',
+    plainLine: 'You carry the family blood and pass it to your daughters. A wife from another house bears your children.',
+  },
+  {
+    id: 'blood_mother',
+    original: 'The mother of the house',
+    plain: 'You are the mother of the family',
+    line: 'The blood is yours, and your sons take it from you. A husband of another house fathers them, and the seal is yours in your own right.',
+    plainLine: 'You carry the family blood and pass it to your sons. A husband from another house fathers your children. You hold the seal yourself, not as a regent.',
+  },
+];
 const answers = ref<Record<string, string>>({});
 const houseName = ref('');
 const heirloom = ref('');
@@ -143,6 +179,10 @@ function on(): void {
  */
 const wanted = computed(() => {
   const out: string[] = [];
+  if (props.prologue.namePrompt !== undefined) {
+    if (!gender.value) out.push('who signed it');
+    if (!configuration.value) out.push('whose blood the house carries');
+  }
   if (props.prologue.examination.some((question) => !answers.value[question.id])) {
     out.push('an answer to each Examination question');
   }
@@ -157,6 +197,8 @@ const wanted = computed(() => {
 function waitingText(): string {
   if (!plain.value) return `It wants ${wanted.value.join(', and ')}.`;
   const labels: Record<string, string> = {
+    'who signed it': 'your gender',
+    'whose blood the house carries': 'which parent carries the family blood',
     'an answer to each Examination question': 'an answer to every question',
     'the thing he asked for by name': 'a selected heirloom',
     'who paid for the rest of it': 'a selected rival house',
@@ -179,7 +221,15 @@ function sign(): void {
       heirloom: heirloom.value,
       grudge: grudge.value,
       friends: friends.value.filter((f) => f.name.trim()),
-      ...(props.prologue.namePrompt !== undefined ? { founderName: founderName.value } : {}),
+      ...(props.prologue.namePrompt !== undefined
+        ? {
+          founder: {
+            name: founderName.value,
+            ...(gender.value ? { gender: gender.value } : {}),
+            ...(configuration.value ? { configuration: configuration.value } : {}),
+          },
+        }
+        : {}),
       ...(props.prologue.examination.length > 0 ? { answers: { ...answers.value } } : {}),
     });
     // The thesis takes the screen on its own. Landing the reader halfway down
@@ -241,6 +291,31 @@ function signOnEnter(event: KeyboardEvent): void {
           :placeholder="plain ? 'Your name' : 'what are you called?'"
           :aria-label="plain ? 'Enter the founder name' : 'Name the founder'"
         />
+        <div class="identity" role="group" :aria-label="plain ? 'Your gender' : 'Who signed it'">
+          <button
+            v-for="option in GENDERS"
+            :key="option.id"
+            class="which"
+            :class="{ on: gender === option.id }"
+            :aria-pressed="gender === option.id"
+            @click="chooseGender(option.id)"
+          >{{ plain ? option.plain : option.original }}</button>
+        </div>
+      </section>
+
+      <section v-if="prologue.namePrompt" class="choice founding-configuration">
+        <h3 class="label">{{ plain ? 'Which parent carries the family blood' : 'Whose blood the house carries' }}</h3>
+        <button
+          v-for="option in CONFIGURATIONS"
+          :key="option.id"
+          class="option"
+          :class="{ on: configuration === option.id }"
+          :aria-pressed="configuration === option.id"
+          @click="configuration = option.id"
+        >
+          <strong>{{ plain ? option.plain : option.original }}</strong>
+          <span class="line">{{ plain ? option.plainLine : option.line }}</span>
+        </button>
       </section>
 
       <section
@@ -426,6 +501,7 @@ input { width: 100%; font-size: var(--t-body); }
 .which { padding: 6px 12px; font-size: var(--t-fine); margin-top: 0; }
 .which.on { border-color: var(--rubric); box-shadow: inset 2px 0 0 var(--rubric); }
 .sign { margin-top: 26px; }
+.identity { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
 /* With the button, not above the three things it is about — those are already
    off the top of the screen by the time anybody reads this. */
 .waiting { margin: 8px 0 0; }

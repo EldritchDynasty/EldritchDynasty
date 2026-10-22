@@ -1,6 +1,6 @@
 import type { BranchId, BranchState, Person, PersonId, Year } from '@ed/schema';
 import { MAIN_BRANCH, asId, currentMembership, isActiveBranch } from '@ed/schema';
-import type { SimCtx, WorldState } from '../world.js';
+import { isRegent, type SimCtx, type WorldState } from '../world.js';
 import { phenotypeOf } from './factory.js';
 import { escheatBranchLand } from '../land.js';
 import { msg } from '../messages.js';
@@ -305,7 +305,7 @@ export function tickBranches(ctx: SimCtx): void {
 
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
   const headExpresses = head ? phenotypeOf(head, ctx.genetics, w.year).eldritch.canExpress : false;
-  const regency = head?.sex === 'female';
+  const regency = head !== undefined && isRegent(w, head);
   // Tenure, not age. Measuring this off the head's birth year meant an old man
   // who inherited last spring counted as a forty-year reign.
   const longReign = head && w.headSince !== undefined
