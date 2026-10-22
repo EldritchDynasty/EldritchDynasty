@@ -179,6 +179,9 @@ function on(): void {
 const wanted = computed(() => {
   const out: string[] = [];
   if (props.prologue.namePrompt !== undefined) {
+    // The player signs as themselves (#1867): the authored name is the
+    // headless default, never the interactive one.
+    if (!founderName.value.trim()) out.push('what you are called');
     if (!gender.value) out.push('who signed it');
     if (!configuration.value) out.push('whose blood the house carries');
   }
@@ -196,6 +199,7 @@ const wanted = computed(() => {
 function waitingText(): string {
   if (!plain.value) return `It wants ${wanted.value.join(', and ')}.`;
   const labels: Record<string, string> = {
+    'what you are called': 'your name',
     'who signed it': 'your gender',
     'whose blood the house carries': 'which parent carries the family blood',
     'an answer to each Examination question': 'an answer to every question',

@@ -15,29 +15,16 @@ import { uniqueName } from './names.js';
  *   the co-parent's body     the other one, and so a name of that sex
  *   the founding children    mother and father swap places
  *
- * and, where content says so, a seed's `byConfiguration` bias over its own.
- * Everything else — keys, houses, memberships, traits, birth years — is the
- * authored cast, untouched. Keys are what the Examination's terms and the
- * conception ordinals are keyed on, so they must not move.
+ * Everything else — keys, houses, memberships, traits, bias, birth years — is
+ * the authored cast, untouched. Keys are what the Examination's terms and the
+ * conception ordinals are keyed on, so they must not move. Bias included, by
+ * decision: a blood mother at the authored 0.2 is the stronger, earlier
+ * start, and that is the house the player chose (docs/BALANCE-LOG.md).
  *
- * A cast already in the asked-for configuration, with nothing authored for
- * it, comes back as the SAME array: the authored founder is not re-derived,
- * and draws nothing.
+ * A cast already in the asked-for configuration comes back as the SAME array:
+ * the authored founder is not re-derived, and draws nothing.
  */
 export function configureFoundingCast(
-  seeds: readonly SeedPerson[],
-  configuration: FoundingConfiguration,
-  runSeed: number,
-): readonly SeedPerson[] {
-  const turned = turnAround(seeds, configuration, runSeed);
-  if (!turned.some((s) => s.byConfiguration?.[configuration])) return turned;
-  return turned.map((s) => {
-    const authored = s.byConfiguration?.[configuration];
-    return authored ? { ...s, bias: { ...s.bias, ...authored.bias } } : s;
-  });
-}
-
-function turnAround(
   seeds: readonly SeedPerson[],
   configuration: FoundingConfiguration,
   runSeed: number,

@@ -65,8 +65,13 @@ async function revealChoices(wrapper: VueWrapper): Promise<void> {
   }
 }
 
-/** Who signed (#1867): the gender row's buttons, in authored order. */
-async function answerFounder(wrapper: VueWrapper, gender = 0): Promise<void> {
+/**
+ * Who signed (#1867): a name, then the gender row's buttons in authored order.
+ * The name is filled only when blank, so a test that typed one keeps it.
+ */
+async function answerFounder(wrapper: VueWrapper, gender = 0, name = 'Daveed'): Promise<void> {
+  const input = wrapper.get('input[aria-label="Name the founder"]');
+  if (!(input.element as HTMLInputElement).value.trim()) await input.setValue(name);
   const buttons = wrapper.findAll('.identity button');
   expect(buttons.length, 'missing the founder identity row').toBe(3);
   await buttons[gender]!.trigger('click');
@@ -199,7 +204,7 @@ describe('founding submit single-flight (#1484)', () => {
         heirloom: 'seal',
         grudge: 'house_marrow',
         friends: [],
-        founder: { name: '', gender: 'man', configuration: 'blood_father' },
+        founder: { name: 'Daveed', gender: 'man', configuration: 'blood_father' },
         answers: {
           question_1: 'answer_1_1',
           question_2: 'answer_2_1',
@@ -375,12 +380,23 @@ describe('who signed', () => {
   const pressed = (wrapper: VueWrapper) => wrapper.findAll('.founding-configuration button')
     .map((button) => button.attributes('aria-pressed'));
 
-  it('waits for both answers, and says so', async () => {
+  it('waits for a name and both answers, and says so', async () => {
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
     await ready(wrapper);
     expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).toContain('what you are called');
     expect(wrapper.text()).toContain('who signed it');
     expect(wrapper.text()).toContain('whose blood the house carries');
+
+    // Whitespace is not a name: the authored founder is never the interactive default.
+    await wrapper.get('input[aria-label="Name the founder"]').setValue('   ');
+    await answerFounder(wrapper, 0, '   ');
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).toContain('what you are called');
+    expect(wrapper.text()).not.toContain('who signed it');
+
+    await wrapper.get('input[aria-label="Name the founder"]').setValue('Ysolt Gearithy');
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
   });
 
   it('pre-selects the body for a woman, keeps a nonbinary founder\'s own choice, and lets anyone change it', async () => {
@@ -397,7 +413,7 @@ describe('who signed', () => {
 
     await wrapper.get('button.sign').trigger('click');
     expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
-      founder: { name: '', gender: 'nonbinary', configuration: 'blood_father' },
+      founder: { name: 'Daveed', gender: 'nonbinary', configuration: 'blood_father' },
     }));
   });
 
