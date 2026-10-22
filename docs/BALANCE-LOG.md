@@ -13797,3 +13797,93 @@ no guardian targets, world-owned counters/stable streams, court reactions only
 in assize, and practice without `canHoldPost`. The pilot must measure actual
 useful effects within ten eligible years, costs and decision density; this
 baseline supplies no go decision for C–F and claims no recurring duty yet.
+
+## 2026-10-22 — #1866 B / #1873: standing Life and Terra duties, paired pilot
+
+**The pilot misses its product question for Life care, and meets it for Terra
+only in a way that is worth nothing.** Per #1873, this is published before any
+retuning, and stages C–F (#1874–#1877) stay blocked pending a re-plan.
+
+**Source and fixed sample.** Code `56a45ad` (the pilot) plus the observer
+`packages/core/src/tools/mystic-pilot.ts`. **512 runs:** seeds
+**187300–187363**, Short300 and Long500, each played four ways on the same
+seed: #1813's chronicler or broad study policy, each with duties off and with a
+duty-keeping policy on. The duty policy reads only `TableView`. It keeps one
+carer at the seat and one Terra warden on the reachable parcel with the
+largest stake, prefers readers who are not mid-book, never releases a duty, and
+pays preparation only with five years' upkeep to spare. Early endings stay in
+every denominator.
+
+```bash
+npm run gate:mystic-pilot -- 64 187300 pilot-short.json short
+npm run gate:mystic-pilot -- 64 187300 pilot-long.json long
+```
+
+**Useful** means a served (paid, available) year in which the duty kept a life,
+held a bad harvest up, or reduced damage. A duty is judged on its first ten
+served years. One that served fewer than ten and showed nothing is left
+unjudged rather than counted a miss. Rates use `proportionSE`. Means are per
+house, ± SE across independent houses.
+
+| Campaign / base policy | Life duties judged | Useful within 10 | Lives kept / house | Served years / life | Crowns / life kept |
+|---|---:|---:|---:|---:|---:|
+| Short / chronicler | 304 | **17.8% ± 2.2** | 2.69 ± 0.26 | 53 | 243 |
+| Short / broad | 326 | **20.2% ± 2.2** | 2.86 ± 0.34 | 59 | 268 |
+| Long / chronicler | 476 | **20.4% ± 1.8** | 4.70 ± 0.49 | 49 | 223 |
+| Long / broad | 555 | **20.7% ± 1.7** | 5.31 ± 0.54 | 50 | 233 |
+
+| Campaign / base policy | Houses ever keeping a Terra duty | Useful within 10 | Crowns kept / house | Spent / house |
+|---|---:|---:|---:|---:|
+| Short / chronicler | 4 / 64 | 10 / 10 | 0.37 ± 0.24 | 16.59 ± 10.52 |
+| Short / broad | 11 / 64 | 19 / 20 | 0.77 ± 0.37 | 31.08 ± 10.18 |
+| Long / chronicler | 8 / 64 | 32 / 32 | 1.37 ± 0.66 | 49.64 ± 22.77 |
+| Long / broad | 11 / 64 | 33 / 34 | 1.34 ± 0.82 | 53.77 ± 26.97 |
+
+**Exposure is not the problem.** Some reader could take up a working in
+practically every house: 670 ± 101 practitioner-years per Short chronicler
+house, and 1,689 ± 217 per Long broad house. The policy then gave 434–835
+orders per column, with none refused. Duty-holder years run 159–304 per house.
+Life duties turn over often (about 6.6 per house in Short): carers die, marry
+out or take posts, and the policy re-assigns them.
+
+**Why Life misses.** The mechanism works: a death roll between the two hazards
+is kept, and `mystic.test.ts` proves it on built state. But in a real house it
+is diluted to a third. A diagnostic run on seed 187300 found the seat
+averaging **18 wards** against the Sickroom Watch's `maxWards: 6`, so each
+ward gets about a third of the care: −6.7% ordinary and −11.7% infant
+mortality. The ordinary hazard it can touch is small next to the max-age wall
+and violence, which care deliberately excludes. One kept life per ~50 served
+years is the result.
+
+**Why Terra hits and does not matter.** None of the 1042 holdings is reachable
+except tenant farms. Their shared harvest is `normal(1, 0.07)` clamped, so a
+shortfall happens in about half of all years. The test is met by trivia: a
+few hundredths of a yield unit at about 0.23 crowns per unit at Known.
+Slate and wetland must be bought, and lesser Terra readers are rare: 4–11
+houses in 64 ever kept the duty. Net coin is negative in every column.
+
+**Paired consequences, same seed.** With duties on, final treasury moves
+**+46 ± 109 / −277 ± 120** (Short chronicler / broad) and
+**+19 ± 110 / −209 ± 110** (Long). Final living blood moves
+**−0.5 ± 1.9 / −1.7 ± 2.2** and **+0.1 ± 2.6 / −5.8 ± 2.5**. Lived years and
+endings diverge chaotically: the ending changes in 15–24 of 64 pairs. Any
+change re-rolls later draws, so these differences are not attributed to care.
+The Long/broad blood difference (2.3 SE) is unexplained and not claimed as a
+cost of care. The extra broad-policy spending is upkeep plus study set down:
+31.9 ± 6.1 and 46.5 ± 7.5 paused study-years per house.
+
+**Noninterference.** The first seed of all eight columns was played again
+without the observer. All eight complete saves match (SHA256, `savedAt`
+blanked). The duty policy adds no docket question; it gives Table orders only.
+
+**Decision for #1866.** B does not meet "useful effect within ten eligible
+years in typical conditions" for Life (≈20%). It meets it for Terra only
+through effects worth under two crowns a campaign. Candidate causes for the
+re-plan, untested here:
+- the `maxWards` dilution against a seat of ~18;
+- care limited to ordinary mortality;
+- Terra's reachable ground limited to low-variance tenant farms;
+- the scarcity of Terra readers.
+
+No content or code was retuned to improve these numbers. Raw reports
+(`pilot-short.json`, `pilot-long.json`) are kept in the execution workspace.

@@ -109,6 +109,11 @@ export function landIncome(ctx: SimCtx): number {
   return held * (INCOME_BY_RESPECT[w.respect] / TOTAL_1042_YIELD);
 }
 
+/** Crowns one yield unit is worth this year, before Charm — what `landIncome` multiplies by. */
+export function landCrownsPerYield(ctx: SimCtx): number {
+  return INCOME_BY_RESPECT[ctx.world.respect] / TOTAL_1042_YIELD;
+}
+
 /** Same physical contribution used by emergency assessment, including cadet ground. */
 export function parcelRecurringYield(ctx: SimCtx, state: ParcelState): number {
   const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
