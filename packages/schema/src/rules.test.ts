@@ -1584,6 +1584,57 @@ describe('the rules that had never caught anything', () => {
       });
       expect(messages('slots/references', b)).toMatch(/NO_SUCH_SLOT/);
     });
+
+    // A form token that cannot resolve renders raw, so `{HEAD.thier}` would
+    // reach the chronicle as written. Outcome text is checked, not just bodies.
+    it('catches an unknown form, and a form naming an undeclared slot, in outcome text', () => {
+      const b = withEvents((x) => {
+        const e = x.events.find((ev) => ev.slots.HEAD && ev.interaction.kind !== 'narration')!;
+        const outcome = e.interaction.kind === 'narration' ? undefined : e.interaction.choices[0]!.outcomes[0]!;
+        outcome!.text = '{HEAD.They} keep {HEAD.thier} counsel, and {NO_SUCH_SLOT.their}.';
+      });
+      const said = messages('slots/references', b);
+      expect(said).toMatch(/unknown form \{HEAD\.thier\}/);
+      expect(said).toMatch(/undefined slot in \{NO_SUCH_SLOT\.their\}/);
+      expect(said).not.toMatch(/HEAD\.They/);
+    });
+
+    it('accepts the forms on the shipped content', () => {
+      expect(runRule('slots/references', content)).toHaveLength(0);
+    });
+  });
+
+  /**
+   * #1867: the founder's grammar is the player's. Per sentence, because the
+   * two shipped guardian scenes carry twenty masculine pronouns and every one
+   * of them is about `{HEAD}`.
+   */
+  describe('prose/founder-forms', () => {
+    const guardianEvent = (b: ContentBundle) =>
+      b.events.find((e) => Object.values(e.slots).some((s) => s.role === 'guardian'))!;
+
+    it('warns on a hand-written pronoun in a sentence naming the guardian', () => {
+      const b = withEvents((x) => {
+        const e = guardianEvent(x);
+        const sid = Object.entries(e.slots).find(([, s]) => s.role === 'guardian')![0];
+        e.body = `${e.body} {${sid}} sets down his cup.`;
+      });
+      const issues = runRule('prose/founder-forms', b);
+      expect(issues.map((i) => i.level)).toContain('warning');
+      expect(issues.map((i) => i.message).join('\n')).toMatch(/'his' beside \{GUARDIAN\}/);
+    });
+
+    it('is satisfied by forms', () => {
+      const b = withEvents((x) => {
+        const e = guardianEvent(x);
+        e.body = `${e.body} {GUARDIAN} sets down {GUARDIAN.their} cup.`;
+      });
+      expect(runRule('prose/founder-forms', b)).toEqual([]);
+    });
+
+    it('says nothing about the shipped guardian scenes, whose every "he" is the Head', () => {
+      expect(runRule('prose/founder-forms', content)).toEqual([]);
+    });
   });
 
   /**

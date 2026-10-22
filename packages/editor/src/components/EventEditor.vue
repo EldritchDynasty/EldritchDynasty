@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { Content, Issue } from '@ed/schema';
-import { FREQUENCY_PROFILES, splitSentences, PROSE_SENTENCE_THRESHOLD, proseIssues } from '@ed/schema';
+import { FREQUENCY_PROFILES, splitSentences, PROSE_SENTENCE_THRESHOLD, proseIssues, slotTokens } from '@ed/schema';
 import { markDirty, store } from '../lib/store';
 import { watchEdits } from '../lib/watch-edits';
 import FrequencyPicker from './FrequencyPicker.vue';
@@ -150,7 +150,7 @@ function setInteractionKind(kind: string) {
 const undefinedTokens = computed(() => {
   const e = current.value;
   if (!e) return [];
-  const used = [...e.body.matchAll(/\{([A-Z_][A-Z0-9_]*)\}/g)].map((m) => m[1]!);
+  const used = slotTokens(e.body).map((t) => t.slot);
   return [...new Set(used)].filter((t) => !slotNames.value.includes(t));
 });
 

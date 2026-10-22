@@ -1,4 +1,4 @@
-import { primordialChance, type EventTemplate, type Outcome, type PrimordialRecord, type PrimordialResponse } from '@ed/schema';
+import { PRIMORDIAL_ACTOR_SLOT, primordialChance, type EventTemplate, type Outcome, type PrimordialRecord, type PrimordialResponse } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { SlotFill } from './slots.js';
 import { renderBody } from './slots.js';
@@ -10,7 +10,7 @@ import { assessHarm, mitigates, type HarmAssessment } from './harm.js';
 import { msg } from '../messages.js';
 import { outcomeTextAddress, renderProse } from '../prose.js';
 
-export const PRIMORDIAL_ACTOR = 'PRIMORDIAL_ACTOR';
+export const PRIMORDIAL_ACTOR = PRIMORDIAL_ACTOR_SLOT;
 export interface PrimordialCandidate { id: string; ep: number; chance: number }
 export interface PrimordialPreview {
   normal: HarmAssessment;

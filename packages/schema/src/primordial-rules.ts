@@ -1,7 +1,8 @@
 import { proseOriginalHash } from './prose-variants.js';
 import type { EventTemplate, Outcome } from './event.js';
 import type { Issue, ValidationRule } from './validate.js';
-import { effectHarmPolicy, potentialHarms } from './primordial.js';
+import { effectHarmPolicy, potentialHarms, PRIMORDIAL_ACTOR_SLOT } from './primordial.js';
+import { slotTokens } from './forms.js';
 
 export function primordialOutcomes(event: EventTemplate) {
   return event.interaction.kind === 'narration'
@@ -64,7 +65,8 @@ export const primordialCoverage: ValidationRule = {
       if (response.id === o.id || choice.outcomes.some(other => other.id === response.id)) issues.push(fail(this.id, where, 'response identity collides with an ordinary outcome'));
       for (const message of validatePrices(response, event)) issues.push(fail(this.id, where, message));
       if (!reducesPotential(o)) issues.push(fail(this.id, where, 'cosmetic response: no material harm is reduced'));
-      const tokenSet = (text: string) => [...text.matchAll(/\{([A-Z_][A-Z0-9_]*)\}/g)].map(m => m[1]!).sort();
+      const tokenSet = (text: string) => slotTokens(text).map(t => t.raw).sort();
+      const slotSet = (text: string) => [...new Set(slotTokens(text).map(t => t.slot))];
       const path = `#events[id=${encodeURIComponent(event.id)}].interaction.${choice.id === '_'
         ? `outcomes[id=${encodeURIComponent(o.id)}]`
         : `choices[id=${encodeURIComponent(choice.id)}].outcomes[id=${encodeURIComponent(o.id)}]`}.primordial.text`;
@@ -72,11 +74,11 @@ export const primordialCoverage: ValidationRule = {
       const counterpart = content.proseVariants.find(row => source ? row.address === `content:${source}${path}` : row.address.endsWith(path));
       if (!counterpart || counterpart.of !== proseOriginalHash(response.text) || !counterpart.plainenglish.trim()) issues.push(fail(this.id, where, 'missing current Plain English response counterpart'));
       const english = counterpart?.plainenglish ?? '';
-      if (!tokenSet(response.text).includes('PRIMORDIAL_ACTOR') || !tokenSet(english).includes('PRIMORDIAL_ACTOR')) {
+      if (!tokenSet(response.text).includes(`{${PRIMORDIAL_ACTOR_SLOT}}`) || !tokenSet(english).includes(`{${PRIMORDIAL_ACTOR_SLOT}}`)) {
         issues.push(fail(this.id, where, 'both response texts must name {PRIMORDIAL_ACTOR}'));
       }
       if (JSON.stringify(tokenSet(response.text)) !== JSON.stringify(tokenSet(english))) issues.push(fail(this.id, where, 'response prose modes have different tokens'));
-      for (const token of tokenSet(response.text)) if (token !== 'PRIMORDIAL_ACTOR' && !event.slots[token]) issues.push(fail(this.id, where, `unresolved response token {${token}}`));
+      for (const token of slotSet(response.text)) if (token !== PRIMORDIAL_ACTOR_SLOT && !event.slots[token]) issues.push(fail(this.id, where, `unresolved response token {${token}}`));
       if ((event.record || event.recordByChoice || event.recordByOutcome) && !response.record) issues.push(fail(this.id, where, 'response must preserve the existing Record choices with its own account'));
       if (response.next && !content.event(response.next.event)) issues.push(fail(this.id, where, `missing response successor ${response.next.event}`));
       if (response.triggers && !content.arc(response.triggers.arc)) issues.push(fail(this.id, where, `missing response arc ${response.triggers.arc}`));
