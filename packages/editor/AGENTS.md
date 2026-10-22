@@ -3,13 +3,15 @@
 Vue 3 + Vite. Imports `@ed/core` directly and never reimplements simulation
 logic — that is what makes preview trustworthy.
 
-Six views, all reading real simulation state; nothing here is mocked.
+Seven views over authored content and real simulation/validation; previews use
+the engine rather than a second rules implementation.
 
 | View | For |
 |---|---|
 | **Events** | Everything a template is: slots and their filters, who decides, branches, outcomes, effects, checks, conditions. Frequency picker showing what each tier *obliges*, live voice-contract lint, per-Age coverage |
 | **Substories** | Arcs as a graph, ranked by distance from the entry. Beats, schedules, successors and their guards; a beat nothing reaches is drawn in rubric |
 | **Characters** | Templates, with a rolled 24-person preview and the gene pool's real carrier rate |
+| **Core prose** | Search core message ids, edit Plain English counterparts, validate interpolation/hash parity, review a diff and save `messages.yaml` |
 | **Family tree** | Generational SVG with procedural inherited sigils; hot lines mark maternal font transmission |
 | **Simulate** | Run to 1542, name the children, watch frequency drive chronicle typography |
 | **Instruments** | Test families, branch trace, coverage, fire rate, pronoun preview, clause board, tale pairs |
@@ -18,7 +20,7 @@ Six views, all reading real simulation state; nothing here is mocked.
 
 `EffectEditor`, `SlotEditor` and `CheckEditor` draw themselves from field
 descriptors walked off the Zod schemas — `reference.ts` → `fieldsOfSchema`,
-`effectFields`. There is no list of the twenty-two effect kinds anywhere in this
+`effectFields`. There is no hand-kept list of effect kinds anywhere in this
 package, and there must not be: a hand-kept copy of a closed union is a copy
 that goes stale, which is the failure this codebase has had most often.
 
@@ -48,8 +50,9 @@ three the day it was added.
 
 ## Gotchas, all of which cost real time
 
-- **No TypeScript `as` casts in template expressions.** `@click="tab = t.id as typeof tab"`
-  compiles, the click lands, and nothing happens. Use a handler function.
+- **Prefer a handler or `v-model` to template casts.** A past inline tab
+  assignment failed silently; casts are not universally unsupported by Vue.
+  Compile templates and exercise the action instead of relying on typecheck.
 - **`{` in template literals collides with Vue's `{{ }}`.** Build such strings in `<script>`.
 - **`triggerRef` is not enough for a long-lived mutable world.** An intermediate
   computed returning `ctx.value.world` yields the same reference every time, so
