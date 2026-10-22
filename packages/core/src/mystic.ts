@@ -7,6 +7,7 @@ import type { OrderResult } from './table.js';
 import { DEBT_FLOOR } from './economy.js';
 import { attendsHall, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily } from './presence.js';
 import { msg } from './messages.js';
+import { ordinaryRisk } from './people/demography.js';
 import { proseForContentField } from './prose.js';
 
 /**
@@ -294,7 +295,7 @@ export function tickMystic(ctx: SimCtx): void {
     a.service.spent += working!.upkeep;
     if (working!.benefit.kind === 'life_care') {
       const place = dutyPlaceOf(ctx, a.target, a.bindings);
-      a.wards = place && 'hall' in place ? hallWards(ctx, place.hall, a.practitioner) : 0;
+      a.attended = place && 'hall' in place ? hallWards(ctx, place.hall, a.practitioner, working!.benefit.maxWards) : [];
     }
     if (wasSuspended) {
       w.chronicle.push({
@@ -306,13 +307,22 @@ export function tickMystic(ctx: SimCtx): void {
   }
 }
 
-/** Who the carer is actually looking after this year — the same attendance rule the benefit reads. */
-function hallWards(ctx: SimCtx, hall: string, carer: string): number {
+/**
+ * WHOSE BED THE CARER SITS BY THIS YEAR: the residents at greatest ordinary
+ * risk, by the formula `rollDeath` itself reads, up to the working's
+ * `maxWards`. A reader cannot sit up with eighteen people; they choose the
+ * cradle and the old man's room, which is what anybody would.
+ */
+function hallWards(ctx: SimCtx, hall: string, carer: string, max: number): string[] {
   const w = ctx.world;
   const deployed = deployedPeople(ctx);
   const duty = dutyPlaces(ctx);
   return w.people.household(w.playerHouse, w.year)
-    .filter((p) => p.id !== carer && attendsHall(ctx, hall, p, deployed, duty)).length;
+    .filter((p) => p.id !== carer && attendsHall(ctx, hall, p, deployed, duty))
+    .map((p) => ({ id: p.id, risk: ordinaryRisk(ctx, p) }))
+    .sort((a, b) => b.risk - a.risk || a.id.localeCompare(b.id))
+    .slice(0, max)
+    .map((x) => x.id);
 }
 
 /** Upkeep the economy collects this year: only what the phase actually reserved. */
@@ -356,9 +366,9 @@ export interface LifeCare {
 }
 
 /**
- * THE CARE A PERSON HAS THIS MOMENT, read by `rollDeath`. Nonstacking: the
- * best single carer in the ward's hall counts. A hall fuller than the
- * working's `maxWards` thins it pro rata.
+ * THE CARE A PERSON HAS THIS MOMENT, read by `rollDeath`. Only a resident the
+ * carer chose to attend this year, still in the hall, with the carer still
+ * able. Nonstacking: the best single carer counts.
  */
 export function lifeCareFor(ctx: SimCtx, ward: Person): LifeCare | undefined {
   if (!ctx.world.mystic.assignments.length) return undefined;
@@ -370,12 +380,12 @@ export function lifeCareFor(ctx: SimCtx, ward: Person): LifeCare | undefined {
   for (const { a, working, p } of duties) {
     if (p.id === ward.id || working.benefit.kind !== 'life_care') continue;
     const place = dutyPlaceOf(ctx, a.target, a.bindings);
+    if (!a.attended?.includes(ward.id)) continue;
     if (!place || !('hall' in place) || !attendsHall(ctx, place.hall, ward, deployed, duty)) continue;
-    const thin = Math.min(1, working.benefit.maxWards / Math.max(1, a.wards ?? 1));
     const care = {
       assignment: a, carer: p,
-      mortality: working.benefit.mortalityReduction * thin,
-      infant: working.benefit.infantReduction * thin,
+      mortality: working.benefit.mortalityReduction,
+      infant: working.benefit.infantReduction,
     };
     if (!best || care.mortality + care.infant > best.mortality + best.infant) best = care;
   }
@@ -527,6 +537,8 @@ export interface MysticDutyView {
   service: MysticAssignment['service'];
   /** The book this duty set down, and how much of it waits. */
   paused?: { book: string; name: string; remainingYears: number };
+  /** Whom a carer is sitting with this year. */
+  attended?: { person: string; name: string }[];
 }
 
 export interface MysticOfferView {
@@ -605,6 +617,7 @@ export function mysticView(ctx: SimCtx): MysticView {
       ready: a.ready,
       upkeep: working?.upkeep ?? 0,
       service: { ...a.service },
+      ...(a.attended ? { attended: a.attended.map((id) => ({ person: id, name: w.people.get(id)?.name ?? id })) } : {}),
       ...(pause ? {
         paused: {
           book: pause.book,

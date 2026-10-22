@@ -209,7 +209,10 @@ export type SavedMatchAgrees = Same<
 export const SAVED_MATCH_AGREES: SavedMatchAgrees = true;
 
 function copyAssignment(a: MysticAssignment): MysticAssignment {
-  return { ...a, target: structuredClone(a.target), bindings: { ...a.bindings }, service: { ...a.service } };
+  return {
+    ...a, target: structuredClone(a.target), bindings: { ...a.bindings }, service: { ...a.service },
+    ...(a.attended ? { attended: [...a.attended] } : {}),
+  };
 }
 
 export class SaveFormatError extends Error {

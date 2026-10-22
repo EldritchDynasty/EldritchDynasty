@@ -94,12 +94,7 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   // hazard at the ceiling is about 18% a year, so a fifth of every cohort
   // would pile up and die exactly ON their maxAge — the same cliff the
   // fertility curve was rewritten to avoid, in the other direction.
-  let base = 0.004 + 0.6 * Math.max(0, spent - 0.45) ** 2;
-  if (spent > 0.8) base += 0.5 * ((spent - 0.8) / 0.2) ** 3;
-
-  // Deliberate infant mortality, tapering to nothing by five. Period-correct,
-  // and it gives the physician's presence effect something to actually suppress.
-  const infant = age < 5 ? 0.03 * (1 - age / 5) : 0;
+  const { base, infant } = ordinaryHazard(age, spent);
 
   // A PHYSICIAN IN THE HOUSE (`assize.ts`). When the world has decided the
   // family is worth steadying, somebody competent is in the building and
@@ -148,6 +143,29 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
     w.year,
     madnessHazard > 0 ? madnessCause(ctx) : msg(ctx, 'demography.cause.ordinary', 'in the ordinary way'),
   );
+}
+
+/**
+ * THE ORDINARY TERMS of the annual hazard: the age curve and infancy, before
+ * strength, violence, Madness and the multipliers. One formula, read by
+ * `rollDeath` and by a Mystic carer deciding whose bed to sit by (#1873).
+ */
+export function ordinaryHazard(age: number, spent: number): { base: number; infant: number } {
+  let base = 0.004 + 0.6 * Math.max(0, spent - 0.45) ** 2;
+  if (spent > 0.8) base += 0.5 * ((spent - 0.8) / 0.2) ** 3;
+  // Deliberate infant mortality, tapering to nothing by five. Period-correct,
+  // and it gives the physician's presence effect something to actually suppress.
+  const infant = age < 5 ? 0.03 * (1 - age / 5) : 0;
+  return { base, infant };
+}
+
+/** This person's ordinary risk this year, on the same scale. */
+export function ordinaryRisk(ctx: SimCtx, p: Person): number {
+  const age = ctx.world.year - p.born;
+  const maxAge = attr(p, 'max_age', ctx.genetics, ctx.world.year) || BASELINE_MAX_AGE;
+  if (age >= maxAge) return 1;
+  const { base, infant } = ordinaryHazard(age, age / maxAge);
+  return base + infant;
 }
 
 /**

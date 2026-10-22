@@ -84,6 +84,20 @@ describe('Life care changes a real death roll (#1873)', () => {
     expect(rollDeath(removed.infant, removed.ctx, fixedRng(roll))).toBe(true);
   });
 
+  it('sits with the most at-risk residents only, and does nothing for anybody else', () => {
+    const { ctx, infant } = world();
+    // Fill the seat past what one carer can attend, with people in their prime.
+    const hale = Array.from({ length: 8 }, (_, i) => place(ctx, { sex: 'male', age: 22 + i, name: `Hale${i}` }));
+    const duty = serveCare(ctx, reader(ctx, 'female', ['lesser_workings_of_life'], 'Maud'));
+    const max = ctx.content.mysticWorking('sickroom_watch')!.benefit;
+    expect(max.kind === 'life_care' && duty.attended!.length).toBe(max.kind === 'life_care' ? max.maxWards : 0);
+    expect(duty.attended).toContain(infant.id);
+    const unattended = hale.filter((p) => !duty.attended!.includes(p.id));
+    expect(unattended.length).toBeGreaterThan(0);
+    for (const p of unattended) expect(lifeCareFor(ctx, p)).toBeUndefined();
+    expect(lifeCareFor(ctx, infant)).toBeDefined();
+  });
+
   it('never reaches a roll the house was always going to survive, nor one care cannot cover', () => {
     const { ctx, infant } = world();
     const duty = serveCare(ctx, reader(ctx, 'female', ['lesser_workings_of_life'], 'Maud'));
@@ -155,7 +169,7 @@ describe('Terra protection changes a real harvest (#1873)', () => {
   it('holds half a bad year up, leaves a good year alone, and only while the warden is there', () => {
     const { ctx, warden, def, state, duty } = warded();
     expect(duty.status).toBe('serving');
-    expect(wardedYieldFactor(ctx, def, state, 0.8)).toBeCloseTo(0.9, 10);
+    expect(wardedYieldFactor(ctx, def, state, 0.8)).toBeCloseTo(0.94, 10);
     expect(wardedYieldFactor(ctx, def, state, 1.1)).toBe(1.1);
     expect(duty.service.usefulYears).toBe(1);
 
@@ -163,10 +177,10 @@ describe('Terra protection changes a real harvest (#1873)', () => {
     expect(wardedYieldFactor(ctx, def, state, 0.8)).toBe(0.8);
   });
 
-  it('halves damage to the warded ground and no other', () => {
+  it('takes most of the damage off the warded ground and none off any other', () => {
     const { ctx, state } = warded();
     damageParcel(ctx, FARM, 2);
-    expect(state.yieldBonus).toBe(-1);
+    expect(state.yieldBonus).toBeCloseTo(-0.6, 10);
     const other = [...ctx.world.parcels.values()].find((s) => s.defId === 'nettlecombe')!;
     damageParcel(ctx, 'nettlecombe', 2);
     expect(other.yieldBonus).toBe(-2);

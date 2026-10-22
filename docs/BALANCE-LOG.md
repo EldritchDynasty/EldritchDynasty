@@ -13887,3 +13887,81 @@ re-plan, untested here:
 
 No content or code was retuned to improve these numbers. Raw reports
 (`pilot-short.json`, `pilot-long.json`) are kept in the execution workspace.
+
+## 2026-10-22 — #1873 retune: a carer sits with the most at-risk, Terra made cheap
+
+**After one retune, Life care meets the pilot's product question; Terra still
+does not pay.** Same 512-run design, same seeds (**187300–187363**), same duty
+policy and observer as the entry above. Only the mechanism and content below
+changed.
+
+**What changed, and why.** The entry above traced the Life miss to dilution:
+one carer was spread pro rata over a seat of about 18. Now:
+
+- **Attendance.** At each year's reservation the carer chooses the
+  `maxWards` residents at greatest ordinary risk. The ranking uses
+  `ordinaryRisk`, the same age-and-infancy terms `rollDeath` reads, now
+  extracted as `ordinaryHazard` so there is one formula, not two. Those
+  residents get the full reduction and everyone else gets nothing. The chosen
+  names are saved as `attended`, shown on the Table, and re-checked at every
+  roll.
+- **Life numbers.** The Sickroom Watch goes to −35% ordinary / −50% infant
+  for 6 wards (was −20% / −35%, thinned). The Long Vigil goes to −45% / −65%
+  for 10 wards, upkeep 6 (was 7).
+- **Terra numbers.** Cost was most of Terra's loss. Shoring the Banks now
+  prepares for 5 crowns, keeps for 1 a year and makes good 70% (was
+  15 / 3 / 50%). The Quarryman's Face is 12 / 2 / 90% (was 30 / 6 / 70%).
+
+Descriptions and their Plain English rows were rewritten to state the new
+behaviour.
+
+**What "typical conditions" was taken to mean.** #1873 does not put a number on
+it. This entry reads it as **a majority of judged duties showing a useful
+effect within their first ten served years**, with the same judging rule as
+before.
+
+| Campaign / base policy | Life duties judged | Useful within 10 | Lives kept / house | Served years / life | Crowns / life kept |
+|---|---:|---:|---:|---:|---:|
+| Short / chronicler | 350 | **62.3% ± 2.6** (was 17.8%) | 14.61 ± 1.19 | 10.4 | 48 |
+| Short / broad | 419 | **61.3% ± 2.4** (was 20.2%) | 17.63 ± 1.36 | 10.6 | 49 |
+| Long / chronicler | 590 | **59.5% ± 2.0** (was 20.4%) | 24.70 ± 2.14 | 9.9 | 46 |
+| Long / broad | 602 | **63.3% ± 2.0** (was 20.7%) | 24.34 ± 2.07 | 10.5 | 49 |
+
+Every column clears one half by at least **4.7 SE**.
+
+| Campaign / base policy | Houses ever keeping a Terra duty | Useful within 10 | Crowns kept / house | Spent / house | Net |
+|---|---:|---:|---:|---:|---:|
+| Short / chronicler | 4 / 64 | 11 / 11 | 0.70 ± 0.44 | 5.44 ± 2.96 | −4.73 ± 2.53 |
+| Short / broad | 9 / 64 | 18 / 18 | 0.54 ± 0.24 | 9.47 ± 4.04 | −8.93 ± 3.80 |
+| Long / chronicler | 4 / 64 | 36 / 36 | 1.75 ± 0.93 | 15.69 ± 8.14 | −13.94 ± 7.22 |
+| Long / broad | 12 / 64 | 29 / 29 | 1.67 ± 0.77 | 13.64 ± 5.70 | −11.97 ± 4.93 |
+
+**Terra is a structural miss, not a tuning one.** Even at one crown a year it
+loses money, because land here is cheap in coin: at Known the entire 1,400
+acres earn about 32 crowns a year. A warden on one farm can hold up a few
+hundredths of that. It is also reachable by very few houses (4–12 of 64),
+because lesser Terra readers are rare. More Terra content will not fix this;
+F (#1877) needs a different civilian role for Terra. Construction, quarry
+collapse, foundations and authored flood or slump events are the candidates
+the parent issue already lists.
+
+**Paired consequences, same seed.** These are as noisy as before, because
+every changed death re-rolls the rest of the run. Final treasury
+**−21 ± 110 / −113 ± 120** (Short chronicler / broad) and
+**+21 ± 133 / −159 ± 114** (Long). Final living blood
+**−1.8 ± 2.5 / +1.3 ± 2.5** and **+0.4 ± 2.8 / −4.7 ± 3.0**. About 15–25 lives
+kept per house do **not** show up as a measurable difference in the living
+line at the term. Most kept lives belong to the old and the very young, and
+the run diverges after each one. This is reported, not explained. Paused
+study averages 2.8–44 years per house. Study is the price under the broad
+policy, where readers are usually mid-book.
+
+**Noninterference.** All eight first-seed controls reproduce their complete
+saves without the observer. The duty policy still adds no docket question.
+
+**Decision for #1866.** The Life pilot meets the predeclared question with
+margin, at about 47 crowns and about 10 served years per life kept. So the
+recurring-duty model is viable for C–F where the affinity has something
+material to protect. Terra's estate role does not, and goes to the re-plan
+noted above. Raw reports (`retune-short.json`, `retune-long.json`) are kept in
+the execution workspace.

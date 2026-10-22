@@ -20,10 +20,12 @@ import { SceneSiteS } from './primordial.js';
 
 export const MysticBenefitS = z.discriminatedUnion('kind', [
   /**
-   * A carer resident in one hall. Reduces the ORDINARY part of the annual
-   * death hazard — age, frailty and infancy — never violence, Madness or the
-   * max-age wall. A hall larger than `maxWards` dilutes the care pro rata;
-   * two carers in one hall do not stack (the better one counts).
+   * A carer posted to one hall. Each year they attend the `maxWards`
+   * residents at greatest ordinary risk (the infants and the frail, by the
+   * same formula `rollDeath` reads) and reduce the ORDINARY part of those
+   * people's death hazard: age, frailty and infancy, never violence, Madness
+   * or the max-age wall. Everyone else in the hall gets nothing from them,
+   * and two carers in one hall do not stack (the better one counts).
    */
   z.object({
     kind: z.literal('life_care'),
@@ -116,8 +118,8 @@ export const MysticAssignmentS = z.object({
   paidThrough: z.number(),
   status: MysticStatusS,
   reason: MysticGapS.optional(),
-  /** Residents the carer covered at this year's reservation; dilutes care above `maxWards`. */
-  wards: z.number().int().nonnegative().optional(),
+  /** The residents a carer attends this year, chosen at the reservation by ordinary risk. */
+  attended: z.array(z.string()).optional(),
   service: MysticServiceS,
 }).strict();
 export type MysticAssignment = z.infer<typeof MysticAssignmentS>;

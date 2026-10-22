@@ -14,12 +14,14 @@ mysticWorkings:
     affinity: life
     books: [lesser_workings_of_life]
     description: >-
-      One reader lives in one hall and sits up with whoever is ill in it. Fewer of
-      them die of fevers, old age and the first five years. It does nothing for a
-      wound, a war or the blood, and a crowded hall gets less of the reader each.
+      One reader lives in one hall and sits up with the six people in it most
+      likely to die that year, which usually means the smallest children and the
+      oldest. Fewer of those six die of fevers, old age and the first five years.
+      It does nothing for a wound, a war or the blood, and nothing for anybody
+      the reader is not sitting with.
     preparation: { crowns: 12, years: 0 }
     upkeep: 4
-    benefit: { kind: life_care, mortalityReduction: 0.2, infantReduction: 0.35, maxWards: 6 }
+    benefit: { kind: life_care, mortalityReduction: 0.35, infantReduction: 0.5, maxWards: 6 }
 
   - id: the_long_vigil
     name: The Long Vigil
@@ -27,11 +29,11 @@ mysticWorkings:
     books: [lesser_workings_of_life, greater_workings_of_life]
     description: >-
       The same watch, kept by somebody who has read the second book. It reaches
-      twice as many beds and holds a little harder at each. It still cannot stop
-      a blade, a war or the blood.
+      ten beds instead of six and holds harder at each. It still cannot stop a
+      blade, a war or the blood.
     preparation: { crowns: 20, years: 1 }
-    upkeep: 7
-    benefit: { kind: life_care, mortalityReduction: 0.3, infantReduction: 0.5, maxWards: 12 }
+    upkeep: 6
+    benefit: { kind: life_care, mortalityReduction: 0.45, infantReduction: 0.65, maxWards: 10 }
 
   - id: shoring_the_banks
     name: Shoring the Banks
@@ -39,11 +41,12 @@ mysticWorkings:
     books: [lesser_workings_of_terra]
     description: >-
       A reader walks one farm or one stretch of wet ground every season, packing
-      the banks and settling the drains. A bad year there is half as bad, and
-      flood or slump takes half as much. It does not make a good year better.
-    preparation: { crowns: 15, years: 1 }
-    upkeep: 3
-    benefit: { kind: estate_protection, lossPrevented: 0.5, parcelKinds: [tenant_farm, wetland], maxAcres: 140 }
+      the banks and settling the drains. A bad year there costs about a third of
+      what it would, and flood or slump takes about a third as much. It does not
+      make a good year better.
+    preparation: { crowns: 5, years: 1 }
+    upkeep: 1
+    benefit: { kind: estate_protection, lossPrevented: 0.7, parcelKinds: [tenant_farm, wetland], maxAcres: 140 }
 
   - id: the_quarrymans_face
     name: The Quarryman's Face
@@ -51,34 +54,34 @@ mysticWorkings:
     books: [lesser_workings_of_terra, greater_workings_of_terra]
     description: >-
       The second book teaches how stone wants to fall. A reader can hold a slate
-      face, a mill race or a large farm through a bad year and keep most of what
-      it would have lost.
-    preparation: { crowns: 30, years: 2 }
-    upkeep: 6
+      face, a mill race or a large farm through a bad year and keep nearly all of
+      what it would have lost.
+    preparation: { crowns: 12, years: 2 }
+    upkeep: 2
     benefit:
       kind: estate_protection
-      lossPrevented: 0.7
+      lossPrevented: 0.9
       parcelKinds: [tenant_farm, wetland, mill, slate_work]
       maxAcres: 260
 
 # Plain English counterparts for working descriptions; Originals above stay unchanged.
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
-    of: e106a20b48392e5f
+    of: e4434738f3973e8c
     plainenglish: >-
-      One reader lives in one hall and looks after anyone there who is ill. Fewer of them die of fever, old age, or in their first five years. It does not help with wounds, war or the blood, and in a crowded hall each person gets less of the reader.
+      One reader lives in one hall and looks after the six people there most likely to die that year, usually the youngest children and the oldest people. Fewer of those six die of fever, old age, or in their first five years. It does not help with wounds, war or the blood, or anyone the reader is not looking after.
   - address: "content:mystic-workings.yaml#mysticWorkings[id=the_long_vigil].description"
-    of: 2d42f97d1dede331
+    of: 4cd3be4968a84ea5
     plainenglish: >-
-      The same care, given by someone who has read the second book. It covers twice as many people and protects each a little more. It still cannot stop a blade, a war or the blood.
+      The same care, given by someone who has read the second book. It covers ten people instead of six and protects each of them more. It still cannot stop a blade, a war or the blood.
   - address: "content:mystic-workings.yaml#mysticWorkings[id=shoring_the_banks].description"
-    of: 67dcc7870272bceb
+    of: d49e82b70fc7dc2b
     plainenglish: >-
-      A reader walks one farm or one area of wet ground every season, strengthening the banks and clearing the drains. A bad year there is only half as bad, and floods or landslips do half as much damage. It does not make a good year better.
+      A reader walks one farm or one area of wet ground every season, strengthening the banks and clearing the drains. A bad year there costs only about a third of what it would, and floods or landslips do about a third of the damage. It does not make a good year better.
   - address: "content:mystic-workings.yaml#mysticWorkings[id=the_quarrymans_face].description"
-    of: 22971d5db99417d9
+    of: b31455ec59e01dc8
     plainenglish: >-
-      The second book teaches how stone wants to fall. A reader can protect a slate quarry, a mill race or a large farm through a bad year and save most of what it would have lost.
+      The second book teaches how stone wants to fall. A reader can protect a slate quarry, a mill race or a large farm through a bad year and save nearly all of what it would have lost.
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].name"
     of: c391dcaa52cff0a6
     plainenglish: "Caring for the Sick"
