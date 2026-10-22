@@ -9,6 +9,7 @@ file, or knows what a year is. Its only dependency is `zod`.
 ids.ts            branded ids. They ARE strings — no cast needed to read one.
 exhaustive.ts     assertNever. The compiler as the checklist.
 event.ts          EventTemplate, Effect, Target, SlotRole, Interaction, Record block
+primordial.ts     SceneSite, emergency harm/prices and saved intervention records
 conditions.ts     Condition, Filter, CompareOp, RespectTier, Register
 attributes.ts     AttributeDef, TraitDef, the affinities, canLearn
 genome.ts         LocusDef, Genome, EldritchProfile, GenePool
@@ -39,6 +40,14 @@ validate.ts       the runner: validateBundle, runRule
   words of Chronicle pages and other persisted diegetic records; localisation
   may use stable message ids before rendering, but loading an old save must not
   require an old translation catalogue. See [docs/LOCALISATION.md](../../docs/LOCALISATION.md).
+- **Guarded outcomes still need a total draw.** `Outcome.onlyIf` uses slot
+  filters, with `outcomes/guard` restricting the supported partitions and
+  `outcomes/cover` requiring an available fallback or complementary guards.
+  A check band selects an outcome directly, so it cannot use `onlyIf`.
+- **Emergency responses are complete outcomes.** `Outcome.primordial` replaces
+  the normal effects and public Record together; `site` and `agreedPrices`
+  describe attendance and specific accepted prices. Validate these through the
+  existing rules, not a second content schema.
 - **Branded ids are assignable to `string`.** If you find yourself writing
   `as unknown as string`, you do not need it. Going the other way is `asId<T>`.
 - **`CONTENT_LAYOUT` is the only statement of where content lives.** Both
