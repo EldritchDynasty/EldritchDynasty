@@ -6,6 +6,7 @@ import { writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import type { Content } from '@ed/schema';
 import { livingBlood } from '../ending.js';
+import { proportionSE } from '../testing.js';
 import { playChallengeRun, type ChallengePolicy } from './challenge-report.js';
 import { attachMysticLedger, emptyMysticLedger, mysticPayback, noteMysticOrder, sampleMysticYear } from './mystic-accounting.js';
 
@@ -30,21 +31,26 @@ export function meanEvidence(values: readonly number[]) {
     min: Math.min(...values), max: Math.max(...values) };
 }
 
+export function rateEvidence(hits: number, n: number) {
+  return { hits, n, rate: n ? hits / n : null, standardError: n ? proportionSE(hits, n) : null };
+}
+
 type Run = ReturnType<typeof playMysticBaseline>;
 export function summariseMysticBaseline(runs: readonly Run[]) {
   return (['short', 'long'] as const).flatMap(campaign => (['chronicler', 'narrow', 'broad'] as const).map(policy => {
     const rows = runs.filter(r => r.campaign === campaign && r.policy === policy);
     const sum = (read: (r: Run) => number) => rows.reduce((total, row) => total + read(row), 0);
     const estimate = (read: (r: Run) => number) => meanEvidence(rows.map(read));
+    const rate = (read: (r: Run) => boolean) => rateEvidence(sum(r => Number(read(r))), rows.length);
     return {
       campaign, policy, runs: rows.length,
       livedYears: sum(r => r.years),
       exposedHouses: sum(r => Number(r.ledger.challengeVisits > 0)),
       trainedHouses: sum(r => Number(r.ledger.trainedHouseYears > 0)),
       successfulLearnedHouses: sum(r => Number(r.ledger.learnedSuccesses > 0)),
-      exposedHouseFraction: estimate(r => Number(r.ledger.challengeVisits > 0)),
-      trainedHouseFraction: estimate(r => Number(r.ledger.trainedHouseYears > 0)),
-      learnedSuccessHouseFraction: estimate(r => Number(r.ledger.learnedSuccesses > 0)),
+      exposedHouseFraction: rate(r => r.ledger.challengeVisits > 0),
+      trainedHouseFraction: rate(r => r.ledger.trainedHouseYears > 0),
+      learnedSuccessHouseFraction: rate(r => r.ledger.learnedSuccesses > 0),
       learnedAttempts: sum(r => r.ledger.learnedAttempts),
       learnedSuccesses: sum(r => r.ledger.learnedSuccesses),
       intervenedLearnedAttempts: sum(r => r.ledger.intervenedLearnedAttempts),
@@ -116,7 +122,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-baseline.ts')) {
       cash: 'actual successful auction payments (including automatic bids), successful broker/binder orders, negative cash bundles that acquire/study a book, and paid challenge preparation counted once',
       payback: 'same selected learned check versus its authored failure band, before primordial response, less priced costs; unintervened column excludes all intervened successes',
       limits: 'not total Library ROI or causal final treasury; all Library acquisition costs charged to this narrow use, other book benefits excluded; noncoin prices and study opportunity years unpriced; no passive effects, wards or duties shipped in this baseline',
-      uncertainty: 'means and standard errors across independent houses; paired differences on identical seeds, not independent-visit binomial intervals',
+      uncertainty: 'means and standard errors across independent houses; house fractions use proportionSE with its 1/n floor; paired differences on identical seeds, never independent-visit trials',
       controls: 'first two seeds of every column replayed without any observers; SHA256 over the complete SavedGame with only savedAt blanked',
     },
     summary: summariseMysticBaseline(samples), paired: pairedMysticBaseline(samples), controls, samples,
