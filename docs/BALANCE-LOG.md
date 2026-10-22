@@ -14017,8 +14017,7 @@ the first witness in 186800–186899, the same change #1881 makes for #1867.
 configuration. `people/founding-cast.ts` turns the authored cast around for a
 **blood mother** (the founder carries the font and bears the children; a
 married-in husband fathers them). Bias and every other seed fact are
-unchanged; `SeedPerson.byConfiguration` lets content give a configuration its
-own bias, and none is authored yet.
+unchanged.
 
 **Founding blood, 40 seeds (5000–5039), authored bias 0.2, §22 scale.**
 
@@ -14059,9 +14058,9 @@ under every bias, because Aldous expresses in every seed — that gap is
 structural, and no founder bias removes it. Line breaks and Regency years
 do not move outside noise.
 
-**Not decided here.** The value goes in `characters/founding.yaml` as
-`byConfiguration.blood_mother.bias`, which needs the content lane, and a
-negative founding bias is a design statement ("the mother's blood was
-thinner") the owner should make. `gate:blood`, `gate:ladder`,
-`gate:endings` and the harness still run unsigned; giving them a founding
-configuration is gates-lane work and the gate-level measurement follows it.
+**Decision (owner, 2026-10-22): keep 0.2.** The blood mother is the
+stronger, earlier start, and that is the house the player chose; no
+per-configuration bias is authored, so none is declared. `gate:blood`,
+`gate:ladder`, `gate:endings` and the harness still run unsigned; giving
+them a founding configuration is gates-lane work, and the gate-level
+measurement follows it.

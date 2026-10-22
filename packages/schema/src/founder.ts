@@ -7,7 +7,8 @@ import { assertNever } from './exhaustive.js';
  * THE FOUNDER IS THE PLAYER (#1867). Who signed in 1042 is an answer the
  * player gives, in three parts that are deliberately independent:
  *
- *   name           what the founder is called. Blank keeps the authored one.
+ *   name           what the founder is called. The signing requires one;
+ *                  blank here (a headless run, an older save) keeps the authored one.
  *   gender         how prose refers to them. Names and grammatical forms only.
  *   configuration  which body carried the blood into the house.
  *

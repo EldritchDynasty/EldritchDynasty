@@ -72,23 +72,6 @@ describe('the founding configuration', () => {
     expect(founded({ gender: 'nonbinary', configuration: 'blood_mother' }).founder.sex).toBe('female');
   });
 
-  it('applies a seed\'s byConfiguration bias only in that configuration', () => {
-    const tuned = {
-      ...bundle,
-      characters: bundle.characters.map((s) => (s.becomesGuardian
-        ? { ...s, byConfiguration: { blood_mother: { bias: { eldritch_power: -0.9 } } } }
-        : s)),
-    };
-    const at = (source: typeof bundle, founder: FounderAnswer) =>
-      bootstrap(source, 4242, 1042, 'long', [], { founder }).world;
-    // The authored configuration does not read it.
-    expect(at(tuned, { gender: 'man' })).toEqual(at(bundle, { gender: 'man' }));
-    // The configuration it names does, and the founding blood moves.
-    const narrator = (w: ReturnType<typeof at>) => w.people.get(w.narrator!)!;
-    expect(narrator(at(tuned, { gender: 'woman' })).genome)
-      .not.toEqual(narrator(at(bundle, { gender: 'woman' })).genome);
-  });
-
   it('refuses a nonbinary founder who has not chosen, rather than guessing a body', () => {
     expect(() => founded({ gender: 'nonbinary' })).toThrow(FounderIdentityError);
   });
