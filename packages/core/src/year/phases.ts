@@ -21,6 +21,7 @@ import {
   tickLandImprovements, tickLandMarket, tickLandRisks, tickPlatIllumination,
 } from '../land.js';
 import { tickMuster } from '../muster.js';
+import { tickMystic } from '../mystic.js';
 import { tickEconomy } from '../economy.js';
 import { tickCondition } from '../people/condition.js';
 import { tickAssize } from '../assize.js';
@@ -165,8 +166,20 @@ export const YEAR_PHASES: readonly Phase[] = [
   },
 
   {
-    name: 'lifecycle',
+    name: 'mystic',
     after: ['ages'],
+    why: 'A standing Mystic duty is re-read and its upkeep reserved before anything it can change '
+      + 'happens — mortality in `lifecycle`, the harvest in `land` — so no benefit is ever drawn on '
+      + 'a year nobody paid for, or from somebody who left last winter (#1873). Draws no dice and '
+      + 'writes nothing while the house keeps no duty.',
+    run({ ctx }) {
+      tickMystic(ctx);
+    },
+  },
+
+  {
+    name: 'lifecycle',
+    after: ['ages', 'mystic'],
     why: 'Awakening, Madness and mortality all read the year the Age has just set.',
     run({ ctx, rng, report }) {
       const w = ctx.world;
@@ -371,7 +384,7 @@ export const YEAR_PHASES: readonly Phase[] = [
 
   {
     name: 'land',
-    after: ['ages'],
+    after: ['ages', 'mystic'],
     why: '`economy` reads what the house holds this year, so land settles before it (issue #93). '
       + 'The market opens and expires here, and a term of improvement completes here, on this '
       + 'phase\'s own reserved stream (issue #94, Phase B) — tenant risk and loss (issue #91, '

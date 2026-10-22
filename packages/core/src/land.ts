@@ -8,6 +8,7 @@ import { addGrudge, relate } from './people/relationships.js';
 import { head } from './world.js';
 import { noteBearing } from './bearing.js';
 import { msg } from './messages.js';
+import { wardedDamage, wardedYieldFactor } from './mystic.js';
 import { proseForContentField } from './prose.js';
 
 /**
@@ -479,6 +480,10 @@ export function tickLandRisks(ctx: SimCtx, rng: Rng): LandRiskResult {
       default:
         assertNever(def.kind, 'parcel kind');
     }
+    // A warden holds a bad year up after the roll, never instead of it (#1873).
+    if (state.yieldFactor !== undefined && w.parcels.has(state.id)) {
+      state.yieldFactor = wardedYieldFactor(ctx, def, state, state.yieldFactor);
+    }
   }
 
   return { villageHarvest, sarrowSank, struck };
@@ -517,7 +522,8 @@ export function damageParcel(ctx: SimCtx, parcel: string, magnitude = LAND_DAMAG
   const found = liveStateOf(ctx, parcel);
   if (!found) return;
   const [, state] = found;
-  state.yieldBonus = (state.yieldBonus ?? 0) - magnitude;
+  const def = ctx.content.parcel(parcel);
+  state.yieldBonus = (state.yieldBonus ?? 0) - (def ? wardedDamage(ctx, def, magnitude) : magnitude);
 }
 
 /** Repair a held parcel's yield. Not capped at the undamaged baseline — see the `land` Effect's own doc for why. A no-op if the house does not hold it. */

@@ -8,6 +8,7 @@ import { activeBranches, hall } from './people/branches.js';
 import { madnessCoverOf } from './people/careers.js';
 import { landIncome } from './land.js';
 import { musterUpkeep } from './muster.js';
+import { mysticUpkeep } from './mystic.js';
 import { msg } from './messages.js';
 
 /**
@@ -192,6 +193,8 @@ export interface EconomyReport {
   resource: number;
   /** `musterUpkeep` (issue #89, Stage 2 — #95) — zero with no commitment standing. */
   war: number;
+  /** Upkeep the `mystic` phase reserved for this year's standing duties (#1873) — zero with none. */
+  mystic: number;
   net: number;
 }
 
@@ -326,9 +329,11 @@ export function economyReading(ctx: SimCtx): EconomyReport {
   // the discipline `resource` and the bonded wage above already keep — two
   // systems that each believe they own a cost is how the house pays it twice.
   const war = musterUpkeep(ctx);
+  // The same discipline: the phase reserved it, this is the one place it is paid.
+  const mystic = mysticUpkeep(ctx);
 
-  const net = income + tithe + labour + resource - upkeep - wages - war;
-  return { income, upkeep, wages, tithe, labour, resource, war, net };
+  const net = income + tithe + labour + resource - upkeep - wages - war - mystic;
+  return { income, upkeep, wages, tithe, labour, resource, war, mystic, net };
 }
 
 /** Recurring gross receipts before a shock; careers have their own year phase. */

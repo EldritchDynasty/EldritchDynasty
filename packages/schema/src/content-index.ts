@@ -15,6 +15,7 @@ import type { TaleDef } from './tale.js';
 import type { PrologueDef } from './prologue.js';
 import type { EndingDef } from './ending.js';
 import type { ParcelDef } from './parcel.js';
+import type { MysticWorkingDef } from './mystic.js';
 import type { PositionDef } from './position.js';
 import type { ProseVariant } from './prose.js';
 import { desugarInline, inlineArcId, outcomesOf } from './desugar.js';
@@ -69,6 +70,7 @@ export interface Content {
   readonly endings: EndingDef[];
   readonly parcels: ParcelDef[];
   readonly positions: PositionDef[];
+  readonly mysticWorkings: MysticWorkingDef[];
   readonly proseVariants: ProseVariant[];
 
   /** True for any compiled or authored content id in this bundle. */
@@ -93,6 +95,7 @@ export interface Content {
   talesAbout(eventId: string): TaleDef[];
   parcel(id: string): ParcelDef | undefined;
   position(id: string): PositionDef | undefined;
+  mysticWorking(id: string): MysticWorkingDef | undefined;
 
   mustEvent(id: string, wantedBy?: string): EventTemplate;
   mustAge(id: string, wantedBy?: string): AgeDef;
@@ -149,6 +152,7 @@ export function indexContent(source: ContentBundle | Content): Content {
   const tales = byId(b.tales);
   const parcels = byId(b.parcels);
   const positions = byId(b.positions);
+  const mysticWorkings = byId(b.mysticWorkings);
 
   // One membership test for the save boundary, with no second copy of
   // CONTENT_LAYOUT. Every authored collection in ContentBundle is an array, so
@@ -221,6 +225,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     endings: b.endings,
     parcels: b.parcels,
     positions: b.positions,
+    mysticWorkings: b.mysticWorkings,
     proseVariants: b.proseVariants,
 
     has: (id) => allIds.has(id),
@@ -242,6 +247,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     talesAbout: (eventId) => talesAboutIndex.get(eventId) ?? [],
     parcel: (id) => parcels.get(id),
     position: (id) => positions.get(id),
+    mysticWorking: (id) => mysticWorkings.get(id),
 
     mustEvent: must(events, 'event'),
     mustAge: must(ages, 'age'),

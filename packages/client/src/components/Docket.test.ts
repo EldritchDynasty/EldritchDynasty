@@ -1178,6 +1178,7 @@ function riteTable(assembly: RiteAssembly): TableView {
     unmaking: { ready: false, reason: 'not yet' },
     tutoring: [],
     studying: [],
+    mystic: { duties: [], offers: [] },
     market: [],
     longWait: [],
     forcing: [],

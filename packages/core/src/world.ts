@@ -5,7 +5,8 @@ import type {
   RentPolicy, ResolvedClaim, RespectTier, RivalLineageState, TaleCirculationState, Year,
 } from '@ed/schema';
 import { emptyAuctionState } from '@ed/schema';
-import { emptyAgeState, emptyFrequencyLedger, emptyMusterState } from '@ed/schema';
+import { emptyAgeState, emptyFrequencyLedger, emptyMusterState, emptyMysticState } from '@ed/schema';
+import type { MysticState } from '@ed/schema';
 import { PersonStore } from './people/store.js';
 import type { GeneticsCtx } from './people/factory.js';
 import type { BearingEntry } from './bearing.js';
@@ -613,6 +614,7 @@ export interface WorldState {
   counters: {
     person: number; mint: number; arc: number; branch: number; decision: number; grudge: number;
     chronicle: number; lot: number; parcel: number; muster: number; library: number; rival: number;
+    mystic: number;
   };
 
   /**
@@ -664,6 +666,14 @@ export interface WorldState {
    * split is the precedent: state a subsystem earns only when it is used.
    */
   muster: MusterState;
+
+  /**
+   * STANDING MYSTIC DUTIES (#1866 B / #1873). Empty until the player names a
+   * practitioner at the Table, and the `mystic` phase draws nothing and writes
+   * nothing while it is — so a house that never assigns one digests exactly as
+   * it did before the system existed. See `mystic.ts`.
+   */
+  mystic: MysticState;
 }
 
 export function createWorld(content: Content, seed: number, startYear: Year, campaign: CampaignId = 'long'): WorldState {
@@ -682,7 +692,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
   // whole pool, and a def with no `ParcelState` behind it is exactly what
   // `buy` looks for.
   const counters = {
-    person: 0, mint: 0, arc: 0, branch: 0, decision: 0, grudge: 0, chronicle: 0, lot: 0, parcel: 0, muster: 0, library: 0, rival: 0,
+    person: 0, mint: 0, arc: 0, branch: 0, decision: 0, grudge: 0, chronicle: 0, lot: 0, parcel: 0, muster: 0, library: 0, rival: 0, mystic: 0,
   };
   const parcels = new Map<string, ParcelState>();
   for (const def of content.parcels) {
@@ -758,6 +768,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
     frame: { lastFired: null, firedAt: {}, entries: [] },
     parcels,
     muster: emptyMusterState(),
+    mystic: emptyMysticState(),
   };
 }
 

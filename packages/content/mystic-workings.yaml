@@ -1,0 +1,93 @@
+# STANDING MYSTIC DUTIES (#1866 B / #1873). A working is what a learned
+# reader can be named to do, every year, for one real place — a hall to care
+# for or a parcel to keep. The Table names the reader and the place; the
+# `mystic` phase reserves the upkeep before any benefit, and the benefit is
+# read where the outcome happens (`rollDeath`, `tickLandRisks`,
+# `damageParcel`), only while the reader is alive, of the house and there.
+#
+# Nothing here touches Madness or Eldritch Power (invariant 4), and practice
+# is not a post (invariant 16): the Threshold four are a woman's exactly as
+# much as a man's. `books` lists EVERY book the reader must have finished.
+mysticWorkings:
+  - id: sickroom_watch
+    name: The Sickroom Watch
+    affinity: life
+    books: [lesser_workings_of_life]
+    description: >-
+      One reader lives in one hall and sits up with whoever is ill in it. Fewer of
+      them die of fevers, old age and the first five years. It does nothing for a
+      wound, a war or the blood, and a crowded hall gets less of the reader each.
+    preparation: { crowns: 12, years: 0 }
+    upkeep: 4
+    benefit: { kind: life_care, mortalityReduction: 0.2, infantReduction: 0.35, maxWards: 6 }
+
+  - id: the_long_vigil
+    name: The Long Vigil
+    affinity: life
+    books: [lesser_workings_of_life, greater_workings_of_life]
+    description: >-
+      The same watch, kept by somebody who has read the second book. It reaches
+      twice as many beds and holds a little harder at each. It still cannot stop
+      a blade, a war or the blood.
+    preparation: { crowns: 20, years: 1 }
+    upkeep: 7
+    benefit: { kind: life_care, mortalityReduction: 0.3, infantReduction: 0.5, maxWards: 12 }
+
+  - id: shoring_the_banks
+    name: Shoring the Banks
+    affinity: terra
+    books: [lesser_workings_of_terra]
+    description: >-
+      A reader walks one farm or one stretch of wet ground every season, packing
+      the banks and settling the drains. A bad year there is half as bad, and
+      flood or slump takes half as much. It does not make a good year better.
+    preparation: { crowns: 15, years: 1 }
+    upkeep: 3
+    benefit: { kind: estate_protection, lossPrevented: 0.5, parcelKinds: [tenant_farm, wetland], maxAcres: 140 }
+
+  - id: the_quarrymans_face
+    name: The Quarryman's Face
+    affinity: terra
+    books: [lesser_workings_of_terra, greater_workings_of_terra]
+    description: >-
+      The second book teaches how stone wants to fall. A reader can hold a slate
+      face, a mill race or a large farm through a bad year and keep most of what
+      it would have lost.
+    preparation: { crowns: 30, years: 2 }
+    upkeep: 6
+    benefit:
+      kind: estate_protection
+      lossPrevented: 0.7
+      parcelKinds: [tenant_farm, wetland, mill, slate_work]
+      maxAcres: 260
+
+# Plain English counterparts for working descriptions; Originals above stay unchanged.
+proseVariants:
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
+    of: e106a20b48392e5f
+    plainenglish: >-
+      One reader lives in one hall and looks after anyone there who is ill. Fewer of them die of fever, old age, or in their first five years. It does not help with wounds, war or the blood, and in a crowded hall each person gets less of the reader.
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_long_vigil].description"
+    of: 2d42f97d1dede331
+    plainenglish: >-
+      The same care, given by someone who has read the second book. It covers twice as many people and protects each a little more. It still cannot stop a blade, a war or the blood.
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=shoring_the_banks].description"
+    of: 67dcc7870272bceb
+    plainenglish: >-
+      A reader walks one farm or one area of wet ground every season, strengthening the banks and clearing the drains. A bad year there is only half as bad, and floods or landslips do half as much damage. It does not make a good year better.
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_quarrymans_face].description"
+    of: 22971d5db99417d9
+    plainenglish: >-
+      The second book teaches how stone wants to fall. A reader can protect a slate quarry, a mill race or a large farm through a bad year and save most of what it would have lost.
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].name"
+    of: c391dcaa52cff0a6
+    plainenglish: "Caring for the Sick"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_long_vigil].name"
+    of: 947afad1b472193d
+    plainenglish: "Greater Care for the Sick"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=shoring_the_banks].name"
+    of: 1ccbba4126b7c45d
+    plainenglish: "Strengthening the Banks"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_quarrymans_face].name"
+    of: e75c92d76597612b
+    plainenglish: "Protecting Quarries and Mills"

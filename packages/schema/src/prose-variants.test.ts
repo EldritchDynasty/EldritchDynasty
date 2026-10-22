@@ -376,6 +376,7 @@ describe('core message counterparts (#1010)', () => {
       'tales.yaml': 'tales: []',
       'parcels.yaml': 'parcels: []',
       'positions.yaml': 'positions: []',
+      'mystic-workings.yaml': 'mysticWorkings: []',
       'events/one.yaml': 'events: []',
       [path]: [
         ...(path === 'events/one.yaml' ? ['events: []'] : []),

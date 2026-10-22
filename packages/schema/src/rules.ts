@@ -2228,6 +2228,36 @@ const genePoolAlleles: ValidationRule = {
  * bottom, one Bramme house. A second is not more acreage of the same kind;
  * it is content silently giving one unique risk shape two identities.
  */
+/**
+ * A STANDING DUTY NEEDS REAL BOOKS (#1873). A working names every book its
+ * practitioner must have finished; a missing id makes the working
+ * unlearnable, and a book of another affinity would let somebody practise
+ * Life on the strength of a Terra primer — silently, because the evaluator
+ * only checks the reader's own list. Ids must also be unique: the Table
+ * addresses a working by id and the index keeps only one of two.
+ */
+const mysticWiring: ValidationRule = {
+  id: 'mystic/wiring',
+  about: 'A Mystic working names existing books of its own affinity, under a unique id.',
+  check(content) {
+    const issues: Issue[] = [];
+    const seen = new Set<string>();
+    for (const w of content.mysticWorkings) {
+      const at = `mysticWorking:${w.id}`;
+      if (seen.has(w.id)) issues.push(err(this.id, at, 'duplicate working id'));
+      seen.add(w.id);
+      for (const id of w.books) {
+        const book = content.spellbook(id);
+        if (!book) issues.push(err(this.id, at, `names unknown book '${id}'`));
+        else if (book.affinity !== w.affinity) {
+          issues.push(err(this.id, at, `book '${id}' is ${book.affinity}, not ${w.affinity}`));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
 const parcelsWiring: ValidationRule = {
   id: 'parcels/wiring',
   about: 'tenant_farm may repeat; every other kind names one unique holding and risk shape.',
@@ -2496,6 +2526,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   careerGate,
   genePoolAlleles,
   parcelsWiring,
+  mysticWiring,
   warWiring,
   purposeDuplicates,
   voiceContract,
