@@ -2,8 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
 import type { FoundingConfiguration, Gender, ProseMode } from '@ed/schema';
-import { configurationFor } from '@ed/schema';
-import { FOUNDER_NAME_MAX, type GameActions } from '../lib/game';
+import { FOUNDER_NAME_MAX, founderConfigurationFor, type GameActions } from '../lib/game';
 import { initialProloguePresentation, initialPrologueShown, prologueSeenText, revealPrologueBeat } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
@@ -79,7 +78,7 @@ const gender = ref<Gender | null>(null);
 const configuration = ref<FoundingConfiguration | null>(null);
 function chooseGender(next: Gender): void {
   gender.value = next;
-  configuration.value = configurationFor(next) ?? configuration.value;
+  configuration.value = founderConfigurationFor(next) ?? configuration.value;
 }
 const GENDERS: readonly { id: Gender; original: string; plain: string }[] = [
   { id: 'man', original: 'A man', plain: 'Man' },
