@@ -1,5 +1,5 @@
 import type { EventTemplate, Filter, Person, SlotSpec } from '@ed/schema';
-import { assertNever, MAIN_BRANCH } from '@ed/schema';
+import { assertNever, MAIN_BRANCH, renderForm, slotTokenPattern } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalFilter } from './conditions.js';
 import { influencedAttr } from './influence.js';
@@ -12,6 +12,7 @@ export { castIn, castPeople, soleCast, type SlotFill } from './fill.js';
 import { foremostOf, secondForemostOf } from '../ascension.js';
 import type { Rng } from '../rng.js';
 import { CHILDBEARING, eligibleToMarry } from '../people/demography.js';
+import { grammarOf } from '../people/grammar.js';
 import {
   RELATIONSHIP_THREAD_RECALL_MULTIPLIER, activeRelationshipThreadHouses,
 } from '../relationship-threads.js';
@@ -430,13 +431,18 @@ export function matchCount(spec: SlotSpec, ctx: SimCtx): number {
   return candidatesFor(spec, ctx, {}).length;
 }
 
-const TOKEN = /\{([A-Z_][A-Z0-9_]*)\}/g;
-
+/**
+ * `{SLOT}` is a name; `{SLOT.form}` is a pronoun or verb agreement for whoever
+ * the slot holds (`forms.ts` in schema is the grammar). A party of more than
+ * one takes the plural. A token that cannot resolve stays as written, so a
+ * missing cast or an unknown form is visible rather than an empty word.
+ */
 export function renderBody(body: string, fill: SlotFill, ctx: SimCtx): string {
-  return body.replace(TOKEN, (_m, name: string) => {
+  return body.replace(slotTokenPattern(), (m, name: string, form: string | undefined) => {
     const people = castPeople(fill, name, ctx);
-    if (!people.length) return `{${name}}`;
-    return nameList(people.map((p) => p.epithet ?? p.name));
+    if (!people.length) return m;
+    if (form === undefined) return nameList(people.map((p) => p.epithet ?? p.name));
+    return renderForm(people.length > 1 ? 'plural' : grammarOf(people[0]!), form) ?? m;
   });
 }
 

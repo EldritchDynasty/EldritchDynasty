@@ -1,6 +1,6 @@
 import type { ArcDef, Schedule } from './arc.js';
 import type { Content } from './content-index.js';
-import type { Effect, EventTemplate, RecordBlock } from './event.js';
+import type { Effect, EventTemplate, RecordBlock, SlotRole } from './event.js';
 import { isLadderRole, outcomeDrawSets, outcomeGuardKey, outcomeGuardsComplementary, type Outcome } from './event.js';
 import { RECURRING_CAST_ROLES } from './character.js';
 import type { Filter } from './conditions.js';
@@ -8,7 +8,9 @@ import type { Issue, ValidationRule } from './validate.js';
 import { FREQUENCY_PROFILES } from './frequency.js';
 import { RESPECT_ORDER } from './conditions.js';
 import { canBeTaught, canLearn } from './attributes.js';
-import { FRAME_PROSE_SENTENCE_THRESHOLD, PROSE_SENTENCE_THRESHOLD, proseIssues } from './prose.js';
+import { contentProseEntries, FRAME_PROSE_SENTENCE_THRESHOLD, PROSE_SENTENCE_THRESHOLD, proseIssues, splitSentences } from './prose.js';
+import { genderedPronounsIn, parseForm, PERSON_FORMS, slotTokens } from './forms.js';
+import { PRIMORDIAL_ACTOR_SLOT } from './primordial.js';
 import { isInlineArcId } from './desugar.js';
 import { ENDING_ORDER } from './ending.js';
 import { assertNever } from './exhaustive.js';
@@ -259,15 +261,29 @@ const recordClaimSymmetry: ValidationRule = {
 
 const slotReferences: ValidationRule = {
   id: 'slots/references',
-  about: 'Every {TOKEN} names a declared slot, and a relation filter names one that is cast before it.',
+  about: 'Every {TOKEN} names a declared slot, every {TOKEN.form} a declared slot and a known form, '
+    + 'and a relation filter names one that is cast before it.',
   check(content) {
     const issues: Issue[] = [];
     for (const e of content.events) {
       const slotIds = new Set(Object.keys(e.slots));
-      for (const token of e.body.matchAll(/\{([A-Z_][A-Z0-9_]*)\}/g)) {
-        const name = token[1]!;
-        if (!slotIds.has(name)) {
-          issues.push(err(this.id, `event:${e.id}`, `body references undefined slot {${name}}`));
+      for (const token of slotTokens(e.body)) {
+        if (token.form === undefined && !slotIds.has(token.slot)) {
+          issues.push(err(this.id, `event:${e.id}`, `body references undefined slot {${token.slot}}`));
+        }
+      }
+      // A form token renders raw when it cannot resolve, so an unknown one is a
+      // pronoun the player reads as `{HEAD.thier}`. Every prose field, not only
+      // the body: forms are new, and nothing authored before them can trip this.
+      for (const entry of contentProseEntries(e.id, e)) {
+        for (const token of slotTokens(entry.text)) {
+          if (token.form === undefined) continue;
+          if (!slotIds.has(token.slot) && token.slot !== PRIMORDIAL_ACTOR_SLOT) {
+            issues.push(err(this.id, `event:${e.id}`, `${entry.address} references undefined slot in ${token.raw}`));
+          } else if (!parseForm(token.form)) {
+            issues.push(err(this.id, `event:${e.id}`, `${entry.address} has unknown form ${token.raw} — `
+              + `known: ${PERSON_FORMS.join(', ')}; a pronoun form may be capitalised`));
+          }
         }
       }
 
@@ -1692,6 +1708,49 @@ const voiceContract: ValidationRule = {
 };
 
 /**
+ * THE FOUNDER IS WHOEVER THE PLAYER SAYS (#1867). A slot cast with one of
+ * these roles can only ever hold the founder, whose grammar the player
+ * states at the signing — so prose about that slot has no business knowing
+ * whether to write "he". It writes `{GUARDIAN.they}` and lets the cast say.
+ */
+const FOUNDER_SLOT_ROLES: ReadonlySet<SlotRole> = new Set<SlotRole>(['guardian']);
+
+/**
+ * Per SENTENCE, not per event: the two guardian scenes shipped with twenty
+ * masculine pronouns between them and every one is about `{HEAD}`, a man
+ * the slot's own filters make one. A pronoun in a sentence naming the founder
+ * is the case that cannot be right for every founder.
+ *
+ * A WARNING until #1867's prose migration (step 2) is done, and an error
+ * after it.
+ */
+const founderForms: ValidationRule = {
+  id: 'prose/founder-forms',
+  about: 'A sentence naming a founder-cast slot refers to the founder by {SLOT.form}, never by a hand-written he or she.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      const founders = new Set(Object.entries(e.slots)
+        .filter(([, spec]) => FOUNDER_SLOT_ROLES.has(spec.role))
+        .map(([sid]) => sid));
+      if (!founders.size) continue;
+      for (const entry of contentProseEntries(e.id, e)) {
+        for (const sentence of splitSentences(entry.text)) {
+          const named = slotTokens(sentence).find((t) => founders.has(t.slot));
+          if (!named) continue;
+          const pronouns = genderedPronounsIn(sentence);
+          if (!pronouns.length) continue;
+          issues.push(warn(this.id, `event:${e.id}`, `${entry.address}: '${pronouns.join("', '")}' beside `
+            + `{${named.slot}} — the founder's grammar is the player's; write {${named.slot}.they}, `
+            + `{${named.slot}.their} and so on`));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
+/**
  * §29's FIRST RULE, made into a check — and NARROWER than the issue's literal
  * text, for a reason that the shipped content proved on the first run.
  *
@@ -2531,6 +2590,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   purposeDuplicates,
   voiceContract,
   bearingUnnamed,
+  founderForms,
   frameShape,
   attentionFloor,
   riteWiring,

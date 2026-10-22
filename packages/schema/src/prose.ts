@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Issue } from './validate.js';
+import { slotTokens } from './forms.js';
 
 /**
  * THE VOICE CONTRACT, applied to anything long enough to have a shape.
@@ -71,8 +72,9 @@ export function proseIssues(where: string, body: string, threshold: number = PRO
   const sensed = /\b(cold|warm|heat|quiet|loud|silence|smell|sound|damp|dry|still)\b/.test(first);
   if (visual && !sensed) warn('prose/opening', 'sight-first opening — reach for sound or temperature before sight');
 
-  // A slot token in the landing breaks the close on some fills (§16.1)
-  if (/\{[A-Z_][A-Z0-9_]*\}/.test(sentences[sentences.length - 1]!)) {
+  // A name token in the landing breaks the close on some fills (§16.1). A
+  // form token is a pronoun, one syllable whoever is cast, and does not.
+  if (slotTokens(sentences[sentences.length - 1]!).some((t) => t.form === undefined)) {
     warn('prose/landing', 'variable in the landing — a five-syllable name destroys a four-beat close');
   }
 
@@ -131,8 +133,10 @@ export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
 ]);
 
 /** Preserve uppercase slot names and lower/mixed-case runtime substitutions alike. */
-// Match the same leading-underscore placeholders that core msg() substitutes.
-const CONTENT_INTERPOLATION = /\{[A-Za-z_][A-Za-z0-9_]*\}/g;
+// Match the same leading-underscore placeholders that core msg() substitutes,
+// and a slot's grammatical form (`{HEAD.their}`, forms.ts): a Plain English
+// variant that drops the form drops the pronoun with it.
+const CONTENT_INTERPOLATION = /\{[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z]+)?\}/g;
 
 export function contentInterpolationTokens(text: string): string[] {
   return text.match(CONTENT_INTERPOLATION) ?? [];

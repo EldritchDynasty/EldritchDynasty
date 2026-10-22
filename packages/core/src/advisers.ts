@@ -1,5 +1,6 @@
 import { assertNever, type Person } from '@ed/schema';
 import type { SimCtx } from './world.js';
+import { formOf } from './people/grammar.js';
 import type { PendingDecision } from './events/decisions.js';
 import type { MatchCard } from './people/match.js';
 import { msg } from './messages.js';
@@ -76,8 +77,8 @@ function lensOf(
   d?: PendingDecision,
 ): { lens: AdviserLens; cares: () => string } | undefined {
   const role = p.contract?.role;
-  const subject = p.sex === 'female' ? 'she' : 'he';
-  const possessive = p.sex === 'female' ? 'her' : 'his';
+  const subject = formOf(p, 'they');
+  const possessive = formOf(p, 'their');
 
   if (d?.kind === 'match') {
     const matched = ctx.world.people.get(d.subject.id);

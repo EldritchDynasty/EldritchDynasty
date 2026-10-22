@@ -40,6 +40,7 @@ export * from './save.js';
 export * from './assemble.js';
 export * from './content-index.js';
 export * from './prose.js';
+export * from './forms.js';
 export * from './prose-variants.js';
 export * from './choices.js';
 export { PLAYER_SHARE_FLOOR, bearingWordsIn } from './rules.js';

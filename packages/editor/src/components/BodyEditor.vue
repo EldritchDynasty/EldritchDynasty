@@ -4,6 +4,7 @@ import { EditorView, basicSetup } from 'codemirror';
 import { EditorState, StateField, StateEffect } from '@codemirror/state';
 import { Decoration, type DecorationSet, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 import { autocompletion, type CompletionContext, type CompletionResult } from '@codemirror/autocomplete';
+import { PERSON_FORMS, parseForm, slotTokens } from '@ed/schema';
 
 /**
  * THE BODY EDITOR (issue #21). CodeMirror is a new dependency — the house
@@ -12,9 +13,11 @@ import { autocompletion, type CompletionContext, type CompletionResult } from '@
  * author, and a text editor is exactly the thing not worth re-inventing.
  *
  * Three live decorations over the plain prose:
- *   defined slot token     a filled chip — `{CHALLENGER}`
- *   undefined slot token    underlined in the error colour, live
- *   `{`                     opens autocomplete over the event's own slots
+ *   defined slot token     a filled chip — `{CHALLENGER}`, `{CHALLENGER.their}`
+ *   undefined slot token    underlined in the error colour, live — an
+ *                           unknown form (`{CHALLENGER.thier}`) too
+ *   `{`                     opens autocomplete over the event's own slots,
+ *                           and `{SLOT.` over the forms (`forms.ts`)
  *
  * `{` in a TEMPLATE LITERAL collides with Vue's `{{ }}` (AGENTS.md's own
  * warning) — every string built here lives in `<script>`, never inlined in
@@ -39,18 +42,15 @@ const slotField = StateField.define<Set<string>>({
   },
 });
 
-const TOKEN_RE = /\{([A-Z_][A-Z0-9_]*)\}/g;
-
 function buildDecorations(view: EditorView): DecorationSet {
   const slots = view.state.field(slotField);
   const marks: ReturnType<typeof Decoration.mark>[] = [];
   const ranges: { from: number; to: number; deco: ReturnType<typeof Decoration.mark> }[] = [];
   const text = view.state.doc.toString();
-  for (const m of text.matchAll(TOKEN_RE)) {
-    const name = m[1]!;
-    const from = m.index!;
-    const to = from + m[0].length;
-    const known = slots.has(name);
+  for (const t of slotTokens(text)) {
+    const from = t.index;
+    const to = from + t.raw.length;
+    const known = slots.has(t.slot) && (t.form === undefined || parseForm(t.form) !== undefined);
     ranges.push({
       from, to,
       deco: Decoration.mark({ class: known ? 'cm-slot-token' : 'cm-slot-undefined' }),
@@ -76,6 +76,15 @@ const slotHighlighter = ViewPlugin.fromClass(
 
 /** Autocomplete: typing `{` offers the event's own slot names. */
 function slotCompletions(context: CompletionContext): CompletionResult | null {
+  const form = context.matchBefore(/\{[A-Z_][A-Z0-9_]*\.[A-Za-z]*/);
+  if (form) {
+    const slot = form.text.slice(1, form.text.indexOf('.'));
+    return {
+      from: form.from,
+      options: PERSON_FORMS.map((f) => ({ label: `{${slot}.${f}}`, type: 'keyword', apply: `{${slot}.${f}}` })),
+      validFor: /^\{[A-Z_][A-Z0-9_]*\.[A-Za-z]*$/,
+    };
+  }
   const word = context.matchBefore(/\{[A-Z_]*/);
   if (!word) return null;
   return {

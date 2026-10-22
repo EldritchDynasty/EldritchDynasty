@@ -1,6 +1,7 @@
 import type { Person, RetainerRole } from '@ed/schema';
 import { RECURRING_CAST_ROLES, RetainerRoleS } from '@ed/schema';
 import type { SimCtx } from '../world.js';
+import { formOf } from './grammar.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { landIncome } from '../land.js';
 import { isBonded } from './bond.js';
@@ -276,7 +277,7 @@ export function ensureHead(ctx: SimCtx, rng: Rng): SuccessionResult {
     if (ward && ward.status === 'alive') {
       for (const p of w.people.all()) p.castSlots = p.castSlots.filter((s) => s !== 'head');
       const regency = seatHead(ctx, ward);
-      const pronoun = ward.sex === 'female' ? 'she' : 'he';
+      const pronoun = formOf(ward, 'they');
       w.chronicle.push({
         year: w.year,
         weight: 'paragraph',
@@ -303,7 +304,7 @@ export function ensureHead(ctx: SimCtx, rng: Rng): SuccessionResult {
   const rightful = heirApparent(ctx, undefined, 0);
   if (rightful && w.year - rightful.born < 16) {
     w.wardship = { ward: rightful.id, since: w.year };
-    const pronoun = rightful.sex === 'female' ? 'she' : 'he';
+    const pronoun = formOf(rightful, 'they');
     w.chronicle.push({
       year: w.year,
       weight: 'paragraph',

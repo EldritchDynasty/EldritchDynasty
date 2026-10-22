@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { EventTemplate, Filter, SlotSpec } from '@ed/schema';
-import { SlotRoleS } from '@ed/schema';
+import { renameSlotTokens, SlotRoleS } from '@ed/schema';
 import FilterBuilder from './FilterBuilder.vue';
 
 /**
@@ -48,7 +48,7 @@ function remove(name: string) {
 }
 
 /**
- * Renaming rewrites the key AND every `{TOKEN}` in the body, because a slot
+ * Renaming rewrites the key AND every `{TOKEN}` and `{TOKEN.form}` in the body, because a slot
  * whose name no longer matches its token is an undefined-slot error the author
  * did not make on purpose. Body rewriting is the whole reason renaming lives
  * here rather than being left to a text edit.
@@ -59,9 +59,8 @@ function rename(from: string, to: string) {
   const spec = props.slots[from]!;
   delete props.slots[from];
   props.slots[clean] = spec;
-  const token = new RegExp('\\{' + from + '\\}', 'g');
-  props.event.body = props.event.body.replace(token, '{' + clean + '}');
-  if (props.event.absentBody) props.event.absentBody = props.event.absentBody.replace(token, '{' + clean + '}');
+  props.event.body = renameSlotTokens(props.event.body, from, clean);
+  if (props.event.absentBody) props.event.absentBody = renameSlotTokens(props.event.absentBody, from, clean);
   touch();
 }
 

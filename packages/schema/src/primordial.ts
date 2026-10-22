@@ -4,6 +4,9 @@ import { RESPECT_ORDER } from './conditions.js';
 import type { Effect, EventTemplate, Outcome } from './event.js';
 import { assertNever } from './exhaustive.js';
 
+/** The slot a primordial response casts its actor into. It is not declared on the event. */
+export const PRIMORDIAL_ACTOR_SLOT = 'PRIMORDIAL_ACTOR';
+
 /** Physical attendance, never inferred from ownership or a prose token. */
 export const SceneSiteS = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('hall'), hall: z.union([z.literal('main'), z.object({ slot: z.string() }).strict()]), visitors: z.array(z.string()).optional() }).strict(),

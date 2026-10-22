@@ -256,7 +256,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `event/purposes` | CI gate 6. Exactly three distinct purposes, from the closed vocabulary (editor brief §4.5). |
 | `frequency/obligations` | A tier is a set of duties, not a weight: Record blocks, folklore, caps, accounts. |
 | `record/claims` | Record and Embellish must either both carry claims or neither may, because both are pages about the same event. |
-| `slots/references` | Every {TOKEN} names a declared slot, and a relation filter names one that is cast before it. |
+| `slots/references` | Every {TOKEN} names a declared slot, every {TOKEN.form} a declared slot and a known form, and a relation filter names one that is cast before it. |
 | `slots/negated-relation` | A negated relation filter must name a counterpart cast before it, or it rejects everybody instead of narrowing anybody. |
 | `slots/arc-bound` | A slot bound for a whole substory needs an arc, and an absent-body if it may go missing. |
 | `slots/counted` | A slot that casts a party may only be referenced as a party — `{ all: }` or `party_sum`. |
@@ -295,6 +295,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `event/purpose-overlap` | CI gate 6. A triple used far past its share is one event written several times. |
 | `prose/voice` | Bodies over five sentences are held to the countable half of the prose manual. The frame answers to a tighter budget (issue #13). |
 | `prose/bearing` | No choice label names bearing — it must never read as a stat (concept §29, rule 1). |
+| `prose/founder-forms` | A sentence naming a founder-cast slot refers to the founder by {SLOT.form}, never by a hand-written he or she. |
 | `frame/shape` | The frame reacts to the record: no effects, no Record block, no rumour, no choices, no slot against the living family, and at least one read to react to. `reads` is frame-only, and a `chronicled` read names an event that can actually leave a page. |
 | `events/player-share` | At least a quarter of the library must actually ask the player something. |
 | `rites/wiring` | A rite names declared slots, casts its ascendant from a pool that can express, and takes its subject. |

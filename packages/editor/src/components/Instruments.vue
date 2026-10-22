@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import type { Content, Issue, EventTemplate, ClauseDef } from '@ed/schema';
-import { PurposeS } from '@ed/schema';
+import type { Content, Issue, EventTemplate, ClauseDef, Sex } from '@ed/schema';
+import { grammarOfSex, PurposeS, renderForm, slotTokenPattern } from '@ed/schema';
 import { CAMPAIGN_YEARS, TEST_FAMILIES, autoCast, castPeople, decideBranch, nameList, resolveSlots, runFireRateGate, testRng, type FireRateGateResult, type SimCtx } from '@ed/core';
 import { deciderKind } from '@ed/schema';
 import { fileOfId } from '../lib/store';
@@ -123,24 +123,26 @@ async function runFireRate() {
 }
 
 /**
- * PRONOUN AND GRAMMAR PREVIEW — the game has no pronoun-substitution layer
- * (`renderBody` fills `{SLOT}` with a name and stops there), so a slot whose
- * filters do not fix a sex can be cast either way, and prose that quietly
- * assumes one ("his beard") is a bug the schema cannot catch. This renders
- * every free slot both ways, side by side, so a human can.
+ * PRONOUN AND GRAMMAR PREVIEW — `{SLOT.their}` and its kin (`forms.ts`) follow
+ * whoever is cast, but a hand-written "his beard" does not, and a slot whose
+ * filters do not fix a sex can be cast either way. That is a bug the schema
+ * cannot catch. This renders every free slot both ways, side by side, forms
+ * included, so a human can.
  */
 const MALE_NAMES = ['Aldric', 'Bregan', 'Cassian', 'Dorn', 'Emeric'];
 const FEMALE_NAMES = ['Rowan', 'Sable', 'Tamsin', 'Ysolt', 'Maren'];
-const TOKEN = /\{([A-Z_][A-Z0-9_]*)\}/g;
 
 function fixedSexOf(spec: EventTemplate['slots'][string]): 'male' | 'female' | undefined {
   for (const f of spec.filters) if ('sex' in f) return f.sex;
   return undefined;
 }
-function renderWith(body: string, names: (i: number) => string, ids: string[]): string {
-  return body.replace(TOKEN, (m, sid: string) => {
+function renderWith(body: string, cast: (i: number) => { name: string; sex: Sex }, ids: string[]): string {
+  return body.replace(slotTokenPattern(), (m, sid: string, form: string | undefined) => {
     const i = ids.indexOf(sid);
-    return i < 0 ? m : names(i);
+    if (i < 0) return m;
+    const who = cast(i);
+    if (form === undefined) return who.name;
+    return renderForm(grammarOfSex(who.sex), form) ?? m;
   });
 }
 
@@ -153,16 +155,12 @@ const grammarPreview = computed(() => {
     .map((e) => {
       const ids = Object.keys(e.slots).sort();
       const free = ids.filter((sid) => fixedSexOf(e.slots[sid]!) === undefined);
-      const maleFill = (i: number) => {
-        const sid = ids[i]!;
-        const fixed = fixedSexOf(e.slots[sid]!);
-        return fixed === 'female' ? FEMALE_NAMES[i % FEMALE_NAMES.length]! : MALE_NAMES[i % MALE_NAMES.length]!;
+      const named = (i: number, sex: Sex) => {
+        const names = sex === 'female' ? FEMALE_NAMES : MALE_NAMES;
+        return { name: names[i % names.length]!, sex };
       };
-      const femaleFill = (i: number) => {
-        const sid = ids[i]!;
-        const fixed = fixedSexOf(e.slots[sid]!);
-        return fixed === 'male' ? MALE_NAMES[i % MALE_NAMES.length]! : FEMALE_NAMES[i % FEMALE_NAMES.length]!;
-      };
+      const maleFill = (i: number) => named(i, fixedSexOf(e.slots[ids[i]!]!) ?? 'male');
+      const femaleFill = (i: number) => named(i, fixedSexOf(e.slots[ids[i]!]!) ?? 'female');
       return {
         id: e.id,
         title: e.title,
