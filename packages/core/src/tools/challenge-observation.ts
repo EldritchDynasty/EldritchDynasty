@@ -22,6 +22,10 @@ export interface ChallengeObservation {
   event: string;
   choice?: string;
   outcome: string;
+  /** The check result before a separate primordial response, if any. */
+  selectedOutcome: string;
+  intervened: boolean;
+  selectedTreasury: number;
   check: string;
   pool: Check['pool']['kind'];
   score: number;
@@ -53,7 +57,7 @@ function readContext(ctx: SimCtx, observation: OutcomeObservation): SimCtx {
 }
 
 function checkFor(observation: OutcomeObservation): { check: Check; key: string } | undefined {
-  const { event, choiceId, outcome } = observation;
+  const { event, choiceId, selectedOutcome: outcome } = observation;
   if (event.interaction.kind === 'narration') return undefined;
   const choice = event.interaction.choices.find((candidate) => candidate.id === choiceId);
   if (choice?.check) {
@@ -142,6 +146,9 @@ export function observeFamilyChallenge(ctx: SimCtx, observation: OutcomeObservat
   return {
     year: ctx.world.year, event: observation.event.id,
     ...(observation.choiceId ? { choice: observation.choiceId } : {}), outcome: observation.outcome.id,
+    selectedOutcome: observation.selectedOutcome.id,
+    intervened: observation.outcome.id !== observation.selectedOutcome.id,
+    selectedTreasury: observation.selectedOutcome.effects.reduce((sum, effect) => sum + (effect.kind === 'treasury' ? effect.delta : 0), 0),
     check: check.id, pool: pool.kind, score, bonus, difficulty, passed,
     ...(cause ? { cause } : {}),
     participants: participants.map((p) => ({ person: p.id, name: p.name })),
