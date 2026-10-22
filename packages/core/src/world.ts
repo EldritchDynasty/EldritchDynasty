@@ -790,6 +790,11 @@ export interface SimCtx {
   observeSelection?: (observation: SelectionObservation) => void;
   /** Measurement-only scalar receipt of a dealt Match hand. Never saved. */
   observeMatchOffer?: (observation: MatchOfferObservation) => void;
+  /** Actual successful book purchase, after payment. Measurement only; never saved. */
+  observeBookPurchase?: (purchase: {
+    book: string; lot: string; coin: number;
+    currency: import('@ed/schema').AuctionBid['currency'];
+  }) => void;
 }
 
 /**

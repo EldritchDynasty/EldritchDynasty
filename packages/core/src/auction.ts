@@ -651,6 +651,10 @@ export function resolveDueLots(ctx: SimCtx, autoResolve: boolean): void {
     if (playerWins && bid) {
       chargeBid(ctx, bid, lot);
       grantLot(ctx, lot);
+      if (lot.kind === 'spellbook') ctx.observeBookPurchase?.({
+        book: lot.refId, lot: lot.id, currency: bid.currency,
+        coin: bid.currency === 'coin' ? bid.amount : 0,
+      });
       w.auction.history.push({ lot, year: w.year, winner: 'player' });
       continue;
     }

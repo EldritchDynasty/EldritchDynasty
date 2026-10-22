@@ -9,6 +9,7 @@
  * Automatic study remains enabled in every column.
  */
 import { writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { loadContent } from '@ed/content';
 import { ALL_AFFINITIES, type AffinityName, type Content } from '@ed/schema';
 import { campaignDef } from '../campaign.js';
@@ -19,15 +20,23 @@ import { streamFor } from '../rng.js';
 import { digest, saveGame } from '../save.js';
 import { viewOf } from '../session.js';
 import { bootstrap, clearNamingQueue } from '../sim.js';
-import { order, tableView } from '../table.js';
+import { order, tableView, type TableOrder, type OrderResult } from '../table.js';
+import type { SimCtx } from '../world.js';
 import { stepYear } from '../year/step.js';
 import { CHALLENGE_FAILURES, observeFamilyChallenge, recordedAffinityScore, type ChallengeObservation } from './challenge-observation.js';
 
-type Policy = 'chronicler' | 'narrow' | 'broad';
+export type ChallengePolicy = 'chronicler' | 'narrow' | 'broad';
+type Policy = ChallengePolicy;
+export interface ChallengeRunObserver {
+  start?: (ctx: SimCtx) => void;
+  beforeYear?: (ctx: SimCtx) => void;
+  afterYear?: (ctx: SimCtx) => void;
+  order?: (ctx: SimCtx, order: TableOrder, result: OrderResult, spent: number) => void;
+}
 const POLICIES: readonly Policy[] = ['chronicler', 'narrow', 'broad'];
 const NARROW: readonly AffinityName[] = ['death', 'darkness'];
 export function playChallengeRun(content: Content, seed: number, campaign: 'short' | 'long', policy: Policy,
-  observe = true) {
+  observe = true, observer?: ChallengeRunObserver) {
   const def = campaignDef(campaign);
   const ctx = bootstrap(content, seed, def.startYear, campaign);
   const w = ctx.world;
@@ -45,7 +54,14 @@ export function playChallengeRun(content: Content, seed: number, campaign: 'shor
     const checked = observeFamilyChallenge(ctx, observation);
     if (checked) checks.push(checked);
   };
-  if (policy !== 'chronicler') order(ctx, { kind: 'marriages', policy: 'in' });
+  if (observe) observer?.start?.(ctx);
+  const send = (action: TableOrder) => {
+    const before = w.treasury;
+    const result = order(ctx, action);
+    if (observe) observer?.order?.(ctx, action, result, before - w.treasury);
+    return result;
+  };
+  if (policy !== 'chronicler') send({ kind: 'marriages', policy: 'in' });
 
   for (let elapsed = 0; elapsed < def.years && !w.ending && w.year < def.endYear; elapsed++) {
     if (policy !== 'chronicler') {
@@ -62,11 +78,11 @@ export function playChallengeRun(content: Content, seed: number, campaign: 'shor
         && !book.queued && book.canPay && book.fee + book.reserve * 2 <= table.treasury)
         .sort((a, b) => priorities.indexOf(a.affinity as AffinityName) - priorities.indexOf(b.affinity as AffinityName))[0];
       let usedOrder = false;
-      if (wantedLot && order(ctx, { kind: 'lotBid', lot: wantedLot.id,
+      if (wantedLot && send({ kind: 'lotBid', lot: wantedLot.id,
         bid: { currency: 'coin', amount: Math.round(wantedLot.reserve * 1.5) } }).ok) {
         treatment.bookBids++;
         usedOrder = true;
-      } else if (elapsed % 12 === 0 && missing && order(ctx, { kind: 'seekBook', book: missing.book }).ok) {
+      } else if (elapsed % 12 === 0 && missing && send({ kind: 'seekBook', book: missing.book }).ok) {
         treatment.bookSearches++;
         usedOrder = true;
       }
@@ -77,12 +93,13 @@ export function playChallengeRun(content: Content, seed: number, campaign: 'shor
       options.sort((a, b) => priorities.indexOf(a.affinity) - priorities.indexOf(b.affinity)
         || a.book.localeCompare(b.book) || a.person.localeCompare(b.person));
       const next = options[0];
-      if (!usedOrder && next && order(ctx, { kind: 'study', person: next.person, book: next.book }).ok) {
+      if (!usedOrder && next && send({ kind: 'study', person: next.person, book: next.book }).ok) {
         treatment.studyOrders++;
         treatment.studyByAffinity[next.affinity] = (treatment.studyByAffinity[next.affinity] ?? 0) + 1;
       } else if (!usedOrder && !shelves.length) treatment.studyYearsWithoutShelf++;
       else if (!usedOrder) treatment.studyYearsWithoutReader++;
     }
+    if (observe) observer?.beforeYear?.(ctx);
     stepYear(ctx, false);
     const rng = streamFor(w, 'chronicler');
     let guard = 0;
@@ -113,10 +130,14 @@ export function playChallengeRun(content: Content, seed: number, campaign: 'shor
     }
     if (w.pendingDecisions.length) throw new Error(`Unresolved docket: ${seed}/${campaign}/${policy}/${w.year}`);
     clearNamingQueue(ctx);
+    if (observe) observer?.afterYear?.(ctx);
   }
   if (w.year >= def.endYear || w.ending) closeTheLedger(ctx);
+  const saved = saveGame(ctx);
   return { seed, campaign, policy, years: w.year - def.startYear, ending: w.ending?.id,
-    fingerprint: digest(saveGame(ctx)), treatment, exposure, exposureYears: [...exposureYears], checks };
+    fingerprint: digest(saved),
+    completeSaveHash: createHash('sha256').update(JSON.stringify({ ...saved, savedAt: '' })).digest('hex'),
+    treatment, exposure, exposureYears: [...exposureYears], checks };
 }
 
 type Run = ReturnType<typeof playChallengeRun>;
