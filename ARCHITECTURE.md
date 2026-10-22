@@ -3,6 +3,9 @@
 The map. `AGENTS.md` carries the rules you cannot derive from the code; this
 file tells you where the code is and how to add to it.
 
+Reviewed against `main` at `098bfe02` on 22 October 2026. The code remains the
+authority when a later change moves an owner or predicate.
+
 **Reading order for an agent.** Load the least you can:
 
 | Task | Read |
@@ -70,6 +73,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **The Match** — three cards, one marriage | `core/src/people/match.ts` | `match.test.ts` |
 | What a card lets you reason from | `core/src/people/panel.ts` | `panel.test.ts`, `gate:blood`'s `blind`/`panel` columns |
 | How much the player is asked, and how often the same thing twice | `core/src/tools/density-gate.ts` | `attention.slow.test.ts`'s per-generation band |
+| Regency/unwoken pacing, maintenance repetition and gaps in progress | `core/src/tools/density-observer.ts`, `density-report.ts` | `tools/stall.test.ts`; dated evidence in `docs/REGENCY-PACING.md` |
 | Genetics — loci, meiosis, expression | `core/src/genetics/` | `sim.slow.test.ts`, `attributes.slow.test.ts` |
 | **How the blood is handed on** — the font's meiotic drive | `core/src/genetics/meiosis.ts` → `driveToward`, and `drive` in `loci.yaml` | `blood.test.ts`, `blood.slow.test.ts` |
 | Who the house marries when nobody is asked | `core/src/people/demography.ts` → `preferred` | `table.test.ts` |
@@ -78,6 +82,8 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | What a **condition** tests | `core/src/events/conditions.ts` | — |
 | **Who takes a branch** | `schema/src/decider.ts` + `core/src/events/deciders.ts` | `deciders.test.ts` |
 | Which slot fills **first** | `core/src/events/slots.ts` → `fillOrder` | `checks.test.ts` |
+| Practical **learned Mystic** checks | `core/src/people/library.ts` → `knowsAffinity`; `events/checks.ts` → `family_knows` | `library.test.ts`, `checks.test.ts` |
+| Guarded weighted **outcomes** | `schema/src/event.ts` → `OutcomeGuardS`; `core/src/events/effects.ts` → `outcomeAdmits` | `influence.test.ts`, `rules.test.ts` (`outcomes/guard`, `outcomes/cover`) |
 | An inline `next` becoming an **arc** | `schema/src/desugar.ts` | `desugar.test.ts` |
 | What a substory **remembers** | `arcs.ts` (`arc_flag` / `arcFlag`) | `arc-memory.test.ts` |
 | Which events **fire** | `core/src/events/selection.ts` | `sim.slow.test.ts`, `arcs.slow.test.ts` |
@@ -88,15 +94,17 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | The world's reaction — the Assize | `core/src/assize.ts` | `assize.test.ts` |
 | The world's memory — Bearing (§29) | `core/src/bearing.ts` | `bearing.test.ts`, `bearing-gate.test.ts` |
 | The Ascension Ladder — §22's rungs | `core/src/ascension.ts` | `ascension.test.ts` |
+| The ladder's public **diagnosis and evidence route** | `core/src/ascension.ts` → `ascensionBlockersFor`; `core/src/session.ts` → `powerEvidenceRoute` | `ladder.test.ts`, `ascension.test.ts` |
 | **Achievements** and their measured earn rates | `core/src/achievements.ts`, `core/src/achievement-rates.ts` | `achievements.test.ts` |
 | The **rites** — what the top three rungs cost | `core/src/events/rites.ts` | `rites.test.ts`, `rites.slow.test.ts` |
 | Standing orders — the table | `core/src/table.ts` | `table.test.ts` |
+| Callable **forcing rites**, one lifetime attempt per boy | `core/src/table.ts`, `events/decisions.ts`; `schema/src/rules.ts` → `rites/forcing` | `table.test.ts`, `influence.test.ts`, `rules.test.ts` |
 | **The Long Wait / Late Waking** — declaring an unwoken man mundane, learning and scripted waking after thirty | `core/src/table.ts`, `core/src/people/library.ts`, `core/src/people/factory.ts`, `packages/content/events/rare_blood.yaml`, `packages/client/src/components/Table.vue` | `table.test.ts`, `library.test.ts`, `core/src/events/reach.test.ts` |
 | The physical **library** — wear, restoration, sale, burn, tribute and theft | `core/src/people/library.ts`, `core/src/table.ts` | `library.test.ts`, `table.test.ts` |
 | Money and standing | `core/src/economy.ts` | `economy.slow.test.ts`, `ledger.slow.test.ts` |
 | Emergency Primordial interventions | `core/src/events/harm.ts`, `events/primordial.ts`, `presence.ts`; `schema/src/primordial.ts` | `events/primordial.test.ts`, `events/primordial-catalogue.test.ts`, `presence.test.ts`; `tools/primordial-report.mjs` |
 | The Ledger — Ages and clauses | `core/src/ages/scheduler.ts` | `ledger.slow.test.ts` |
-| The **prologue** — the signing, and its two choices | `core/src/prologue.ts` + `packages/content/prologue.yaml` | `prologue.test.ts` |
+| The **prologue** — founder name, Examination and founding choices | `core/src/prologue.ts`, `sim.ts`, `session.ts` + `packages/content/prologue.yaml` | `prologue.test.ts`, `tools/signing-gate.test.ts` |
 | The **ending** — the last night, and the ring | `core/src/ending.ts` + `packages/content/endings.yaml` | `ending.test.ts` |
 | A **chapter** — the years between one Age closing and the next (issue #65) | `core/src/chapter.ts` → `chapterOf`/`openingOf` | `chapter.test.ts` |
 | What a **client** can do | `core/src/session.ts` | `session.slow.test.ts` |
@@ -109,6 +117,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **The Muster** — the levy, and what a war costs | `core/src/muster.ts` | `muster.test.ts`, `muster.slow.test.ts`, `gate:war` |
 | **The papers** — lineage documents as the real dowry | `core/src/people/papers.ts` | `papers.test.ts` |
 | Rival-house **descent** | `core/src/people/rivals.ts` | `rivals.test.ts` |
+| Authored recurring-role **dismissal and recasting** | `core/src/events/effects.ts` → `recast`; `people/succession.ts` → `maintainCast` | `effect-verbs.test.ts`, `rules.test.ts` (`recast/role`) |
 | Which outside houses **recur** — a read model over grudges, the Match, lies | `core/src/relationship-threads.ts` | `rivals.test.ts` |
 | The **campaign** — Short Line, Long Line or demo (not yet on the normal start screen) | `core/src/campaign.ts` → `CAMPAIGNS` | `campaign.test.ts`, `gate:campaigns` |
 | The house's **ambition** | `core/src/ambition.ts` | `ambition.test.ts` |
@@ -132,6 +141,38 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 This is implemented-system history, not a work queue. The code is the authority;
 current work is in the issue tracker.
 
+- **Mystic practice checks completed learning** (#1796, #1830). `knowsAffinity`
+  reads a living, eligible reader's completed `spellsKnown`; `family_knows`
+  asks the household for one. Raw affinity and a book on the shelf are not
+  completed training. The Death, Terra and Darkness routes have authored book
+  and reader supply; recurring assignments and covert operations remain #1866.
+- **The ladder explains its next blocker** (#1806). `ascensionBlockersFor`
+  supplies concurrent failures for diagnostics from the actual predicates.
+  `SessionView.ascension` carries the ordered rungs, the next unmet predicate
+  and, when power is first, public family
+  and Match evidence. Client components do not infer hidden genomes or odds.
+- **Recurring rivals can leave their role** (#1812). Authored `recast` effects
+  free the cast role, and `maintainCast` can refill it. `recast/role` limits
+  content to recurring roles the engine knows how to replace; dismissing a
+  role is not killing its former occupant or rewriting an arc's kept cast.
+- **Pacing observers distinguish Regency from an unwoken house** (#1814).
+  The density report counts actual decisions, exact maintenance repetition and
+  gaps in strategic progress separately for each period and campaign. It reads
+  private diagnostic copies, consumes no simulation draws, and sets no new
+  density gate. `docs/REGENCY-PACING.md` records a dated cohort.
+- **The Table can call a forcing rite** (#1817). Any otherwise eligible
+  unwoken boy in its age window may be offered the rite without exposing his
+  hidden font. Ambient and called outcomes set the same `forcingTried` mark.
+  `onlyIf` filters weighted outcomes using the actual cast, and the coverage
+  rules require a total draw; check bands select outcomes directly instead.
+- **Emergency manifestations are local, unsolicited replacements** (#1868).
+  `assessHarm` excludes specific agreed prices; `resolvePresence` finds who is
+  at the authored scene. Present awakened male expressers each roll at
+  `min(EP / 100, 0.9)` in seeded shuffled order. The first success substitutes
+  one complete response before the single outcome commit and leaves a saved
+  private receipt. This event adapter does not cover annual mortality, ordinary
+  upkeep or military attrition, and offers no player manifestation order.
+
 - **The record is read back** (concept §6 and §29.3's third bite, [#45](https://github.com/EldritchDynasty/EldritchDynasty/issues/45)). On the last night the creditor tests what the book CLAIMS against what the rest of the book can support: standing Discrepancies, weighted by severity at the auction's own 1 : 2 : 4, discount the attested rung, and `selectEnding` reads `Reckoning.substantiated` rather than `attested`. Proven lies are excluded (§6 bills those the year they are caught) and buried ones too (burying is the act that answers the bill — §29.4 rule 5). Derived from `world.discrepancies` and the chronicle, so no new world field and no `SAVE_FORMAT` bump. A reading that withholds a rung writes its own chronicle page naming both readings, because a cost the player cannot reconstruct is indistinguishable from bad dice. `standingLies` and `provenLies` had been counted, shown on the ending screen, and read by nothing that decided anything for as long as the endings had existed. See `core/src/ending.ts` and BALANCE-LOG's *"Stage 3's second bite"*.
 
 - **A secret has legs.** `knowsSecrets` and `loyalty` are read — `core/src/people/secrets.ts`, and the `secrets` year phase. Loyalty rises while the house pays its staff and falls while it cannot; when service ends, each secret on the contract is tested against loyalty and against how badly they were let go, and what fails walks out on `world.looseSecrets` with the house that took them on. Years later it is told, and becomes an OPEN DISCREPANCY under its own id, provable by that house — from there the PRESSURE pass, the `discrepancy` condition, the frame's `reads` and the auction's chronicle pages all pick it up with no new vocabulary. `releaseContracts` reads the contract before it clears it, which is the whole trick: read after, a secret is one nobody knows. `secrets/wiring` fails the build if an id is also a content Discrepancy or a knowledge flag. `SAVE_FORMAT` was 6 when this feature landed. `arcs/archive.yaml` still tells the story by hand and is now the illustration rather than the mechanism.
@@ -151,7 +192,11 @@ current work is in the issue tracker.
 - **Player choice** is wired — see AGENTS.md invariant 9 and `events/decisions.ts`. Choice events, player-cast slots and the Record block all go on a docket that stops the clock, and `autoResolve` still answers them for the harness.
 - **Two hosts, one client.** `packages/shell` loads the built game client in Electron, packages Windows with electron-builder/NSIS, and smoke-tests both source and packaged layouts; release-tag CI requires a signing certificate. `packages/mobile` wraps that same client with Capacitor for Android and iPhone through one bridge. Unsigned Windows/Android beta.3 prereleases and iOS simulator runtime proof are complete; signing, store distribution and physical-device acceptance remain owner-blocked in [issuesneedingowneraction](issuesneedingowneraction). macOS and Linux desktop builds are out of scope. Neither host owns game rules or duplicate UI.
 - **Fertility is heritable.** Fecundity is a Core attribute weighted seventy-thirty toward the mother, driving both completed family size and the annual conception chance — see AGENTS.md invariant 10 and [#28](https://github.com/EldritchDynasty/EldritchDynasty/issues/28).
-- **The Ledger pays out.** Every named, clause-bearing Age reveals one clause to a house that keeps an archivist. Runs recover 4–9 of the nine, and about three quarters reach the God gate of seven.
+- **The Ledger pays out by campaign.** Short, Long and demo profiles hold
+  three, nine and one clauses respectively. Clause-bearing Ages can reveal a
+  clause through paid archival service; a post-Unmaking Demigod also permits
+  the deliberate late search described in brief §18. Recovery rates belong to
+  dated measurements in `docs/BALANCE-LOG.md`, not a universal run guarantee.
 - **Hostility is an edge.** Grudges are recorded, inherited down the generations by their own policy, and decay. Content can gate on `grudgeAgainstUs`.
 - **Standing decays.** A quiet forty-five years costs a tier, visible Madness costs tiers faster, and decay floors at Known — Unknown has to be done to you.
 - **A run is a value.** `saveGame` produces a versioned, Zod-validated snapshot of everything the run has caused, and `loadGame` rebuilds it; a reloaded run continues bit-identically. Derived state — the phenotype cache, the house table, the content — is rebuilt rather than stored.

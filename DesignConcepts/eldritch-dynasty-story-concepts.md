@@ -3,6 +3,12 @@
 **Status:** exploratory. Nothing here is canon. The concept brief (v0.2.1) contains one of these
 already; the other three are alternatives to it, not additions to it.
 
+Historical concept comparison, reviewed for provenance on 22 October 2026
+against `main` at `098bfe02`. The v0.2.1 and millennium references below belong
+to that comparison; the current brief is v0.2.3 and shipped campaigns are
+300/500 years, with a separate 33-year engine demo. Proposed milestones here
+do not describe additional implemented systems or current open work.
+
 **What the question was.** The player accumulates five things — **reputation, bloodline, family
 members, heirlooms, money**. Those are the nouns. A story concept's job is to turn each of them
 from a number into a *reason*, and to lay milestones along the thousand years so the player always

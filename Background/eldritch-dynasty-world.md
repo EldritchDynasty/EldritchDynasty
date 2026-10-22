@@ -3,6 +3,10 @@
 **Status:** canon. Where this file and `packages/content/**` disagree, the content wins and this
 file gets corrected. Where this file and the concept brief disagree, the brief wins.
 
+Implementation review: `main` at `098bfe02`, 22 October 2026. The canon registry
+below describes shipped campaign and founder defaults; proposed founder
+configurations (#1867) and recurring Mystic duties (#1866) are not canon yet.
+
 **What it is for.** The simulation knows how blood moves. It does not know what a mile costs, who
 may arrest a Head, how long a letter takes to reach the king's city, or whether anyone in this
 world has ever seen a printed page. Event authors invent those answers under deadline, and by the
@@ -1096,15 +1100,15 @@ Established in code and content. This file must not contradict any of it, and ne
 
 | Thing | Fixed as | Where |
 |---|---|---|
-| The run | 1042–1542, ~20 generations | brief, `core/src/campaign.ts` |
-| The founder | **Daveed Gearithy**, born 1004, never dies, becomes the house's guardian | `characters/founding.yaml`, invariant 3 |
+| The run | Short: 1042–1342, 300 years, 3 clauses (default); Long: 1042–1542, 500 years, 9 clauses; engine demo: 1042–1075, 33 years, 1 clause | brief, `core/src/campaign.ts` |
+| The founder | Player-supplied name, **Daveed Gearithy** by default; authored male, born 1004, never dies, becomes the house's guardian | `characters/founding.yaml`, `core/src/prologue.ts`, invariant 3 |
 | The house | The player names it; **The Eldritch House** by default, `house_gearithy` | `houses.yaml` |
 | Rival houses | **Marrow** (death, eminent), **Calder** (soldiers, regarded), **Ilm** (light and scholarship, regarded) | `houses.yaml` |
 | The Church | **The Church of the Nine Quiet Names**, wealth 4000, exalted, wants Light and burns it | `houses.yaml` |
 | Coin | 1 crown = 20 marks = 240 mites | brief §13, `core/src/economy.ts` |
 | Income at Regarded | 55–70 crowns a year | `economy.ts` |
 | Household size | Main hall soft cap **14**, branch soft cap **8** | `people/branches.ts` |
-| The nine clauses | Named and written, one revealed per clause-bearing Age | `clauses.yaml` |
+| The nine clauses | Named and written; campaign limits recovery to its contract size, normally through clause-bearing Ages and paid archival service | `clauses.yaml`, `core/src/campaign.ts` |
 | The Ages | Long Peace, Wars, Crusade, Insurrection, Withering, Quickening, Plague | `ages/ages.yaml` |
 | The Regalia | Three founding heirlooms; the **Seal** is one; needed entire for Demigod | brief §22, `arcs/seal.yaml` |
 | The Burning of the Nine Libraries | Mythic, fires no earlier than 1300, reveals the Clause of the Kept Thing | `events/rites.yaml` |

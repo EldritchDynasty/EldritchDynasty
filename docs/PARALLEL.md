@@ -1,9 +1,10 @@
 # Many agents, one repository
 
-Everything below assumes the thing this project actually does: several Claude
-sessions, each in its own container with its own clone, working different issues
-at the same time. They cannot see each other's files, cannot message each other,
-and all of them authenticate to GitHub as the same person.
+This protocol coordinates independent coding sessions, including Claude Code
+and Codex, working different issues in separate clones or worktrees. Do not
+assume another session shares files or a messaging channel. Sessions can
+authenticate to GitHub as the same person; canonical claim refs identify the
+working branch and arbitrate ownership.
 
 ---
 

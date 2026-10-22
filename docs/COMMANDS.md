@@ -131,7 +131,8 @@ fresh rebase and authoritative merge-group check.
 
 `.github/workflows/check.yml` runs **in two tiers**. The short one — `lint`
 (typecheck + validate + prose annotations) and `fast lane` — runs on every
-event, always. The full one adds `test` as a four-way vitest shard, `gates` in
+event, always. The full one adds the checked merge-blocking slow suites in four duration-packed
+vitest shards, `gates` in
 one merge-blocking `batch` lane (sampled `fire-rate`, `war`, `endings` run nightly; `blood` and `outcome-reach` run weekly), a `windows` runner and a `corpus` warm that
 nothing waits on, and it runs on every push to `main`, every tag, every manual
 dispatch and every pull request that is **not a draft**. A draft pull request
@@ -236,94 +237,27 @@ default is still the safe one: an ordinary pull request is not a draft, so it
 gets exactly the coverage it always did, and cheap iteration is something you
 opt into rather than something you can forget your way out of.
 
-**The build was 68 minutes and one shard was all of it.** Run 185 (`main`,
-green): every job started within three seconds of every other, seven of the
-nine finished inside 21 minutes, and `test 2/4` took **67m47s** while the other
-three shards took 3m02s, 10m45s and 4m03s. Vitest shards by a hash of the file
-PATH, not by duration, so which suites a shard draws is re-rolled whenever a
-test file is added anywhere — and every shard was green throughout.
+**Why duration packing exists.** The earlier full-suite build was dominated by
+one shard while its siblings finished much earlier. Path-hash packing had no
+relationship to cost; repeated `view()` reads inside a played-run test added
+avoidable work as well. The fix paired duration-based packing with a cheaper
+read of the same simulation result. Historical measurements are retained in
+[AGENT-LOG.md](AGENT-LOG.md) and [BALANCE-LOG.md](BALANCE-LOG.md).
 
-Two things fixed it. The shards are packed by recorded duration now
-(`tools/shards.mjs`, off `tools/test-durations.json`), so four shards cannot
-fall apart by coincidence of filename. And **one file was most of the problem
-underneath that**: `burying.slow.test.ts` polled `g.view()` — which rebuilds
-the household tree, the halls and a chronicle slice — two and three times a
-turn to read a number, over about fourteen thousand turns a run, sixty-five
-seeds and two policies. It plays exactly what it played before. Measured on a
-four-core container, before and after:
+Current measurements live in `tools/test-durations.json` and
+`tools/gate-durations.json`. The test sequencer packs from the first;
+`lanes.test.ts` and the evidence-inventory checks enforce the retained suite
+shape. Gate jobs retain structured timings with host CPU and Node metadata and
+apply the checked duration guard. A faster runner and a cheaper algorithm are
+different explanations, so retain that host evidence when rebaselining.
 
-| | before | after |
-|---|---|---|
-| `npm test` | ~65 min | **~14 min** |
-| packed shards | 60.2m / 14.6m / 14.6m / 14.6m | **~10m each** |
-| spread | 4.12x | **1.00x** |
-| longest single file | 60.2m, over a 26.0m fair share | **~9m, under ~10m** |
-
-Those container figures explain why duration-packed test shards exist; they
-are not a current runner contract. Current gate-lane baselines live only in
-`tools/gate-durations.json`, and each gate job measures itself and fails when
-it exceeds the recorded tolerance. #333 records the current per-gate
-attribution and repack evidence in `docs/BALANCE-LOG.md` instead of copying
-another stopwatch table here. Each lane also retains the JSON produced by
-`npm run gates -- --lane <lane> --timings-json <file>`, so a drift can be
-attributed gate by gate without transcribing timestamps. Since #1641 that JSON
-also names its `host` (CPU model, logical CPUs, Node), because a hosted timing
-that cannot say which machine it ran on cannot separate a code regression from
-a slower runner. A faster build starts
-by looking at whichever checked lane the data says is longest.
-
-The shards are not level on the runners (10m05s against 5m27s) while the
-committed table packs them level, and that is not the packing failing: the
-durations come from a four-core container with a warm corpus, and a runner is
-a different machine that may restore a cold one. What the table gets right is
-the *relative* cost of the files. `lanes.test.ts` asserts the packing against
-those recorded durations — a structural claim about one file being too big —
-never against a runner's clock, which would be a stopwatch in CI and muted
-within a fortnight.
-
-**What went stale, and what was done about it.** `check.yml` had claimed
-`18m02s of wall clock` since run 125 and carried a written argument that
-balancing the shards would buy nothing — sound when written, and then `war`
-halved (the 500-year term, #133) while `test 2/4` quadrupled, so the floor
-stopped being the gates and the argument survived the fact it rested on.
-`vitest.config.ts` and this file carried their own copies. All three said, in
-their own prose, that a timing comment is perishable. **The warning is not the
-mechanism**, so the numbers that decide anything are data now: `npm run cost --
---full --write` measures them, the sequencer packs from them, and a test fails
-when they drift. What is left in the comments is the reasoning, which is the
-part a number cannot carry.
-
-**Gate-lane shape is measured, not remembered.** Earlier versions of this
-file copied runner timings and then reasoned from them after they had gone
-stale. #333 makes the current lane cost machine-readable instead. The
-important structural fact remains: gates that share an expensive process-local
-corpus stay together, while expensive independent gates can move to separate
-runners. `gates.test.ts` proves the partition and the workflow matrix agree;
-the per-lane duration guard proves the checked timing budget still describes CI.
-**The landing is a separate problem, and it got its own fix.** Sharding buys
-the verdict; it cannot help `npm run land`, which runs on one container. So
-the landing overlaps instead: `typecheck` and `validate` still go first and
-alone — twenty-three seconds that catch a broken template before anything
-spends forty minutes — and then `test` and `gates` run AT THE SAME TIME.
-Vitest takes a worker per core; `npm run gates` is a single node process
-walking the gate table in a serial loop, so it held one core for thirty-six
-minutes while three sat idle. About 196 core-minutes of work that took 76
-minutes of clock **measured 40m01s** overlapped, on 2026-09-13 — fetch to
-push, with the CI verdict wait on top of that.
-
-It reports BOTH, too. A serial landing died at the first failure, so a red
-test hid a moved gate and cost another 76 minutes to find it — the argument
-this file already made about CI's jobs, which had been true of the landing the
-whole time.
-
-Full-tier CI runs on the native merge queue's synthetic `merge_group` head
-before GitHub advances `main` — this is the authoritative integration check.
-Ready same-repository PRs enter that queue through `auto-merge-queue.yml`
-after their exact head passes `CI required`; sessions do not fast-forward
-`main` directly. Pushes to `main` still run CI for a post-landing verdict
-(and to judge exceptional direct changes), with the documented markdown-only
-short-tier exception. The gate step runs everything in `GATES` rather than
-a hand-maintained list: one such list once omitted gate 2.
+The local preflight has two modes. Default runs typecheck, validation and the
+fast lane. `--full-preflight` derives the complete local script set from CI
+and overlaps independent expensive checks after the preliminary checks pass.
+Neither mode pushes `main`; GitHub's native merge-group check remains the
+integration authority. Merge CI runs the classified blocking slow suites and
+`batch` gates, while scheduled and release workflows own the broader sampled
+sets described above. It does not run every gate on every merge.
 
 **One job runs on Windows, and it is the one that makes AGENTS.md's
 "Supported environments" a fact rather than a sentence.** It runs the same
@@ -357,8 +291,9 @@ not try it, and do not read a surviving branch as work in flight.
   after. If the fingerprint block moves it was not a refactor — and since each
   year phase draws from its own RNG stream, a moved block points at the system
   that moved it.
-- **`npm run harness`** is the only viable balance method. One playthrough is
-  8–12 hours; never claim a balance change works without a batch behind it.
+- **`npm run harness`** supplies headless balance evidence. Human Long Line
+  playtime is unmeasured; never claim a balance change works without a batch
+  behind it.
 - **`npm run mutate`** breaks code on purpose and lists what no test noticed. A
   PROBE, run deliberately — never a CI threshold.
 - **`npm run gate:drag` / `:blood` / `:ladder` / `:bearing`** are the four

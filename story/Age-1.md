@@ -1,5 +1,12 @@
 # AGE ONE — the first thing the reader reads
 
+**Status:** authored narrative reference, not a literal runtime transcript.
+Reviewed for provenance against `main` at `098bfe02` on 22 October 2026. The
+signing now includes founder naming and the Examination, and its term is
+campaign-aware. Use the live `packages/content/prologue.yaml`, Age/event YAML
+and [fullstory.md](../fullstory.md) for current text and scheduling; the sequence
+below preserves the earlier composition and editorial notes.
+
 **Reading order.** Everything below is in the order the player meets it, from the moment the game
 opens to the moment the first Age is named and closes. Prose is final-draft; the bracketed notes
 are for the build and are not shown.

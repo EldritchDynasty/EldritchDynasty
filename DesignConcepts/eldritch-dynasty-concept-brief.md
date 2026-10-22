@@ -2,13 +2,17 @@
 
 **Version:** 0.2.3 (the Examination)
 **Date:** August 2026
+**Implementation review:** `main` at `098bfe02`, 22 October 2026. The revision
+history below records design intent; current gates are stated in §22 and
+implemented in `packages/core/src/ascension.ts`. Historical playtime and arrival
+targets are not measured guarantees. Unbuilt work remains in the issue tracker.
 **Genre:** Text-based generational strategy / narrative simulation
 **Platform:** Windows via Steam; Android and iPhone (iOS) on their app stores; browser demo. macOS and Linux desktop builds are out of scope (owner decision, 2026-09-29; #349)
 **Stack:** Vue 3 + TypeScript; Electron for Windows, Capacitor for Android and iOS
 **Target price:** NZD $28–35
 **Session shape:** **A Long Line** is 500 in-game years (1042–1542), roughly 20 generations. Real-time playtime has not been measured for this profile; no duration claim is made. **A Short Line** is the separate 300-year default (#66).
 
-> **On this revision.** v0.1 was a systems document with story bolted to the outside. v0.2 rebuilds the narrative architecture using the principles in `.claude/skills/eldritch-story/reference/story-manual.md`. No system from v0.1 has been cut. What has changed: the game now has a **frame**, the chronicle is now **unreliable and player-authored**, the debt now **pays out on a schedule** instead of deferring everything to the last hour, and every Age is now required to advance the mystery. v0.1 is preserved at `eldritch-dynasty-concept-brief.v0.1.md`. Changes are itemised in §26.
+> **On this revision.** v0.1 was a systems document with story bolted to the outside. v0.2 rebuilds the narrative architecture using the principles in `.claude/skills/eldritch-story/reference/story-manual.md`. No system from v0.1 has been cut. What has changed: the game now has a **frame**, the chronicle is now **unreliable and player-authored**, the debt now **pays out on a schedule** instead of deferring everything to the last hour, and every Age is now required to advance the mystery. v0.1 is recoverable from git history. Changes are itemised in §26.
 >
 > **0.2.1 — three changes, arriving with the data model.** The affinity count is now **eight**, in four opposed pairs; §22's God gate was right and §9 was short one. Eldritch Power is confirmed **X-linked**. And the eight affinities now split into **Elemental** and **Threshold**, with women practising only the Threshold four. Note carefully that this governs **Mystic** magic only: Eldritch Power stays male-expressed, and since Madness is the overflow of Eldritch Power, **only those capable of expressing it can go mad** — which means never a woman and never a mundane man. §7, §10, §11, §12, §16, §17 and §22 all move with these.
 >
@@ -81,7 +85,7 @@ Everything the world says about the world: tavern songs, rival houses' chronicle
 Once, at the head of the run. Interactive at the signing. Roughly seven minutes.
 
 - Year 1042. The founder takes **the player's supplied name**. Leaving it blank keeps **Daveed Gearithy**. Names remain load-bearing: this one follows the founder into the Chronicle and the guardian continuity rather than being withheld.
-- The counterparty appears **on-screen, once, in the entire game**. Not shown; described by what it displaces. Iron rusting on the table between one sentence and the next. A dog that will not come into the room. The smell of wet ash indoors, in summer.
+- The counterparty appears **at the signing and the last night**. Not shown; described by what it displaces. Iron rusting on the table between one sentence and the next. A dog that will not come into the room. The smell of wet ash indoors, in summer.
 - The prologue is structured as an announced triad — **three things given, three things owed** — and delivers three, ascending in weight. The third is the one that hurts.
 - **The Examination** comes before the house is named: four questions weigh the founder's answers. Every answer adds a thing given and a thing owed; none is meant to be a right answer.
 - The existing heirloom and first-grudge choices remain. Both echo for five hundred years.
@@ -572,21 +576,21 @@ Ages force optimisation *across* generations rather than within one: sitting on 
 **Cost:** None. Baseline, not achievement. No Touched male = Regency.
 
 ### 2. Adept — *the blood does something*
-**Gate:** EP ≥ 25 · 3 spells · Madness ≤ Mind
+**Gate:** EP ≥ 25 · 1 completed book with the current catalogue · Madness ≤ Mind
 **Cost:** The years of study
 **Unlocks:** May hold Regalia. Eldritch manifestations become frequent — never reliable.
 *Typical arrival: generation 3–5.*
 
 ### 3. Hierophant — *the world notices*
-**Gate:** EP ≥ 50 · 8 spells across ≥3 affinities · 1 Named Art in the family · Respect ≥ Regarded · **Madness ≥ 20** and ≤ Mind
-**Cost:** A public rite. Failure costs a Respect tier.
+**Gate:** EP ≥ 50 · 3 completed books across ≥3 affinities · Respect ≥ Regarded · **Madness ≥ 20** and ≤ Mind
+**Cost:** Study and the blood's accumulated cost. There is no separate Hierophant rite or Named Art count in the current predicate.
 **Unlocks:** Head may sanction rituals. Sealed auction lots.
 
 Note the Madness *floor*. From here up, a placid mind cannot ascend.
 *Typical arrival: generation 10–15. This is where most first runs die — at the Respect wall, having bred beautifully and offended everyone.*
 
 ### 4. The Vessel — *the rung nobody expects*
-**Gate:** EP ≥ 70 · 15 spells · 2 Named Arts · Mind ≥ 70 · Respect ≥ Eminent
+**Gate:** EP ≥ 70 · 4 completed books · Mind ≥ 70 · Respect ≥ Eminent · Vessel rite completed
 **Cost:** **A living family member of the blood, willingly given.** Named, chosen by the player from the tree. Consumed. Their attributes are added to the ascendant's. The tree shows them greyed, with a mark that is not the mark for death.
 
 The Vessel's Madness transfers **in full and uncapped**. Sacrificing your most gifted, most damaged relative is the strongest play and the worst idea.
@@ -596,7 +600,7 @@ The Vessel's Madness transfers **in full and uncapped**. Sacrificing your most g
 *(new)* The Vessel generates a mandatory Record choice with no good option: record it and lose two Respect tiers, or omit it and create the largest Discrepancy in the game — one that the Church spends the remaining centuries trying to prove.
 
 ### 5. Demigod — *the hinge*
-**Gate:** EP ≥ 85 · 25 spells across ≥5 affinities · 4 Named Arts · Respect ≥ Eminent · Madness ≥ 60 and ≤ Mind · **the Regalia complete** (all three founding heirlooms held simultaneously — most runs have lost at least one, so this is often the real gate)
+**Gate:** EP ≥ 85 · 7 completed books across ≥5 affinities · Respect ≥ Eminent · Madness ≥ 60 and ≤ Mind · **the Regalia complete** (all three founding heirlooms held simultaneously) · Great Rite completed
 **Cost:** A Great Rite requiring Church sanction *or* open defiance. Defiance sets the Church permanently hostile.
 **Effect:** Ageing stops. Death by violence or Madness overflow only. Reaching Demigod is a life event, not a reading that can be revoked: if current standing later falls, ageing does not restart.
 
@@ -607,18 +611,27 @@ The Vessel's Madness transfers **in full and uncapped**. Sacrificing your most g
 **Gate:**
 - A **living** elder in the family who has reached at least Hierophant and completed both the Vessel and Great Rites
 - A **separate**, adult blood descendant capable of expressing Eldritch Power, chosen before the Unmaking; the elder's completed rites pass to him when the elder is sacrificed
-- The descendant's own EP ≥ 98; living members of the family, including spouses in its halls, together have read enough distinct books for the final reading gate and know **all eight** affinities to form the last working
+- The descendant's own EP ≥ 88; living family readers, including spouses in its halls, together know at least **eight distinct books** and at least one affinity from **each of the four opposed pairs**. The earlier rungs' cumulative requirements still apply, including Demigod's five-affinity reading
 - Respect ≥ Exalted
 - Madness ≥ 90, Mind ≥ Madness — the narrowest window in the game
 - **At least seven of the nine Ledger clauses recovered**
 - The Ledger settled: the 1042 debt paid, broken, or assumed
 
-**Cost:** The elder who completed both rites. He is unmade to raise the younger, passing on part of his born font and channel as well as the power he acquired. Chosen — or resisted, in which case it is a fight, and the whole run can be lost at the final step. The descendant must still clear the personal power, Mind and Madness gates after the rite; living family readers supply the book and affinity gates. An absent or dead reader cannot stand in the circle.
+**Cost:** The elder who completed both rites. He is unmade to raise the younger, passing on part of his born font and channel as well as the power he acquired. Chosen — or resisted, in which case it is a fight, and the whole run can be lost at the final step. The descendant must still clear the personal power, Mind and Madness gates after the rite; living family readers supply the book and affinity gates. A departed or dead reader cannot supply the household's knowledge.
+
+**How these numbers relate to code.** The ladder is cumulative and uses
+normalised power, Mind and Madness, not raw genetic units. Lower book counts
+are derived by `booksFor` from the catalogue (21 titles at this review), so
+adding books can move them. God's eight-book gate is fixed. The calibrated
+God power floor and four-pair circle replaced the older 98/all-eight design;
+`POWER_FLOOR`, `GOD_AFFINITY_PAIRS` and the shared predicates are authoritative.
+The client receives a next-step diagnosis and public evidence route, while
+instruments can enumerate simultaneous blockers from those same predicates.
 
 ### Why the shape works
-Each rung escalates a different axis, so no single strategy carries you: early rewards breeding, mid rewards patience and the library, Hierophant rewards diplomacy, Vessel rewards ruthlessness, Demigod rewards *preservation*, and God rewards a family deep enough to sacrifice an elder who climbed, raise a descendant who can bear what he leaves, and keep the eight arts alive among the blood — and honest enough, somewhere along the way, to have written down what it actually did.
+Each rung escalates a different axis, so no single strategy carries you: early rewards breeding, mid rewards patience and the library, Hierophant rewards diplomacy, Vessel rewards ruthlessness, Demigod rewards *preservation*, and God rewards a family deep enough to sacrifice an elder who climbed, raise a descendant who can bear what he leaves, and keep living readers across the four opposed pairs — and honest enough, somewhere along the way, to have written down what it actually did.
 
-The terminal irony: the elder's climb is necessary and insufficient. **A dynasty that concentrates everything into one perfect patriarch cannot ascend.** It must raise a successor and keep living readers of every affinity; when the elder is unmade, the house must still know what he did not.
+The terminal irony: the elder's climb is necessary and insufficient. **A dynasty that concentrates everything into one perfect patriarch cannot ascend.** It must raise a successor and keep living readers across the four opposed pairs; when the elder is unmade, the house must still know what he did not.
 
 ---
 
@@ -630,11 +643,12 @@ Every ending replays the prologue's three-part structure with **exactly one elem
 |---|---|---|
 | **Apotheosis** | A god is made | The third part of the triad is no longer a debt. The final page is written in a hand that is not human, and it is legible, which is worse |
 | **The Unmade** | The God rite fails at the last step | Both titans gone. The house is quiet in exactly the way it was quiet in 1042, and a mundane cadet cousin is sitting where the founder sat |
-| **The Broken Line** | Madness overflow takes the family before 1542 | Nobody is at the table. The creditor reads the chronicle alone |
+| **The Broken Line** | No living blood remains, regardless of the cause | Nobody is at the table. The creditor reads the chronicle alone |
 | **The Forgotten** | You survive to 1542 having never passed Adept | The creditor arrives, reads, and does not collect. Survival as anticlimax. The worst ending, and it does not feel like losing until the last line |
 | **The Devoured** | The Ledger comes due with a Hierophant or Vessel at the head | Strong enough to be interesting to it. Not strong enough to refuse |
+| **The Settled Account** | Short or demo contract complete, the highest Chronicle claim fully substantiated, and no earlier ending takes precedence | The shorter account is settled; its triad changes one beat as the others do |
 
-**In all five,** the closing text is assembled from the chronicle the player wrote — including the omissions, which print as dated blank lines. The last thing on screen is a short, plain sentence that reaches back to the prologue's final line.
+**Across all six authored endings,** the closing text is assembled from the chronicle the player wrote — including the omissions, which print as dated blank lines. Long offers the original five; Short and demo offer Broken Line, Settled Account, Forgotten and Devoured. `selectEnding` tests extinction first, then a campaign-eligible failed Unmaking, Apotheosis, a substantiated Hierophant-or-higher reading (Devoured), eligible settlement, then Forgotten. Standing Discrepancies can discount the book's claim. The last thing on screen is a short, plain sentence that reaches back to the prologue's final line.
 
 ---
 
@@ -689,10 +703,23 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 | 12 | Event editor enforces **three declared purposes** | Rothfuss's revision method moved upstream into authoring |
 | 13 | Eldritch Power explicitly **may never become reliable** | Protects the numinous half of the magic design from optimisation |
 | 14 | The founder takes **the player's name**, and the signing gains **the Examination** | Makes the Narrator/guardian continuity explicit and turns the triad's given/owed grammar into paid-for opening choices |
+| 15 | Calibrated book/power gates and the four-pair final circle; public ladder diagnosis | Describes the shipped predicates and actionable evidence rather than older raw design counts (§22; #1802, #1806) |
+| 16 | Callable forcing with guarded outcomes, learned Mystic checks and recurring-role recast | Makes the existing Table, knowledge and cast mechanics explicit (#1796, #1812, #1817, #1830) |
+
+The five package guides and [ARCHITECTURE.md](../ARCHITECTURE.md) route authors
+to these implementations. Mystic checks now require completed study where the
+scene promises practice; #1866's recurring assignments are still unbuilt.
+Forcing rites consume one lifetime attempt per boy, and `onlyIf` preserves
+hidden capability while guaranteeing an outcome. Their presence does not
+make spontaneous Eldritch manifestations a player-controlled action.
 
 ---
 
 ## 27. Design Risk Register
+
+These are continuing design and research questions, not an inventory of absent
+code. Mechanisms and bot measurements do not establish a human response; the
+waived, unrun studies are recorded in [docs/PLAYTEST.md](../docs/PLAYTEST.md).
 
 - [ ] **Frame with no function.** Do the 1542 interludes complicate the tale, or just look mysterious?
 - [ ] **Promise debt.** Is every one of the nine clauses written, and is each assigned to an Age?

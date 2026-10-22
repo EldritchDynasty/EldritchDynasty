@@ -1,5 +1,13 @@
 # TEST COVERAGE
 
+**Historical survey: August–September 2026.** Reviewed for provenance against
+`main` at `098bfe02` on 22 October 2026. The percentages, suite counts and
+"open" surfaces below describe those survey dates, not today's coverage.
+`jsdom` and `@vue/test-utils` are now installed and Vue/host tests exist; use
+the current test files and `tools/ci-evidence.json` for the enforced contracts.
+No new coverage run was made for this documentation audit. Current command
+measurements belong in [AGENTS.md](../AGENTS.md#commands).
+
 Measured 2026-08-20 with `@vitest/coverage-v8` over the full suite, plus two
 probes for the things a coverage tool cannot express: which authored *outcomes*
 a run can actually reach, and which of the condition and effect vocabularies
@@ -426,7 +434,7 @@ does not stop the event; it casts the wrong person into it.
 `filters.test.ts` is that truth table. Re-running the probe over the same two
 mutants afterwards: **1 survivor becomes 0.**
 
-## Still open
+## Still open at the survey date
 
 - **The editor's 4,440 lines of Vue.** Needs `jsdom` and `@vue/test-utils`.
   With `store.ts` covered, this is the remaining untested surface — and it is a

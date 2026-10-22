@@ -45,7 +45,7 @@ The first list comes off the prototype, the second off the store. Add a verb to
 clickable — which is the only thing standing between the content's two `party`
 deciders and a `send` verb that silently never fires.
 
-The ladder's order, names and concurrent blockers come from `view.ascension`.
+The ladder's order, names and next unmet predicate come from `view.ascension`.
 Render its diagnosis and public evidence route rather than reproducing power,
 reading or rite predicates in a component. The Table likewise supplies forcing
 rite offers and refusals; an unwoken boy's hidden font is not UI information.

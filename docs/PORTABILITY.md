@@ -3,6 +3,11 @@
 AGENTS.md states the rules. This is what is behind them, and what to do when
 you touch a hook, a command or a test fixture.
 
+Reviewed against `main` at `098bfe02` on 22 October 2026. The dated failures
+below explain the current portable `.mjs` tools and shared hook registrations;
+old file sizes, deleted scripts and runtime costs in that history are not
+current measurements. Use AGENTS.md for the live command block and byte budget.
+
 ## What it was
 
 The claim — all four agent/platform combinations first-class — was prose until

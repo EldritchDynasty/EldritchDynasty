@@ -1,5 +1,13 @@
 # Eldritch Dynasty — Suggestions
 
+> **Status:** dated analysis, preserved as the 18 October 2026 snapshot.
+> Reviewed for provenance against `main` at `098bfe02` on 22 October 2026;
+> the measurements below were not rerun. Since the snapshot, the ladder
+> evidence route, rival recasting, pacing observers, forcing rites, reader
+> supply and emergency manifestations have shipped. Consult
+> [ARCHITECTURE.md](ARCHITECTURE.md#shipped-systems-and-how-they-behave)
+> and the live tracker before treating a proposed task below as open work.
+>
 > **Purpose:** design rationale and measured evidence for improving the game.
 > Issue priority labels decide work order under `AGENTS.md`; §9 explains the
 > design rationale and does not set a second queue.
@@ -11,7 +19,7 @@
 > setup, not game design. So nothing in it competes with the work below. Launch
 > notes are parked in the appendix.
 >
-> **Checked against:** `main` at `6f8c144b` and the issue tracker on **18 October
+> **Snapshot source:** `main` at `6f8c144b` and the issue tracker on **18 October
 > 2026** (18 open issues; #1641 is closed). Every claim about what the game
 > does or measures cites its issue, file or `docs/BALANCE-LOG.md` entry. Numbers
 > move, so re-check before relying on one.
