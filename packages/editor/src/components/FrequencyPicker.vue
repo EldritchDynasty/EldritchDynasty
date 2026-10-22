@@ -27,14 +27,18 @@ const rows = computed(() => [
 </script>
 
 <template>
-  <label>Frequency</label>
-  <div class="freqpick">
-    <button
-      v-for="f in FREQUENCY_ORDER" :key="f"
-      :class="[f, { on: modelValue === f }]"
-      @click="emit('update:modelValue', f)"
-    >{{ f }}</button>
-  </div>
+  <fieldset class="frequency-group">
+    <legend>Frequency</legend>
+    <div class="freqpick">
+      <button
+        v-for="f in FREQUENCY_ORDER" :key="f"
+        type="button"
+        :aria-pressed="modelValue === f"
+        :class="[f, { on: modelValue === f }]"
+        @click="emit('update:modelValue', f)"
+      >{{ f }}</button>
+    </div>
+  </fieldset>
 
   <div class="oblig">
     <table>
@@ -44,3 +48,12 @@ const rows = computed(() => [
     </table>
   </div>
 </template>
+
+<style scoped>
+.frequency-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.frequency-group legend {
+  padding: 0; margin: 12px 0 5px;
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 600;
+}
+</style>
