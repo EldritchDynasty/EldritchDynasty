@@ -125,7 +125,7 @@ describe('Capacitor iOS project', () => {
 
     expect(workflow).toContain('runs-on: macos-26');
     expect(workflow).toContain('-derivedDataPath "$RUNNER_TEMP/ed-ios-derived"');
-    expect(workflow).toContain('timeout-minutes: 15');
+    expect(workflow).toContain('timeout-minutes: 20');
     expect(workflow).toContain('xcrun simctl bootstatus "$UDID" -b');
     expect(workflow).toContain('xcrun simctl install "$UDID" "$APP"');
     expect(workflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
