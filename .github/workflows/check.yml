@@ -562,12 +562,13 @@ jobs:
           if ! launch_once false; then
             echo "First simulator launch did not complete; collecting simulator state at $(date -u +%H:%M:%S)"
             xcrun simctl list devices || true
-            xcrun simctl spawn "$UDID" launchctl list | head -40 || true
             # #1870: after a long first-boot data migration, a wedged
             # CoreSimulator launch service survives an app-level retry against
             # the same boot. Reboot once to restore it, then retry once. The
             # boot is allowed to fail because shutdown may not have taken;
             # bootstatus -b boots the device itself when it is not running.
+            # Diagnose from the host only: a command spawned inside the wedged
+            # device can block past the step budget, and macOS has no timeout.
             echo "Restarting simulator before one bounded launch retry at $(date -u +%H:%M:%S)"
             xcrun simctl shutdown "$UDID" || true
             xcrun simctl boot "$UDID" || true
