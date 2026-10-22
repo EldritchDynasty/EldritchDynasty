@@ -64,11 +64,16 @@ describe('adviser knowledge boundary (#273)', () => {
     expect(imports).toEqual([
       '@ed/schema',
       './world.js',
+      './people/grammar.js',
       './events/decisions.js',
       './people/match.js',
       './messages.js',
     ]);
     expect(imports.some((path) => /genetics\/|bearing|rng|checks/i.test(path ?? ''))).toBe(false);
+    // How a person is referred to (#1867) is a fact the player can see, and
+    // the module that decides it reaches nothing else.
+    const grammar = readFileSync(new URL('./people/grammar.ts', import.meta.url), 'utf8');
+    expect([...grammar.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1])).toEqual(['@ed/schema']);
     const renderer = readFileSync(new URL('./messages.ts', import.meta.url), 'utf8');
     expect([...renderer.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1])).toEqual([
       '@ed/schema', './prose.js', './world.js',
