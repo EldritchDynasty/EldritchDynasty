@@ -645,6 +645,7 @@ const MARRIAGE_ORDERS = [
       <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
         <div class="small"><strong>{{ duty.name }}</strong> · {{ duty.workingName }} · {{ duty.place }} <span class="dim">· {{ dutyStatus(duty) }}</span></div>
         <p class="small dim">{{ duty.upkeep }} {{ local('crowns a year', 'crowns per year') }} · {{ dutyRecord(duty) }}</p>
+        <p v-if="duty.attended?.length" class="small dim">{{ local('Sitting with:', 'Caring for:') }} {{ duty.attended.map((w) => w.name).join(', ') }}</p>
         <p v-if="duty.paused" class="small dim">{{ local('Set down for it:', 'Reading paused:') }} {{ duty.paused.name }}, {{ duty.paused.remainingYears }} {{ duty.paused.remainingYears === 1 ? 'year' : 'years' }} {{ local('left', 'remaining') }}</p>
         <button class="small" :aria-label="local('Release', 'End duty') + ' ' + duty.name" @click="actions.order({ kind: 'mysticRelease', assignment: duty.id })">{{ local('Release', 'End duty') }}</button>
       </div>
