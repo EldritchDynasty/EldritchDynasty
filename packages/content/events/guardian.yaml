@@ -9,7 +9,7 @@
 # him at the term, generations later.
 events:
   - id: the_guardian_at_the_table
-    title: He Is Still Sitting There
+    title: Still Sitting There
     tier: family
     frequency: uncommon
     weight: 110
@@ -178,9 +178,9 @@ events:
 # Companion batch: household.yaml. Only variant text is added; mechanics are untouched.
 proseVariants:
   - address: content:events/guardian.yaml#events[id=the_guardian_at_the_table].title
-    of: 8b57d80e36a19b12
+    of: fee6893fd1c5905b
     plainenglish: >-
-      The Chair Still Belongs to Him
+      The Chair Is Still Taken
   - address: content:events/guardian.yaml#events[id=the_guardian_at_the_table].body
     of: e160e66775e780bb
     plainenglish: >-

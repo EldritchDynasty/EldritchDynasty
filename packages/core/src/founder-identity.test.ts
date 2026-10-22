@@ -129,6 +129,20 @@ describe('{NARRATOR}', () => {
     const other = place(ctx, { sex: 'male', age: 50, name: 'Corr' });
     expect(renderBody('{NARRATOR.They} {NARRATOR.is} late.', { NARRATOR: other.id }, ctx)).toBe('He is late.');
   });
+
+  it('renders every frame line with the founder\'s forms, and leaves no token behind', () => {
+    const { ctx } = founded({ name: 'Ash Gearithy', gender: 'nonbinary', configuration: 'blood_mother' });
+    const frame = bundle.events.filter((e) => e.tier === 'frame');
+    const texts = frame.flatMap((e) => [e.body, ...(e.interaction.kind === 'narration'
+      ? e.interaction.outcomes.map((o) => o.text) : [])]);
+    const narrated = texts.filter((t) => t.includes('{NARRATOR'));
+    expect(narrated.length).toBeGreaterThan(10);
+    for (const text of narrated) {
+      const line = renderBody(text, {}, ctx);
+      expect(line, text).not.toMatch(/\{NARRATOR/);
+      expect(line, text).not.toMatch(/\b(he|him|his|himself)\b/i);
+    }
+  });
 });
 
 describe('who signed, persisted', () => {
