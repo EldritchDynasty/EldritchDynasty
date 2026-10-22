@@ -361,10 +361,18 @@ describe('CI evidence inventory', () => {
       const smokeStart = workflow.indexOf('- name: install and launch on an iPhone simulator');
       expect(smokeStart, 'iOS runtime smoke step').toBeGreaterThanOrEqual(0);
       const smoke = workflow.slice(smokeStart);
-      expect(smoke.slice(0, 700)).toContain('timeout-minutes: 15');
+      expect(smoke.slice(0, 700)).toContain('timeout-minutes: 20');
       expect(smoke).toContain('launch_once()');
       expect(smoke).toContain('simctl launch client did not return within 120 seconds.');
       expect(smoke).toContain('simctl launch --terminate-running-process "$UDID" nz.eldritchdynasty.game');
+      // #1870: a retry against the same wedged boot hung exactly like the
+      // first launch. The retry must follow a reboot, and the reboot's boot
+      // must tolerate a shutdown that did not take under `bash -e`.
+      const retry = smoke.slice(smoke.indexOf('if ! launch_once false; then'));
+      expect(retry.indexOf('xcrun simctl shutdown "$UDID" || true')).toBeGreaterThan(0);
+      expect(retry).toContain('xcrun simctl boot "$UDID" || true');
+      expect(retry.indexOf('xcrun simctl bootstatus "$UDID" -b'))
+        .toBeLessThan(retry.indexOf('launch_once true'));
     }
   });
 

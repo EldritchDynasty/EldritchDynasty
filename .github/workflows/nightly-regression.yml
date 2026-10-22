@@ -122,8 +122,9 @@ jobs:
         # #409 exposed the real runner envelope, and later hosted runs spent
         # more than 8.5 minutes in first-boot data migration before install.
         # This is a runtime smoke, not a latency gate; keep the nightly copy
-        # aligned with merge CI's 15-minute CoreSimulator envelope.
-        timeout-minutes: 15
+        # aligned with merge CI's 20-minute CoreSimulator envelope, which
+        # holds first boot, a hung launch, one reboot and one retry (#1870).
+        timeout-minutes: 20
         working-directory: packages/mobile
         run: |
           DEVICES="$(xcrun simctl list devices available -j)"
@@ -212,8 +213,19 @@ jobs:
 
           echo "Launching app at $(date -u +%H:%M:%S)"
           if ! launch_once false; then
-            echo "First simulator launch did not complete; retrying once at $(date -u +%H:%M:%S)"
-            sleep 15
+            echo "First simulator launch did not complete; collecting simulator state at $(date -u +%H:%M:%S)"
+            xcrun simctl list devices || true
+            xcrun simctl spawn "$UDID" launchctl list | head -40 || true
+            # #1870: after a long first-boot data migration, a wedged
+            # CoreSimulator launch service survives an app-level retry against
+            # the same boot. Reboot once to restore it, then retry once. The
+            # boot is allowed to fail because shutdown may not have taken;
+            # bootstatus -b boots the device itself when it is not running.
+            echo "Restarting simulator before one bounded launch retry at $(date -u +%H:%M:%S)"
+            xcrun simctl shutdown "$UDID" || true
+            xcrun simctl boot "$UDID" || true
+            xcrun simctl bootstatus "$UDID" -b
+            echo "Retrying simulator launch at $(date -u +%H:%M:%S)"
             launch_once true
           fi
           echo "Simulator launch completed at $(date -u +%H:%M:%S)"
