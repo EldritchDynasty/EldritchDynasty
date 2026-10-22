@@ -91,8 +91,10 @@ events:
       LISTENER_B: { role: listener_record }
     body: >-
       The record says entire. The guardian counts on fingers that are not
-      fingers, out of a habit that outlived the hand. He gets to two, the way
-      he always gets to two, and stops there, the way he always stops there.
+      fingers, out of a habit that outlived the hand. {NARRATOR.They}
+      get{NARRATOR.s} to two, the way {NARRATOR.they} always get{NARRATOR.s}
+      to two, and stop{NARRATOR.s} there, the way {NARRATOR.they} always
+      stop{NARRATOR.s} there.
     interaction:
       kind: narration
       outcomes:
@@ -129,15 +131,17 @@ events:
       LISTENER_B: { role: listener_record }
     body: >-
       Somewhere in the house a trough was filled and emptied a hundred years
-      ago, and the ledger has the year of it and the boy's name and nothing
-      at all about the cold. The guardian was cold on that night. He is not
-      cold now, because cold is a thing bodies do.
+      ago, and the ledger has the year of it and the boy's name and nothing at
+      all about the cold. The guardian was cold on that night. {NARRATOR.They}
+      {NARRATOR.is} not cold now, because cold is a thing bodies do.
     interaction:
       kind: narration
       outcomes:
         - id: only
           weight: 100
-          text: The last of the blood asks, once, whether it hurt. He answers a different question instead.
+          text: >-
+            The last of the blood asks, once, whether it hurt. {NARRATOR.They}
+            answer{NARRATOR.s} a different question instead.
 
   - id: frame_the_second_time
     title: Nine Days, Twice
@@ -193,7 +197,9 @@ events:
       outcomes:
         - id: only
           weight: 100
-          text: He does not say what the house actually kept. Neither, tonight, does the ledger.
+          text: >-
+            {NARRATOR.They} do{NARRATOR.es} not say what the house actually
+            kept. Neither, tonight, does the ledger.
 
   - id: frame_the_northern_house
     title: Not Heard From After
@@ -225,16 +231,19 @@ events:
       LISTENER_B: { role: listener_record }
     body: >-
       She was nineteen, and the page that has her on it is the last page that
-      does. Whatever it says happened — and the guardian has read it more times
-      than the family ever did — the account stops there, the way his own
-      sentences stop when he has decided a thing is not for telling. The last
-      of the blood has learned, by now, what that silence is standing in for.
+      does. Whatever it says happened — and the guardian has read it more
+      times than the family ever did — the account stops there, the way
+      {NARRATOR.their} own sentences stop when {NARRATOR.they} {NARRATOR.has}
+      decided a thing is not for telling. The last of the blood has learned,
+      by now, what that silence is standing in for.
     interaction:
       kind: narration
       outcomes:
         - id: only
           weight: 100
-          text: Nobody at this table is going to be the one who asks him to finish it.
+          text: >-
+            Nobody at this table is going to be the one who asks
+            {NARRATOR.them} to finish it.
 
   - id: frame_the_short_account
     title: Three Other Accounts
@@ -278,7 +287,8 @@ events:
     body: >-
       A fine, a small confessed heresy, a great deal of tea gone cold, and the
       house bought eighty years of nobody asking further. The guardian thinks
-      that was cheap. He has never once said so where the ledger could hear him.
+      that was cheap. {NARRATOR.They} {NARRATOR.has} never once said so where
+      the ledger could hear {NARRATOR.them}.
     interaction:
       kind: narration
       outcomes:
@@ -343,13 +353,16 @@ events:
     body: >-
       Every so often somebody asks which branch is keeping the Seal, meaning
       it kindly, meaning it as small talk, and the guardian answers with a
-      name he has been ready with for a very long time. It is not a real branch.
+      name {NARRATOR.they} {NARRATOR.has} been ready with for a very long
+      time. It is not a real branch.
     interaction:
       kind: narration
       outcomes:
         - id: only
           weight: 100
-          text: He tells it well. He has had centuries to get the details right.
+          text: >-
+            {NARRATOR.They} tell{NARRATOR.s} it well. {NARRATOR.They}
+            {NARRATOR.has} had centuries to get the details right.
 
   - id: frame_the_missing_third_returns
     title: The Count, Again
@@ -393,7 +406,9 @@ events:
       outcomes:
         - id: only
           weight: 100
-          text: He could tell them. He has never once told them.
+          text: >-
+            The guardian could tell them. {NARRATOR.They} {NARRATOR.has} never
+            once told them.
 
   - id: frame_the_drowning_remembered
     title: The Trough, Still Filled
@@ -425,8 +440,8 @@ events:
     body: >-
       Every so many generations a boy goes under for nine days and comes up
       changed or does not come up changed, and the ledger takes a line for it
-      either way. The guardian has never once added to that line. He has his
-      reasons.
+      either way. The guardian has never once added to that line.
+      {NARRATOR.They} {NARRATOR.has} {NARRATOR.their} reasons.
     interaction:
       kind: narration
       outcomes:
@@ -564,15 +579,16 @@ events:
       LISTENER_A: { role: listener_blood }
       LISTENER_B: { role: listener_record }
     body: >-
-      There is a page for the eleven days, and whatever the family chose to set
-      down on it — the careful account, the kind one, or the dated blank that
-      is itself a kind of account — the page is about a room. The guardian has
-      stood at more of those beds than the page has years. He has watched the
-      iron laid across a threshold go dull along its whole length in about the
-      time it takes a person to notice it, and he has not in eleven hundred
+      There is a page for the eleven days, and whatever the family chose to
+      set down on it — the careful account, the kind one, or the dated blank
+      that is itself a kind of account — the page is about a room. The
+      guardian has stood at more of those beds than the page has years.
+      {NARRATOR.They} {NARRATOR.has} watched the iron laid across a threshold
+      go dull along its whole length in about the time it takes a person to
+      notice it, and {NARRATOR.they} {NARRATOR.has} not in eleven hundred
       years found the sentence for what that was. A room is the one thing the
-      record has ever been good at, and it does not lie about this one. It lies
-      by being equal to it.
+      record has ever been good at, and it does not lie about this one. It
+      lies by being equal to it.
     interaction:
       kind: narration
       outcomes:
@@ -638,11 +654,12 @@ events:
       LISTENER_B: { role: listener_record }
     body: >-
       Never cost the house a thing the house was not glad to give, the page
-      says, of two people four hundred years apart, and the page is in the hand
-      of somebody who met neither of them. The guardian met both. He does not
-      say so and he does not correct the page, and the not-correcting has by
-      now gone on longer than either of those two lives, and is beginning to
-      look, even to him, like a kind of agreement.
+      says, of two people four hundred years apart, and the page is in the
+      hand of somebody who met neither of them. The guardian met both.
+      {NARRATOR.They} do{NARRATOR.es} not say so and {NARRATOR.they}
+      do{NARRATOR.es} not correct the page, and the not-correcting has by now
+      gone on longer than either of those two lives, and is beginning to look,
+      even to {NARRATOR.them}, like a kind of agreement.
     interaction:
       kind: narration
       outcomes:
@@ -702,18 +719,19 @@ events:
       ambiguity since the year of the signing, the page says, and the page has
       said it in eleven copies and nine hands and has never once been made to
       say anything else. Both half-sheets are still in the box. The guardian
-      wrote one of them on a night he can still describe and the other eight
-      days later out of a memory he already did not trust, and of everything he
-      has been unable to say to this family in five hundred years, that is the
-      one he has come closest to saying.
+      wrote one of them on a night {NARRATOR.they} can still describe and the
+      other eight days later out of a memory {NARRATOR.they} already did not
+      trust, and of everything {NARRATOR.they} {NARRATOR.has} been unable to
+      say to this family in five hundred years, that is the one
+      {NARRATOR.they} {NARRATOR.has} come closest to saying.
     interaction:
       kind: narration
       outcomes:
         - id: only
           weight: 100
           text: >-
-            He would tell them now, if telling them now were a thing that could
-            be done. It is very late to be finding that out.
+            The guardian would tell them now, if telling them now were a thing
+            that could be done. It is very late to be finding that out.
 
   - id: frame_the_colour_of_its_own_paper
     title: The Colour of Its Own Paper
@@ -735,13 +753,14 @@ events:
       LISTENER_A: { role: listener_blood }
       LISTENER_B: { role: listener_record }
     body: >-
-      The guardian turns to the date of a wet autumn afternoon and stops.
-      Some hands name the ink and the dogs, some call it damp, and some leave
-      the line blank. He does not need the sentence. He was there when the
-      dogs stood outside with their backs to the hall and the second
-      obligation went the colour of its own paper. What the record chose was
-      an ordinary cause, an impossible fact, or silence, and all three sit in
-      the same place where an answer ought to have been. The page says enough.
+      The guardian turns to the date of a wet autumn afternoon and stops. Some
+      hands name the ink and the dogs, some call it damp, and some leave the
+      line blank. {NARRATOR.They} do{NARRATOR.es} not need the sentence.
+      {NARRATOR.They} {NARRATOR.was} there when the dogs stood outside with
+      their backs to the hall and the second obligation went the colour of its
+      own paper. What the record chose was an ordinary cause, an impossible
+      fact, or silence, and all three sit in the same place where an answer
+      ought to have been. The page says enough.
     interaction:
       kind: narration
       outcomes:
@@ -797,9 +816,10 @@ events:
       There are seven grates in the long room and one of them is lit, which is
       how it has been on every night of this kind, in a house that has had
       three roofs and four names and has never once been warm from end to end.
-      The guardian sits where the guardian sits. He has been sitting there
-      since before the oldest thing in the room was made, and the chair beneath
-      him is a hundred and forty years old, and both of these are true.
+      The guardian sits where the guardian sits. {NARRATOR.They}
+      {NARRATOR.has} been sitting there since before the oldest thing in the
+      room was made, and the chair beneath {NARRATOR.them} is a hundred and
+      forty years old, and both of these are true.
     interaction:
       kind: narration
       outcomes:
@@ -887,8 +907,9 @@ events:
       LISTENER_A: { role: listener_blood }
       LISTENER_B: { role: listener_record }
     body: >-
-      There is a page he turns past every time, and he turns past it at the
-      same speed he turns the others, which is the only reason anybody ever
+      There is a page the guardian turns past every time, and {NARRATOR.they}
+      turn{NARRATOR.s} past it at the same speed {NARRATOR.they}
+      turn{NARRATOR.s} the others, which is the only reason anybody ever
       noticed. It has been read aloud in this room perhaps four times in eight
       hundred years, each time by somebody who did not know it was the page,
       and each of those four accounts of it disagrees with the other three
@@ -920,9 +941,10 @@ events:
       The Church keeps nine names and speaks eight of them, and has explained
       the ninth in four different ways across as many centuries, each
       explanation complete and none of them the same. The guardian was in a
-      room once where somebody tried the ninth. He has never said what happened
-      and he has never said that nothing did, and the difference between those
-      two silences is the whole of what the family has to go on.
+      room once where somebody tried the ninth. {NARRATOR.They} {NARRATOR.has}
+      never said what happened and {NARRATOR.they} {NARRATOR.has} never said
+      that nothing did, and the difference between those two silences is the
+      whole of what the family has to go on.
     interaction:
       kind: narration
       outcomes:
@@ -940,8 +962,9 @@ proseVariants:
   - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].body"
     of: "3363c161f437397d"
     plainenglish: >-
-      Tonight two of the seven fireplaces are lit, one more than usual. The guardian has not
-      mentioned the Seal in the last eleven tellings, and he does not mention it now.
+      Tonight two of the seven fireplaces are lit, one more than usual. The
+      guardian has not mentioned the Seal in the last eleven tellings, and
+      does not mention it now.
   - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].interaction.outcomes[id=only].text"
     of: "417c62fababc8cf6"
     plainenglish: >-
@@ -968,11 +991,13 @@ proseVariants:
     plainenglish: >-
       The Missing Third Piece
   - address: "content:events/frame.yaml#events[id=frame_two_of_three].body"
-    of: "21447aac0cf64d70"
+    of: "a71e3f8abe116de6"
     plainenglish: >-
-      The record says the set is complete. The guardian counts on fingers that are no longer
-      real fingers, out of a habit that outlived his hand. He gets to two, as he always does,
-      and stops there, as he always does.
+      The record says the set is complete. The guardian counts on fingers that
+      are no longer real fingers, out of a habit that outlived the hand.
+      {NARRATOR.They} get{NARRATOR.s} to two, as {NARRATOR.they} always
+      get{NARRATOR.s} to two, and stop{NARRATOR.s} there, as {NARRATOR.they}
+      always stop{NARRATOR.s} there.
   - address: "content:events/frame.yaml#events[id=frame_two_of_three].interaction.outcomes[id=only].text"
     of: "9a89fc76c8493b6a"
     plainenglish: >-
@@ -982,16 +1007,18 @@ proseVariants:
     plainenglish: >-
       What the Book Left Out
   - address: "content:events/frame.yaml#events[id=frame_the_cost_not_written].body"
-    of: "775bbde340e8f8a7"
+    of: "bdf9702a47707096"
     plainenglish: >-
-      A hundred years ago, somewhere in this house, a water trough was filled and then emptied.
-      The record gives the year and the boy's name, and says nothing at all about the cold. The
-      guardian was cold that night. He is not cold now, because being cold is something only
-      living bodies do.
+      A hundred years ago, somewhere in this house, a water trough was filled
+      and then emptied. The record gives the year and the boy's name, and says
+      nothing at all about the cold. The guardian was cold that night.
+      {NARRATOR.They} {NARRATOR.is} not cold now, because being cold is
+      something only living bodies do.
   - address: "content:events/frame.yaml#events[id=frame_the_cost_not_written].interaction.outcomes[id=only].text"
-    of: "3357fee81703dad4"
+    of: "e578880dbe479b91"
     plainenglish: >-
-      The last of the blood asks, once, whether it hurt. He answers a different question.
+      The last of the blood asks, once, whether it hurt. {NARRATOR.They}
+      answer{NARRATOR.s} a different question.
   - address: "content:events/frame.yaml#events[id=frame_the_second_time].title"
     of: "cfe14f40b34c62b4"
     plainenglish: >-
@@ -1017,24 +1044,28 @@ proseVariants:
       trust for others. The guardian has heard the house tell this story proudly in three
       different centuries, in three different voices.
   - address: "content:events/frame.yaml#events[id=frame_nine_libraries].interaction.outcomes[id=only].text"
-    of: "bdadee0411276ef0"
+    of: "e209adcb84ddf72f"
     plainenglish: >-
-      He does not say what the house really kept. Tonight, the record does not say either.
+      {NARRATOR.They} do{NARRATOR.es} not say what the house really kept.
+      Tonight, the record does not say either.
   - address: "content:events/frame.yaml#events[id=frame_the_northern_house].title"
     of: "112d2974106a1540"
     plainenglish: >-
       Never Heard From Again
   - address: "content:events/frame.yaml#events[id=frame_the_northern_house].body"
-    of: "21afce7c99bddb08"
+    of: "24055198ab36f21c"
     plainenglish: >-
-      She was nineteen, and the page she appears on is the last page that mentions her. Whatever
-      it says happened, and the guardian has read it more often than the family ever did, the
-      account stops there. It stops the way his own sentences stop when he has decided something
-      is not to be told. By now, the last of the blood has learned what that silence is hiding.
+      She was nineteen, and the page she appears on is the last page that
+      mentions her. Whatever it says happened, and the guardian has read it
+      more often than the family ever did, the account stops there. It stops
+      the way {NARRATOR.their} own sentences stop when {NARRATOR.they}
+      {NARRATOR.has} decided something is not to be told. By now, the last of
+      the blood has learned what that silence is hiding.
   - address: "content:events/frame.yaml#events[id=frame_the_northern_house].interaction.outcomes[id=only].text"
-    of: "4bb2d8657d5ea689"
+    of: "604d91f4547358c0"
     plainenglish: >-
-      Nobody at this table will be the one to ask him to finish the story.
+      Nobody at this table will be the one to ask {NARRATOR.them} to finish
+      the story.
   - address: "content:events/frame.yaml#events[id=frame_the_short_account].title"
     of: "9ea583b7c986040b"
     plainenglish: >-
@@ -1054,11 +1085,13 @@ proseVariants:
     plainenglish: >-
       Eighty Years of Nobody Looking Closely
   - address: "content:events/frame.yaml#events[id=frame_the_bought_silence].body"
-    of: "799565530733d51f"
+    of: "0320eff76bc9dfd3"
     plainenglish: >-
-      A fine, a minor heresy confessed, and a great deal of tea left to go cold: with that, the
-      house bought eighty years in which nobody asked any more questions. The guardian thinks it
-      was cheap. He has never once said so where the record could hear him.
+      A fine, a minor heresy confessed, and a great deal of tea left to go
+      cold: with that, the house bought eighty years in which nobody asked any
+      more questions. The guardian thinks it was cheap. {NARRATOR.They}
+      {NARRATOR.has} never once said so where the record could hear
+      {NARRATOR.them}.
   - address: "content:events/frame.yaml#events[id=frame_the_bought_silence].interaction.outcomes[id=only].text"
     of: "63737510146375a4"
     plainenglish: >-
@@ -1087,15 +1120,17 @@ proseVariants:
     plainenglish: >-
       The Branch That Never Existed
   - address: "content:events/frame.yaml#events[id=frame_the_keeping_of_it].body"
-    of: "09ff984410934910"
+    of: "4a81eb3120d8f4a5"
     plainenglish: >-
-      Every so often someone asks which branch of the family is looking after the Seal. They
-      mean it kindly, as small talk. The guardian answers with a name he has had ready for a
-      very long time. It is not a real branch.
+      Every so often someone asks which branch of the family is looking after
+      the Seal. They mean it kindly, as small talk. The guardian answers with
+      a name {NARRATOR.they} {NARRATOR.has} had ready for a very long time. It
+      is not a real branch.
   - address: "content:events/frame.yaml#events[id=frame_the_keeping_of_it].interaction.outcomes[id=only].text"
-    of: "8eb776d51c2030d9"
+    of: "f40df4adb4556951"
     plainenglish: >-
-      He tells the story well. He has had hundreds of years to get the details right.
+      {NARRATOR.They} tell{NARRATOR.s} the story well. {NARRATOR.They}
+      {NARRATOR.has} had hundreds of years to get the details right.
   - address: "content:events/frame.yaml#events[id=frame_the_missing_third_returns].title"
     of: "1b60429d25466ed9"
     plainenglish: >-
@@ -1107,23 +1142,25 @@ proseVariants:
       already knows the number, and watches them reach for the box anyway. In nine hundred
       years, two out of three has never become three out of three.
   - address: "content:events/frame.yaml#events[id=frame_the_missing_third_returns].interaction.outcomes[id=only].text"
-    of: "6d07ed315c47bb7d"
+    of: "249036a393e8eb2f"
     plainenglish: >-
-      He could tell them. He never has.
+      The guardian could tell them. {NARRATOR.They} never {NARRATOR.has}.
   - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].title"
     of: "d115b58782c1f723"
     plainenglish: >-
       The Water Trough Is Still Filled
   - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].body"
-    of: "7b73791b766a656f"
+    of: "1b41d49b56adfcc7"
     plainenglish: >-
-      Every few generations a boy goes under the water for nine days and comes up changed, or
-      comes up unchanged, and the record gives it one line either way. The guardian has never
-      once added to that line. He has his reasons.
+      Every few generations a boy goes under the water for nine days and comes
+      up changed, or comes up unchanged, and the record gives it one line
+      either way. The guardian has never once added to that line.
+      {NARRATOR.They} {NARRATOR.has} {NARRATOR.their} reasons.
   - address: "content:events/frame.yaml#events[id=frame_the_drowning_remembered].interaction.outcomes[id=only].text"
     of: "178d892e235b994a"
     plainenglish: >-
-      The last of the blood has stopped asking what his reasons are.
+      The last of the blood has stopped asking what the guardian's reasons
+      are.
   - address: "content:events/frame.yaml#events[id=frame_the_index_in_another_hand].title"
     of: "cca6ab255e11d691"
     plainenglish: >-
@@ -1182,15 +1219,18 @@ proseVariants:
     plainenglish: >-
       In the Usual Way
   - address: "content:events/frame.yaml#events[id=frame_nothing_worth_the_ink].body"
-    of: "244cff8afbb9a186"
+    of: "606c75d4d72deff0"
     plainenglish: >-
-      There is a page for the eleven days of mourning. Whatever the family chose to write on it,
-      a careful account, a kind one, or a dated blank, which is a kind of account in itself, the
-      page is about a room. The guardian has stood beside more of those deathbeds than the page
-      has years. He has watched iron laid across a doorway turn dull along its whole length in
-      about the time it takes someone to notice. In eleven hundred years he has not found the
-      words for what that was. Describing a room is the one thing the record has always been
-      good at, and it does not lie about this one. It lies by treating it as ordinary.
+      There is a page for the eleven days of mourning. Whatever the family
+      chose to write on it, a careful account, a kind one, or a dated blank,
+      which is a kind of account in itself, the page is about a room. The
+      guardian has stood beside more of those deathbeds than the page has
+      years. {NARRATOR.They} {NARRATOR.has} watched iron laid across a doorway
+      turn dull along its whole length in about the time it takes someone to
+      notice. In eleven hundred years {NARRATOR.they} {NARRATOR.has} not found
+      the words for what that was. Describing a room is the one thing the
+      record has always been good at, and it does not lie about this one. It
+      lies by treating it as ordinary.
   - address: "content:events/frame.yaml#events[id=frame_nothing_worth_the_ink].interaction.outcomes[id=only].text"
     of: "fa4c5a6eea9df64a"
     plainenglish: >-
@@ -1219,13 +1259,15 @@ proseVariants:
     plainenglish: >-
       Two People, Both of Them Trouble
   - address: "content:events/frame.yaml#events[id=frame_what_the_ring_cost].body"
-    of: "a6e6ddd4a9f5b640"
+    of: "54efe4b596945049"
     plainenglish: >-
-      The page says of two people, four hundred years apart, that they never cost the house
-      anything it was not glad to give. It is written by someone who never met either of them.
-      The guardian met both. He does not say so, and he does not correct the page. He has now
-      gone without correcting it for longer than either of their lives lasted, and even to him
-      it is starting to look like a kind of agreement.
+      The page says of two people, four hundred years apart, that they never
+      cost the house anything it was not glad to give. It is written by
+      someone who never met either of them. The guardian met both.
+      {NARRATOR.They} do{NARRATOR.es} not say so, and {NARRATOR.they}
+      do{NARRATOR.es} not correct the page. The guardian has now gone without
+      correcting it for longer than either of their lives lasted, and even to
+      {NARRATOR.them} it is starting to look like a kind of agreement.
   - address: "content:events/frame.yaml#events[id=frame_what_the_ring_cost].interaction.outcomes[id=only].text"
     of: "6946951f7a5cd78b"
     plainenglish: >-
@@ -1254,32 +1296,36 @@ proseVariants:
     plainenglish: >-
       One Word, and Eight Days Later
   - address: "content:events/frame.yaml#events[id=frame_one_word_and_eight_days].body"
-    of: "5806741e9e20dce2"
+    of: "f64fd75c2cf048c0"
     plainenglish: >-
-      The page says it was written in the founder's own hand and has been kept without a break
-      or any doubt since the year of the signing. It has said so in eleven copies, in nine
-      different handwritings, and has never once been made to say anything else. Both
-      half-sheets are still in the box. The guardian wrote one of them on a night he can still
-      describe, and the other eight days later, from a memory he already did not trust. Of
-      everything he has been unable to tell this family in five hundred years, that is the thing
-      he has come closest to telling.
+      The page says it was written in the founder's own hand and has been kept
+      without a break or any doubt since the year of the signing. It has said
+      so in eleven copies, in nine different handwritings, and has never once
+      been made to say anything else. Both half-sheets are still in the box.
+      The guardian wrote one of them on a night {NARRATOR.they} can still
+      describe, and the other eight days later, from a memory {NARRATOR.they}
+      already did not trust. Of everything {NARRATOR.they} {NARRATOR.has} been
+      unable to tell this family in five hundred years, that is the thing
+      {NARRATOR.they} {NARRATOR.has} come closest to telling.
   - address: "content:events/frame.yaml#events[id=frame_one_word_and_eight_days].interaction.outcomes[id=only].text"
-    of: "1ef70df4e7ea1d68"
+    of: "f6530205571f9e61"
     plainenglish: >-
-      He would tell them now, if telling them now were still possible. It is very late to be
-      finding that out.
+      The guardian would tell them now, if telling them now were still
+      possible. It is very late to be finding that out.
   - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].title"
     of: "9f32d2b940229a4d"
     plainenglish: >-
       The Ink Faded to the Colour of the Paper
   - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].body"
-    of: "89fd1becc7b9b7a8"
+    of: "008bcf5c1c58b398"
     plainenglish: >-
-      The guardian turns to the date of a wet autumn afternoon and stops. Some writers mention
-      the ink and the dogs, some blame damp, and some leave the line blank. He does not need the
-      sentence. He was there when the dogs stood outside with their backs to the hall, and the
-      writing of the second obligation faded to the colour of its own paper. The record chose an
-      ordinary cause, an impossible fact, or silence, and all three sit in the place where an
+      The guardian turns to the date of a wet autumn afternoon and stops. Some
+      writers mention the ink and the dogs, some blame damp, and some leave
+      the line blank. {NARRATOR.They} do{NARRATOR.es} not need the sentence.
+      {NARRATOR.They} {NARRATOR.was} there when the dogs stood outside with
+      their backs to the hall, and the writing of the second obligation faded
+      to the colour of its own paper. The record chose an ordinary cause, an
+      impossible fact, or silence, and all three sit in the place where an
       answer should have been. The page says enough.
   - address: "content:events/frame.yaml#events[id=frame_the_colour_of_its_own_paper].interaction.outcomes[id=only].text"
     of: "a4a56b6ab6648bd6"
@@ -1291,13 +1337,15 @@ proseVariants:
     plainenglish: >-
       Seven Fireplaces, One Lit
   - address: "content:events/frame.yaml#events[id=frame_the_grates_and_the_hour].body"
-    of: "cd06da286b418b34"
+    of: "1fc6cf3491f959b0"
     plainenglish: >-
-      The long room has seven fireplaces, and one is lit, as on every night like this. The house
-      has had three roofs and four names, and it has never once been warm from end to end. The
-      guardian sits where the guardian always sits. He has been sitting there since before the
-      oldest thing in the room was made, and the chair under him is a hundred and forty years
-      old, and both of those things are true.
+      The long room has seven fireplaces, and one is lit, as on every night
+      like this. The house has had three roofs and four names, and it has
+      never once been warm from end to end. The guardian sits where the
+      guardian always sits. {NARRATOR.They} {NARRATOR.has} been sitting there
+      since before the oldest thing in the room was made, and the chair under
+      {NARRATOR.them} is a hundred and forty years old, and both of those
+      things are true.
   - address: "content:events/frame.yaml#events[id=frame_the_grates_and_the_hour].interaction.outcomes[id=only].text"
     of: "e04934798e407945"
     plainenglish: >-
@@ -1340,14 +1388,17 @@ proseVariants:
   - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].title"
     of: "c861a1b769ff2aa3"
     plainenglish: >-
-      A Page He Always Skips
+      A Page Always Skipped
   - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].body"
-    of: "4e840361c43e4ddd"
+    of: "7e6862388174c6ac"
     plainenglish: >-
-      There is one page he always turns past. He turns past it at exactly the same speed as the
-      others, and that is the only reason anyone ever noticed. In eight hundred years it has
-      been read aloud in this room perhaps four times, each time by someone who did not know it
-      was that page. Each of those four people describes it differently from the other three.
+      There is one page the guardian always turns past. Every time,
+      {NARRATOR.they} turn{NARRATOR.s} past it at exactly the same speed
+      {NARRATOR.they} turn{NARRATOR.s} the others, and that is the only reason
+      anyone ever noticed. In eight hundred years it has been read aloud in
+      this room perhaps four times, each time by someone who did not know it
+      was that page. Each of those four people describes it differently from
+      the other three.
   - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].interaction.outcomes[id=only].text"
     of: "0b2899926d123d0e"
     plainenglish: >-
@@ -1358,13 +1409,15 @@ proseVariants:
     plainenglish: >-
       Eight Names Out of Nine
   - address: "content:events/frame.yaml#events[id=frame_the_ninth_name_unspoken].body"
-    of: "d9d8a025b93ae6c9"
+    of: "fa3a17816f28c495"
     plainenglish: >-
-      The Church keeps nine names and speaks eight of them. Over four centuries it has explained
-      the ninth in four different ways, each explanation complete and none of them the same. The
-      guardian was once in a room where someone tried saying the ninth. He has never said what
-      happened, and he has never said that nothing happened, and the difference between those
-      two silences is all the family has to go on.
+      The Church keeps nine names and speaks eight of them. Over four
+      centuries it has explained the ninth in four different ways, each
+      explanation complete and none of them the same. The guardian was once in
+      a room where someone tried saying the ninth. {NARRATOR.They}
+      {NARRATOR.has} never said what happened, and {NARRATOR.they}
+      {NARRATOR.has} never said that nothing happened, and the difference
+      between those two silences is all the family has to go on.
   - address: "content:events/frame.yaml#events[id=frame_the_ninth_name_unspoken].interaction.outcomes[id=only].text"
     of: "1f84f0f9c7dd55bd"
     plainenglish: >-
