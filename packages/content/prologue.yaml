@@ -5,7 +5,9 @@
 # what it displaces and never by what it is, and no motive anywhere. The one
 # plain line in the file is `thesis`, and every ending reaches back to it.
 #
-# The founder takes the player's supplied name; blank keeps Daveed Gearithy.
+# The signing speaks to the player in the second person: they are the founder,
+# and it is read before they have said who they are (#1867). Nothing here may
+# assume the founder's gender, name or body, nor the spouse's.
 # The house name remains a separate answer after the Examination.
 prologue:
   - id: the_signing
@@ -14,23 +16,23 @@ prologue:
       new one has not begun and every table in the province keeps a seat empty
       without anybody agreeing why. The hall was cold in the way of a room
       built for four times the family that had it. There were seven candles in
-      sconces meant for forty, and a dog at the fire that had slept there every
-      winter of its life.
+      sconces meant for forty, and a dog at the fire that had slept there
+      every winter of its life.
 
 
       What came in was not seen. The dog rose and went out and would not be
       called back, and was found in the morning in the yard with the snow
       melted around it in a shape nobody cared to measure. The iron on the
       table dulled between one sentence and the next, so that the seal which
-      had been bright when the man sat down had to be cleaned before it would
-      take wax. There was a smell of wet ash indoors, in summer, in the middle
-      of winter. Afterwards none of the four who had been in that room could
+      had been bright when you sat down had to be cleaned before it would take
+      wax. There was a smell of wet ash indoors, in summer, in the middle of
+      winter. Afterwards none of the four who had been in that room could
       agree on how long they had been in it, and two of them would not discuss
       it at all.
 
 
-      Three things were given. Three things were owed for them. The man was
-      told which was which, in order, and the order was not an accident.
+      Three things were given. Three things were owed for them. You were told
+      which was which, in order, and the order was not an accident.
 
     triad:
       - given: >-
@@ -40,10 +42,10 @@ prologue:
           quiet held through the Fall of the next dynasty and the burning of
           the Marches and four royal surveys, and it holds now.
         owed: >-
-          A PAGE A YEAR. Somebody of the blood was to write down what the house
-          had done, truthfully, in a book kept for the purpose and kept
-          nowhere else. The man took this for a courtesy. He was a man who had
-          never yet had anything he needed to leave out.
+          A PAGE A YEAR. Somebody of the blood was to write down what the
+          house had done, truthfully, in a book kept for the purpose and kept
+          nowhere else. You took this for a courtesy. You had never yet had
+          anything you needed to leave out.
 
       - given: >-
           THE THING IN THE BLOOD. It was not explained, then or since. It comes
@@ -65,18 +67,18 @@ prologue:
           campaignText: >-
             THE TERM. {years} years, to the day, ending in {endYear}, and then
             the account read back and settled in whatever coin the account
-            turns out to be written in. The man agreed to this part quickly,
-            and the two of his household who were sober enough to remember it
-            both said afterwards that he had agreed to it more quickly than to
-            the others. He was fifty-one. {years} years was a number, and not a
-            thing that happens to anybody.
+            turns out to be written in. You agreed to this part quickly, and
+            the two of your household who were sober enough to remember it
+            both said afterwards that you had agreed to it more quickly than
+            to the others. You were fifty-one. {years} years was a number, and
+            not a thing that happens to anybody.
 
     namePrompt: >-
       Before any seal was warmed and before the house was asked what it would
-      call itself, the other party asked the man what he was called, and when
-      he answered the name was written down in a hand that none of the four in
-      the room could afterwards imitate. The page remained open upon the table.
-      What are you called?
+      call itself, the other party asked what you were called, and when you
+      answered the name was written down in a hand that none of the four in
+      the room could afterwards imitate. The page remained open upon the
+      table. What are you called?
 
     examination:
       - id: the_ford
@@ -84,8 +86,8 @@ prologue:
           In the year before the signing, at a ford below Cawdry, the river
           rose after dark and took one wheel of a laden cart between two
           stones, while the Warden's men watched from the farther bank and the
-          last useful light went out of the sky. The question was what the man
-          had done then.
+          last useful light went out of the sky. The question was what you had
+          done then.
         answers:
           - id: own_back
             says: I put my own back to the wheel.
@@ -134,15 +136,16 @@ prologue:
 
       - id: the_two_letters
         situation: >-
-          Before Eilwen came from Ilm there were two letters, one written by a
-          woman who had known her mother and one by a steward who had counted
-          what travelled with the marriage. Both were kept. The question was
-          not which letter had been believed, but why the man had married her.
+          Before the match with Ilm was made there were two letters, one
+          written by a woman who had known the mother of the one you were to
+          marry and one by a steward who had counted what travelled with the
+          marriage. Both were kept. The question was not which letter had been
+          believed, but why you had married at all.
         answers:
           - id: what_her_mother_bore
-            says: For what her mother bore.
-            given: Eilwen's fecundity was favoured.
-            owed: Some of Eilwen's charm was the price.
+            says: For what their mother bore.
+            given: The fecundity of the one you married was favoured.
+            owed: Some of their charm was the price.
             terms:
               given:
                 - kind: bias
@@ -155,9 +158,9 @@ prologue:
                   attr: charm
                   amount: -0.15
           - id: light_in_her
-            says: For the light in her.
-            given: Light and Life ran stronger in Eilwen's blood.
-            owed: Eilwen's fecundity ran thinner.
+            says: For the light in them.
+            given: Light and Life ran stronger in the blood of the one you married.
+            owed: Their fecundity ran thinner.
             terms:
               given:
                 - kind: bias
@@ -176,7 +179,7 @@ prologue:
           - id: for_the_dowry
             says: For the dowry.
             given: The treasury began with more coin.
-            owed: A small tithe was taken across Eilwen's heritable strengths.
+            owed: A small tithe was taken across the heritable strengths of the one you married.
             terms:
               given:
                 - kind: treasury
@@ -247,7 +250,7 @@ prologue:
           land than it had stood the night before, though the ground about it
           carried no boot-mark and the rain had not been heavy enough to move
           anything made of stone. The neighbour said nothing. The question was
-          what the man had done.
+          what you had done.
         answers:
           - id: assize_at_cawdry
             says: I took it to the assize at Cawdry.
@@ -294,15 +297,15 @@ prologue:
 
     housePrompt: >-
       Only after these answers did the other party ask what the house would be
-      called. The man's own name was already on the page; this one was for the
-      door, the seal, and those who would come after him. Name the house.
+      called. Your own name was already on the page; this one was for the
+      door, the seal, and those who would come after you. Name the house.
 
     friendsPrompt: >-
-      There was one further question and it was not about the house, and the
-      man answered it without understanding that he had been asked anything.
-      Name five, it said, who are not of your blood and without whom the life
-      you have had would have been some other life. He gave five names. He was
-      not asked why, and he did not say, and none of the four in that room
+      There was one further question and it was not about the house, and you
+      answered it without understanding that you had been asked anything. Name
+      five, it said, who are not of your blood and without whom the life you
+      have had would have been some other life. You gave five names. You were
+      not asked why, and you did not say, and none of the four in that room
       could afterwards recall a single one of them.
 
 
@@ -311,30 +314,30 @@ prologue:
       son with the wrong grandmother. A girl dealt to a table that had already
       turned down two that season, in a year the house could not afford to be
       careful. The last of the five arrived somewhere before 1300 and there
-      has not been another, which is the part the family would find worse if it
-      had ever counted them.
+      has not been another, which is the part the family would find worse if
+      it had ever counted them.
 
 
       Each of them was a little better than they had any business being — a
       strong back, a long life, a mind that got there first — and none of them
-      was ever anything more than that. Nobody in the house has remarked on it,
-      because nobody in the house was in the room, and the man who was did not
-      write the names down.
+      was ever anything more than that. Nobody in the house has remarked on
+      it, because nobody in the house was in the room, and you, who were, did
+      not write the names down.
 
     heirlooms:
       - heirloom: portion_of_agelessness
         line: >-
-          He asked for time, which was the only thing he had seen anyone in
+          You asked for time, which was the only thing you had seen anyone in
           that room appear to have too much of.
       - heirloom: portion_of_fertility
         line: >-
-          He asked for children, which was the least imaginative thing anyone
+          You asked for children, which was the least imaginative thing anyone
           could have asked for in that room, and the only one that has never
           yet ruined a house.
       - heirloom: the_unmirrored_eye
         line: >-
-          He asked to be able to see it. Nothing in the agreement obliged
-          anybody to tell him what he would be looking at, and nothing has.
+          You asked to be able to see it. Nothing in the agreement obliged
+          anybody to tell you what you would be looking at, and nothing has.
 
     grudges:
       - house: house_marrow
@@ -358,8 +361,8 @@ prologue:
         severity: 40
         inheritance: house_wide
         line: >-
-          The man burned a scholar's letters rather than answer the question
-          in them. Ilm does not forget and does not retaliate; it writes,
+          You burned a scholar's letters rather than answer the question in
+          them. Ilm does not forget and does not retaliate; it writes,
           patiently, for three hundred years, and lends the writing to anyone
           who asks.
 
@@ -378,26 +381,26 @@ prologue:
 
 proseVariants:
   - address: "content:prologue.yaml#prologue[id=the_signing].opening"
-    of: "aa2e4a6011052714"
+    of: "891b02c8ce328684"
     plainenglish: >-
-      It was the last of the Hollow Days, the time when the old year has ended and the new one
-      has not yet begun, and every table in the province keeps an empty seat without anyone
-      agreeing why. The hall was cold, the way a room gets when it was built for four times the
-      family living in it. Seven candles burned in holders meant for forty, and a dog lay by the
-      fire where it had slept every winter of its life.
+      It was the last of the Hollow Days, the time when the old year has ended and the new one has
+      not yet begun, and every table in the province keeps an empty seat without anyone agreeing
+      why. The hall was cold, the way a room gets when it was built for four times the family living
+      in it. Seven candles burned in holders meant for forty, and a dog lay by the fire where it had
+      slept every winter of its life.
 
 
-      Nobody saw what came in. The dog got up and went outside and would not come back when
-      called. In the morning they found it in the yard, with the snow melted around it in a
-      shape nobody wanted to measure. The iron on the table went dull between one sentence and
-      the next, so the seal, which had been bright when the man sat down, had to be cleaned
-      before it would take wax. There was a smell of wet ash indoors, as if it were summer, in
-      the middle of winter. Afterwards none of the four people who had been in that room could
-      agree how long they had been there, and two of them would not talk about it at all.
+      Nobody saw what came in. The dog got up and went outside and would not come back when called.
+      In the morning they found it in the yard, with the snow melted around it in a shape nobody
+      wanted to measure. The iron on the table went dull between one sentence and the next, so the
+      seal, which had been bright when you sat down, had to be cleaned before it would take wax.
+      There was a smell of wet ash indoors, as if it were summer, in the middle of winter.
+      Afterwards none of the four people who had been in that room could agree how long they had
+      been there, and two of them would not talk about it at all.
 
 
-      Three things were given. Three things were owed in return. The man was told which was
-      which, in order, and the order was not an accident.
+      Three things were given. Three things were owed in return. You were told which was which, in
+      order, and the order was not an accident.
   - address: "content:prologue.yaml#prologue[id=the_signing].triad[0].given"
     of: "5a75adbfb7d50173"
     plainenglish: >-
@@ -406,11 +409,11 @@ proseVariants:
       them did. That silence lasted through the Fall of the next royal line, the burning of the
       Marches and four royal surveys, and it still holds.
   - address: "content:prologue.yaml#prologue[id=the_signing].triad[0].owed"
-    of: "1413a3895dffaecd"
+    of: "de4363f95276bab5"
     plainenglish: >-
-      A PAGE A YEAR. Someone of the blood had to write down what the house had done, truthfully,
-      in a book kept only for that and kept nowhere else. The man thought this was a formality.
-      He had never yet done anything he needed to leave out.
+      A PAGE A YEAR. Someone of the blood had to write down what the house had done, truthfully, in
+      a book kept only for that and kept nowhere else. You thought this was a formality. You had
+      never yet done anything you needed to leave out.
   - address: "content:prologue.yaml#prologue[id=the_signing].triad[1].given"
     of: "135cd2ddb117ad89"
     plainenglish: >-
@@ -431,26 +434,26 @@ proseVariants:
       ever found a use for. There was one condition: the family must keep them in a hand that
       could be shown.
   - address: "content:prologue.yaml#prologue[id=the_signing].triad[2].owed.campaignText"
-    of: "1029d118b647c23c"
+    of: "b1b41ee90dc57b3d"
     plainenglish: >-
-      THE TERM. {years} years, to the day, ending in {endYear}. Then the account would be read
-      back and settled in whatever currency the account turned out to be written in. The man
-      agreed to this part quickly. The two members of his household sober enough to remember
-      said afterwards that he agreed to it faster than to the others. He was fifty-one. {years}
-      years was just a number, not something that happens to anyone.
+      THE TERM. {years} years, to the day, ending in {endYear}. Then the account would be read back
+      and settled in whatever currency the account turned out to be written in. You agreed to this
+      part quickly. The two members of your household sober enough to remember said afterwards that
+      you agreed to it faster than to the others. You were fifty-one. {years} years was just a
+      number, not something that happens to anyone.
   - address: "content:prologue.yaml#prologue[id=the_signing].namePrompt"
-    of: "a585358c96a3a1b0"
+    of: "b27ad0a310d3991f"
     plainenglish: >-
       Before any seal was warmed, and before the house was asked what it would call itself, the
-      other party asked the man his name. When he answered, the name was written down in a
-      handwriting that none of the four people in the room could ever copy afterwards. The page
-      stayed open on the table. What is your name?
+      other party asked your name. When you answered, the name was written down in a handwriting
+      that none of the four people in the room could ever copy afterwards. The page stayed open on
+      the table. What is your name?
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].situation"
-    of: "18b266cc7d1e62f8"
+    of: "d5ce4078238684d4"
     plainenglish: >-
-      In the year before the signing, at a ford below Cawdry, the river rose after dark and
-      trapped one wheel of a loaded cart between two stones. The Warden's men watched from the
-      far bank, and the last useful light left the sky. The question was what the man did then.
+      In the year before the signing, at a ford below Cawdry, the river rose after dark and trapped
+      one wheel of a loaded cart between two stones. The Warden's men watched from the far bank, and
+      the last useful light left the sky. The question was what you did then.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_ford].answers[id=own_back].says"
     of: "b02a14f982d5d39d"
     plainenglish: >-
@@ -488,35 +491,36 @@ proseVariants:
     plainenglish: >-
       A small cut was taken from all of the line's inherited strengths.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].situation"
-    of: "9112c154ac92cfa0"
+    of: "e11fb633d6cedc17"
     plainenglish: >-
-      Before Eilwen came from Ilm, there were two letters. One was written by a woman who had
-      known her mother, and one by a steward who had counted what came with the marriage. Both
-      were kept. The question was not which letter he believed, but why the man married her.
+      Before the match with Ilm was made, there were two letters. One was written by a woman who had
+      known the mother of the person you were to marry, and one by a steward who had counted what
+      came with the marriage. Both were kept. The question was not which letter you believed, but
+      why you married at all.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].says"
-    of: "6ce0c8e096accbcc"
+    of: "639c65993b4f043d"
     plainenglish: >-
-      Because of how many children her mother had.
+      Because of how many children their mother had.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].given"
-    of: "4020a799ef40ad7d"
+    of: "29bb61f9ae0b831d"
     plainenglish: >-
-      Eilwen's fecundity was improved.
+      Your spouse's fecundity was improved.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=what_her_mother_bore].owed"
-    of: "cb156bc2f989e6e6"
+    of: "ab6a9c349989c360"
     plainenglish: >-
-      Some of Eilwen's charm was the cost.
+      Some of your spouse's charm was the cost.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].says"
-    of: "aa640149341489c5"
+    of: "c674652adbeb5fbe"
     plainenglish: >-
-      Because of the light in her.
+      Because of the light in them.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].given"
-    of: "f2943492c99b00f6"
+    of: "9c6c9f78a1c80f8c"
     plainenglish: >-
-      Light and Life grew stronger in Eilwen's blood.
+      Light and Life grew stronger in your spouse's blood.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=light_in_her].owed"
-    of: "915ee77b8349a3c7"
+    of: "2dffa2f36969b917"
     plainenglish: >-
-      Eilwen's fecundity weakened.
+      Your spouse's fecundity weakened.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=for_the_dowry].says"
     of: "ca79214ef86d8862"
     plainenglish: >-
@@ -526,16 +530,16 @@ proseVariants:
     plainenglish: >-
       The treasury started with more money.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_two_letters].answers[id=for_the_dowry].owed"
-    of: "2e1572a87f762104"
+    of: "287b89ba765fcce6"
     plainenglish: >-
-      A small cut was taken from all of Eilwen's inherited strengths.
+      A small cut was taken from all of your spouse's inherited strengths.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].situation"
     of: "40026dfe4a41670a"
     plainenglish: >-
-      In the worst winter anyone then alive could remember, there was only enough bread for two,
-      and three people stood at the door: a teacher, a midwife, and a man who could make a
-      column of numbers add up. Snow already covered the lower road. The question was who he let
-      in.
+      In the worst winter anyone then alive could remember, there was only
+      enough bread for two, and three people stood at the door: a teacher, a
+      midwife, and a man who could make a column of numbers add up. Snow
+      already covered the lower road. The question was who you let in.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_hard_winter].answers[id=the_teacher].says"
     of: "8057852441c6b078"
     plainenglish: >-
@@ -573,12 +577,11 @@ proseVariants:
     plainenglish: >-
       All three servants became less loyal to the house.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].situation"
-    of: "779ab1b61f5d54d2"
+    of: "5f12ff96e1a2f7b2"
     plainenglish: >-
-      One morning a boundary stone stood one furrow further onto the house's land than it had
-      the night before. There were no boot prints around it, and the rain had not been heavy
-      enough to move anything made of stone. The neighbour said nothing. The question was what
-      the man did.
+      One morning a boundary stone stood one furrow further onto the house's land than it had the
+      night before. There were no boot prints around it, and the rain had not been heavy enough to
+      move anything made of stone. The neighbour said nothing. The question was what you did.
   - address: "content:prologue.yaml#prologue[id=the_signing].examination[id=the_moved_stone].answers[id=assize_at_cawdry].says"
     of: "27919ec8bca1f074"
     plainenglish: >-
@@ -616,48 +619,46 @@ proseVariants:
     plainenglish: >-
       The house lost the value of the furrow.
   - address: "content:prologue.yaml#prologue[id=the_signing].housePrompt"
-    of: "8038dc3fc8e4bcbb"
+    of: "1cf9def2b03eead6"
     plainenglish: >-
-      Only after these answers did the other party ask what the house would be called. The man's
-      own name was already on the page. This name was for the door, the seal, and everyone who
-      would come after him. Name the house.
+      Only after these answers did the other party ask what the house would be called. Your own name
+      was already on the page. This name was for the door, the seal, and everyone who would come
+      after you. Name the house.
   - address: "content:prologue.yaml#prologue[id=the_signing].friendsPrompt"
-    of: "a0171a3f15dc5c73"
+    of: "30f46f2162eef535"
     plainenglish: >-
-      There was one more question. It was not about the house, and the man answered it without
-      realising he had been asked anything. It said: name five people who are not of your blood,
-      without whom your life would have been a different life. He gave five names. Nobody asked
-      him why, he did not say, and none of the four people in that room could later remember a
-      single one of them.
+      There was one more question. It was not about the house, and you answered it without realising
+      you had been asked anything. It said: name five people who are not of your blood, without whom
+      your life would have been a different life. You gave five names. Nobody asked you why, you did
+      not say, and none of the four people in that room could later remember a single one of them.
 
 
-      They have been coming back ever since, about one every half century, and then they
-      stopped. A midwife from Kettlewick in 1094. A rival's second son with the wrong
-      grandmother. A girl offered to a table that had already turned down two that season, in a
-      year when the house could not afford to be picky. The last of the five arrived some time
-      before 1300, and there has not been another. The family would find that worse if it had
-      ever counted them.
+      They have been coming back ever since, about one every half century, and then they stopped. A
+      midwife from Kettlewick in 1094. A rival's second son with the wrong grandmother. A girl
+      offered to a table that had already turned down two that season, in a year when the house
+      could not afford to be picky. The last of the five arrived some time before 1300, and there
+      has not been another. The family would find that worse if it had ever counted them.
 
 
-      Each of them was a little better than they had any right to be: a strong back, a long
-      life, a mind that got there first. None of them was ever more than that. Nobody in the
-      house has commented on it, because nobody in the house was in that room, and the man who
-      was there did not write the names down.
+      Each of them was a little better than they had any right to be: a strong back, a long life, a
+      mind that got there first. None of them was ever more than that. Nobody in the house has
+      commented on it, because nobody in the house was in that room, and you, who were there, did
+      not write the names down.
   - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[0].line"
-    of: "91bcf61b1429e28f"
+    of: "c5cd7a23c8c3d887"
     plainenglish: >-
-      He asked for time, because time was the only thing anyone in that room seemed to have too
+      You asked for time, because time was the only thing anyone in that room seemed to have too
       much of.
   - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[1].line"
-    of: "e3896372948141de"
+    of: "593a9404f9f45210"
     plainenglish: >-
-      He asked for children. It was the least imaginative thing anyone could have asked for in
-      that room, and the only one that has never yet ruined a house.
+      You asked for children. It was the least imaginative thing anyone could have asked for in that
+      room, and the only one that has never yet ruined a house.
   - address: "content:prologue.yaml#prologue[id=the_signing].heirlooms[2].line"
-    of: "37faa8738c6ad83f"
+    of: "67f4be3670b290fa"
     plainenglish: >-
-      He asked to be able to see it. Nothing in the agreement said anyone had to tell him what
-      he would be looking at, and nobody has.
+      You asked to be able to see it. Nothing in the agreement said anyone had to tell you what you
+      would be looking at, and nobody has.
   - address: "content:prologue.yaml#prologue[id=the_signing].grudges[0].line"
     of: "b9f41bab68418b4f"
     plainenglish: >-
@@ -672,11 +673,11 @@ proseVariants:
       This house did not come, and four of the men came back. Soldiers hold this kind of thing
       against a seat, not a family, so it falls on whoever is sitting in it.
   - address: "content:prologue.yaml#prologue[id=the_signing].grudges[2].line"
-    of: "e056da1c3598afe8"
+    of: "30229788c6472e64"
     plainenglish: >-
-      The man burned a scholar's letters rather than answer the question in them. Ilm does not
-      forget and does not strike back. It writes, patiently, for three hundred years, and lends
-      what it writes to anyone who asks.
+      You burned a scholar's letters rather than answer the question in them. Ilm does not forget
+      and does not strike back. It writes, patiently, for three hundred years, and lends what it
+      writes to anyone who asks.
   - address: "content:prologue.yaml#prologue[id=the_signing].thesis"
     of: "e3208e1764517113"
     plainenglish: >-

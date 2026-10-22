@@ -121,6 +121,16 @@ describe('the founder\'s grammar', () => {
   });
 });
 
+describe('{NARRATOR}', () => {
+  it('names the founder in any scene without a slot, and a declared slot of that name wins', () => {
+    const { ctx, founder } = founded({ name: 'Ysolt Gearithy', gender: 'woman' });
+    expect(renderBody('{NARRATOR} counts on {NARRATOR.their} fingers.', {}, ctx))
+      .toBe('Ysolt Gearithy counts on her fingers.');
+    const other = place(ctx, { sex: 'male', age: 50, name: 'Corr' });
+    expect(renderBody('{NARRATOR.They} {NARRATOR.is} late.', { NARRATOR: other.id }, ctx)).toBe('He is late.');
+  });
+});
+
 describe('who signed, persisted', () => {
   // The chronicler answers every docket, so a played year logs what replay
   // will answer too, and the two logs are comparable.

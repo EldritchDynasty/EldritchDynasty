@@ -26,6 +26,14 @@ import type { Sex } from './attributes.js';
  * would each have read `{HEAD.they}` as plain text, silently.
  */
 
+/**
+ * The founder, by name or form, in any event's prose — `{NARRATOR}`,
+ * `{NARRATOR.their}` — without a slot (#1867). The frame speaks of the
+ * guardian in every scene and casts nobody; an event that declares a slot of
+ * this name keeps its own.
+ */
+export const NARRATOR_TOKEN = 'NARRATOR';
+
 /** The grammatical class a person is referred to by. Not `Sex`, and never inferred from a name. */
 export type Grammar = 'masculine' | 'feminine' | 'neutral';
 

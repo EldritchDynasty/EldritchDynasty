@@ -1624,6 +1624,15 @@ describe('the rules that had never caught anything', () => {
       expect(issues.map((i) => i.message).join('\n')).toMatch(/'his' beside \{GUARDIAN\}/);
     });
 
+    it('accepts {NARRATOR} without a slot, and holds it to the founder\'s forms', () => {
+      const b = withEvents((x) => {
+        const e = x.events.find((ev) => ev.tier === 'frame')!;
+        e.body = `${e.body} {NARRATOR} turns back {NARRATOR.their} leaf. {NARRATOR} closes his book.`;
+      });
+      expect(messages('slots/references', b)).not.toMatch(/NARRATOR/);
+      expect(messages('prose/founder-forms', b)).toMatch(/'his' beside \{NARRATOR\}/);
+    });
+
     it('is satisfied by forms', () => {
       const b = withEvents((x) => {
         const e = guardianEvent(x);

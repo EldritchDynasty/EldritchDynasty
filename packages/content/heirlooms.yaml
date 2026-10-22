@@ -152,9 +152,10 @@ heirlooms:
       said anything at supper. Two people went and looked at the portrait in the
       west passage afterwards, separately, and neither mentioned having gone.
     blurb: >-
-      Too large for the founder and too large for his son. The family remembers
-      four wearings, forty years apart, and has never yet decided
-      whether the ring chooses badly or whether it is simply right about people.
+      Too large for the founder and too large for the founder's heir. The
+      family remembers four wearings, forty years apart, and has never yet
+      decided whether the ring chooses badly or whether it is simply right
+      about people.
 
   - id: the_rod
     name: The Rod
@@ -330,11 +331,11 @@ proseVariants:
       people went to look at the portrait in the west passage, separately, and neither mentioned
       going.
   - address: "content:heirlooms.yaml#heirlooms[id=the_ring].blurb"
-    of: "753521cf504c230b"
+    of: "1b3a5a254df891d9"
     plainenglish: >-
-      Too big for the founder and too big for his son. The family remembers four people wearing
-      it, forty years apart, and has never decided whether the ring chooses badly or is simply
-      right about people.
+      Too big for the founder and too big for the founder's heir. The family remembers four people
+      wearing it, forty years apart, and has never decided whether the ring chooses badly or is
+      simply right about people.
   - address: "content:heirlooms.yaml#heirlooms[id=the_rod].name"
     of: "e7943e39f50f5d75"
     plainenglish: >-

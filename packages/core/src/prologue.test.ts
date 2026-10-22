@@ -538,7 +538,7 @@ const FOUNDING_ORIGINALS: Record<string, string> = {
   'founding.refuse.founded': 'the house has already been founded',
   'founding.refuse.no_name': 'the house needs a name',
   'founding.refuse.long_name': 'that is a paragraph, not a name',
-  'founding.refuse.heirloom': 'he did not ask for that',
+  'founding.refuse.heirloom': 'you did not ask for that',
   'founding.refuse.grudge': 'nobody was wronged in that direction',
   'founding.refuse.content_gone': 'the content no longer holds that',
   'founding.refuse.configuration': 'choose whether the founder is the blood father or the blood mother',
@@ -596,7 +596,7 @@ describe('founding and Examination refusals in Plain English (#812)', () => {
     expect(original.results).toEqual([
       { ok: false, reason: 'the house needs a name' },
       { ok: false, reason: 'that is a paragraph, not a name' },
-      { ok: false, reason: 'he did not ask for that' },
+      { ok: false, reason: 'you did not ask for that' },
       { ok: false, reason: 'nobody was wronged in that direction' },
     ]);
     expect(translated.results).toEqual([

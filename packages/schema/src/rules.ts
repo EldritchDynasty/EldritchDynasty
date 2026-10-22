@@ -9,7 +9,7 @@ import { FREQUENCY_PROFILES } from './frequency.js';
 import { RESPECT_ORDER } from './conditions.js';
 import { canBeTaught, canLearn } from './attributes.js';
 import { contentProseEntries, FRAME_PROSE_SENTENCE_THRESHOLD, PROSE_SENTENCE_THRESHOLD, proseIssues, splitSentences } from './prose.js';
-import { genderedPronounsIn, parseForm, PERSON_FORMS, slotTokens } from './forms.js';
+import { genderedPronounsIn, NARRATOR_TOKEN, parseForm, PERSON_FORMS, slotTokens } from './forms.js';
 import { PRIMORDIAL_ACTOR_SLOT } from './primordial.js';
 import { isInlineArcId } from './desugar.js';
 import { ENDING_ORDER } from './ending.js';
@@ -267,8 +267,10 @@ const slotReferences: ValidationRule = {
     const issues: Issue[] = [];
     for (const e of content.events) {
       const slotIds = new Set(Object.keys(e.slots));
+      // `{NARRATOR}` is the founder without a slot (forms.ts).
+      const known = (slot: string) => slotIds.has(slot) || slot === NARRATOR_TOKEN;
       for (const token of slotTokens(e.body)) {
-        if (token.form === undefined && !slotIds.has(token.slot)) {
+        if (token.form === undefined && !known(token.slot)) {
           issues.push(err(this.id, `event:${e.id}`, `body references undefined slot {${token.slot}}`));
         }
       }
@@ -278,7 +280,7 @@ const slotReferences: ValidationRule = {
       for (const entry of contentProseEntries(e.id, e)) {
         for (const token of slotTokens(entry.text)) {
           if (token.form === undefined) continue;
-          if (!slotIds.has(token.slot) && token.slot !== PRIMORDIAL_ACTOR_SLOT) {
+          if (!known(token.slot) && token.slot !== PRIMORDIAL_ACTOR_SLOT) {
             issues.push(err(this.id, `event:${e.id}`, `${entry.address} references undefined slot in ${token.raw}`));
           } else if (!parseForm(token.form)) {
             issues.push(err(this.id, `event:${e.id}`, `${entry.address} has unknown form ${token.raw} — `
@@ -1733,7 +1735,9 @@ const founderForms: ValidationRule = {
       const founders = new Set(Object.entries(e.slots)
         .filter(([, spec]) => FOUNDER_SLOT_ROLES.has(spec.role))
         .map(([sid]) => sid));
-      if (!founders.size) continue;
+      // `{NARRATOR}` names the founder in any scene that does not declare a
+      // slot of that name for somebody else.
+      if (!e.slots[NARRATOR_TOKEN]) founders.add(NARRATOR_TOKEN);
       for (const entry of contentProseEntries(e.id, e)) {
         for (const sentence of splitSentences(entry.text)) {
           const named = slotTokens(sentence).find((t) => founders.has(t.slot));

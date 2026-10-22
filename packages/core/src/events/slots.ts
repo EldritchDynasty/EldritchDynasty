@@ -1,5 +1,5 @@
 import type { EventTemplate, Filter, Person, SlotSpec } from '@ed/schema';
-import { assertNever, MAIN_BRANCH, renderForm, slotTokenPattern } from '@ed/schema';
+import { assertNever, MAIN_BRANCH, NARRATOR_TOKEN, renderForm, slotTokenPattern } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalFilter } from './conditions.js';
 import { influencedAttr } from './influence.js';
@@ -436,14 +436,22 @@ export function matchCount(spec: SlotSpec, ctx: SimCtx): number {
  * the slot holds (`forms.ts` in schema is the grammar). A party of more than
  * one takes the plural. A token that cannot resolve stays as written, so a
  * missing cast or an unknown form is visible rather than an empty word.
+ * `{NARRATOR}` is the founder wherever no slot of that name is cast.
  */
 export function renderBody(body: string, fill: SlotFill, ctx: SimCtx): string {
   return body.replace(slotTokenPattern(), (m, name: string, form: string | undefined) => {
-    const people = castPeople(fill, name, ctx);
+    const people = name === NARRATOR_TOKEN && fill[name] === undefined
+      ? narratorOf(ctx)
+      : castPeople(fill, name, ctx);
     if (!people.length) return m;
     if (form === undefined) return nameList(people.map((p) => p.epithet ?? p.name));
     return renderForm(people.length > 1 ? 'plural' : grammarOf(people[0]!), form) ?? m;
   });
+}
+
+function narratorOf(ctx: SimCtx): Person[] {
+  const p = ctx.world.narrator ? ctx.world.people.get(ctx.world.narrator) : undefined;
+  return p ? [p] : [];
 }
 
 /**
