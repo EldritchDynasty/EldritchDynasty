@@ -3,6 +3,11 @@
 > **Complete spoilers.** This is a story-facing map of the game that exists on `main`: what a player is guaranteed to be shown, what changes from run to run, how the Ascension Ladder keeps giving the house a next objective, and how each ending closes the ring opened in 1042.
 >
 > The executable game is the authority where older design prose has drifted. In particular, the current game has **six authored endings across two campaign profiles**: five available to A Long Line, and four available to A Short Line, with overlap between them.
+>
+> Reviewed against `main` at `098bfe02` on 22 October 2026. Quotations below
+> are Original-register story excerpts; the live YAML, selected campaign and
+> prose mode determine the rendered wording. The 33-year demo is an additional
+> engine profile, not a choice on the normal start screen.
 
 This is not a replacement for the concept brief, the world bible, or the event corpus. It is the shortest route through the **whole story**.
 
@@ -10,7 +15,7 @@ This is not a replacement for the concept brief, the world bible, or the event c
 
 Eldritch Dynasty is the story of one bloodline living inside an agreement none of its descendants made.
 
-The player does not play one mortal character. The player is the continuing will of the house: choosing marriages, preserving or spending people, collecting books and heirlooms, deciding what the family writes down, and trying to make later generations capable of doing what earlier generations could not.
+The player begins as the signing founder and remains the continuing will of the house when he becomes its guardian: choosing marriages, preserving or spending people, collecting books and heirlooms, deciding what the family writes down, and trying to make later generations capable of doing what earlier generations could not.
 
 Every player-facing run has four layers:
 
@@ -28,11 +33,16 @@ The two campaign profiles use the same beginning and the same family systems:
 
 A Short Line is the default shorter campaign. A Long Line is the complete campaign and contains the God / Unmaking endgame.
 
-### Known current story seam: Short still speaks the Long term in the signing
+### The signing uses the selected campaign's term
 
-The campaign clock and ending logic are campaign-aware, but the authored prologue is currently shared verbatim. That means a player who selects **A Short Line** still sees the third debt say **“Five hundred years, to the day”**, even though the Short campaign actually ends in **1342 after 300 years**.
+The third debt uses `campaignText` in `prologue.yaml`, rendered with the
+profile's `years` and `endYear`. Short says 300 years ending in 1342; Long says
+500 ending in 1542; the engine's demo says 33 ending in 1075. Endings and
+clauses can also carry campaign-aware text. The old shared-term mismatch is
+fixed; Long Line excerpts below do not set the Short Line's clock.
 
-This is current implementation drift, not a second piece of lore. The table above describes the executable campaign clock; the quoted signing below preserves the exact text the client currently displays. The product copy should eventually make those two agree rather than asking the player to rationalise the contradiction.
+`core/src/prologue.ts` renders that term; `core/src/campaign.test.ts` exercises
+the campaign text contract.
 
 ---
 
@@ -122,6 +132,11 @@ A Long Line takes this literally: the clock ends in 1542. A Short Line uses a sm
 
 ### The player's founding choices
 
+First the player names the founder (blank keeps Daveed Gearithy) and answers
+the four Examination questions. Each selected answer applies both its given
+and its owed terms. `GameSession.found()` rebuilds the founding family before
+committing those answers. Gender/configuration selection remains #1867.
+
 The founder is deliberately left unnamed. The player names the **house**, because the house is what persists.
 
 The player also chooses one founding heirloom request:
@@ -163,7 +178,7 @@ The values below are the gates the code currently evaluates. Book counts are der
 | **Hierophant** | Power **50+**; **3+ books**; **3+ affinities**; Madness **20+** but not above Mind; house at least **Regarded** | The ladder becomes public and paradoxical: the heir must be hurt by the gift, but not destroyed by it, and the outside world must respect the house enough to recognise what it has become. |
 | **The Vessel** | Power **70+**; **4+ books**; Mind **70+**; house **Eminent**; the Vessel rite completed | Pay with an actual living member of the blood, willingly given. The next step is no longer something breeding and study can buy by themselves. |
 | **Demigod** | Power **85+**; **7+ books**; **5+ affinities**; house **Eminent**; Madness **60+** but not above Mind; all **3 Regalia** held; Great Rite completed | Reassemble what the centuries scattered. The house must preserve its founding objects, sustain a highly damaged but still functioning ascendant, and either obtain sanction for the Great Rite or defy the institution that withholds it. |
-| **God** | Power **88+**; living family readers collectively know **8+ books** covering **all 8 affinities**; house **Exalted**; Madness **90+** but not above Mind; **7+ Ledger clauses** recovered; the Unmaking completed | Outgrow the house's own elder. A separate two-rite elder must be spent to raise a blood descendant beyond him, while the surviving family keeps every art represented. One perfect patriarch is not enough. |
+| **God** | Power **88+**; living family readers collectively know **8+ distinct books**, with at least one affinity from **each of the four opposed pairs**; house **Exalted**; Madness **90+** but not above Mind; **7+ Ledger clauses** recovered; the Unmaking completed | Outgrow the house's own elder. A separate two-rite elder must be spent to raise a blood descendant beyond him, while the surviving family keeps the four pair positions represented. One perfect patriarch is not enough. |
 
 The ladder is cumulative: somebody standing at a higher rung must also have cleared everything below it.
 
@@ -175,7 +190,7 @@ The important part of the table is not the numbers. It is the changing **shape**
 - **Adept → Hierophant:** broaden knowledge, acquire visible standing, and accept some Madness rather than avoiding it.
 - **Hierophant → Vessel:** make the family pay a human cost.
 - **Vessel → Demigod:** preserve the Regalia across generations and survive the Great Rite.
-- **Demigod → God:** stop thinking about one exceptional man. Build a deep living family, recover enough of the contract, sustain all eight arts, and create a descendant strong enough to inherit what an elder is destroyed to give him.
+- **Demigod → God:** stop thinking about one exceptional man. Build a deep living family, recover enough of the contract, sustain reading across all four opposed pairs, and create a descendant strong enough to inherit what an elder is destroyed to give him.
 
 That last reversal is the terminal irony of the ladder:
 
@@ -328,7 +343,7 @@ The Vessel then turns the game's metaphor literal. “The sons” were always th
 
 Demigod requires the Regalia to be reunited, knowledge to have survived, the ascendant to have been driven deep into Madness without crossing what his Mind can bear, and the Great Rite to have happened.
 
-God reverses the fantasy of the singular chosen one. The house needs an elder who climbed, a descendant who can surpass him, living readers who collectively preserve all eight arts, seven recovered clauses, Exalted standing, and a final act that destroys the elder to lift the younger.
+God reverses the fantasy of the singular chosen one. The house needs an elder who climbed, a descendant who can surpass him, living readers who collectively preserve the four opposed-pair positions, seven recovered clauses, Exalted standing, and a final act that destroys the elder to lift the younger.
 
 The player's best individual is no longer the project.
 
@@ -558,7 +573,7 @@ That ordering is story logic, not merely implementation detail. A formidable Sho
 
 ## 11. The whole story in one paragraph
 
-In 1042 a man whose name the family later chooses to lose accepts a protected house, an impossible thing in the blood, and three objects to keep; in exchange his descendants owe a truthful record, their sons, and an account at the end of the term. The player names the house and then spends centuries making descendants who can carry the gift farther than their parents did: first awakening it, then learning it, then becoming publicly formidable, then paying for ascent with relatives, heirlooms, reputation, sanity, knowledge, and finally the elder who climbed before them. While the family does this, the Ledger slowly reveals that inheritance, extinction, and even ceasing to be human do not obviously void the agreement, and the chronicle the player has been editing for immediate advantage becomes the evidence read at the end. When the term arrives, the creditor sits at the table and reads what the house said it was. The family may be extinct, forgotten, worth consuming, released from a shorter account, emptied of the gift by a failed last rite, or transformed far enough that the final party at the table is no longer merely the descendant of the person who signed. The last night does not ask whether the family was good. It asks what five centuries made, what they wrote down about making it, and whether the book can prove the difference.
+In 1042 the founder, named by the player, accepts a protected house, an impossible thing in the blood, and three objects to keep; in exchange his descendants owe a truthful record, their sons, and an account at the end of the term. The player names the house and then spends centuries making descendants who can carry the gift farther than their parents did: first awakening it, then learning it, then becoming publicly formidable, then paying for ascent with relatives, heirlooms, reputation, sanity, knowledge, and finally the elder who climbed before them. While the family does this, the Ledger slowly reveals that inheritance, extinction, and even ceasing to be human do not obviously void the agreement, and the chronicle the player has been editing for immediate advantage becomes the evidence read at the end. When the term arrives, the creditor sits at the table and reads what the house said it was. The family may be extinct, forgotten, worth consuming, released from a shorter account, emptied of the gift by a failed last rite, or transformed far enough that the final party at the table is no longer merely the descendant of the person who signed. The last night does not ask whether the family was good. It asks what five centuries made, what they wrote down about making it, and whether the book can prove the difference.
 
 ---
 

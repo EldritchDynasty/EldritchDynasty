@@ -1,6 +1,12 @@
 # Critical Prose
 
 > Internal narrative reference. This document contains campaign, ending, and identity spoilers.
+>
+> Editorial guidance and illustrative beats, reviewed against `main` at
+> `098bfe02` on 22 October 2026. Examples and desired emotional effects are not
+> guarantees of event reach or evidence from players. The live YAML and
+> [fullstory.md](fullstory.md) describe the shipped story; #1867 tracks the
+> further founder identity and attachment work.
 
 ## Purpose
 
@@ -82,7 +88,7 @@ That is the first sin of the dynasty and the template for almost everything the 
 
 The player is not one mortal character. The player is the will of the line.
 
-Internally, the implementation makes this literal: Daveed Gearithy is the first character and first Head. When death reaches him it is redirected; he becomes the guardian spirit of the house and remains castable forever. The player has effectively been him all along.
+Internally, the implementation makes this literal: the player names the first character and first Head (Daveed Gearithy by default). When death reaches him it is redirected; he becomes the guardian spirit of the house and remains castable forever. The player has been him all along. The authored founding body remains male; #1867's identity/configuration extension is not shipped.
 
 That fact should remain a story advantage rather than casual exposition. It gives the entire campaign a second reading: the founder who signed the debt never truly leaves the family alone with it.
 

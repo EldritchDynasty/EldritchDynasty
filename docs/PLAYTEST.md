@@ -27,8 +27,10 @@ The rule is simple: **record first, interpret second, tune last**.
 
 ## Before recruiting
 
-Use a product-equivalent build, preferably the packaged Windows build from #67
-once that path is green. Do not use editor controls, debug panels, seeded test
+Use a product-equivalent build, preferably a verified packaged Windows build
+whose source SHA is recorded in `issuesneedingowneraction` (beta.3 is the
+existing unsigned proof). Packaging evidence is separate from observing a
+player. Do not use editor controls, debug panels, seeded test
 helpers, or explanations that a normal player would not receive.
 
 For every session record:

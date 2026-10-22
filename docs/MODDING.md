@@ -65,9 +65,10 @@ the ladder-playing acquittal for content that is reachable only when a house
 actively climbs. The smaller default sample is useful while editing; **Use CI
 settings** selects the full 800-run, 500-year sample and can take a long time.
 
-**`frequency` is a rationing tier, not a weight.** Adding thirty `common`
-templates silently rations every other common template. The per-template
-`weight` only nudges selection *within* that tier.
+**`frequency` is a rationing tier, not a weight.** Adding `common` templates
+changes competition with every ambient tier. A template's `weight` multiplies
+its tier's frequency weight in the shared draw; it does not buy more time
+inside a tier's global cooldown. Measure the whole affected pool.
 
 Frame events are different: they run on the record-reading frame cadence rather
 than the ambient Frequency ledger.

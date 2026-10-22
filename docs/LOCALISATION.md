@@ -5,6 +5,12 @@ callback that must repeat exactly is carried, and how the text is inventoried.
 It does not choose a launch language, translation vendor, message format, or UI
 library.
 
+Implementation review: `main` at `098bfe02`, 22 October 2026. Original and
+Plain English are shipped prose modes (`core/src/prose.ts`, `messages.ts` and
+authored `proseVariants`); they do not constitute a translated launch language.
+The storage decision below still applies. The callback table is explicitly the
+28 September survey, not a fresh inventory of open implementation work.
+
 ## Decision: the Chronicle is an artefact
 
 **Persist the rendered words of every saved diegetic artefact. Do not replace
@@ -117,9 +123,9 @@ catalogues.
 Exports and Library memories remain self-contained. A page can be shown exactly
 as saved even if content or translations have since changed.
 
-Localisation work still needs stable identities for repeated callbacks and
-every rule currently matching English. Those are separate correctness tasks in
-#276; this decision does not preserve any English-matching exception.
+New localisation work must keep repeated callbacks structurally identified and
+rules independent of English. #276 records that migration's history; this
+decision does not preserve an English-matching exception or reopen that issue.
 
 ## Revisit only if
 

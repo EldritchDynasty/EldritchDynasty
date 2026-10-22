@@ -22,7 +22,7 @@ function over plain values, testable with nothing but node
 (`renderer-entry.test.ts`).
 
 Saves are opaque JSON, written under Electron's `userData` by `src/saves.mjs`.
-`SavedGameS` in core is still the only authority on whether a blob is a run;
+`SavedGameS` in schema, used by core, is the authority on whether a blob is a run;
 this package checks exactly one thing about one — that `format` is a number.
 
 ## Commands
@@ -56,10 +56,11 @@ with the inherited `ELECTRON_RUN_AS_NODE` flag removed. The Open-a-run dialog
 explicitly starts in Documents, avoiding Electron 43+'s Downloads default.
 See the dependency history in [docs/DEPENDENCIES.md](../../docs/DEPENDENCIES.md).
 
-**The code upgrade is not the complete release proof.** #514 remains open for
-a fresh-`npm ci` shell smoke, tagged Windows installer/packaged smoke, and
-a current Electron advisory check. Do not mistake an ordinary green PR CI run
-for the tag-only packaging evidence.
+**The code upgrade is distinct from production release proof.** #514 is closed;
+the supported-line launcher, Documents default and cold Windows smoke shipped.
+The unsigned beta.3 installer proof and remaining signing/store/device actions
+are recorded in [issuesneedingowneraction](../../issuesneedingowneraction).
+Do not treat an ordinary PR run as tagged or signed installer evidence.
 
 ## Boundaries
 

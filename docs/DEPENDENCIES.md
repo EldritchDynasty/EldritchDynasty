@@ -9,7 +9,7 @@ Never `npm audit fix --force`. It picks the newest major of everything it can
 reach — it offered vitest 5, Electron 44 and a *downgrade* of electron-builder
 here — without asking whether the code survives it.
 
-## Ongoing audit evidence — proposed in #514 (2026-10-10)
+## Ongoing audit evidence — shipped with #514
 
 The scheduled **dependency advisory audit** workflow (`.github/workflows/dependency-audit.yml`)
 checks the current npm advisory database **without modifying the lockfile**.
@@ -28,9 +28,32 @@ network failure must not be reported as a clean bill of health. This is a
 new recurring measurement, not a replacement for the first successful
 tagged Windows install/signing proof required by #321 and #514.
 
-Until a hosted run of this workflow completes and its JSON artifact is
-inspected, **the 2026-10-06 numbers below remain historical**, not a claim
-that 2026-10-10 is vulnerability-free.
+Hosted run [38226428291](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38226428291)
+at `978c576ac17511226433a28c00e3da20b45022c5` was reviewed on 12 October:
+0 critical, 0 high, 11 moderate, 0 low. Its retained artifact and disposition
+are linked in [#514](https://github.com/EldritchDynasty/EldritchDynasty/issues/514#issuecomment-6121709689).
+These are dated results, not a claim about a later advisory database.
+
+## 2026-10-22 — documentation-audit measurement
+
+`npm audit --json` on the unchanged lockfile from `main` at `098bfe02`
+reported **0 critical, 0 high, 13 moderate, 0 low**. The lockfile has Electron
+44.7.0 and Vitest / `@vitest/mocker` 4.1.11. npm exits 1 for these findings;
+`tools/electron-audit.mjs` passes its high/critical gate while listing the
+moderates for review. No dependency or lockfile was changed by this audit.
+
+The two extra package rows over the historical 11 are `@vitest/mocker` and
+its parent `vitest`, from:
+
+| Advisory | Reported affected range | Status |
+|---|---|---|
+| [GHSA-qxg6-89mg-rqv8](https://github.com/advisories/GHSA-qxg6-89mg-rqv8), unauthenticated manual mock registration | `@vitest/mocker` >=2.1.0-beta.7, <4.1.12 | Newly recorded dev/test dependency finding; npm reports a fix available. Not accepted by the old table. |
+| [GHSA-xp26-3454-mjgp](https://github.com/advisories/GHSA-xp26-3454-mjgp), Windows redirect allowlist traversal | `@vitest/mocker` >=4.1.11, <4.1.12 | Same pending review/remediation; does not establish a shipped renderer exposure. |
+
+The accepted historical packaging and iOS-generation findings below remain
+reported too. Reproduce the current report before taking a dependency change;
+the documentation audit neither waives these new findings nor claims a clean
+advisory result.
 
 ---
 
@@ -72,8 +95,11 @@ The code slice passed hosted PR CI, including clean dependency installation,
 but that is not evidence that a freshly installed Electron shell has launched
 successfully or that the tag-only Windows installer has packaged and passed
 its packaged smoke. [#514](https://github.com/EldritchDynasty/EldritchDynasty/issues/514)
-remains open for those proofs and a fresh `npm audit` check. Do not treat
-the historical advisory totals in this document as a current audit result.
+was subsequently closed by owner decision: the launcher engineering and cold
+Windows smoke had shipped, and the remaining tagged packaging proof was folded
+into #321. The unsigned beta.3 proof and deferred production signing/store work
+are now recorded in [issuesneedingowneraction](../issuesneedingowneraction).
+Do not treat the historical advisory totals as a current audit result.
 
 ### Vitest 4 changed three things the repository leaned on
 

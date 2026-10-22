@@ -1,5 +1,10 @@
 # Player hooks in Eldritch Dynasty
 
+Reviewed against `main` at `098bfe02` on 22 October 2026. These are an analysis
+of implemented hooks and proposed improvements, not measured player responses.
+The founder currently accepts a name and remains the authored male signer;
+the identity/configuration extension is tracked in #1867.
+
 **Eldritch Dynasty’s strongest hook is: “I’m building a future for this family, but the things I do to secure it may be what destroys it.”** The mystery draws the player in; particular people, ambitions and remembered decisions give them reasons to stay.
 
 Reading the current implementation and content, these are the main points where that investment develops. They overlap and vary between runs.

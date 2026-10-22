@@ -56,6 +56,12 @@ The editor imports `core` directly and never reimplements simulation logic. That
 
 A `SavedGame` is the whole world as plain, validated data; `SAVE_FORMAT` is 33.
 
+Documentation reviewed against `main` at `098bfe02` on 22 October 2026.
+Living guides describe shipped code; dated surveys, narrative drafts and
+append-only logs retain their original evidence. See the audit entry in
+[docs/AGENT-LOG.md](docs/AGENT-LOG.md). Founder configuration and recurring
+Mystic duties remain tracker work (#1867 and #1866).
+
 ## Commands
 
 The block below is the only place this repository states what a command costs.
@@ -88,7 +94,7 @@ npm run test:fast    # ~8 min, the fix-and-rerun loop. Skips the *.slow.test.ts 
 npm test             # everything: fast and slow suites. For fresh counts and
                      # full-suite timing: npm run cost -- --full --write
 npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
-                     # client's templates. ~29s
+                     # client's templates.
 npm run validate     # every content rule; exits non-zero on any error. An error
                      # names the file it is in: `events/rites.yaml → event:the_drowning`
 
@@ -184,7 +190,7 @@ Plague, duel, madness overflow, an authored `status` effect — all of it goes t
 
 ### 3. The Narrator does not die
 
-**Daveed Gearithy** is the first character and the first head of the Eldritch House. When death is triggered for him it is *redirected*: he becomes the house's guardian spirit and makes its decisions from that day forward. He is the player, and the player has been him the whole time.
+The player names the founder; **Daveed Gearithy** is the authored default. He is the first character and the first head of the Eldritch House. When death is triggered for him it is *redirected*: he becomes the house's guardian spirit and makes its decisions from that day forward. He is the player, and the player has been him the whole time. His authored sex and founding parentage remain unchanged by naming.
 
 - Marked `becomesGuardian: true` on the seed character; handled inside `kill()`.
 - Afterwards his status is `guardian` — never `alive` again, so succession, marriage, births and mortality all step around him.
@@ -223,7 +229,7 @@ Never introduce `Math.random()` into `core`.
 
 `stepYear(ctx, false)` puts choice events and Record blocks on `world.pendingDecisions` and **does not advance the year** until they are answered. A choice resolved three years after its event is not a choice.
 
-- **Not every branch is the player's.** `decidedBy` (`schema/src/decider.ts`) says who takes one: `player` dockets, `chance` draws, `state` reads a ladder of guards over the family's own condition, and `party` pools a `Check` over the people the player casts — his decision there is *who goes*, and `session.send` is how a client answers it. Only `player` stops the clock; a scene the content already decided is not a question, and putting it on the docket would offer the player a decision that is not his.
+- **Not every branch is the player's.** `decidedBy` (`schema/src/decider.ts`) says who takes one: `player` dockets, `chance` draws, `state` reads a ladder of guards over the family's own condition, and `party` pools a `Check` over the people the player casts — his decision there is *who goes*, and `session.send` is how a client answers it. Player choices and player-cast slots stop the clock; automatic branch resolution does not by itself ask a question.
 - **`decideBranch` is the one evaluator**, and both the docket path and auto-resolve go through it, for the same reason `commitOutcome` is the only place an outcome is applied. Every path through it returns a branch — a ladder no rung of which holds falls through to weight rather than returning nothing, because an unanswered decision stops the clock permanently.
 
 - The blocked call returns a report with `blocked` set rather than silently doing nothing.
@@ -268,10 +274,11 @@ response it makes writes a chronicle line naming who did what.
 
 ### 14. The ladder is measured, never stored as an achievement
 
-`ascension.ts` reads §22's gates every year, off the people and the content, and
-recomputes where the house stands. `world.ascension.best` is the only thing
-remembered, because a family that made a Hierophant once made one — the rung can
-be lost, the fact that it was reached cannot.
+`ascension.ts` reads the calibrated gates every year, off the people and the
+content, and recomputes where the house stands. `world.ascension.best` and
+`reachedAt` preserve the high-water history — the rung can be lost, the fact
+that it was reached cannot. Demigod attainment separately records the
+irreversible cessation of ageing; a later fall in standing does not undo it.
 
 `eldritchPower` normalises onto §22's 0–100 scale from the locus table rather
 than from a constant, which is invariant 10's rule applied to the ladder: the
@@ -406,7 +413,7 @@ loading a different bundle — all of them look like a working simulation from t
 outside. Write tests that assert the shape of a healthy run, not that functions
 return. [docs/FAILURES.md](docs/FAILURES.md) is the catalogue.
 
-[docs/TEST-COVERAGE.md](docs/TEST-COVERAGE.md) is the coverage survey and what
+[docs/TEST-COVERAGE.md](docs/TEST-COVERAGE.md) is the dated coverage survey and what
 it found — three live bugs, one mechanic that had never run, and why line
 coverage reads high on a dispatch chain nobody has ever taken a branch of.
 
@@ -497,9 +504,19 @@ true even if nobody opens it.
   neutral.
 
 
-## Known gaps
+## Evidence and remaining work
 
-- **Outcomes passing on a coin.** Gate 8 (outcome reach, `gateOutcomeReach`) requires every authored outcome to resolve at least once across its batch of Long Lines — 800 of them now, widened from 100 more than once for exactly this tail — and a handful sat at 2-4% when last measured: `the_registrar_asks_for_the_book`'s two branches, `who_gets_the_physician/the_weak_one -> kept_them_both`, `the_coat_hung_up/let_him_stop -> home` and `the_turn_of_the_stave/mend_the_verse -> mended`. Any change to any phase's draws re-rolls them, so that gate can go red on content nobody touched. Two rounds of this are done and both are written up beside the content they moved: the Insurrection's four scenes at one measured weight (top of `packages/content/events/age_insurrection.yaml`), and the archive substory's launcher (`the_archive_and_the_wage_roll`, in `packages/content/events/retainers.yaml`). The frame layer is no longer clear, and "every interlude is at 7% or better" has stopped being true: measured over sixty runs, seven interludes fire in 1 to 4 of them. Every one of those waits on a single named lie, which the chronicler tells one time in five when the event carrying it fires at all — and BALANCE-LOG now measures the frame in two columns, ELIGIBLE against FIRED, because "its premise never came true" and "it lost the draw" look identical from the gate and are not the same bug. Three interludes have been moved onto the PAGE (`chronicled`) rather than the lie and went from 0 to 13-17 runs in 60. The coverage batch in `arcs.slow.test.ts` is a coin over what is left of that tail, so a red there naming one of them is the tail and not a regression.
-- **Measure the funnel, not the thing that looks thin.** Both frame interludes that sat at 1-2% were fine; they were starved four events upstream, by a launcher firing in 10 runs of a hundred and by a Discrepancy reachable only through a one-in-five Embellish. Neither was visible from the interlude, and raising the interlude's own weight would have bought nothing — a frame event is gated by `reads`, not drawn from a rationed pool. The frame's cadence caps how many interludes a run gets; the supply of open Discrepancies decides which ones they can be, so `arcs.slow.test.ts`'s batch mean is the wrong instrument for asking whether one is reachable and gate 8 is the right one.
+- **Reach is a measured funnel.** An event's premise, cast, eligibility,
+  selection and resolved outcome are separate questions. Use the gate runner
+  (`npm run gates -- fire-rate`) and outcome-reach
+  evidence for the current bundle; do not acquit a red result by remembering
+  a rare tail from an older batch. Frame events use record-reading cadence,
+  while ambient events share frequency rations.
+- **Historical measurements stay dated.** `docs/BALANCE-LOG.md` and
+  `docs/REGENCY-PACING.md` identify their code/content, campaigns, seeds and
+  policies. They do not establish today's rate after another content change.
+- **Human response is unverified.** `docs/PLAYTEST.md` records the waived,
+  unrun studies. Automated reach, deterministic replay and mechanism tests
+  cannot establish attachment, comprehension or enjoyment.
 
 For implemented-system history, see [ARCHITECTURE.md](ARCHITECTURE.md#shipped-systems-and-how-they-behave).

@@ -127,3 +127,39 @@ deletion, and a mass deletion is a number of branches, not a proportion of
 them. The shallow-clone refusal is untouched and remains the real defence,
 because it removes the condition that produced the false readings instead of
 trying to recognise their shape afterwards.
+
+## 2026-10-22 — #1864: documentation audit against shipped main
+
+Baseline: `main` at `098bfe02`. The documentation-only branch also retains
+`playerhooks.md` from #1865 and adds its missing README inventory row. No
+simulation, authored YAML, schema, dependency, migration or generated-duration
+change is part of this audit.
+
+| Documents | Review and disposition |
+|---|---|
+| Root AGENTS, README, ARCHITECTURE and the seven package AGENTS guides | Correct founding/default identity, catalogue/campaign descriptions, instruction routing, the editor's seventh view, learned Mystic checks, forcing/guards, recasting, ladder evidence, local emergency resolution and the host engineering/release distinction. Mobile's existing boundaries remain current. |
+| Concept brief and world bible | Bring the shipped ladder and six-ending/campaign envelope into line with the shared predicates; retain design intent and explicitly separate unbuilt #1866/#1867 work. The world registry now names the Short, Long and demo profiles and player-named founder default. |
+| COMMANDS, PARALLEL and PORTABILITY | Keep native queue admission and advisory local preflight distinct. Describe the retained merge-slow inventory, scheduled evidence and actual blocking gate lane; remove a second obsolete stopwatch account from the operating procedure. Shared tools and hook registrations remain the portable path. |
+| GAME-LOOP, MODDING and LOCALISATION | Correct founder/guardian continuity, household ladder/Regency reading, final pair coverage and frequency competition; distinguish shipped Original/Plain English modes from a future translated-language contract. Saved rendered prose still stays frozen. |
+| Suggestions and TEST-COVERAGE | Label as historical snapshots with their original source/dates. No rerun of those balance or coverage cohorts is implied. Old open-work lists are not today's queue. |
+| fullstory, criticalprose, playerhooks and story/Age-1 | Correct the current campaign term, founding path and final reading gates. Distinguish illustrative or earlier authored sequences from the live rendered transcript and emotional intentions from observed player responses. |
+| Exploratory story concepts, market research and REGENCY-PACING | Preserve dated/exploratory evidence rather than manufacture current results. The exploratory comparison now makes its old version/millennium framing explicit. The research and pacing reports already identify their source dates/trees. |
+| PLAYTEST, store/steam and mobile store drafts/checklist | Human studies remain waived and unrun. Point the runbook at existing packaged proof; preserve the stores' draft/unpublished status and owner/device requirements. No store claim, image, account or publication was changed. |
+| MERGE-QUEUE-INCIDENT and append-only BALANCE-LOG / FAILURES / prior AGENT-LOG entries | Retain chronological evidence unchanged. A later audit does not rewrite what an incident or measurement showed at the time. |
+| .devcontainer guides, interface patterns, canonical skills and Codex launchers | Existing setup/design boundaries and canonical-manual routing need no implementation update. Launcher parity and the shared instruction budget are covered by the existing Codex checks. |
+| Generated VOCABULARY, loci and duration table | Regenerate vocabulary through its command and compare; never hand-edit. No genetics or test-inventory change calls for regenerating the other two. |
+
+The dependency report was re-requested from npm on the unchanged lockfile:
+0 high/critical and 13 moderate package rows. DEPENDENCIES records the two
+additional Vitest-related rows as new findings awaiting remediation/review,
+not as accepted by the older packaging/iOS table. The raw report is
+reproducible with `npm audit --json`; it is not a new production release proof.
+
+The first attempted local checks exposed an executor restriction:
+`execFileSync` children returned `EPERM` even when Git printed a version.
+Running with the executor's additional network permission resolved it; no
+repository workaround or disabled test was introduced. The focused docs,
+codemap and Codex suites then passed all 85 assertions. Command-cost and
+preflight outcomes are recorded in the PR; timing belongs only in the generated
+AGENTS command block. The full population/coverage studies were not rerun for
+a prose-only change.

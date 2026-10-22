@@ -2,7 +2,7 @@
 
 A text-based generational strategy game. **A Long Line is five hundred years, roughly twenty generations, one bloodline.**
 
-You are not a character. You are the will of a bloodline — the thing that persists while individuals are born, ruined and buried. You never fight, never explore, and never speak a line of dialogue. You decide **who marries whom**, **who is spent**, **what gets written down**, and what each child is called.
+You begin as the signing founder, named by you, and continue as the house's guardian when his mortal life ends. Across later generations you are the will of a bloodline: you decide **who marries whom**, **who is spent**, **what gets written down**, and what each child is called. You do not directly fight or explore; the opening Examination is the one dialogue you answer yourself.
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
@@ -54,7 +54,8 @@ The original build order and commercial pass ([#277](https://github.com/Eldritch
 | File | Purpose and reader |
 |---|---|
 | [README.md](README.md) | Project orientation for players, contributors and agents. |
-| [Suggestions.md](Suggestions.md) | Design rationale and evidence behind tracked work; issue priority labels set the order. |
+| [Suggestions.md](Suggestions.md) | Dated design analysis from 18 October 2026; use the live tracker for current work. |
+| [playerhooks.md](playerhooks.md) | Player goals and emotional investment, with human validation still outstanding. |
 | [fullstory.md](fullstory.md) | Complete story reference for authors and reviewers; contains ending and identity spoilers. |
 | [criticalprose.md](criticalprose.md) | Narrative promises and prose beats for content authors; contains spoilers. |
 | `market research.md` | Dated market evidence and commercial implications for the owner. |
@@ -96,7 +97,7 @@ The attribute list is **open** — an attribute is six loci and a description, a
 
 ## The family is more than one household
 
-Name an heir and everyone else becomes a **cadet branch** — a hall of its own, with its own crowding brake, its own books, and its own memory. The family grows sideways the way real ones did, roughly seventy living across six halls by the collection rather than twenty in one room.
+Name an heir and eligible brothers can establish **cadet branches** — halls with their own crowding brakes, books and memory. The family can grow sideways across several halls; its eventual size depends on the run.
 
 Branches pay a tithe while they are content and stop while they are not. Grievance rises in a hall that holds a man who could have led and watches somebody lesser hold the seal, and it fades when nothing is wrong. When the main line runs out of men the seal goes to a cousin, and he is sent for, and everyone learns his name by spring.
 
@@ -120,7 +121,7 @@ The implemented game also includes **achievements**, a **Plain English** prose m
 
 Every event and character template declares `common | uncommon | rare | mythic`. It is a **rationing tier**, not a weight synonym — it reaches into scheduling (caps, cooldowns, a drought curve), presentation (a common event is one grey line; a mythic one is an illuminated page named in the chronicle forever), folklore, and whether a Record choice is required.
 
-A mythic event is not *unlikely*. It is rationed: at most three in a Long Line, and the drought curve makes sure you get them.
+A mythic event is rationed: at most three ambient fires in a Long Line. A drought curve raises its chance when eligible; conditions and cast requirements still have to hold. Frame events and substories use their own scheduling paths.
 
 ## The engine, from outside
 

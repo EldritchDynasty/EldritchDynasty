@@ -5,9 +5,13 @@ in the way. [DesignConcepts/eldritch-dynasty-concept-brief.md](../DesignConcepts
 is the authority on all of this — its section numbers are cited below — and wins wherever
 this page simplifies something into a rougher shape than the brief gives it.
 
+Reviewed against `main` at `098bfe02` on 22 October 2026. The code's calibrated
+gates, rather than older design counts, govern the climb.
+
 ## The basic loop
 
-You don't play one character — you play the **family**, generation after generation
+You begin as the signing founder and continue as the house's guardian. You steer
+the **family**, generation after generation
 (roughly one chapter per generation). Each round: years pass, you pick a
 marriage partner for your heir from three candidate cards, a handful of text events fire,
 children are born, you decide what the chronicle records about the generation just lived,
@@ -24,8 +28,10 @@ by breeding a man powerful and stable enough to hit each rung:
    madness, because this rung has a madness floor as well as a ceiling.
 4. **The Vessel** — requires a living relative sacrificed into the ascending heir.
 5. **Demigod** — ageing stops; requires the three founding heirlooms reunited.
-6. **God** — requires an even more powerful descendant to already exist alongside the
-   demigod, so the family has to outgrow its own god to finish the climb.
+6. **God** — requires a separate blood descendant to receive the two-rite elder's
+   Unmaking and clear the final gates, with living family readers carrying eight
+   distinct books and an affinity from each opposed pair. The earlier cumulative
+   gates still apply. The family has to prepare a successor beyond its elder.
 
 Each rung demands more raw power, more magical range, more social standing, and —
 pointedly — more sanity risk. A dynasty that concentrates everything into one perfect
@@ -52,9 +58,11 @@ someone better than your best.
   reaches an eligible male heir — the source of the family's power is also the source of
   its scandal and its self-destruction. §7, §10.
 - **The Barren Generation (Regency).** If no living son can express the power, a woman
-  holds the house together. She can defend, enrich and negotiate — she cannot advance the
-  ladder by a single point. Most runs lose 30–80 years this way at least once, while the
-  Ledger (the antagonist's debt) keeps counting regardless. §7.
+  holds the house together. She can defend, enrich, negotiate and prepare books
+  and future heirs; she cannot express Eldritch Power herself. The house's
+  ladder is measured over its eligible men, rather than the Head alone. The
+  Ledger (the antagonist's debt) keeps counting regardless. The measured pacing
+  cohorts are dated in [REGENCY-PACING.md](REGENCY-PACING.md). §7.
 - **Respect is a permission gate, not a score to maximise.** Five tiers, Unknown through
   Exalted. High Respect is required just to be *allowed* to attempt the higher rites, but
   visible madness and honest chronicle entries about it burn Respect fast — so the endgame
@@ -78,7 +86,7 @@ someone better than your best.
   army or court, or leave idle is a choice that trades one person's future for the house's
   present. §13, §17.
 
-**In short:** progression means breeding smarter — for power, sanity headroom, fertility
+Progression means breeding for power, sanity headroom, fertility
 and charm — across generations while juggling four scarce resources (magical power, sanity
 headroom, social respect, and truth in your own record), each of which actively undermines
 at least one of the others as you climb.
