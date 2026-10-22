@@ -190,11 +190,13 @@ Plague, duel, madness overflow, an authored `status` effect — all of it goes t
 
 ### 3. The Narrator does not die
 
-The player names the founder; **Daveed Gearithy** is the authored default. He is the first character and the first head of the Eldritch House. When death is triggered for him it is *redirected*: he becomes the house's guardian spirit and makes its decisions from that day forward. He is the player, and the player has been him the whole time. His authored sex and founding parentage remain unchanged by naming.
+The founder is the player: their name, their gender, and their **founding configuration** (#1867). **Daveed Gearithy**, a man and the blood father, is the authored default. The founder is the first character and the first head of the Eldritch House. When death is triggered for them it is *redirected*: they become the house's guardian spirit and make its decisions from that day forward.
 
 - Marked `becomesGuardian: true` on the seed character; handled inside `kill()`.
-- Afterwards his status is `guardian` — never `alive` again, so succession, marriage, births and mortality all step around him.
-- He stays castable forever via the `guardian` slot role, which reads status rather than liveness. A template written for 1042 can still name him in 1542.
+- Afterwards their status is `guardian` — never `alive` again, so succession, marriage, births and mortality all step around them.
+- They stay castable forever via the `guardian` slot role, which reads status rather than liveness. A template written for 1042 can still name them in 1542.
+- Name and gender never touch a body. Only the configuration does (`people/founding-cast.ts`): as *blood mother* the founder is the woman who carries the font and a married-in husband fathers the children.
+- **The founder's charter**: the founder holds the seal in their own right. `isRegent` is the one place that exempts them; never test a head's `sex` for Regency.
 
 ### 4. Two magics, two rules
 

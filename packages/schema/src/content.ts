@@ -6,6 +6,7 @@ import { AgeDefS } from './age.js';
 import { ArcDefS } from './arc.js';
 import { HouseDefS } from './house.js';
 import { SexS } from './attributes.js';
+import { FoundingConfigurationS } from './founder.js';
 import { PersonNameS, RetainerContractS } from './person.js';
 import { CharacterTemplateS } from './character.js';
 import { HeirloomDefS } from './heirloom.js';
@@ -50,6 +51,16 @@ export const SeedPersonS = z.object({
   traits: z.array(z.string()).default([]),
   /** Nudges the rolled genome toward an authored intent, without pinning it. */
   bias: z.record(z.string(), z.number()).default({}),
+  /**
+   * What this seed's `bias` becomes in a founding configuration other than
+   * the one authored (#1867). Per key, over `bias`. The founder's Eldritch
+   * bias is calibrated against what reaches the first expressing man, and
+   * that man is a generation earlier when the founder is the blood mother —
+   * so the same number is a different house.
+   */
+  byConfiguration: z.record(FoundingConfigurationS, z.object({
+    bias: z.record(z.string(), z.number()).default({}),
+  })).optional(),
   isHead: z.boolean().default(false),
   note: z.string().optional(),
 });

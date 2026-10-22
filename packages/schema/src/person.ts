@@ -8,6 +8,7 @@ import type { Rite } from './rung.js';
 import type { AttributeId, HouseId, PersonId, TraitId, Year, SpellbookId, FlagId, CareerId } from './ids.js';
 import type { EldritchProfile, Genome, GenomeRef } from './genome.js';
 import type { Sex } from './attributes.js';
+import type { Gender } from './founder.js';
 
 /** A person's name is a short identity, not the longer house-name field. */
 export const PERSON_NAME_MAX = 32;
@@ -307,6 +308,13 @@ export interface Person {
    * A second place that kills people is a second place that can kill him.
    */
   becomesGuardian?: boolean;
+  /**
+   * How the founder is referred to, as the player stated it at the signing
+   * (#1867). Set on the founder only, and only when the signing answered who
+   * signed: everybody else is referred to as their `sex` implies, and nothing
+   * is stored for them.
+   */
+  gender?: Gender;
 
   /** Which CharacterTemplate produced them, if they were not authored. */
   mintedFrom?: string;

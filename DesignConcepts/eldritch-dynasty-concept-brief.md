@@ -84,7 +84,9 @@ Everything the world says about the world: tavern songs, rival houses' chronicle
 
 Once, at the head of the run. Interactive at the signing. Roughly seven minutes.
 
-- Year 1042. The founder takes **the player's supplied name**. Leaving it blank keeps **Daveed Gearithy**. Names remain load-bearing: this one follows the founder into the Chronicle and the guardian continuity rather than being withheld.
+- Year 1042. The founder is **the player**: their supplied name, their gender, and which body carried the blood into the house. Leaving the name blank keeps **Daveed Gearithy**. Names remain load-bearing: this one follows the founder into the Chronicle and the guardian continuity rather than being withheld.
+- Gender (man, woman or nonbinary) decides only how the founder is named and referred to. The **founding configuration** is the separate answer that touches a body: as the **blood father** the founder passes the font to every daughter and a married-in wife bears the children; as the **blood mother** the founder carries the font, bears the children, and a married-in husband fathers them. A man or a woman pre-selects the matching configuration, a nonbinary founder chooses, and anyone may change it.
+- **The founder's charter.** The founder holds the seal in their own right. A blood mother is never a Regent (§7, *The Barren Generation*); every woman who holds the seal after her is.
 - The counterparty appears **at the signing and the last night**. Not shown; described by what it displaces. Iron rusting on the table between one sentence and the next. A dog that will not come into the room. The smell of wet ash indoors, in summer.
 - The prologue is structured as an announced triad — **three things given, three things owed** — and delivers three, ascending in weight. The third is the one that hurts.
 - **The Examination** comes before the house is named: four questions weigh the founder's answers. Every answer adds a thing given and a thing owed; none is meant to be a right answer.
@@ -97,7 +99,7 @@ Once, at the head of the run. Interactive at the signing. Roughly seven minutes.
 
 ## 4. Player Fantasy
 
-You do not play a succession of characters. You are the **will of a bloodline** — the thing that persists while individuals are born, ruined, and buried. The founder is the exception that explains the frame: he bears the player's name, becomes the guardian rather than dying, and remains the Narrator through whom that will is exercised. Later heads are still people the player steers, not avatars the player becomes.
+You do not play a succession of characters. You are the **will of a bloodline** — the thing that persists while individuals are born, ruined, and buried. The founder is the exception that explains the frame: they bear the player's name, become the guardian rather than dying, and remain the Narrator through whom that will is exercised. Later heads are still people the player steers, not avatars the player becomes.
 
 You never directly fight or explore. Outside the one-off Examination, you do not speak dialogue. You do three things across the line: you decide **who marries whom**, you decide **who is spent**, and you decide **what gets written down**.
 
@@ -176,7 +178,7 @@ Followed down, with nothing invented that is not a consequence:
 - **The marriage market has a vocabulary.** "Deep blood," "a thin line," "a bought grandmother." Never explained in text. Learned from use.
 
 ### The Barren Generation
-When no living son expresses Eldritch Power, the family enters **Regency**. A woman of the blood holds the house. She can defend, enrich, negotiate, and arrange marriages with precision. She cannot advance ascension by a single point. The Ledger keeps counting.
+When no living son expresses Eldritch Power, the family enters **Regency**. A woman of the blood holds the house. The founder's charter (§3) is the one exemption: a founder who is the blood mother holds it in her own right. She can defend, enrich, negotiate, and arrange marriages with precision. She cannot advance ascension by a single point. The Ledger keeps counting.
 
 A soft-fail with real teeth. Most runs lose 30–80 years this way at least once. The chronicle entries written *during* a Regency are the best-written in the game, and the player will notice.
 
@@ -705,6 +707,7 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 | 14 | The founder takes **the player's name**, and the signing gains **the Examination** | Makes the Narrator/guardian continuity explicit and turns the triad's given/owed grammar into paid-for opening choices |
 | 15 | Calibrated book/power gates and the four-pair final circle; public ladder diagnosis | Describes the shipped predicates and actionable evidence rather than older raw design counts (§22; #1802, #1806) |
 | 16 | Callable forcing with guarded outcomes, learned Mystic checks and recurring-role recast | Makes the existing Table, knowledge and cast mechanics explicit (#1796, #1812, #1817, #1830) |
+| 17 | The founder is **the player**: name, gender and **founding configuration** (blood father or blood mother), and the **founder's charter** | Lets the player sign as themselves without coercing a body from a pronoun; a blood mother founds the house rather than keeping it for a son (#1867) |
 
 The five package guides and [ARCHITECTURE.md](../ARCHITECTURE.md) route authors
 to these implementations. Mystic checks now require completed study where the

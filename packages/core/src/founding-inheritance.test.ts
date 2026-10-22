@@ -88,7 +88,7 @@ describe('founding inheritance', () => {
   });
 
   it('puts the player name on the founder, succession and first page', () => {
-    const ctx = bootstrap(bundle, 34_297, 1042, 'long', [], { founderName: '  Arlen Gearithy  ' });
+    const ctx = bootstrap(bundle, 34_297, 1042, 'long', [], { founder: { name: '  Arlen Gearithy  ' } });
     const founder = ctx.world.people.all().find((person) => person.becomesGuardian)!;
 
     expect(founder.name).toBe('Arlen Gearithy');
@@ -96,12 +96,12 @@ describe('founding inheritance', () => {
     expect(ctx.world.chronicle[0]?.text).toContain('Arlen Gearithy');
     expect(ctx.takenNames.has('Arlen Gearithy')).toBe(true);
 
-    const blank = bootstrap(bundle, 34_297, 1042, 'long', [], { founderName: '   ' });
+    const blank = bootstrap(bundle, 34_297, 1042, 'long', [], { founder: { name: '   ' } });
     expect(blank.world.people.all().find((person) => person.becomesGuardian)?.name).toBe(founderSeed.name);
     expect(blank.world.succession[0]?.name).toBe(founderSeed.name);
     expect(blank.world.chronicle[0]?.text).toContain(founderSeed.name);
     expect(() => bootstrap(bundle, 34_297, 1042, 'long', [], {
-      founderName: 'x'.repeat(PERSON_NAME_MAX + 1),
+      founder: { name: 'x'.repeat(PERSON_NAME_MAX + 1) },
     })).toThrow();
   });
 

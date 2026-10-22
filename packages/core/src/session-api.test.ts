@@ -720,7 +720,7 @@ describe('the two ends of the run, through the façade', () => {
       const before = g.save();
       const result = g.found({
         houseName: 'The House of Salt', heirloom: prologue.heirlooms[0]!.heirloom,
-        grudge: prologue.grudges[0]!.house, founderName: 'Arlen Gearithy',
+        grudge: prologue.grudges[0]!.house, founder: { name: 'Arlen Gearithy' },
         answers: { public_question: 'chosen' },
       });
       expect(result).toEqual({
@@ -763,7 +763,7 @@ describe('the two ends of the run, through the façade', () => {
       houseName: 'The House of Salt',
       heirloom: p.heirlooms[0]!.heirloom,
       grudge: p.grudges[0]!.house,
-      founderName: '  Arlen Gearithy  ',
+      founder: { name: '  Arlen Gearithy  ' },
       answers: { public_question: 'chosen' },
     });
 
@@ -811,7 +811,7 @@ describe('the two ends of the run, through the façade', () => {
       const p = g.prologue()!;
       expect(g.found({
         houseName: 'The House of Salt', heirloom: p.heirlooms[0]!.heirloom, grudge: p.grudges[0]!.house,
-        founderName: 'Marek', answers: { public_question: 'chosen' },
+        founder: { name: 'Marek' }, answers: { public_question: 'chosen' },
       }).ok).toBe(true);
       return g.ctx.world.chronicle.find((page) => page.year === 1042 && page.weight === 'illuminated')!;
     };
@@ -850,7 +850,7 @@ describe('the two ends of the run, through the façade', () => {
       houseName: 'The House of Salt',
       heirloom: p.heirlooms[0]!.heirloom,
       grudge: p.grudges[0]!.house,
-      founderName: 'Arlen Gearithy',
+      founder: { name: 'Arlen Gearithy' },
       answers: { public_question: 'not_an_answer' },
     });
 
@@ -870,7 +870,7 @@ describe('the two ends of the run, through the façade', () => {
       houseName: 'The House of Salt',
       heirloom: p.heirlooms[0]!.heirloom,
       grudge: p.grudges[0]!.house,
-      founderName: 'Arlen Gearithy',
+      founder: { name: 'Arlen Gearithy' },
       answers: { public_question: 'chosen' },
     });
 

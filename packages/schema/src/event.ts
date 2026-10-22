@@ -37,7 +37,7 @@ export const SlotRoleS = z.enum([
   'retainer', 'rival_house', 'outsider', 'heirloom', 'spellbook',
   'tutor', 'rival', 'fragile', 'the_match',
   'listener_record', 'listener_blood',
-  /** The Narrator, after he crosses over. Castable in any year, forever. */
+  /** The Narrator, after they cross over. Castable in any year, forever. */
   'guardian',
   /**
    * The one man of the house standing highest on the ladder (§22, issue #41).

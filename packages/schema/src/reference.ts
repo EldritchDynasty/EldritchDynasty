@@ -197,7 +197,7 @@ export function vocabulary(): Vocabulary {
       { name: 'Register', values: RegisterS.options, note: 'An Age\'s texture. Two Ages of one register never run consecutively.' },
       { name: 'CompareOp', values: CompareOpS.options },
       { name: 'Sex', values: SexS.options },
-      { name: 'PersonStatus', values: PersonStatusS.options, note: '`guardian` is the Narrator after he crosses over — never `alive` again.' },
+      { name: 'PersonStatus', values: PersonStatusS.options, note: '`guardian` is the Narrator after they cross over — never `alive` again.' },
       { name: 'MembershipKind', values: MembershipKindS.options, note: 'One OPEN record per person. Two puts them in two halls at once.' },
       { name: 'RetainerRole', values: RetainerRoleS.options, note: 'An `archivist` in post is what makes an Age pay its clause.' },
       { name: 'AttributeKind', values: AttributeKindS.options, note: 'The list of attributes is open; nothing in the engine counts them.' },

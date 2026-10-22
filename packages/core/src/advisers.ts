@@ -1,5 +1,5 @@
 import { assertNever, type Person } from '@ed/schema';
-import type { SimCtx } from './world.js';
+import { isRegent, type SimCtx } from './world.js';
 import { formOf } from './people/grammar.js';
 import type { PendingDecision } from './events/decisions.js';
 import type { MatchCard } from './people/match.js';
@@ -91,7 +91,7 @@ function lensOf(
   }
 
   const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
-  const regent = p.sex === 'female' && p.castSlots.includes('head');
+  const regent = isRegent(ctx.world, p) && p.castSlots.includes('head');
   if (heldSeal || regent || widowOfHead(ctx, p)) {
     const cares = () => heldSeal
       ? msg(ctx, 'adviser.cares.former_head', "{SUBJECT} has held the seal before", { SUBJECT: subject })

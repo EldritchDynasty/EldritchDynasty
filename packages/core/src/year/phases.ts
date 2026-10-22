@@ -213,7 +213,7 @@ export const YEAR_PHASES: readonly Phase[] = [
   {
     name: 'guardian',
     after: ['lifecycle'],
-    why: 'He can only have crossed over in the pass that tried to kill him.',
+    why: 'The founder can only have crossed over in the pass that tried to kill them.',
     run({ ctx, report }) {
       const w = ctx.world;
       if (w.guardianSince) return;
