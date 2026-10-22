@@ -54,7 +54,7 @@ everything already fixed in code and content. Where the two disagree, the brief 
 
 The editor imports `core` directly and never reimplements simulation logic. That is what makes preview trustworthy.
 
-A `SavedGame` is the whole world as plain, validated data; `SAVE_FORMAT` is 34.
+A `SavedGame` is the whole world as plain, validated data; `SAVE_FORMAT` is 35.
 
 Documentation reviewed against `main` at `098bfe02` on 22 October 2026.
 Living guides describe shipped code; dated surveys, narrative drafts and

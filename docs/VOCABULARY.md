@@ -197,7 +197,7 @@ presentation, folklore and whether a Record choice is required.
 **Sex** — `male` · `female`
 
 **PersonStatus** — `alive` · `dead` · `vessel_consumed` · `missing` · `given_to_church` · `ascended` · `guardian`
-<br>`guardian` is the Narrator after he crosses over — never `alive` again.
+<br>`guardian` is the Narrator after they cross over — never `alive` again.
 
 **MembershipKind** — `blood` · `married_in` · `retainer` · `ward` · `hostage` · `clergy` · `cadet` · `none`
 <br>One OPEN record per person. Two puts them in two halls at once.
@@ -218,7 +218,7 @@ Source: `core/src/year/phases.ts`.
 | 1 | `ages` | — | An Age is the weather every other phase happens in, so it is decided first. |
 | 2 | `mystic` | `ages` | A standing Mystic duty is re-read and its upkeep reserved before anything it can change happens — mortality in `lifecycle`, the harvest in `land` — so no benefit is ever drawn on a year nobody paid for, or from somebody who left last winter (#1873). Draws no dice and writes nothing while the house keeps no duty. |
 | 3 | `lifecycle` | `ages`, `mystic` | Awakening, Madness and mortality all read the year the Age has just set. |
-| 4 | `guardian` | `lifecycle` | He can only have crossed over in the pass that tried to kill him. |
+| 4 | `guardian` | `lifecycle` | The founder can only have crossed over in the pass that tried to kill them. |
 | 5 | `quarrels` | `lifecycle` | Grudges pass to the living and posts fall vacant, both on this year's deaths. |
 | 6 | `secrets` | `quarrels` | A secret can only walk out with somebody, and `quarrels` is where service ends. Loyalty moves here too, so a year of arrears is priced before the next year's releases read it (`people/secrets.ts`). |
 | 7 | `papers` | `secrets` | A forged pedigree is caught the way a secret walks out — by somebody with a motive putting two records side by side (world §16). Runs after `secrets` so both leave the house through the same kind of year, and before `assize`, so the world reads a house whose papers have just been questioned as the house it now is (`people/papers.ts`). |
