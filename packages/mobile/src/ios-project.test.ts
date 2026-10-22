@@ -137,6 +137,22 @@ describe('Capacitor iOS project', () => {
     expect(build).toBeGreaterThan(boot);
   });
 
+  it('prewarms the nightly simulator during the iOS build and reuses its device', () => {
+    const workflow = readFileSync(join(MOBILE, '../../.github/workflows/nightly-regression.yml'), 'utf8');
+    const startBoot = workflow.indexOf('- name: start an iPhone simulator while the app builds');
+    const startBuild = workflow.indexOf('- name: build unsigned iPhone simulator app');
+    const startSmoke = workflow.indexOf('- name: install and launch on an iPhone simulator');
+
+    expect(startBoot).toBeGreaterThan(-1);
+    expect(startBuild).toBeGreaterThan(startBoot);
+    expect(startSmoke).toBeGreaterThan(startBuild);
+
+    const prewarm = workflow.slice(startBoot, startBuild);
+    expect(prewarm).toContain('echo "IOS_SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"');
+    expect(prewarm).toContain('xcrun simctl boot "$UDID" 2>/dev/null || true');
+    expect(workflow.slice(startSmoke)).toContain('UDID="$IOS_SIMULATOR_UDID"');
+  });
+
   it('rejects empty or malformed native smoke evidence rather than matching two missing hashes', async () => {
     // This is the exact pure validator loaded by the Node-based simulator driver.
     // @ts-ignore JavaScript .mjs implementation intentionally has no TS declarations.
