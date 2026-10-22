@@ -371,6 +371,7 @@ describe('CI evidence inventory', () => {
       const retry = smoke.slice(smoke.indexOf('if ! launch_once false; then'));
       expect(retry.indexOf('xcrun simctl shutdown "$UDID" || true')).toBeGreaterThan(0);
       expect(retry).toContain('xcrun simctl boot "$UDID" || true');
+      expect(retry.slice(0, retry.indexOf('launch_once true'))).not.toContain('simctl spawn');
       expect(retry.indexOf('xcrun simctl bootstatus "$UDID" -b'))
         .toBeLessThan(retry.indexOf('launch_once true'));
     }
