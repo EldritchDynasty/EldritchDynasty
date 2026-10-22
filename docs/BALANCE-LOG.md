@@ -13544,3 +13544,128 @@ returns **exit 0** for each of **905.202, 905.203, 927.108, 927.109, 959.478,
 slowdown is caught while the actual measurements pass. The 800×500 sample,
 all gate assertions, `maxFactor`, and every other lane reference are unchanged.
 This issue changes only `tools/gate-durations.json` and this evidence entry.
+
+## #1868 — Local emergency Primordial interventions (22 October 2026)
+
+Adopted refinement **B** in concept §12 before implementing the resolver:
+each living, awakened family expresser physically present rolls at
+`min(EP / 100, 0.9)`. A dedicated seeded stream shuffles unique actors and
+stops at the first success. The ordinary outcome is selected first; only
+the final bundle is applied. There is no additional decision, frequency
+charge, payment or Madness cost. Multiple actors compound as
+`1 - product(1 - p_i)`; the cap prevents certainty for one actor, and does
+not promise low probabilities for a large local pool.
+
+The exhaustive typed-effect audit inventories **527** candidate ordinary
+outcomes, including individually declared agreed prices, and supplies **155**
+authored responses. It includes arcs and compiled follow-ups. Validation
+requires an incident site, a material response and a current Plain English
+counterpart independently of optional tags. The **1,162** existing normal
+outcome witnesses remain normal commits; successful responses have separate
+identities and assessment witnesses. No event weights, frequency rations,
+gate floors, sample sizes or outcome-reach exceptions were changed.
+
+Assessment reads actual current family targets and owned assets, combines
+effects in order, and uses pre-shock recurring gross receipts. Cash qualifies
+at `max(50 crowns, half gross receipts)` or the first crossing below zero;
+estate harm at a quarter of actual recurring land yield or loss of the seat;
+inheritance at loss of Regalia, a unique Named Art manuscript, or a third of
+distinct physical library titles; standing at two actual Respect tiers.
+Proving a discrepancy costs a tier and is included. Ordinary worn books
+remain readable, and losing learned knowledge alone does not destroy a
+manuscript. The founder's intended guardian transition is not a death to
+prevent. A living, awakened male founder can still be an actor.
+
+The checked engine differs from two details in the issue's preliminary map:
+Respect effects already operate in tiers, and event treasury deltas are not
+clamped by the annual economy's debt floor. There is no membership, injury
+or incapacitation effect. Muster settlement/withdrawal returns survivors;
+annual military attrition is not an authored casualty effect. The classifier
+records those explicit policies rather than inventing damage declarations.
+
+Reproduce the paired experiment with:
+
+```bash
+node --import tsx tools/primordial-report.mjs --runs=64 --output=docs/primordial-balance.json
+```
+
+[The raw report](primordial-balance.json) retains every pair and all never
+attempted response paths. Both terms use the declared, unfiltered seed
+sequence `186800 + 7*i`, `i = 0..63`. The control removes only response
+payloads from the same catalogue. Each enabled run records its real pending
+harm, local candidates and per-incident combined probability before commit.
+
+| Measurement, 64 paired houses per term | Short, 300 years | Long, 500 years |
+|---|---:|---:|
+| Qualifying ordinary incidents | 102 | 192 |
+| Incidents with a declared site | 102 | 192 |
+| Incidents with eligible local actors / attempts | 48 | 95 |
+| Successful, materially mitigating interventions | 25 | 46 |
+| Expected successes, sum of local combined probabilities | 26.3632 | 46.4181 |
+| Observed / expected success rate per attempt | 52.08% / 54.92% | 48.42% / 48.86% |
+| Difference from expectation, model standard errors | -0.477 | -0.105 |
+| Absent eligible relatives excluded, incident-person occurrences | 266 | 536 |
+| Lives saved / houses seeing a life saved | 2 / 2 | 3 / 3 |
+| Missing family members prevented | 0 | 0 |
+| Crowns directly preserved | 70 | 150 |
+| Recurring estate yield directly preserved | 0 | 0 |
+| Distinct normal results still committed | 929 | 1,042 |
+| Distinct successful response results | 14 | 17 |
+| Authored responses never attempted in this sample | 132 | 125 |
+
+Local pool sizes **0/1/2/3/4/5** occurred **54/33/9/2/1/3** times in Short
+Lines and **97/63/22/5/3/2** times in Long Lines. The 76 and 144 local
+actor observations respectively both had EP min/median/max
+**8.6580 / 47.6190 / 99.0476**. Thus a global pool would materially inflate
+opportunities. Explicit remote scenes with no established family attendance
+have empty pools; a letter's recipient is not teleported to its distant
+subject. No qualifying incident with local candidates had a response erased
+by actual-state clamps in this sample. Runtime still refuses to roll when
+the projected response cannot materially improve the current loss.
+
+Both rate assertions pass the repository's unchanged **two standard error
+minimum margin** in `expectRate`, in both directions around the local-pool
+expectation. The report prints its conservative bounds and standardised
+difference. These incident counts are evidence about the rule in this
+sample, not proof that every rare authored scene is naturally reachable.
+
+| Mean terminal measurement, control → enabled (paired mean difference) | Short | Long |
+|---|---:|---:|
+| Living current family, including married-in members | 47.6094 → 49.3281 (+1.7188) | 48.4531 → 48.8594 (+0.4063) |
+| Treasury, crowns | 1,223.0330 → 1,100.1386 (-122.8944) | 962.2616 → 1,033.0366 (+70.7750) |
+| Held acreage | 1,474.6094 → 1,481.0156 (+6.4063) | 1,503.9063 → 1,500.0781 (-3.8281) |
+| Ordinary committed outcomes per house | 103.9375 → 103.5469 (-0.3906) | 169.8125 → 168.7813 (-1.0313) |
+
+The median paired difference is zero for each row in both terms. Endings
+here are `selectEnding` readings at the term boundary, since `runYears`
+does not itself close the Ledger. Short readings change from
+**forgotten/devoured/settled/broken_line = 22/15/14/13** to **21/15/14/14**;
+Long readings from **forgotten/devoured/broken_line = 34/17/13** to
+**35/16/13**. Short best-rung counts are unchanged:
+**none/touched/adept/hierophant/vessel = 1/2/43/16/2**. Long changes from
+**none/adept/hierophant/vessel = 1/44/16/3** to **1/45/15/3**. These paired
+observations do not establish a survival, economic or ascension benefit:
+intervening changes later casts and events as well as its immediate loss.
+They show no catastrophe immunity; most qualifying incidents still fail
+to find an actor or fail their trials.
+
+**Remaining limits.** Annual plague, childbirth, ageing, Madness overflow,
+routine economy and military attrition are outside this event adapter.
+Only **3.125%** of Short houses and **4.6875%** of Long houses saw a life
+saved. A **mortality incident adapter, starting with plague and childbirth**,
+is the recommended next extension if the life-saving experience is the goal.
+Zero estate or missing-person rescues and the never-attempted lists remain
+explicit coverage limits, not successes inferred from deterministic tests.
+
+Private receipts retain the actor, site, selected/final identities and
+numeric assessed difference even when the public Record omits or embellishes
+the page. Save format **33** accepts formats 31 and 32 without inventing
+intervention history. A real campaign replay witness checks successful
+interventions, preserved saved wording, and rejection of changed actor facts.
+Both prose modes have a mounted Chronicle history/navigation test. Editor
+previews use the same assessor in fresh private fixtures and make no rolls.
+Repeated content values are interned at client build time and expanded before
+schema validation; full bundle parity and the unchanged **1,600,000-byte**
+startup limit pass. Test-duration regeneration used the official cost writer,
+retaining existing measurements and adding actual measurements for previously
+unmeasured files; no timing or payload ceiling was raised.
