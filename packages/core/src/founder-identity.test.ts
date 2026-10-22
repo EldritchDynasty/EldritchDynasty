@@ -166,11 +166,11 @@ describe('who signed, persisted', () => {
     expect(digestOf(replayed)).toBe(digestOf(g.ctx));
   });
 
-  it('upgrades a format-33 signing to the authored founder under the recorded name', () => {
+  it.each([33, 34])('upgrades a format-%i signing to the authored founder under the recorded name', (format) => {
     const { g } = choice({ name: 'Arlen Gearithy' });
     const save = saveGame(g.ctx);
     const legacy = structuredClone(save) as unknown as Record<string, unknown>;
-    legacy.format = 33;
+    legacy.format = format;
     const log = legacy.decisionLog as Record<string, unknown>[];
     const { founder: _founder, ...row } = log[0]!;
     log[0] = { ...row, founderName: 'Arlen Gearithy' };

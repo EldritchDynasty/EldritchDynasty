@@ -92,6 +92,9 @@ npm run validate     # every content rule; exits non-zero on any error
   outside. The floor sits far under where the content stands (81% at the time
   of writing) because it is for the six-hundredth template, not this one.
 - Bodies reference slots as `{SLOT}`. Undefined slots are errors.
+- Pronouns follow the cast through `{SLOT.form}` (`schema/src/forms.ts`):
+  `{HEAD.they}`, `{HEAD.their}`, `{HEAD.They}`, `{HEAD.is}`, `walk{HEAD.s}`.
+  Never hand-write "he" for the founder (`prose/founder-forms`).
 - An arc-bound slot with `onMissing: continue_absent` **must** supply `absentBody`
   — otherwise it renders a token for a man forty years in the ground.
 - **IDs are `snake_case` and are never renamed after commit.** Save files

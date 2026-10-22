@@ -2517,6 +2517,10 @@ proseVariants:
     of: "0c3a66903669eee4"
     plainenglish: >-
       that item is no longer in the content
+  - address: "core:messages#founding.refuse.configuration"
+    of: "13fbd4cf99d03c5b"
+    plainenglish: >-
+      choose which parent carries the family blood
   - address: "core:messages#founding.refuse.answer"
     of: "f89c797e86762652"
     plainenglish: >-
