@@ -128,11 +128,12 @@ events:
       open, which is why the question gets asked in front of five people
       instead of one. {YOUNGEST} wants to know whether it was ever true. Not
       whether the family is out of favour, or resting, or being punished for
-      something a great-grandfather did — whether there was ever anything there
-      at all, or whether four hundred years of the house's own chronicle is
-      four hundred years of people agreeing with one another. {HEAD} has met
-      this question before, in himself, at about that age. There is an answer
-      in the book and the answer is a story. Nobody at the table can do it.
+      something a great-grandfather did — whether there was ever anything
+      there at all, or whether four hundred years of the house's own chronicle
+      is four hundred years of people agreeing with one another. {HEAD} has
+      met this question before, privately, at about that age. There is an
+      answer in the book and the answer is a story. Nobody at the table can do
+      it.
     interaction:
       kind: choice
       choices:
@@ -247,7 +248,7 @@ proseVariants:
     plainenglish: >-
       Was It Ever True?
   - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].body"
-    of: 06a6b97a36092946
+    of: 4f88a5db2e432757
     plainenglish: >-
       It is warm for the first time in a month, and all the doors are open. That
       is why {YOUNGEST} asks the question in front of five people instead of

@@ -495,8 +495,9 @@ events:
     body: >-
       {CHALLENGER} does not raise his voice. That is the frightening part. He
       asks, in front of the assembled house, by what right {HEAD} holds the
-      Seal — and whether a man whose sons have not woken can be said to hold
-      anything at all. Somewhere behind him a chair moves. Nobody sits down in it.
+      Seal — and whether a Head whose sons have not woken can be said to hold
+      anything at all. Somewhere behind him a chair moves. Nobody sits down in
+      it.
     interaction:
       kind: choice
       choices:
@@ -655,9 +656,10 @@ events:
       It takes nine days and it is not nine fires, it is one fire told nine
       times, moving east at the speed of a man on a good horse. When it stops
       there is nothing left outside this house that anyone can learn from.
-      {HEAD} stands in his own library at the end of it and understands, with
-      perfect clarity and no pleasure at all, that every book in the room has
-      just become irreplaceable and every house in the world now wants one.
+      {HEAD} stands in {HEAD.their} own library at the end of it and
+      understands, with perfect clarity and no pleasure at all, that every
+      book in the room has just become irreplaceable and every house in the
+      world now wants one.
     interaction:
       kind: narration
       outcomes:
@@ -1972,12 +1974,12 @@ proseVariants:
     plainenglish: >-
       The Seal Is Questioned
   - address: "content:events/rites.yaml#events[id=the_seal_questioned].body"
-    of: "77279e24bdabb998"
+    of: "1c26c258bd476664"
     plainenglish: >-
-      {CHALLENGER} does not raise his voice, and that is what makes it frightening. In front of
-      the whole house, he asks by what right {HEAD} holds the Seal, and whether a man whose sons
-      have not woken can be said to hold anything at all. Behind him, a chair moves. Nobody sits
-      in it.
+      {CHALLENGER} does not raise his voice, and that is what makes it
+      frightening. In front of the whole house, he asks by what right {HEAD}
+      holds the Seal, and whether a Head whose sons have not woken can be said
+      to hold anything at all. Behind him, a chair moves. Nobody sits in it.
   - address: "content:events/rites.yaml#events[id=the_seal_questioned].interaction.choices[id=strike].label"
     of: "7af8e3179e1e6e4b"
     plainenglish: >-
@@ -2032,13 +2034,14 @@ proseVariants:
     plainenglish: >-
       The Nine Libraries Burn
   - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].body"
-    of: "062c71f4b6821698"
+    of: "37b548fa756e5216"
     plainenglish: >-
-      It lasts nine days. It is not nine fires but one fire told nine times, moving east as fast
-      as a man on a good horse. When it stops, there is nothing left outside this house that
-      anyone can learn from. At the end, {HEAD} stands in his own library and understands, very
-      clearly and with no pleasure at all, that every book in the room can no longer be
-      replaced, and that every house in the world now wants one.
+      It lasts nine days. It is not nine fires but one fire told nine times,
+      moving east as fast as a man on a good horse. When it stops, there is
+      nothing left outside this house that anyone can learn from. At the end,
+      {HEAD} stands in {HEAD.their} own library and understands, very clearly
+      and with no pleasure at all, that every book in the room can no longer
+      be replaced, and that every house in the world now wants one.
   - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].interaction.outcomes[id=survived].text"
     of: "ca15a97a967c1f36"
     plainenglish: >-

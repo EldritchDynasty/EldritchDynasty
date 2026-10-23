@@ -38,12 +38,12 @@ events:
               weight: 100
               tags: [land, money]
               text: >-
-                The price is what a bog costs, which is not much, and
-                {HEAD} signs for it the same afternoon a digger up from
-                Bramme walks the boundary and gives the only honest answer
-                there is: years, not seasons. {HEAD} pays for the first of
-                them without knowing which of his own descendants will be
-                the one who pays for the last.
+                The price is what a bog costs, which is not much, and {HEAD}
+                signs for it the same afternoon a digger up from Bramme walks
+                the boundary and gives the only honest answer there is: years,
+                not seasons. {HEAD} pays for the first of them without knowing
+                which of the family's descendants will be the one who pays for
+                the last.
               effects:
                 - { kind: treasury, delta: -35 }
                 - { kind: land, op: grant, parcel: cradlemoor }
@@ -114,29 +114,29 @@ events:
       HEAD: { role: head }
     body: >-
       {HEAD} did not buy Cradlemoor and did not choose to drain it, and
-      inherits the ditches and the argument about them in the same week he
-      inherits the seal. The channel holds in a dry year and floods in a
-      wet one, which the diggers call ordinary and the rent roll calls
-      nothing at all, because a half-drained field pays like a bog with
-      better manners. Two generations' worth of coin is already in the
+      inherits the ditches and the argument about them in the same week
+      {HEAD.they} inherit{HEAD.s} the seal. The channel holds in a dry year
+      and floods in a wet one, which the diggers call ordinary and the rent
+      roll calls nothing at all, because a half-drained field pays like a bog
+      with better manners. Two generations' worth of coin is already in the
       ground. A third generation's worth would probably finish it, which is
       what the last digger said too.
     interaction:
       kind: choice
       choices:
         - id: keep_paying
-          label: Finish what his grandfather started. It has come this far.
+          label: Finish what two generations started. It has come this far.
           outcomes:
             - id: kept_paying
               weight: 100
               tags: [land, money]
               text: >-
-                {HEAD} signs the same order his father signed and his
-                grandfather signed before that, for a sum that has not
-                gotten any smaller with age. The diggers cut a second
-                channel to take the overflow the first one cannot carry
-                alone, and Cradlemoor pays a little better than it did,
-                which is not yet the point.
+                {HEAD} signs the same order {HEAD.their} father signed and
+                {HEAD.their} grandfather signed before that, for a sum that
+                has not gotten any smaller with age. The diggers cut a second
+                channel to take the overflow the first one cannot carry alone,
+                and Cradlemoor pays a little better than it did, which is not
+                yet the point.
               effects:
                 - { kind: treasury, delta: -40 }
                 - { kind: land, op: restore, parcel: cradlemoor, magnitude: 2 }
@@ -194,13 +194,13 @@ events:
       HEAD: { role: head }
     body: >-
       {HEAD} is the third of the family to inherit an argument about
-      Cradlemoor, and the first to inherit ground instead of a question.
-      The channel his grandfather cut and his father paid to keep open has
-      done, this year, the one thing three generations were promised it
-      would eventually do: held all the way through a wet spring without
-      being asked to. The tenant does not remark on it, because the tenant
-      has never known Cradlemoor any other way, which is exactly the point
-      of sixty years of work nobody outside this family will ever hear
+      Cradlemoor, and the first to inherit ground instead of a question. The
+      channel {HEAD.their} grandfather cut and {HEAD.their} father paid to
+      keep open has done, this year, the one thing three generations were
+      promised it would eventually do: held all the way through a wet spring
+      without being asked to. The tenant does not remark on it, because the
+      tenant has never known Cradlemoor any other way, which is exactly the
+      point of sixty years of work nobody outside this family will ever hear
       about.
     interaction:
       kind: narration
@@ -210,10 +210,10 @@ events:
           text: >-
             The rent roll for Cradlemoor this year reads like an ordinary
             farm's, for the first time since anyone on it can remember it
-            reading like anything at all. {HEAD} does not hold a feast for
-            a ditch. He does write the year down, in the same hand his
-            grandfather used for the first one, which is as close as this
-            family comes to admitting what something cost.
+            reading like anything at all. {HEAD} does not hold a feast for a
+            ditch. {HEAD.They} do{HEAD.es} write the year down, in the same
+            hand {HEAD.their} grandfather used for the first one, which is as
+            close as this family comes to admitting what something cost.
           effects:
             - { kind: land, op: restore, parcel: cradlemoor, magnitude: 6 }
             - { kind: respect, delta: 1 }
@@ -257,7 +257,7 @@ proseVariants:
     plainenglish: >-
       Buy Cradlemoor and begin draining it properly.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_wants_draining].interaction.choices[id=commit_to_draining].outcomes[id=bought_and_begun].text"
-    of: e73e62b8071a6164
+    of: b9317133ba1fab4f
     plainenglish: >-
       Cradlemoor is cheap because it is a bog. {HEAD} signs the purchase that afternoon. A digger
       from Bramme walks the boundary and says the drainage will take years, not seasons. {HEAD} pays
@@ -294,23 +294,27 @@ proseVariants:
     plainenglish: >-
       Whether the Ditches Will Hold
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].body"
-    of: fc7784fae30280a6
+    of: e08597355afff7f9
     plainenglish: >-
-      {HEAD} did not buy Cradlemoor or decide to drain it. He inherits the estate and the unfinished
-      work when he inherits the family seal. The channel stays open in dry years but floods in wet
-      ones. Because the field is only partly drained, its rent is still as low as a bog's. The
-      family has already spent two generations of money on it. The diggers say one more generation
-      of spending should finish the work, just as the previous digger said.
+      {HEAD} did not buy Cradlemoor or decide to drain it. When {HEAD.they}
+      inherit{HEAD.s} the family seal, the estate and the unfinished work come
+      with it. The channel stays open in dry years but floods in wet ones.
+      Because the field is only partly drained, its rent is still as low as a
+      bog's. The family has already spent two generations of money on it. The
+      diggers say one more generation of spending should finish the work, just
+      as the previous digger said.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=keep_paying].label"
-    of: a78b5437efa3b4fb
+    of: e1f9c888d4d6df6c
     plainenglish: >-
-      Finish the drainage work his grandfather started.
+      Finish the drainage work two generations started.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=keep_paying].outcomes[id=kept_paying].text"
-    of: 3b7733ded6668a9a
+    of: 06550384b1982f00
     plainenglish: >-
-      {HEAD} signs the same order that his father and grandfather signed. It still costs just as
-      much. The diggers cut a second channel to carry water the first cannot handle alone.
-      Cradlemoor starts to earn a little more rent, but the investment has not yet paid off.
+      {HEAD} signs the same order that {HEAD.their} father and {HEAD.their}
+      grandfather signed. It still costs just as much. The diggers cut a
+      second channel to carry water the first cannot handle alone. Cradlemoor
+      starts to earn a little more rent, but the investment has not yet paid
+      off.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ditches_hold].interaction.choices[id=let_it_lapse].label"
     of: 643d1bff6d5a00db
     plainenglish: >-
@@ -341,20 +345,23 @@ proseVariants:
     plainenglish: >-
       What Three Generations Paid For
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].body"
-    of: bde5e119f408fa55
+    of: 12aae4df5080feab
     plainenglish: >-
-      {HEAD} is the third generation to inherit the drainage work at Cradlemoor. Unlike his
-      predecessors, he finally inherits usable ground. The channel his grandfather dug and his
-      father maintained now stays open through a wet spring. That is what the family has spent sixty
-      years trying to achieve. The tenant thinks this is normal, because he has never known the land
-      any other way. People outside the family will never know how much work it took.
+      {HEAD} is the third generation to inherit the drainage work at
+      Cradlemoor. Unlike the Heads before, this one finally inherits usable
+      ground. The channel {HEAD.their} grandfather dug and {HEAD.their} father
+      maintained now stays open through a wet spring. That is what the family
+      has spent sixty years trying to achieve. The tenant thinks this is
+      normal, because he has never known the land any other way. People
+      outside the family will never know how much work it took.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].interaction.outcomes[id=finally_holds].text"
-    of: 0533d6e4b0b88878
+    of: 9f6ce13d091017c1
     plainenglish: >-
-      For the first time anyone remembers, Cradlemoor's rent accounts look like those of an ordinary
-      farm. {HEAD} does not hold a celebration for a drainage ditch. He writes down the year, using
-      the same handwriting style as his grandfather did when the work began. That is how the family
-      acknowledges what it cost.
+      For the first time anyone remembers, Cradlemoor's rent accounts look
+      like those of an ordinary farm. {HEAD} does not hold a celebration for a
+      drainage ditch. {HEAD.They} do{HEAD.es} write down the year, using the
+      same handwriting style as {HEAD.their} grandfather did when the work
+      began. That is how the family acknowledges what it cost.
   - address: "content:events/arc_cradlemoor.yaml#events[id=cradlemoor_the_ground_finally_holds].record.subject"
     of: df45c01e862829d2
     plainenglish: >-

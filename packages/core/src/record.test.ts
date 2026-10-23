@@ -591,7 +591,7 @@ describe('authored deed claims with internal commas (#587)', () => {
   "kept the Seal in the house, in a trusted branch's keeping", // arc_seal
   "was sought out by the recruiting captain, and taken without payment", // careers
   "was released with the thanks of his colonel, having been carried from the field", // careers
-  "reconsidered of his own wisdom, and the house prospered by it", // guardian
+  "reconsidered in wisdom, and the house prospered by it", // guardian
   "declined the blood, choosing service over power", // marriage
   "went to war with the house's men under another banner, not one of their own", // muster
   "gave the herald four generations and the acreage, but not the elder descent", // papers
