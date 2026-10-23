@@ -5,7 +5,7 @@ import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
-import { proseForOutcome } from '../prose.js';
+import { proseForClause, proseForOutcome } from '../prose.js';
 import { advanceArc, type ArcStep } from './arcs.js';
 
 /**
@@ -67,6 +67,30 @@ export const FRAME_CHANCE_PER_YEAR = 0.07;
 export const FRAME_MAX_GAP_YEARS = 108;
 
 /**
+ * AND NO LONGER THAN THIS WITHOUT AN ANSWER (#1904, option (a) of #1897).
+ *
+ * The ceiling above counts interludes only. A recovered Ledger clause also
+ * tells the player something new about the bargain, and #1897 measured the
+ * two together: the longest stretch with neither averaged 72 years and ran to
+ * 104, because 108 almost never binds once a clause has landed in between.
+ * Most of those silences sat in the midgame, where no generation's choices
+ * reach the debt at all.
+ *
+ * So the frame is also overdue once this many years have passed since the
+ * last answer of either kind. The minimum gap between interludes still holds,
+ * and so do their `reads`; a clause that landed recently keeps the frame on
+ * its ordinary roll.
+ *
+ * Sixty is §5's expected gap from the note on the minimum above. Measured on
+ * 24 Long Lines (`gate:long`, chronicler): mean longest answer silence 74.0
+ * -> 64.7, interludes per run 6.5 -> 6.9, clauses and endings unchanged.
+ * What still runs long opens at the signing, where no interlude's `reads`
+ * hold yet and an overdue frame has nothing it may show; that stretch is
+ * #1897's authored half, not a cadence.
+ */
+export const FRAME_ANSWER_GAP_YEARS = 60;
+
+/**
  * Does one `reads` entry hold? Reuses `evalCondition`'s own `discrepancy`
  * branch rather than a second copy of it — a read is exactly that condition,
  * just asked from a different tier for a different reason.
@@ -125,19 +149,44 @@ export function framePool(ctx: SimCtx): EventTemplate[] {
   });
 }
 
+/**
+ * The year the run last told the player something new about the bargain: the
+ * last interlude, or a later recovered clause, or the signing if neither.
+ *
+ * A clause is read off its own page in the chronicle, which is the page
+ * `gate:long` counts too. The opening clause the house always had writes no
+ * page, so it answers nothing here either.
+ */
+export function lastAnswerYear(ctx: SimCtx): number {
+  const w = ctx.world;
+  let latest = w.frame.lastFired ?? w.assize.openedAt;
+  let pages: Map<string, string> | undefined;
+  for (const entry of w.chronicle) {
+    if (entry.year <= latest || entry.weight !== 'illuminated' || entry.title === undefined) continue;
+    pages ??= new Map(ctx.content.clauses
+      .filter((c) => w.clausesRecovered.has(c.id))
+      .map((c) => { const prose = proseForClause(ctx, c); return [prose.name, prose.text]; }));
+    if (pages.get(entry.title) === entry.text) latest = entry.year;
+  }
+  return latest;
+}
+
 /** The cadence check alone, with no regard to what is actually in the pool. */
 export function frameDue(ctx: SimCtx, rng: Rng): boolean {
   const w = ctx.world;
   const since = w.year - (w.frame.lastFired ?? w.assize.openedAt);
   if (w.frame.lastFired !== null && since < FRAME_MIN_GAP_YEARS) return false;
-  if (since >= FRAME_MAX_GAP_YEARS) return true;
+  if (frameOverdue(ctx)) return true;
   return rng.next() < FRAME_CHANCE_PER_YEAR;
 }
 
 /** Whether the frame has been silent long enough to take what it can get. */
 export function frameOverdue(ctx: SimCtx): boolean {
   const w = ctx.world;
-  return w.year - (w.frame.lastFired ?? w.assize.openedAt) >= FRAME_MAX_GAP_YEARS;
+  const since = w.year - (w.frame.lastFired ?? w.assize.openedAt);
+  if (since >= FRAME_MAX_GAP_YEARS) return true;
+  if (since < FRAME_ANSWER_GAP_YEARS) return false;
+  return w.year - lastAnswerYear(ctx) >= FRAME_ANSWER_GAP_YEARS;
 }
 
 /** One frame template, weighted, or none if this is not a frame year. */

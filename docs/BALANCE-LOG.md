@@ -14188,3 +14188,51 @@ shortens: the next-longest stretches were already in the midgame
 (1126–1447), within a few years of the opening one. **The opening's quiet is
 answered; the midgame's is now the longest, at about seventy years, and is
 the open half of §6.**
+
+## 2026-10-23 — #1904 (#1897 option (a)): the frame cuts after sixty years without an answer
+
+**The change.** `frameOverdue` (`core/src/events/frame.ts`) now has a second
+ceiling, `FRAME_ANSWER_GAP_YEARS = 60`. Besides 108 years without an interlude,
+the frame is overdue after 60 years since the last *answer*: the later of the
+last interlude and the last recovered clause's page (matched through
+`proseForClause`, the same page `gate:long` counts), with the signing as the
+floor. `FRAME_MIN_GAP_YEARS` and every interlude's `reads` still hold. No new
+world state, no save bump.
+
+**Measured** on `2a9abab` (before) and this branch, with
+`npm run gate:long -- 24 500 chronicler` (seeds `20000 + 37i`):
+
+| Reading (24 runs) | before | N = 70 | **N = 60** |
+|---|---:|---:|---:|
+| longest answer silence, mean | 74.0 | 68.1 | **64.7** |
+| · median / p75 | 68 / 87 | 68 / 70 | 60 / 67 |
+| · max | 108 | 96 | 96 |
+| interludes per run, mean | 6.5 | 6.7 | 6.9 |
+| frame-only max silence, mean | 89.4 | 84.8 | 83.5 |
+| first frame, mean | 1120.1 | 1118.6 | 1118.0 |
+| clauses, mean | 5.9 | 5.9 | 5.9 |
+| endings (broken / forgotten / devoured) | 4 / 14 / 6 | same | same |
+
+Clauses, best rung, term reached and endings are identical: the answer
+ceiling moves only when the frame cuts, and the frame writes to
+`world.frame.entries`, not the record.
+
+**Where the tail is now.** Split by where the run's longest silence opens, at
+N = 60:
+
+- midgame-opened (16 runs): 52, 54, 54, 57, 60 ×11, 67. The ceiling binds.
+- signing-opened (8 runs): 39, 59, 67, 75, 87, 90, 95, 96.
+
+The signing-opened silences survive because no interlude's `reads` hold before
+the first discrepancy or Record decision. An overdue frame with an empty pool
+shows nothing, by design (cutting to a scene whose premise is false is worse
+than silence). Two caveats on that stretch. First, the tutor's three-year
+glimpse (entry above) answers it for the player, but it carries no marker and
+`gate:long` cannot count it, so these eight overstate what the player sees.
+Second, closing it for real is #1897's option (c), authored glimpses, not a
+cadence.
+
+**Why 60 and not 70.** §5's cadence note on `FRAME_MIN_GAP_YEARS` already
+names sixty as the expected gap. At 70 the batch mean (68.1) is too close to
+72 for #1897's `expectMean` claim to carry on 24 runs. At 60 the cost is 0.4
+interludes per run.
