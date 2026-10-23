@@ -1,5 +1,5 @@
 import type { Commitment, Person, PositionDef, RespectTier } from '@ed/schema';
-import { assertNever, musterEscalation, RESPECT_ORDER } from '@ed/schema';
+import { assertNever, canHoldPost, musterEscalation, RESPECT_ORDER } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { activeBranches } from './people/branches.js';
@@ -206,7 +206,7 @@ export function addOfficer(ctx: SimCtx, personId: string): boolean {
   // Only a living man currently belonging to this house can take an officer's
   // place. Reject a stale/uncast slot instead of persisting a phantom officer.
   // Women can serve as Mystic field specialists, but not in military posts.
-  if (!person || person.status !== 'alive' || person.sex !== 'male' || !isCurrentFamily(ctx, person)) return false;
+  if (!person || person.status !== 'alive' || !canHoldPost(person.sex) || !isCurrentFamily(ctx, person)) return false;
   if (!c.officers.includes(personId)) c.officers.push(personId);
   return true;
 }
