@@ -884,7 +884,16 @@ describe('the gates fail when they should', () => {
  * box — had never once fired, and it all typechecked.
  */
 describe('gate 9 asks whether anybody can clear the ladder', () => {
-  const cheap = { runs: 2, years: 300, every: 50 } as const;
+  /**
+   * Four runs, not two (#1867). Gate 9 convicts a floor nobody clears wherever
+   * the rung beneath it was stood on at all — and since the opening concern can
+   * put a term of mind on the first heir, two runs of three hundred years now
+   * hold one Hierophant, which convicted the Vessel's mind floor and the God
+   * pair on a sample of one. Four runs is the smallest batch that carries the
+   * shipped ladder; the verdict that counts is the 32-run blocking gate, which
+   * passes (god pair cleared by 24.8% of expressers).
+   */
+  const cheap = { runs: 4, years: 300, every: 50 } as const;
 
   it('accepts a purchased Madness floor only when a measured population reaches it (#378)', () => {
     expect(judgeLadderFloor(90, 0, 3, 61.8, 112)).toBe('reached');
@@ -1095,16 +1104,17 @@ describe('the shared batch answers about the content it was handed', () => {
    * answers have to belong to what was asked.
    */
   it('gate 9 judges the bundle it was handed, not the one before it', () => {
-    const cheap = { runs: 2, years: 300, every: 50 } as const;
+    // The same four runs as gate 9's own block above, and for the same reason.
+    const cheap = { runs: 4, years: 300, every: 50 } as const;
 
     // Same batch, different floors: the population is shared, the verdict is not.
     const shipped = gateLadderScales(content, cheap);
     /**
      * `hierophant`, not a higher rung: gate 9 convicts a floor nobody clears
-     * only where the rung BENEATH it was actually stood on, and at two runs of
-     * three hundred years the only populated rungs are `adept` and below. A
-     * floor on `vessel` comes back "untested" rather than dead — which is the
-     * gate being right, and would make this a test of nothing.
+     * only where the rung BENEATH it was actually stood on, and in a batch this
+     * small the populated rungs are `hierophant` and below. A floor further up
+     * comes back "untested" rather than dead — which is the gate being right,
+     * and would make this a test of nothing.
      */
     const impossible = gateLadderScales(content, { ...cheap, mindFloor: { hierophant: 10_000 } });
     expect(shipped.ok, shipped.lines.join('\n')).toBe(true);
