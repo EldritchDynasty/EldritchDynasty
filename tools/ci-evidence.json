@@ -595,6 +595,18 @@
       ]
     },
     {
+      "path": "packages/core/src/founder-journey.slow.test.ts",
+      "claim": "Played/full-run regression assertions: every offered founder identity, signed through the session, carries its name, body, children and charter through a docket-answered first generation, persists exactly, crosses over with its own grammatical forms, hands the seal on (or opens a minor's wardship) and opens the collection on the signer, with no authored token left unrendered.",
+      "evidenceType": "player-driven end-to-end regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/founder-identity.test.ts#hands the seal on through ordinary succession when she crosses over",
+        "packages/core/src/founder-identity.test.ts#survives save, resume and replay",
+        "packages/core/src/founder-identity.test.ts#refers to the founder as the player said, whatever the body"
+      ]
+    },
+    {
       "path": "packages/core/src/founding-inheritance.slow.test.ts",
       "claim": "Played/full-run regression assertions: keeps a played world internally healthy after seeded inheritance is real",
       "evidenceType": "full-run regression with merge-blocking mechanism coverage",

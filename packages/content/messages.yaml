@@ -1679,19 +1679,19 @@ proseVariants:
   - address: "core:messages#record.stakes.respect_down"
     of: "4d8b663d4d402cb9"
     plainenglish: >-
-      Respect −{N}.
+      The family loses {N} Respect.
   - address: "core:messages#record.stakes.respect_up"
     of: "e3576df6d7fc6852"
     plainenglish: >-
-      Respect +{N}.
+      The family gains {N} Respect.
   - address: "core:messages#record.stakes.treasury_down"
     of: "391bbc81c9357ce5"
     plainenglish: >-
-      −{N} crowns.
+      The family pays {N} crowns.
   - address: "core:messages#record.stakes.treasury_up"
     of: "087755ece7546060"
     plainenglish: >-
-      +{N} crowns.
+      The family gains {N} crowns.
   - address: "core:messages#rites.vessel.self"
     of: "a4b1bf82a54e9d56"
     plainenglish: >-
