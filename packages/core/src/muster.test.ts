@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { musterEscalation, proseOriginalHash } from '@ed/schema';
+import { asId, musterEscalation, proseOriginalHash } from '@ed/schema';
 import {
   activeCommitment, addOfficer, applyEffect, beginCommitment, bootstrap, buyPosition, loadGame,
   maxMen, musterMortality, musterOrder, musterUpkeep, place, positionOptions, reinforceCommitment,
@@ -10,6 +10,7 @@ import {
 } from '@ed/core';
 import { coreMessageAddress } from './messages.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
+import type { SlotFill } from './events/slots.js';
 
 const bundle = loadContent();
 
@@ -123,29 +124,54 @@ describe('reinforceCommitment / addOfficer / setPosition', () => {
   it('rejects phantom, absent, non-house and female officers without changing the levy', () => {
     const ctx = testWorld(bundle);
     const c = beginCommitment(ctx, 5, 'the_wars');
-    expect(addOfficer(ctx, 'no_such_person')).toBe(false);
+    const officer = place(ctx, { sex: 'male', age: 30 });
+    expect(addOfficer(ctx, officer.id)).toBe(true);
 
     const dead = place(ctx, { sex: 'male', age: 30 });
-    dead.status = 'dead';
+    ctx.world.people.kill(dead.id, ctx.world.year, 'test');
     const missing = place(ctx, { sex: 'male', age: 30 });
     missing.status = 'missing';
     const guardian = place(ctx, { sex: 'male', age: 30 });
-    guardian.status = 'guardian';
+    guardian.becomesGuardian = true;
+    ctx.world.people.kill(guardian.id, ctx.world.year, 'test');
     const departed = place(ctx, { sex: 'male', age: 30 });
-    departed.membership = [];
+    departed.membership.at(-1)!.to = ctx.world.year;
+    const outsider = place(ctx, { sex: 'male', age: 30, house: 'marrow' });
+    const emigrant = place(ctx, { sex: 'male', age: 30 });
+    emigrant.membership.at(-1)!.to = ctx.world.year;
+    emigrant.membership.push({ house: outsider.membership.at(-1)!.house, kind: 'married_in', from: ctx.world.year });
     const retainer = place(ctx, { sex: 'male', age: 30 });
     retainer.membership.at(-1)!.kind = 'retainer';
+    const hostage = place(ctx, { sex: 'male', age: 30 });
+    hostage.membership.at(-1)!.kind = 'hostage';
     const specialist = place(ctx, { sex: 'female', age: 30 });
 
-    for (const person of [dead, missing, guardian, departed, retainer, specialist]) {
-      expect(addOfficer(ctx, person.id)).toBe(false);
+    const before = saveGame(ctx);
+    for (const id of ['no_such_person', dead.id, missing.id, guardian.id, departed.id,
+      outsider.id, emigrant.id, retainer.id, hostage.id, specialist.id]) {
+      expect(addOfficer(ctx, id), id).toBe(false);
+      expect({ ...saveGame(ctx), savedAt: before.savedAt }, id).toEqual(before);
     }
-    expect(c.officers).toEqual([]);
+    expect(c.officers).toEqual([officer.id]);
 
     const eligible = place(ctx, { sex: 'male', age: 30 });
     expect(addOfficer(ctx, eligible.id)).toBe(true);
     expect(addOfficer(ctx, eligible.id)).toBe(true);
-    expect(c.officers).toEqual([eligible.id]);
+    expect(c.officers).toEqual([officer.id, eligible.id]);
+  });
+
+  it('accepts current cadets and married-in men, including men born outside the house', () => {
+    const ctx = testWorld(bundle);
+    const c = beginCommitment(ctx, 5, 'the_wars');
+    const cadet = place(ctx, { sex: 'male', age: 30, branch: 'cadet_hall' });
+    cadet.membership.at(-1)!.kind = 'cadet';
+    const husband = place(ctx, { sex: 'male', age: 30, house: 'marrow' });
+    husband.membership.at(-1)!.to = ctx.world.year;
+    husband.membership.push({ house: asId(ctx.world.playerHouse), kind: 'married_in', from: ctx.world.year });
+
+    expect(addOfficer(ctx, cadet.id)).toBe(true);
+    expect(addOfficer(ctx, husband.id)).toBe(true);
+    expect(c.officers).toEqual([cadet.id, husband.id]);
   });
 
   it('stores whatever position id it is given', () => {
@@ -463,6 +489,24 @@ describe('the muster effect', () => {
     applyEffect({ kind: 'muster', op: 'begin', men: 5, age: 'the_wars' }, ctx, {});
     applyEffect({ kind: 'muster', op: 'add_officer', officer: { slot: 'OFFICER' } }, ctx, { OFFICER: officer.id });
     expect(activeCommitment(ctx)!.officers).toEqual([officer.id]);
+  });
+
+  it('add_officer leaves existing officers and state intact for stale or ineligible casts', () => {
+    const ctx = testWorld(bundle);
+    const officer = place(ctx, { sex: 'male', age: 30 });
+    const specialist = place(ctx, { sex: 'female', age: 30 });
+    const departed = place(ctx, { sex: 'male', age: 30 });
+    departed.membership.at(-1)!.to = ctx.world.year;
+    beginCommitment(ctx, 5, 'the_wars');
+    addOfficer(ctx, officer.id);
+    const before = saveGame(ctx);
+
+    const casts: SlotFill[] = [{}, { OFFICER: 'no_such_person' },
+      { OFFICER: specialist.id }, { OFFICER: departed.id }];
+    for (const fill of casts) {
+      applyEffect({ kind: 'muster', op: 'add_officer', officer: { slot: 'OFFICER' } }, ctx, fill);
+      expect({ ...saveGame(ctx), savedAt: before.savedAt }).toEqual(before);
+    }
   });
 
   it('set_position stores the id', () => {
