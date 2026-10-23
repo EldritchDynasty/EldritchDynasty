@@ -323,11 +323,11 @@ events:
       same number of rooms and fewer people in them. Six of the seven grates
       are cold and nobody gave an order about it. Nobody has been up the west
       stair since the Tuesday. {HEAD} counts the household the way a steward
-      counts it, which is by places laid, and the number he gets is a number
-      this house last had in his grandmother's time, and she was not proud of
-      it either. The Age is not over, and there is no announcement when one
-      ends, and the only thing that has changed is the noise. The grates stay
-      cold.
+      counts it, which is by places laid, and the number {HEAD.they}
+      get{HEAD.s} is a number this house last had in {HEAD.their}
+      grandmother's time, and she was not proud of it either. The Age is not
+      over, and there is no announcement when one ends, and the only thing
+      that has changed is the noise. The grates stay cold.
     interaction:
       kind: narration
       outcomes:
@@ -581,14 +581,16 @@ proseVariants:
     plainenglish: >-
       Six of Seven Hearths Are Cold
   - address: "content:events/age_plague.yaml#events[id=the_hall_after].body"
-    of: ba5eb7215362324d
+    of: 024cc052bc64147e
     plainenglish: >-
-      The hall has the same number of rooms, but fewer people. Six of its seven
-      fireplaces are cold, though nobody ordered them left unlit. Nobody has used the
-      west stairs since Tuesday. {HEAD} counts the household by the number of places
-      needed at the table. It is as small as it was in his grandmother's day, when she
-      was unhappy with the count too. The Plague Age has not ended. Ages end without an
-      announcement. The hall is simply much quieter, and the fireplaces stay cold.
+      The hall has the same number of rooms, but fewer people. Six of its
+      seven fireplaces are cold, though nobody ordered them left unlit. Nobody
+      has used the west stairs since Tuesday. {HEAD} counts the household by
+      the number of places needed at the table. The number {HEAD.they}
+      get{HEAD.s} is as small as it was in {HEAD.their} grandmother's day,
+      when she was unhappy with the count too. The Plague Age has not ended.
+      Ages end without an announcement. The hall is simply much quieter, and
+      the fireplaces stay cold.
   - address: "content:events/age_plague.yaml#events[id=the_hall_after].interaction.outcomes[id=counted].text"
     of: d51780ca358d443e
     plainenglish: >-

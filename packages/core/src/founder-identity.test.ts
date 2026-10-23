@@ -145,6 +145,30 @@ describe('{NARRATOR}', () => {
   });
 });
 
+describe('a Head\'s forms', () => {
+  // A Regent holds the seal in every run, and a blood mother holds it in the
+  // first generation: Head prose follows whoever is seated.
+  it('refers to a woman holding the seal as herself', () => {
+    const { ctx, founder } = founded();
+    const regent = place(ctx, { sex: 'female', age: 44, name: 'Maren' });
+    const scene = bundle.events.find((e) => e.id === 'the_guardian_disagrees')!;
+    const body = renderBody(scene.body, { HEAD: regent.id, GUARDIAN: founder.id }, ctx);
+    expect(body).toContain('Maren has made up her mind');
+    expect(body).toContain('until she has changed her mind');
+    expect(body).not.toMatch(/\b(he|him|his)\b/i);
+  });
+
+  it('leaves no Head form unrendered anywhere in the bundle', () => {
+    const { ctx } = founded();
+    const regent = place(ctx, { sex: 'female', age: 44, name: 'Maren' });
+    const withForms = bundle.events.flatMap((e) => [e.body, ...(e.interaction.kind === 'narration'
+      ? e.interaction.outcomes : e.interaction.choices.flatMap((c) => c.outcomes)).map((o) => o.text)])
+      .filter((t) => t.includes('{HEAD.'));
+    expect(withForms.length).toBeGreaterThan(5);
+    for (const text of withForms) expect(renderBody(text, { HEAD: regent.id }, ctx), text).not.toMatch(/\{HEAD\./);
+  });
+});
+
 describe('who signed, persisted', () => {
   // The chronicler answers every docket, so a played year logs what replay
   // will answer too, and the two logs are comparable.

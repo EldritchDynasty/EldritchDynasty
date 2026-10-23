@@ -70,13 +70,14 @@ events:
       GUARDIAN: { role: guardian }
       HEAD: { role: head }
     body: >-
-      {HEAD} has made up his mind and says so twice, which is once more than a
-      man says a thing he believes. Then the seal is not where he left it. Then
-      the letter he wrote is in the grate, unburnt, face up, and the fire has
-      gone around it. Nobody in the house will admit to any of this and nobody
-      in the house is lying. He sits down in the wrong chair, at the side,
-      where a son sits, and he does not get up again until he has changed his
-      mind.
+      {HEAD} has made up {HEAD.their} mind and says so twice, which is once
+      more than anyone says a thing they believe. Then the seal is not where
+      {HEAD.they} left it. Then the letter {HEAD.they} wrote is in the grate,
+      unburnt, face up, and the fire has gone around it. Nobody in the house
+      will admit to any of this and nobody in the house is lying. {HEAD.They}
+      sit{HEAD.s} down in the wrong chair, at the side, where a son sits, and
+      {HEAD.they} do{HEAD.es} not get up again until {HEAD.they} {HEAD.has}
+      changed {HEAD.their} mind.
     interaction:
       kind: choice
       choices:
@@ -86,8 +87,9 @@ events:
             - id: yielded
               weight: 100
               text: >-
-                It is the correct decision and it costs him every part of being
-                the man who makes them. He is forty-one. He will not try again.
+                It is the correct decision and it costs {HEAD.them} every part
+                of being the one who makes them. {HEAD.They} {HEAD.is}
+                forty-one. {HEAD.They} will not try again.
               effects:
                 - { kind: treasury, delta: 120 }
         - id: defy
@@ -96,8 +98,9 @@ events:
             - id: held
               weight: 44
               text: >-
-                Nothing stops him, and the not-stopping is worse than being
-                stopped, because now he has to find out whether he was right.
+                Nothing stops {HEAD.them}, and the not-stopping is worse than
+                being stopped, because now {HEAD.they} {HEAD.has} to find out
+                whether {HEAD.they} {HEAD.was} right.
               effects:
                 - { kind: respect, delta: 1 }
             - id: ruined
@@ -162,11 +165,11 @@ events:
         omit:
           chronicle: null
         embellish:
-          chronicle: The Head reconsidered, in his wisdom, and the house prospered by it.
+          chronicle: The Head reconsidered, in wisdom, and the house prospered by it.
           effects:
             - { kind: respect, delta: 1 }
           claims:
-            - { kind: deed, target: { slot: HEAD }, text: 'reconsidered of his own wisdom, and the house prospered by it' }
+            - { kind: deed, target: { slot: HEAD }, text: 'reconsidered in wisdom, and the house prospered by it' }
           discrepancy:
             id: the_empty_chair_lie
             severity: major
@@ -199,32 +202,35 @@ proseVariants:
     plainenglish: >-
       The House Overrules Its Head
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].body
-    of: fe3a38674127b0b3
+    of: ff24ef7ba73e6967
     plainenglish: >-
-      {HEAD} announces his decision twice, as if he needs to convince himself. Then the house
-      seal disappears from where he left it. His letter turns up in the fireplace, still
-      unburnt and face up, while the fire burns around it. Nobody admits that anything
-      strange has happened, and nobody is lying. He takes the side chair where a son would
-      sit and stays there until he changes his decision.
+      {HEAD} has made up {HEAD.their} mind and announces it twice, as if to
+      convince the house. Then the house seal is not where {HEAD.they} left
+      it. The letter {HEAD.they} wrote turns up in the fireplace, still
+      unburnt and face up, while the fire burns around it. Nobody admits that
+      anything strange has happened, and nobody is lying. {HEAD.They}
+      take{HEAD.s} the side chair where a son would sit, and {HEAD.they}
+      do{HEAD.es} not get up until {HEAD.they} {HEAD.has} changed {HEAD.their}
+      mind.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=yield].label
     of: ee80f494798fe708
     plainenglish: >-
       Give in. The house has existed longer than you have.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=yield].outcomes[id=yielded].text
-    of: 833ef938329e3dac
+    of: 0e84167e07f572d2
     plainenglish: >-
-      Giving in is the right decision, but it takes away his authority as the man who makes
-      the decisions. He is forty-one years old. He will never try to challenge the house
-      again.
+      Giving in is the right decision, but it costs {HEAD.them} the authority
+      of the one who makes the decisions. {HEAD.They} {HEAD.is} forty-one
+      years old. {HEAD.They} will never try to challenge the house again.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].label
     of: c98e59fc1065fb38
     plainenglish: >-
       Go ahead with the decision anyway.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=held].text
-    of: 44dc2d42c116046e
+    of: 187281f4a6c86b90
     plainenglish: >-
-      Nothing stops him. That is worse than being stopped, because now he has to find out
-      whether he made the right decision.
+      Nothing stops {HEAD.them}. That is worse than being stopped, because now
+      {HEAD.they} {HEAD.has} to find out whether {HEAD.they} {HEAD.was} right.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].text
     of: 467d99062c3f40b2
     plainenglish: >-
@@ -244,13 +250,13 @@ proseVariants:
     plainenglish: >-
       was overruled in the long room by someone who was no longer alive
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].record.options.embellish.chronicle
-    of: 0716adb5eba1c6d1
+    of: a7990c41f9ba92fd
     plainenglish: >-
-      The Head wisely changed his own mind, and the house prospered afterward.
+      The Head wisely reconsidered, and the house prospered afterward.
   - address: content:events/guardian.yaml#events[id=the_guardian_disagrees].record.options.embellish.claims[0].text
-    of: 2fb6a7c0d31a8df4
+    of: 23d14e4a861efe5e
     plainenglish: >-
-      wisely changed his own mind, which helped the house prosper
+      wisely reconsidered, which helped the house prosper
   - address: >-
       content:events/guardian.yaml#events[id=the_guardian_disagrees].interaction.choices[id=defy].outcomes[id=ruined].primordial.text
     of: 26bfe06470189a40
