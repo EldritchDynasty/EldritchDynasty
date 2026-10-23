@@ -592,6 +592,19 @@ describe('the opening concern', () => {
     expect(shown?.event.body).toBe(template.absentBody);
   });
 
+  it('the result names the choice that bought it: its page cites the 1042 answer (#1867 §5)', () => {
+    const { g } = play(4105, 'teach_the_heir', 1047);
+    const book = g.ctx.world.chronicle;
+    const choice = book.find((e) => e.eventId === OPENING);
+    const result = book.find((e) => e.eventId === 'the_heir_reads_the_tally');
+    expect(choice?.id).toBeDefined();
+    expect(result?.cause).toEqual({ year: choice!.year, page: choice!.id });
+    // The way back a client reads (#269) leads to the same page.
+    expect(g.causeOf(result!.id!)).toEqual({ year: choice!.year, page: choice!.id, blank: false });
+    // The arc's first beat answers nothing earlier in the arc.
+    expect(choice!.cause).toBeUndefined();
+  });
+
   it('a pupil who dies takes only their own scene with them', () => {
     const { resolved, g } = play(4104, 'teach_the_heir', 1048, (g) => {
       const pupil = g.ctx.world.tutoring.find((t) => t.attr === 'mind')!.person;
