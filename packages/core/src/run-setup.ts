@@ -1,8 +1,8 @@
 import type { CampaignId, Content, ContentBundle, FoundingConfiguration } from '@ed/schema';
 import { CampaignIdS, FoundingConfigurationS } from '@ed/schema';
-import { campaignDef } from '../campaign.js';
-import { bootstrap } from '../sim.js';
-import type { SimCtx } from '../world.js';
+import { campaignDef } from './campaign.js';
+import { bootstrap } from './sim.js';
+import type { SimCtx } from './world.js';
 
 /**
  * WHAT A MEASURED RUN IS FOUNDED AS (#1867).
@@ -13,6 +13,10 @@ import type { SimCtx } from '../world.js';
  * ever played. A setup names the campaign and the founding configuration;
  * absent is exactly the bootstrap every gate made before, so CI's runs and
  * their fingerprints are unchanged.
+ *
+ * Not under `tools/`: the harness founds its runs through this, and the run
+ * corpus keys on the simulation path but leaves `tools/` out of its hash, so a
+ * founding recipe in there could change a cached run without changing its key.
  */
 export interface RunSetup {
   campaign?: CampaignId;

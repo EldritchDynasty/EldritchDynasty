@@ -13,7 +13,7 @@ import { inRegency } from './world.js';
 import { phenotypeOf } from './people/factory.js';
 import { activeBranches, halls } from './people/branches.js';
 import { CAMPAIGN_YEARS, END_YEAR } from './campaign.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './tools/run-setup.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
 
 export interface RunStats {
   seed: number;

@@ -3,7 +3,7 @@ import { loadContent } from '@ed/content';
 import {
   bootstrap, stepYear, runYears, makeRng,
   resolveChoice, resolveRecord, applyRecord, autoResolveAll, autoResolveDecision,
-  type PendingChoice, type PendingRecord,
+  type PendingChoice, type PendingDecision, type PendingRecord,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
 import { delegationDensityLines, measureDensity, type DensityRun } from './tools/density-gate.js';
@@ -16,14 +16,19 @@ const bundle = loadContent();
  * year does not turn while a decision stands, so a test that ignores the
  * docket sits on the same year until the loop gives up.
  */
-function stepUntilDecision(seed: number, kind: 'choice' | 'record', limit = 800) {
+function stepUntilDecision(
+  seed: number,
+  kind: 'choice' | 'record',
+  limit = 800,
+  accept: (d: PendingDecision) => boolean = () => true,
+) {
   const ctx = bootstrap(bundle, seed, 1042);
   const rng = makeRng(seed);
   for (let i = 0; i < limit; i++) {
     stepYear(ctx, false);
     let guard = 0;
     while (ctx.world.pendingDecisions.length && guard++ < 50) {
-      const found = ctx.world.pendingDecisions.find((d) => d.kind === kind);
+      const found = ctx.world.pendingDecisions.find((d) => d.kind === kind && accept(d));
       if (found) return { ctx, decision: found };
       autoResolveDecision(ctx, ctx.world.pendingDecisions[0]!, rng);
     }
@@ -89,14 +94,29 @@ describe('the docket', () => {
     expect(ctx.world.pendingDecisions.some((d) => d.id === pending.id), 'the decision was dropped anyway').toBe(true);
   });
 
-  /** Spending the ration twice would let one event eat a whole tier. */
+  /**
+   * Spending the ration twice would let one event eat a whole tier. An arc's
+   * beat is scheduled rather than drawn and spends none — and since #1867 the
+   * opening concern is an arc choice in the first year — so this asks for an
+   * ambient choice, and checks the arc side of the same rule beside it.
+   */
   it('spends the frequency ration exactly once', () => {
-    const { ctx, decision } = stepUntilDecision(5150, 'choice');
+    const { ctx, decision } = stepUntilDecision(5150, 'choice', 800, (d) => d.kind === 'choice' && !d.event.arc);
     const pending = decision as PendingChoice;
+    expect(pending, 'no ambient choice reached the docket').toBeDefined();
     const tier = pending.event.frequency;
     const before = ctx.world.frequency.firedThisRun[tier];
     resolveChoice(ctx, pending.id, pending.choices.find((c) => c.available)!.id, makeRng(4));
     expect(ctx.world.frequency.firedThisRun[tier]).toBe(before + 1);
+  });
+
+  it('spends no tier ration on an arc beat', () => {
+    const { ctx, decision } = stepUntilDecision(5150, 'choice', 800, (d) => d.kind === 'choice' && !!d.event.arc);
+    const pending = decision as PendingChoice;
+    expect(pending, 'no arc choice reached the docket').toBeDefined();
+    const before = { ...ctx.world.frequency.firedThisRun };
+    resolveChoice(ctx, pending.id, pending.choices.find((c) => c.available)!.id, makeRng(4));
+    expect(ctx.world.frequency.firedThisRun).toEqual(before);
   });
 });
 
