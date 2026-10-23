@@ -894,6 +894,18 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * passes (god pair cleared by 24.8% of expressers).
    */
   const cheap = { runs: 4, years: 300, every: 50 } as const;
+  /**
+   * The same four runs, sampled half as often. The three tests that hand the
+   * gate an impossible floor are about the verdicts it gives WITHOUT a
+   * measured ceiling: a floor "cleared by nobody" above a populated rung, and
+   * an untested one above a rung nobody reached. Gate 9 measures a ceiling
+   * once it holds `MIN_FOR_CEILING` (150) expresser samples, and past that
+   * the same floor is rightly called stale instead. At `every: 50` the batch
+   * sat just under it until #1896's pannage re-roll took it to 180, which
+   * silently moved all three into the other branch. At `every: 100` it holds
+   * about 93: well clear of the line, so a re-roll cannot flip the regime.
+   */
+  const uncapped = { ...cheap, every: 100 } as const;
 
   it('accepts a purchased Madness floor only when a measured population reaches it (#378)', () => {
     expect(judgeLadderFloor(90, 0, 3, 61.8, 112)).toBe('reached');
@@ -960,7 +972,7 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * are the thing handed in, and the judgement is the thing under test.
    */
   it('refuses a floor nobody in the population can reach', () => {
-    const { ok, lines } = gateLadderScales(content, { ...cheap, mindFloor: { hierophant: 10_000 } });
+    const { ok, lines } = gateLadderScales(content, { ...uncapped, mindFloor: { hierophant: 10_000 } });
     expect(ok).toBe(false);
     expect(lines.join('\n')).toMatch(/cleared by nobody/);
   });
@@ -977,7 +989,7 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * went in around it.
    */
   it('refuses a POWER floor nobody in the population can reach', () => {
-    const { ok, lines } = gateLadderScales(content, { ...cheap, powerFloor: { hierophant: 10_000 } });
+    const { ok, lines } = gateLadderScales(content, { ...uncapped, powerFloor: { hierophant: 10_000 } });
     expect(ok, lines.join('\n')).toBe(false);
     expect(lines.join('\n')).toMatch(/power >= 10000 is cleared by nobody/);
   });
@@ -995,7 +1007,7 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * number that is right.
    */
   it('holds its tongue about a floor above a rung nobody reached', () => {
-    const { ok, lines } = gateLadderScales(content, { ...cheap, madnessFloor: { god: 10_000 } });
+    const { ok, lines } = gateLadderScales(content, { ...uncapped, madnessFloor: { god: 10_000 } });
     expect(ok, 'convicted a floor above an unreached rung').toBe(true);
     expect(lines.join('\n')).toMatch(/never got far enough to test/);
   });
