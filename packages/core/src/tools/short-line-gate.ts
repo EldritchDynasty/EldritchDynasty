@@ -10,10 +10,11 @@
  * rather than merely proving that every run ended in a valid Short outcome.
  */
 import { loadContent } from '@ed/content';
-import { indexContent, type Content, type ContentBundle, type EndingId } from '@ed/schema';
+import { indexContent, type Content, type ContentBundle, type EndingId, type FoundingConfiguration } from '@ed/schema';
 import { campaignDef } from '../campaign.js';
 import { playToTheEnd, type EndingRun } from './ending-gate.js';
 import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
+import { runSetupFlags } from './run-setup.js';
 
 type Source = ContentBundle | Content;
 
@@ -132,6 +133,7 @@ export function shortLineVerdictOver(
 export function gateShortLine(
   source: Source = loadContent(),
   runs: number = BLOCKING_GATE_CONFIG['short-line'].runs,
+  founding?: FoundingConfiguration,
 ): ShortLineVerdict {
   const config = BLOCKING_GATE_CONFIG['short-line'];
   const content = indexContent(source);
@@ -143,6 +145,8 @@ export function gateShortLine(
       config.years,
       config.decider,
       config.campaign,
+      undefined,
+      founding,
     ));
 
   const authoredEvents = content.events.filter((event) => event.tier !== 'frame').map((event) => String(event.id));
@@ -155,8 +159,13 @@ export function gateShortLine(
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('short-line-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? BLOCKING_GATE_CONFIG['short-line'].runs);
-  const verdict = gateShortLine(loadContent(), runs);
+  const args = process.argv.slice(2);
+  const positional = args.filter((a) => !a.startsWith('--'));
+  const runs = Number(positional[0] ?? BLOCKING_GATE_CONFIG['short-line'].runs);
+  // The Short Line is this gate's own campaign; only the founding is asked (#1867).
+  const { founding } = runSetupFlags(args);
+  const verdict = gateShortLine(loadContent(), runs, founding);
+  console.log(`founding: ${founding ?? 'authored founder'}`);
   for (const line of verdict.lines) console.log(line);
   process.exit(verdict.ok ? 0 : 1);
 }
