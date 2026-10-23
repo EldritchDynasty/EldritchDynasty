@@ -80,8 +80,8 @@
  * still not the game §22 describes.
  */
 import { loadContent } from '@ed/content';
-import { indexContent, MAIN_BRANCH, type CampaignId, type Content, type ContentBundle, type EndingId, type Rung } from '@ed/schema';
-import { bootstrap, clearNamingQueue } from '../sim.js';
+import { indexContent, MAIN_BRANCH, type CampaignId, type Content, type ContentBundle, type EndingId, type FoundingConfiguration, type Rung } from '@ed/schema';
+import { clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { makeRng, hashSeed } from '../rng.js';
 import { autoResolveAll } from '../events/decisions.js';
@@ -107,6 +107,7 @@ import {
   type GatePartition,
   type GatePartitionResult,
 } from './gate-partition.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
 
 type Source = ContentBundle | Content;
 
@@ -324,9 +325,10 @@ export function playToTheEnd(
   policy: EndingPolicy = 'chronicler',
   campaign: CampaignId = 'long',
   onYear?: (visit: EndingYearVisit) => void,
+  founding?: FoundingConfiguration,
 ): EndingRun {
   const def = campaignDef(campaign);
-  const ctx = bootstrap(indexContent(source), seed, def.startYear, campaign);
+  const ctx = bootstrapRun(indexContent(source), seed, { campaign, ...(founding ? { founding } : {}) });
   const w = ctx.world;
   if (policy === 'ascendant') configureAscendant(ctx);
 
@@ -1029,13 +1031,14 @@ export function runEndingGatePartition(
   source: Source,
   partition: GatePartition<Pick<EndingRun, 'seed' | 'policy'>>,
   years: number,
+  setup: RunSetup = {},
 ): GatePartitionResult<EndingRun> {
   const content = indexContent(source);
   return {
     id: partition.id,
     observations: partition.items.map(({ index, input }) => ({
       index,
-      value: playToTheEnd(content, input.seed, years, input.policy),
+      value: playToTheEnd(content, input.seed, years, input.policy, setup.campaign, undefined, setup.founding),
     })),
   };
 }
@@ -1044,32 +1047,34 @@ export function gateEndings(
   source: Source = loadContent(),
   runs = ENDING_DEFAULT_BATCH,
   years = CAMPAIGN_YEARS,
-  opts: { workers?: number } = {},
+  opts: { workers?: number; setup?: RunSetup } = {},
 ): EndingVerdict {
   const content = indexContent(source);
   const bundle = content.bundle;
   // Fast fixture calls stay serial; the 512-pair nightly batch benefits from
   // the same bounded workers already exercised by blood and war gates.
   const workers = opts.workers ?? (runs >= 8 ? gatePartitionWorkerCount() : 1);
+  const setup = opts.setup ?? {};
   const plan = partitionGateInputs(endingGateInputs(runs), workers);
   const results = plan.length === 1
-    ? plan.map((partition) => runEndingGatePartition(content, partition, years))
+    ? plan.map((partition) => runEndingGatePartition(content, partition, years, setup))
     : runGatePartitionsInWorkers<Pick<EndingRun, 'seed' | 'policy'>, EndingRun>(plan, {
       moduleUrl: import.meta.url,
       exportName: 'runEndingGatePartition',
       argsBefore: [bundle],
-      argsAfter: [years],
+      argsAfter: [years, setup],
     });
   const played = reduceGatePartitions(plan, results);
   const v = verdictOver(played);
-  return { ok: v.ok, lines: [`gate (endings): ${runs} played runs x ${years} years, per policy`, ...v.lines] };
+  return { ok: v.ok, lines: [`gate (endings): ${runs} played runs x ${years} years, per policy · ${runSetupLabel(setup)}`, ...v.lines] };
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('ending-gate.ts');
 if (isMain) {
-  const runs = Number(process.argv[2] ?? ENDING_DEFAULT_BATCH);
-  const years = Number(process.argv[3] ?? CAMPAIGN_YEARS);
-  const { ok, lines } = gateEndings(loadContent(), runs, years);
+  const positional = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+  const runs = Number(positional[0] ?? ENDING_DEFAULT_BATCH);
+  const years = Number(positional[1] ?? CAMPAIGN_YEARS);
+  const { ok, lines } = gateEndings(loadContent(), runs, years, { setup: runSetupFlags(process.argv.slice(2)) });
   console.log(lines.join('\n'));
   process.exit(ok ? 0 : 1);
 }

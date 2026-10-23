@@ -95,13 +95,14 @@
 import { loadContent } from '@ed/content';
 import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
 import { indexContent, type Content, type ContentBundle, type Rung } from '@ed/schema';
-import { bootstrap, clearNamingQueue } from '../sim.js';
+import { clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { POWER_FLOOR, foremostOf, rungIndex, standingOf } from '../ascension.js';
 import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { eldritch } from '../genetics/expression.js';
 import { END_YEAR } from '../ending.js';
-import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { CAMPAIGN_YEARS } from '../campaign.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
 import type { SimCtx } from '../world.js';
 import {
   nameScion, nameScionHeir, resolveYear, type LadderPolicy,
@@ -211,9 +212,11 @@ function geneticChannelOf(ctx: SimCtx, p: ReturnType<SimCtx['world']['people']['
   return Math.max(0, (base.ceiling - 4) / 0.8);
 }
 
-export function playOnce(bundle: Source, seed: number, years: number, policy: LadderPolicy, bid: number): LadderRun {
+export function playOnce(
+  bundle: Source, seed: number, years: number, policy: LadderPolicy, bid: number, setup: RunSetup = {},
+): LadderRun {
   const content = indexContent(bundle);
-  const ctx = bootstrap(content, seed, START_YEAR);
+  const ctx = bootstrapRun(content, seed, setup);
   const w = ctx.world;
   // The one standing order both columns share, so the shelf is the same size
   // in each. Without it the auction never spends and the books axis, not the
@@ -372,18 +375,19 @@ let lastPolicyMatrix: {
 
 export function ladderPolicyMatrix(
   source: Source,
-  opts: { seeds?: readonly number[]; years?: number; bid?: number } = {},
+  opts: { seeds?: readonly number[]; years?: number; bid?: number; setup?: RunSetup } = {},
 ): { policy: LadderPolicy; runs: LadderRun[] }[] {
   const config = BLOCKING_GATE_CONFIG.ladder;
   const seeds = opts.seeds ?? config.seeds;
   const years = opts.years ?? config.years;
   const bid = opts.bid ?? config.bid;
-  const key = JSON.stringify([seeds, years, bid]);
+  const setup = opts.setup ?? {};
+  const key = JSON.stringify([seeds, years, bid, setup]);
   if (lastPolicyMatrix?.source === source && lastPolicyMatrix.key === key) return lastPolicyMatrix.columns;
   const content = indexContent(source);
   const columns = config.policies.map((policy) => ({
     policy,
-    runs: seeds.map((seed) => playOnce(content, seed, years, policy, bid)),
+    runs: seeds.map((seed) => playOnce(content, seed, years, policy, bid, setup)),
   }));
   lastPolicyMatrix = { source, key, columns };
   return columns;
@@ -391,17 +395,18 @@ export function ladderPolicyMatrix(
 
 export function gateLadder(
   source: Source = loadContent(),
-  opts: { seeds?: number[]; years?: number; bid?: number } = {},
+  opts: { seeds?: number[]; years?: number; bid?: number; setup?: RunSetup } = {},
 ): LadderVerdict {
   const config = BLOCKING_GATE_CONFIG.ladder;
   const seeds = opts.seeds ?? [...config.seeds];
   const years = opts.years ?? config.years;
   const bid = opts.bid ?? config.bid;
 
-  const columns = ladderPolicyMatrix(source, { seeds, years, bid });
+  const setup = opts.setup ?? {};
+  const columns = ladderPolicyMatrix(source, { seeds, years, bid, setup });
 
   const mean = (rs: LadderRun[], f: (r: LadderRun) => number) => rs.reduce((a, r) => a + f(r), 0) / (rs.length || 1);
-  const lines: string[] = [`gate (ladder): ${seeds.length} played runs x ${years} years, per policy`];
+  const lines: string[] = [`gate (ladder): ${seeds.length} played runs x ${years} years, per policy · ${runSetupLabel(setup)}`];
   const share = (rs: LadderRun[]) => mean(rs, (r) => r.floorPaid) / Math.max(1, mean(rs, (r) => r.adeptYears));
   for (const c of columns) {
     lines.push(
@@ -541,7 +546,7 @@ if (isMain) {
   const seeds = runs <= config.seeds.length
     ? [...config.seeds].slice(0, runs)
     : Array.from({ length: runs }, (_, i) => config.seeds[0] + i * 13);
-  const { ok, lines } = gateLadder(loadContent(), { seeds, years, bid });
+  const { ok, lines } = gateLadder(loadContent(), { seeds, years, bid, setup: runSetupFlags(args) });
   for (const l of lines) console.log(l);
   process.exit(ok ? 0 : 1);
 }

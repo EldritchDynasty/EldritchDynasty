@@ -76,7 +76,8 @@ import { onTheMarket } from '../table.js';
 import { eldritch, realizedHomozygosity, deleteriousLoad } from '../genetics/expression.js';
 import { POWER_FLOOR, rawPowerFor, rungIndex } from '../ascension.js';
 import { closeTheLedger, END_YEAR, selectEnding } from '../ending.js';
-import { CAMPAIGN_YEARS, START_YEAR } from '../campaign.js';
+import { CAMPAIGN_YEARS } from '../campaign.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
 import type { SimCtx } from '../world.js';
 import { expectMean } from '../testing.js';
 import { GREAT_RITE_REACH } from '../events/rites.js';
@@ -523,9 +524,9 @@ function answerMatch(ctx: SimCtx, pending: PendingMatch, policy: Policy, tally: 
   }
 }
 
-export function playOnce(bundle: ContentBundle, seed: number, years: number, policy: Policy): BloodRun {
+export function playOnce(bundle: ContentBundle, seed: number, years: number, policy: Policy, setup: RunSetup = {}): BloodRun {
   const content = indexContent(bundle);
-  const ctx = bootstrap(content, seed, START_YEAR);
+  const ctx = bootstrapRun(content, seed, setup);
   const w = ctx.world;
   // The standing order the player gives once, at the table, and never again.
   // `concentrate` / `dilute` are the complete strategies, not only the
@@ -1013,8 +1014,9 @@ if (isMain) {
     books: base.houses.find((h) => h.isPlayerHouse)?.library.length ?? 0,
   };
   const seeds = Array.from({ length: runs }, (_, i) => 4000 + i * 13);
+  const setup = runSetupFlags(args);
 
-  console.log(`${runs} runs x ${years} years, ${policies.join(' / ')}`);
+  console.log(`${runs} runs x ${years} years, ${policies.join(' / ')} · ${runSetupLabel(setup)}`);
   for (const cM of cMs) {
     for (const del of dels) {
       for (const drive of drives) {
@@ -1035,7 +1037,7 @@ if (isMain) {
       console.log(`\n── ${label} ──`);
       const columns = policies.map((policy) => ({
         label: policy,
-        runs: seeds.map((seed) => playOnce(bundle, seed, years, policy)),
+        runs: seeds.map((seed) => playOnce(bundle, seed, years, policy, setup)),
       }));
       console.log(table(columns));
       for (const line of pairedLines(columns)) console.log(line);
