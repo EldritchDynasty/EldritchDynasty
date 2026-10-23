@@ -910,7 +910,11 @@ export interface SessionView {
     question: string;
     opened: number;
     kind: string;
-    previous?: { question: string; answer: string; from: number; to: number };
+    previous?: {
+      question: string; answer: string; from: number; to: number;
+      /** The tracked ambition, read the year the seal passed on (#1867 §5). */
+      ambition?: string;
+    };
   };
   /** The house's id — what content and saves refer to it by. */
   house: string;
@@ -1521,6 +1525,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
               previous: {
                 question: previous.question.text,
                 answer: previous.answer,
+                ...(previous.ambition !== undefined ? { ambition: previous.ambition } : {}),
                 from: previous.from,
                 to: previous.to,
               },

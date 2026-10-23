@@ -635,6 +635,18 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
 }
 
 /**
+ * What the tracked ambition reads at a handover (#1867 §5): the outgoing
+ * generation's account against the plan the player chose, in one line. The
+ * succession record keeps the words, as it keeps the generation's answer.
+ */
+export function ambitionAtHandover(ctx: SimCtx): string | undefined {
+  const view = ambitionView(ctx);
+  if (!view) return undefined;
+  return msg(ctx, 'ambition.handover', 'Ambition — {NAME}: {PROGRESS}. {STATUS}',
+    { NAME: view.name, PROGRESS: view.progress.label, STATUS: view.status });
+}
+
+/**
  * WHICH PLAN THE HOUSE'S SITUATION POINTS AT (#1867 §4).
  *
  * The opening hands the player an ambition with a reason attached, and the

@@ -1049,6 +1049,8 @@ export const SavedGameS = z.object({
       subjectName: z.string().optional(),
     }).optional(),
     answer: z.string().optional(),
+    /** #1867 §5: what the tracked ambition read when the seal passed on. Absent when none was kept. */
+    ambition: z.string().optional(),
   })).default([]),
 
   /**

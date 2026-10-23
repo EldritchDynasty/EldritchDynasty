@@ -487,6 +487,7 @@ const yearAndBirths = computed(() => {
           <details v-if="view.generationArc.previous">
             <summary class="dim small">{{ shellCopy.previousQuestion }}</summary>
             <p class="small">{{ view.generationArc.previous.answer }}</p>
+            <p v-if="view.generationArc.previous.ambition" class="small dim">{{ view.generationArc.previous.ambition }}</p>
           </details>
         </section>
         <!-- One decision at a time. The docket can hold several; answering the

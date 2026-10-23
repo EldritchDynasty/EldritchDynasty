@@ -415,6 +415,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
     ...(r.to !== undefined ? { to: r.to } : {}),
     ...(r.question !== undefined ? { question: { ...r.question } } : {}),
     ...(r.answer !== undefined ? { answer: r.answer } : {}),
+    ...(r.ambition !== undefined ? { ambition: r.ambition } : {}),
   }));
 
   if (s.wardship !== undefined) {
