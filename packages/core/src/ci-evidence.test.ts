@@ -91,6 +91,20 @@ describe('CI evidence inventory', () => {
     expect(recorded).toEqual(actual);
   });
 
+  it('never gates the required verdict on advisory corpus warming', () => {
+    const workflow = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
+    const corpus = workflow.split('\\n  corpus:\\n')[1]?.split('\\n  required:\\n')[0];
+    const required = workflow.split('\\n  required:\\n')[1]?.split('\\n  release-slow:\\n')[0];
+
+    expect(corpus, 'check.yml corpus job exists').toBeDefined();
+    expect(required, 'check.yml required job exists').toBeDefined();
+    expect(corpus).toContain("if: needs.tier.outputs.full == 'true' && github.event_name != 'merge_group'");
+    expect(corpus).toContain('continue-on-error: true');
+    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates]');
+    expect(required).not.toMatch(/^\\s*needs:.*\\bcorpus\\b/m);
+    expect(required).not.toContain("'corpus'");
+  });
+
   it('classifies every defined gate lane exactly once, regardless of CI cadence', () => {
     const source = readFileSync(join(root, 'packages/core/src/tools/gates.ts'), 'utf8');
     const defaultLane = /export const DEFAULT_LANE = '([^']+)'/.exec(source);
