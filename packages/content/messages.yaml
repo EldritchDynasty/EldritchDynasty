@@ -491,6 +491,10 @@ proseVariants:
     of: "c56d5b5aefecf04e"
     plainenglish: >-
       Keep family halls alive and viable beyond the main hall.
+  - address: "core:messages#ambition.handover"
+    of: "2eed7ece7531ef2a"
+    plainenglish: >-
+      Family goal — {NAME}: {PROGRESS}. {STATUS}
   - address: "core:messages#ambition.match.thin_line"
     of: "15115c0d6b17a9d9"
     plainenglish: >-

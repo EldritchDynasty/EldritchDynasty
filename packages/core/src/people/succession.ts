@@ -13,6 +13,7 @@ import { newEmployer, walkSecrets, type ReleaseReason } from './secrets.js';
 import { headNamesake } from './naming.js';
 import { MAIN_BRANCH, asId } from '@ed/schema';
 import { answerGenerationQuestion, chooseGenerationQuestion } from '../generation.js';
+import { ambitionAtHandover } from '../ambition.js';
 import { characterProse } from './character-prose.js';
 import { msg } from '../messages.js';
 
@@ -208,6 +209,10 @@ function seatHead(ctx: SimCtx, next: Person): boolean {
   const sitting = w.succession[w.succession.length - 1];
   if (sitting && sitting.to === undefined) {
     if (sitting.question) sitting.answer = answerGenerationQuestion(ctx, sitting.question);
+    // What the generation did for the plan the player chose (#1867 §5), read
+    // once at the handover so a later year cannot rewrite it.
+    const ambition = ambitionAtHandover(ctx);
+    if (ambition) sitting.ambition = ambition;
     sitting.to = w.year;
   }
   const question = chooseGenerationQuestion(ctx, sitting?.question);

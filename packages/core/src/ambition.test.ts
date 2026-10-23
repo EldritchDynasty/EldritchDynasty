@@ -8,6 +8,9 @@ import { ambitionOptions, ambitionRelevance, ambitionView, recommendAmbition } f
 import { bootstrap } from './sim.js';
 import { campaignDef } from './campaign.js';
 import { place, testWorld } from './testing.js';
+import { ensureHead } from './people/succession.js';
+import { makeRng } from './rng.js';
+import { loadGame, saveGame } from './save.js';
 import { relevantPeople } from './people/relevance.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
@@ -247,6 +250,10 @@ describe('house ambition (issue #210)', () => {
     const b = JSON.parse(JSON.stringify(without.save()));
     delete a.savedAt; delete b.savedAt;
     delete a.houseAmbition; delete b.houseAmbition;
+    // The one other trace a tracked ambition leaves is its reading at each
+    // handover (#1867 §5): words kept as history, never an input to a roll.
+    for (const reign of a.succession) delete reign.ambition;
+    expect(b.succession.some((reign: { ambition?: string }) => reign.ambition !== undefined)).toBe(false);
     expect(a).toEqual(b);
   });
 
@@ -597,5 +604,40 @@ describe('the opening hands the player a recommended ambition (#1867 §4)', () =
     expect(read('plainenglish')).toEqual({
       ...original, name: `plain: ${original.name}`, reason: `plain: ${original.reason}`,
     });
+  });
+});
+
+describe('a handover reads the outgoing generation against the plan (#1867 §5)', () => {
+  function handover(ambition: HouseAmbitionId | null) {
+    const ctx = bootstrap(content, 1867, 1042, 'long');
+    const w = ctx.world;
+    w.houseAmbition = ambition;
+    w.year = 1070;
+    w.people.kill(w.narrator!, w.year, 'a test');
+    expect(w.people.get(w.narrator!)!.status).toBe('guardian');
+    expect(ensureHead(ctx, makeRng(1)).newHead).toBeDefined();
+    return ctx;
+  }
+
+  it('keeps what the tracked ambition read the year the seal passed, and shows it with the answer', () => {
+    const ctx = handover('deepen_blood');
+    const closed = ctx.world.succession.at(-2)!;
+    expect(closed.to).toBe(1070);
+    expect(closed.ambition).toMatch(/^Ambition — Deepen the blood: \d+ living of the blood; 14 is a resilient line\. /);
+
+    // History, not a reading: a later change to the house does not rewrite it.
+    const kept = closed.ambition;
+    ctx.world.houseAmbition = 'restore_ledger';
+    expect(ctx.world.succession.at(-2)!.ambition).toBe(kept);
+
+    // It survives the save, and the session shows it beside the generation's answer.
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    expect(resumed.world.succession.at(-2)!.ambition).toBe(kept);
+    const game = resumeGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    expect(game.view().generationArc?.previous?.ambition).toBe(kept);
+  });
+
+  it('records nothing when no ambition was kept', () => {
+    expect(handover(null).world.succession.at(-2)!.ambition).toBeUndefined();
   });
 });
