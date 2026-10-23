@@ -2,6 +2,7 @@ import type { Content, ContentBundle, Person, Sex } from '@ed/schema';
 import { asId, MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { bootstrap } from './sim.js';
+import { OPENING_CONCERN } from './campaign.js';
 import { makePerson } from './people/factory.js';
 import { makeRng, hashSeed } from './rng.js';
 import { emptyReport, type YearReport } from './year/report.js';
@@ -29,9 +30,20 @@ import { isCaput } from './land.js';
  * quietly stops matching.
  */
 
-/** A world with the founding cast in it and nothing else having happened. */
+/**
+ * A world with the founding cast in it and nothing else having happened.
+ *
+ * Nothing scheduled, either: a full campaign's bootstrap starts its opening
+ * concern (#1867), which is the first question a PLAYED run asks, and a test
+ * about one phase or one arc was not asking it. A test about the opening
+ * itself bootstraps the campaign directly.
+ */
 export function testWorld(source: ContentBundle | Content, seed = 1042, year = 1042): SimCtx {
-  return bootstrap(source, seed, year);
+  const ctx = bootstrap(source, seed, year);
+  for (const [id, instance] of ctx.world.arcs) {
+    if (instance.arc === OPENING_CONCERN) ctx.world.arcs.delete(id);
+  }
+  return ctx;
 }
 
 export interface PlacedPerson {
