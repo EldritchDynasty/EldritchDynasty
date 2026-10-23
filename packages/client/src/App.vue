@@ -513,6 +513,7 @@ const yearAndBirths = computed(() => {
           :age-match-priorities="view.ageMatchPriorities"
           :age-record-priorities="view.ageRecordPriorities"
           :founded-year="view.campaign.startYear"
+          :narrator="view.narrator"
           :refused-card="refusedCard"
           :reveal-card="matchReveal"
         />

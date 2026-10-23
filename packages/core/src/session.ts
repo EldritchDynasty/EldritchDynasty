@@ -21,6 +21,7 @@ import type { SlotFill } from './events/slots.js';
 import { branchOf, halls } from './people/branches.js';
 import { knownToExpress, phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
+import { formOf } from './people/grammar.js';
 import { visibleRecordView } from './record.js';
 import { chronicleReading, generationChangesOf, type GenerationChanges } from './people/generation-changes.js';
 export type { GenerationChange, GenerationChangeKind, GenerationChanges } from './people/generation-changes.js';
@@ -1049,6 +1050,12 @@ export interface SessionView {
   }[];
   guardian?: { id: string; name: string; since?: number };
   /**
+   * The founder, as a client may name them (#1867): the name, and the form
+   * that takes an object ("Let her decide"). Present from the first year,
+   * where `guardian` waits until they have crossed over.
+   */
+  narrator?: { name: string; them: string };
+  /**
    * THE MUSTER (issue #89, Stages 2-3 — #95, #97). Absent — not merely empty —
    * with no commitment standing, which is nearly always: #90 measures a
    * median gap of ~250 years between Wars. `muster()` is what a player
@@ -1668,6 +1675,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   };
 
   if (w.ending) view.ending = { ...w.ending };
+
+  const narrator = w.narrator ? w.people.get(w.narrator) : undefined;
+  if (narrator) view.narrator = { name: narrator.name, them: formOf(narrator, 'them') };
 
   if (guardian) {
     view.guardian = {

@@ -1723,8 +1723,8 @@ const FOUNDER_SLOT_ROLES: ReadonlySet<SlotRole> = new Set<SlotRole>(['guardian']
  * the slot's own filters make one. A pronoun in a sentence naming the founder
  * is the case that cannot be right for every founder.
  *
- * A WARNING until #1867's prose migration (step 2) is done, and an error
- * after it.
+ * An ERROR since #1867's prose migration (step 2): the shipped content
+ * raises none, so a new one is a new hand-written "he" for the founder.
  */
 const founderForms: ValidationRule = {
   id: 'prose/founder-forms',
@@ -1744,7 +1744,7 @@ const founderForms: ValidationRule = {
           if (!named) continue;
           const pronouns = genderedPronounsIn(sentence);
           if (!pronouns.length) continue;
-          issues.push(warn(this.id, `event:${e.id}`, `${entry.address}: '${pronouns.join("', '")}' beside `
+          issues.push(err(this.id, `event:${e.id}`, `${entry.address}: '${pronouns.join("', '")}' beside `
             + `{${named.slot}} — the founder's grammar is the player's; write {${named.slot}.they}, `
             + `{${named.slot}.their} and so on`));
         }

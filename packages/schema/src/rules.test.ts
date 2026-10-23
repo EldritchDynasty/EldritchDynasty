@@ -1613,14 +1613,14 @@ describe('the rules that had never caught anything', () => {
     const guardianEvent = (b: ContentBundle) =>
       b.events.find((e) => Object.values(e.slots).some((s) => s.role === 'guardian'))!;
 
-    it('warns on a hand-written pronoun in a sentence naming the guardian', () => {
+    it('refuses a hand-written pronoun in a sentence naming the guardian', () => {
       const b = withEvents((x) => {
         const e = guardianEvent(x);
         const sid = Object.entries(e.slots).find(([, s]) => s.role === 'guardian')![0];
         e.body = `${e.body} {${sid}} sets down his cup.`;
       });
       const issues = runRule('prose/founder-forms', b);
-      expect(issues.map((i) => i.level)).toContain('warning');
+      expect(issues.map((i) => i.level)).toContain('error');
       expect(issues.map((i) => i.message).join('\n')).toMatch(/'his' beside \{GUARDIAN\}/);
     });
 

@@ -1924,15 +1924,18 @@ describe('reader-local docket instructions in Plain English (#410)', () => {
     const original = structuredClone(decision);
     const actions = spyActions();
     const wrapper = mount(Docket, {
-      props: { decision, actions: actions as unknown as GameActions },
+      props: { decision, actions: actions as unknown as GameActions, narrator: { name: 'Daveed Gearithy', them: 'him' } },
     });
     try {
       expect(wrapper.text()).toContain('The branch is not yours to take.');
       expect(wrapper.text()).toContain('Let him decide');
+      // The escape hatch names the founder the player signed as (#1867).
+      await wrapper.setProps({ narrator: { name: 'Ysolt Gearithy', them: 'her' } });
+      expect(wrapper.text()).toContain('Let her decide');
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.text()).toContain('Their combined abilities decide the result');
       expect(wrapper.text()).toContain('Send the selected people');
-      expect(wrapper.text()).toContain('Let Daveed decide');
+      expect(wrapper.text()).toContain('Let Ysolt Gearithy decide');
       expect(wrapper.text()).toContain(decision.body);
       expect(wrapper.text()).toContain(decision.callback);
       await wrapper.findAll('button').find((b) => b.text().includes('Send the selected people'))!.trigger('click');

@@ -15,6 +15,8 @@ const props = defineProps<{
   ageRecordPriorities?: import('@ed/core').AgeRecordPriority[];
   /** Campaign/founding year; when supplied, routine delegation waits fifty years. */
   foundedYear?: number;
+  /** Who the escape hatch hands the pen to (#1867): their name and object form. */
+  narrator?: { name: string; them: string };
   /**
    * A card the engine refused anyway (issue #83), drawn against the card it
    * belongs to. `match.ts` closes a card the moment its person or its subject
@@ -329,6 +331,11 @@ onMounted(async () => {
 });
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
+
+/** The escape hatch names the founder as the player did; never a hard-coded "him". */
+const letDecideLabel = computed(() => plain.value
+  ? `Let ${props.narrator?.name ?? 'the founder'} decide`
+  : `Let ${props.narrator?.them ?? 'them'} decide`);
 </script>
 
 <template>
@@ -670,7 +677,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     <!-- THE ESCAPE HATCH. Daveed is not neutral, and handing him the pen is a
          way of playing rather than a way of skipping. -->
     <footer>
-      <button class="quiet small" @click="oncePerRender(() => actions.letHimDecide())">{{ plain ? 'Let Daveed decide' : 'Let him decide' }}</button>
+      <button class="quiet small" @click="oncePerRender(() => actions.letHimDecide())">{{ letDecideLabel }}</button>
     </footer>
   </section>
 </template>
