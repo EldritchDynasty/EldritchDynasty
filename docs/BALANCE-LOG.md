@@ -14064,3 +14064,59 @@ per-configuration bias is authored, so none is declared. `gate:blood`,
 `gate:ladder`, `gate:endings` and the harness still run unsigned; giving
 them a founding configuration is gates-lane work, and the gate-level
 measurement follows it.
+
+## 2026-10-23 — #1867: the blood mother through the gates, both terms
+
+**Instrument.** Code `5da283c` (gates and harness take a founding
+configuration through `tools/run-setup.ts`) and `gate:short`'s founding flag
+from the next commit; content as of that head. Each cell is the gate's own
+default seeds and policies, founded as named. `blood_father` is the authored
+house (its prose signs as a man; nothing it measures moves), so it is the
+baseline each `blood_mother` cell is read against. Authored Eldritch bias
+0.2 in both, by the owner's decision of 2026-10-22.
+
+```bash
+npm run gate:endings -- 512 500 --campaign=long --founding=blood_mother
+npm run gate:short   -- 512 --founding=blood_mother
+npm run gate:blood   -- 8 500 --campaign=long --founding=blood_mother    # and 300 --campaign=short
+npm run gate:ladder  -- 6 500 --campaign=long --founding=blood_mother    # and 300 --campaign=short
+npm run harness      -- 16 500 --campaign=long --founding=blood_mother   # and 300 --campaign=short
+```
+
+**Every gate passes in every cell, and the harness invariants hold**: no
+mad woman and no mad-but-incapable man in any run, a female founder included.
+
+**Endings, 512 runs per cell.** Long through `gate:endings`, Short through
+`gate:short` — run on the Short Line, `gate:endings` counts every `settled`
+run as "no ending", for the authored founder too, so it is the wrong
+instrument there.
+
+| term | founding | broken line | devoured | catastrophe | forgotten | settled |
+|---|---|---:|---:|---:|---:|---:|
+| Long | blood father | 27.5% | 27.1% | 54.9% | 45.1% | — |
+| Long | blood mother | 31.1% | 31.6% | **62.7%** | 37.3% | — |
+| Short | blood father | 19.3% | 28.1% | 47.4% | 31.4% | 21.1% |
+| Short | blood mother | 25.2% | 30.5% | **55.7%** | 28.1% | 16.2% |
+
+The blood mother is about eight points more catastrophic on both terms
+(≈2.5–2.7 SE at 512), at the expense of the quiet endings. Both stay inside
+every judged band. Long ascendant runs took the Unmaking in 13.7% against
+9.6%; apotheosis stays below the owner's floor in both (0.2% / 0.6%, not
+judged while pre-production).
+
+**The ladder and the blood (small batches — direction only).**
+`gate:ladder` (6 runs a column): best rungs barely move, but the deepest
+Madness on a climbing man rises — 88.0 against 57.8 (Long), 74.8 against
+66.2 (Short). `gate:blood` (8 runs a column): the first generation's font
+is about twice the blood father's (6.6–10.4 against 2.8–5.9) and the line
+stays thicker to the end; every run survives in both.
+
+**Regency halves** (harness, 16 runs): 0.9 a run / 45 years against 1.9 /
+96 (Long), 0.9 / 38 against 1.5 / 72 (Short) — her sons wake.
+
+**Reading.** The scratch measurement of 2026-10-22 found the blood mother
+reaching Hierophant about twice as often. The gates add the other half:
+the same house goes wrong about eight points more often, by a broken line
+or by being devoured. A stronger and a more dangerous start, as the
+owner's keep-0.2 decision accepted; this entry is what that decision
+costs, measured.
