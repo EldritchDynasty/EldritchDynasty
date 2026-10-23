@@ -70,7 +70,7 @@ export function chooseGenerationQuestion(
     candidates.push(candidate(
       'thin_line', 90,
       () => msg(ctx, 'generation.question.thin_line',
-        'Only {COUNT} of the blood are living. Can {HEAD} leave the line stronger than he found it?',
+        'Only {COUNT} of the blood are living. Can {HEAD} leave the line stronger than it was found?',
         { COUNT: String(blood.length), HEAD: head.name }),
       w.year, blood.length, head,
     ));

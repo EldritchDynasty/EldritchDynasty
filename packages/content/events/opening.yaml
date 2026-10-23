@@ -1,0 +1,434 @@
+# THE TUTOR'S GOOD YEARS (#1867, step 3). See `arcs/opening.yaml` for the
+# shape and why it is forced rather than drawn.
+#
+# What the choice costs is real and the same door every other term uses: the
+# `tutor` effect goes through `beginTutoring`, takes the fee now, and pays its
+# attribute when the term completes, eight years on, with the chronicle line
+# that says so. Sharing the hours buys no term and costs nothing — a smaller,
+# immediate gain for all three, which is what dividing a tutor actually buys.
+events:
+  - id: the_tutors_good_years
+    title: The Tutor's Good Years
+    tier: family
+    frequency: uncommon
+    campaigns: [short, long]
+    repeatable: false
+    tags: [opening, tutor, children]
+    purposes: [change_relationship, worldbuild_through_action, establish_magic_rule]
+    arc: { of: arc_the_tutors_good_years, node: the_choice }
+    slots:
+      HEAD: { role: head }
+      TUTOR:
+        role: tutor
+        bind: arc
+      # The founding children, by what they are rather than by key. The age
+      # floor is what keeps a child born in 1042 out of a dead sister's place:
+      # a scene about who gets the lessons is not about a baby. A founding
+      # child dead before the first spring (about one seed in fifty) is a
+      # house this scene is not about, and the arc expires unplayed.
+      SON:
+        role: child
+        bind: arc
+        filters: [{ status: [alive] }, { sex: male }, { age: { op: gte, value: 4 } }]
+      ELDER:
+        role: child
+        bind: arc
+        filters: [{ status: [alive] }, { sex: female }, { trait: early_waking, has: true }]
+      YOUNGER:
+        role: child
+        bind: arc
+        filters:
+          - { status: [alive] }
+          - { sex: female }
+          - { trait: early_waking, has: false }
+          - { age: { op: gte, value: 4 } }
+    body: >-
+      The schoolroom is the one warm room in the hall. {TUTOR} will not teach
+      in a cold one, and has said so to two generations of this family.
+      {TUTOR.They} {TUTOR.is} nearly fifty now, and cough{TUTOR.s} in the
+      mornings and blame{TUTOR.s} the chalk. This week {TUTOR.they} told {HEAD}
+      what the whole hall already knew: a few good years of teaching left,
+      enough to make one scholar or three children who can sign their names.
+      {SON} will hold the seal one day. {ELDER} will be old enough for the
+      Match soon, and the houses that come to look at her will be reading for
+      a price. {YOUNGER} has been taking the books about dying off the low
+      shelf when she thinks nobody is counting. Somebody is always counting.
+    interaction:
+      kind: choice
+      choices:
+        - id: teach_the_heir
+          label: '{SON}. The seal will need a reader.'
+          outcomes:
+            - id: the_heir_is_taught
+              weight: 100
+              text: >-
+                The accounts come up from the steward's room in a basket, and
+                {SON} learns to read a reeve's tally the way other boys learn
+                to read weather. The term is paid for in advance. {ELDER} goes
+                to the Match knowing what she already knew. The schoolroom
+                door closes at nine.
+              effects:
+                - { kind: tutor, target: { slot: SON }, attr: mind, op: begin }
+                - { kind: relationship, from: { slot: SON }, to: { slot: TUTOR }, sentiment: 20 }
+                - { kind: arc_flag, flag: pupil, set: heir }
+        - id: teach_the_waker
+          label: '{ELDER}, before the Match.'
+          outcomes:
+            - id: the_waker_is_taught
+              weight: 100
+              text: >-
+                Two winters of letters, and then the harder lesson: how a room
+                full of strangers decides what a girl is worth, and how to let
+                them be wrong in the useful direction. {ELDER} learns quickly.
+                The term is paid for in advance. Being watched is not new to
+                her.
+              effects:
+                - { kind: tutor, target: { slot: ELDER }, attr: charm, op: begin }
+                - { kind: relationship, from: { slot: ELDER }, to: { slot: TUTOR }, sentiment: 20 }
+                - { kind: arc_flag, flag: pupil, set: waker }
+        - id: teach_the_threshold
+          label: '{YOUNGER}, and the low shelf.'
+          outcomes:
+            - id: the_threshold_is_taught
+              weight: 100
+              text: >-
+                The books about dying come down from the low shelf and go on the
+                table where everyone can see them, which ends the counting.
+                {YOUNGER} is too young to know yet that what she can make from
+                them her brother can only inherit. The term is paid for in
+                advance. The tutor has known for a year.
+              effects:
+                - { kind: tutor, target: { slot: YOUNGER }, attr: death, op: begin }
+                - { kind: relationship, from: { slot: YOUNGER }, to: { slot: TUTOR }, sentiment: 20 }
+                - { kind: arc_flag, flag: pupil, set: threshold }
+        - id: share_the_hours
+          label: All three. An hour each.
+          outcomes:
+            - id: the_hours_are_shared
+              weight: 100
+              text: >-
+                No term, and no fee. {TUTOR} divides the mornings by the bell:
+                the seal's figures, then the manners of the Match, then the low
+                shelf, then dinner. Nobody is going to become a scholar. All
+                three can sign their names.
+              effects:
+                - { kind: attribute, target: { slot: SON }, attr: mind, delta: 2 }
+                - { kind: attribute, target: { slot: ELDER }, attr: mind, delta: 2 }
+                - { kind: attribute, target: { slot: YOUNGER }, attr: mind, delta: 2 }
+                - { kind: arc_flag, flag: pupil, set: shared }
+
+  - id: the_heir_reads_the_tally
+    title: The Autumn Tally
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    repeatable: false
+    tags: [opening, tutor, children, accounts]
+    purposes: [change_standing, buy_patience, worldbuild_through_action]
+    arc: { of: arc_the_tutors_good_years, node: the_day_book }
+    slots:
+      TUTOR:
+        role: tutor
+        bind: arc
+        onMissing: continue_absent
+      SON:
+        role: child
+        bind: arc
+        onMissing: cancel_arc
+    body: >-
+      The reeve brings the autumn tally up the hill and finds {SON} at the
+      table instead of the steward. {TUTOR} sits by the fire with a blanket
+      over {TUTOR.their} knees and does not help. The reeve reads the figures
+      out the way he always has. He gets as far as the mill.
+    absentBody: >-
+      The reeve brings the autumn tally up the hill and finds {SON} at the
+      table instead of the steward. The chair by the schoolroom fire is empty
+      now, and nobody has moved the blanket. The reeve reads the figures out
+      the way he always has. He gets as far as the mill.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_three_sacks
+          weight: 100
+          text: >-
+            The reeve reads the autumn tally aloud and {SON} stops him at the
+            mill: eleven sacks, where the miller's own tally says fourteen. The
+            reeve finds the other three before dinner. Nobody at the table calls
+            the heir a boy after that.
+          effects:
+            - { kind: treasury, delta: 15 }
+
+  - id: the_daughter_at_the_fair
+    title: Looked At, at Bramme
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    repeatable: false
+    tags: [opening, tutor, children, match]
+    purposes: [change_standing, change_relationship, plant_rumour]
+    arc: { of: arc_the_tutors_good_years, node: the_fair }
+    slots:
+      TUTOR:
+        role: tutor
+        bind: arc
+        onMissing: continue_absent
+      ELDER:
+        role: child
+        bind: arc
+        onMissing: cancel_arc
+    body: >-
+      The Bramme fair comes round, and with it the families who have come to
+      look at {ELDER} without saying so. {TUTOR} watches from the wall with
+      {TUTOR.their} hands in {TUTOR.their} sleeves. Two years of lessons are
+      standing in the middle of the yard in a borrowed blue dress. Nobody has
+      told her where to stand. She knows.
+    absentBody: >-
+      The Bramme fair comes round, and with it the families who have come to
+      look at {ELDER} without saying so. Nobody from the schoolroom watches
+      from the wall this year. Two years of lessons are standing in the middle
+      of the yard in a borrowed blue dress. Nobody has told her where to
+      stand. She knows.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_other_question
+          weight: 100
+          text: >-
+            At the Bramme fair a widow from one of the river houses asks
+            {ELDER} a question meant to find out what the house can pay, and
+            she answers a different question so well that the widow forgets
+            she asked. It is repeated on the road home. By the next market
+            three houses have asked after her.
+          effects:
+            - { kind: respect, delta: 1 }
+
+  - id: the_books_about_dying
+    title: The Low Shelf
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    repeatable: false
+    tags: [opening, tutor, children, threshold]
+    purposes: [test_magic_rule, change_relationship, worldbuild_through_action]
+    arc: { of: arc_the_tutors_good_years, node: the_low_shelf }
+    slots:
+      TUTOR:
+        role: tutor
+        bind: arc
+        onMissing: continue_absent
+      YOUNGER:
+        role: child
+        bind: arc
+        onMissing: cancel_arc
+    body: >-
+      The books about dying have lived on the schoolroom table for three years
+      now, and the room smells of the tallow {YOUNGER} burns reading them late.
+      {TUTOR} has stopped correcting her. {TUTOR.They} say{TUTOR.s} it is
+      because she is right. The steward says it is because the tutor is tired.
+      Both are true.
+    absentBody: >-
+      The books about dying have lived on the schoolroom table for three years
+      now, and the room smells of the tallow {YOUNGER} burns reading them late.
+      There is nobody left to correct her. She corrects herself, in pencil, in
+      the margins. The steward has stopped asking her to put the candle out.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_carpenters_mother
+          weight: 100
+          text: >-
+            In the dark of the year {YOUNGER} sits with the carpenter's mother
+            through the last of a fever, and does what the books say, and the
+            old woman goes easier than anyone expected. The household has no
+            word for what she did. It starts using hers.
+          effects:
+            - { kind: attribute, target: { slot: YOUNGER }, attr: death, delta: 2 }
+
+  - id: three_names_in_the_day_book
+    title: Three Hands at the Foot of the Page
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    repeatable: false
+    tags: [opening, tutor, children]
+    purposes: [buy_patience, change_standing, change_relationship]
+    arc: { of: arc_the_tutors_good_years, node: the_signatures }
+    slots:
+      HEAD: { role: head }
+      TUTOR:
+        role: tutor
+        bind: arc
+        onMissing: continue_absent
+    body: >-
+      {HEAD} finds the household day-book signed at the foot of the autumn
+      page, in the children's hands, none of them good. {TUTOR} says it was
+      their idea. {TUTOR.They} {TUTOR.is} lying, and pleased about it. The ink
+      has run on the last name where somebody blotted it too soon.
+    absentBody: >-
+      {HEAD} finds the household day-book signed at the foot of the autumn
+      page, in the children's hands, none of them good. The tutor who taught
+      them is not there to take the credit. The ink has run on the last name
+      where somebody blotted it too soon.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: everybody_reads_the_bill
+          weight: 100
+          text: >-
+            The children have signed the autumn page of the day-book, badly.
+            Nobody in the house is a scholar. Everybody in it can read a bill
+            before paying it, which the reeve minds more than he expected to.
+          effects:
+            - { kind: treasury, delta: 5 }
+proseVariants:
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].title"
+    of: "a6d9b3edc07ea031"
+    plainenglish: >-
+      The Tutor's Last Good Years
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].body"
+    of: "f110300b69705137"
+    plainenglish: >-
+      The schoolroom is the only warm room in the hall. {TUTOR} refuses to teach in a cold
+      room, and has told two generations of this family so. {TUTOR.They} {TUTOR.is} nearly
+      fifty, and cough{TUTOR.s} every morning and blame{TUTOR.s} the chalk. This week
+      {TUTOR.they} told {HEAD} what everyone already knew: there are only a few good years of
+      teaching left. That is enough to make one child a scholar, or to teach all three
+      children to sign their names. {SON} will hold the seal one day. {ELDER} will soon be old
+      enough for the Match, and the families who come to see her will be judging what she is
+      worth. {YOUNGER} has been secretly reading the books about dying from the low shelf.
+      Someone has noticed.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_heir].label"
+    of: "d5c6aaab017fdbef"
+    plainenglish: >-
+      {SON}. The future Head needs to read well.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_heir].outcomes[id=the_heir_is_taught].text"
+    of: "85b83f7e746840d2"
+    plainenglish: >-
+      The steward sends the accounts up in a basket, and {SON} learns to read the reeve's
+      figures as easily as other boys read the weather. The term is paid for now. {ELDER} will
+      go to the Match without extra lessons. The schoolroom door closes at nine.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_waker].label"
+    of: "8068308645a87e72"
+    plainenglish: >-
+      {ELDER}, to prepare her for the Match.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_waker].outcomes[id=the_waker_is_taught].text"
+    of: "ec4484c93df609cd"
+    plainenglish: >-
+      First come two winters of reading and writing, then the harder lesson: how strangers
+      judge a girl's worth, and how to let them misjudge her in the house's favour. {ELDER}
+      learns quickly. The term is paid for now. She is used to being watched.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_threshold].label"
+    of: "3cbec4ba57e795b6"
+    plainenglish: >-
+      {YOUNGER}, and the books about dying.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=teach_the_threshold].outcomes[id=the_threshold_is_taught].text"
+    of: "7f184d8c83441378"
+    plainenglish: >-
+      The books about dying come off the low shelf and onto the table where everyone can see
+      them, so nobody has to keep watch. {YOUNGER} is too young to understand that she can
+      create new magic from them, while her brother can only inherit it. The term is paid for
+      now. The tutor has known this for a year.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=share_the_hours].label"
+    of: "3d0033045c2fbe10"
+    plainenglish: >-
+      All three children, an hour each.
+  - address: "content:events/opening.yaml#events[id=the_tutors_good_years].interaction.choices[id=share_the_hours].outcomes[id=the_hours_are_shared].text"
+    of: "d798f91457578400"
+    plainenglish: >-
+      There is no term and no fee. {TUTOR} splits the mornings by the bell: accounts for the
+      seal, then manners for the Match, then the low shelf, then dinner. None of them will
+      become a scholar. All three can sign their names.
+  - address: "content:events/opening.yaml#events[id=the_heir_reads_the_tally].title"
+    of: "fa1404d86303b09c"
+    plainenglish: >-
+      Checking the Autumn Accounts
+  - address: "content:events/opening.yaml#events[id=the_heir_reads_the_tally].body"
+    of: "ae96470f971252cb"
+    plainenglish: >-
+      The reeve brings the autumn accounts up the hill and finds {SON} at the table instead of
+      the steward. {TUTOR} sits by the fire with a blanket over {TUTOR.their} knees and does
+      not help. The reeve reads the figures aloud as usual. He reaches the mill.
+  - address: "content:events/opening.yaml#events[id=the_heir_reads_the_tally].absentBody"
+    of: "0be08cd9258a1c1d"
+    plainenglish: >-
+      The reeve brings the autumn accounts up the hill and finds {SON} at the table instead of
+      the steward. The tutor's chair by the schoolroom fire is empty now, but nobody has moved
+      the blanket. The reeve reads the figures aloud as usual. He reaches the mill.
+  - address: "content:events/opening.yaml#events[id=the_heir_reads_the_tally].interaction.outcomes[id=the_three_sacks].text"
+    of: "21046f1a1458eb5e"
+    plainenglish: >-
+      The reeve reads the autumn accounts aloud, and {SON} stops him at the mill: the record
+      says eleven sacks, but the miller's own record says fourteen. The reeve finds the
+      missing three before dinner. After that, nobody at the table calls the heir a boy.
+  - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].title"
+    of: "eb011a23423ac8ff"
+    plainenglish: >-
+      Seen at the Bramme Fair
+  - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].body"
+    of: "90b3fc5ba4ac598f"
+    plainenglish: >-
+      The Bramme fair arrives, and with it families who have quietly come to look at {ELDER}.
+      {TUTOR} watches from the wall with {TUTOR.their} hands in {TUTOR.their} sleeves. Two
+      years of lessons stand in the middle of the yard in a borrowed blue dress. Nobody has
+      told her where to stand. She knows anyway.
+  - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].absentBody"
+    of: "a1daad1d895a9c69"
+    plainenglish: >-
+      The Bramme fair arrives, and with it families who have quietly come to look at {ELDER}.
+      Nobody from the schoolroom watches from the wall this year. Two years of lessons stand
+      in the middle of the yard in a borrowed blue dress. Nobody has told her where to stand.
+      She knows anyway.
+  - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].interaction.outcomes[id=the_other_question].text"
+    of: "3e950be7de937c63"
+    plainenglish: >-
+      At the Bramme fair, a widow from one of the river families asks {ELDER} a question meant
+      to find out how much the house can pay. She answers a different question so well that
+      the widow forgets what she asked. People repeat the story on the way home. By the next
+      market, three families have asked about her.
+  - address: "content:events/opening.yaml#events[id=the_books_about_dying].title"
+    of: "2ce24ae2307f2d6e"
+    plainenglish: >-
+      The Books About Dying
+  - address: "content:events/opening.yaml#events[id=the_books_about_dying].body"
+    of: "4df833ac2404c708"
+    plainenglish: >-
+      The books about dying have been on the schoolroom table for three years, and the room
+      smells of the candles {YOUNGER} burns reading them late. {TUTOR} has stopped correcting
+      her. {TUTOR.They} say{TUTOR.s} it is because she is right. The steward says it is
+      because the tutor is tired. Both are true.
+  - address: "content:events/opening.yaml#events[id=the_books_about_dying].absentBody"
+    of: "45a60bb25ff58426"
+    plainenglish: >-
+      The books about dying have been on the schoolroom table for three years, and the room
+      smells of the candles {YOUNGER} burns reading them late. Nobody is left to correct her,
+      so she corrects herself in pencil in the margins. The steward has stopped asking her to
+      put the candle out.
+  - address: "content:events/opening.yaml#events[id=the_books_about_dying].interaction.outcomes[id=the_carpenters_mother].text"
+    of: "faafbe267bf2fa72"
+    plainenglish: >-
+      In midwinter {YOUNGER} sits with the carpenter's mother through the end of a fever and
+      follows what the books say. The old woman dies more peacefully than anyone expected. The
+      household has no word for what she did, so it starts using her word.
+  - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].title"
+    of: "0792176a00d41436"
+    plainenglish: >-
+      The Children Sign the Day-Book
+  - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].body"
+    of: "0516cb9ab6766306"
+    plainenglish: >-
+      {HEAD} finds the children's signatures at the bottom of the autumn page of the household
+      day-book, all of them messy. {TUTOR} says it was the children's idea. {TUTOR.They}
+      {TUTOR.is} lying, and pleased with it. The ink on the last name has smudged where
+      somebody blotted it too soon.
+  - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].absentBody"
+    of: "bfd676e2ea4cbbde"
+    plainenglish: >-
+      {HEAD} finds the children's signatures at the bottom of the autumn page of the household
+      day-book, all of them messy. The tutor who taught them is not there to take the credit.
+      The ink on the last name has smudged where somebody blotted it too soon.
+  - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].interaction.outcomes[id=everybody_reads_the_bill].text"
+    of: "f07f9a6ce50f0220"
+    plainenglish: >-
+      The children have signed the autumn page of the day-book, badly. Nobody in the house is
+      a scholar, but everyone can read a bill before paying it. The reeve minds this more than
+      he expected.

@@ -1674,7 +1674,7 @@ proseVariants:
       {HEIR} is next in line to become Head, and the strain already shows. Do we risk the bloodline on
       him?
   - address: "core:messages#generation.question.thin_line"
-    of: "a9d6526151bb5455"
+    of: "a92a6aa50b514061"
     plainenglish: >-
       Only {COUNT} blood relatives are alive. Can {HEAD} leave a stronger line than the one inherited?
   - address: "core:messages#generation.question.record"

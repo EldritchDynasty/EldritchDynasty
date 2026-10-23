@@ -28,6 +28,15 @@ export interface CampaignDef {
 }
 
 
+/**
+ * THE OPENING CONCERN (#1867, step 3): which child gets the tutor's last good
+ * years. Both full campaigns open on it, through the ordinary arc scheduler,
+ * so the first generation has a named person and a near-term hope before any
+ * ambient draw. Before it, a third of seeds asked nothing until the first
+ * Match. The demo keeps its own introduction: it opens on the founder's death.
+ */
+export const OPENING_CONCERN = 'arc_the_tutors_good_years';
+
 export const CAMPAIGNS: Readonly<Record<CampaignId, CampaignDef>> = {
   short: {
     id: 'short',
@@ -37,6 +46,7 @@ export const CAMPAIGNS: Readonly<Record<CampaignId, CampaignDef>> = {
     years: 300,
     clauses: 3,
     endings: ['broken_line', 'settled', 'forgotten', 'devoured'],
+    openingArc: { arc: OPENING_CONCERN },
   },
   long: {
     id: 'long',
@@ -46,6 +56,7 @@ export const CAMPAIGNS: Readonly<Record<CampaignId, CampaignDef>> = {
     years: 500,
     clauses: 9,
     endings: ['apotheosis', 'unmade', 'broken_line', 'forgotten', 'devoured'],
+    openingArc: { arc: OPENING_CONCERN },
   },
   /**
    * Track C of #323: the same game in miniature, not a second mode.
