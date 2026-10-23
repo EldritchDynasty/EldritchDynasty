@@ -645,6 +645,10 @@ const letDecideLabel = computed(() => plain.value
             <small class="dim entry">
               {{ decision.options.find((x) => x.option === o.option)?.chronicle ?? (plain ? 'No text will be recorded.' : 'nothing at all') }}
             </small>
+            <!-- What it costs, by the rules (#1867 §5). The advisers voice the
+                 pull; this is the price, so the temptation is never the only
+                 thing on the button. -->
+            <small v-if="decision.stakes?.[o.option]" class="stakes">{{ decision.stakes[o.option] }}</small>
           </button>
         </template>
       </div>
@@ -699,6 +703,7 @@ const letDecideLabel = computed(() => plain.value
 .choices button { text-align: left; display: block; width: 100%; }
 .choices .entry { display: block; margin-top: 3px; font-style: italic; }
 .choices .temptation { font-style: italic; }
+.choices .stakes { display: block; margin-top: 3px; color: var(--ink-faint); }
 /* The number in the margin. Quiet enough to read past, there when you look
    for it — a shortcut nobody can see is a shortcut nobody uses. */
 .key {
