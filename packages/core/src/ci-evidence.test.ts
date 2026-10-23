@@ -391,6 +391,20 @@ describe('CI evidence inventory', () => {
     }
   });
 
+  it('bounds the editor browser job and its Chromium download (#1902)', () => {
+    // `CI required` waits on this job. Without a bound, a stalled download
+    // holds every PR and the merge queue for GitHub's six-hour default.
+    const workflow = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
+    const jobStart = workflow.indexOf('\n  editor:\n');
+    expect(jobStart, 'check.yml editor job').toBeGreaterThanOrEqual(0);
+    const rest = workflow.slice(jobStart + 1);
+    const nextJob = rest.slice(1).search(/\n  [a-z][\w-]*:\n/);
+    const job = nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
+    expect(job.slice(0, job.indexOf('steps:'))).toMatch(/timeout-minutes: \d+/);
+    const install = job.slice(job.indexOf('- name: install Chromium'));
+    expect(install.slice(0, install.indexOf('run: npx playwright install'))).toMatch(/timeout-minutes: \d+/);
+  });
+
 
   it('retains live Electron advisory evidence and fails closed on critical npm findings', () => {
     const workflow = readFileSync(join(root, '.github/workflows/dependency-audit.yml'), 'utf8');

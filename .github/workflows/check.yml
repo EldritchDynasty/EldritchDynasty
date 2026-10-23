@@ -322,6 +322,10 @@ jobs:
   editor:
     name: editor in a browser
     runs-on: ubuntu-latest
+    # #1902: healthy, the whole job takes about a minute. Unbounded, one
+    # stalled Chromium download held `CI required`, and with it merge-queue
+    # admission, for 52 minutes (#1901) on its way to the six-hour default.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -330,6 +334,9 @@ jobs:
           cache: npm
       - run: npm ci
       - name: install Chromium
+        # About 20 seconds when the CDN answers. A stall now fails fast and
+        # visibly, and one re-run clears it.
+        timeout-minutes: 5
         run: npx playwright install --with-deps chromium
       - name: editor browser tests
         run: npx playwright test --project=editor
