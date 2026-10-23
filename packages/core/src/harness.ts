@@ -8,11 +8,12 @@
  */
 import { loadContent } from '@ed/content';
 import { MAIN_BRANCH, validateBundle } from '@ed/schema';
-import { bootstrap, stepYear } from './sim.js';
+import { stepYear } from './sim.js';
 import { inRegency } from './world.js';
 import { phenotypeOf } from './people/factory.js';
 import { activeBranches, halls } from './people/branches.js';
-import { CAMPAIGN_YEARS, END_YEAR, START_YEAR } from './campaign.js';
+import { CAMPAIGN_YEARS, END_YEAR } from './campaign.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './tools/run-setup.js';
 
 export interface RunStats {
   seed: number;
@@ -100,9 +101,9 @@ export interface RunStats {
   placementsBy: Record<string, number>;
 }
 
-export function runOnce(seed: number, years: number): RunStats {
+export function runOnce(seed: number, years: number, setup: RunSetup = {}): RunStats {
   const bundle = loadContent();
-  const ctx = bootstrap(bundle, seed, START_YEAR);
+  const ctx = bootstrapRun(bundle, seed, setup);
 
   const w = ctx.world;
 
@@ -213,16 +214,16 @@ export function runOnce(seed: number, years: number): RunStats {
 
 const round = (n: number) => Math.round(n * 10) / 10;
 
-export function batch(runs: number, years: number): void {
+export function batch(runs: number, years: number, setup: RunSetup = {}): void {
   const bundle = loadContent();
   const issues = validateBundle(bundle);
   const errors = issues.filter((i) => i.level === 'error');
-  console.log(`content: ${bundle.events.length} events, ${bundle.ages.length} ages, ${bundle.loci.length} loci`);
+  console.log(`content: ${bundle.events.length} events, ${bundle.ages.length} ages, ${bundle.loci.length} loci · ${runSetupLabel(setup)}`);
   console.log(`validation: ${errors.length} errors, ${issues.length - errors.length} warnings`);
   for (const e of errors) console.log(`  ERROR ${e.where}: ${e.message}`);
 
   const all: RunStats[] = [];
-  for (let i = 0; i < runs; i++) all.push(runOnce(1000 + i * 7, years));
+  for (let i = 0; i < runs; i++) all.push(runOnce(1000 + i * 7, years, setup));
 
   const avg = (f: (s: RunStats) => number) => round(all.reduce((a, s) => a + f(s), 0) / all.length);
 
@@ -331,4 +332,8 @@ export function batch(runs: number, years: number): void {
 }
 
 const isMain = process.argv[1]?.replace(/\\/g, '/').endsWith('harness.ts');
-if (isMain) batch(Number(process.argv[2] ?? 16), Number(process.argv[3] ?? CAMPAIGN_YEARS));
+if (isMain) {
+  const args = process.argv.slice(2);
+  const positional = args.filter((a) => !a.startsWith('--'));
+  batch(Number(positional[0] ?? 16), Number(positional[1] ?? CAMPAIGN_YEARS), runSetupFlags(args));
+}
