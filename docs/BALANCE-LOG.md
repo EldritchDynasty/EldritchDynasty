@@ -14002,3 +14002,11 @@ changes. Route hits equal or trail fire counts by one or two.
 either base. The response flattens above 80 because the ambient events share
 one ration. The floor and the batch are unchanged. Raw logs are kept in the
 execution workspace.
+
+**What the re-roll spent elsewhere.** The full preflight passed all 12 gates
+and failed two slow suites, neither of which touches land:
+`burying.slow`'s paired claim (1.9 SE at 105 runs, the fourth time content
+has re-rolled it under 2) and `replay.slow`'s intervention test, which was
+pinned to seed 186800. The burying batch is widened 105 → 165 with seeds
+vetted to reach the term under both policies (2.8 SE). The replay test takes
+the first witness in 186800–186899, the same change #1881 makes for #1867.
