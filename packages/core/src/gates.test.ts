@@ -25,7 +25,7 @@ import { gateWar, warGateInputs } from './tools/war-gate.js';
 import { gateSigning } from './tools/signing-gate.js';
 import { gateUnwitnessedOutcomeReach } from './tools/outcome-reach-blocking.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
-import { judgeLongitudinalDelta, ladderBlockerKind } from './tools/long-line-gate.js';
+import { judgeLongitudinalDelta, ladderBlockerKind, longestSilence } from './tools/long-line-gate.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
 import { makeRng } from './rng.js';
 import { place, testWorld } from './testing.js';
@@ -500,6 +500,35 @@ describe('#201 late ladder diagnosis', () => {
     }
     expect(ladderBlockerKind(undefined, false)).toBe('no-expresser');
     expect(ladderBlockerKind(undefined, true)).toBe('clear');
+  });
+});
+
+describe('#1897 the longest answer silence', () => {
+  it('counts the signing and the last year as ends of a gap', () => {
+    expect(longestSilence([1100, 1180], 1042, 1542)).toEqual({ years: 362, from: 1180 });
+    expect(longestSilence([1150, 1500], 1042, 1542)).toEqual({ years: 350, from: 1150 });
+    expect(longestSilence([1200, 1250], 1042, 1542)).toEqual({ years: 292, from: 1250 });
+    expect(longestSilence([1150], 1042, 1542).from).toBe(1150);
+  });
+
+  it('reads unsorted, duplicated answers from two sources as one sequence', () => {
+    // A frame and a clause in the same year are one answer, not a zero gap
+    // that hides the real one.
+    const frames = [1300, 1120, 1450];
+    const clauses = [1120, 1200, 1380];
+    expect(longestSilence([...frames, ...clauses], 1042, 1542))
+      .toEqual({ years: 100, from: 1200 });
+  });
+
+  it('opens at the signing on a tie, and when nothing answered at all', () => {
+    expect(longestSilence([1142, 1242, 1342, 1442], 1042, 1542)).toEqual({ years: 100, from: 1042 });
+    expect(longestSilence([], 1042, 1542)).toEqual({ years: 500, from: 1042 });
+  });
+
+  it('ends a run that stopped early at the year it stopped', () => {
+    // A house extinct in 1222 was not silent until 1542.
+    expect(longestSilence([1100], 1042, 1222)).toEqual({ years: 122, from: 1100 });
+    expect(longestSilence([1100, 1300], 1042, 1222)).toEqual({ years: 122, from: 1100 });
   });
 });
 
