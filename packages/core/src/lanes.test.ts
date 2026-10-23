@@ -130,7 +130,7 @@ function centuryScale(source: string): string[] {
  * flagged `gen-docs.ts`, whose local `table()` helper collides with a
  * `table()` in a file that does play. A generic name is not evidence.
  */
-// `bootstrapRun` (tools/run-setup.ts, #1867) is how the gates found a run
+// `bootstrapRun` (run-setup.ts, #1867) is how the gates found a run
 // now; without it here every gate that moved onto it would read as one that
 // plays nothing.
 const BATCH_SEED = /\b(bootstrap|bootstrapRun|runYears|newGame|TEST_FAMILIES)\b/;
@@ -172,8 +172,6 @@ const DRIVES_A_BATCH: Record<string, string> = {
     'the war verdict over hand-built runs; plays nothing — 0.0s',
   'packages/core/src/tools/replay-divergence.test.ts':
     'the run-two comparator and report rows over hand-built decision streams; plays nothing — 0.0s',
-  'packages/core/src/tools/run-setup.test.ts':
-    'the gates\' run founding: two bootstraps and a flag parser; plays no years — 0.1s',
   'packages/core/src/tools/stall.test.ts':
     'one 3-year density run proving table-order failure wiring; the rest, gate:stall\'s readings '
     + 'included, is hand-built — 0.2s',

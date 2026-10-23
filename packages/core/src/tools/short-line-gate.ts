@@ -14,7 +14,7 @@ import { indexContent, type Content, type ContentBundle, type EndingId, type Fou
 import { campaignDef } from '../campaign.js';
 import { playToTheEnd, type EndingRun } from './ending-gate.js';
 import { BLOCKING_GATE_CONFIG } from './gate-registry.js';
-import { runSetupFlags } from './run-setup.js';
+import { runSetupFlags } from '../run-setup.js';
 
 type Source = ContentBundle | Content;
 

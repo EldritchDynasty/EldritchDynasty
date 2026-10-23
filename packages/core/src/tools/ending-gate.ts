@@ -107,7 +107,7 @@ import {
   type GatePartition,
   type GatePartitionResult,
 } from './gate-partition.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from '../run-setup.js';
 
 type Source = ContentBundle | Content;
 

@@ -102,7 +102,7 @@ import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { eldritch } from '../genetics/expression.js';
 import { END_YEAR } from '../ending.js';
 import { CAMPAIGN_YEARS } from '../campaign.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from '../run-setup.js';
 import type { SimCtx } from '../world.js';
 import {
   nameScion, nameScionHeir, resolveYear, type LadderPolicy,

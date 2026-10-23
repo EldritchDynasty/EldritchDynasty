@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { bootstrap } from '../sim.js';
+import { bootstrap } from './sim.js';
 import { bootstrapRun, runSetupFlags, runSetupLabel } from './run-setup.js';
 
 const bundle = loadContent();

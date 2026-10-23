@@ -77,7 +77,7 @@ import { eldritch, realizedHomozygosity, deleteriousLoad } from '../genetics/exp
 import { POWER_FLOOR, rawPowerFor, rungIndex } from '../ascension.js';
 import { closeTheLedger, END_YEAR, selectEnding } from '../ending.js';
 import { CAMPAIGN_YEARS } from '../campaign.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
+import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from '../run-setup.js';
 import type { SimCtx } from '../world.js';
 import { expectMean } from '../testing.js';
 import { GREAT_RITE_REACH } from '../events/rites.js';
