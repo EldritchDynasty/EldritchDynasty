@@ -769,10 +769,11 @@ jobs:
 
   # ── THE CORPUS WARM, WHICH BLOCKS NOTHING ─────────────────────────────────
   #
-  # Nothing `needs:` this job and it needs nothing, so it runs beside the
-  # shards and is never on the critical path. It exists to leave a warm corpus
-  # under the key the NEXT run will restore — which is the only thing a warm
-  # was ever able to do once the test job became four concurrent shards.
+  # A corpus warm is advisory; CI required must not wait for it. Keep warming
+  # on PR heads, main pushes and tags so later runs can reuse a matching key.
+  # Do not launch a duplicate warmer for merge_group: after a successful queue
+  # merge, the main push will warm its exact integration key. Nothing that
+  # asserts correctness depends on this job.
   #
   # ADVISORY IN EVERY SENSE. The corpus is a CACHE of played millennia, keyed
   # on the simulation sources and the content together, and `playedRun` falls
@@ -785,7 +786,7 @@ jobs:
   corpus:
     name: warm run corpus
     needs: tier
-    if: needs.tier.outputs.full == 'true'
+    if: needs.tier.outputs.full == 'true' && github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -826,7 +827,7 @@ jobs:
   required:
     name: CI required
     if: always()
-    needs: [tier, lint, fast, windows, ios, test, gates, corpus]
+    needs: [tier, lint, fast, windows, ios, test, gates]
     runs-on: ubuntu-latest
     steps:
       - name: require the event's complete CI tier
@@ -838,7 +839,7 @@ jobs:
             const needs = JSON.parse(process.env.NEEDS_JSON);
             const shortTier = needs.tier?.outputs?.full !== 'true';
             const iosRequired = needs.tier?.outputs?.ios === 'true';
-            const shortTierJobs = new Set(['windows', 'ios', 'test', 'gates', 'corpus']);
+            const shortTierJobs = new Set(['windows', 'ios', 'test', 'gates']);
             const failed = Object.entries(needs).filter(([name, job]) => {
               if (job.result === 'success') return false;
               if (name === 'ios' && job.result === 'skipped' && !iosRequired) return false;
