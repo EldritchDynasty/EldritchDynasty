@@ -1094,7 +1094,10 @@ describe('the native merge queue CI contract', () => {
     );
     expect(required).toContain('name: CI required');
     expect(required).toContain('if: always()');
-    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates, corpus]');
+    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates]');
+    // Corpus warming is advisory: the stable verdict must not wait for it.
+    expect(required).not.toMatch(/^\\s*needs:.*\\bcorpus\\b/m);
+    expect(required).not.toContain("'corpus'");
     expect(required).toContain("const shortTier = needs.tier?.outputs?.full !== 'true';");
     expect(required).toContain("job.result === 'skipped'");
     expect(required).not.toContain("context.eventName === 'pull_request'");
