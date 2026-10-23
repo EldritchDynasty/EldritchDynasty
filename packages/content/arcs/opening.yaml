@@ -1,0 +1,64 @@
+# THE TUTOR'S GOOD YEARS — the opening concern of both full campaigns (#1867).
+#
+# Started at bootstrap by `campaign.ts`'s `openingArc`, so it is not an ambient
+# draw: measured before it existed, a third of seeds asked the player nothing
+# at all until the first Match in 1047, and the rest opened on whatever the
+# pool happened to roll. This is the scene that gives the first generation a
+# named person, a near-term hope and a visible result.
+#
+# THE SHAPE. One choice in the first year — which child gets the tutor's last
+# good years — and, three years on and before the first Match, one scene that
+# shows what that bought. The four follow-ups are separate events rather than
+# one state-decided event because each binds only its own pupil: a child who
+# died in between cancels only that child's scene, and a tutor who died
+# renders the `absentBody`, which names nobody it cannot see.
+#
+# The children are cast by what the founding cast IS, not by key: the one son,
+# the daughter who woke early, and the other daughter. The founding
+# configuration swaps who carried the blood, never who the children are.
+arcs:
+  - id: arc_the_tutors_good_years
+    title: The Tutor's Good Years
+    entry: the_choice
+    bindings: [TUTOR, SON, ELDER, YOUNGER]
+    expiresAfterYears: 12
+    maxConcurrentInstances: 1
+    nodes:
+      - id: the_choice
+        event: the_tutors_good_years
+        schedule: immediate
+        selection: first_match
+        successors:
+          - { to: the_day_book, when: { arcFlag: pupil, is: heir } }
+          - { to: the_fair, when: { arcFlag: pupil, is: waker } }
+          - { to: the_low_shelf, when: { arcFlag: pupil, is: threshold } }
+          - to: the_signatures
+
+      - id: the_day_book
+        event: the_heir_reads_the_tally
+        schedule: { minYears: 3, maxYears: 3 }
+        successors:
+          - to: end
+
+      - id: the_fair
+        event: the_daughter_at_the_fair
+        schedule: { minYears: 3, maxYears: 3 }
+        successors:
+          - to: end
+
+      - id: the_low_shelf
+        event: the_books_about_dying
+        schedule: { minYears: 3, maxYears: 3 }
+        successors:
+          - to: end
+
+      - id: the_signatures
+        event: three_names_in_the_day_book
+        schedule: { minYears: 3, maxYears: 3 }
+        successors:
+          - to: end
+proseVariants:
+  - address: "content:arcs/opening.yaml#arcs[id=arc_the_tutors_good_years].title"
+    of: "a6d9b3edc07ea031"
+    plainenglish: >-
+      The Tutor's Last Good Years

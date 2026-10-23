@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { EventTemplateS, FREQUENCY_PROFILES, eventInCampaign } from '@ed/schema';
-import { bootstrap } from './sim.js';
-import { phase, testWorld } from './testing.js';
+import { EventTemplateS, FREQUENCY_PROFILES, eventInCampaign, type CampaignId, type FoundingConfiguration } from '@ed/schema';
+import { bootstrap, stepYear } from './sim.js';
+import { expectRate, phase, testWorld } from './testing.js';
+import { newGame, type GameSession } from './session.js';
+import type { ResolvedEvent } from './events/effects.js';
 import { present } from './year/phases.js';
 import { emptyReport } from './year/report.js';
 import { makeRng } from './rng.js';
@@ -29,6 +31,7 @@ import {
   campaignProgress,
   isLateCampaignYear,
   isFullCampaignEvent,
+  OPENING_CONCERN,
 } from './campaign.js';
 
 describe('pre-effect selection observations (#1811)', () => {
@@ -351,6 +354,7 @@ describe('campaign profiles (#66, #133)', () => {
       years: 300,
       clauses: 3,
       endings: ['broken_line', 'settled', 'forgotten', 'devoured'],
+      openingArc: { arc: OPENING_CONCERN },
     });
     expect(campaignDef('long')).toEqual({
       id: 'long',
@@ -360,6 +364,7 @@ describe('campaign profiles (#66, #133)', () => {
       years: 500,
       clauses: 9,
       endings: ['apotheosis', 'unmade', 'broken_line', 'forgotten', 'devoured'],
+      openingArc: { arc: OPENING_CONCERN },
     });
     expect(campaignDef('demo')).toEqual({
       id: 'demo',
@@ -421,7 +426,8 @@ describe('campaign introductions (#323)', () => {
     expect(isFullCampaignEvent({ campaigns: ['short', 'demo'] })).toBe(true);
     for (const campaign of ['short', 'long'] as const) {
       const ctx = bootstrap(content, 323, 1042, campaign);
-      expect(ctx.world.arcs.size).toBe(0);
+      // The full campaigns open on their own concern (#1867), never the demo's.
+      expect([...ctx.world.arcs.values()].map((a) => a.arc)).toEqual([OPENING_CONCERN]);
       ctx.world.scheduled.push({ event: demo.id, year: 1042 });
       expect(selectEvents(ctx, makeRng(323), 0)).toEqual([]);
     }
@@ -471,4 +477,127 @@ describe('campaign introductions (#323)', () => {
       expect(canonical(saveGame(loadGame(saved, content)))).toBe(canonical(saved));
     },
   );
+});
+
+// ── The opening concern (#1867, step 3) ─────────────────────────────────
+
+const bundle = loadContent();
+const OPENING = 'the_tutors_good_years';
+
+const signing = (configuration: FoundingConfiguration) => ({
+  founder: { gender: configuration === 'blood_mother' ? 'woman' as const : 'man' as const, configuration },
+});
+
+/** Answer everything that is not the opening the way the density gate's player does: first offer. */
+function drain(g: GameSession): void {
+  const w = g.ctx.world;
+  for (let guard = 0; w.pendingDecisions.length && guard < 200; guard++) {
+    const d = w.pendingDecisions[0]!;
+    if (d.kind === 'match') {
+      const card = d.cards.find((c) => c.available);
+      if (!card || !g.match(d.id, card.id).ok) g.declineHand(d.id);
+    } else if (d.kind === 'record') {
+      g.record(d.id, 'record');
+    } else if (!d.choicesAreOpen) {
+      g.send(d.id, {});
+    } else {
+      const choice = d.choices.find((c) => c.available);
+      if (!choice || !g.choose(d.id, choice.id).ok) g.letHimDecide();
+    }
+  }
+}
+
+/** Play to `until`, answering the opening with `pick` and returning every event that resolved. */
+function play(seed: number, pick: string, until: number, after?: (g: GameSession) => void) {
+  const g = newGame(bundle, { seed, campaign: 'long' });
+  const resolved: ResolvedEvent[] = [];
+  const first = g.advance(1);
+  resolved.push(...first.years.flatMap((y) => y.resolved));
+  const opening = g.ctx.world.pendingDecisions.find((d) => d.kind === 'choice' && d.event.id === OPENING);
+  if (!opening || opening.kind !== 'choice') throw new Error(`seed ${seed}: the opening did not reach the docket`);
+  const labels = opening.choices.map((c) => c.label);
+  expect(g.choose(opening.id, pick).ok).toBe(true);
+  after?.(g);
+  drain(g);
+  while (g.year < until) {
+    resolved.push(...g.advance(1).years.flatMap((y) => y.resolved));
+    drain(g);
+  }
+  return { g, resolved, labels, fill: opening.fill };
+}
+
+/**
+ * THE OPENING CONCERN (#1867, step 3). The first generation's named person,
+ * near-term hope, available action and visible result — measured, because
+ * an opening that depends on the draw is not an opening.
+ */
+describe('the opening concern', () => {
+  it('opens both full campaigns, and leaves the demo its own introduction', () => {
+    expect(campaignDef('short').openingArc?.arc).toBe(OPENING_CONCERN);
+    expect(campaignDef('long').openingArc?.arc).toBe(OPENING_CONCERN);
+    expect(campaignDef('demo').openingArc?.arc).not.toBe(OPENING_CONCERN);
+  });
+
+  // The issue's number: 200 seeds per campaign and per founding configuration,
+  // on the docket within the first year in at least 95% of runs. The misses
+  // are founding children dead before the first spring — measured at about
+  // one seed in fifty — for whom this scene does not exist.
+  it.each([
+    ['short', 'blood_father'], ['short', 'blood_mother'],
+    ['long', 'blood_father'], ['long', 'blood_mother'],
+  ] as [CampaignId, FoundingConfiguration][])('reaches the docket in the first year: %s, %s', (campaign, configuration) => {
+    const n = 200;
+    let hits = 0;
+    for (let s = 0; s < n; s++) {
+      const ctx = bootstrap(bundle, 9000 + s, campaignDef(campaign).startYear, campaign, [], signing(configuration));
+      stepYear(ctx, false);
+      if (ctx.world.pendingDecisions.some((d) => d.kind === 'choice' && d.event.id === OPENING)) hits++;
+    }
+    expectRate({ what: `${campaign} · ${configuration}: the opening concern in year one`, hits, n, floor: 0.95 });
+  });
+
+  it.each([
+    ['teach_the_heir', 'the_heir_reads_the_tally', 'SON', 'mind'],
+    ['teach_the_waker', 'the_daughter_at_the_fair', 'ELDER', 'charm'],
+    ['teach_the_threshold', 'the_books_about_dying', 'YOUNGER', 'death'],
+  ])('%s buys a real term and shows its result before the first Match', (pick, followUp, slot, attr) => {
+    const { g, resolved, labels, fill } = play(4101, pick, 1047);
+    // Labels name the children; a raw token on the docket is a bug the player can see.
+    for (const label of labels) expect(label).not.toMatch(/\{/);
+    const pupil = String(fill[slot]);
+    expect(g.ctx.world.tutoring).toContainEqual(expect.objectContaining({ person: pupil, attr }));
+    const shown = resolved.find((r) => r.event.id === followUp);
+    expect(shown, `${followUp} should resolve three years on`).toBeDefined();
+    expect(shown!.text).toContain(g.ctx.world.people.get(pupil)!.name);
+    expect(g.ctx.world.chronicle.some((e) => e.text === shown!.text && e.year === 1046)).toBe(true);
+  });
+
+  it('sharing the hours buys no term, and all three children are better for it now', () => {
+    const { g, resolved, fill } = play(4102, 'share_the_hours', 1047);
+    for (const slot of ['SON', 'ELDER', 'YOUNGER']) {
+      const child = g.ctx.world.people.get(String(fill[slot]))!;
+      expect(child.acquired.mind).toBeGreaterThanOrEqual(2);
+      expect(g.ctx.world.tutoring.some((t) => t.person === child.id)).toBe(false);
+    }
+    expect(resolved.some((r) => r.event.id === 'three_names_in_the_day_book')).toBe(true);
+  });
+
+  it('outlives the tutor: the follow-up renders the body that names nobody it cannot see', () => {
+    const { resolved } = play(4103, 'teach_the_heir', 1047, (g) => {
+      const tutor = g.ctx.world.people.living().find((p) => p.castSlots.includes('tutor'))!;
+      expect(g.ctx.world.people.kill(tutor.id, g.year, 'a test')).toBe(true);
+    });
+    const shown = resolved.find((r) => r.event.id === 'the_heir_reads_the_tally');
+    const template = bundle.events.find((e) => e.id === 'the_heir_reads_the_tally')!;
+    expect(shown?.event.body).toBe(template.absentBody);
+  });
+
+  it('a pupil who dies takes only their own scene with them', () => {
+    const { resolved, g } = play(4104, 'teach_the_heir', 1048, (g) => {
+      const pupil = g.ctx.world.tutoring.find((t) => t.attr === 'mind')!.person;
+      expect(g.ctx.world.people.kill(pupil, g.year, 'a test')).toBe(true);
+    });
+    expect(resolved.some((r) => r.event.id === 'the_heir_reads_the_tally')).toBe(false);
+    expect(g.ctx.world.chronicle.some((e) => /eleven sacks/.test(e.text ?? ''))).toBe(false);
+  });
 });

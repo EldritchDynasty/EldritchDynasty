@@ -191,7 +191,9 @@ export function queueChoice(
     fill,
     choices: choices.map((c) => ({
       ...choiceAvailability(c, ctx, fill, e),
-      label: proseForChoiceLabel(ctx, e, c),
+      // Tokens render here as they do in the body: a label that names {KIN}
+      // is about a person, and showing the token is showing the player a bug.
+      label: renderBody(proseForChoiceLabel(ctx, e, c), fill, ctx),
     })),
     cast: castRequests(e, ctx, fill, playerCast),
     decidedBy,
