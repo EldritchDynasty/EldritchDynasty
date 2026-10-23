@@ -471,7 +471,11 @@ events:
     title: Pannage, and the Most Important Animal at Wick
     tier: family
     frequency: common
-    weight: 70
+    # A declared land-loss route (gate:land, floor one run in four). At 70 it
+    # reached 148/512 runs, exactly 2 SE over that floor, and 134 (0.6 SE)
+    # once #1867's opening arc re-rolled the draw. 90 reaches 187 (5.2 SE) on
+    # 8530821 and 177 (4.5 SE) with #1867. #1896.
+    weight: 90
     tags: [food, tenants, harvest, custom]
     purposes: [change_relationship, change_standing, test_magic_rule]
     slots:
