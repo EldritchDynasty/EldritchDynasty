@@ -1,7 +1,7 @@
 import { parseDocument, type Document } from 'yaml';
-import { reactive } from 'vue';
-import type { ContentBundle, ProseVariant } from '@ed/schema';
-import { CONTENT_LAYOUT, contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
+import { reactive, toRaw } from 'vue';
+import type { Content, ContentBundle, ProseVariant } from '@ed/schema';
+import { CONTENT_LAYOUT, contentInterpolationTokens, indexContent, proseOriginalHash } from '@ed/schema';
 import { proseVariantStatus } from './prose-status.js';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
 import { assembleYamlBundle } from '../../../content/src/yaml.js';
@@ -127,7 +127,30 @@ export const store = reactive({
   dirty: new Set<string>(),
   saving: new Set<string>(),
   errors: {} as Record<string, string>,
+  /**
+   * Bumped by every mutation of `bundle` (issue #1891). `App.vue` indexes
+   * `toRaw(bundle)` so the simulation and validation read plain data, which
+   * means `content` cannot track the edit through the proxy and has to be told.
+   * Every mutator here goes through `markFileDirty` or `markDirty`, and both
+   * bump it; a new mutator that does neither is a stale view.
+   */
+  revision: 0,
 });
+
+/**
+ * The authored bundle, indexed, with no Vue proxy anywhere in it (issue #1891).
+ *
+ * This is what the simulation and validation read. `core` is entitled to
+ * plain data: `createWorld` `structuredClone`s each house, and Chromium
+ * refuses to clone a proxy, so indexing the reactive bundle made every world
+ * build in the editor throw. Node's clone accepts the proxy, which is why no
+ * unit test saw it. `toRaw` on the root is enough — a reactive object's raw
+ * target holds raw children. Edits still go through `store.bundle`; being
+ * raw, this cannot see them, so its caller re-reads it on `store.revision`.
+ */
+export function rawContent(): Content {
+  return indexContent(toRaw(store.bundle));
+}
 
 /**
  * A save snapshots text before awaiting disk/IPC. New edits to that file
@@ -140,6 +163,7 @@ const dirtyGeneration = new Map<string, number>();
 const dirtyItems = new Map<string, Map<string, number>>();
 
 function markFileDirty(path: string): void {
+  store.revision += 1;
   // A clean path starts a new editing cycle; this also lets test fixtures reset
   // the public dirty Set without leaking private bookkeeping between cases.
   if (!store.dirty.has(path)) dirtyItems.delete(path);
@@ -273,6 +297,8 @@ export async function externalChange(path: string): Promise<{ changed: boolean; 
 
 /** Mark an item's file dirty. Called on every edit; cheap enough (files × items) at content-directory scale. */
 export function markDirty(collectionKey: string, id: string): void {
+  // Before `locate`: the edit happened whether or not a file holds the item.
+  store.revision += 1;
   const located = locate(collectionKey, id);
   if (!located) return;
   markFileDirty(located.path);

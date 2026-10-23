@@ -25,6 +25,13 @@
       "proposedTier": "merge-blocking"
     },
     {
+      "id": "editor",
+      "claim": "Open the authoring tool in Chromium: it boots, every view renders and builds a world, browsing is not editing, and a keystroke is not a re-index. Node cannot see a Vue proxy reaching structuredClone; only a browser can.",
+      "evidenceType": "deterministic",
+      "currentTier": "merge-blocking",
+      "proposedTier": "merge-blocking"
+    },
+    {
       "id": "windows",
       "claim": "Prove the supported Windows tooling contract with the same typecheck/validate/fast commands.",
       "evidenceType": "deterministic",

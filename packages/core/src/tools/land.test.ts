@@ -1094,7 +1094,7 @@ describe('the native merge queue CI contract', () => {
     );
     expect(required).toContain('name: CI required');
     expect(required).toContain('if: always()');
-    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates]');
+    expect(required).toContain('needs: [tier, lint, fast, editor, windows, ios, test, gates]');
     // Corpus warming is advisory: the stable verdict must not wait for it.
     expect(required).not.toMatch(/^\s*needs:.*\bcorpus\b/m);
     expect(required).not.toContain("'corpus'");

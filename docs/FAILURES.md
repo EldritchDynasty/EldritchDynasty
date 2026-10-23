@@ -507,3 +507,37 @@ the casting primitive E4 said was missing, and the debt did not clear — what
 owes it is channel width (`GREAT_RITE_REACH`, `channelCeiling`). A pin that
 names the wrong creditor sends the next reader to redo work that is already
 done.
+
+## The editor was blank, and every editor test was green (#1891)
+
+`createWorld` clones each house with `structuredClone` (#980). The editor
+indexed its live, Vue-reactive bundle and handed that to `core`, so every
+house was a proxy. **Node's `structuredClone` accepts a Vue proxy; Chromium's
+throws `DataCloneError`.** From 11 October, Instruments, Family tree and
+Simulate threw the moment they built a world. On 22 October the emergency
+intervention panel started building one for the first event of the Events
+view, and the render error unmounted the whole editor on boot: a blank page,
+with `typecheck:editor` clean and 152 editor tests passing. Nothing that ran
+the editor existed.
+
+Two more were hiding behind it, both just as quiet:
+
+- **Browsing marked files dirty.** A deep watcher on the selected item fires
+  when the *selection* changes too, so five clicks reported five unsaved
+  files. An unsaved count that is always wrong is one an author learns to
+  ignore, which is the same as not having one.
+- **A keystroke cost over a second.** Every edit re-indexed the bundle and
+  validated all 533 events through reactive proxies.
+
+And the browser tests themselves could not start. `playwright.config.ts`
+carried a glob in a block comment, and its slash-star-star-slash closed the
+comment. The file failed to parse from the day it landed (#360), so for three
+weeks `npm run test:e2e` errored before running anything, and nothing ran it
+to notice.
+
+**The lesson:** a test environment that is more lenient than production can
+pass code that production refuses. A Node test cannot stand in for a browser
+on anything a browser API decides.
+**Now guarded by:** `tests/e2e/editor.spec.ts`, run by `check.yml`'s
+merge-blocking `editor` job; `store.test.ts` — "hands core no Vue proxy
+anywhere in the indexed content"; `watch-edits.test.ts`.

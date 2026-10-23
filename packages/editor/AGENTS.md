@@ -39,14 +39,31 @@ it names, by COPYING them.
 for most events and silently loses the edit for any event a `next` chain
 touches, which is the worst possible failure mode — it depends on the content.
 
-## Typecheck the templates
+**`props.content` is raw** (`rawContent()` in `lib/store.ts`, #1891): no Vue
+proxy anywhere in it, because `core` clones what it is given and Chromium
+refuses to clone a proxy. So an edit made through it never re-renders
+anything, and it cannot track an edit itself. `App.vue` re-reads it when
+`store.revision` moves, once typing pauses. Every mutator in `store.ts`
+goes through `markFileDirty` or `markDirty`, and both bump the revision; a
+new mutator that does neither leaves a stale view.
+
+**Changing the selection is not an edit.** An editor marks its item dirty
+through `watchEdits` (`lib/watch-edits.ts`), never a bare deep watcher, which
+also fires when the selection changes.
+
+## Typecheck the templates, then open it
 
 ```bash
 npm run typecheck:editor    # vue-tsc. Plain tsc cannot see .vue files.
+npx playwright test --project=editor   # the editor, in Chromium
 ```
 
-Run it. Every silent failure this tool has had was in a template, and it found
-three the day it was added.
+Run both. Every silent failure this tool has had was in a template, and
+vue-tsc found three the day it was added. The browser run is the only thing
+that sees what Node permits and Chromium does not: the editor once booted
+blank with every unit test green. CI runs it as the merge-blocking `editor`
+job. A session whose image ships a different Chromium build than Playwright
+pins can point `PLAYWRIGHT_CHROMIUM_EXECUTABLE` at its own.
 
 ## Gotchas, all of which cost real time
 

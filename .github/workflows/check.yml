@@ -309,6 +309,40 @@ jobs:
       - name: fast lane
         run: npm run test:fast
 
+  # ── THE EDITOR, IN A BROWSER ──────────────────────────────────────────────
+  #
+  # The editor booted to a blank page with `fast` green (#1891). Its views
+  # hand content to `core`, `createWorld` `structuredClone`s each house, and
+  # Chromium refuses to clone the Vue proxy that Node accepts — so no Vitest
+  # suite could see it, and three views had been dead for twelve days before
+  # the front one followed. This is the one job that opens the editor.
+  #
+  # Every tier, like `fast`: it is a smoke test of a whole tool, not sampled
+  # evidence, and a blank editor is not a thing to find on a later run.
+  editor:
+    name: editor in a browser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: editor browser tests
+        run: npx playwright test --project=editor
+      - name: retain the report of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: editor-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
   # ── THE OTHER PLATFORM ────────────────────────────────────────────────────
   #
   # AGENTS.md says this repository is supported on Windows and Linux, under
@@ -828,7 +862,7 @@ jobs:
   required:
     name: CI required
     if: always()
-    needs: [tier, lint, fast, windows, ios, test, gates]
+    needs: [tier, lint, fast, editor, windows, ios, test, gates]
     runs-on: ubuntu-latest
     steps:
       - name: require the event's complete CI tier
