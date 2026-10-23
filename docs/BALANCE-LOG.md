@@ -13965,3 +13965,40 @@ recurring-duty model is viable for C–F where the affinity has something
 material to protect. Terra's estate role does not, and goes to the re-plan
 noted above. Raw reports (`retune-short.json`, `retune-long.json`) are kept in
 the execution workspace.
+
+## 2026-10-23 — #1896: pannage's land route had no margin
+
+**`the_pigs_go_into_the_wood` weight 70 → 90.** The land gate requires every
+declared land route to reach at least one run in four, by 2 standard errors
+(`land-gate.ts`, unchanged floor 0.25). Pannage is the
+`damage:the_pigs_go_into_the_wood` route. It reached **150/512** runs at #1810
+(2.1 SE) and **148/512** on `main` 8530821 (2.0 SE). Two unrelated changes that
+re-rolled the draw then turned the batch lane red: #1889's officer validation
+(PR #1890, **146**, 1.8 SE) and #1867's opening arc (PR #1881 head 3d0f796,
+**134**, 0.6 SE). The parcel-loss events are authored at `uncommon`, weight
+1000, behind `holdsParcel`, and reach 59–61% of runs. Pannage is an ordinary
+`common` ambient event, so its route sat about three points above its floor.
+
+**Widening the batch is not the fix.** The gate prescribes ~792 runs. At 800,
+with #1890's diff, the route still cleared by only 2.0 SE (~225/800), and the
+extra 288 seeds would put the batch lane past its duration guard.
+
+**Measured.** `npm run gates -- land`, canonical 512 seeds; only this weight
+changes. Route hits equal or trail fire counts by one or two.
+
+| weight | base | pannage fired | route SE | other land assertions |
+|---|---|---|---|---|
+| 70 | 8530821 | 148 | 2.0 | pass |
+| 80 | 8530821 | 180 | 4.8 | pass |
+| 90 | 8530821 | 187 | 5.2 | pass |
+| 90 | 8530821 + #1890 | 184 | 4.9 | pass |
+| 110 | 8530821 | 201 | 6.5 | pass |
+| 140 | 8530821 | 243 | 9.9 | pass |
+| 70 | #1881 3d0f796 | 136 | **0.6, red** | pass |
+| 80 | #1881 3d0f796 | 165 | 3.3 | pass |
+| 90 | #1881 3d0f796 | 177 | 4.5 | pass |
+
+90 is the smallest weight that keeps the route at least 4.5 SE clear on
+either base. The response flattens above 80 because the ambient events share
+one ration. The floor and the batch are unchanged. Raw logs are kept in the
+execution workspace.
