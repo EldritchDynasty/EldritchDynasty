@@ -1227,8 +1227,8 @@ const vesselAssembly: RiteAssembly = {
   atRisk: [{
     slot: 'VESSEL',
     candidates: [
-      { person: 'p_2', name: 'Mara' },
-      { person: 'p_3', name: 'Cesse' },
+      { person: 'p_2', name: 'Mara', remembered: 'Mara, 24, child of Aldren. The book last named them in 1188.' },
+      { person: 'p_3', name: 'Cesse', remembered: 'Cesse, 19. The book has never written of them.' },
     ],
   }],
   preparations: ['Aldren has read The Red Primer.'],
@@ -1462,6 +1462,11 @@ describe('major rite confirmation (#218)', () => {
     expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('Mara');
     expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('The Red Primer');
     expect(wrapper.get('[aria-label="Rite assembly"]').text()).toContain('consumed');
+    // Each candidate who could be spent, as the house remembers them (#1867 §6).
+    expect(wrapper.findAll('.remembered li').map((li) => li.text())).toEqual([
+      'Mara, 24, child of Aldren. The book last named them in 1188.',
+      'Cesse, 19. The book has never written of them.',
+    ]);
 
     await buttonContaining(wrapper, 'Not yet').trigger('click');
 

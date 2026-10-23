@@ -3416,6 +3416,30 @@ proseVariants:
     of: "1e66df09c50edc25"
     plainenglish: >-
       The Great Rite (widening the ascendant)
+  - address: "core:messages#table.assembly.last_page"
+    of: "b1a9efe018234aa4"
+    plainenglish: >-
+      The Chronicle last mentioned them in {YEAR}.
+  - address: "core:messages#table.assembly.last_page_title"
+    of: "0bece34bf7f77ad7"
+    plainenglish: >-
+      The Chronicle last mentioned them in {YEAR}, in the entry “{TITLE}”.
+  - address: "core:messages#table.assembly.never_written"
+    of: "e23a7bcd47c29ff1"
+    plainenglish: >-
+      The Chronicle has never mentioned them.
+  - address: "core:messages#table.assembly.remembered"
+    of: "4ba46ad3183e61df"
+    plainenglish: >-
+      {NAME}, age {AGE}.
+  - address: "core:messages#table.assembly.remembered_parent"
+    of: "607bf8929de8a0be"
+    plainenglish: >-
+      {NAME}, age {AGE}, child of {PARENT}.
+  - address: "core:messages#table.assembly.remembered_parents"
+    of: "a6a635306f24c15c"
+    plainenglish: >-
+      {NAME}, age {AGE}, child of {MOTHER} and {FATHER}.
   - address: "core:messages#table.heir_vacant_beside"
     of: "80dbb7a82e79aafc"
     plainenglish: >-
