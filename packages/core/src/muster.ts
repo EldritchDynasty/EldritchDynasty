@@ -6,6 +6,7 @@ import { activeBranches } from './people/branches.js';
 import { DEBT_FLOOR } from './economy.js';
 import { msg } from './messages.js';
 import { proseForContentField } from './prose.js';
+import { isCurrentFamily } from './presence.js';
 
 /**
  * THE MUSTER'S NUMBERS (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -201,6 +202,11 @@ export function reinforceCommitment(ctx: SimCtx, men: number, from?: string): bo
 export function addOfficer(ctx: SimCtx, personId: string): boolean {
   const c = activeCommitment(ctx);
   if (!c) return false;
+  const person = ctx.world.people.get(personId);
+  // Only a living man currently belonging to this house can take an officer's
+  // place. Reject a stale/uncast slot instead of persisting a phantom officer.
+  // Women can serve as Mystic field specialists, but not in military posts.
+  if (!person || person.status !== 'alive' || person.sex !== 'male' || !isCurrentFamily(ctx, person)) return false;
   if (!c.officers.includes(personId)) c.officers.push(personId);
   return true;
 }
