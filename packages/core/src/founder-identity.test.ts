@@ -189,6 +189,7 @@ describe('who signed, persisted', () => {
     const signing = w.decisionLog[0]!;
     expect(signing).toMatchObject({ kind: 'signing', founder: { gender: 'woman', configuration: 'blood_mother' } });
     expect(describeDecision(signing)).toContain('woman, blood_mother');
+    expect(g.view().narrator).toEqual({ name: w.people.get(w.narrator!)!.name, them: 'her' });
   });
 
   it('refuses an unfinished identity without touching the run', () => {
