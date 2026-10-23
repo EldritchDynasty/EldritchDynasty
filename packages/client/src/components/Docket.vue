@@ -357,6 +357,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
          answer the engine will not accept. -->
     <template v-if="decision.kind === 'choice'">
       <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ decision.event.title }}</h3>
+      <!-- Frequency is authored, already part of the photographed docket. Mark only
+           genuinely exceptional events, without changing their prose or odds. -->
+      <p v-if="decision.event.frequency === 'rare' || decision.event.frequency === 'mythic'"
+        class="event-rarity small" :data-frequency="decision.event.frequency">
+        {{ decision.event.frequency === 'mythic'
+          ? (plain ? 'Mythic event — an extraordinary moment in the family’s history' : '✦ A mythic event')
+          : (plain ? 'Rare event — an unusual moment in the family’s history' : '✧ A rare event') }}
+      </p>
       <p class="body">{{ decision.body }}</p>
       <p v-if="metBefore" class="met-before dim small">
         <span aria-hidden="true">↺</span>
@@ -603,6 +611,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
          `Docket.test.ts` reads the kinds off the schema to check it. -->
     <template v-else-if="decision.kind === 'record'">
       <h3 id="docket-heading" ref="heading" class="label" tabindex="-1">{{ decision.year }} · {{ plain ? 'Choose what to record' : 'what the book will say' }}</h3>
+      <!-- Frequency is authored, already part of the photographed docket. Mark only
+           genuinely exceptional events, without changing their prose or odds. -->
+      <p v-if="decision.event.frequency === 'rare' || decision.event.frequency === 'mythic'"
+        class="event-rarity small" :data-frequency="decision.event.frequency">
+        {{ decision.event.frequency === 'mythic'
+          ? (plain ? 'Mythic event — an extraordinary moment in the family’s history' : '✦ A mythic event')
+          : (plain ? 'Rare event — an unusual moment in the family’s history' : '✧ A rare event') }}
+      </p>
       <p class="body">
         <template v-if="plain">Decide what the record says about <em>{{ decision.subject }}</em>.</template>
         <template v-else>There is one line about <em>{{ decision.subject }}</em>, and this is it.</template>
@@ -752,4 +768,6 @@ footer { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 8px; 
 }
 .met-before { margin-top: -8px; }
 .met-before span + span { margin-left: 4px; }
+.event-rarity { margin: 4px 0 12px; font-weight: 600; letter-spacing: 0.03em; }
+.event-rarity[data-frequency="mythic"] { font-weight: 700; }
 </style>
