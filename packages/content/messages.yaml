@@ -724,6 +724,10 @@ proseVariants:
     of: "84860702d62e5796"
     plainenglish: >-
       Current rung: {HELD}; previous best: {BEST}; campaign horizon: {HORIZON}
+  - address: "core:messages#ambition.view.ascent_ahead"
+    of: "26a263cf4016a5f3"
+    plainenglish: >-
+      {ELDER} has completed both rites. The final step sacrifices an elder with both rites to raise a younger family member, so one strong climber is not enough. Start preparing the next one now.
   - address: "core:messages#ambition.view.ascent_foremost"
     of: "24872edd5c875029"
     plainenglish: >-
