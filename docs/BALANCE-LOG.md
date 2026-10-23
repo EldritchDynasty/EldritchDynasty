@@ -14120,3 +14120,45 @@ the same house goes wrong about eight points more often, by a broken line
 or by being devoured. A stronger and a more dangerous start, as the
 owner's keep-0.2 decision accepted; this entry is what that decision
 costs, measured.
+
+## 2026-10-23 — #1867 §6: where the Long Line goes quiet
+
+**The question.** §6 asks for an audit of "long stretches without a useful
+answer or changed understanding". An *answer* here is either a frame
+interlude or a recovered Ledger clause: the two places the run tells the
+player something new about the bargain.
+
+**Measured** on `d1dbea3` (the opening concern and §4–§6 slices in), Long
+Line, authored founder, chronicler policy, seeds `20000 + 37i`:
+
+```
+npm run gate:long -- 24 500 chronicler
+# plus a scratch probe over the same 24 seeds (bootstrap + runYears(500)):
+# the longest gap between consecutive answers, campaign edges included
+```
+
+| Reading (24 runs) | mean | p25 | median | p75 | max |
+|---|---:|---:|---:|---:|---:|
+| `gate:long` frame-only max silence | 86.0 | 80 | 87 | 97 | — |
+| probe: frame-only max silence | 94.0 | 84 | 96 | 102 | 181 |
+| probe: **combined** (frames ∪ clauses) max silence | **73.6** | 61 | 71 | 92 | 108 |
+
+`gate:long`'s frame cadence otherwise matches Stage 5G's (first frame mean
+1120.6 against 1118; max silence mean 86 against 88 years), so the opening
+concern has neither helped nor hurt the frame. (The probe's frame-only
+figure runs higher than the gate's because the gate answers the docket
+with its own observed policy; the two are not the same worlds.)
+
+**Where the quiet is.** In **10 of 24** runs the longest combined silence
+*starts in 1042*: from the signing to the first interlude or clause,
+60–108 years. The rest sit mid-run (1126–1447) with no single dominant
+window. Two runs ended early (1079, 1222) and are in the table as they are.
+
+**Reading.** The opening concern gives the first generation a person and a
+decision in year one (98% of seeds), and the ambition handoff gives it a
+plan — but nothing in the first two or three generations *changes the
+player's understanding of the bargain*. The frame's first interlude lands
+around 1120. This is the stretch §6 means; it is a frame-cadence question
+(content and scheduler), not something the hooks in this branch should
+paper over, so it is recorded here and put to the owner rather than retuned
+in passing.
