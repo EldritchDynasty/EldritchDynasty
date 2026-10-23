@@ -98,12 +98,23 @@ describe('replay reconstructs a run from its decision log', () => {
   });
 
   it('rebuilds successful interventions, preserves their saved words and rejects changed facts (#1868)', () => {
-    // This campaign witness reaches two ordinary emergencies with local actors;
-    // no outcome or actor is injected into the replay's bootstrap inputs.
-    const seed = 186800;
+    // The witness is the first seed in a fixed range whose ordinary campaign
+    // reaches an intervention with a local actor; nothing is injected into the
+    // replay's bootstrap inputs. A range rather than one seed (#1867): adding
+    // the opening concern re-rolled every run, and the seed this test was
+    // pinned to stopped reaching one. About one Short Line in twelve does by
+    // 175 years, so a hundred seeds leaves no realistic chance of finding none.
     const years = 175;
-    const original = bootstrap(bundle, seed, 1042, 'short');
-    runYears(original, years);
+    const witness = (() => {
+      for (let seed = 186800; seed < 186900; seed++) {
+        const ctx = bootstrap(bundle, seed, 1042, 'short');
+        runYears(ctx, years);
+        if (ctx.world.decisionLog.some(row => row.kind === 'outcome' && row.primordial)) return { seed, ctx };
+      }
+      return undefined;
+    })();
+    if (!witness) throw Error('no campaign in the witness range exercised an intervention');
+    const { seed, ctx: original } = witness;
     const intervention = original.world.decisionLog.find(row => row.kind === 'outcome' && row.primordial);
     if (intervention?.kind !== 'outcome' || !intervention.primordial) throw Error('campaign did not exercise an intervention');
     intervention.primordial.receipt = 'The words retained in the earlier private account.';
