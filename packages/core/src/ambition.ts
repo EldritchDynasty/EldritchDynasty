@@ -1,13 +1,15 @@
 import {
   MAIN_BRANCH,
   assertNever,
+  isActiveBranch,
   RUNG_ORDER,
   isLadderRole,
   type CampaignId,
   type Effect,
   type HouseAmbitionId,
 } from '@ed/schema';
-import type { SimCtx } from './world.js';
+import { isRegent, type SimCtx } from './world.js';
+import { livingBlood, thinLineAt } from './generation.js';
 import { branchOf, halls, viableCadetHall } from './people/branches.js';
 import { visibleAscensionRanking, rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
@@ -27,6 +29,12 @@ export interface HouseAmbitionView {
   progress: { current: number; target: number; label: string };
   status: string;
   next: string;
+}
+/** The plan the house's visible situation points at now, and why (#1867 §4). */
+export interface AmbitionRecommendation {
+  id: HouseAmbitionId;
+  name: string;
+  reason: string;
 }
 export interface HouseAmbitionOption {
   id: HouseAmbitionId;
@@ -591,6 +599,8 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const current = Math.max(0, RUNG_ORDER.indexOf(w.ascension.rung));
   const target = RUNG_ORDER.indexOf(targetRung);
   const foremost = visibleAscensionRanking(ctx)[0];
+  const head = w.people.living().find((p) => p.castSlots.includes('head'));
+  const regent = head && isRegent(w, head) ? head : undefined;
   const rungs = {
     HELD: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best), HORIZON: rungTitle(ctx, targetRung),
   };
@@ -607,11 +617,80 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     status: foremost
       ? msg(ctx, 'ambition.view.ascent_foremost', '{NAME} is the foremost candidate.', { NAME: foremost.name })
       : msg(ctx, 'ambition.view.ascent_none', 'No living candidate is carrying the ascent.'),
-    next: foremost
-      ? msg(ctx, 'ambition.view.ascent_next',
-        'Keep {NAME} alive, read, and supplied while answering the blockers shown on the ladder.',
-        { NAME: foremost.name })
-      : msg(ctx, 'ambition.view.ascent_next_none',
-        'Name and prepare a Scion or heir rather than letting the programme choose itself.'),
+    next: regent && foremost
+      ? msg(ctx, 'ambition.view.ascent_next_regency',
+        'While {REGENT} keeps the seal, nobody climbs. Keep {NAME} alive and taught, and spend the Regency on the archive and the family.',
+        { REGENT: regent.name, NAME: foremost.name })
+      : regent
+        ? msg(ctx, 'ambition.view.ascent_next_regency_none',
+          'While {REGENT} keeps the seal, nobody climbs. Spend the Regency on the archive, the branches and the children who will.',
+          { REGENT: regent.name })
+        : foremost
+          ? msg(ctx, 'ambition.view.ascent_next',
+            'Keep {NAME} alive, read, and supplied while answering the blockers shown on the ladder.',
+            { NAME: foremost.name })
+          : msg(ctx, 'ambition.view.ascent_next_none',
+            'Name and prepare a Scion or heir rather than letting the programme choose itself.'),
   };
+}
+
+/**
+ * WHICH PLAN THE HOUSE'S SITUATION POINTS AT (#1867 §4).
+ *
+ * The opening hands the player an ambition with a reason attached, and the
+ * reason is recomputed every year, so a succession, a crisis or a dead
+ * candidate changes what is recommended without anybody storing it. It is a
+ * reading like `ambitionView`: public household facts only — no genome, no
+ * check, no prediction — and following it grants nothing.
+ *
+ * The order is the order of what ends a run soonest: a thin line first (the
+ * generation question's own threshold), then a Ledger within reach, then a
+ * hall about to break away, then a candidate the house can already see.
+ */
+export function recommendAmbition(ctx: SimCtx): AmbitionRecommendation | undefined {
+  const w = ctx.world;
+  const options = ambitionOptions(ctx);
+  const pick = (id: HouseAmbitionId, reason: string): AmbitionRecommendation | undefined => {
+    const option = options.find((o) => o.id === id);
+    return option ? { id, name: option.name, reason } : undefined;
+  };
+
+  const blood = livingBlood(ctx).length;
+  if (blood <= thinLineAt(ctx)) {
+    return pick('deepen_blood', blood === 1
+      ? msg(ctx, 'ambition.recommend.thin_one',
+        'Only one of the blood is living. Every other plan depends on the line outlasting this generation.')
+      : msg(ctx, 'ambition.recommend.thin',
+        'Only {COUNT} of the blood are living. Every other plan depends on the line outlasting this generation.',
+        { COUNT: String(blood) }));
+  }
+
+  const target = campaignDef(w.campaign).clauses;
+  const remaining = target - Math.min(w.clausesRecovered.size, target);
+  if (remaining === 1 || remaining === 2) {
+    return pick('restore_ledger', remaining === 1
+      ? msg(ctx, 'ambition.recommend.ledger_one', 'The Ledger is one clause from whole.')
+      : msg(ctx, 'ambition.recommend.ledger', 'The Ledger is {COUNT} clauses from whole.', { COUNT: String(remaining) }));
+  }
+
+  const troubled = [...w.branches.values()]
+    .filter((b) => isActiveBranch(b) && b.grievance >= 60)
+    .sort((a, b) => b.grievance - a.grievance || a.id.localeCompare(b.id))[0];
+  if (troubled) {
+    return pick('secure_branches', msg(ctx, 'ambition.recommend.branch',
+      '{BRANCH} is close to breaking with the seat.', { BRANCH: troubled.name }));
+  }
+
+  const foremost = visibleAscensionRanking(ctx)[0];
+  if (foremost) {
+    return pick('raise_ascendant', msg(ctx, 'ambition.recommend.ascent',
+      '{NAME} has shown the blood, and the house can see who would carry the climb.', { NAME: foremost.name }));
+  }
+
+  return remaining > 0
+    ? pick('restore_ledger', msg(ctx, 'ambition.recommend.ledger_far',
+      'Nothing presses harder than the bargain itself. {COUNT} clauses of it are still unread.',
+      { COUNT: String(remaining) }))
+    : pick('secure_branches', msg(ctx, 'ambition.recommend.branches_far',
+      'The Ledger is whole. What remains is making sure the family outlives the seat.'));
 }

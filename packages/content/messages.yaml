@@ -531,6 +531,38 @@ proseVariants:
     plainenglish: >-
       {NAME} is part of the programme. The papers show that every available line in this hand is outside
       the family.
+  - address: "core:messages#ambition.recommend.ascent"
+    of: "c2de1a69bb8fd22d"
+    plainenglish: >-
+      {NAME} has shown Eldritch Power, so the family knows who could lead the Ascension.
+  - address: "core:messages#ambition.recommend.branch"
+    of: "48dbc01182a6cfdd"
+    plainenglish: >-
+      {BRANCH} is close to breaking away from the main hall.
+  - address: "core:messages#ambition.recommend.branches_far"
+    of: "803dc6a35f1d1ff7"
+    plainenglish: >-
+      The Ledger is complete. The remaining task is making sure the family survives beyond the main hall.
+  - address: "core:messages#ambition.recommend.ledger"
+    of: "438700d92a87acad"
+    plainenglish: >-
+      The Ledger needs {COUNT} more clauses to be complete.
+  - address: "core:messages#ambition.recommend.ledger_far"
+    of: "8541f7fe4f11757a"
+    plainenglish: >-
+      Nothing is more urgent than the bargain itself. {COUNT} of its clauses have not been read yet.
+  - address: "core:messages#ambition.recommend.ledger_one"
+    of: "bba363eb008d5807"
+    plainenglish: >-
+      The Ledger needs one more clause to be complete.
+  - address: "core:messages#ambition.recommend.thin"
+    of: "b301dd60e516a134"
+    plainenglish: >-
+      Only {COUNT} members of the bloodline are alive. Every other goal depends on the bloodline surviving this generation.
+  - address: "core:messages#ambition.recommend.thin_one"
+    of: "53bd15b375d143b7"
+    plainenglish: >-
+      Only one member of the bloodline is alive. Every other goal depends on the bloodline surviving this generation.
   - address: "core:messages#ambition.record.clause"
     of: "f436643aab80c996"
     plainenglish: >-
@@ -704,6 +736,14 @@ proseVariants:
     of: "e153b78909c19db5"
     plainenglish: >-
       Choose and prepare a Scion or heir instead of leaving the programme to choose for itself.
+  - address: "core:messages#ambition.view.ascent_next_regency"
+    of: "d7e11b98059a465c"
+    plainenglish: >-
+      While {REGENT} holds the seal as Regent, nobody can climb. Keep {NAME} alive and educated, and use the Regency to look after the archive and the family.
+  - address: "core:messages#ambition.view.ascent_next_regency_none"
+    of: "24a7abae501bf1e2"
+    plainenglish: >-
+      While {REGENT} holds the seal as Regent, nobody can climb. Use the Regency to look after the archive, the branches and the children who will climb later.
   - address: "core:messages#ascension.ledger_wait_title"
     of: "813b9749d641fda5"
     plainenglish: >-

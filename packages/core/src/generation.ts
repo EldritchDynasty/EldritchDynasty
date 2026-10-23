@@ -17,8 +17,15 @@ type Candidate = GenerationQuestion & { score: number; say: () => string };
 const openDiscrepancies = (ctx: SimCtx): number =>
   [...ctx.world.discrepancies.values()].filter((d) => d.state === 'open').length;
 
-const livingBlood = (ctx: SimCtx): Person[] =>
+export const livingBlood = (ctx: SimCtx): Person[] =>
   ctx.world.people.blood(ctx.world.playerHouse).filter((p) => p.status === 'alive');
+
+/**
+ * How few living blood make a thin line. One threshold, shared with the
+ * ambition recommendation (#1867 §4), so the generation's question and the
+ * plan the house is pointed at cannot disagree about whether the line is thin.
+ */
+export const thinLineAt = (ctx: SimCtx): number => Math.max(5, Math.floor(ctx.world.bloodHighWater * 0.35));
 
 function candidate(
   kind: GenerationQuestion['kind'],
@@ -65,8 +72,7 @@ export function chooseGenerationQuestion(
   }
 
   const blood = livingBlood(ctx);
-  const thinAt = Math.max(5, Math.floor(w.bloodHighWater * 0.35));
-  if (blood.length <= thinAt) {
+  if (blood.length <= thinLineAt(ctx)) {
     candidates.push(candidate(
       'thin_line', 90,
       () => msg(ctx, 'generation.question.thin_line',
