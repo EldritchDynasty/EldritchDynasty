@@ -57,7 +57,7 @@ describe('one question per generation (issue #213)', () => {
 describe('the generation\'s question and answer speak the reader\'s setting (#758)', () => {
   /** Every Original, keyed; the Plain English is the key itself plus its tokens, so a miss is unmistakable. */
   const ORIGINALS: Record<string, string> = {
-    'generation.question.thin_line': 'Only {COUNT} of the blood are living. Can {HEAD} leave the line stronger than he found it?',
+    'generation.question.thin_line': 'Only {COUNT} of the blood are living. Can {HEAD} leave the line stronger than it was found?',
     'generation.question.ledger_one': 'The Ledger is one clause from complete. Does {HEAD} fund the reading, or the house that must survive it?',
     'generation.question.ledger': 'The Ledger is {COUNT} clauses from complete. Does {HEAD} fund the reading, or the house that must survive it?',
     'generation.question.record': 'The chronicle carries {COUNT} open contradictions. Does {HEAD} protect the legend, or leave something the house can prove?',

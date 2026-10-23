@@ -7752,3 +7752,32 @@ describe('the late Long branch account (#1807)', () => {
     }
   }
 });
+
+describe('the opening concern, witnessed through its own arc (#1867)', () => {
+  const entry = content.mustEvent('the_tutors_good_years');
+  it.each([
+    { choice: 'teach_the_heir', taught: 'the_heir_is_taught', event: 'the_heir_reads_the_tally', outcome: 'the_three_sacks' },
+    { choice: 'teach_the_waker', taught: 'the_waker_is_taught', event: 'the_daughter_at_the_fair', outcome: 'the_other_question' },
+    { choice: 'teach_the_threshold', taught: 'the_threshold_is_taught', event: 'the_books_about_dying', outcome: 'the_carpenters_mother' },
+    { choice: 'share_the_hours', taught: 'the_hours_are_shared', event: 'three_names_in_the_day_book', outcome: 'everybody_reads_the_bill' },
+  ])('$choice, and three years on, $event', ({ choice, taught, event, outcome }) => {
+    // The campaign's own bootstrap, not `testWorld`: the arc is started there.
+    const ctx = bootstrap(content, 1867, 1042, 'long');
+    const instance = [...ctx.world.arcs.values()].find((arc) => arc.arc === 'arc_the_tutors_good_years');
+    if (!instance) throw new Error('the long campaign did not open on its concern');
+    ctx.world.year += 1;
+    const opening = dueArcSteps(ctx, makeRng(18670)).find((step) => step.instance.id === instance.id)!;
+    const first = executeOutcomeWitness(ctx, entry, {
+      choiceId: choice, expectedOutcomeId: taught, rng: makeRng(18671), arcStep: opening,
+    });
+    expect(first.ok, first.reason).toBe(true);
+    expect(instance.dueYear).toBe(ctx.world.year + 3);
+    ctx.world.year = instance.dueYear!;
+    const step = dueArcSteps(ctx, makeRng(18672)).find((s) => s.instance.id === instance.id)!;
+    expect(step.node.event).toBe(event);
+    const second = executeOutcomeWitness(ctx, content.mustEvent(event), {
+      expectedOutcomeId: outcome, rng: makeRng(18673), arcStep: step,
+    });
+    expect(second.ok, second.reason).toBe(true);
+  });
+});
