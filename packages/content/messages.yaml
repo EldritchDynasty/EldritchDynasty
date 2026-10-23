@@ -1648,6 +1648,50 @@ proseVariants:
     of: "a2310207f8f37ddb"
     plainenglish: >-
       the page for {YEAR}
+  - address: "core:messages#record.stakes.embellish_major"
+    of: "5c250f515fd967cd"
+    plainenglish: >-
+      The record sounds better, but it includes a serious contradiction that someone could prove.
+  - address: "core:messages#record.stakes.embellish_minor"
+    of: "e7bf568272401cee"
+    plainenglish: >-
+      The record sounds better, but it includes a small contradiction that someone could prove.
+  - address: "core:messages#record.stakes.embellish_total"
+    of: "3fd1504e9313786a"
+    plainenglish: >-
+      The record sounds better, but it includes a contradiction that would discredit the whole account if proven.
+  - address: "core:messages#record.stakes.omit"
+    of: "e50443c174643fbd"
+    plainenglish: >-
+      This year stays blank in the record. It cannot be used as evidence later, and blank years are counted at the end of the game.
+  - address: "core:messages#record.stakes.omit_discrepancy"
+    of: "f420dbc898268b2c"
+    plainenglish: >-
+      This year stays blank in the record, and the missing entry is itself a contradiction that someone could prove.
+  - address: "core:messages#record.stakes.record"
+    of: "4c318076254b322a"
+    plainenglish: >-
+      The record shows what really happened, and the family can rely on it later.
+  - address: "core:messages#record.stakes.record_knowledge"
+    of: "a402d95831668124"
+    plainenglish: >-
+      The record shows what really happened, and the family keeps what it learned.
+  - address: "core:messages#record.stakes.respect_down"
+    of: "4d8b663d4d402cb9"
+    plainenglish: >-
+      Respect −{N}.
+  - address: "core:messages#record.stakes.respect_up"
+    of: "e3576df6d7fc6852"
+    plainenglish: >-
+      Respect +{N}.
+  - address: "core:messages#record.stakes.treasury_down"
+    of: "391bbc81c9357ce5"
+    plainenglish: >-
+      −{N} crowns.
+  - address: "core:messages#record.stakes.treasury_up"
+    of: "087755ece7546060"
+    plainenglish: >-
+      +{N} crowns.
   - address: "core:messages#rites.vessel.self"
     of: "a4b1bf82a54e9d56"
     plainenglish: >-

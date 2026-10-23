@@ -250,6 +250,24 @@ function spyActions() {
     & { readonly __brand?: GameActions };
 }
 
+describe('the Record docket shows what each option costs (#1867 §5)', () => {
+  it('draws the price under the option it belongs to, and nothing where none is given', () => {
+    const decision = {
+      ...recordDecision(),
+      stakes: {
+        record: 'The page stands as it happened, for the house to lean on later.',
+        omit: 'The year is left blank. It claims nothing the house could show, and the blanks are read at the reckoning.',
+      },
+    } as SessionView['docket'][number];
+    const w = mount(Docket, { props: { decision, actions: spyActions() as unknown as GameActions } });
+    const buttons = w.findAll('.choices button');
+    const row = (label: string) => buttons.find((b) => b.text().includes(label))!;
+    expect(row('Write it as it happened').get('.stakes').text()).toBe(decision.stakes!.record);
+    expect(row('Leave it out').get('.stakes').text()).toBe(decision.stakes!.omit);
+    expect(row('Improve it').find('.stakes').exists()).toBe(false);
+  });
+});
+
 describe('following a Match from the power blocker (#1805)', () => {
   it.each(['original', 'plainenglish'] as const)('focuses the named card and opens its existing evidence (%s)', async (mode) => {
     const decision = matchDecision();

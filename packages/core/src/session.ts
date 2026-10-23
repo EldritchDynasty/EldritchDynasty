@@ -56,6 +56,7 @@ import {
   type AgeMatchPriority, type AgeRecordPriority,
 } from './ages/strategy.js';
 import { resolveDelegated } from './delegation.js';
+import { recordStakes, type RecordStakes } from './record-stakes.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
@@ -895,7 +896,11 @@ export function resumeGame(
  * built on live references has to be told when to re-read; a UI built on values
  * only has to be given a new one.
  */
-export type SessionDecisionView = PendingDecisionView & { ambition?: AmbitionRelevance };
+export type SessionDecisionView = PendingDecisionView & {
+  ambition?: AmbitionRelevance;
+  /** #1867 §5: what each offered Record option costs, by the rules. Record dockets only. */
+  stakes?: RecordStakes;
+};
 
 export interface SessionView {
   year: number;
@@ -1602,6 +1607,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         ...decision,
         advice: adviceForDecision(ctx, decision),
         ...(ambition ? { ambition } : {}),
+        ...(decision.kind === 'record' ? { stakes: recordStakes(ctx, decision) } : {}),
       });
     }),
     namesWanted: w.pendingNames.map((n) => ({
