@@ -971,7 +971,7 @@ function expectAssemblyMatchesDocket(
     const cast = pending.cast.find((request) => request.slot === risk.slot);
     expect(cast, `no docket cast request for ${risk.slot}`).toBeDefined();
     expect(cast!.candidates.map((candidate) => ({ person: candidate.id, name: candidate.name })))
-      .toEqual(risk.candidates);
+      .toEqual(risk.candidates.map(({ person, name }) => ({ person, name })));
   }
 
   if (expectedCandidate) {
@@ -979,6 +979,34 @@ function expectAssemblyMatchesDocket(
       .toContain(expectedCandidate);
   }
 }
+
+describe('the rite names who it would spend, as the house remembers them (#1867 §6)', () => {
+  it('gives each candidate their age, the parents on record, and the last page that named them', () => {
+    const ctx = testWorld(content, 920);
+    const elder = readyClimber(ctx);
+    place(ctx, { sex: 'male', age: 30, name: 'The Witness' });
+    const vessel = place(ctx, { sex: 'female', age: 20, name: 'The Vessel' });
+    beget(ctx, vessel, undefined, elder);
+    const remembered = () => tableView(ctx).vesselRite.assembly!.atRisk
+      .flatMap((r) => r.candidates).find((c) => c.person === vessel.id)!.remembered;
+
+    expect(remembered()).toBe(`The Vessel, 20, child of ${elder.name}. The book has never written of them.`);
+
+    ctx.world.chronicle.push({
+      id: 'chr_vessel_page', year: ctx.world.year - 3, weight: 'paragraph', title: 'The Long Winter',
+      text: 'She kept the stores.', named: false, people: [vessel.id],
+    });
+    expect(remembered()).toBe(
+      `The Vessel, 20, child of ${elder.name}. The book last named them in ${ctx.world.year - 3}, under “The Long Winter”.`,
+    );
+
+    // A blank page does not count as remembering anyone.
+    ctx.world.chronicle.push({
+      id: 'chr_vessel_blank', year: ctx.world.year - 1, weight: 'line', text: null, record: 'omit', named: false, people: [vessel.id],
+    });
+    expect(remembered()).toContain(`in ${ctx.world.year - 3}`);
+  });
+});
 
 describe('rite confirmation prose (#920)', () => {
   const messages = coreMessageEntries(readFileSync(new URL('./table.ts', import.meta.url), 'utf8'))
@@ -1025,8 +1053,14 @@ describe('rite confirmation prose (#920)', () => {
         .map((id) => content.mustSpellbook(id).name).join(', ')}.`);
       setProseMode(ctx, 'plainenglish');
       const plain = tableView(ctx)[rite];
+      // The same people at risk; only the remembered line is in the reader's setting.
+      const people = (risk: typeof assembly.atRisk) =>
+        risk.map((r) => ({ slot: r.slot, candidates: r.candidates.map(({ person, name }) => ({ person, name })) }));
+      expect(people(plain.assembly!.atRisk)).toEqual(people(assembly.atRisk));
+      expect(plain.assembly!.atRisk.flatMap((r) => r.candidates)
+        .every((candidate) => candidate.remembered.startsWith('Plain: '))).toBe(true);
       expect(plain).toMatchObject({ ready: true, assembly: {
-        rite: assembly.rite, actors: assembly.actors, atRisk: assembly.atRisk,
+        rite: assembly.rite, actors: assembly.actors,
         title: `Plain: ${assembly.title}`,
         irreversible: assembly.irreversible.map((line) => `Plain: ${line}`),
       } });

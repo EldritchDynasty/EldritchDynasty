@@ -509,8 +509,12 @@ export interface RiteAssembly {
   title: string;
   /** People already fixed by the engine's slot resolution. */
   actors: { slot: string; person: string; name: string }[];
-  /** Player-cast slots, with the exact candidates the resolver will accept. */
-  atRisk: { slot: string; candidates: { person: string; name: string }[] }[];
+  /**
+   * Player-cast slots, with the exact candidates the resolver will accept.
+   * Each carries the life the house has on record (#1867 §6): a Vessel is a
+   * decision about a named relative with a remembered life, not a name.
+   */
+  atRisk: { slot: string; candidates: { person: string; name: string; remembered: string }[] }[];
   /** Visible preparation already carried by the fixed actors. Never probabilities. */
   preparations: string[];
   /** Costs the player cannot undo once the taking branch resolves. */
@@ -524,6 +528,39 @@ function preparationRiteName(ctx: SimCtx, rite: Person['rites'][number]): string
     case 'unmaking': return msg(ctx, 'table.assembly.known_unmaking', 'unmaking');
     default: return assertNever(rite);
   }
+}
+
+/**
+ * WHAT THE HOUSE REMEMBERS OF SOMEONE IT MAY SPEND (#1867 §6).
+ *
+ * Their age, the parents the family's own papers name (never the genome's),
+ * and the last page of the book that named them — or the plain fact that it
+ * never has. Only what is already on record; nothing about the rite's odds.
+ */
+function rememberedLife(ctx: SimCtx, p: Person): string {
+  const w = ctx.world;
+  const age = String(w.year - p.born);
+  const nameOf = (id: string | undefined) => (id ? w.people.get(id)?.name : undefined);
+  const mother = nameOf(p.claimedParents.mother);
+  const father = nameOf(p.claimedParents.father);
+  const parent = mother ?? father;
+  const who = mother && father
+    ? msg(ctx, 'table.assembly.remembered_parents', '{NAME}, {AGE}, child of {MOTHER} and {FATHER}.',
+      { NAME: p.name, AGE: age, MOTHER: mother, FATHER: father })
+    : parent
+      ? msg(ctx, 'table.assembly.remembered_parent', '{NAME}, {AGE}, child of {PARENT}.',
+        { NAME: p.name, AGE: age, PARENT: parent })
+      : msg(ctx, 'table.assembly.remembered', '{NAME}, {AGE}.', { NAME: p.name, AGE: age });
+  let page: (typeof w.chronicle)[number] | undefined;
+  for (let i = w.chronicle.length - 1; i >= 0 && !page; i--) {
+    const entry = w.chronicle[i]!;
+    if (entry.text !== null && entry.people?.includes(p.id)) page = entry;
+  }
+  if (!page) return `${who} ${msg(ctx, 'table.assembly.never_written', 'The book has never written of them.')}`;
+  return `${who} ${page.title
+    ? msg(ctx, 'table.assembly.last_page_title', 'The book last named them in {YEAR}, under “{TITLE}”.',
+      { YEAR: String(page.year), TITLE: page.title })
+    : msg(ctx, 'table.assembly.last_page', 'The book last named them in {YEAR}.', { YEAR: String(page.year) })}`;
 }
 
 function assemblyFor(
@@ -546,7 +583,7 @@ function assemblyFor(
     const people = spec ? candidatesFor(spec, ctx, slots.fill) : [];
     return {
       slot,
-      candidates: people.map((p) => ({ person: p.id, name: p.name })),
+      candidates: people.map((p) => ({ person: p.id, name: p.name, remembered: rememberedLife(ctx, p) })),
     };
   });
 

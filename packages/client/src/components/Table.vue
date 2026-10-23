@@ -481,6 +481,10 @@ const MARRIAGE_ORDERS = [
         <div v-for="risk in riteAssembly.atRisk" :key="risk.slot" class="small">
           <strong>{{ risk.slot }}</strong> — {{ local('choose on the docket from', 'choose from these candidates when prompted:') }}
           {{ risk.candidates.map((candidate) => candidate.name).join(', ') }}.
+          <!-- Who would be spent, as the house remembers them (#1867 §6). -->
+          <ul class="remembered">
+            <li v-for="candidate in risk.candidates" :key="candidate.person" class="dim">{{ candidate.remembered }}</li>
+          </ul>
         </div>
         <p v-for="line in riteAssembly.preparations" :key="line" class="small dim">{{ line }}</p>
         <p v-for="line in riteAssembly.irreversible" :key="line" class="small rubric">{{ line }}</p>
