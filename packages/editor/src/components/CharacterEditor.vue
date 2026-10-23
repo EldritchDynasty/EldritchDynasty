@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, watch } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import type { Content } from '@ed/schema';
 import { FREQUENCY_PROFILES } from '@ed/schema';
 import { START_YEAR, bootstrap, previewTemplate, makeRng, eldritch, genomeOf } from '@ed/core';
-import { markDirty } from '../lib/store';
+import { store } from '../lib/store';
+import { watchEdits } from '../lib/watch-edits';
 import FrequencyPicker from './FrequencyPicker.vue';
 import Sigil from './Sigil.vue';
 import SaveControl from './SaveControl.vue';
@@ -12,13 +13,14 @@ import ProseVariantEditor from './ProseVariantEditor.vue';
 
 const props = defineProps<{ content: Content }>();
 
-// No local copy (issue #20) — see EventEditor.vue's own note. `content.characterTemplates`
-// is `store.bundle.characterTemplates` itself.
-const templates = computed(() => props.content.characterTemplates);
+// No local copy (issue #20) — see EventEditor.vue's own note. The AUTHORED
+// templates, not `content.characterTemplates`: `content` is indexed from the
+// raw bundle (issue #1891), so an edit made through it would never re-render.
+const templates = computed(() => store.bundle.characterTemplates);
 const selectedId = ref(templates.value[0]?.id ?? '');
 const current = computed(() => templates.value.find((t) => t.id === selectedId.value));
 
-watch(current, () => { if (current.value) markDirty('characterTemplates', current.value.id); }, { deep: true });
+watchEdits(current, 'characterTemplates');
 
 const roleFilter = ref<string>('all');
 const roles = computed(() => ['all', ...new Set(templates.value.map((t) => t.role))]);

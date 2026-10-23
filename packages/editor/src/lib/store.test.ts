@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isProxy } from 'vue';
 import { parse } from 'yaml';
 import { assembleBundle } from '@ed/schema';
 
@@ -77,6 +78,7 @@ const {
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
   createItem, externalChange, removeProseVariant, stageProseVariant,
   applyCoreProseEdits, pendingCoreProseText, saveCoreProseCatalogue,
+  markCoreProseDraftDirty, rawContent,
 } = await import('./store.js');
 
 describe('authoring-store load validation', () => {
@@ -1028,5 +1030,70 @@ describe('Mod Editor content hydration (#1528)', () => {
     });
     expect(writable).toEqual(new Set(['arcs/user-a.yaml', 'events/user-b.yaml']));
     expect(() => registerUserContent(allFiles, writable, {})).not.toThrow();
+  });
+});
+
+describe('the simulation reads plain data (#1891)', () => {
+  /**
+   * Every object reachable from `rawContent()`, with a visited set: indexes
+   * are Maps over the same objects, and the bundle is a graph, not a tree.
+   */
+  function proxiesIn(root: unknown): string[] {
+    const found: string[] = [];
+    const seen = new Set<object>();
+    const walk = (x: unknown, where: string) => {
+      if (x === null || typeof x !== 'object' || seen.has(x)) return;
+      seen.add(x);
+      if (isProxy(x)) { found.push(where); return; }
+      const entries = x instanceof Map ? [...x.entries()].map(([k, v]) => [String(k), v] as const)
+        : x instanceof Set ? [...x].map((v, i) => [String(i), v] as const)
+        : Object.entries(x);
+      for (const [k, v] of entries) walk(v, `${where}.${k}`);
+    };
+    walk(root, 'content');
+    return found;
+  }
+
+  it('hands core no Vue proxy anywhere in the indexed content', () => {
+    // Chromium's structuredClone refuses a proxy and Node's accepts one, so a
+    // world built here would pass either way. This is the check Node can make.
+    expect(proxiesIn(rawContent()).slice(0, 5)).toEqual([]);
+  });
+
+  it('still sees an edit made through the reactive bundle', () => {
+    const target = event(EVENT);
+    const before = target.title;
+    try {
+      target.title = 'A Title Changed Through the Proxy';
+      expect(rawContent().event(EVENT)?.title).toBe('A Title Changed Through the Proxy');
+    } finally {
+      target.title = before;
+    }
+  });
+
+  it('bumps the revision on every route that marks an edit', async () => {
+    let r = store.revision;
+    markDirty('events', EVENT);
+    expect(store.revision).toBeGreaterThan(r);
+
+    // Before `locate`: an edit to an item no file holds is still an edit.
+    r = store.revision;
+    markDirty('events', 'no_such_event_anywhere');
+    expect(store.revision).toBeGreaterThan(r);
+
+    // The file-level route every prose mutator and `createItem` goes through.
+    r = store.revision;
+    markCoreProseDraftDirty();
+    expect(store.revision).toBeGreaterThan(r);
+
+    const id = 'a_revision_probe_event';
+    r = store.revision;
+    try {
+      await createItem('events', CRUSADE, { ...JSON.parse(JSON.stringify(event(EVENT))), id });
+      expect(store.revision).toBeGreaterThan(r);
+    } finally {
+      const i = store.bundle.events.findIndex((e) => e.id === id);
+      if (i >= 0) store.bundle.events.splice(i, 1);
+    }
   });
 });

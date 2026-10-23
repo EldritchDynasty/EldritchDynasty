@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, provide, ref } from 'vue';
-import { indexContent, validateBundle } from '@ed/schema';
-import { store } from './lib/store';
+import { computed, onBeforeUnmount, provide, ref, watch } from 'vue';
+import { validateBundle } from '@ed/schema';
+import { rawContent, store } from './lib/store';
 import { Sound } from './lib/sound';
 import { SOUND } from './lib/audio-key';
 import type { MarkName } from './lib/marks';
@@ -20,8 +20,32 @@ import CoreProseEditor from './components/CoreProseEditor.vue';
  * cheap (a handful of `Map`s over arrays already in memory) and correct: a
  * cached `Content` would drift the moment an id changed, which is precisely
  * the kind of silent staleness this file used to have with local copies.
+ *
+ * It indexes the RAW bundle (`rawContent`, issue #1891): handing `core` Vue
+ * proxies made every world build throw in the browser, and the render error
+ * unmounted the whole editor on boot. Raw reads also take validation off the
+ * proxy path. Being raw, `content` cannot track an edit; `store.revision`
+ * tells it one happened.
+ *
+ * It follows the revision once typing pauses rather than on every key.
+ * Re-indexing, validating 500-odd events and re-rendering every view that
+ * reads `content` cost most of a second per keystroke. The fields being typed
+ * into read `store.bundle` and stay live; validation and cross-references
+ * trail the last key by SETTLE_MS, and the rail says so while they do.
  */
-const content = computed(() => indexContent(store.bundle));
+const SETTLE_MS = 250;
+const settled = ref(store.revision);
+let settleTimer: ReturnType<typeof setTimeout> | undefined;
+watch(() => store.revision, (revision) => {
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(() => { settled.value = revision; }, SETTLE_MS);
+});
+onBeforeUnmount(() => clearTimeout(settleTimer));
+const validating = computed(() => settled.value !== store.revision);
+const content = computed(() => {
+  void settled.value;
+  return rawContent();
+});
 const tab = ref<Tab>('events');
 
 const issues = computed(() => validateBundle(content.value.bundle));
@@ -84,8 +108,11 @@ function select(id: Tab) {
           {{ content.loci.length }} loci
         </div>
         <div class="state" role="status">
-          <span :class="{ bad: errors }">{{ errors }} error{{ errors === 1 ? '' : 's' }}</span>
-          · {{ warnings }} warning{{ warnings === 1 ? '' : 's' }}<br />
+          <span v-if="validating">validating…</span>
+          <template v-else>
+            <span :class="{ bad: errors }">{{ errors }} error{{ errors === 1 ? '' : 's' }}</span>
+            · {{ warnings }} warning{{ warnings === 1 ? '' : 's' }}
+          </template><br />
           <span v-if="store.dirty.size" class="bad">
             {{ store.dirty.size }} file{{ store.dirty.size > 1 ? 's' : '' }} unsaved
           </span>

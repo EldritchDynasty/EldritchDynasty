@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { ArcDef, ArcNode, Content, Issue, Successor } from '@ed/schema';
 import { markDirty, store } from '../lib/store';
+import { watchEdits } from '../lib/watch-edits';
 import ArcGraph from './ArcGraph.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
 import SaveControl from './SaveControl.vue';
@@ -25,12 +26,13 @@ import ProseVariantEditor from './ProseVariantEditor.vue';
 const props = defineProps<{ content: Content; issues: Issue[] }>();
 
 /**
- * The COMPILED list, so arcs built from an inline `next` chain are visible
- * here too. Authored arcs are the same objects `store.bundle.arcs` holds —
- * `desugarInline` appends to the array and never copies an authored arc — so
- * editing one reaches the store. Compiled arcs are read-only and say so.
+ * The authored arcs, then the ones compiled from an inline `next` chain, so
+ * those are visible here too — the same order `desugarInline` builds. Authored
+ * arcs come from `store.bundle` and not from `content`, which is indexed from
+ * the raw bundle (issue #1891): an edit made through it would never re-render.
+ * Compiled arcs are read-only and say so.
  */
-const arcs = computed(() => props.content.arcs);
+const arcs = computed(() => [...store.bundle.arcs, ...props.content.arcs.filter((a) => a.inline)]);
 
 /**
  * Events are looked up in the AUTHORED bundle when they are about to be
@@ -49,7 +51,7 @@ const node = computed<ArcNode | undefined>(() => arc.value?.nodes.find((n) => n.
 const readOnly = computed(() => arc.value?.inline ?? false);
 
 watch(arc, () => { selectedNode.value = arc.value?.entry ?? ''; }, { immediate: true });
-watch(arc, () => { if (arc.value && !arc.value.inline) markDirty('arcs', arc.value.id); }, { deep: true });
+watchEdits(arc, 'arcs', (a) => !a.inline);
 
 const myIssues = computed(() =>
   props.issues.filter((i) => i.where.startsWith(`arc:${selectedId.value}`)));

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import type { Content, Issue } from '@ed/schema';
 import { FREQUENCY_PROFILES, splitSentences, PROSE_SENTENCE_THRESHOLD, proseIssues } from '@ed/schema';
 import { markDirty, store } from '../lib/store';
+import { watchEdits } from '../lib/watch-edits';
 import FrequencyPicker from './FrequencyPicker.vue';
 import SaveControl from './SaveControl.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
@@ -44,8 +45,8 @@ const current = computed(() => events.value.find((e) => e.id === selectedId.valu
 // Every field on the selected event feeds one deep watcher rather than an
 // `@input` handler on each control — simpler, and it also catches edits made
 // by the sub-editors below (conditions, outcomes, body) without each of them
-// needing to know about the store.
-watch(current, () => { if (current.value) markDirty('events', current.value.id); }, { deep: true });
+// needing to know about the store. Changing the selection is not an edit.
+watchEdits(current, 'events');
 
 const shown = computed(() =>
   events.value.filter((e) => {

@@ -100,7 +100,7 @@ describe('CI evidence inventory', () => {
     expect(required, 'check.yml required job exists').toBeDefined();
     expect(corpus).toContain("if: needs.tier.outputs.full == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')");
     expect(corpus).toContain('continue-on-error: true');
-    expect(required).toContain('needs: [tier, lint, fast, windows, ios, test, gates]');
+    expect(required).toContain('needs: [tier, lint, fast, editor, windows, ios, test, gates]');
     expect(required).not.toMatch(/^\s*needs:.*\bcorpus\b/m);
     expect(required).not.toContain("'corpus'");
   });
