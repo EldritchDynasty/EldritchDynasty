@@ -1117,3 +1117,46 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     expect(head.claimedParents.mother).toBe(parent.id);
   });
 });
+
+describe('collection returns to where the run began (#1867 §6)', () => {
+  const page = (year: number, eventId: string, text: string | null, extra: Partial<ChronicleEntry> = {}): ChronicleEntry =>
+    ({ year, weight: 'paragraph', text, eventId, named: false, ...extra });
+
+  it('names the founder, quotes the opening arc as the book holds it, and reads the ambition kept in view', () => {
+    const ctx = atTheTerm();
+    const w = ctx.world;
+    w.ending = { id: 'forgotten', year: w.year };
+    w.guardianSince = 1090;
+    w.houseAmbition = 'deepen_blood';
+    w.chronicle.push(
+      page(1043, 'the_tutors_good_years', null, { record: 'omit' }),
+      page(1044, 'the_alewife_and_the_licence', 'Four crowns to the magistrate.'),
+      page(1046, 'three_names_in_the_day_book', 'The children have signed the autumn page.', { record: 'embellish' }),
+    );
+
+    const beginning = epilogueOf(ctx)!.beginning!;
+    expect(beginning.founder).toBe(w.people.get(w.narrator!)!.name);
+    expect(beginning.guardianSince).toBe(1090);
+    // Only the opening arc's own pages, in the order written — and an omitted
+    // page is still a blank at the reckoning, an improved one still improved.
+    expect(beginning.pages.map((e) => [e.eventId, e.text, e.record])).toEqual([
+      ['the_tutors_good_years', null, 'omit'],
+      ['three_names_in_the_day_book', 'The children have signed the autumn page.', 'embellish'],
+    ]);
+    expect(beginning.ambition).toMatchObject({ name: 'Deepen the blood' });
+    expect(beginning.ambition!.progress).toMatch(/living of the blood/);
+
+    // A reader gets copies, never the saved book.
+    beginning.pages[1]!.text = 'rewritten';
+    expect(w.chronicle.at(-1)!.text).toBe('The children have signed the autumn page.');
+  });
+
+  it('says nothing it did not see: no ambition tracked, no crossing, no opening pages', () => {
+    const ctx = atTheTerm();
+    ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
+    const beginning = epilogueOf(ctx)!.beginning!;
+    expect(beginning.pages).toEqual([]);
+    expect(beginning.ambition).toBeUndefined();
+    expect(beginning.guardianSince).toBeUndefined();
+  });
+});

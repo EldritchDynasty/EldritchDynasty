@@ -188,3 +188,51 @@ describe('ending image export failures', () => {
     } finally { w.unmount(); canvas.mockRestore(); }
   });
 });
+
+describe('the ending returns to where the run began (#1867 §6)', () => {
+  const view = {
+    houseName: 'House Ash',
+    seed: 47,
+    campaign: { id: 'long', name: 'A Long Line', startYear: 1042, endYear: 1542 },
+  } as SessionView;
+  const epilogue = (beginning?: unknown) => ({
+    year: 1542, title: 'T', summary: 'S', opening: 'O', closing: 'C', read: [], ring: [],
+    reckoning: {
+      pages: 1, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0, clauses: 1, clausesTotal: 9,
+      attested: 'none', substantiated: 'none', rungsWithheld: 0, livingBlood: 3,
+    },
+    ...(beginning ? { beginning } : {}),
+  }) as unknown as EpilogueView;
+  const mountWith = (e: EpilogueView, proseMode: 'original' | 'plainenglish' = 'original') => mount(Ending, {
+    props: { view, epilogue: e, actions: { restart: vi.fn() } as unknown as GameActions, proseMode },
+  });
+
+  it('names the founder, quotes the opening pages, blanks included, and the ambition kept in view', async () => {
+    const w = mountWith(epilogue({
+      founder: 'Ana Vell',
+      guardianSince: 1090,
+      pages: [
+        { id: 'chr_1', year: 1043, weight: 'paragraph', text: null, record: 'omit', named: false },
+        { id: 'chr_2', year: 1046, weight: 'line', text: 'The children signed the day-book.', named: false },
+      ],
+      ambition: { name: 'Deepen the blood', progress: '14 living of the blood', status: 'The line is broad' },
+    }));
+    const section = w.get('.beginning');
+    expect(section.text()).toContain('Ana Vell signed in 1042, and kept the house as its guardian from 1090.');
+    expect(section.text()).toContain('The children signed the day-book.');
+    expect(section.get('.beginning-ambition').text()).toBe(
+      'The house set out to: Deepen the blood. 14 living of the blood. The line is broad',
+    );
+
+    await w.setProps({ proseMode: 'plainenglish' });
+    expect(w.get('.beginning').text()).toContain('Ana Vell signed the agreement in 1042, and guided the family as its guardian from 1090.');
+    expect(w.get('.beginning-ambition').text()).toContain('Family goal:');
+  });
+
+  it('draws nothing for a run with no founder, and no crossing or goal it did not see', () => {
+    expect(mountWith(epilogue()).find('.beginning').exists()).toBe(false);
+    const quiet = mountWith(epilogue({ founder: 'Ana Vell', pages: [] }));
+    expect(quiet.get('.beginning').text()).toContain('Ana Vell signed in 1042.');
+    expect(quiet.find('.beginning-ambition').exists()).toBe(false);
+  });
+});

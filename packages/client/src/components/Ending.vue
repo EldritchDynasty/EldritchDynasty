@@ -154,6 +154,32 @@ async function saveAfterimage(): Promise<void> {
       />
     </section>
 
+    <!-- WHERE IT BEGAN (#1867 §6). Collection returns to the player: who
+         signed, what the house was first asked to decide and what the book
+         made of it, and the plan it kept in view. All read off this run. -->
+    <section v-if="epilogue.beginning" class="beginning" aria-labelledby="beginning-title">
+      <h3 id="beginning-title" class="label">{{ plain ? 'How the family started' : 'Where it began' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          {{ epilogue.beginning.founder }} signed the agreement in {{ view.campaign.startYear }}<template v-if="epilogue.beginning.guardianSince !== undefined">, and guided the family as its guardian from {{ epilogue.beginning.guardianSince }}</template>.
+        </template>
+        <template v-else>
+          {{ epilogue.beginning.founder }} signed in {{ view.campaign.startYear }}<template v-if="epilogue.beginning.guardianSince !== undefined">, and kept the house as its guardian from {{ epilogue.beginning.guardianSince }}</template>.
+        </template>
+      </p>
+      <Entry
+        v-for="(entry, i) in epilogue.beginning.pages"
+        :key="'beginning:' + (entry.id ?? entry.year + ':' + i)"
+        :entry="entry"
+        :prose-mode="proseMode"
+        read
+      />
+      <p v-if="epilogue.beginning.ambition" class="small beginning-ambition">
+        <span class="rubric">{{ plain ? 'Family goal:' : 'The house set out to:' }}</span>
+        {{ epilogue.beginning.ambition.name }}. {{ epilogue.beginning.ambition.progress }}. {{ epilogue.beginning.ambition.status }}
+      </p>
+    </section>
+
     <section class="tally">
       <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
@@ -273,6 +299,9 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
   white-space: pre-line; margin: 0 0 34px;
 }
 .read { margin-bottom: 34px; }
+.beginning { margin-bottom: 34px; }
+.beginning-ambition { margin-top: 10px; }
+.beginning .rubric { color: var(--rubric); }
 .read .top { justify-content: space-between; align-items: baseline; gap: 10px; }
 .tally dl { margin: 0; display: grid; gap: 5px; }
 .tally div { display: flex; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
