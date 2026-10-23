@@ -595,6 +595,47 @@ describe('House ambition refusal and selection (#1069)', () => {
  * the blood-family member who married them (#1147). Kept in the existing
  * measured client legibility suite so the shard duration ledger stays valid.
  */
+describe('the recommended ambition (#1867 §4)', () => {
+  const recommending = (id: string | null, recommended: string) => ({
+    ...ambitionView(id),
+    ambitionRecommendation: {
+      id: recommended,
+      name: recommended === 'blood' ? 'Keep the bloodline' : 'Keep the estate',
+      reason: 'Only 4 of the blood are living.',
+    },
+  }) as unknown as SessionView;
+
+  it('pre-selects the recommendation for a first ambition, says why, and still offers the rest', async () => {
+    const setAmbition = vi.fn().mockReturnValue(true);
+    const wrapper = mount(Ambition, {
+      props: { view: recommending(null, 'land'), actions: { setAmbition } as unknown as GameActions },
+    });
+
+    expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('land');
+    expect(wrapper.findAll('option').map((o) => o.text())).toEqual(['Keep the bloodline', 'Keep the estate (recommended)']);
+    expect(wrapper.get('.recommendation').text()).toContain('Only 4 of the blood are living.');
+
+    await wrapper.get('select').setValue('blood');
+    await wrapper.get('.ambition-actions button').trigger('click');
+    expect(setAmbition).toHaveBeenCalledWith('blood');
+  });
+
+  it('says when the situation points away from the tracked ambition, and opens that plan on request', async () => {
+    const wrapper = mount(Ambition, {
+      props: { view: recommending('blood', 'land'), actions: { setAmbition: vi.fn() } as unknown as GameActions },
+    });
+    expect(wrapper.get('.pressing').text()).toContain('Keep the estate');
+
+    await wrapper.get('.pressing button').trigger('click');
+    expect((wrapper.get('select').element as HTMLSelectElement).value).toBe('land');
+
+    const settled = mount(Ambition, {
+      props: { view: recommending('blood', 'blood'), actions: { setAmbition: vi.fn() } as unknown as GameActions },
+    });
+    expect(settled.find('.pressing').exists()).toBe(false);
+  });
+});
+
 describe('married-in spouse provenance on family cards (#1147)', () => {
   function member(marriedIn: boolean): SessionView['halls'][number]['members'][number] {
     return {

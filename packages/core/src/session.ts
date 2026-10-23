@@ -48,8 +48,8 @@ import { streamFor } from './rng.js';
 import { campaignDef } from './campaign.js';
 import { libraryRunOf } from './run-library.js';
 import {
-  ambitionOptions, ambitionRelevance, ambitionView,
-  type AmbitionRelevance, type HouseAmbitionOption, type HouseAmbitionView,
+  ambitionOptions, ambitionRelevance, ambitionView, recommendAmbition,
+  type AmbitionRecommendation, type AmbitionRelevance, type HouseAmbitionOption, type HouseAmbitionView,
 } from './ambition.js';
 import {
   activeMatchPriorities, activeRecordPriorities, strategicPressures,
@@ -920,6 +920,13 @@ export interface SessionView {
   ambition?: HouseAmbitionView;
   ambitionOptions: HouseAmbitionOption[];
   /**
+   * #1867 §4: the plan the house's visible situation points at this year, and
+   * why. Present from the opening, so the first ambition arrives with a reason;
+   * recomputed every year, so it follows a succession, a crisis or a lost
+   * candidate. Advice only — choosing it changes nothing but what is tracked.
+   */
+  ambitionRecommendation?: AmbitionRecommendation;
+  /**
    * WHAT THE CONTENT CALLS THINGS. Attributes and traits arrive everywhere
    * else on this view as ids — `max_age`, `the_tutors_aphorisms` — because
    * that is what saves and claims refer to them by, and a client that printed
@@ -1531,6 +1538,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     houseName: w.founding?.houseName ?? presentedHouseName(ctx, w.playerHouse),
     ...(ambitionView(ctx) ? { ambition: ambitionView(ctx)! } : {}),
     ambitionOptions: ambitionOptions(ctx),
+    ...(() => {
+      const recommended = recommendAmbition(ctx);
+      return recommended ? { ambitionRecommendation: recommended } : {};
+    })(),
     attributes: ctx.content.attributes.map((a) => ({
       attr: String(a.id),
       name: proseForContentField(ctx, 'attributes', String(a.id), 'name', a.name),

@@ -4,7 +4,10 @@ import { loadContent } from '@ed/content';
 import type { EventTemplate } from '@ed/schema';
 import { newGame, resumeGame } from '@ed/core';
 import { MAIN_BRANCH, asId, proseOriginalHash, type BranchId, type HouseAmbitionId } from '@ed/schema';
-import { ambitionOptions, ambitionRelevance, ambitionView } from './ambition.js';
+import { ambitionOptions, ambitionRelevance, ambitionView, recommendAmbition } from './ambition.js';
+import { bootstrap } from './sim.js';
+import { campaignDef } from './campaign.js';
+import { place, testWorld } from './testing.js';
 import { relevantPeople } from './people/relevance.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
@@ -365,6 +368,9 @@ describe('house ambition (issue #210)', () => {
     expect(imports).toEqual([
       '@ed/schema',
       './world.js',
+      // #1867 §4: the thin-line threshold the generation question already
+      // reads. `generation.ts` is itself a pure reader of public pressures.
+      './generation.js',
       './people/branches.js',
       './ascension.js',
       './campaign.js',
@@ -494,5 +500,102 @@ describe('the House Ambition speaks the reader\'s setting (#818, #819, #820)', (
       view: { ...plain(view, ['name', 'purpose', 'status', 'next']), progress: plain(view.progress, ['label']) },
       options: options.map((o) => plain(o, ['name', 'purpose'])),
     })));
+  });
+});
+
+describe('the opening hands the player a recommended ambition (#1867 §4)', () => {
+  it('opens both full campaigns, under both founding configurations, on a plan with a reason', () => {
+    for (const campaign of ['short', 'long'] as const) {
+      for (const configuration of ['blood_father', 'blood_mother'] as const) {
+        const gender = configuration === 'blood_mother' ? 'woman' as const : 'man' as const;
+        const ctx = bootstrap(content, 1867, campaignDef(campaign).startYear, campaign, [],
+          { founder: { gender, configuration } });
+        expect(recommendAmbition(ctx), `${campaign} · ${configuration}`).toEqual({
+          id: 'deepen_blood',
+          name: 'Deepen the blood',
+          reason: 'Only 4 of the blood are living. Every other plan depends on the line outlasting this generation.',
+        });
+        // Advice, not a choice made for the player.
+        expect(ctx.world.houseAmbition).toBeNull();
+      }
+    }
+  });
+
+  it('reaches the session view, and the demo, which offers no ambitions, recommends none', () => {
+    const game = newGame(content, { seed: 1867, campaign: 'short', decider: 'chronicler' });
+    const recommended = game.view().ambitionRecommendation;
+    expect(recommended?.id).toBe('deepen_blood');
+    expect(game.setAmbition(recommended!.id)).toBe(true);
+    expect(game.view().ambition?.id).toBe('deepen_blood');
+
+    const demo = newGame(content, { seed: 1867, campaign: 'demo', decider: 'chronicler' });
+    expect(demo.view().ambitionOptions).toEqual([]);
+    expect(demo.view().ambitionRecommendation).toBeUndefined();
+  });
+
+  it('follows the house: a Ledger in reach, then a hall about to break, then the bargain itself', () => {
+    const ctx = testWorld(content);
+    const w = ctx.world;
+    for (let i = 0; i < 8; i++) place(ctx, { sex: i % 2 ? 'male' : 'female', age: 20 + i, name: `Broadline${i}` });
+    const target = campaignDef(w.campaign).clauses;
+    const recovered = new Set(w.clausesRecovered);
+
+    expect(recommendAmbition(ctx)).toMatchObject({
+      id: 'restore_ledger',
+      reason: `Nothing presses harder than the bargain itself. ${target - recovered.size} clauses of it are still unread.`,
+    });
+
+    const branchId = asId<BranchId>('br_ambition_recommend_test');
+    const speaker = w.people.living().find((p) => p.name === 'Broadline1')!;
+    w.branches.set(branchId, {
+      id: branchId, name: 'The river hall', house: asId(w.playerHouse), founder: speaker.id,
+      splitFrom: MAIN_BRANCH, foundedYear: w.year, speaker: speaker.id, grievance: 75,
+    });
+    expect(recommendAmbition(ctx)).toMatchObject({
+      id: 'secure_branches', reason: 'The river hall is close to breaking with the seat.',
+    });
+    // A hall that has died out cannot break away.
+    w.branches.get(branchId)!.extinct = w.year;
+    expect(recommendAmbition(ctx)?.id).toBe('restore_ledger');
+    w.branches.get(branchId)!.extinct = undefined;
+
+    for (let i = 0; w.clausesRecovered.size < target - 1; i++) w.clausesRecovered.add(asId(`test_clause_${i}`));
+    expect(recommendAmbition(ctx)).toMatchObject({ id: 'restore_ledger', reason: 'The Ledger is one clause from whole.' });
+
+    // A thin line outranks everything else the house can see.
+    for (const p of w.people.living().filter((p) => p.name.startsWith('Broadline'))) p.status = 'dead';
+    expect(recommendAmbition(ctx)?.id).toBe('deepen_blood');
+  });
+
+  it('gives a Regency something to do while nobody climbs', () => {
+    const ctx = testWorld(content);
+    const w = ctx.world;
+    const founder = w.people.get(w.narrator!)!;
+    founder.castSlots = founder.castSlots.filter((s) => s !== 'head');
+    const regent = place(ctx, { sex: 'female', age: 40, name: 'Maud the Regent', castSlots: ['head'] });
+    w.houseAmbition = 'raise_ascendant';
+
+    const view = ambitionView(ctx)!;
+    expect(view.next).toContain('While Maud the Regent keeps the seal, nobody climbs.');
+    regent.castSlots = [];
+    founder.castSlots.push('head');
+    expect(ambitionView(ctx)!.next).not.toContain('keeps the seal');
+  });
+
+  it('keys every recommendation, and reads one in Plain English', () => {
+    const keyed = coreMessageEntries(readFileSync(new URL('./ambition.ts', import.meta.url), 'utf8'));
+    expect(keyed.filter((e) => /#ambition\.recommend\./.test(e.address))).toHaveLength(8);
+    const read = (mode: 'original' | 'plainenglish') => {
+      const ctx = testWorld(content);
+      setProseVariants(ctx, keyed.map((entry) => ({
+        address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `plain: ${entry.text}`,
+      })));
+      setProseMode(ctx, mode);
+      return recommendAmbition(ctx)!;
+    };
+    const original = read('original');
+    expect(read('plainenglish')).toEqual({
+      ...original, name: `plain: ${original.name}`, reason: `plain: ${original.reason}`,
+    });
   });
 });
