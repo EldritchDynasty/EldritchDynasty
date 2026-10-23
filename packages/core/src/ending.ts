@@ -7,6 +7,7 @@ import { END_YEAR, campaignDef } from './campaign.js';
 import { renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
+import { ambitionView } from './ambition.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -486,7 +487,54 @@ export interface EpilogueView {
   read: ChronicleEntry[];
   /** What the house was called, and what it asked for in 1042. */
   founding?: { houseName: string; heirloom: string; heirloomName: string; grudge: string; grudgeName: string };
+  /**
+   * WHERE IT BEGAN (#1867 §6). Collection returns to the player: who signed,
+   * the first thing the house was asked to decide and what the book made of
+   * it, and the plan the house was keeping in view at the end. All of it read
+   * off this run — nothing here is authored per ending.
+   */
+  beginning?: EpilogueBeginning;
   year: number;
+}
+
+export interface EpilogueBeginning {
+  /** The founder as the player signed them. */
+  founder: string;
+  /** The year the founder crossed over and began deciding as the guardian. */
+  guardianSince?: number;
+  /**
+   * The pages the campaign's opening arc wrote, as they stand in the book:
+   * a page left blank is still a blank, and an improved one still improved.
+   */
+  pages: ChronicleEntry[];
+  /** The ambition the house was tracking at the reckoning, read as the panel reads it. */
+  ambition?: { name: string; progress: string; status: string };
+}
+
+/** The opening arc's own pages, in the order they were written. */
+function openingPages(ctx: SimCtx): ChronicleEntry[] {
+  const opening = campaignDef(ctx.world.campaign).openingArc;
+  const arc = opening ? ctx.content.arc(opening.arc) : undefined;
+  if (!arc) return [];
+  const events = new Set(arc.nodes.map((n) => String(n.event)));
+  return ctx.world.chronicle
+    .filter((e) => e.eventId !== undefined && events.has(e.eventId))
+    .map((entry) => structuredClone(entry));
+}
+
+function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
+  const w = ctx.world;
+  const founder = w.narrator ? w.people.get(w.narrator) : undefined;
+  if (!founder) return undefined;
+  const ambition = ambitionView(ctx);
+  return {
+    founder: founder.name,
+    ...(w.guardianSince !== undefined ? { guardianSince: w.guardianSince } : {}),
+    pages: openingPages(ctx),
+    ...(ambition
+      ? { ambition: { name: ambition.name, progress: ambition.progress.label, status: ambition.status } }
+      : {}),
+  };
 }
 
 /** How much of the book the last night quotes back. */
@@ -567,6 +615,8 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     afterimage: afterimageEvidence(ctx),
     year: w.ending.year,
   };
+  const beginning = beginningOf(ctx);
+  if (beginning) view.beginning = beginning;
 
   if (w.founding) {
     view.founding = {
