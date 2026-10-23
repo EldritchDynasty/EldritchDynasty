@@ -133,6 +133,10 @@ export interface LongRun {
   frameFirst?: number;
   frameLast?: number;
   frameMaxSilence: number;
+  /** Longest gap between answers (frames ∪ clauses), edges included (#1897). */
+  answerMaxSilence: number;
+  /** The year that gap opens: START_YEAR when the run is quiet from the signing. */
+  answerSilenceFrom: number;
   chapters: number;
   chaptersNoFrame: number;
   chaptersMultiFrame: number;
@@ -230,6 +234,27 @@ export function judgeLongitudinalDelta(
   } catch (error) {
     return `FAIL ${error instanceof Error ? error.message : String(error)}`;
   }
+}
+
+/**
+ * #1897: the longest stretch without an answer, campaign edges included —
+ * the signing and the year the run stopped both count as ends of a gap.
+ * Shared by 5C's frame-only figure and its frames ∪ clauses figure so the two
+ * read silence the same way. `from` is the year the longest gap opens; on a
+ * tie the earliest wins, so a run quiet from the signing reports the signing.
+ */
+export function longestSilence(
+  years: readonly number[],
+  start: number,
+  end: number,
+): { years: number; from: number } {
+  const edges = [start, ...years.filter((y) => y >= start && y <= end).sort((a, b) => a - b), end];
+  let best = { years: 0, from: start };
+  for (let i = 1; i < edges.length; i++) {
+    const gap = edges[i]! - edges[i - 1]!;
+    if (gap > best.years) best = { years: gap, from: edges[i - 1]! };
+  }
+  return best;
 }
 
 function summary(xs: number[]): string {
@@ -511,11 +536,11 @@ function runOne(bundle: Content, seed: number, years: number, policy: LongLinePo
   ).length;
 
   const frameYears = w.frame.entries.map((e) => e.year).sort((a, b) => a - b);
-  const frameEdges = [START_YEAR, ...frameYears, Math.min(END_YEAR, w.year)];
-  let frameMaxSilence = 0;
-  for (let i = 1; i < frameEdges.length; i++) {
-    frameMaxSilence = Math.max(frameMaxSilence, frameEdges[i]! - frameEdges[i - 1]!);
-  }
+  const lastYear = Math.min(END_YEAR, w.year);
+  const frameMaxSilence = longestSilence(frameYears, START_YEAR, lastYear).years;
+  // #1897's "answer": an interlude or a recovered clause, the two places the
+  // run tells the player something new about the bargain.
+  const answerSilence = longestSilence([...frameYears, ...clauseYears], START_YEAR, lastYear);
 
   const chapters = w.age.ended
     .map((ended) => chapterOf(ctx, ended))
@@ -569,6 +594,8 @@ function runOne(bundle: Content, seed: number, years: number, policy: LongLinePo
     ...(frameYears[0] !== undefined ? { frameFirst: frameYears[0] } : {}),
     ...(frameYears.at(-1) !== undefined ? { frameLast: frameYears.at(-1) } : {}),
     frameMaxSilence,
+    answerMaxSilence: answerSilence.years,
+    answerSilenceFrom: answerSilence.from,
     chapters: chapters.length,
     chaptersNoFrame,
     chaptersMultiFrame,
@@ -773,6 +800,12 @@ export function reportLongLine(runs: LongRun[], years: number): string {
   lines.push('  first frame: ' + summary(runs.flatMap((r) => r.frameFirst === undefined ? [] : [r.frameFirst])));
   lines.push('  last frame:  ' + summary(runs.flatMap((r) => r.frameLast === undefined ? [] : [r.frameLast])));
   lines.push('  max silence incl. campaign edges: ' + summary(nums((r) => r.frameMaxSilence)));
+  const fromSigning = runs.filter((r) => r.answerSilenceFrom === START_YEAR).length;
+  const midgameFrom = runs.flatMap((r) => r.answerSilenceFrom === START_YEAR ? [] : [r.answerSilenceFrom]);
+  lines.push('  longest answer silence (frames ∪ clauses): ' + summary(nums((r) => r.answerMaxSilence))
+    + ' · max ' + Math.max(0, ...nums((r) => r.answerMaxSilence)));
+  lines.push('    opens at the signing ' + fromSigning + '/' + countRuns
+    + (midgameFrom.length ? ' · otherwise opens ' + summary(midgameFrom) : ''));
   const chapterCount = runs.reduce((a, r) => a + r.chapters, 0);
   const noFrame = runs.reduce((a, r) => a + r.chaptersNoFrame, 0);
   const multiFrame = runs.reduce((a, r) => a + r.chaptersMultiFrame, 0);
