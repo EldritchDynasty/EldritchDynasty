@@ -115,6 +115,7 @@ function cancel(): void {
       <p class="small ambition-progress">{{ view.ambition.progress.label }}</p>
       <p class="dim small">{{ view.ambition.status }}</p>
       <p class="small next"><span class="rubric">{{ plain ? 'Next step:' : 'Next:' }}</span> {{ view.ambition.next }}</p>
+      <p v-if="view.ambition.ahead" class="small ahead"><span class="rubric">{{ plain ? 'Plan ahead:' : 'Ahead:' }}</span> {{ view.ambition.ahead }}</p>
       <p v-if="pressing" class="small pressing">
         <span class="dim">{{ plain ? 'The family\'s situation now points to' : 'The house\'s situation now points to' }}</span>
         <strong>{{ pressing.name }}</strong>. {{ pressing.reason }}
@@ -158,6 +159,7 @@ function cancel(): void {
   font-variant-numeric: tabular-nums;
 }
 .next { margin-bottom: 0; }
+.ahead { margin: 6px 0 0; }
 .rubric { color: var(--rubric); }
 label { display: grid; gap: 6px; }
 select { width: 100%; }

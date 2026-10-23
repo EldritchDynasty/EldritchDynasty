@@ -641,3 +641,36 @@ describe('a handover reads the outgoing generation against the plan (#1867 §5)'
     expect(handover(null).world.succession.at(-2)!.ambition).toBeUndefined();
   });
 });
+
+describe('the ascent says what its last step will ask, in time (#1867 §6)', () => {
+  function house(campaign: 'short' | 'long') {
+    const ctx = testWorld(content);
+    ctx.world.campaign = campaign;
+    ctx.world.houseAmbition = 'raise_ascendant';
+    return ctx;
+  }
+
+  it('warns the Long Line once an elder has taken both rites, naming him', () => {
+    const ctx = house('long');
+    expect(ambitionView(ctx)!.ahead).toBeUndefined();
+    const elder = place(ctx, { sex: 'male', age: 58, name: 'Aldren the Elder' });
+    elder.rites.push('vessel');
+    expect(ambitionView(ctx)!.ahead, 'one rite is not yet the elder the last step spends').toBeUndefined();
+    elder.rites.push('great_rite');
+    expect(ambitionView(ctx)!.ahead).toBe(
+      'Aldren the Elder has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.',
+    );
+
+    // Once the Unmaking has been done, there is nothing left to prepare for.
+    const raised = place(ctx, { sex: 'male', age: 30, name: 'The Raised' });
+    raised.rites.push('unmaking');
+    expect(ambitionView(ctx)!.ahead).toBeUndefined();
+  });
+
+  it('says nothing on the Short Line, whose horizon is not the God rung', () => {
+    const ctx = house('short');
+    const elder = place(ctx, { sex: 'male', age: 58, name: 'Aldren the Elder' });
+    elder.rites.push('vessel', 'great_rite');
+    expect(ambitionView(ctx)!.ahead).toBeUndefined();
+  });
+});

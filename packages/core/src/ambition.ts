@@ -29,6 +29,12 @@ export interface HouseAmbitionView {
   progress: { current: number; target: number; label: string };
   status: string;
   next: string;
+  /**
+   * What the plan will ask before its last step, said while there is still
+   * time to answer it (#1867 §6). Absent when nothing is coming that the
+   * player can prepare for now.
+   */
+  ahead?: string;
 }
 /** The plan the house's visible situation points at now, and why (#1867 §4). */
 export interface AmbitionRecommendation {
@@ -604,8 +610,24 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const rungs = {
     HELD: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best), HORIZON: rungTitle(ctx, targetRung),
   };
+  // THE SUCCESSOR BEYOND THE GREATEST ELDER (§22, #1867 §6). The ladder
+  // reads one blocker at a time, so the Long Line's last step — a two-rite
+  // elder spent to raise a younger descendant — was first said at the God
+  // gate itself, when it was too late to raise anyone. Said here instead, the
+  // moment the house has an elder who has taken both rites.
+  const elder = w.campaign === 'long' && !w.people.living().some((p) => p.rites.includes('unmaking'))
+    ? w.people.living().find((p) => p.houseOfOrigin === w.playerHouse
+      && p.rites.includes('vessel') && p.rites.includes('great_rite'))
+    : undefined;
   return {
     ...shown,
+    ...(elder
+      ? {
+        ahead: msg(ctx, 'ambition.view.ascent_ahead',
+          '{ELDER} has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.',
+          { ELDER: elder.name }),
+      }
+      : {}),
     progress: {
       current,
       target,

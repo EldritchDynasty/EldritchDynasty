@@ -636,6 +636,17 @@ describe('the recommended ambition (#1867 §4)', () => {
   });
 });
 
+describe('the ascent ambition looks ahead (#1867 §6)', () => {
+  it('shows what the last step will ask only when the view carries it', () => {
+    const base = ambitionView('blood');
+    const ahead = { ...base, ambition: { ...base.ambition!, ahead: 'Aldren has taken both rites.' } } as SessionView;
+    const shown = mount(Ambition, { props: { view: ahead, actions: { setAmbition: vi.fn() } as unknown as GameActions } });
+    expect(shown.get('.ahead').text()).toBe('Ahead: Aldren has taken both rites.');
+    const quiet = mount(Ambition, { props: { view: base, actions: { setAmbition: vi.fn() } as unknown as GameActions } });
+    expect(quiet.find('.ahead').exists()).toBe(false);
+  });
+});
+
 describe('married-in spouse provenance on family cards (#1147)', () => {
   function member(marriedIn: boolean): SessionView['halls'][number]['members'][number] {
     return {
