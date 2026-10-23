@@ -14162,3 +14162,29 @@ around 1120. This is the stretch §6 means; it is a frame-cadence question
 (content and scheduler), not something the hooks in this branch should
 paper over, so it is recorded here and put to the owner rather than retuned
 in passing.
+
+**Owner decision (2026-10-23): option (b).** The opening concern's
+three-year follow-up now carries the first glimpse of the debt, one per
+answer and seen through the skill that answer bought: the heir finds a debt
+in the founder's own hand, sum and creditor blank, carried every quarter
+since the signing; the daughter at Bramme hears the house did well out of
+its *bargain*; the Threshold daughter is told the candles of the signing
+night burned until morning and were no shorter; the day-book holds a second
+line under the founder's name, ruled and left empty. Wonder stage: a
+contract exists, has terms, and seems to favour the house. Text only — no
+effect, no draw — so selection, gates and fire rates do not move.
+
+Re-measured on the same 24 seeds, counting the glimpse page as an answer:
+
+| Reading (24 runs) | mean | p25 | median | p75 | max |
+|---|---:|---:|---:|---:|---:|
+| frames ∪ clauses (before) | 73.6 | 61 | 71 | 92 | 108 |
+| frames ∪ clauses ∪ glimpse | **72.1** | 59 | 70 | 91 | 104 |
+
+The glimpse is written in 23 of 24 runs (the miss is a run whose opening
+did not reach its follow-up). The longest silence now starts at the signing
+in **1 of 24** runs, against 10. But the run's longest silence barely
+shortens: the next-longest stretches were already in the midgame
+(1126–1447), within a few years of the opening one. **The opening's quiet is
+answered; the midgame's is now the longest, at about seventy years, and is
+the open half of §6.**

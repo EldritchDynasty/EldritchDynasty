@@ -151,10 +151,14 @@ events:
         - id: the_three_sacks
           weight: 100
           text: >-
-            The reeve reads the autumn tally aloud and {SON} stops him at the
-            mill: eleven sacks, where the miller's own tally says fourteen. The
-            reeve finds the other three before dinner. Nobody at the table calls
-            the heir a boy after that.
+            The reeve reads the autumn tally aloud and {SON} stops him at the mill:
+            eleven sacks, where the miller's own tally says fourteen. The reeve finds
+            the other three before dinner, and nobody at the table calls the heir a boy
+            after that. {SON} keeps reading once the reeve has gone, back through the
+            old quarters to the spring of the signing. There is a line there in
+            {NARRATOR}'s own hand: a debt, entered the proper way, with the sum left
+            blank and the creditor left blank. It has been carried forward every quarter
+            since. The reeve has never once been asked why.
           effects:
             - { kind: treasury, delta: 15 }
 
@@ -194,11 +198,13 @@ events:
         - id: the_other_question
           weight: 100
           text: >-
-            At the Bramme fair a widow from one of the river houses asks
-            {ELDER} a question meant to find out what the house can pay, and
-            she answers a different question so well that the widow forgets
-            she asked. It is repeated on the road home. By the next market
-            three houses have asked after her.
+            At the Bramme fair a widow from one of the river houses asks {ELDER} a
+            question meant to find out what the house can pay, and she answers a
+            different question so well that the widow forgets she asked. At the gate the
+            widow says the house did well out of its bargain, everyone says so, and asks
+            what it cost. {ELDER} has never heard the word used about her own family.
+            She says it cost nothing, and the widow laughs as if she has been told a
+            good one. By the next market three houses have asked after her.
           effects:
             - { kind: respect, delta: 1 }
 
@@ -237,10 +243,14 @@ events:
         - id: the_carpenters_mother
           weight: 100
           text: >-
-            In the dark of the year {YOUNGER} sits with the carpenter's mother
-            through the last of a fever, and does what the books say, and the
-            old woman goes easier than anyone expected. The household has no
-            word for what she did. It starts using hers.
+            In the dark of the year {YOUNGER} sits with the carpenter's mother through
+            the last of a fever, and does what the books say, and the old woman goes
+            easier than anyone expected. Near the end the old woman talks about the
+            night of the signing. She was in the kitchen, she says, and the candles in
+            the hall burned until morning and were no shorter for it. The carpenter says
+            that was the fever talking. {YOUNGER} writes it in the margin of the book
+            about dying, where she keeps the things nobody else will. The household has
+            no word for what she did. It starts using hers.
           effects:
             - { kind: attribute, target: { slot: YOUNGER }, attr: death, delta: 2 }
 
@@ -275,9 +285,12 @@ events:
         - id: everybody_reads_the_bill
           weight: 100
           text: >-
-            The children have signed the autumn page of the day-book, badly.
-            Nobody in the house is a scholar. Everybody in it can read a bill
-            before paying it, which the reeve minds more than he expected to.
+            The children have signed the autumn page of the day-book, badly. Further
+            back is the page {NARRATOR} wrote in the spring of the signing, and under
+            that name there is a second line, ruled in the same ink and left empty. None
+            of the children signs on it. None of them could say why. Nobody in the house
+            is a scholar. Everybody in it can read a bill before paying it, which the
+            reeve minds more than he expected to.
           effects:
             - { kind: treasury, delta: 5 }
 proseVariants:
@@ -355,11 +368,16 @@ proseVariants:
       the steward. The tutor's chair by the schoolroom fire is empty now, but nobody has moved
       the blanket. The reeve reads the figures aloud as usual. He reaches the mill.
   - address: "content:events/opening.yaml#events[id=the_heir_reads_the_tally].interaction.outcomes[id=the_three_sacks].text"
-    of: "21046f1a1458eb5e"
+    of: "3ee81959d1bba84d"
     plainenglish: >-
-      The reeve reads the autumn accounts aloud, and {SON} stops him at the mill: the record
-      says eleven sacks, but the miller's own record says fourteen. The reeve finds the
-      missing three before dinner. After that, nobody at the table calls the heir a boy.
+      The reeve reads the autumn accounts aloud, and {SON} stops him at the mill: the
+      record says eleven sacks, but the miller's own record says fourteen. The reeve
+      finds the missing three before dinner. After that, nobody at the table calls the
+      heir a boy. {SON} keeps reading after the reeve leaves, back to the spring when
+      the agreement was signed. There, in {NARRATOR}'s own handwriting, is a debt
+      written down correctly, except that the amount is blank and the name of the person
+      owed is blank too. It has been copied forward into every quarter's accounts since
+      then. Nobody has ever asked the reeve why.
   - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].title"
     of: "eb011a23423ac8ff"
     plainenglish: >-
@@ -379,12 +397,15 @@ proseVariants:
       in the middle of the yard in a borrowed blue dress. Nobody has told her where to stand.
       She knows anyway.
   - address: "content:events/opening.yaml#events[id=the_daughter_at_the_fair].interaction.outcomes[id=the_other_question].text"
-    of: "3e950be7de937c63"
+    of: "250af1173a57bd2b"
     plainenglish: >-
-      At the Bramme fair, a widow from one of the river families asks {ELDER} a question meant
-      to find out how much the house can pay. She answers a different question so well that
-      the widow forgets what she asked. People repeat the story on the way home. By the next
-      market, three families have asked about her.
+      At the Bramme fair, a widow from one of the river families asks {ELDER} a question
+      meant to find out how much the house can pay. She answers a different question so
+      well that the widow forgets what she asked. At the gate, the widow says that
+      everyone agrees the family did well out of its bargain, and asks what it cost.
+      {ELDER} has never heard anyone call it a bargain before. She says it cost nothing.
+      The widow laughs as if she has heard a good joke. By the next market, three
+      families have asked about her.
   - address: "content:events/opening.yaml#events[id=the_books_about_dying].title"
     of: "2ce24ae2307f2d6e"
     plainenglish: >-
@@ -404,11 +425,16 @@ proseVariants:
       so she corrects herself in pencil in the margins. The steward has stopped asking her to
       put the candle out.
   - address: "content:events/opening.yaml#events[id=the_books_about_dying].interaction.outcomes[id=the_carpenters_mother].text"
-    of: "faafbe267bf2fa72"
+    of: "7d0a92d091c2967c"
     plainenglish: >-
-      In midwinter {YOUNGER} sits with the carpenter's mother through the end of a fever and
-      follows what the books say. The old woman dies more peacefully than anyone expected. The
-      household has no word for what she did, so it starts using her word.
+      In midwinter {YOUNGER} sits with the carpenter's mother through the end of a fever
+      and follows what the books say. The old woman dies more peacefully than anyone
+      expected. Near the end, the old woman talks about the night the agreement was
+      signed. She was working in the kitchen, she says, and the candles in the hall
+      burned all night but were no shorter in the morning. The carpenter says the fever
+      made her say it. {YOUNGER} writes it in the margin of the book about dying, where
+      she keeps the things nobody else will. The household has no word for what she did,
+      so it starts using her word.
   - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].title"
     of: "0792176a00d41436"
     plainenglish: >-
@@ -427,8 +453,11 @@ proseVariants:
       day-book, all of them messy. The tutor who taught them is not there to take the credit.
       The ink on the last name has smudged where somebody blotted it too soon.
   - address: "content:events/opening.yaml#events[id=three_names_in_the_day_book].interaction.outcomes[id=everybody_reads_the_bill].text"
-    of: "f07f9a6ce50f0220"
+    of: "4326856888fae814"
     plainenglish: >-
-      The children have signed the autumn page of the day-book, badly. Nobody in the house is
-      a scholar, but everyone can read a bill before paying it. The reeve minds this more than
-      he expected.
+      The children have signed the autumn page of the day-book, badly. Earlier in the
+      book is the page {NARRATOR} wrote in the spring when the agreement was signed.
+      Under that name there is a second line, drawn in the same ink and left empty. None
+      of the children signs on it, and none of them could explain why. Nobody in the
+      house is a scholar, but everyone can read a bill before paying it. The reeve minds
+      this more than he expected.

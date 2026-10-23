@@ -592,6 +592,27 @@ describe('the opening concern', () => {
     expect(shown?.event.body).toBe(template.absentBody);
   });
 
+  // The owner's answer to the §6 audit (option b): the run's longest silence
+  // most often ran from the signing to the first interlude, so the follow-up
+  // three years on carries the first glimpse of the debt. Every answer gets
+  // one, seen through the skill that answer bought; none explains the other
+  // party, and the founder is named as the player signed them.
+  it.each([
+    ['teach_the_heir', 'the_heir_reads_the_tally', /a debt, entered the proper way, with the sum left blank/],
+    ['teach_the_waker', 'the_daughter_at_the_fair', /the house did well out of its bargain/],
+    ['teach_the_threshold', 'the_books_about_dying', /burned until morning and were no shorter for it/],
+    ['share_the_hours', 'three_names_in_the_day_book', /a second line, ruled in the same ink and left empty/],
+  ])('%s: the follow-up carries the first glimpse of the debt (#1867 §6)', (pick, followUp, glimpse) => {
+    const { g } = play(4106, pick, 1047);
+    const page = g.ctx.world.chronicle.find((e) => e.eventId === followUp);
+    expect(page?.text).toMatch(glimpse);
+    expect(page!.text).not.toMatch(/\{/);
+    const founder = g.ctx.world.people.get(g.ctx.world.narrator!)!.name;
+    if (/NARRATOR/.test(JSON.stringify(bundle.events.find((e) => e.id === followUp)))) {
+      expect(page!.text).toContain(founder);
+    }
+  });
+
   it('the result names the choice that bought it: its page cites the 1042 answer (#1867 §5)', () => {
     const { g } = play(4105, 'teach_the_heir', 1047);
     const book = g.ctx.world.chronicle;
