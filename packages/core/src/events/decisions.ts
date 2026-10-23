@@ -1,6 +1,6 @@
 import type { Decider, EventTemplate, LoggedDecision, Outcome, Person, Rung, Year } from '@ed/schema';
 import { recordFire, recordTemplateFire, RESPECT_ORDER } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { candidatesFor, castIn, castPeople, renderBody, type SlotFill } from './slots.js';
 import { decideBranch } from './deciders.js';
@@ -369,6 +369,7 @@ export function commitOutcome(
   // to have written it before `advanceArc` asks.
   const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
   if (intervention.record) resolved.primordial = { ...intervention.record, page: resolved.entryId };
+  if (arcStep) citeEarlierBeat(ctx, arcStep, resolved.entryId);
   if (observation) ctx.observeAppliedOutcome?.(observation);
 
   // A boy goes through one forcing rite (§11, #1817), whatever came of it and
@@ -409,6 +410,41 @@ export function commitOutcome(
 
   if (arcStep) advanceArc(arcStep, outcome, choiceId, ctx, rng);
   return resolved;
+}
+
+/**
+ * A LATER BEAT NAMES THE PAGE THAT CAUSED IT (#1867 §5, the #269 way back).
+ *
+ * An arc's follow-up is the consequence of its earlier answer — the heir
+ * reading the reeve's tally is what the tutor's years bought — but its page
+ * carried no `cause`, so the book could not point back at the choice. The
+ * earlier page is already identifiable from saved state: the previous node's
+ * event and the year it ran. Nothing new is stored but the link itself, on
+ * the page, where every other cause lives.
+ *
+ * An omitted earlier page is still cited: the way back then leads to a blank,
+ * which is what the house chose to keep. A beat whose event wrote no page is
+ * cited by year alone, as an act the house never wrote down.
+ */
+function citeEarlierBeat(ctx: SimCtx, step: ArcStep, entryId: string): void {
+  const w = ctx.world;
+  const previous = step.instance.history.at(-1);
+  if (!previous) return;
+  const page = latestPage(w.chronicle, (c) => c.id === entryId);
+  if (!page || page.cause) return;
+  const event = ctx.content.arc(step.instance.arc)?.nodes.find((n) => n.id === previous.node)?.event;
+  const earlier = event === undefined
+    ? undefined
+    : latestPage(w.chronicle, (c) => c.eventId === String(event) && c.year === previous.year && c.id !== entryId);
+  page.cause = earlier?.id ? { year: earlier.year, page: earlier.id } : { year: previous.year };
+}
+
+/** The most recent page that matches, searching from the end of the book. */
+function latestPage(book: ChronicleEntry[], match: (c: ChronicleEntry) => boolean): ChronicleEntry | undefined {
+  for (let i = book.length - 1; i >= 0; i--) {
+    if (match(book[i]!)) return book[i];
+  }
+  return undefined;
 }
 
 export interface ChoiceResolution {
