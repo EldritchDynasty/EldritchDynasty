@@ -8,7 +8,8 @@ import { ensureHead } from './people/succession.js';
 import { loadGame, saveGame } from './save.js';
 import { makeRng } from './rng.js';
 import { inRegency, isRegent } from './world.js';
-import { place } from './testing.js';
+import { phase, place } from './testing.js';
+import { setProseMode, setProseVariants } from './prose.js';
 
 const bundle = loadContent();
 const founderSeed = bundle.characters.find((s) => s.becomesGuardian)!;
@@ -142,6 +143,21 @@ describe('{NARRATOR}', () => {
       expect(line, text).not.toMatch(/\{NARRATOR/);
       expect(line, text).not.toMatch(/\b(he|him|his|himself)\b/i);
     }
+  });
+});
+
+describe('the crossing, in both wordings', () => {
+  it.each(['original', 'plainenglish'] as const)('names a woman founder as herself in %s', (mode) => {
+    const { ctx, founder } = founded({ name: 'Ysolt Gearithy', gender: 'woman' });
+    setProseVariants(ctx, bundle.proseVariants);
+    setProseMode(ctx, mode);
+    ctx.world.year = 1080;
+    ctx.world.people.kill(founder.id, ctx.world.year, 'test');
+    phase('guardian', ctx);
+    const page = ctx.world.chronicle.at(-1)!;
+    expect(page.text).toContain('Ysolt Gearithy had not');
+    expect(page.text).toMatch(/\bShe\b/);
+    expect(page.text).not.toMatch(/\b(he|him|his)\b/i);
   });
 });
 

@@ -3404,10 +3404,11 @@ proseVariants:
   - address: "core:messages#guardian.crossed"
     of: "4f1d523971ba4aed"
     plainenglish: >-
-      They buried {NARRATOR} in spring. Everyone noticed that the house did not feel emptier, but
-      nobody said it. Fires were prepared before anyone did the work. The accounts balanced all year
-      without anyone balancing them. {NARRATOR} had not left. {NARRATOR_THEY} simply no longer
-      needed the house to feed them.
+      They buried {NARRATOR} in spring. Everyone noticed that the house did
+      not feel emptier, but nobody said it. Fires were prepared before anyone
+      did the work. The accounts balanced all year without anyone balancing
+      them. {NARRATOR} had not left. {NARRATOR_THEY} simply no longer needed
+      feeding.
   - address: "core:messages#library.first_reading"
     of: "064ac4c545026729"
     plainenglish: >-

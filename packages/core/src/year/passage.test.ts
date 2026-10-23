@@ -417,10 +417,10 @@ describe('year-passage prose identities (#710)', () => {
 describe('the year-phase pages speak the reader\'s setting (#752)', () => {
   const PAGES: Record<string, [string, string]> = {
     'age.named_fallback': ['They began to call it {AGE}.', 'People started calling this time {AGE}.'],
-    'guardian.crossed_title': ['The House Does Not Empty', 'He Did Not Leave'],
+    'guardian.crossed_title': ['The House Does Not Empty', 'Nobody Left'],
     'guardian.crossed': [
-      'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. He had not gone anywhere. He had only stopped being someone they had to feed.',
-      'They buried {NARRATOR} in the spring, but the house did not feel emptier. Fires were lit and accounts were kept with no one doing it. He had not gone; he simply no longer needed feeding.',
+      'They buried {NARRATOR} in the spring and the house did not feel emptier for it, which everyone noticed and nobody said. The fires were laid before anyone laid them. The accounts stayed balanced through a year in which nobody balanced them. {NARRATOR} had not gone anywhere. {NARRATOR_THEY} had only stopped being someone the house had to feed.',
+      'They buried {NARRATOR} in the spring, but the house did not feel emptier. Fires were lit and accounts were kept with no one doing it. {NARRATOR} had not gone; {NARRATOR_THEY} simply no longer needed feeding.',
     ],
     'library.first_reading': [
       '{PERSON} finished {BOOK}. Nobody in the house had read it before.',
@@ -429,7 +429,7 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
   };
   type Mode = 'original' | 'plainenglish';
   const say = (mode: Mode, key: string, v: Record<string, string> = {}) =>
-    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z]+)\}/g, (_, k: string) => v[k]!);
+    PAGES[key]![mode === 'original' ? 0 : 1].replace(/\{([A-Z_]+)\}/g, (_, k: string) => v[k]!);
   function speak(ctx: SimCtx, mode: Mode): SimCtx {
     setProseVariants(ctx, Object.entries(PAGES).map(([key, [original, plain]]) => ({
       address: coreMessageAddress(key), of: proseOriginalHash(original), plainenglish: plain,
@@ -559,10 +559,12 @@ describe('the year-phase pages speak the reader\'s setting (#752)', () => {
       phase('guardian', ctx);
       const page = ctx.world.chronicle.at(-1)!;
       expect(page.title).toBe(say(mode, 'guardian.crossed_title'));
-      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name }));
+      // The founder's own grammar (#1867): the authored founder is a man.
+      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name, NARRATOR_THEY: 'He' }));
       expect(ctx.world.guardianSince).toBe(ctx.world.year);
       setProseMode(ctx, mode === 'original' ? 'plainenglish' : 'original');
-      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name }));
+      // The founder's own grammar (#1867): the authored founder is a man.
+      expect(page.text).toBe(say(mode, 'guardian.crossed', { NARRATOR: narrator.name, NARRATOR_THEY: 'He' }));
     });
 
     it(`writes the house's first reading of a book in ${mode}`, () => {
