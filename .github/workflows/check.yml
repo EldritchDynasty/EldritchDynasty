@@ -769,11 +769,12 @@ jobs:
 
   # ── THE CORPUS WARM, WHICH BLOCKS NOTHING ─────────────────────────────────
   #
-  # A corpus warm is advisory; CI required must not wait for it. Keep warming
-  # on PR heads, main pushes and tags so later runs can reuse a matching key.
-  # Do not launch a duplicate warmer for merge_group: after a successful queue
-  # merge, the main push will warm its exact integration key. Nothing that
-  # asserts correctness depends on this job.
+  # A corpus warm is advisory; CI required must not wait for it. Cache
+  # entries written on pull_request and merge_group refs are scoped to those
+  # ephemeral refs, so they cannot prime main or another integration run.
+  # Warm only after a main push (or manual main dispatch): the cache then
+  # becomes available to later PR/queue checks. Nothing that asserts
+  # correctness depends on this job.
   #
   # ADVISORY IN EVERY SENSE. The corpus is a CACHE of played millennia, keyed
   # on the simulation sources and the content together, and `playedRun` falls
@@ -786,7 +787,7 @@ jobs:
   corpus:
     name: warm run corpus
     needs: tier
-    if: needs.tier.outputs.full == 'true' && github.event_name != 'merge_group'
+    if: needs.tier.outputs.full == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
