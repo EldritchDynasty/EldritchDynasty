@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MysticServiceS } from './mystic.js';
 
 /**
  * THE MUSTER (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -45,6 +46,13 @@ export const CommitmentS = z.object({
   /** Accrues yearly; spent — or not — at settlement. */
   credit: z.number(),
   status: CommitmentStatusS,
+  /** Bound when field practice first needs an actual opposing house. */
+  opponent: z.string().optional(),
+  /** Returned/disabled duties keep their paid service in this commitment's account. */
+  fieldService: z.array(z.object({
+    practitioner: z.string(), working: z.string(), service: MysticServiceS,
+    ended: z.number(), fate: z.enum(['returned', 'captured', 'dead', 'departed']),
+  }).strict()).optional(),
 });
 export type Commitment = z.infer<typeof CommitmentS>;
 

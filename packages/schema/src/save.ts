@@ -216,7 +216,8 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
  * Earlier formats contain no such record and do not acquire one on load. */
 /** Format 37 records public session inputs in their decision-log position.
  * Older saves load without inventing unrecorded historical commands. */
-export const SAVE_FORMAT = 37;
+/** Format 38 retains commitment-bound field service, foreign spending and recovery. */
+export const SAVE_FORMAT = 38;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -281,6 +282,7 @@ export const StoredPersonS = z.object({
   career: z.object({ career: z.string(), from: z.number() }).optional(),
   membership: z.array(MembershipRecordS),
   captivity: CaptivityS.optional(),
+  fieldRecoveryUntil: z.number().optional(),
   contract: RetainerContractS.optional(),
   marriages: z.array(z.object({ spouse: z.string(), from: z.number(), to: z.number().optional() })).default([]),
   madness: z.number(),

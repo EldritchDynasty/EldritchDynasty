@@ -14,10 +14,10 @@ import { marriagePledge } from './pledges.js';
 import type { MarriagePromise } from '@ed/schema';
 import { careerMortality, inBreedingPool } from './careers.js';
 import { deleteriousLoad } from '../genetics/expression.js';
-import { musterMortality } from '../muster.js';
+import { musterExposure } from '../muster.js';
 import { acquiredFamilySize } from './condition.js';
 import { msg } from '../messages.js';
-import { lifeCareFor, noteLifeKept } from '../mystic.js';
+import { lifeCareFor, noteFieldOfficerKept, noteLifeKept } from '../mystic.js';
 
 /**
  * WHO DIES, WHO MARRIES, WHO IS BORN.
@@ -43,7 +43,9 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   const madnessHazard = ph.canExpress && p.madness > mind
     ? Math.min(0.2, (p.madness - mind) / 260)
     : 0;
-  const violenceHazard = careerMortality(ctx, p) + musterMortality(ctx, p);
+  const field = musterExposure(ctx, p);
+  const violenceHazard = careerMortality(ctx, p) + field.hazard;
+  const fieldReduction = field.ordinary - field.hazard;
 
   // §22's Demigod effect is literal: ageing stops. A man who has reached
   // Demigod is no longer exposed to the ordinary age curve, the max-age wall,
@@ -63,7 +65,13 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
     // Once reached, the effect survives later movement in current standing.
     p.acquired[DEMIGOD_AGEING_STOPPED] = 1;
     const hazard = violenceHazard + madnessHazard;
-    if (!rng.bool(hazard)) return false;
+    if (fieldReduction > 0) {
+      const roll = rng.next();
+      if (roll >= hazard) {
+        if (roll < hazard + fieldReduction && field.commitment) noteFieldOfficerKept(ctx, field.commitment, p);
+        return false;
+      }
+    } else if (!rng.bool(hazard)) return false;
     return w.people.kill(
       p.id,
       w.year,
@@ -108,13 +116,13 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
 
   // The terms in their historical order, so an uncared-for body's hazard is
   // the same float it always was and every existing run digests unchanged.
-  const hazardOf = (ordinary: number, frail: number): number => {
+  const hazardOf = (ordinary: number, frail: number, violence = violenceHazard): number => {
     let hazard = ordinary;
     if (age < 5) hazard += frail;
     hazard *= 1 - Math.min(0.5, strength / 220);
     // Military: kills people. A career's own extra hazard plus the muster hazard
     // are the violence term Demigods retain above.
-    hazard += violenceHazard;
+    hazard += violence;
     // Madness overflow takes people. Only ever those who could express.
     hazard += madnessHazard;
     if (mercy) hazard *= MERCY_HAZARD;
@@ -128,10 +136,13 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   // never violence, Madness or the wall above — and reuses this one draw, so
   // a life is "kept" exactly when the same roll falls between the two hazards.
   const care = lifeCareFor(ctx, p);
-  if (care) {
+  if (care || fieldReduction > 0) {
     const roll = rng.next();
-    if (roll >= hazardOf(base * (1 - care.mortality), infant * (1 - care.infant))) {
-      if (roll < hazard) noteLifeKept(ctx, care, p);
+    if (roll >= hazardOf(base * (1 - (care?.mortality ?? 0)), infant * (1 - (care?.infant ?? 0)))) {
+      if (care && roll < hazard) noteLifeKept(ctx, care, p);
+      if (field.commitment && roll < hazardOf(base, infant, violenceHazard + fieldReduction)) {
+        noteFieldOfficerKept(ctx, field.commitment, p);
+      }
       return false;
     }
   } else if (!rng.bool(hazard)) return false;

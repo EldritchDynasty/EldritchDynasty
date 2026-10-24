@@ -109,13 +109,16 @@ export function saveGame(ctx: SimCtx): SavedGame {
     heirlooms: [...w.heirlooms.entries()],
     parcels: [...w.parcels.entries()],
     muster: {
-      commitments: w.muster.commitments.map((c) => ({ ...c, from: { ...c.from }, officers: [...c.officers] })),
+      commitments: w.muster.commitments.map((c) => ({ ...c, from: { ...c.from }, officers: [...c.officers],
+        ...(c.fieldService ? { fieldService: structuredClone(c.fieldService) } : {}) })),
       tide: w.muster.tide,
       ...(w.muster.lastSettled !== undefined ? { lastSettled: w.muster.lastSettled } : {}),
     },
     mystic: {
       assignments: w.mystic.assignments.map(copyAssignment),
       pauses: w.mystic.pauses.map((p) => ({ ...p })),
+      ...(w.mystic.foreignSpent ? { foreignSpent: { ...w.mystic.foreignSpent } } : {}),
+      ...(w.mystic.reservedUpkeep ? { reservedUpkeep: { ...w.mystic.reservedUpkeep } } : {}),
     },
     library: [...w.library.entries()],
     auction: w.auction,
@@ -261,12 +264,12 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
   // turns a bare founder name into the authored founder under that name.
   const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
-  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && !legacySigning) {
+  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && format !== 37 && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
   const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>)
-    : format === 35 || format === 36 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
+    : format === 35 || format === 36 || format === 37 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -370,6 +373,8 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   world.mystic = {
     assignments: s.mystic.assignments.map(copyAssignment),
     pauses: s.mystic.pauses.map((p) => ({ ...p })),
+    ...(s.mystic.foreignSpent ? { foreignSpent: { ...s.mystic.foreignSpent } } : {}),
+    ...(s.mystic.reservedUpkeep ? { reservedUpkeep: { ...s.mystic.reservedUpkeep } } : {}),
   };
   world.library = new Map(s.library);
   world.auction = s.auction;
@@ -493,6 +498,7 @@ function storePerson(p: Person): StoredPerson {
     ...(p.career ? { career: { career: String(p.career.career), from: p.career.from } } : {}),
     membership: p.membership,
     ...(p.captivity ? { captivity: structuredClone(p.captivity) } : {}),
+    ...(p.fieldRecoveryUntil !== undefined ? { fieldRecoveryUntil: p.fieldRecoveryUntil } : {}),
     ...(p.contract ? { contract: p.contract } : {}),
     marriages: p.marriages,
     madness: p.madness,
@@ -559,6 +565,7 @@ function restorePerson(s: StoredPerson): Person {
   if (s.career) p.career = { career: asId(s.career.career), from: s.career.from };
   if (s.contract) p.contract = s.contract;
   if (s.captivity) p.captivity = structuredClone(s.captivity);
+  if (s.fieldRecoveryUntil !== undefined) p.fieldRecoveryUntil = s.fieldRecoveryUntil;
   if (s.becomesGuardian !== undefined) p.becomesGuardian = s.becomesGuardian;
   if (s.gender !== undefined) p.gender = s.gender;
   if (s.mintedFrom !== undefined) p.mintedFrom = s.mintedFrom;
@@ -640,6 +647,9 @@ export function digest(save: SavedGame): string {
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
   delete value.replayOrigin;
+  if (value.format === 38 && save.muster.commitments.every(c => !c.opponent && !c.fieldService)
+    && !save.mystic.foreignSpent && !save.mystic.reservedUpkeep && save.people.every(p => p.fieldRecoveryUntil === undefined)
+    && save.mystic.assignments.every(a => a.target.kind !== 'muster')) value.format = 37;
   // Unrecorded session inputs add no state to an existing seeded campaign.
   if (value.format === 37 && !save.decisionLog.some(row => row.kind === 'command')) value.format = 36;
   // An unused capture vocabulary must not change an existing campaign's digest.

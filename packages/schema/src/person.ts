@@ -253,6 +253,8 @@ export interface Person {
 
   membership: MembershipRecord[];
   captivity?: Captivity;
+  /** A field injury prevents Mystic service until this year, even after reassignment. */
+  fieldRecoveryUntil?: number;
   contract?: RetainerContract;
   marriages: { spouse: PersonId; from: Year; to?: Year }[];
 
