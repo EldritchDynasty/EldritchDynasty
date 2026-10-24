@@ -60,7 +60,8 @@ export const FULL_PEDIGREE = 3;
 export const PEDIGREE_PRICE: Record<PedigreeGrade, number> = { bramme: 25, caster: 120 };
 export const PEDIGREE_COVERS: Record<PedigreeGrade, number> = { bramme: 2, caster: 3 };
 
-export type PedigreeGrade = 'bramme' | 'caster';
+export type { PedigreeGrade } from '@ed/schema';
+import type { PedigreeGrade } from '@ed/schema';
 
 /**
  * THE STANDARD TELL (world §16): *"the seal of a house that stopped

@@ -4,6 +4,8 @@ import { SexS } from './attributes.js';
 import { SigningIdS } from './signing.js';
 import { FounderIdentityS } from './founder.js';
 import { PrimordialRecordS } from './primordial.js';
+import { RecordOptionS, SessionCommandS } from './session-command.js';
+import { ProseModeS } from './prose.js';
 
 /**
  * THE DECISION LOG (issue #8, phase 1).
@@ -27,6 +29,17 @@ import { PrimordialRecordS } from './primordial.js';
  * the thing the snapshot is missing.
  */
 export const LoggedDecisionS = z.discriminatedUnion('kind', [
+  /** A public session input precedes every output it caused. Failed inputs leave no row. */
+  z.object({
+    kind: z.literal('command'), year: z.number(), command: SessionCommandS,
+    /** Rendering at this mutation; absence is Original. Changing a preference alone logs nothing. */
+    proseMode: ProseModeS.optional(),
+    /** Initial signing-page rendering, retained on the first input only. */
+    initialProseMode: ProseModeS.optional(),
+    /** A host may still be loading its catalogue; fallback wording is historical too. */
+    proseCatalogueEmpty: z.literal(true).optional(),
+    initialProseCatalogueEmpty: z.literal(true).optional(),
+  }).strict(),
   /**
    * A narration outcome or an answered choice. `choiceId` is absent for
    * narration, which has nothing to choose — the outcome still rolls, and
@@ -50,7 +63,7 @@ export const LoggedDecisionS = z.discriminatedUnion('kind', [
     kind: z.literal('record'),
     year: z.number(),
     event: z.string(),
-    option: z.enum(['record', 'omit', 'embellish']),
+    option: RecordOptionS,
   }),
   /**
    * A suitor drafted (concept §5). The seed decides which three cards the

@@ -52,6 +52,17 @@ describe('a run survives being written down', () => {
     expect(legacy).toEqual(original);
   });
 
+  it('reads format 36 without inventing historical session inputs', () => {
+    const before = bootstrap(content, 1042, 1042);
+    const legacy = { ...saveGame(before), format: 36 };
+    const original = structuredClone(legacy);
+    const after = loadGame(legacy, content);
+    expect(saveGame(after).format).toBe(SAVE_FORMAT);
+    expect(after.world.decisionLog.some(row => row.kind === 'command')).toBe(false);
+    expect(digestOf(after)).toBe(digestOf(before));
+    expect(legacy).toEqual(original);
+  });
+
   it('reads format 31 without inventing an unrecorded forcing attempt', () => {
     const before = bootstrap(content, 1042, 1042);
     const legacy = { ...saveGame(before), format: 31 };
@@ -674,6 +685,7 @@ describe('a run survives being written down', () => {
       savedAt: 'a timestamp — the envelope, not the world',
       takenNames: 'lives on SimCtx beside the world, not on it',
       contentSources: 'load-safety provenance derived from the serialized save and authored bundle',
+      replayOrigin: 'initial archived rendering provenance on SimCtx, superseded by the first input',
     };
 
     /** Old enough that `narrator`, `guardianSince`, `headSince` and `respectChanged` are all set. */

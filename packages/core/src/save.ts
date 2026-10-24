@@ -41,6 +41,8 @@ export function saveGame(ctx: SimCtx): SavedGame {
     year: w.year,
     generation: w.generation,
     playerHouse: w.playerHouse,
+    ...(ctx.replayOrigin && !w.decisionLog.some(row => row.kind === 'command')
+      ? { replayOrigin: { ...ctx.replayOrigin } } : {}),
 
     people: w.people.all().map(storePerson),
     takenNames: [...ctx.takenNames],
@@ -259,12 +261,12 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
   // turns a bare founder name into the authored founder under that name.
   const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
-  if (format !== SAVE_FORMAT && format !== 35 && !legacySigning) {
+  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
   const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>)
-    : format === 35 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
+    : format === 35 || format === 36 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -299,6 +301,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
     genetics: makeGeneticsCtx(content, s.seed),
     takenNames: new Set(s.takenNames),
     prose: createProseRuntime(),
+    ...(s.replayOrigin ? { replayOrigin: { ...s.replayOrigin } } : {}),
   };
 
   world.generation = s.generation;
@@ -482,7 +485,8 @@ function storePerson(p: Person): StoredPerson {
     lineageDocuments: p.lineageDocuments,
     genome: p.genome.kind === 'materialized'
       ? { kind: 'materialized', genome: storeGenome(p.genome.genome) }
-      : { kind: 'lazy', pool: p.genome.pool, seed: p.genome.seed },
+      : { kind: 'lazy', pool: p.genome.pool, seed: p.genome.seed,
+        ...(p.genome.bias ? { bias: { ...p.genome.bias } } : {}) },
     traits: [...p.traits],
     awakening: p.awakening,
     spellsKnown: [...p.spellsKnown],
@@ -530,7 +534,8 @@ function restorePerson(s: StoredPerson): Person {
     lineageDocuments: s.lineageDocuments,
     genome: s.genome.kind === 'materialized'
       ? { kind: 'materialized', genome: restoreGenome(s.genome.genome) }
-      : { kind: 'lazy', pool: s.genome.pool, seed: s.genome.seed },
+      : { kind: 'lazy', pool: s.genome.pool, seed: s.genome.seed,
+        ...(s.genome.bias ? { bias: { ...s.genome.bias } } : {}) },
     traits: new Set(s.traits.map((t) => asId<TraitId>(t))),
     awakening: s.awakening,
     spellsKnown: s.spellsKnown.map((x) => asId<SpellbookId>(x)),
@@ -634,6 +639,9 @@ export function digest(save: SavedGame): string {
   // Provenance says whether this save may be loaded against a content bundle;
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
+  delete value.replayOrigin;
+  // Unrecorded session inputs add no state to an existing seeded campaign.
+  if (value.format === 37 && !save.decisionLog.some(row => row.kind === 'command')) value.format = 36;
   // An unused capture vocabulary must not change an existing campaign's digest.
   if (value.format === 36 && save.people.every(person => person.captivity === undefined)) value.format = 35;
   if (save.campaign === 'long') {

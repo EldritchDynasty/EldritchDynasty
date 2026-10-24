@@ -2,7 +2,7 @@ import type { PrimordialObservation } from './events/primordial.js';
 import type {
   AgeState, ArcInstance, AuctionState, BranchState, CampaignId, Content, EndingId, FrameEntry, FrequencyLedger, HeirloomState, HouseDef,
   LibraryBookState, LibraryMemory, LoggedDecision, LooseSecret, MarriagePromise, MusterState, ParcelState, Person, PersonId, Relationship,
-  RentPolicy, ResolvedClaim, RespectTier, RivalLineageState, TaleCirculationState, Year,
+  RentPolicy, ResolvedClaim, RespectTier, RivalLineageState, TaleCirculationState, Year, ReplayOrigin,
 } from '@ed/schema';
 import { emptyAuctionState } from '@ed/schema';
 import { emptyAgeState, emptyFrequencyLedger, emptyMusterState, emptyMysticState } from '@ed/schema';
@@ -794,6 +794,8 @@ export interface SimCtx {
   takenNames: Set<string>;
   /** Prospective wording preference; deliberately not part of WorldState/save. */
   prose: ProseRuntime;
+  /** Initial archived rendering, kept separately from the active reader preference. */
+  replayOrigin?: ReplayOrigin;
   /** Measurement-only listener before an authored outcome applies. Never saved or called by previews. */
   observePrimordial?: (observation: PrimordialObservation) => void;
   observeOutcome?: (observation: OutcomeObservation) => void;

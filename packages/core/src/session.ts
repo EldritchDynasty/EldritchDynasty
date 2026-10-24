@@ -1,8 +1,8 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung,
+  SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung, SessionCommand,
 } from '@ed/schema';
-import { FounderIdentityError, MAIN_BRANCH, RUNG_ORDER, assertNever, resolveFounder } from '@ed/schema';
+import { FounderIdentityError, MAIN_BRANCH, RUNG_ORDER, assertNever, resolveFounder, SessionCommandS, TableOrderS, MusterOrderS } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
 import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type BootstrapSigning } from './sim.js';
 import { stepYear } from './year/step.js';
@@ -391,6 +391,8 @@ function matchFutureMessage(
 
 export class GameSession {
   decider: 'ask' | 'chronicler';
+  #initialProseMode: ProseMode;
+  #initialProseCatalogueEmpty: boolean;
 
   constructor(
     public ctx: SimCtx,
@@ -398,6 +400,61 @@ export class GameSession {
     private readonly foundingBootstrap?: FoundingBootstrap,
   ) {
     this.decider = decider;
+    const first = ctx.world.decisionLog.find(row => row.kind === 'command');
+    this.#initialProseMode = first ? first.initialProseMode ?? 'original' : ctx.replayOrigin?.proseMode ?? ctx.prose.mode;
+    this.#initialProseCatalogueEmpty = first ? first.initialProseCatalogueEmpty === true
+      : ctx.replayOrigin ? ctx.replayOrigin.catalogueEmpty === true : ctx.prose.variants.size === 0;
+    this.#keepReplayOrigin();
+  }
+
+  /** Save the external input before the verb generates its independently checked outputs. */
+  #input<T>(command: SessionCommand, perform: () => T, accepted: (result: T) => boolean = () => true): T {
+    const parsed = SessionCommandS.parse(command); // also owns the copy: caller payloads stay detached
+    const log = this.ctx.world.decisionLog;
+    const index = log.length;
+    const lazy = this.#lazyGenomes();
+    const rollback = () => {
+      log.splice(index, 1);
+      for (const { person, genome } of lazy) person.genome = genome;
+    };
+    const first = !log.some(row => row.kind === 'command');
+    log.push({ kind: 'command', year: this.year, command: parsed,
+      ...(this.ctx.prose.mode !== 'original' ? { proseMode: this.ctx.prose.mode } : {}),
+      ...(this.ctx.prose.mode !== 'original' && this.ctx.prose.variants.size === 0 ? { proseCatalogueEmpty: true as const } : {}),
+      ...(first && this.#initialProseMode !== 'original'
+        ? { initialProseMode: this.#initialProseMode } : {}),
+      ...(first && this.#initialProseMode !== 'original' && this.#initialProseCatalogueEmpty
+        ? { initialProseCatalogueEmpty: true as const } : {}),
+    });
+    try {
+      const result = perform();
+      if (!accepted(result)) rollback();
+      return result;
+    } catch (error) {
+      rollback();
+      throw error;
+    }
+  }
+
+  /** Expression may cache a lazy genome. A read model must not change its
+   * saved representation, or opening a card becomes an unrecorded input.
+   * Keep the derived phenotype cache; restore only those original lazy refs.
+   */
+  #read<T>(read: () => T): T {
+    const lazy = this.#lazyGenomes();
+    try { return read(); }
+    finally { for (const { person, genome } of lazy) person.genome = genome; }
+  }
+
+  #lazyGenomes() {
+    return this.ctx.world.people.all().filter(p => p.genome.kind === 'lazy')
+      .map(person => ({ person, genome: person.genome }));
+  }
+
+  #keepReplayOrigin(): void {
+    if (this.#initialProseMode === 'original') delete this.ctx.replayOrigin;
+    else this.ctx.replayOrigin = { proseMode: this.#initialProseMode,
+      ...(this.#initialProseCatalogueEmpty ? { catalogueEmpty: true } : {}) };
   }
 
   get year(): number {
@@ -410,6 +467,19 @@ export class GameSession {
    * spinning the loop would only produce blocked reports.
    */
   advance(years = 1): AdvanceResult {
+    // The old zero/negative/NaN request turns no years. Infinity cannot be a
+    // finite saved input, nor may it spin an unbounded loop at a closed Ledger.
+    if (!Number.isFinite(years)) years = 0;
+    if (years <= 0 || this.ctx.world.ending || this.ctx.world.pendingDecisions.length) {
+      return this.#read(() => this.#advance(years));
+    }
+    const beforeYear = this.year;
+    const beforeEnding = this.ctx.world.ending;
+    return this.#input({ kind: 'advance', years, decider: this.decider },
+      () => this.#advance(years), () => this.year !== beforeYear || this.ctx.world.ending !== beforeEnding);
+  }
+
+  #advance(years: number): AdvanceResult {
     const out: YearReport[] = [];
     const said: Passage[] = [];
     const chapters: ChapterView[] = [];
@@ -430,6 +500,7 @@ export class GameSession {
           pending: this.pending,
         };
       }
+      if (this.ctx.world.ending) break;
       const report = stepYear(this.ctx, this.decider === 'chronicler');
       resolveDelegated(this.ctx);
       out.push(report);
@@ -475,19 +546,25 @@ export class GameSession {
    * the knowledge boundary in `advisers.ts`.
    */
   advice(surface: HelpSurface, subject: string, tier: HelpTier): AdviserAdvice[] {
-    return adviceFor(this.ctx, surface, subject, tier);
+    return this.#read(() => adviceFor(this.ctx, surface, subject, tier));
   }
 
   /** Remember or withdraw one exact repeated-event answer (#219). */
   delegateChoice(eventId: string, choiceId: string | null): void {
-    if (choiceId === null) delete this.ctx.world.delegation.choices[eventId];
-    else this.ctx.world.delegation.choices[eventId] = choiceId;
+    if ((this.ctx.world.delegation.choices[eventId] ?? null) === choiceId) return;
+    this.#input({ kind: 'delegateChoice', event: eventId, choice: choiceId }, () => {
+      if (choiceId === null) delete this.ctx.world.delegation.choices[eventId];
+      else this.ctx.world.delegation.choices[eventId] = choiceId;
+    });
   }
 
   /** Remember or withdraw one exact harmless Record answer (#219). */
   delegateRecord(eventId: string, option: RecordOption | null): void {
-    if (option === null) delete this.ctx.world.delegation.records[eventId];
-    else this.ctx.world.delegation.records[eventId] = option;
+    if ((this.ctx.world.delegation.records[eventId] ?? null) === option) return;
+    this.#input({ kind: 'delegateRecord', event: eventId, option }, () => {
+      if (option === null) delete this.ctx.world.delegation.records[eventId];
+      else this.ctx.world.delegation.records[eventId] = option;
+    });
   }
 
   /**
@@ -496,15 +573,11 @@ export class GameSession {
    * many times the client re-rendered, or what the editor previewed in between.
    */
   choose(decision: string, choiceId: string, cast: SlotFill = {}): ChoiceResolution {
-    const result = resolveChoice(
-      this.ctx,
-      decision,
-      choiceId,
-      streamFor(this.ctx.world, 'decision', decision),
-      cast,
-    );
-    if (result.ok) resolveDelegated(this.ctx);
-    return result;
+    return this.#input({ kind: 'choose', decision, choice: choiceId, cast }, () => {
+      const result = resolveChoice(this.ctx, decision, choiceId, streamFor(this.ctx.world, 'decision', decision), cast);
+      if (result.ok) resolveDelegated(this.ctx);
+      return result;
+    }, result => result.ok);
   }
 
   /**
@@ -517,15 +590,11 @@ export class GameSession {
    * difference is which half of the answer the client supplies.
    */
   send(decision: string, cast: SlotFill = {}): ChoiceResolution {
-    const result = resolveChoice(
-      this.ctx,
-      decision,
-      undefined,
-      streamFor(this.ctx.world, 'decision', decision),
-      cast,
-    );
-    if (result.ok) resolveDelegated(this.ctx);
-    return result;
+    return this.#input({ kind: 'send', decision, cast }, () => {
+      const result = resolveChoice(this.ctx, decision, undefined, streamFor(this.ctx.world, 'decision', decision), cast);
+      if (result.ok) resolveDelegated(this.ctx);
+      return result;
+    }, result => result.ok);
   }
 
   /**
@@ -534,23 +603,26 @@ export class GameSession {
    * the suitor a card promises is the suitor who arrives.
    */
   match(decision: string, cardId: string): MatchResolution {
-    return resolveMatch(this.ctx, decision, cardId);
+    return this.#input({ kind: 'match', decision, card: cardId }, () => resolveMatch(this.ctx, decision, cardId), result => result.ok);
   }
 
   /** Take none of them. A real answer — the house waits for a better year. */
   declineHand(decision: string): boolean {
-    return declineMatch(this.ctx, decision);
+    return this.#input({ kind: 'declineHand', decision }, () => declineMatch(this.ctx, decision), result => result);
   }
 
   record(decision: string, option: RecordOption): RecordResolution {
-    const result = resolveRecord(this.ctx, decision, option);
-    if (result.ok) resolveDelegated(this.ctx);
-    return result;
+    return this.#input({ kind: 'record', decision, option }, () => {
+      const result = resolveRecord(this.ctx, decision, option);
+      if (result.ok) resolveDelegated(this.ctx);
+      return result;
+    }, result => result.ok);
   }
 
   /** Hand the pen back. Answers everything standing, through the same commit path. */
   letHimDecide(): void {
-    autoResolveAll(this.ctx, streamFor(this.ctx.world, 'chronicler'));
+    if (!this.ctx.world.pendingDecisions.length) return;
+    this.#input({ kind: 'letHimDecide' }, () => autoResolveAll(this.ctx, streamFor(this.ctx.world, 'chronicler')));
   }
 
   /**
@@ -563,23 +635,27 @@ export class GameSession {
    * you can afford one") by having the simulation quietly decide both.
    */
   order(o: TableOrder): OrderResult {
-    return order(this.ctx, o);
+    const parsed = TableOrderS.safeParse(o);
+    if (!parsed.success) return { ok: false };
+    return this.#input({ kind: 'order', order: parsed.data }, () => order(this.ctx, parsed.data), result => result.ok);
   }
 
   /** What the house can currently be told to do, and what it would cost. */
   table(): TableView {
-    return tableView(this.ctx);
+    return this.#read(() => tableView(this.ctx));
   }
 
   /** Issue #210: select, replace, or clear the one voluntary house ambition. */
   setAmbition(id: HouseAmbitionId | null): boolean {
-    if (id !== null && !ambitionOptions(this.ctx).some((a) => a.id === id)) return false;
-    this.ctx.world.houseAmbition = id;
-    return true;
+    if (id !== null && !this.ambitionOptions().some((a) => a.id === id)) return false;
+    return this.#input({ kind: 'setAmbition', ambition: id }, () => {
+      this.ctx.world.houseAmbition = id;
+      return true;
+    });
   }
 
   ambitionOptions(): HouseAmbitionOption[] {
-    return ambitionOptions(this.ctx);
+    return this.#read(() => ambitionOptions(this.ctx));
   }
 
   /**
@@ -591,7 +667,7 @@ export class GameSession {
    * object, the same way `jump()` sits beside `view()`.
    */
   land(): LandView {
-    return landView(this.ctx);
+    return this.#read(() => landView(this.ctx));
   }
 
   /**
@@ -601,11 +677,13 @@ export class GameSession {
    * between, the same shape `order()` is for the table.
    */
   muster(order: MusterOrder): MusterOrderResult {
-    return musterOrder(this.ctx, order);
+    const parsed = MusterOrderS.safeParse(order);
+    if (!parsed.success) return { ok: false };
+    return this.#input({ kind: 'muster', order: parsed.data }, () => musterOrder(this.ctx, parsed.data), result => result.ok);
   }
 
   name(personId: string, name: string): boolean {
-    return renameChild(this.ctx, personId, name);
+    return this.#input({ kind: 'name', person: personId, name }, () => renameChild(this.ctx, personId, name), result => result);
   }
 
   /**
@@ -615,12 +693,13 @@ export class GameSession {
    * drained strip) will ever have.
    */
   nameParcel(parcelId: string, name: string): boolean {
-    return nameParcel(this.ctx, parcelId, name).ok;
+    return this.#input({ kind: 'nameParcel', parcel: parcelId, name }, () => nameParcel(this.ctx, parcelId, name).ok, result => result);
   }
 
   /** Accept the chronicler's names for everyone waiting. Ignoring the offer is a valid way to play. */
   keepSuggestedNames(): void {
-    clearNamingQueue(this.ctx);
+    if (!this.ctx.world.pendingNames.length) return;
+    this.#input({ kind: 'keepSuggestedNames' }, () => clearNamingQueue(this.ctx));
   }
 
   /**
@@ -630,7 +709,7 @@ export class GameSession {
    * suggests" the button a player pressed to get their clock back.
    */
   keepSuggestedName(personId: string): boolean {
-    return keepSuggestedName(this.ctx, personId);
+    return this.#input({ kind: 'keepSuggestedName', person: personId }, () => keepSuggestedName(this.ctx, personId), result => result);
   }
 
   /**
@@ -638,12 +717,12 @@ export class GameSession {
    * Translation uses the same reviewed, fingerprinted catalogue as other core messages.
    */
   matchFuture(card: MatchCard, priorities: MatchFutureKind[] = []): MatchFutureReading {
-    return matchFuture(card, priorities, (key, original, values) =>
-      matchFutureMessage(this.ctx, key, original, values));
+    return this.#read(() => matchFuture(card, priorities, (key, original, values) =>
+      matchFutureMessage(this.ctx, key, original, values)));
   }
 
   view(): SessionView {
-    return viewOf(this.ctx);
+    return this.#read(() => viewOf(this.ctx));
   }
 
   /**
@@ -654,7 +733,7 @@ export class GameSession {
    * `founded` on the view says which of those two it is.
    */
   prologue(): PrologueView | undefined {
-    return prologueView(this.ctx);
+    return this.#read(() => prologueView(this.ctx));
   }
 
   /**
@@ -665,6 +744,16 @@ export class GameSession {
    * in it.
    */
   found(choice: FoundingChoice): FoundingResult {
+    const result = this.#found(choice);
+    if (result.ok) {
+      this.#initialProseMode = this.ctx.prose.mode;
+      this.#initialProseCatalogueEmpty = this.ctx.prose.variants.size === 0;
+      this.#keepReplayOrigin();
+    }
+    return result;
+  }
+
+  #found(choice: FoundingChoice): FoundingResult {
     // A second answer is just the ordinary once-only refusal. Do not rebuild
     // a finished founding merely because the caller supplied old form fields.
     if (this.ctx.world.founding) return foundHouse(this.ctx, choice);
@@ -753,7 +842,7 @@ export class GameSession {
 
   /** Recorded family changes during one Head's tenure, current by default. */
   generationChanges(index?: number): GenerationChanges {
-    return generationChangesOf(this.ctx, index);
+    return this.#read(() => generationChangesOf(this.ctx, index));
   }
 
   /** The earlier act a Chronicle page answers, when one is recoverable. */
@@ -802,37 +891,39 @@ export class GameSession {
     guardian?: boolean;
     claimedDeath?: { year: number; cause: string };
   }[] {
-    const w = this.ctx.world;
-    const household = w.people.household(w.playerHouse, w.year);
-    return w.succession.map((held) => {
-      const p = w.people.get(held.person);
-      const said = p ? visibleRecordView(this.ctx, p.id, household) : undefined;
-      return {
-        person: held.person,
-        name: held.name,
-        from: held.from,
-        ...(held.to !== undefined ? { to: held.to } : {}),
-        ...(p?.born !== undefined ? { born: p.born } : {}),
-        ...(p?.died !== undefined ? { died: p.died } : {}),
-        ...(p?.status === 'guardian' ? { guardian: true } : {}),
-        ...(said?.claimedDeath ? { claimedDeath: said.claimedDeath } : {}),
-      };
+    return this.#read(() => {
+      const w = this.ctx.world;
+      const household = w.people.household(w.playerHouse, w.year);
+      return w.succession.map((held) => {
+        const p = w.people.get(held.person);
+        const said = p ? visibleRecordView(this.ctx, p.id, household) : undefined;
+        return {
+          person: held.person,
+          name: held.name,
+          from: held.from,
+          ...(held.to !== undefined ? { to: held.to } : {}),
+          ...(p?.born !== undefined ? { born: p.born } : {}),
+          ...(p?.died !== undefined ? { died: p.died } : {}),
+          ...(p?.status === 'guardian' ? { guardian: true } : {}),
+          ...(said?.claimedDeath ? { claimedDeath: said.claimedDeath } : {}),
+        };
+      });
     });
   }
 
   epilogue(): EpilogueView | undefined {
-    return epilogueOf(this.ctx);
+    return this.#read(() => epilogueOf(this.ctx));
   }
 
   /** Finished-run awards, read in the current mode without persisting their wording. */
   achievements(library?: RunLibrary): AchievementView[] {
     if (!this.ctx.world.ending) return [];
-    return earnedAchievements(saveGame(this.ctx), library).map((id) => achievementView(this.ctx, id));
+    return this.#read(() => earnedAchievements(saveGame(this.ctx), library).map((id) => achievementView(this.ctx, id)));
   }
 
   /** What this finished house may leave in the installation-level library. */
   libraryRun(): LibraryRun | undefined {
-    return libraryRunOf(this.ctx);
+    return this.#read(() => libraryRunOf(this.ctx));
   }
 
   /** Change future authored wording without changing simulation or save state. */
@@ -1448,7 +1539,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           ...(p.awakening.awakened ? { expresses: knownToExpress(p, ctx.genetics, w.year) } : {}),
           madness: p.madness,
           attrs: realAttrs,
-          parents: { ...p.trueParents },
+          parents: {
+            ...(p.trueParents.mother !== undefined ? { mother: p.trueParents.mother } : {}),
+            ...(p.trueParents.father !== undefined ? { father: p.trueParents.father } : {}),
+          },
           record: {
             // The claimed value where the record has spoken; the real one
             // otherwise, so a UI can always draw `record.attrs` for the
@@ -1456,7 +1550,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
             attrs: { ...realAttrs, ...Object.fromEntries(view.attrs) },
             claimedTraits: [...view.claimedTraits],
             claimedDeath: view.claimedDeath,
-            parents: { ...p.claimedParents },
+            parents: {
+              ...(p.claimedParents.mother !== undefined ? { mother: p.claimedParents.mother } : {}),
+              ...(p.claimedParents.father !== undefined ? { father: p.claimedParents.father } : {}),
+            },
             claimed: [...view.attrs.keys()],
           },
           drift: view.divergence.size > 0,

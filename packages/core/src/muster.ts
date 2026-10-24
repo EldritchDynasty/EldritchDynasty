@@ -350,10 +350,8 @@ export function withdrawCommitment(ctx: SimCtx): boolean {
  * player free-picks off a panel. `buy` is stage 3's addition (#97), now that
  * `positions.yaml` has real prices to show and check against.
  */
-export type MusterOrder =
-  | { op: 'reinforce'; men: number }
-  | { op: 'buy'; position: string }
-  | { op: 'withdraw' };
+export type { MusterOrder } from '@ed/schema';
+import type { MusterOrder } from '@ed/schema';
 
 export interface MusterOrderResult {
   ok: boolean;
