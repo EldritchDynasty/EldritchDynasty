@@ -14236,3 +14236,66 @@ cadence.
 names sixty as the expected gap. At 70 the batch mean (68.1) is too close to
 72 for #1897's `expectMean` claim to carry on 24 runs. At 60 the cost is 0.4
 interludes per run.
+
+## 2026-10-24 — #1906: an unanswered ninth question earns the early return
+
+**The missing path was an outright refusal.** Nightly run
+[40076896546](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/40076896546)
+on `69619961` failed only fire rate: `the_archdeacon_comes_back_early`
+appeared in **3/800 Long Lines (0.375%)**, below the unchanged **0.5%** floor,
+and was absent from the twelve climbing-policy acquittal runs. All nightly
+slow-test shards, war, endings and iOS jobs passed.
+
+The existing return was scheduled only by
+`answer_all_eleven/the_ninth_question`, the 38-weight outcome of one of the
+Visitation's two choices. Declining the ninth question cost standing and
+seeded a rumour, but scheduled nothing. The callback's flag was therefore
+missing, rather than its cast being unavailable.
+
+**Diagnostic before sample.** `gate:funnel` traced both the Visitation and its
+return on the first 200 canonical seeds (`5000 + 7*i`), Long500, with two
+complete-save observer controls. All 200 houses had an eligible Visitation;
+ten actually saw it. Eight refused the ninth question and two gave a
+satisfactory answer. No hesitant answer occurred, no return was scheduled,
+and the return's annual checkpoints all lacked their premise. Both observer
+controls reproduced the complete saved world. These 200 runs diagnose the
+path; the nightly failure above is the full 800-run baseline.
+
+**Change.** Refusing the question now sets the existing pending-return flag
+and starts the existing four-year arc. Both prose variants say when the next
+visit is due. The trigger reuses
+`inline_the_visitation_of_the_archdeacon__the_ninth_question`, preserving the
+arc ID and schedule used by existing saves and the hesitant-answer path. A
+satisfactory answer still schedules no early return. No event or outcome
+weight, frequency, template count, gate floor, sample size or save format
+changes.
+
+**After measurement.** The canonical 800 Long500 runs, seeds `5000 + 7*i`,
+use the unchanged nightly fire/vocabulary evaluator and full outcome-reach
+evaluator over their shared batch. The Visitation reaches 33 houses; its
+return reaches **25/800 (3.125%)**, up from 3/800. `expectRate` places the
+return **4.27 SE** above the unchanged 0.5% floor. All **507 non-frame events**
+pass fire rate, and all **30 effect kinds** reach the sample. The rarest
+remaining event is `the_cellar_shelf_is_found`, at 0.75%.
+
+The return resolves 26 times across those 25 houses: nine full-list answers
+and seventeen claims that the books were lent. The latter include fifteen
+ordinary results and two Primordial alternatives. This counts actual chosen
+answers, rather than treating an offered answer as a resolution.
+
+Full outcome telemetry passes across **1,167 authored outcomes**, retaining
+seven explicit thin-sample findings: the physician's `bought_days`, the
+unattainable Match's `opened`, the repeated Drowning's `nothing`, the lamp
+vigil's `nothing`, the dark-year fast's `woke` and `nothing`, and Unmaking's
+`failed_at_the_last_step`. None is relabelled as observed. All **12 unchanged
+batch gates** also pass; pannage retains 4.5 SE above its land-route floor.
+
+**Mechanism checks.** All 373 reach tests pass. They exercise both sources
+through the real outcome path, both answers to the due return, the
+satisfactory-answer control, and save/reload of both pending-return paths.
+Content validation has zero errors and the same three frequency-obligation
+warnings. Raw reports and logs remain in the execution workspace under
+`/tmp/ed-1906-*`.
+
+The scheduled-regression issue stays open until a successful nightly run on
+main confirms recovery.

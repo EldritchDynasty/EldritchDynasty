@@ -7416,6 +7416,12 @@ describe('#334 timed-promise reader witnesses', () => {
         { choice: 'say_they_were_lent', outcome: 'said_lent', cost: 0, kept: true }],
     },
     {
+      writer: 'the_visitation_of_the_archdeacon', choice: 'decline_the_ninth', outcome: 'declined_one', weighted: false,
+      reader: 'the_archdeacon_comes_back_early', flag: 'the_visitation_comes_back_early', min: 4, max: 4,
+      answers: [{ choice: 'give_him_the_list', outcome: 'listed', cost: 0, kept: false },
+        { choice: 'say_they_were_lent', outcome: 'said_lent', cost: 0, kept: true }],
+    },
+    {
       writer: 'the_name_said_aloud', choice: 'it_is_a_skipping_rhyme', outcome: 'stood_ground', weighted: false,
       reader: 'a_different_office_asks', flag: 'the_rhyme_in_the_chapter_yard', min: 19, max: 19,
       answers: [{ choice: 'send_an_account', outcome: 'accounted', cost: 6, kept: false },
@@ -7447,7 +7453,7 @@ describe('#334 timed-promise reader witnesses', () => {
   }
 
   for (const [index, entry] of readers.entries()) {
-    it(`${entry.reader} is shut without ${entry.flag}`, () => {
+    it(`${entry.reader} from ${entry.writer}/${entry.outcome} is shut without ${entry.flag}`, () => {
       const ctx = fixture(33600 + index);
       expect(evalCondition(content.mustEvent(entry.reader).conditions, ctx)).toBe(false);
       ctx.world.flags.set(entry.flag, true);
@@ -7471,6 +7477,37 @@ describe('#334 timed-promise reader witnesses', () => {
       });
     }
   }
+
+  for (const entry of readers.filter(row => row.writer === 'the_visitation_of_the_archdeacon')) {
+    it(`${entry.choice}/${entry.outcome} preserves the four-year return across save/reload (#1906)`, () => {
+      const { ctx, instance } = scheduled(entry, 190610);
+      const restored = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      const pending = restored.world.arcs.get(instance.id)!;
+      expect(pending.arc).toBe(instance.arc);
+      expect(pending.dueYear).toBe(instance.dueYear);
+      expect(restored.world.flags.get(entry.flag)).toBe(true);
+      restored.world.year = pending.dueYear!;
+      const step = dueArcSteps(restored, makeRng(190611)).find(due => due.instance.id === instance.id);
+      expect(step?.node.event).toBe(entry.reader);
+      const result = executeOutcomeWitnessRaw(restored, content.mustEvent(entry.reader), {
+        choiceId: 'give_him_the_list', expectedOutcomeId: 'listed', arcStep: step, rng: makeRng(190612),
+      });
+      expect(result.ok, result.reason).toBe(true);
+      expect(restored.world.flags.get(entry.flag)).toBe(false);
+      expect(pending.status).toBe('ended');
+    });
+  }
+
+  it('a satisfactory ninth answer leaves no early visitation pending (#1906)', () => {
+    const ctx = fixture(190600);
+    const result = executeOutcomeWitnessRaw(ctx, content.mustEvent('the_visitation_of_the_archdeacon'), {
+      choiceId: 'answer_all_eleven', expectedOutcomeId: 'answered', targetWeightedOutcome: true, rng: makeRng(190601),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.flags.get('the_visitation_comes_back_early')).not.toBe(true);
+    expect([...ctx.world.arcs.values()].some(arc => arc.status === 'active' &&
+      content.arc(arc.arc)?.nodes.some(node => node.event === 'the_archdeacon_comes_back_early'))).toBe(false);
+  });
 });
 
 describe('#334 reserved account execution witnesses', () => {
