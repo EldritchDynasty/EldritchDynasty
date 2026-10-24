@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { Choice, Content, EventTemplate, Outcome } from '@ed/schema';
+import { CompareOpS, OutcomeS } from '@ed/schema';
 import EffectEditor from './EffectEditor.vue';
 import PrimordialEditor from './PrimordialEditor.vue';
+import SceneSiteEditor from './SceneSiteEditor.vue';
+import OutcomeGuardEditor from './OutcomeGuardEditor.vue';
 import Mark from './Mark.vue';
 import { valenceOf, type Valence } from '../lib/valence';
 
@@ -26,6 +29,10 @@ const props = defineProps<{ event: EventTemplate; eventIds: string[]; content?: 
 const emit = defineEmits<{ change: [] }>();
 
 const slotNames = computed(() => Object.keys(props.event.slots));
+const attributeIds = computed(() => props.content?.attributes.map((attr) => String(attr.id)) ?? []);
+const compareOps = CompareOpS.options;
+const triggerOps = OutcomeS.shape.triggers.unwrap().shape.op.options;
+const arcIds = computed(() => props.content?.arcs.map((arc) => arc.id) ?? []);
 
 const branches = computed<{ choice?: Choice; label: string; outcomes: Outcome[]; check?: string }[]>(() => {
   const i = props.event.interaction;
@@ -71,6 +78,15 @@ function removeChoice(i: number) {
   touch();
 }
 
+function addRequirement(choice: Choice) {
+  choice.requires.push({ slot: slotNames.value[0] ?? '', attr: attributeIds.value[0] ?? '', op: 'gte', value: 0 });
+  touch();
+}
+function removeRequirement(choice: Choice, i: number) {
+  choice.requires.splice(i, 1);
+  touch();
+}
+
 function setCheck(choice: Choice, id: string) {
   if (id) choice.check = id;
   else delete choice.check;
@@ -91,6 +107,33 @@ function addOutcome(outcomes: Outcome[]) {
 
 function removeOutcome(outcomes: Outcome[], i: number) {
   outcomes.splice(i, 1);
+  touch();
+}
+
+function toggleTrigger(o: Outcome) {
+  if (o.triggers) delete o.triggers;
+  else o.triggers = { arc: arcIds.value[0] ?? '', op: triggerOps[0]! };
+  touch();
+}
+function setTriggerArc(o: Outcome, arc: string) {
+  if (!o.triggers) return;
+  o.triggers.arc = arc;
+  touch();
+}
+function setTriggerOp(o: Outcome, op: string) {
+  if (!o.triggers) return;
+  o.triggers.op = OutcomeS.shape.triggers.unwrap().shape.op.parse(op);
+  touch();
+}
+
+function setOutcomeSite(o: Outcome, site: Outcome['site']) {
+  if (site) o.site = site;
+  else delete o.site;
+  touch();
+}
+function setOutcomeGuard(o: Outcome, guard: Outcome['onlyIf']) {
+  if (guard) o.onlyIf = guard;
+  else delete o.onlyIf;
   touch();
 }
 
@@ -156,6 +199,28 @@ function setSchedule(o: Outcome, kind: string) {
         </template>
       </div>
 
+      <div v-if="b.choice" class="requirements">
+        <label class="sub">Choice requirements — slot, attribute, comparison, threshold</label>
+        <div v-for="(req, ri) in b.choice.requires" :key="ri" class="require-row">
+          <select aria-label="Required slot" :value="req.slot"
+                  @change="req.slot = ($event.target as HTMLSelectElement).value; touch()">
+            <option v-for="slot in slotNames" :key="slot" :value="slot">{{ slot }}</option>
+          </select>
+          <select aria-label="Required attribute" :value="req.attr"
+                  @change="req.attr = ($event.target as HTMLSelectElement).value; touch()">
+            <option v-for="attr in attributeIds" :key="attr" :value="attr">{{ attr }}</option>
+            <option v-if="!attributeIds.includes(req.attr)" :value="req.attr">{{ req.attr || '—' }}</option>
+          </select>
+          <select aria-label="Comparison" :value="req.op"
+                  @change="req.op = CompareOpS.parse(($event.target as HTMLSelectElement).value); touch()">
+            <option v-for="op in compareOps" :key="op" :value="op">{{ op }}</option>
+          </select>
+          <input type="number" aria-label="Threshold" :value="req.value"
+                 @input="req.value = Number(($event.target as HTMLInputElement).value); touch()" />
+          <button type="button" class="btn tiny" @click="removeRequirement(b.choice!, ri)">remove requirement</button>
+        </div>
+        <button type="button" class="btn tiny" @click="addRequirement(b.choice!)">+ requirement</button>
+      </div>
       <div v-if="checkOf(b)" class="bandnote">
         resolved by band — {{ checkOf(b)!.bands.map((x) => `≥${x.atLeast} → ${x.outcome}`).join('  ·  ') }}
       </div>
@@ -191,7 +256,37 @@ function setSchedule(o: Outcome, kind: string) {
         <EffectEditor :model-value="o.effects" :slot-names="slotNames"
                       @update:model-value="(v) => { o.effects = v; touch(); }" />
 
+        <details class="authoring-detail">
+          <summary>Outcome eligibility and site</summary>
+          <p class="note">Guarded outcomes draw only when their cast slot passes the filters.</p>
+          <OutcomeGuardEditor :model-value="o.onlyIf" :slot-names="slotNames"
+                              @update:model-value="(v) => setOutcomeGuard(o, v)" />
+          <SceneSiteEditor :model-value="o.site" :slot-names="slotNames"
+                           @update:model-value="(v) => setOutcomeSite(o, v)" />
+        </details>
         <PrimordialEditor :event="event" :outcome="o" :content="content" @change="touch" />
+        <div class="trigger-editor">
+          <button class="btn tiny" type="button" @click="toggleTrigger(o)">
+            {{ o.triggers ? 'remove arc trigger' : '+ arc trigger' }}
+          </button>
+          <template v-if="o.triggers">
+            <label>Arc
+              <select aria-label="Triggered arc" :value="o.triggers.arc"
+                      @change="setTriggerArc(o, ($event.target as HTMLSelectElement).value)">
+                <option v-for="arc in arcIds" :key="arc" :value="arc">{{ arc }}</option>
+                <option v-if="!arcIds.includes(o.triggers.arc)" :value="o.triggers.arc">
+                  {{ o.triggers.arc || '—' }}
+                </option>
+              </select>
+            </label>
+            <label>Action
+              <select aria-label="Arc action" :value="o.triggers.op"
+                      @change="setTriggerOp(o, ($event.target as HTMLSelectElement).value)">
+                <option v-for="op in triggerOps" :key="op" :value="op">{{ op }}</option>
+              </select>
+            </label>
+          </template>
+        </div>
         <div class="nextline">
           <button class="btn tiny" @click="toggleNext(o)">
             {{ o.next ? 'remove follow-up' : '+ follow-up scene' }}
@@ -228,6 +323,15 @@ function setSchedule(o: Outcome, kind: string) {
 </template>
 
 <style scoped>
+.trigger-editor { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0; }
+.trigger-editor label { font-size: 11px; }
+.trigger-editor select { width: auto; margin-left: 4px; }
+.requirements { margin: 8px 0 12px; padding: 6px 0 6px 8px; border-left: 2px solid var(--rule); }
+.require-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin: 5px 0; }
+.require-row select, .require-row input { margin: 0; width: auto; font-size: 12px; }
+.require-row input { max-width: 80px; }
+.authoring-detail { margin: 8px 0; padding: 6px 0; border-top: 1px solid var(--rule); }
+.authoring-detail summary { cursor: pointer; }
 .branch { border-left: 3px solid var(--rule); padding: 7px 0 7px 11px; margin-bottom: 12px; }
 .branch-head { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .branch-head input, .branch-head select { width: auto; margin: 0; font-size: 12.5px; padding: 4px 6px; }

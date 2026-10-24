@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { PrimordialResponseS, SceneSiteS, AgreedPriceS, potentialHarms, type Content, type EventTemplate, type Outcome } from '@ed/schema';
+import { PrimordialResponseS, AgreedPriceS, RecordBlockS, fieldsOfSchema, potentialHarms, type AgreedPrice, type Content, type EventTemplate, type Outcome } from '@ed/schema';
 import { candidatesFor, fillOrder, previewPrimordial, TEST_FAMILIES, type SlotFill } from '@ed/core';
 import EffectEditor from './EffectEditor.vue';
+import { store } from '../lib/store';
+import FieldInput from './FieldInput.vue';
+import RecordEditor from './RecordEditor.vue';
 
 const props = defineProps<{ event: EventTemplate; outcome: Outcome; content?: Content }>();
 const emit = defineEmits<{ change: [] }>();
-const error = ref('');
 const family = ref(TEST_FAMILIES[0]!.id);
 const harms = computed(() => potentialHarms(props.outcome));
 const preview = computed(() => {
@@ -25,37 +27,142 @@ const preview = computed(() => {
   return { ...reading, names: reading.candidates.map(p => ctx.world.people.get(p.id)!.name) };
 });
 
-function edit(field: 'site' | 'agreedPrices' | 'primordial', event: Event) {
-  const text = (event.target as HTMLTextAreaElement).value;
-  try {
-    if (!text.trim()) delete props.outcome[field];
-    else {
-      const raw: unknown = JSON.parse(text);
-      if (field === 'site') props.outcome.site = SceneSiteS.parse(raw);
-      else if (field === 'agreedPrices') props.outcome.agreedPrices = AgreedPriceS.array().parse(raw);
-      else props.outcome.primordial = PrimordialResponseS.parse(raw);
-    }
-    error.value = '';
-    emit('change');
-  } catch (cause) { error.value = cause instanceof Error ? cause.message : String(cause); }
+// The two price lists use the same schema and control descriptors. No raw
+// JSON parsing or hand-kept copy of permitted price reasons.
+const priceSpecs = fieldsOfSchema(AgreedPriceS);
+const responseSpecs = fieldsOfSchema(PrimordialResponseS)
+  .filter((spec) => ['id', 'text', 'tags', 'triggers', 'next'].includes(spec.key));
+type PriceScope = 'ordinary' | 'response';
+
+function prices(scope: PriceScope): AgreedPrice[] {
+  return (scope === 'ordinary' ? props.outcome.agreedPrices : props.outcome.primordial?.agreedPrices) ?? [];
 }
+function setPrices(scope: PriceScope, updated: AgreedPrice[]) {
+  if (scope === 'ordinary') {
+    if (updated.length) props.outcome.agreedPrices = updated;
+    else delete props.outcome.agreedPrices;
+  } else if (props.outcome.primordial) {
+    if (updated.length) props.outcome.primordial.agreedPrices = updated;
+    else delete props.outcome.primordial.agreedPrices;
+  }
+  emit('change');
+}
+function priceValue(price: AgreedPrice, key: string): unknown {
+  return (price as unknown as Record<string, unknown>)[key];
+}
+function updatePrice(scope: PriceScope, index: number, key: string, value: unknown) {
+  const updated = prices(scope).map((price, i) => {
+    if (i !== index) return price;
+    const next = { ...price } as Record<string, unknown>;
+    if (value === undefined) delete next[key];
+    else next[key] = value;
+    return next as AgreedPrice;
+  });
+  setPrices(scope, updated);
+}
+function addPrice(scope: PriceScope) {
+  const price = AgreedPriceS.parse({ effect: 0, reason: 'contract' });
+  setPrices(scope, [...prices(scope), price]);
+}
+function removePrice(scope: PriceScope, index: number) {
+  setPrices(scope, prices(scope).filter((_, i) => i !== index));
+}
+
+function toggleResponse() {
+  if (props.outcome.primordial) {
+    delete props.outcome.primordial;
+  } else {
+    props.outcome.primordial = PrimordialResponseS.parse({
+      id: (props.outcome.id + '_primordial').replace(/[^a-z0-9_]/g, '_'),
+      text: 'An awakened member of the family intervenes.',
+      effects: [],
+      tags: [],
+      record: null,
+    });
+  }
+  emit('change');
+}
+function responseValue(key: string): unknown {
+  return props.outcome.primordial
+    ? (props.outcome.primordial as unknown as Record<string, unknown>)[key] : undefined;
+}
+function setResponseField(key: string, value: unknown) {
+  const response = props.outcome.primordial;
+  if (!response) return;
+  const next = { ...response } as Record<string, unknown>;
+  if (value === undefined) delete next[key];
+  else next[key] = value;
+  props.outcome.primordial = next as Outcome['primordial'];
+  emit('change');
+}
+function toggleRecord() {
+  const response = props.outcome.primordial;
+  if (!response) return;
+  if (response.record) response.record = null;
+  else response.record = RecordBlockS.parse({
+    subject: props.event.title,
+    options: {
+      record: { chronicle: props.event.title + ' was faithfully recorded.' },
+      omit: { chronicle: null },
+      embellish: {
+        chronicle: 'The witnesses told a different story.',
+        discrepancy: { id: props.outcome.id + '_primordial_account', severity: 'minor', provableBy: [store.bundle.houses[0]?.id ?? ''] },
+      },
+    },
+  });
+  emit('change');
+}
+const slotNames = computed(() => [...Object.keys(props.event.slots), 'PRIMORDIAL_ACTOR']);
+
 </script>
 
 <template>
   <details class="primordial-editor">
     <summary>Emergency intervention · {{ harms.length ? harms.join(', ') : 'no potential major harm' }}</summary>
     <p>Assess the ordinary result first. The response replaces its whole effect bundle; the actor is bound as PRIMORDIAL_ACTOR.</p>
-    <label>Incident site (outcome override)
-      <textarea :value="JSON.stringify(outcome.site ?? event.site, null, 2)" aria-label="Incident site" @change="edit('site', $event)" />
-    </label>
-    <label>Agreed prices (effect indexes and typed reasons)
-      <textarea :value="JSON.stringify(outcome.agreedPrices, null, 2)" aria-label="Agreed prices" @change="edit('agreedPrices', $event)" />
-    </label>
-    <label>Complete response and public Record (paired wording is in Prose variants)
-      <textarea class="contract" :value="JSON.stringify(outcome.primordial, null, 2)" aria-label="Primordial response" @change="edit('primordial', $event)" />
-    </label>
-    <EffectEditor v-if="outcome.primordial" v-model="outcome.primordial.effects" :slot-names="[...Object.keys(event.slots), 'PRIMORDIAL_ACTOR']" @update:model-value="emit('change')" />
-    <p v-if="error" role="alert">{{ error }}</p>
+    <p class="note">Incident sites are edited beside outcome eligibility above, without a separate JSON copy here.</p>
+
+    <fieldset>
+      <legend>Prices agreed for the ordinary outcome</legend>
+      <div v-for="(price, i) in prices('ordinary')" :key="i" class="price-row">
+        <FieldInput v-for="spec in priceSpecs" :key="spec.key" :spec="spec"
+                    :model-value="priceValue(price, spec.key)"
+                    @update:model-value="(v) => updatePrice('ordinary', i, spec.key, v)" />
+        <button type="button" class="btn tiny" @click="removePrice('ordinary', i)">remove price</button>
+      </div>
+      <button type="button" class="btn tiny" @click="addPrice('ordinary')">+ agreed price</button>
+    </fieldset>
+
+    <fieldset>
+      <legend>Complete emergency response</legend>
+      <button type="button" class="btn tiny" @click="toggleResponse">
+        {{ outcome.primordial ? 'remove response' : '+ response' }}
+      </button>
+      <template v-if="outcome.primordial">
+        <FieldInput v-for="spec in responseSpecs" :key="spec.key" :spec="spec"
+                    :model-value="responseValue(spec.key)"
+                    @update:model-value="(v) => setResponseField(spec.key, v)" />
+        <label class="sub">Committed effects</label>
+        <EffectEditor v-model="outcome.primordial.effects" :slot-names="slotNames" @update:model-value="emit('change')" />
+
+        <label class="sub">Prices agreed for the response</label>
+        <div v-for="(price, i) in prices('response')" :key="i" class="price-row">
+          <FieldInput v-for="spec in priceSpecs" :key="spec.key" :spec="spec"
+                      :model-value="priceValue(price, spec.key)"
+                      @update:model-value="(v) => updatePrice('response', i, spec.key, v)" />
+          <button type="button" class="btn tiny" @click="removePrice('response', i)">remove price</button>
+        </div>
+        <button type="button" class="btn tiny" @click="addPrice('response')">+ response price</button>
+
+        <label class="sub">Public Record</label>
+        <button type="button" class="btn tiny" @click="toggleRecord">
+          {{ outcome.primordial.record ? 'set public Record to absent' : '+ public Record' }}
+        </button>
+        <RecordEditor v-if="outcome.primordial.record" :record="outcome.primordial.record"
+                      :slot-names="slotNames" @change="emit('change')" />
+      </template>
+    </fieldset>
+
     <label v-if="content">Preview family
       <select v-model="family"><option v-for="fixture in TEST_FAMILIES" :key="fixture.id" :value="fixture.id">{{ fixture.name }}</option></select>
     </label>
@@ -70,6 +177,9 @@ function edit(field: 'site' | 'agreedPrices' | 'primordial', event: Event) {
 <style scoped>
 .primordial-editor { margin-block: 8px; border-top: 1px solid var(--rule); padding-block: 6px; }
 label { display: block; margin-block: 6px; }
-textarea { width: 100%; min-height: 4em; }
-.contract { min-height: 12em; }
+.primordial-editor fieldset { min-width: 0; border: 1px solid var(--rule); margin: 8px 0; padding: 9px; }
+.primordial-editor legend { font-weight: 600; }
+.price-row { padding: 5px 0 7px 10px; border-left: 2px solid var(--rule); margin: 7px 0; }
+.sub { display: block; font-size: 11px; margin: 9px 0 5px; }
+.note { font-size: 12px; }
 </style>

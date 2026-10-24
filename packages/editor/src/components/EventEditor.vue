@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { Content, Issue } from '@ed/schema';
-import { FREQUENCY_PROFILES, splitSentences, PROSE_SENTENCE_THRESHOLD, proseIssues, slotTokens } from '@ed/schema';
+import { FREQUENCY_PROFILES, EventTierS, splitSentences, PROSE_SENTENCE_THRESHOLD, proseIssues, slotTokens } from '@ed/schema';
 import { markDirty, store } from '../lib/store';
 import { watchEdits } from '../lib/watch-edits';
+import { eventIssueId, issuesForEvent } from '../lib/event-issues';
 import FrequencyPicker from './FrequencyPicker.vue';
 import SaveControl from './SaveControl.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
@@ -18,7 +19,7 @@ import DeciderPicker from './DeciderPicker.vue';
 import Mark from './Mark.vue';
 import { PURPOSE_LABEL, PURPOSE_MARK, TIER_MARK } from '../lib/marks';
 
-const props = defineProps<{ content: Content; issues: Issue[] }>();
+const props = defineProps<{ content: Content; issues: Issue[]; focusEvent?: { id: string; sequence: number } }>();
 
 /**
  * No local copy (issue #20): editing `current.title` mutates the one shared
@@ -39,8 +40,37 @@ const events = computed(() => store.bundle.events);
 const selectedId = ref(events.value[0]?.id ?? '');
 const search = ref('');
 const freqFilter = ref<string>('all');
+const tierFilter = ref<string>('all');
+const issueFilter = ref<'all' | 'errors' | 'warnings' | 'any'>('all');
+const eventIssues = computed(() => {
+  const counts = new Map<string, { errors: number; warnings: number }>();
+  for (const issue of props.issues) {
+    const id = eventIssueId(issue);
+    if (!id) continue;
+    const count = counts.get(id) ?? { errors: 0, warnings: 0 };
+    if (issue.level === 'error') count.errors++;
+    else count.warnings++;
+    counts.set(id, count);
+  }
+  return counts;
+});
+function issueCount(id: string) {
+  return eventIssues.value.get(id) ?? { errors: 0, warnings: 0 };
+}
 
 const current = computed(() => events.value.find((e) => e.id === selectedId.value));
+
+// The rail can jump to an event even when a filter has hidden it. A monotonically
+// increasing sequence lets the same error link work repeatedly after navigation.
+watch(() => props.focusEvent?.sequence, () => {
+  const id = props.focusEvent?.id;
+  if (!id || !events.value.some((e) => e.id === id)) return;
+  search.value = '';
+  freqFilter.value = 'all';
+  tierFilter.value = 'all';
+  issueFilter.value = 'all';
+  selectedId.value = id;
+}, { immediate: true });
 
 // Every field on the selected event feeds one deep watcher rather than an
 // `@input` handler on each control — simpler, and it also catches edits made
@@ -51,12 +81,16 @@ watchEdits(current, 'events');
 const shown = computed(() =>
   events.value.filter((e) => {
     if (freqFilter.value !== 'all' && e.frequency !== freqFilter.value) return false;
+    if (tierFilter.value !== 'all' && e.tier !== tierFilter.value) return false;
+    const count = issueCount(e.id);
+    if (issueFilter.value === 'errors' && count.errors === 0) return false;
+    if (issueFilter.value === 'warnings' && count.warnings === 0) return false;
+    if (issueFilter.value === 'any' && count.errors === 0 && count.warnings === 0) return false;
     const q = search.value.toLowerCase();
     return !q || e.id.includes(q) || e.title.toLowerCase().includes(q) || e.tags.some((t) => t.includes(q));
   }));
 
-const myIssues = computed(() =>
-  props.issues.filter((i) => i.where.startsWith(`event:${selectedId.value}`)));
+const myIssues = computed(() => issuesForEvent(props.issues, selectedId.value));
 
 /** Live voice-contract read on the body being edited. */
 const prose = computed(() => {
@@ -111,8 +145,8 @@ function seedEvent(id: string) {
       kind: 'choice',
       decidedBy: 'player',
       choices: [
-        { id: 'one_way', label: 'One way about it', requires: [], outcomes: [{ id: 'went_one_way', weight: 100, text: 'And so it went.', tags: [], effects: [] }] },
-        { id: 'another', label: 'Another', requires: [], outcomes: [{ id: 'went_another', weight: 100, text: 'And so it went instead.', tags: [], effects: [] }] },
+        { id: 'one_way', label: 'One way about it', requires: [], outcomes: [{ id: 'went_one_way', weight: 100, text: 'The house earns respect for this choice.', tags: [], effects: [{ kind: 'respect', delta: 1 }] }] },
+        { id: 'another', label: 'Another', requires: [], outcomes: [{ id: 'went_another', weight: 100, text: 'The house spends some respect on the other path.', tags: [], effects: [{ kind: 'respect', delta: -1 }] }] },
       ],
     },
   } as never;
@@ -194,6 +228,23 @@ const byFrequency = computed(() => {
     >{{ f }}<span v-if="f !== 'all'" class="count">{{ byFrequency[f] ?? 0 }}</span></button>
   </div>
 
+  <div class="bar" aria-label="Event filters">
+    <label>Tier
+      <select aria-label="Filter by tier" v-model="tierFilter">
+        <option value="all">all tiers</option>
+        <option v-for="tier in EventTierS.options" :key="tier" :value="tier">{{ tier }}</option>
+      </select>
+    </label>
+    <label>Validation
+      <select aria-label="Filter by validation" v-model="issueFilter">
+        <option value="all">all events</option>
+        <option value="errors">has errors</option>
+        <option value="warnings">has warnings</option>
+        <option value="any">has errors or warnings</option>
+      </select>
+    </label>
+  </div>
+
   <div class="cols wide">
     <div>
       <div class="panel" style="margin-bottom:12px">
@@ -205,7 +256,12 @@ const byFrequency = computed(() => {
             :class="{ on: e.id === selectedId }" @click="selectedId = e.id"
           >
             <span class="badge" :class="e.frequency">{{ e.frequency }}</span>
-            <span class="t">{{ e.title }}<br /><span class="sub">{{ e.tier }} · {{ e.id }}</span></span>
+            <span class="t">{{ e.title }}<br /><span class="sub">{{ e.tier }} · {{ e.id }}</span>
+              <span v-if="issueCount(e.id).errors || issueCount(e.id).warnings" class="sub">
+                · <span v-if="issueCount(e.id).errors" class="bad">{{ issueCount(e.id).errors }} errors</span>
+                <span v-if="issueCount(e.id).warnings">{{ issueCount(e.id).warnings }} warnings</span>
+              </span>
+            </span>
             <!-- What it is aimed at, a rule, and one mark per declared purpose.
                  Nothing here is chosen: the three-purpose rule guarantees
                  exactly three, and `marks.ts` maps each to its own mark. Two

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isProxy } from 'vue';
 import { parse } from 'yaml';
-import { assembleBundle } from '@ed/schema';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { assembleBundle, EventTemplateS, RecordBlockS } from '@ed/schema';
 
 /**
  * THE WRITE-BACK STORE — the code that touches the author's files.
@@ -76,10 +78,12 @@ vi.mock('./content.js', async () => {
 const {
   store, fileOf, fileOfId, filesHolding, isDirty, markDirty,
   pendingText, saveItem, saveEvent, saveArc, saveCharacterTemplate,
-  createItem, externalChange, removeProseVariant, stageProseVariant,
+  createItem, deleteEvent, pendingDeleteEvent, externalChange, removeProseVariant, stageProseVariant,
   applyCoreProseEdits, pendingCoreProseText, saveCoreProseCatalogue,
   markCoreProseDraftDirty, rawContent,
 } = await import('./store.js');
+const { duplicateEventDraft, eventBackreferences, eventDeletionBlockers, suggestedDuplicateId } = await import('./event-duplicate.js');
+const { eventIssueId } = await import('./event-issues.js');
 
 describe('authoring-store load validation', () => {
   it('refuses truncated effect prose before creating the live authoring bundle', async () => {
@@ -1094,6 +1098,401 @@ describe('the simulation reads plain data (#1891)', () => {
     } finally {
       const i = store.bundle.events.findIndex((e) => e.id === id);
       if (i >= 0) store.bundle.events.splice(i, 1);
+    }
+  });
+});
+
+
+describe('schema-driven event metadata controls (#1888)', () => {
+  it('connects the new event fields to the existing YAML save flow', () => {
+    const components = join(import.meta.dirname, '..', 'components');
+    const save = readFileSync(join(components, 'SaveControl.vue'), 'utf8');
+    const metadata = readFileSync(join(components, 'EventMetadataEditor.vue'), 'utf8');
+    const record = readFileSync(join(components, 'RecordEditor.vue'), 'utf8');
+    const rumour = readFileSync(join(components, 'RumourEditor.vue'), 'utf8');
+    expect(save).toContain('<EventMetadataEditor');
+    expect(save).toContain("markDirty('events', editableEvent.value.id)");
+    expect(metadata).toContain('PurposeS.options');
+    expect(metadata).toContain('RecordBlockS.parse');
+    expect(metadata).toContain("obligations.rumour === 'always'");
+    expect(metadata).toContain('<RumourEditor');
+    expect(record).toContain('fieldsOfSchema(RecordBlockS)');
+    expect(record).toContain('<ClaimEditor');
+    const claim = readFileSync(join(components, 'ClaimEditor.vue'), 'utf8');
+    expect(claim).toContain('ClaimS.options');
+    expect(claim).toContain('fieldsOfSchema(schema');
+    expect(rumour).toContain('fieldsOfSchema(rumourSchema)');
+  });
+
+  for (const [key, patch] of [
+    ['tier', (e: ReturnType<typeof event>) => { e.tier = e.tier === 'head' ? 'family' : 'head'; }],
+    ['purposes', (e: ReturnType<typeof event>) => { e.purposes = ['plant_rumour', 'force_record_choice', 'buy_patience']; }],
+    ['record', (e: ReturnType<typeof event>) => {
+      e.record = {
+        subject: 'A witnessed promise',
+        options: {
+          record: { chronicle: 'The promise was written.', effects: [], claims: [{ kind: 'deed', target: 'head', text: 'The archivist witnessed a promise.' }] },
+          omit: { chronicle: null, effects: [] },
+          embellish: {
+            chronicle: 'Another account was written.', effects: [], claims: [],
+            discrepancy: { id: 'an_account', severity: 'minor', provableBy: ['family_record'] },
+          },
+        },
+      };
+    }],
+    ['rumour', (e: ReturnType<typeof event>) => { e.rumour = { id: 'authoring_test_rumour', accuracy: 0.7, spread: 0.5 }; }],
+    ['site', (e: ReturnType<typeof event>) => { e.site = { kind: 'hall', hall: 'main', visitors: ['HEAD'] }; }],
+    ['campaigns', (e: ReturnType<typeof event>) => { e.campaigns = ['short']; }],
+    ['forcing', (e: ReturnType<typeof event>) => { e.forcing = { slot: 'HEAD', called: false }; }],
+    ['weight', (e: ReturnType<typeof event>) => { e.weight += 7; }],
+    ['cooldownYears', (e: ReturnType<typeof event>) => { e.cooldownYears += 1; }],
+    ['repeatable', (e: ReturnType<typeof event>) => { e.repeatable = !e.repeatable; }],
+    ['tags', (e: ReturnType<typeof event>) => { e.tags = [...e.tags, 'authoring_test_tag']; }],
+    ['accounts', (e: ReturnType<typeof event>) => { e.accounts = ['The archivist', 'A neighbour']; }],
+    ['ages', (e: ReturnType<typeof event>) => { e.ages = { only: ['the_plague'], never: ['the_withering'] }; }],
+  ] as const) {
+    it(`stages only the ${key} YAML field, keeping every sibling field untouched`, () => {
+      const target = event(EVENT);
+      const original = JSON.parse(JSON.stringify(target)) as Record<string, unknown>;
+      try {
+        patch(target);
+        markDirty('events', EVENT);
+        const staged = pendingText('events', EVENT);
+        expect(staged).toBeDefined();
+        const before = (parse(staged!.before) as { events: Record<string, unknown>[] }).events.find((e) => e.id === EVENT)!;
+        const after = (parse(staged!.after) as { events: Record<string, unknown>[] }).events.find((e) => e.id === EVENT)!;
+        expect(after[key]).not.toEqual(before[key]);
+        delete before[key];
+        delete after[key];
+        expect(after).toEqual(before);
+      } finally {
+        for (const key of Object.keys(target)) {
+          if (!(key in original)) delete (target as unknown as Record<string, unknown>)[key];
+        }
+        Object.assign(target, original);
+        markDirty('events', EVENT);
+      }
+    });
+  }
+});
+
+describe('authored outcome site and guard controls (#1888)', () => {
+  it('reuses the schema variant and filter forms, not free-form JSON', () => {
+    const components = join(import.meta.dirname, '..', 'components');
+    const site = readFileSync(join(components, 'SceneSiteEditor.vue'), 'utf8');
+    const guard = readFileSync(join(components, 'OutcomeGuardEditor.vue'), 'utf8');
+    const graph = readFileSync(join(components, 'OutcomeGraph.vue'), 'utf8');
+    expect(site).toContain('SceneSiteS.options');
+    expect(site).toContain('fieldsOfSchema(schema');
+    expect(guard).toContain('<FilterBuilder');
+    expect(graph).toContain('<SceneSiteEditor');
+    expect(graph).toContain('<OutcomeGuardEditor');
+    expect(graph).toContain('CompareOpS.options');
+    expect(graph).toContain('OutcomeS.shape.triggers.unwrap().shape.op.options');
+  });
+
+  it('stages an outcome guard and site without changing another outcome or any event metadata', () => {
+    const target = store.bundle.events.find((e) => e.interaction.kind !== 'narration'
+      && e.interaction.choices.some((c) => c.outcomes.length > 0));
+    expect(target).toBeDefined();
+    const original = JSON.parse(JSON.stringify(target));
+    try {
+      if (!target || target.interaction.kind === 'narration') return;
+      const choice = target.interaction.choices.find((c) => c.outcomes.length > 0)!;
+      const outcome = choice.outcomes[0]!;
+      outcome.site = { kind: 'hall', hall: 'main', visitors: ['HEAD'] };
+      outcome.onlyIf = { slot: Object.keys(target.slots)[0] ?? 'HEAD', filters: [{ awakened: true }] };
+      outcome.triggers = { arc: store.bundle.arcs[0]?.id ?? '', op: 'start' };
+      markDirty('events', target.id);
+      const staged = pendingText('events', target.id)!;
+      const getEvent = (text: string) => (parse(text) as { events: { id: string; interaction: unknown }[] })
+        .events.find((e) => e.id === target.id)!;
+      const before = getEvent(staged.before);
+      const after = getEvent(staged.after);
+      expect(after.interaction).not.toEqual(before.interaction);
+      delete before.interaction;
+      delete after.interaction;
+      expect(after).toEqual(before);
+    } finally {
+      if (target) {
+        for (const key of Object.keys(target)) {
+          if (!(key in original)) delete (target as unknown as Record<string, unknown>)[key];
+        }
+        Object.assign(target, original);
+        markDirty('events', target.id);
+      }
+    }
+  });
+});
+
+describe('authored frame and choice-specific Record fields (#1888)', () => {
+  it('builds the frame read form from the Zod union variants', () => {
+    const components = join(import.meta.dirname, '..', 'components');
+    const frame = readFileSync(join(components, 'FrameReadsEditor.vue'), 'utf8');
+    const metadata = readFileSync(join(components, 'EventMetadataEditor.vue'), 'utf8');
+    expect(frame).toContain('FrameReadS.options');
+    expect(frame).toContain('fieldsOfSchema(schema)');
+    expect(metadata).toContain('<FrameReadsEditor');
+    expect(metadata).toContain('selectorIds(scope)');
+    expect(metadata).toContain('<RecordEditor :record="row"');
+  });
+
+  it('only stages the reads field when a frame event is given a different reading', () => {
+    const target = store.bundle.events.find((e) => e.tier === 'frame');
+    expect(target).toBeDefined();
+    if (!target) return;
+    const original = JSON.parse(JSON.stringify(target));
+    try {
+      target.reads = [{ omitted: { atLeast: 91 } }];
+      markDirty('events', target.id);
+      const staged = pendingText('events', target.id)!;
+      const find = (text: string) => (parse(text) as { events: Record<string, unknown>[] }).events.find((e) => e.id === target.id)!;
+      // The write-back store deliberately serialises Zod-supplied defaults
+      // on an edited item. Compare *semantic* schema-normalized siblings so
+      // absent defaults (tags, weight, slot fields, etc.) don't look like
+      // unrelated edits; the authored record still has to differ in reads.
+      const before = EventTemplateS.parse(find(staged.before));
+      const after = EventTemplateS.parse(find(staged.after));
+      expect(after.reads).not.toEqual(before.reads);
+      const { reads: _beforeReads, ...beforeSiblings } = before;
+      const { reads: _afterReads, ...afterSiblings } = after;
+      expect(afterSiblings).toEqual(beforeSiblings);
+    } finally {
+      for (const key of Object.keys(target)) if (!(key in original)) delete (target as unknown as Record<string, unknown>)[key];
+      Object.assign(target, original);
+      markDirty('events', target.id);
+    }
+  });
+
+  for (const key of ['recordByChoice', 'recordByOutcome'] as const) {
+    it(`stages only ${key} when selecting a real choice/outcome`, () => {
+      const target = store.bundle.events.find((e) => e.interaction.kind !== 'narration' && e.interaction.choices.length > 0);
+      expect(target).toBeDefined();
+      if (!target || target.interaction.kind === 'narration') return;
+      const original = JSON.parse(JSON.stringify(target));
+      try {
+        const choice = target.interaction.choices[0]!;
+        const id = key === 'recordByChoice' ? choice.id : choice.id + '/' + choice.outcomes[0]!.id;
+        const record = RecordBlockS.parse({
+          subject: 'Witnessed in the hall',
+          options: {
+            record: { chronicle: 'The family wrote the truth.' },
+            omit: { chronicle: null },
+            embellish: {
+              chronicle: 'The family wrote a lie.',
+              discrepancy: { id: 'test_record_lie', severity: 'minor', provableBy: ['record_keeper'] },
+            },
+          },
+        });
+        target[key] = [{ ...record, id }];
+        markDirty('events', target.id);
+        const staged = pendingText('events', target.id)!;
+        const find = (text: string) => (parse(text) as { events: Record<string, unknown>[] }).events.find((e) => e.id === target.id)!;
+        const before = find(staged.before);
+        const after = find(staged.after);
+        expect(after[key]).not.toEqual(before[key]);
+        delete after[key];
+        delete before[key];
+        expect(after).toEqual(before);
+      } finally {
+        for (const name of Object.keys(target)) {
+          if (!(name in original)) delete (target as unknown as Record<string, unknown>)[name];
+        }
+        Object.assign(target, original);
+        markDirty('events', target.id);
+      }
+    });
+  }
+});
+
+describe('typed primordial response authoring (#1888)', () => {
+  it('uses schema-derived price and response fields rather than free-form JSON', () => {
+    const component = readFileSync(join(import.meta.dirname, '..', 'components', 'PrimordialEditor.vue'), 'utf8');
+    expect(component).toContain('fieldsOfSchema(AgreedPriceS)');
+    expect(component).toContain('fieldsOfSchema(PrimordialResponseS)');
+    expect(component).toContain('AgreedPriceS.parse');
+    expect(component).toContain('PrimordialResponseS.parse');
+    expect(component).toContain('<EffectEditor');
+    expect(component).toContain('<RecordEditor');
+    expect(component).not.toContain('JSON.stringify(outcome.');
+    expect(component).not.toContain('JSON.parse(text)');
+  });
+});
+
+describe('safe event duplication (#1888)', () => {
+  it('offers the next unused snake_case ID and refuses an existing ID', () => {
+    const source = event(EVENT);
+    const id = suggestedDuplicateId(store.bundle, source);
+    expect(id).toMatch(/^[a-z0-9_]+$/);
+    expect(store.bundle.events.some((e) => e.id === id)).toBe(false);
+    expect(duplicateEventDraft(store.bundle, source, source.id)).toEqual({
+      ok: false, error: `Event '${source.id}' already exists.`,
+    });
+  });
+
+  it('refuses events named by authored substory nodes and follow-ups', () => {
+    const referenced = store.bundle.arcs.flatMap((arc) => arc.nodes.map((node) => node.event))
+      .find((id) => store.bundle.events.some((e) => e.id === id));
+    expect(referenced).toBeDefined();
+    const source = event(referenced!);
+    const refs = eventBackreferences(store.bundle, source.id);
+    expect(refs.some((ref) => ref.startsWith('arc '))).toBe(true);
+    const result = duplicateEventDraft(store.bundle, source, suggestedDuplicateId(store.bundle, source));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain('referenced by');
+  });
+
+  it('creates a valid detached copy without changing the source', () => {
+    const source = store.bundle.events.find((e) => !e.arc && e.frequency === 'common'
+      && eventBackreferences(store.bundle, e.id).length === 0
+      && (e.interaction.kind === 'narration' ? e.interaction.outcomes
+        : e.interaction.choices.flatMap((choice) => choice.outcomes))
+        .every((outcome) => !outcome.next && !outcome.primordial?.next));
+    expect(source).toBeDefined();
+    if (!source) return;
+    const before = JSON.parse(JSON.stringify(source));
+    const id = suggestedDuplicateId(store.bundle, source);
+    const result = duplicateEventDraft(store.bundle, source, id);
+    expect(result.ok, result.ok ? undefined : result.error).toBe(true);
+    if (!result.ok) return;
+    expect(result.event.id).toBe(id);
+    expect(result.event.title).toBe(source.title + ' (copy)');
+    expect(result.event).not.toBe(source);
+    expect(source).toEqual(before);
+    expect(store.bundle.events.some((e) => e.id === id)).toBe(false);
+  });
+
+  it('exposes duplication only through the existing writable Save panel', () => {
+    const componentPath = join(import.meta.dirname, '..', 'components');
+    const controls = readFileSync(join(componentPath, 'EventDuplicate.vue'), 'utf8');
+    const save = readFileSync(join(componentPath, 'SaveControl.vue'), 'utf8');
+    expect(controls).toContain("filesHolding('events')");
+    expect(controls).toContain('blockedByEdit');
+    expect(controls).toContain("createItem('events'");
+    expect(save).toContain('<EventDuplicate v-if="editableEvent"');
+  });
+});
+
+describe('nested event-reference safety (#1888)', () => {
+  it('finds schedule effects nested under outcome bundles, not just next or arc nodes', () => {
+    const carrier = event(EVENT);
+    const outcomes = carrier.interaction.kind === 'narration'
+      ? carrier.interaction.outcomes : carrier.interaction.choices[0]!.outcomes;
+    const outcome = outcomes[0]!;
+    const before = [...outcome.effects];
+    try {
+      outcome.effects.push({ kind: 'schedule', event: SIBLING, inYears: 1 });
+      const refs = eventBackreferences(store.bundle, SIBLING);
+      expect(refs.some((where) => where.includes('.effects[') && where.endsWith('.event'))).toBe(true);
+      expect(eventDeletionBlockers(store.bundle, SIBLING).length).toBeGreaterThan(0);
+    } finally {
+      outcome.effects = before;
+    }
+  });
+});
+
+describe('reference-safe event deletion (#1888)', () => {
+  it('refuses to preview an event used by a substory, and a dirty file', () => {
+    const linked = store.bundle.arcs.flatMap((arc) => arc.nodes.map((node) => node.event))
+      .find((id) => store.bundle.events.some((e) => e.id === id));
+    expect(linked).toBeDefined();
+    expect(eventDeletionBlockers(store.bundle, linked!).some((path) => path.startsWith('arc '))).toBe(true);
+    const linkedPreview = pendingDeleteEvent(linked!);
+    expect(linkedPreview.ok).toBe(false);
+
+    markDirty('events', EVENT);
+    const dirtyPreview = pendingDeleteEvent(EVENT);
+    expect(dirtyPreview.ok).toBe(false);
+    if (!dirtyPreview.ok) expect(dirtyPreview.error).toContain('Save or resolve other edits');
+    expect(event(EVENT).id).toBe(EVENT);
+  });
+
+  it('keeps the whole source file intact if the delete write is refused', async () => {
+    // A temporary standalone row: the real authored files still contain their
+    // header comments and siblings when this test finishes.
+    const source = event(EVENT);
+    const id = 'test_delete_refused_event';
+    const fresh = JSON.parse(JSON.stringify(source));
+    fresh.id = id;
+    delete fresh.arc;
+    const created = await createItem('events', CRUSADE, fresh);
+    expect(created.ok).toBe(true);
+    const initial = h.disk.get(CRUSADE)!;
+    try {
+      expect(pendingDeleteEvent(id).ok).toBe(true);
+      h.refuse.value = true;
+      const rejected = await deleteEvent(id);
+      expect(rejected.ok).toBe(false);
+      expect(fileOf('events', id)).toBe(CRUSADE);
+      expect(h.disk.get(CRUSADE)).toBe(initial);
+    } finally {
+      h.refuse.value = false;
+      expect((await deleteEvent(id)).ok).toBe(true);
+    }
+  });
+
+  it('previews and deletes only a standalone row, preserving the sibling event and comments', async () => {
+    const id = 'test_delete_standalone_event';
+    const fresh = JSON.parse(JSON.stringify(event(EVENT)));
+    fresh.id = id;
+    delete fresh.arc;
+    const created = await createItem('events', CRUSADE, fresh);
+    expect(created.ok).toBe(true);
+    const before = h.disk.get(CRUSADE)!;
+    const sibling = event(SIBLING);
+    const siblingSnapshot = JSON.parse(JSON.stringify(sibling));
+    const reviewed = pendingDeleteEvent(id);
+    expect(reviewed.ok).toBe(true);
+    if (!reviewed.ok) return;
+    expect(reviewed.before).toBe(before);
+    expect(reviewed.after).not.toContain(`id: ${id}`);
+    const result = await deleteEvent(id);
+    expect(result.ok).toBe(true);
+    expect(fileOf('events', id)).toBeUndefined();
+    expect(store.bundle.events.some((event) => event.id === id)).toBe(false);
+    expect(h.disk.get(CRUSADE)).toBe(reviewed.after);
+    expect(h.disk.get(CRUSADE)).toContain('id: ' + SIBLING);
+    expect(h.disk.get(CRUSADE)).toContain('#');
+    expect(sibling).toEqual(siblingSnapshot);
+  });
+
+  it('wires a typed confirmation and an actual diff to the event Save panel', () => {
+    const components = join(import.meta.dirname, '..', 'components');
+    const deletion = readFileSync(join(components, 'EventDelete.vue'), 'utf8');
+    const save = readFileSync(join(components, 'SaveControl.vue'), 'utf8');
+    expect(deletion).toContain('pendingDeleteEvent');
+    expect(deletion).toContain('externalChange');
+    expect(deletion).toContain('<DiffView');
+    expect(deletion).toContain('confirmation.value !== props.id');
+    expect(save).toContain('<EventDelete v-if="editableEvent"');
+  });
+});
+
+describe('validation locations map to exact event IDs (#1888)', () => {
+  it('matches nested paths but not similarly prefixed event IDs', () => {
+    expect(eventIssueId({ where: 'event:abc' })).toBe('abc');
+    expect(eventIssueId({ where: 'event:abc/interaction/outcomes' })).toBe('abc');
+    expect(eventIssueId({ where: 'event:abc.title' })).toBe('abc');
+    expect(eventIssueId({ where: 'arc:abc' })).toBeUndefined();
+    expect(eventIssueId({ where: 'event:abc-extra' })).toBeUndefined();
+    expect(eventIssueId({ where: 'event:' })).toBeUndefined();
+  });
+});
+
+describe('new Rare event starter guards (#1888)', () => {
+  it('starts with distinct lasting choice consequences, not two empty outcomes', () => {
+    const source = readFileSync(join(import.meta.dirname, '..', 'components', 'EventEditor.vue'), 'utf8');
+    expect(source).toContain("effects: [{ kind: 'respect', delta: 1 }]");
+    expect(source).toContain("effects: [{ kind: 'respect', delta: -1 }]");
+  });
+
+  it('chooses an existing authored house for a newly added Record discrepancy', () => {
+    const components = join(import.meta.dirname, '..', 'components');
+    expect(store.bundle.houses.length).toBeGreaterThan(0);
+    for (const component of ['EventMetadataEditor.vue', 'PrimordialEditor.vue']) {
+      const source = readFileSync(join(components, component), 'utf8');
+      expect(source).toContain("store.bundle.houses[0]?.id");
+      expect(source).not.toContain("provableBy: ['family_record']");
     }
   });
 });
