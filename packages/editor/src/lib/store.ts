@@ -1,6 +1,7 @@
 import { parseDocument, type Document } from 'yaml';
 import { reactive, toRaw } from 'vue';
 import type { Content, ContentBundle, ProseVariant } from '@ed/schema';
+import { eventDeletionBlockers } from './event-duplicate.js';
 import { CONTENT_LAYOUT, contentInterpolationTokens, indexContent, proseOriginalHash } from '@ed/schema';
 import { proseVariantStatus } from './prose-status.js';
 import { isWritableContentPath, rawFiles, readFile, writeFile } from './content.js';
@@ -440,6 +441,9 @@ export interface CreateResult extends WriteResult {
 export async function createItem(collectionKey: string, path: string, item: { id: string }): Promise<CreateResult> {
   const file = files.get(path);
   if (!file) return { ok: false, error: `no loaded file '${path}'` };
+  // A concurrent delete/write is already using this document. Check BEFORE
+  // appending; saveItem's later lock would otherwise leave an orphaned draft.
+  if (store.saving.has(path)) return { ok: false, error: `'${path}' is already being saved` };
 
   const items = itemsOf(collectionKey);
   if (!items) return { ok: false, error: `no collection '${collectionKey}'` };
@@ -454,6 +458,87 @@ export async function createItem(collectionKey: string, path: string, item: { id
 
   const res = await saveItem(collectionKey, item.id);
   return { ...res, path };
+}
+
+/**
+ * A deliberate, reviewed event deletion. Unlike saveItem, the removed item
+ * cannot be used as a locator AFTER deletion, so we stage the whole write
+ * from a Document clone, verify the baseline, then install it only on success.
+ */
+export type EventDeletePreview =
+  | { ok: true; path: string; before: string; after: string }
+  | { ok: false; error: string };
+
+export function pendingDeleteEvent(id: string): EventDeletePreview {
+  const located = locate('events', id);
+  if (!located) return { ok: false, error: `Event '${id}' is not in a loaded file` };
+  const file = files.get(located.path)!;
+  if (!isWritableContentPath(located.path)) {
+    return { ok: false, error: `'${located.path}' is read-only in Mod Editor` };
+  }
+  if (store.saving.has(located.path) || store.dirty.has(located.path)) {
+    return { ok: false, error: 'Save or resolve other edits to this file before deleting an event.' };
+  }
+  const blockers = eventDeletionBlockers(store.bundle, id);
+  if (blockers.length) return { ok: false, error: `Cannot delete referenced event: ${blockers.join(', ')}` };
+  const after = file.doc.clone();
+  if (!after.deleteIn(['events', located.index])) {
+    return { ok: false, error: 'Unable to locate the authored event node to delete.' };
+  }
+  return { ok: true, path: located.path, before: file.loadedText, after: after.toString(STRINGIFY_OPTS) };
+}
+
+export async function deleteEvent(id: string): Promise<WriteResult> {
+  const preview = pendingDeleteEvent(id);
+  if (!preview.ok) return preview;
+  const located = locate('events', id);
+  const source = store.bundle.events.find((event) => event.id === id);
+  if (!located || !source) return { ok: false, error: 'Event selection changed before deletion.' };
+  const original = JSON.stringify(source);
+  const file = files.get(preview.path)!;
+
+  // The lock must be acquired before the first await so another write or
+  // duplicated event cannot change the YAML sequence index in flight.
+  store.saving.add(preview.path);
+  try {
+    let disk: Awaited<ReturnType<typeof readFile>>;
+    try { disk = await readFile(preview.path); }
+    catch (cause) {
+      disk = { ok: false, error: cause instanceof Error ? cause.message : String(cause) };
+    }
+    if (!disk.ok || disk.text === undefined || disk.text !== file.loadedText) {
+      return { ok: false, error: !disk.ok ? `Cannot verify source file: ${disk.error ?? 'read failed'}`
+        : 'The source file changed on disk. Reload before deleting.' };
+    }
+    if (store.dirty.has(preview.path) || JSON.stringify(source) !== original) {
+      return { ok: false, error: 'The event changed while deletion was being verified; review again.' };
+    }
+    let result: WriteResult;
+    try { result = await writeFile(preview.path, preview.after); }
+    catch (cause) { result = { ok: false, error: cause instanceof Error ? cause.message : String(cause) }; }
+    if (!result.ok) return result;
+
+    const revised = file.doc.clone();
+    revised.deleteIn(['events', located.index]);
+    file.doc = revised;
+    file.loadedText = preview.after;
+
+    // An author might have edited during the actual IPC write. Do NOT drop
+    // that later work: recreate the item's YAML node as a dirty local draft.
+    if (JSON.stringify(source) !== original) {
+      file.doc.addIn(['events'], node(file.doc, source));
+      markFileDirty(preview.path);
+      return { ok: false, error: 'The deletion was written, but newer edits were retained as an unsaved draft. Review and save it.' };
+    }
+
+    const liveIndex = store.bundle.events.findIndex((event) => event.id === id);
+    if (liveIndex >= 0) store.bundle.events.splice(liveIndex, 1);
+    store.revision += 1;
+    delete store.errors[preview.path];
+    return { ok: true };
+  } finally {
+    store.saving.delete(preview.path);
+  }
 }
 
 /**

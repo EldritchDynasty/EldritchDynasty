@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { validateBundle } from '@ed/schema';
 import { rawContent, store } from './lib/store';
+import { eventIssueId } from './lib/event-issues';
 import { Sound } from './lib/sound';
 import { SOUND } from './lib/audio-key';
 import type { MarkName } from './lib/marks';
@@ -41,6 +42,16 @@ watch(() => store.revision, (revision) => {
   settleTimer = setTimeout(() => { settled.value = revision; }, SETTLE_MS);
 });
 onBeforeUnmount(() => clearTimeout(settleTimer));
+
+// A file-level dirty set already owns the truth about unsaved YAML and core
+// prose. Warn only when leaving the editor, never on internal tab navigation.
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+  if (store.dirty.size === 0) return;
+  event.preventDefault();
+  event.returnValue = '';
+}
+onMounted(() => window.addEventListener('beforeunload', warnBeforeUnload));
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnload));
 const validating = computed(() => settled.value !== store.revision);
 const content = computed(() => {
   void settled.value;
@@ -51,6 +62,23 @@ const tab = ref<Tab>('events');
 const issues = computed(() => validateBundle(content.value.bundle));
 const errors = computed(() => issues.value.filter((i) => i.level === 'error').length);
 const warnings = computed(() => issues.value.length - errors.value);
+
+// Link from the rail's global error count to a real, authored event, rather
+// than presenting a validation total that cannot be acted on.
+const firstEventErrorId = computed(() => {
+  const eventIds = new Set(store.bundle.events.map((event) => event.id));
+  for (const issue of issues.value) {
+    const id = eventIssueId(issue);
+    if (issue.level === 'error' && id && eventIds.has(id)) return id;
+  }
+  return undefined;
+});
+const focusEvent = ref<{ id: string; sequence: number }>();
+function showFirstEventError() {
+  if (!firstEventErrorId.value) return;
+  focusEvent.value = { id: firstEventErrorId.value, sequence: (focusEvent.value?.sequence ?? 0) + 1 };
+  tab.value = 'events';
+}
 
 /**
  * The one audio engine, provided to everything below (`lib/audio-key.ts`).
@@ -110,7 +138,10 @@ function select(id: Tab) {
         <div class="state" role="status">
           <span v-if="validating">validating…</span>
           <template v-else>
-            <span :class="{ bad: errors }">{{ errors }} error{{ errors === 1 ? '' : 's' }}</span>
+            <button v-if="firstEventErrorId" type="button" class="issue-jump"
+                    :class="{ bad: errors }" title="Find the first event error"
+                    @click="showFirstEventError">{{ errors }} error{{ errors === 1 ? '' : 's' }}</button>
+            <span v-else :class="{ bad: errors }">{{ errors }} error{{ errors === 1 ? '' : 's' }}</span>
             · {{ warnings }} warning{{ warnings === 1 ? '' : 's' }}
           </template><br />
           <span v-if="store.dirty.size" class="bad">
@@ -131,7 +162,7 @@ function select(id: Tab) {
     </nav>
 
     <main class="main">
-      <EventEditor v-if="tab === 'events'" :content="content" :issues="issues" />
+      <EventEditor v-if="tab === 'events'" :content="content" :issues="issues" :focus-event="focusEvent" />
       <ArcEditor v-else-if="tab === 'arcs'" :content="content" :issues="issues" />
       <CharacterEditor v-else-if="tab === 'characters'" :content="content" />
       <FamilyTree v-else-if="tab === 'tree'" :content="content" />
