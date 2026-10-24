@@ -55,6 +55,44 @@ export const ArcNodeS = z.object({
 });
 export type ArcNode = z.infer<typeof ArcNodeS>;
 
+/**
+ * THE ORDINARY DECISIONS AN ARC CAN BE STARTED BY (#1898).
+ *
+ * A Match, a tutor's term and an awakening are made by the docket, the Table
+ * and the genome, not by an event, so nothing could start a story from one:
+ * an arc started only from an outcome, and the scenes that happen to fire
+ * near these decisions reach any one generation in about one run in twelve.
+ * `startsOn` lets the decision itself open the arc. `startDecisionArcs`
+ * (`core/src/events/arcs.ts`) is the one place that does it, called from each
+ * decision's own door — never from an authored effect, whose scene already
+ * narrates the term or the waking it causes.
+ */
+export const ArcDecisionS = z.enum(['match', 'tutor', 'awakening']);
+export type ArcDecision = z.infer<typeof ArcDecisionS>;
+
+/**
+ * Who each decision hands the arc, by binding name. Fixed rather than
+ * authored so that every arc started by a Match calls the couple the same
+ * thing, and `arcs/decision` can check the entry event casts them.
+ */
+export const DECISION_ARC_BINDINGS: Readonly<Record<ArcDecision, readonly string[]>> = {
+  match: ['SUBJECT', 'SPOUSE'],
+  tutor: ['PUPIL'],
+  awakening: ['WOKEN'],
+};
+
+export const ArcStartsOnS = z.object({
+  decision: ArcDecisionS,
+  /**
+   * Years after one instance STARTS before the decision may start another.
+   * A house marries, tutors and wakes far more often than a reader wants the
+   * same callback, and `maxConcurrentInstances` alone only spaces them by the
+   * length of the story.
+   */
+  cooldownYears: z.number().int().nonnegative().default(0),
+});
+export type ArcStartsOn = z.infer<typeof ArcStartsOnS>;
+
 export const ArcDefS = z.object({
   id: z.string(),
   title: z.string(),
@@ -64,6 +102,8 @@ export const ArcDefS = z.object({
   bindings: z.array(z.string()).default([]),
   expiresAfterYears: z.number().optional(),
   maxConcurrentInstances: z.number().default(1),
+  /** Started by an ordinary decision rather than an outcome. See `ArcStartsOnS`. */
+  startsOn: ArcStartsOnS.optional(),
   /**
    * Compiled from an `Outcome.next` chain rather than authored (see
    * `desugar.ts`). Never present in `Content.bundle.arcs`, so the editor never

@@ -269,6 +269,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 | `discrepancy/wiring` | A Discrepancy proved or buried without ever being created cannot be found; provableBy must name a real house. |
 | `secrets/wiring` | A secret on a contract becomes a Discrepancy under its own id, so nothing else may own that id. |
 | `arcs/wiring` | An arc that points at a node or an event that is not there dies silently at that node. |
+| `arcs/decision` | An arc started by a decision binds the people the decision hands it, and opens on that year's page. |
 | `arcs/expiry` | An arc's expiresAfterYears must cover the longest path its own node schedules can draw. |
 | `arcs/inline` | An inline follow-up must belong to exactly one chain, and must not compete with an authored arc. |
 | `arcs/flags` | arc_flag effects and arcFlag/arcVisited conditions only mean anything inside a substory. |

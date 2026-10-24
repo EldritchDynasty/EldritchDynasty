@@ -1,9 +1,9 @@
-import type { ArcDef, ArcInstance, ArcNode, MissingPolicy, Outcome } from '@ed/schema';
-import { eventInCampaign, stillCastable } from '@ed/schema';
+import type { ArcDecision, ArcDef, ArcInstance, ArcNode, MissingPolicy, Outcome } from '@ed/schema';
+import { DECISION_ARC_BINDINGS, eventInCampaign, stillCastable } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
 import { resolveSlots, soleCast, type SlotFill } from './slots.js';
-import type { Rng } from '../rng.js';
+import { streamFor, type Rng } from '../rng.js';
 import { campaignDef } from '../campaign.js';
 import { minimumArcYears } from './arc-reach.js';
 
@@ -52,6 +52,53 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
   };
   ctx.world.arcs.set(instance.id, instance);
   return instance;
+}
+
+/**
+ * A DECISION OPENS ITS OWN STORY (#1898).
+ *
+ * Called from each decision's door — the Match answered (`resolveMatch`), a
+ * term bought at the Table or by the steward (`table.ts`), a natural waking
+ * (`lifecycle`) — with the people that decision was about, under the names
+ * `DECISION_ARC_BINDINGS` gives them. Every arc declaring `startsOn` that
+ * decision starts, unless one started inside its cooldown or the campaign
+ * does not tell its opening scene.
+ *
+ * Draws nothing: an authored arc's entry is due the year it starts, and
+ * `startArc` only rolls for an inline one, which cannot declare `startsOn`.
+ */
+export function startDecisionArcs(ctx: SimCtx, decision: ArcDecision, cast: Record<string, string>): void {
+  const w = ctx.world;
+  for (const arc of ctx.content.arcs) {
+    if (arc.startsOn?.decision !== decision) continue;
+    const entry = arc.nodes.find((n) => n.id === arc.entry);
+    const opening = entry && ctx.content.event(entry.event);
+    if (!opening || !eventInCampaign(opening, w.campaign)) continue;
+    const cooldown = arc.startsOn.cooldownYears;
+    const recent = [...w.arcs.values()].some((a) => a.arc === arc.id && w.year - a.startedYear < cooldown);
+    if (recent) continue;
+    const seed: SlotFill = {};
+    for (const slot of DECISION_ARC_BINDINGS[decision]) {
+      if (cast[slot]) seed[slot] = cast[slot]!;
+    }
+    startArc(arc, ctx, streamFor(w, 'decision-arcs', arc.id), seed);
+  }
+}
+
+/**
+ * A DECISION UNDONE TAKES ITS STORY WITH IT (#1898).
+ *
+ * A term can end without completing — an authored `tutor` cancel, or the
+ * pupil taken hostage — and the return would then show what eight years
+ * bought when they bought nothing. Each place that ends a decision early
+ * calls this with the person it was about, and the story ends there.
+ */
+export function cancelDecisionArcs(ctx: SimCtx, decision: ArcDecision, personId: string): void {
+  const [about] = DECISION_ARC_BINDINGS[decision];
+  for (const instance of ctx.world.arcs.values()) {
+    if (instance.status !== 'active' || instance.bindings[about!] !== personId) continue;
+    if (ctx.content.arc(instance.arc)?.startsOn?.decision === decision) instance.status = 'cancelled';
+  }
 }
 
 /**

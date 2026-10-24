@@ -413,6 +413,34 @@ describe('the content rules', () => {
     expect(runRule('arcs/wiring', b).some((i) => i.message.includes('no_such_node'))).toBe(true);
   });
 
+  describe('arcs/decision (#1898)', () => {
+    const MATCH = 'arc_the_match_come_to_something';
+    const arc = (b: ContentBundle) => b.arcs.find((a) => a.id === MATCH)!;
+    const opening = (b: ContentBundle) => b.events.find((e) => e.id === 'the_match_made')!;
+    const errorsFor = (mutate: (b: ContentBundle) => void) =>
+      runRule('arcs/decision', withEvents(mutate)).filter((i) => i.level === 'error');
+
+    it('passes the shipped decision arcs', () => {
+      expect(errorsFor(() => {})).toEqual([]);
+      expect(content.bundle.arcs.filter((a) => a.startsOn).length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('refuses an arc that does not bind a person the decision hands it', () => {
+      const issues = errorsFor((x) => { arc(x).bindings = ['SUBJECT']; });
+      expect(issues.map((i) => i.message)).toEqual([expect.stringContaining('SPOUSE')]);
+    });
+
+    it('refuses an entry slot that recasts instead of binding', () => {
+      const issues = errorsFor((x) => { opening(x).slots.SPOUSE!.bind = 'event'; });
+      expect(issues.map((i) => i.message)).toEqual([expect.stringContaining('bind: arc')]);
+    });
+
+    it('refuses an entry that is not the decision\'s own year', () => {
+      const issues = errorsFor((x) => { arc(x).nodes[0]!.schedule = { minYears: 2, maxYears: 3 }; });
+      expect(issues.map((i) => i.message)).toEqual([expect.stringContaining('immediate')]);
+    });
+  });
+
   it('catches an effect naming content that does not exist', () => {
     const b = withEvents((x) => {
       const e = x.events.find((ev) => ev.interaction.kind === 'narration')!;

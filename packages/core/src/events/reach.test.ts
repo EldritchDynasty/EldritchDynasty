@@ -3,14 +3,14 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { previewPrimordial, rollPrimordial } from './primordial.js';
-import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge } from '@ed/schema';
+import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge, type ArcDecision } from '@ed/schema';
 import { makeRng, streamFor, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, phase, place, testWorld } from '../testing.js';
 import { resolveSlots, renderBody, type SlotFill } from './slots.js';
 import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitnessRaw, executeOutcomeWitness as executeOutcomeWitnessRaw, outcomeKey } from './reach.js';
 import { evalCondition } from './conditions.js';
-import { dueArcSteps, startArc } from './arcs.js';
+import { dueArcSteps, startArc, startDecisionArcs } from './arcs.js';
 import { maintainCast } from '../people/succession.js';
 import { queueChoice, queueRecord, resolveChoice, resolveRecord } from './decisions.js';
 import {
@@ -7816,5 +7816,63 @@ describe('the opening concern, witnessed through its own arc (#1867)', () => {
       expectedOutcomeId: outcome, rng: makeRng(18673), arcStep: step,
     });
     expect(second.ok, second.reason).toBe(true);
+  });
+});
+
+describe('decision callbacks, witnessed through their own arcs (#1898)', () => {
+  /** Open the story from its decision, resolve its opening page, and hand back its return step. */
+  function throughTheOpening(
+    ctx: ReturnType<typeof testWorld>, decision: ArcDecision, cast: Record<string, string>, opens: string, outcome: string,
+  ) {
+    startDecisionArcs(ctx, decision, cast);
+    const instance = [...ctx.world.arcs.values()].find((arc) => arc.startedYear === ctx.world.year && arc.status === 'active')!;
+    const opening = dueArcSteps(ctx, makeRng(18980)).find((step) => step.instance.id === instance.id)!;
+    expect(opening.node.event).toBe(opens);
+    const first = executeOutcomeWitness(ctx, content.mustEvent(opens), { expectedOutcomeId: outcome, rng: makeRng(18981), arcStep: opening });
+    expect(first.ok, first.reason).toBe(true);
+    return instance;
+  }
+  function theReturn(ctx: ReturnType<typeof testWorld>, instance: { id: string; dueYear?: number }, event: string, outcome: string) {
+    ctx.world.year = instance.dueYear!;
+    const step = dueArcSteps(ctx, makeRng(18982)).find((s) => s.instance.id === instance.id)!;
+    expect(step.node.event).toBe(event);
+    const second = executeOutcomeWitness(ctx, content.mustEvent(event), { expectedOutcomeId: outcome, rng: makeRng(18983), arcStep: step });
+    expect(second.ok, second.reason).toBe(true);
+  }
+
+  it.each([
+    { sex: 'male', opened: 'a_son_married', stands: true, returned: 'the_match_held' },
+    { sex: 'female', opened: 'a_daughter_married', stands: false, returned: 'the_match_undone' },
+  ] as const)('a Match: $opened, then $returned', ({ sex, opened, stands, returned }) => {
+    const ctx = testWorld(content, 18984, 1100);
+    const subject = place(ctx, { sex, age: 21, name: 'The Matched' });
+    const spouse = place(ctx, { sex: sex === 'male' ? 'female' : 'male', age: 22, name: 'The Spouse' });
+    marry(ctx, subject, spouse);
+    const instance = throughTheOpening(ctx, 'match', { SUBJECT: subject.id, SPOUSE: spouse.id }, 'the_match_made', opened);
+    if (!stands) {
+      subject.marriages[0]!.to = ctx.world.year + 1;
+      spouse.marriages[0]!.to = ctx.world.year + 1;
+    }
+    theReturn(ctx, instance, 'the_match_returned', returned);
+  });
+
+  it.each([
+    { sex: 'male', returned: 'it_shows_in_him' },
+    { sex: 'female', returned: 'it_shows_in_her' },
+  ] as const)('a term bought, and eight years on, $returned', ({ sex, returned }) => {
+    const ctx = testWorld(content, 18985, 1100);
+    const pupil = place(ctx, { sex, age: 10, name: 'The Pupil' });
+    const instance = throughTheOpening(ctx, 'tutor', { PUPIL: pupil.id }, 'the_term_bought', 'shown_the_chair');
+    theReturn(ctx, instance, 'the_term_shows', returned);
+  });
+
+  it.each([
+    { sex: 'male', opened: 'a_son_woke', returned: 'what_his_waking_became' },
+    { sex: 'female', opened: 'a_daughter_woke', returned: 'what_her_waking_became' },
+  ] as const)('a waking: $opened, then $returned', ({ sex, opened, returned }) => {
+    const ctx = testWorld(content, 18986, 1100);
+    const woken = place(ctx, { sex, age: 13, name: 'The Woken', awakened: true });
+    const instance = throughTheOpening(ctx, 'awakening', { WOKEN: woken.id }, 'the_waking_noticed', opened);
+    theReturn(ctx, instance, 'the_waking_shows', returned);
   });
 });

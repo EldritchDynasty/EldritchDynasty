@@ -1,0 +1,90 @@
+# CALLBACKS — the ordinary decisions, come back to (#1898).
+#
+# #1867 gave the first generation a choice and a return: the tutor's good
+# years, chosen in 1042 and shown three years on. Nothing did the same for the
+# Matches, terms and wakings of every generation after it. These three arcs
+# do, and they are started by the decision itself (`startsOn`), not drawn: the
+# scenes that happen to fire near a Match reach any one generation in about
+# one run in twelve.
+#
+# THE SHAPE. Each opens on the decision's own page, in the year it is made,
+# naming the person and what the house hopes for. It comes back once, inside
+# the same generation, and shows what that bought. The return cites the
+# opening page (`citeEarlierBeat`), so the book can point back at the choice.
+#
+# THE COOLDOWN. A house marries every few years and the steward buys a term
+# most decades. `cooldownYears` keeps each callback to about one a generation,
+# so it reads as the house remembering, not as the house repeating itself.
+#
+# Cast by the names the decision hands over (`DECISION_ARC_BINDINGS`), never
+# by key, so the same story fits 1100 and 1500. A person who dies before the
+# return cancels only their own story, and a widowing cancels the couple's.
+arcs:
+  - id: arc_the_match_come_to_something
+    title: What the Match Was For
+    entry: the_match_made
+    bindings: [SUBJECT, SPOUSE]
+    startsOn: { decision: match, cooldownYears: 30 }
+    expiresAfterYears: 12
+    nodes:
+      - id: the_match_made
+        event: the_match_made
+        schedule: immediate
+        successors:
+          - to: the_match_returned
+      - id: the_match_returned
+        event: the_match_returned
+        schedule: { minYears: 4, maxYears: 6 }
+        successors:
+          - to: end
+
+  - id: arc_the_term_paid_for
+    title: The Term Paid For
+    entry: the_term_bought
+    bindings: [PUPIL]
+    startsOn: { decision: tutor, cooldownYears: 30 }
+    expiresAfterYears: 14
+    nodes:
+      - id: the_term_bought
+        event: the_term_bought
+        schedule: immediate
+        successors:
+          - to: the_term_shows
+      # Eight years is `TUTOR_YEARS`: the term has completed, through the same
+      # loop every term completes through, before this scene can fire.
+      - id: the_term_shows
+        event: the_term_shows
+        schedule: { minYears: 8, maxYears: 8 }
+        successors:
+          - to: end
+
+  - id: arc_the_waking_kept
+    title: The Waking Kept
+    entry: the_waking_noticed
+    bindings: [WOKEN]
+    startsOn: { decision: awakening, cooldownYears: 30 }
+    expiresAfterYears: 12
+    nodes:
+      - id: the_waking_noticed
+        event: the_waking_noticed
+        schedule: immediate
+        successors:
+          - to: the_waking_shows
+      - id: the_waking_shows
+        event: the_waking_shows
+        schedule: { minYears: 5, maxYears: 7 }
+        successors:
+          - to: end
+proseVariants:
+  - address: "content:arcs/callbacks.yaml#arcs[id=arc_the_match_come_to_something].title"
+    of: "59c52cd7b2e4c003"
+    plainenglish: >-
+      What the Marriage Was For
+  - address: "content:arcs/callbacks.yaml#arcs[id=arc_the_term_paid_for].title"
+    of: "16aa394746529503"
+    plainenglish: >-
+      The Lessons the House Paid For
+  - address: "content:arcs/callbacks.yaml#arcs[id=arc_the_waking_kept].title"
+    of: "5021e89931692fdd"
+    plainenglish: >-
+      After the Waking

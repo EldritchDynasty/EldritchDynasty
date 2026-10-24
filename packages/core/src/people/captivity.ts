@@ -4,6 +4,7 @@ import { DEBT_FLOOR } from '../economy.js';
 import { msg } from '../messages.js';
 import { proseForContentField } from '../prose.js';
 import { isCurrentFamily } from '../presence.js';
+import { cancelDecisionArcs } from '../events/arcs.js';
 
 /** Shared by field and covert incidents. Captives stay alive in PersonStore;
  * their foreign hostage membership removes residence, not blood or mortality.
@@ -29,6 +30,7 @@ export function captureFamily(ctx: SimCtx, person: string, captor: string, ranso
   };
   w.studies = w.studies.filter(term => term.person !== p.id);
   w.tutoring = w.tutoring.filter(term => term.person !== p.id);
+  if (tutoring) cancelDecisionArcs(ctx, 'tutor', p.id);
   home.to = w.year;
   p.membership.push({ house: asId(captor), kind: 'hostage', from: w.year });
   w.chronicle.push({
