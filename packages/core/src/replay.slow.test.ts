@@ -3,9 +3,11 @@ import { loadContent } from '@ed/content';
 import { LibraryRunS } from '@ed/schema';
 import {
   applyRecord, bootstrap, commitOutcome, digestOf, emptyReport, foundHouse, heldHeirlooms, place, present,
-  replay, ReplayMismatchError, runYears, testRng, testWorld,
+  replay, ReplayMismatchError, runYears, testRng, testWorld, newGame, activeCommitment,
   saveGame, loadGame, expectHealthyWorld, setProseMode, setProseVariants,
 } from '@ed/core';
+import type { SlotFill } from './events/slots.js';
+import { assertNever } from '@ed/schema';
 import { CAMPAIGNS, CAMPAIGN_YEARS } from './campaign.js';
 
 const bundle = loadContent();
@@ -58,6 +60,93 @@ describe('the demonstration pays every promised beat (#323)', () => {
  */
 describe('replay reconstructs a run from its decision log', () => {
   const YEARS = CAMPAIGN_YEARS;
+
+  it('bounds a large requested span by the actual campaign ending (#1910)', () => {
+    const s = newGame(bundle, { seed: 1910, campaign: 'demo', decider: 'chronicler' });
+    const result = s.advance(Number.MAX_SAFE_INTEGER);
+    expect(s.ctx.world.ending).toBeDefined();
+    expect(result.years.length).toBeLessThanOrEqual(CAMPAIGNS.demo.years + 1);
+    const rebuilt = replay(bundle, s.ctx.world.decisionLog, 1910, 1042, s.year - 1042, 'demo', [], {
+      expectedDigest: digestOf(s.ctx),
+    });
+    expect(digestOf(rebuilt)).toBe(digestOf(s.ctx));
+  });
+
+  it('rebuilds a real played session with manual answers, names, party casts and Muster orders (#1910)', () => {
+    let witnessed = false;
+    const tried: unknown[] = [];
+    for (const seed of SEEDS) {
+      const s = newGame(bundle, { seed });
+      let mustered = false;
+      for (let turn = 0; turn < YEARS && !s.ctx.world.ending; turn += 1) {
+        while (s.pending.length) {
+          const d = s.pending[0]!;
+          switch (d.kind) {
+            case 'choice': {
+              const cast: SlotFill = {};
+              const used = new Set<string>();
+              for (const request of d.cast) {
+                const count = request.count?.min ?? (request.optional ? 0 : 1);
+                if (!count) continue;
+                const ids = request.candidates.filter(c => !used.has(c.id)).slice(0, count).map(c => c.id);
+                for (const id of ids) used.add(id);
+                if (ids.length) cast[request.slot] = request.count ? ids : ids[0]!;
+              }
+              const choice = d.event.id === 'the_muster_is_called'
+                ? d.choices.find(c => c.id === 'send_them' && c.available)
+                : d.choices.filter(c => c.available).at(-1);
+              const result = d.choicesAreOpen && choice ? s.choose(d.id, choice.id, cast) : s.send(d.id, cast);
+              if (!result.ok) s.letHimDecide();
+              break;
+            }
+            case 'record':
+              expect(s.record(d.id, d.options.some(o => o.option === 'embellish') ? 'embellish' : 'record').ok).toBe(true);
+              break;
+            case 'match': {
+              let accepted = false;
+              for (const card of d.cards) {
+                if (s.match(d.id, card.id).ok) { accepted = true; break; }
+              }
+              if (!accepted) expect(s.declineHand(d.id)).toBe(true);
+              break;
+            }
+            default: assertNever(d, 'played replay docket');
+          }
+          if (s.pending[0]?.id === d.id) throw new Error(`The real docket ${d.id} could not be answered`);
+        }
+        const names = [...s.ctx.world.pendingNames];
+        if (names[0]) expect(s.name(names[0].person, `Wren ${names[0].person}`)).toBe(true);
+        if (names[1]) expect(s.keepSuggestedName(names[1].person)).toBe(true);
+        s.keepSuggestedNames();
+        if (!mustered && activeCommitment(s.ctx)) {
+          s.muster({ op: 'reinforce', men: 1 }); // capacity may already be full
+          expect(s.muster({ op: 'buy', position: 'none' }).ok).toBe(true);
+          expect(s.muster({ op: 'withdraw' }).ok).toBe(true);
+          mustered = true;
+        }
+        const kinds = new Set(s.ctx.world.decisionLog.flatMap(row => row.kind === 'command' ? [row.command.kind] : []));
+        const needed = ['choose', 'send', 'record', 'match', 'name'] as const;
+        if (mustered && needed.every(kind => kinds.has(kind))) {
+          const saved = saveGame(s.ctx);
+          const rebuilt = replay(bundle, saved.decisionLog, seed, 1042, s.year - 1042, 'long', [], {
+            expectedDigest: digestOf(s.ctx),
+          });
+          expect(digestOf(rebuilt)).toBe(digestOf(s.ctx));
+          expect(rebuilt.world.muster).toEqual(s.ctx.world.muster);
+          expect(rebuilt.world.pendingNames).toEqual(s.ctx.world.pendingNames);
+          expect(rebuilt.world.pendingDecisions).toEqual(s.ctx.world.pendingDecisions);
+          expectHealthyWorld(rebuilt);
+          witnessed = true;
+          break;
+        }
+        s.advance();
+      }
+      tried.push({ seed, year: s.year, mustered, kinds: [...new Set(s.ctx.world.decisionLog
+        .flatMap(row => row.kind === 'command' ? [row.command.kind] : []))] });
+      if (witnessed) break;
+    }
+    expect(witnessed, `the real seed set supplied no complete player-input/Muster witness: ${JSON.stringify(tried)}`).toBe(true);
+  });
 
   it('digest(replay(log)) equals digest(original) across the standard seed set', () => {
     let causalPages = 0;

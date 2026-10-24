@@ -829,8 +829,12 @@ describe('the two ends of the run, through the façade', () => {
     back.setProseMode('original');
     expect(sign(back)).toMatchObject(originalPage);
 
-    // Words only: the founded house is the same house either way.
-    const words = (key: string, value: unknown) => (key === 'savedAt' || key === 'title' || key === 'text' ? undefined : value);
+    // Words and their initial rendering provenance only: the founded house
+    // is the same house either way, including every mechanical decision.
+    expect(late.save().replayOrigin).toEqual({ proseMode: 'plainenglish' });
+    expect(back.save().replayOrigin).toBeUndefined();
+    const words = (key: string, value: unknown) => (
+      key === 'savedAt' || key === 'title' || key === 'text' || key === 'replayOrigin' ? undefined : value);
     expect(JSON.stringify(late.save(), words)).toBe(JSON.stringify(back.save(), words));
     expect(late.ctx.prose.mode).toBe('plainenglish');
     expect(back.ctx.prose.mode).toBe('original');

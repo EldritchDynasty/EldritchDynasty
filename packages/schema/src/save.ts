@@ -16,6 +16,7 @@ import {
 } from './person.js';
 import type { LooseSecret } from './person.js';
 import { LoggedDecisionS } from './decision-log.js';
+import { ReplayOriginS } from './session-command.js';
 import { SlotFillS } from './slot-fill.js';
 import type { AgeState } from './age.js';
 import type { ArcInstance } from './arc.js';
@@ -213,7 +214,9 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
  * exactly what those formats could express. */
 /** Format 36 preserves a captive's quoted ransom, home and paused learning.
  * Earlier formats contain no such record and do not acquire one on load. */
-export const SAVE_FORMAT = 36;
+/** Format 37 records public session inputs in their decision-log position.
+ * Older saves load without inventing unrecorded historical commands. */
+export const SAVE_FORMAT = 37;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -786,6 +789,8 @@ export const SavedGameS = z.object({
    * file on load would be less honest than saying no provenance was recorded.
    */
   contentSources: z.array(z.tuple([z.string(), z.string()])).default([]),
+  /** Rendering provenance for a session saved before its first recorded input. */
+  replayOrigin: ReplayOriginS.optional(),
 
   branches: z.array(BranchStateS),
   /** Rival-house descent (issue #24 item 6), keyed by house id. */

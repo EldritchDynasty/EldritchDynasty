@@ -253,6 +253,12 @@ describe('house ambition (issue #210)', () => {
     // The one other trace a tracked ambition leaves is its reading at each
     // handover (#1867 §5): words kept as history, never an input to a roll.
     for (const reign of a.succession) delete reign.ambition;
+    // The player's selection is now a replay input, separate from the
+    // resulting simulation. Keep every generated outcome in the comparison.
+    expect(a.decisionLog.filter((row: { kind: string; command?: { kind: string } }) =>
+      row.kind === 'command' && row.command?.kind === 'setAmbition')).toHaveLength(1);
+    a.decisionLog = a.decisionLog.filter((row: { kind: string; command?: { kind: string } }) =>
+      !(row.kind === 'command' && row.command?.kind === 'setAmbition'));
     expect(b.succession.some((reign: { ambition?: string }) => reign.ambition !== undefined)).toBe(false);
     expect(a).toEqual(b);
   });
