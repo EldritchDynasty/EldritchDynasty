@@ -14339,3 +14339,12 @@ return's `cause` resolves through `causeOf` to its own opening page (809 of
 809 in the probe batch). `callbacks.slow.test.ts` asserts each generation at
 a 0.6 floor with `expectRate`, every link, and that every story opens in the
 year of the decision about the person it was.
+
+**Gates on this branch.** All **12 batch gates** pass. Outcome reach ran its
+sampled 800-run verdict before the eleven new witnesses were generated, and
+every new outcome resolved in the batch. The endings gate (512 Long Lines,
+chronicler) reads broken_line **27.1%** (band 22–45%), devoured **26.6%**
+(ceiling 45%), forgotten 46.3%: the added pages move nothing the ending
+reads. Fire rate passes for all **513 non-frame events**; the rarest are the
+same five as the #1906 baseline (`the_cellar_shelf_is_found` 0.75%), and all
+30 effect kinds are reached.
