@@ -1437,6 +1437,7 @@ function stateOf(ctx: SimCtx) {
 
 /** The exact Original of every tutor, rite-offer and Ledger-search refusal (#810). */
 const OFFER_ORIGINALS: Record<string, string> = {
+  'table.tutor.captive': 'they are held away from the house',
   'table.tutor.no_subject': 'nothing anybody teaches',
   'table.tutor.unteachable': '{ATTRIBUTE} is not a thing a tutor can teach',
   'table.tutor.too_old': 'too old to be taught',

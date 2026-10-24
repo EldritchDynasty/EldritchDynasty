@@ -12,7 +12,7 @@ import { EventTemplateS } from './event.js';
 import { DeciderS } from './decider.js';
 import {
   LineageDocumentS, MembershipRecordS, PersonStatusS, RetainerContractS, StorageTierS,
-  AwakeningStateS,
+  AwakeningStateS, CaptivityS,
 } from './person.js';
 import type { LooseSecret } from './person.js';
 import { LoggedDecisionS } from './decision-log.js';
@@ -211,7 +211,9 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
  * may carry a stated `gender`. Formats 31–34 upgrade: a recorded name becomes
  * that name on the authored founder, a man and the blood father, which is
  * exactly what those formats could express. */
-export const SAVE_FORMAT = 35;
+/** Format 36 preserves a captive's quoted ransom, home and paused learning.
+ * Earlier formats contain no such record and do not acquire one on load. */
+export const SAVE_FORMAT = 36;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -275,6 +277,7 @@ export const StoredPersonS = z.object({
   spellsKnown: z.array(z.string()).default([]),
   career: z.object({ career: z.string(), from: z.number() }).optional(),
   membership: z.array(MembershipRecordS),
+  captivity: CaptivityS.optional(),
   contract: RetainerContractS.optional(),
   marriages: z.array(z.object({ spouse: z.string(), from: z.number(), to: z.number().optional() })).default([]),
   madness: z.number(),

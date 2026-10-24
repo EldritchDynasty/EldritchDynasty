@@ -994,11 +994,13 @@ describe('study and the posts refuse in the reader\'s setting (#805)', () => {
 
   it('keys every refusal', () => {
     expect(Object.fromEntries(keyed.map((entry) => [entry.address.split('#')[1], entry.text]))).toEqual({
+      'library.refuse.captive': 'they are held away from the house',
       'library.refuse.on_duty': 'they are keeping a Mystic duty',
       'library.refuse.binder': 'the copy is with the binder',
       'library.refuse.not_woken': 'not woken',
       'library.refuse.not_hers': 'not hers to learn',
       'library.refuse.affinity_short': 'the affinity is not there yet',
+      'career.refuse.captive': 'they are held away from the house',
       'career.refuse.woman': 'no post in Aubren is open to a woman',
     });
   });

@@ -41,6 +41,17 @@ describe('a run survives being written down', () => {
     expect(digestOf(after)).toBe(digestOf(before));
   });
 
+  it('reads format 35 without inventing captives or changing the input', () => {
+    const before = bootstrap(content, 1042, 1042);
+    const legacy = { ...saveGame(before), format: 35 };
+    const original = structuredClone(legacy);
+    const after = loadGame(legacy, content);
+    expect(saveGame(after).format).toBe(SAVE_FORMAT);
+    expect(after.world.people.all().some(person => person.captivity)).toBe(false);
+    expect(digestOf(after)).toBe(digestOf(before));
+    expect(legacy).toEqual(original);
+  });
+
   it('reads format 31 without inventing an unrecorded forcing attempt', () => {
     const before = bootstrap(content, 1042, 1042);
     const legacy = { ...saveGame(before), format: 31 };

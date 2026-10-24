@@ -1,5 +1,5 @@
 import type { CareerDef, Person } from '@ed/schema';
-import { canHoldPost } from '@ed/schema';
+import { canHoldPost, currentMembership } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { applyEffect } from '../events/effects.js';
@@ -43,6 +43,7 @@ export function careerDefOf(ctx: SimCtx, p: Person): CareerDef | undefined {
  * hers, and the Threshold four are hers to practise (invariant 4).
  */
 export function canTakePost(ctx: SimCtx, p: Person): { ok: true } | { ok: false; reason: string } {
+  if (p.captivity) return { ok: false, reason: msg(ctx, 'career.refuse.captive', 'they are held away from the house') };
   if (!canHoldPost(p.sex)) {
     return { ok: false, reason: msg(ctx, 'career.refuse.woman', 'no post in Aubren is open to a woman') };
   }
@@ -51,12 +52,13 @@ export function canTakePost(ctx: SimCtx, p: Person): { ok: true } | { ok: false;
 
 /** Clergy: taken out of the breeding pool entirely. No marriage, no children. */
 export function inBreedingPool(ctx: SimCtx, p: Person): boolean {
-  return !careerDefOf(ctx, p)?.removesFromBreedingPool;
+  return currentMembership(p, ctx.world.year)?.kind !== 'hostage'
+    && !careerDefOf(ctx, p)?.removesFromBreedingPool;
 }
 
 /** Military: kills people. Read by `rollDeath`, added straight into the annual hazard. */
 export function careerMortality(ctx: SimCtx, p: Person): number {
-  return careerDefOf(ctx, p)?.extraMortality ?? 0;
+  return p.captivity ? 0 : careerDefOf(ctx, p)?.extraMortality ?? 0;
 }
 
 /** Clergy: grants Madness cover. The largest cover held anywhere in `roster`. */

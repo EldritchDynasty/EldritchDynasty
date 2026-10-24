@@ -25,6 +25,7 @@ import { ageCareerFactor } from './ages/strategy.js';
 import { proseForClause, proseForContentField, proseForEventTitle, proseForPromiseLot } from './prose.js';
 import { msg } from './messages.js';
 import { assignDuty, mysticView, releaseDuty, type MysticView } from './mystic.js';
+import { captivityView, ransomCaptive } from './people/captivity.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -69,6 +70,8 @@ import { assignDuty, mysticView, releaseDuty, type MysticView } from './mystic.j
  */
 
 export type TableOrder =
+  /** Pay the incident's fixed ransom once and bring a captive family member home. */
+  | { kind: 'ransom'; person: string }
   /** Put somebody on a book. Costs them years, and the house nothing. */
   | { kind: 'study'; person: string; book: string }
   /** Pay once for a physical shelf copy to spend a fixed term with the binder. */
@@ -325,6 +328,7 @@ export function beginTutoring(ctx: SimCtx, p: Person, attrId: string, charge = t
   // A stale detached snapshot or dead record must not buy a ghost term,
   // consume treasury or schedule work against someone else with the same id.
   if (p.status !== 'alive' || w.people.get(p.id) !== p) return { ok: false };
+  if (p.captivity) return { ok: false, reason: msg(ctx, 'table.tutor.captive', 'they are held away from the house') };
   const subject = ctx.content.attributes.find((a) => String(a.id) === attrId);
   if (!subject) return { ok: false, reason: msg(ctx, 'table.tutor.no_subject', 'nothing anybody teaches') };
   if (!canBeTaught(subject.kind)) {
@@ -721,6 +725,8 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
   const w = ctx.world;
 
   switch (o.kind) {
+    case 'ransom':
+      return ransomCaptive(ctx, o.person);
     case 'study': {
       const p = ours(ctx, o.person);
       if (!p) return { ok: false, reason: msg(ctx, 'table.order.study.unknown', 'nobody of this house by that name') };
@@ -1138,6 +1144,8 @@ export interface TableView {
   studying: { person: string; name: string; book: string; completes: Year }[];
   /** Standing Mystic duties, and every working the house could set somebody to (#1873). */
   mystic: MysticView;
+  /** Named family held elsewhere, with the engine's fixed ransom and affordability quote. */
+  captives: ReturnType<typeof captivityView>;
   /**
    * WHO THE MARKET MAY BE SHOWN, and which of them the house is keeping off
    * it. Built from the engine's own `eligibleToMarry` and `onTheMarket`: §7's
@@ -1424,6 +1432,7 @@ export function tableView(ctx: SimCtx): TableView {
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
     mystic: mysticView(ctx),
+    captives: captivityView(ctx),
     longWait: (() => {
       const possible = new Set(knownSuccession(ctx).possible);
       return household

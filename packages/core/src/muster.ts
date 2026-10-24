@@ -100,7 +100,7 @@ export function musterUpkeep(ctx: SimCtx): number {
  */
 export function musterMortality(ctx: SimCtx, p: Person): number {
   const c = activeCommitment(ctx);
-  if (!c || !c.officers.includes(p.id)) return 0;
+  if (!c || p.captivity || !c.officers.includes(p.id)) return 0;
   const tideWorseness = (TIDE_MAX - ctx.world.muster.tide) / TIDE_MAX;
   return OFFICER_HAZARD_BASE + OFFICER_HAZARD_TIDE_SPAN * tideWorseness;
 }
@@ -229,7 +229,10 @@ export function setPosition(ctx: SimCtx, position: string): boolean {
 function priceOf(ctx: SimCtx, c: Commitment, def: PositionDef): number | undefined {
   if (def.price === undefined) return undefined;
   const serving = def.discountWithCareer !== undefined
-    && c.officers.some((id) => ctx.world.people.get(id)?.career?.career === def.discountWithCareer);
+    && c.officers.some((id) => {
+      const p = ctx.world.people.get(id);
+      return p && !p.captivity && p.career?.career === def.discountWithCareer;
+    });
   return serving ? def.price * (1 - DISCOUNT_WITH_CAREER_SERVING) : def.price;
 }
 
@@ -254,7 +257,7 @@ function checkPosition(ctx: SimCtx, position: string): MusterOrderResult {
   if (def.requiresOfficerAged !== undefined) {
     const aged = c.officers.some((id) => {
       const p = ctx.world.people.get(id);
-      return p !== undefined && ctx.world.year - p.born >= def.requiresOfficerAged!;
+      return p !== undefined && !p.captivity && ctx.world.year - p.born >= def.requiresOfficerAged!;
     });
     if (!aged) {
       return {

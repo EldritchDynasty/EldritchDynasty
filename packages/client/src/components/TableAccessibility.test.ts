@@ -14,13 +14,51 @@ function fixture(boughtBack = false): TableView {
     greatRite: { ready: false, reason: 'Not ready' },
     unmaking: { ready: false, reason: 'Not ready' },
     ledgerSearch: { ready: false, reason: 'Not ready' },
-    shelf: [], studying: [], mystic: { duties: [], offers: [] }, missingPrimers: [], pupils: [], teachable: [],
+    shelf: [], studying: [], mystic: { duties: [], offers: [] }, captives: [], missingPrimers: [], pupils: [], teachable: [],
     canTutor: false, tutoring: [], posts: [], marriagePolicy: 'in',
     programmeCandidates: [], scion: null, scionHeir: null,
     scionVacant: false, scionHeirVacant: false, market: [], longWait: [], forcing: [],
     papers: [], pedigreePrices: [], servants: [], maxBond: 20,
   } as unknown as TableView;
 }
+
+describe('Table captive return (#1908)', () => {
+  it('names captor and fixed price, preserves refusals and sends the same ransom order in both readings', async () => {
+    const table: TableView = { ...fixture(), captives: [
+      { person: 'linn', name: 'Linn', captor: 'House Marrow', since: 1100, ok: true, price: 37 },
+      { person: 'maud', name: 'Maud', captor: 'House Wick', since: 1101, ok: false, price: 90, reason: 'The family cannot afford 90 crowns.' },
+    ] };
+    const before = structuredClone(table);
+    const order = vi.fn();
+    const wrapper = mount(GameTable, { props: {
+      table, land: { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView,
+      actions: { order } as unknown as GameActions, refusal: null, receipt: null, proseMode: 'original',
+    } });
+    try {
+      for (const proseMode of ['original', 'plainenglish', 'original'] as const) {
+        await wrapper.setProps({ proseMode });
+        const rows = wrapper.get('.captives').findAll('.line');
+        expect(rows[0]!.text()).toContain('Linn');
+        expect(rows[0]!.text()).toContain('House Marrow');
+        expect(rows[0]!.text()).toContain('1100');
+        const enabled = rows[0]!.get('button');
+        expect(enabled.attributes('aria-label')).toContain('Linn — 37 crowns');
+        expect(enabled.attributes('disabled')).toBeUndefined();
+        const disabled = rows[1]!.get('button');
+        expect(disabled.attributes('disabled')).toBeDefined();
+        expect(disabled.attributes('aria-describedby')).toBe('ransom-maud');
+        expect(wrapper.get('#ransom-maud').text()).toBe('The family cannot afford 90 crowns.');
+        await disabled.trigger('click');
+        const calls = order.mock.calls.length;
+        await enabled.trigger('click');
+        expect(order).toHaveBeenCalledTimes(calls + 1);
+        expect(order).toHaveBeenLastCalledWith({ kind: 'ransom', person: 'linn' });
+        expect(table).toEqual(before);
+      }
+      expect(order).toHaveBeenCalledTimes(3);
+    } finally { wrapper.unmount(); }
+  });
+});
 
 describe('Plain English treasury debt reading (#1755)', () => {
   it.each([-40, 0, 100])('describes a signed treasury balance of %i without claiming debt is spendable', async (treasury) => {
