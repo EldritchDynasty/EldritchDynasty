@@ -17,6 +17,7 @@ import { outcomeChronicleEffectAddress, proseForEventTitle, proseForOutcome, ren
 import { performRite } from './rites.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
+import { cancelDecisionArcs } from './arcs.js';
 import {
   addOfficer, beginCommitment, reinforceCommitment, setPosition, settleCommitment, withdrawCommitment,
 } from '../muster.js';
@@ -399,7 +400,11 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
     // whatever term the target is in, if any; no refund, same as the order.
     case 'tutor': {
       for (const p of resolveTargets(eff.target, ctx, fill)) {
-        if (eff.op === 'cancel') { w.tutoring = w.tutoring.filter((t) => t.person !== p.id); continue; }
+        if (eff.op === 'cancel') {
+          w.tutoring = w.tutoring.filter((t) => t.person !== p.id);
+          cancelDecisionArcs(ctx, 'tutor', p.id);
+          continue;
+        }
         beginTutoring(ctx, p, eff.attr);
       }
       break;

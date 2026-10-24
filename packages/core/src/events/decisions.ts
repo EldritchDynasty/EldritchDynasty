@@ -8,7 +8,7 @@ import { choiceAvailability, type DecisionChoice } from './availability.js';
 import { applyEffect, applyOutcome, type ResolvedEvent } from './effects.js';
 import { resolvePrimordial } from './primordial.js';
 import { resolveChoiceOutcome } from './checks.js';
-import { advanceArc, startArc, type ArcStep } from './arcs.js';
+import { advanceArc, startArc, startDecisionArcs, type ArcStep } from './arcs.js';
 import { resolveClaim } from '../record.js';
 import { RUNGS, rungIndex } from '../ascension.js';
 import { noteBearing } from '../bearing.js';
@@ -608,6 +608,7 @@ export function resolveMatch(ctx: SimCtx, decision: string, cardId: string): Mat
     card: card.id,
     spouse: result.spouse?.id ?? '',
   });
+  if (result.spouse) startDecisionArcs(ctx, 'match', { SUBJECT: pending.subject.id, SPOUSE: result.spouse.id });
   // Somebody has just been married. Any other hand promising them, or dealt
   // FOR them, is no longer the hand it was.
   refreshHands(ctx);

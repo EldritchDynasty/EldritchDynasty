@@ -11,6 +11,7 @@ import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, bidAtAuction, commissionBook, lotNa
 import { PLEDGE_TERM } from './people/pledges.js';
 import { evalCondition } from './events/conditions.js';
 import { queueChoice } from './events/decisions.js';
+import { startDecisionArcs } from './events/arcs.js';
 import { candidatesFor, castIn, resolveSlots, type SlotResolution } from './events/slots.js';
 import { streamFor } from './rng.js';
 import { canTakePost } from './people/careers.js';
@@ -645,7 +646,9 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
     case 'tutor': {
       const p = ours(ctx, o.person);
       if (!p) return { ok: false, reason: msg(ctx, 'table.order.tutor.unknown', 'nobody of this house by that name') };
-      return beginTutoring(ctx, p, o.attr);
+      const begun = beginTutoring(ctx, p, o.attr);
+      if (begun.ok) startDecisionArcs(ctx, 'tutor', { PUPIL: p.id });
+      return begun;
     }
 
     case 'career': {
@@ -1541,7 +1544,7 @@ export function runStandingOrders(
         if (!rng.bool(keen)) continue;
       }
       const subject = (isProgramme && mind) ? mind : rng.pick(teachable);
-      beginTutoring(ctx, p, String(subject.id));
+      if (beginTutoring(ctx, p, String(subject.id)).ok) startDecisionArcs(ctx, 'tutor', { PUPIL: p.id });
     }
   }
 

@@ -14299,3 +14299,43 @@ warnings. Raw reports and logs remain in the execution workspace under
 
 The scheduled-regression issue stays open until a successful nightly run on
 main confirms recovery.
+
+## 2026-10-24 — #1898: later generations' Matches, terms and wakings come back
+
+**Question.** #1867 gave the first generation a choice and a return (the
+tutor's good years). Does anything come back to a Match, a tutor's term or an
+awakening in the generations after it?
+
+**Before.** Nothing authored did. Twelve Long Lines (seeds `20000 + 37i`,
+canonical chronicler) on `fc5502f`: of every event tagged for marriage,
+tutoring or waking, only `the_boy_who_woke` reached a given Head's reign in
+more than a few runs, and it is ambient texture, not a return. The tutor and
+Match scenes reached any one reign after the first in 0–1 of 12 runs. A
+callback hung on the ambient draw cannot be relied on, because the draw is
+spread over hundreds of commons.
+
+**Change.** An arc may declare `startsOn: { decision, cooldownYears }`
+(`schema/src/arc.ts`). `startDecisionArcs` (`core/src/events/arcs.ts`) opens
+it from the decision's own door: a Match answered (`resolveMatch`), a term
+bought at the Table or by the steward, a natural waking in the household. An
+authored effect never opens one, so the 1042 opening concern is not told
+twice. The decision hands the arc fixed bindings (`SUBJECT`/`SPOUSE`,
+`PUPIL`, `WOKEN`); `arcs/decision` checks the arc binds them and opens on an
+`immediate` page. A term that ends early — an authored `tutor` cancel, or
+the pupil taken hostage — cancels its story through `cancelDecisionArcs`, and
+a Match return splits on whether the marriage still stands. Three arcs,
+six narration scenes, no effects, no choices, no ambient templates: arc steps
+spend no ambient budget, so no tier's share of the draw moves. No new
+`WorldState` field, so no `SAVE_FORMAT` change.
+
+**Tuning.** Cooldowns of 15–20 years put each callback near its cap (about
+28, 17 and 15 openings a run) — the house repeating itself rather than
+remembering. Thirty years for all three keeps about one of each a generation.
+
+**After (24 Long Lines, seeds `20000 + 37i`, 30-year cooldowns).** A callback
+page reaches the second, third and fourth Heads' reigns in **21, 21 and 20 of
+24 runs**. The misses are reigns a few years long (1134–1136, for one). Every
+return's `cause` resolves through `causeOf` to its own opening page (809 of
+809 in the probe batch). `callbacks.slow.test.ts` asserts each generation at
+a 0.6 floor with `expectRate`, every link, and that every story opens in the
+year of the decision about the person it was.

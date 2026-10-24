@@ -1,4 +1,4 @@
-import type { ArcDef, Schedule } from './arc.js';
+import { DECISION_ARC_BINDINGS, type ArcDef, type Schedule } from './arc.js';
 import type { Content } from './content-index.js';
 import type { Effect, EventTemplate, RecordBlock, SlotRole } from './event.js';
 import { isLadderRole, outcomeDrawSets, outcomeGuardKey, outcomeGuardsComplementary, type Outcome } from './event.js';
@@ -1056,6 +1056,43 @@ const secretsWiring: ValidationRule = {
         const known = knowledge.get(secret);
         if (known) {
           issues.push(err(this.id, holder.at, `secret '${secret}' is also granted as knowledge at ${known}`));
+        }
+      }
+    }
+    return issues;
+  },
+};
+
+/**
+ * A DECISION HANDS AN ARC ITS PEOPLE BY NAME (#1898).
+ *
+ * `startDecisionArcs` seeds `DECISION_ARC_BINDINGS` and nothing else. A name
+ * the arc does not bind is dropped by `startArc`, and an entry slot that is
+ * not `bind: arc` recasts from the whole household, so the scene about the
+ * bride is about whoever the pool turned up. The entry is `immediate`
+ * because it IS the decision's page: the return cites it, and a delayed entry
+ * would put that page years away from the choice it records.
+ */
+const arcDecision: ValidationRule = {
+  id: 'arcs/decision',
+  about: 'An arc started by a decision binds the people the decision hands it, and opens on that year\'s page.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const arc of content.arcs) {
+      if (!arc.startsOn) continue;
+      const at = `arc:${arc.id}`;
+      const entry = arc.nodes.find((n) => n.id === arc.entry);
+      if (entry && entry.schedule !== 'immediate') {
+        issues.push(err(this.id, at, `entry '${entry.id}' must be scheduled 'immediate': it is the ${arc.startsOn.decision}'s own page`));
+      }
+      const event = entry && content.event(entry.event);
+      for (const slot of DECISION_ARC_BINDINGS[arc.startsOn.decision]) {
+        if (!arc.bindings.includes(slot)) {
+          issues.push(err(this.id, at, `a ${arc.startsOn.decision} hands the arc ${slot}; add it to bindings`));
+        }
+        const spec = event?.slots[slot];
+        if (event && spec?.bind !== 'arc') {
+          issues.push(err(this.id, `${at}/${arc.entry}`, `entry event '${event.id}' must cast ${slot} with bind: arc`));
         }
       }
     }
@@ -2568,6 +2605,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   discrepancyWiring,
   secretsWiring,
   arcWiring,
+  arcDecision,
   arcExpiry,
   inlineCollision,
   arcFlags,

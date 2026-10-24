@@ -595,6 +595,18 @@
       ]
     },
     {
+      "path": "packages/core/src/events/callbacks.slow.test.ts",
+      "claim": "Played/full-run regression assertions: a decision-started callback (Match, tutor's term, awakening) reaches the second, third and fourth Heads' reigns in most Long Lines; every return cites its own opening page; every story opens in the year of the decision that started it, about the person it was.",
+      "evidenceType": "full-run regression with merge-blocking mechanism coverage",
+      "currentTier": "nightly",
+      "proposedTier": "nightly",
+      "coveredBy": [
+        "packages/core/src/events/callbacks.test.ts#a Match answered opens the couple's story, bound to both of them",
+        "packages/core/src/events/callbacks.test.ts#the return names the decision that started it: its page cites the opening page",
+        "packages/core/src/events/callbacks.test.ts#a term cancelled before it completes ends its story, and only that one"
+      ]
+    },
+    {
       "path": "packages/core/src/founder-journey.slow.test.ts",
       "claim": "Played/full-run regression assertions: every offered founder identity, signed through the session, carries its name, body, children and charter through a docket-answered first generation, persists exactly, crosses over with its own grammatical forms, hands the seal on (or opens a minor's wardship) and opens the collection on the signer, with no authored token left unrendered.",
       "evidenceType": "player-driven end-to-end regression with merge-blocking mechanism coverage",

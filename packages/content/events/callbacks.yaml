@@ -1,0 +1,320 @@
+# CALLBACKS (#1898). See `arcs/callbacks.yaml` for the shape and why the
+# decision starts them rather than the ambient draw.
+#
+# Each pair is the decision's page and its return. Neither asks anything: the
+# question was the Match, the term or the waking itself, and the player has
+# already answered it. What these add is the way back to that answer.
+#
+# Outcomes split on the person's sex, never on `canExpress`: a son's waking
+# and a daughter's are different promises, and an outcome that sorted sons by
+# the hidden font would tell the player what the genome is.
+events:
+  - id: the_match_made
+    title: The Toasts
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    tags: [marriage, callback]
+    purposes: [change_relationship, plant_rumour, worldbuild_through_action]
+    arc: { of: arc_the_match_come_to_something, node: the_match_made }
+    slots:
+      SUBJECT: { role: family_member, bind: arc, onMissing: cancel_arc }
+      SPOUSE: { role: family_member, bind: arc, onMissing: cancel_arc }
+    body: >-
+      The terms are read twice at the long table, once for the house and once
+      for the witnesses, and then the cups come out. {SUBJECT} and {SPOUSE}
+      are married before the month is out. Nobody asks either of them what
+      they hope for. The house hopes for children, and says so in every toast.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: a_son_married
+          weight: 100
+          onlyIf: { slot: SUBJECT, filters: [{ sex: male }] }
+          text: >-
+            {SUBJECT} is a son of the blood with a wife at his side, and the
+            house can count forward from him. It starts counting that night.
+        - id: a_daughter_married
+          weight: 100
+          onlyIf: { slot: SUBJECT, filters: [{ not: { sex: male } }] }
+          text: >-
+            {SUBJECT} is a daughter of the blood, and worth what her sons will
+            be. The house has named its price, and settles in to see it paid.
+
+  - id: the_match_returned
+    title: Looked At Again
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    tags: [marriage, callback]
+    purposes: [change_relationship, buy_patience, plant_rumour]
+    arc: { of: arc_the_match_come_to_something, node: the_match_returned }
+    slots:
+      SUBJECT: { role: family_member, bind: arc, onMissing: cancel_arc }
+      SPOUSE: { role: family_member, bind: arc, onMissing: cancel_arc }
+    body: >-
+      Some years on, the house looks again at the Match it made for {SUBJECT},
+      the way it looks again at a field it paid too much for. It walks the
+      edges. It counts what came up.
+    interaction:
+      kind: narration
+      # Split on whether the marriage still stands, not on who is in it: an
+      # authored `marriage: end` can undo a Match the docket made, and a page
+      # about two chairs at one table would then be about nobody.
+      outcomes:
+        - id: the_match_held
+          weight: 100
+          onlyIf: { slot: SUBJECT, filters: [{ relation: spouse_of, of: SPOUSE }] }
+          text: >-
+            For {SUBJECT} the marriage bought what a marriage buys first: a
+            settled chair at the table, and an end to being argued about at
+            dinner. Settled is what the house paid for.
+        - id: the_match_undone
+          weight: 100
+          onlyIf: { slot: SUBJECT, filters: [{ not: { relation: spouse_of, of: SPOUSE } }] }
+          text: >-
+            The marriage did not hold. The house does not write down why, and
+            {SUBJECT} does not ask it to. The second chair goes back against
+            the wall.
+
+  - id: the_term_bought
+    title: Counted Onto the Table
+    tier: individual
+    frequency: common
+    campaigns: [short, long]
+    tags: [table, tutor, money, callback]
+    purposes: [worldbuild_through_action, change_relationship, change_standing]
+    arc: { of: arc_the_term_paid_for, node: the_term_bought }
+    slots:
+      PUPIL: { role: child, bind: arc, onMissing: cancel_arc }
+    body: >-
+      Forty crowns goes out of the strongbox in one morning, counted onto the
+      table where the steward and the tutor can both watch it go. {PUPIL} has
+      eight years now that belong to somebody else's lessons. The house does
+      not say what it wants for the money. It wants what every house wants: a
+      child worth more than the sum.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: shown_the_chair
+          weight: 100
+          text: >-
+            {PUPIL} is shown the schoolroom and the chair that goes with it.
+            The chair is hard, which the tutor says is the point.
+
+  - id: the_term_shows
+    title: The Box Goes Back on the Cart
+    tier: individual
+    frequency: common
+    campaigns: [short, long]
+    tags: [table, tutor, callback]
+    purposes: [buy_patience, change_standing, plant_rumour]
+    arc: { of: arc_the_term_paid_for, node: the_term_shows }
+    slots:
+      PUPIL: { role: family_member, bind: arc, onMissing: cancel_arc }
+    body: >-
+      Eight years, and the tutor packs the books he came with into the box he
+      brought them in. {PUPIL} helps carry it out to the cart. Nobody makes a
+      speech. The house finds out what it bought the way it always does, by
+      watching.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: it_shows_in_him
+          weight: 100
+          onlyIf: { slot: PUPIL, filters: [{ sex: male }] }
+          text: >-
+            It shows in {PUPIL}, in the yard and the counting room, wherever
+            the steward sends him. He is sent more often every year, which is how a house
+            says a thing worked.
+        - id: it_shows_in_her
+          weight: 100
+          onlyIf: { slot: PUPIL, filters: [{ not: { sex: male } }] }
+          text: >-
+            It shows in {PUPIL} at the table, where she corrects the steward
+            twice in one winter and is right both times. Nobody forgets which of them was
+            paid for.
+
+  - id: the_waking_noticed
+    title: The Kitchen Knows First
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    tags: [awakening, blood, callback]
+    purposes: [establish_magic_rule, buy_patience, change_relationship]
+    arc: { of: arc_the_waking_kept, node: the_waking_noticed }
+    slots:
+      WOKEN: { role: family_member, bind: arc, onMissing: cancel_arc }
+    body: >-
+      It is the kitchen that notices, as it always is: a jug that cracks with
+      nobody holding it, a cold that settles on one end of the bench and will
+      not shift. By evening the whole house knows that {WOKEN} has woken.
+      Nobody says the word.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: a_son_woke
+          weight: 100
+          onlyIf: { slot: WOKEN, filters: [{ sex: male }] }
+          text: >-
+            {WOKEN} is a son who has woken, and the house does the sum it
+            always does. It will come when it comes, and never because anybody
+            asked.
+        - id: a_daughter_woke
+          weight: 100
+          onlyIf: { slot: WOKEN, filters: [{ not: { sex: male } }] }
+          text: >-
+            {WOKEN} will never use it. She will carry it, and every house that
+            hears of this will want her sons.
+
+  - id: the_waking_shows
+    title: A Door Left Open
+    tier: family
+    frequency: common
+    campaigns: [short, long]
+    tags: [awakening, blood, callback]
+    purposes: [establish_magic_rule, test_magic_rule, buy_patience]
+    arc: { of: arc_the_waking_kept, node: the_waking_shows }
+    slots:
+      WOKEN: { role: family_member, bind: arc, onMissing: cancel_arc }
+    body: >-
+      {WOKEN} woke some years ago now, which is long enough for a house to stop
+      whispering about a thing and start arranging itself around it. Nobody
+      mentions the waking. Everybody remembers it.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: what_his_waking_became
+          weight: 100
+          onlyIf: { slot: WOKEN, filters: [{ sex: male }] }
+          text: >-
+            When {WOKEN} is angry the fires gutter, and the household has
+            learned to leave a door open. It has never once come when he called
+            it.
+        - id: what_her_waking_became
+          weight: 100
+          onlyIf: { slot: WOKEN, filters: [{ not: { sex: male } }] }
+          text: >-
+            Every house that writes to this one mentions {WOKEN}, in the careful
+            way such letters mention anything. Nobody has to say what they are
+            asking after.
+proseVariants:
+  - address: "content:events/callbacks.yaml#events[id=the_match_made].title"
+    of: "06ac085007d5cd3c"
+    plainenglish: >-
+      The Wedding Toasts
+  - address: "content:events/callbacks.yaml#events[id=the_match_made].body"
+    of: "5c255df5114354b1"
+    plainenglish: >-
+      The marriage terms are read aloud twice at the long table, once for the family and
+      once for the witnesses. Then the cups come out. {SUBJECT} and {SPOUSE} are married
+      within the month. Nobody asks either of them what they want from it. The family wants
+      children, and says so in every toast.
+  - address: "content:events/callbacks.yaml#events[id=the_match_made].interaction.outcomes[id=a_son_married].text"
+    of: "50ed0ad0c22098e4"
+    plainenglish: >-
+      {SUBJECT} is a son of the blood, and now he has a wife. The family can start hoping
+      for his children. It starts that same night.
+  - address: "content:events/callbacks.yaml#events[id=the_match_made].interaction.outcomes[id=a_daughter_married].text"
+    of: "7b9a3114d08366e8"
+    plainenglish: >-
+      {SUBJECT} is a daughter of the blood. Her value to the family is the sons she may
+      have. The family has made its bargain, and now it waits to see what it gets.
+  - address: "content:events/callbacks.yaml#events[id=the_match_returned].title"
+    of: "a21746446d865910"
+    plainenglish: >-
+      The Marriage, Some Years Later
+  - address: "content:events/callbacks.yaml#events[id=the_match_returned].body"
+    of: "b31926878a21436b"
+    plainenglish: >-
+      Some years later, the family takes a fresh look at the marriage it arranged for
+      {SUBJECT}, the way you would check a field you paid too much for. It looks at the
+      whole thing. It counts what came of it.
+  - address: "content:events/callbacks.yaml#events[id=the_match_returned].interaction.outcomes[id=the_match_held].text"
+    of: "0a74f0a9bfb63d4d"
+    plainenglish: >-
+      For {SUBJECT}, the marriage brought the first thing a marriage brings: a settled place
+      at the table, and no more arguments about them at dinner. A settled life is what the
+      family paid for.
+  - address: "content:events/callbacks.yaml#events[id=the_match_returned].interaction.outcomes[id=the_match_undone].text"
+    of: "974049ba6cf615fe"
+    plainenglish: >-
+      The marriage did not last. The family does not write down why, and {SUBJECT} does not
+      ask them to. The second chair is put back against the wall.
+  - address: "content:events/callbacks.yaml#events[id=the_term_bought].title"
+    of: "2a1f2ba08078e9bc"
+    plainenglish: >-
+      Paying for the Lessons
+  - address: "content:events/callbacks.yaml#events[id=the_term_bought].body"
+    of: "4d9b274362f8fb77"
+    plainenglish: >-
+      Forty crowns come out of the strongbox in one morning. They are counted onto the table
+      while the steward and the tutor both watch. For the next eight years, {PUPIL} belongs
+      to someone else's lessons. The family does not say what it wants for the money. It
+      wants what every family wants: a child worth more than the money spent.
+  - address: "content:events/callbacks.yaml#events[id=the_term_bought].interaction.outcomes[id=shown_the_chair].text"
+    of: "9356f4e31fcad257"
+    plainenglish: >-
+      {PUPIL} is shown the schoolroom and given a chair there. The chair is hard, and the
+      tutor says that is on purpose.
+  - address: "content:events/callbacks.yaml#events[id=the_term_shows].title"
+    of: "0c307b0433217a88"
+    plainenglish: >-
+      The Tutor Leaves
+  - address: "content:events/callbacks.yaml#events[id=the_term_shows].body"
+    of: "902281989bc7c35c"
+    plainenglish: >-
+      After eight years, the tutor packs his books back into the box he brought them in.
+      {PUPIL} helps carry it out to the cart. Nobody makes a speech. The family will find
+      out what the lessons were worth the usual way: by watching.
+  - address: "content:events/callbacks.yaml#events[id=the_term_shows].interaction.outcomes[id=it_shows_in_him].text"
+    of: "523711989d2d396c"
+    plainenglish: >-
+      The lessons show in {PUPIL}, in the yard and in the counting room, wherever the
+      steward sends him. He gets sent more often every year. That is how a family says
+      something worked.
+  - address: "content:events/callbacks.yaml#events[id=the_term_shows].interaction.outcomes[id=it_shows_in_her].text"
+    of: "6ca16629c008a36d"
+    plainenglish: >-
+      The lessons show in {PUPIL} at the table. One winter she corrects the steward twice,
+      and she is right both times. Nobody forgets which of them the family paid to teach.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_noticed].title"
+    of: "d20233b2afae478e"
+    plainenglish: >-
+      The Kitchen Notices First
+  - address: "content:events/callbacks.yaml#events[id=the_waking_noticed].body"
+    of: "10f041b7958d24a3"
+    plainenglish: >-
+      As usual, the kitchen notices first. A jug cracks when nobody is holding it. A cold
+      settles on one end of the bench and will not go away. By evening the whole household
+      knows that {WOKEN} has woken. Nobody says the word out loud.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_noticed].interaction.outcomes[id=a_son_woke].text"
+    of: "5d8117b0bd8963f4"
+    plainenglish: >-
+      {WOKEN} is a son, and he has woken. The family makes its usual calculations. The power
+      will come when it comes, and never because someone asked for it.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_noticed].interaction.outcomes[id=a_daughter_woke].text"
+    of: "cbd000f4f1fc0488"
+    plainenglish: >-
+      {WOKEN} will never be able to use the power. She will carry it instead, and every
+      family that hears about this will want her sons.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_shows].title"
+    of: "fc17f7c3285fd657"
+    plainenglish: >-
+      Years After the Waking
+  - address: "content:events/callbacks.yaml#events[id=the_waking_shows].body"
+    of: "aac45af52b958171"
+    plainenglish: >-
+      {WOKEN} woke some years ago. That is long enough for a household to stop whispering
+      about something and start living around it. Nobody mentions the waking now. Everybody
+      remembers it.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_shows].interaction.outcomes[id=what_his_waking_became].text"
+    of: "5ad3415ba5b18ebf"
+    plainenglish: >-
+      When {WOKEN} is angry, the fires flicker and dim, so the household has learned to
+      leave a door open. The power has never once come when he called for it.
+  - address: "content:events/callbacks.yaml#events[id=the_waking_shows].interaction.outcomes[id=what_her_waking_became].text"
+    of: "429df532a63455b6"
+    plainenglish: >-
+      Every family that writes to this one mentions {WOKEN}, carefully, the way such letters
+      mention anything. Nobody needs to explain what they are really asking about.

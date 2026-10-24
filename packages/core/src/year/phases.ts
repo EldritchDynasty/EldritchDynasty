@@ -35,7 +35,7 @@ import { tickAuction } from '../auction.js';
 import { tickMarriagePledges } from '../people/pledges.js';
 import { selectEvents } from '../events/selection.js';
 import { presentFrame, selectFrame } from '../events/frame.js';
-import { dueArcSteps, type ArcStep } from '../events/arcs.js';
+import { dueArcSteps, startDecisionArcs, type ArcStep } from '../events/arcs.js';
 import { tickTales } from '../events/tales.js';
 import { pickOutcome } from '../events/effects.js';
 import { resolveChoiceOutcome } from '../events/checks.js';
@@ -198,6 +198,13 @@ export const YEAR_PHASES: readonly Phase[] = [
         if (rollAwakening(p, w.year, ctx.genetics, rng)) report.awakenings.push(p);
         accrueMadness(p, ctx.genetics, w.year);
         if (rollDeath(p, ctx, rng)) report.deaths.push(p);
+      }
+      // The house's own wakings open their stories (#1898). Read after the
+      // loop, so a child who woke and died in the same year opens nothing.
+      // Draws no dice, so it cannot move this phase's stream.
+      const household = new Set(w.people.household(w.playerHouse, w.year).map((p) => p.id));
+      for (const p of report.awakenings) {
+        if (p.status === 'alive' && household.has(p.id)) startDecisionArcs(ctx, 'awakening', { WOKEN: p.id });
       }
       // A name is spoken for while its holder lives and for a generation
       // after. Without this the pool drained by 1153 and two thirds of the
