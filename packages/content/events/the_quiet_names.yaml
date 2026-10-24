@@ -609,10 +609,15 @@ events:
                 He accepts it without a flicker, because he has been declined
                 before and because a declined question makes a better entry
                 than an answered one. The clerk writes the question out in full
-                and then writes, underneath it, that no answer was had.
+                and then writes, underneath it, that no answer was had. Below
+                that he writes a date four years away.
               effects:
                 - { kind: respect, delta: -1 }
                 - { kind: rumour, op: seed, id: rumour_the_question_not_answered, accuracy: 0.5 }
+                - { kind: flag, flag: the_visitation_comes_back_early, set: true }
+              # Reuse the four-year arc compiled from the hesitant answer above.
+              # One follow-up has one arc owner, including in existing saves.
+              triggers: { arc: inline_the_visitation_of_the_archdeacon__the_ninth_question, op: start }
     record:
       subject: the ninth question
       options:
@@ -1139,11 +1144,12 @@ proseVariants:
     plainenglish: >-
       Answer ten of the eleven. He cannot force an answer.
   - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].interaction.choices[id=decline_the_ninth].outcomes[id=declined_one].text"
-    of: "caca38741425f018"
+    of: "ea98d012b1b6da96"
     plainenglish: >-
       He accepts it without a flicker. He has been refused before, and a refused question makes
       a better record than an answered one. The clerk writes out the question in full, and
-      underneath it writes that no answer was given.
+      underneath it writes that no answer was given. He sets the next visit for four years
+      from now.
   - address: "content:events/the_quiet_names.yaml#events[id=the_visitation_of_the_archdeacon].record.subject"
     of: "b4e8efebdab5021f"
     plainenglish: >-
