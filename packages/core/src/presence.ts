@@ -22,7 +22,7 @@ export function isCurrentFamily(ctx: SimCtx, person: Person): boolean {
  * is in that hall, whichever hall they sleep in otherwise. A duty that is
  * suspended places nobody: they are wherever the suspension left them.
  */
-export type DutyPlace = { hall: string } | { parcel: string };
+export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string };
 
 export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
   const w = ctx.world;
@@ -46,15 +46,25 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
       if (!anchor || currentMembership(anchor, w.year)?.house !== w.playerHouse) return undefined;
       return { hall: branchOf(w, anchor, w.year) };
     }
-    case 'party': case 'elsewhere': case 'muster': return undefined;
+    case 'muster': {
+      const c = w.muster.commitments.find(c => c.id === site.commitment && c.status === 'in_the_field');
+      return c ? { commitment: c.id } : undefined;
+    }
+    case 'party': case 'elsewhere': return undefined;
     default: return assertNever(site, 'duty site');
   }
 }
 
 /** Officers in the field this year. Small: it is the muster's officer list. */
 export function deployedPeople(ctx: SimCtx): Set<string> {
-  return new Set(ctx.world.muster.commitments
-    .filter(c => c.status === 'in_the_field').flatMap(c => c.officers));
+  const active = ctx.world.muster.commitments.filter(c => c.status === 'in_the_field');
+  const commitments = new Set(active.map(c => c.id));
+  return new Set([
+    ...active.flatMap(c => c.officers),
+    // Travel, unpaid service and recovery do not teleport somebody home.
+    ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
+      && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
+  ]);
 }
 
 function free(ctx: SimCtx, p: Person | undefined): p is Person {
@@ -89,7 +99,11 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
     case 'party': case 'elsewhere': case 'parcel': return { site, people: distinct(named(site.slots)) };
-    case 'muster': return { site, people: distinct([...deployed]) };
+    case 'muster': {
+      if (site.commitment !== undefined && !w.muster.commitments.some(c =>
+        c.id === site.commitment && c.status === 'in_the_field')) return { site, people: [] };
+      return { site, people: distinct([...deployed]) };
+    }
     case 'hall': {
       const anchor = typeof site.hall === 'string' ? undefined : w.people.get(soleCast(fill, site.hall.slot) ?? '');
       if (typeof site.hall !== 'string' && (!anchor || currentMembership(anchor, w.year)?.house !== w.playerHouse)) {

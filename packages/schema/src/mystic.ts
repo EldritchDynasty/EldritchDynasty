@@ -18,6 +18,38 @@ import { SceneSiteS } from './primordial.js';
  * INVARIANT 16: practice is not a post. Nothing here calls `canHoldPost`.
  */
 
+/** Annual risks for a physically deployed reader, before concealment and tide. */
+const FieldRiskS = z.object({
+  death: z.number().min(0).max(0.05),
+  capture: z.number().min(0).max(0.1),
+  injury: z.number().min(0).max(0.15),
+  ransom: z.number().int().nonnegative(),
+}).strict();
+
+export const MysticFieldBenefitS = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('field_care'), risk: FieldRiskS,
+    casualtyReduction: z.number().min(0).max(0.5),
+    officerReduction: z.number().min(0).max(0.5),
+  }).strict(),
+  z.object({
+    kind: z.literal('field_supply'), risk: FieldRiskS,
+    crownsPerMan: z.number().min(0).max(0.6),
+    maxMen: z.number().int().positive().max(30),
+  }).strict(),
+  z.object({
+    kind: z.literal('field_watch'), risk: FieldRiskS,
+    opportunityChance: z.number().min(0).max(0.5),
+    credit: z.number().positive().max(2),
+  }).strict(),
+  z.object({
+    kind: z.literal('field_concealment'), risk: FieldRiskS,
+    captureReduction: z.number().min(0).max(0.6),
+    observationReduction: z.number().min(0).max(0.6),
+  }).strict(),
+]);
+export type MysticFieldBenefit = z.infer<typeof MysticFieldBenefitS>;
+
 export const MysticBenefitS = z.discriminatedUnion('kind', [
   /**
    * A carer posted to one hall. Each year they attend the `maxWards`
@@ -44,6 +76,7 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     parcelKinds: z.array(ParcelKindS).min(1),
     maxAcres: z.number().positive(),
   }).strict(),
+  ...MysticFieldBenefitS.options,
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
 export type MysticBenefitKind = MysticBenefit['kind'];
@@ -78,7 +111,7 @@ export type MysticStatus = z.infer<typeof MysticStatusS>;
  */
 export const MysticGapS = z.enum([
   'dead', 'left_house', 'hostage', 'missing', 'deployed', 'away_post', 'not_resident',
-  'unlearned', 'target_lost', 'unpaid', 'too_young',
+  'unlearned', 'target_lost', 'unpaid', 'too_young', 'wounded',
 ]);
 export type MysticGap = z.infer<typeof MysticGapS>;
 
@@ -97,12 +130,20 @@ export const MysticServiceS = z.object({
   yieldKept: z.number().nonnegative(),
   /** Crowns: preparation plus every reserved upkeep. */
   spent: z.number().nonnegative(),
+  /** Field-only counters stay absent on historical household duties. */
+  menKept: z.number().int().nonnegative().optional(),
+  crownsKept: z.number().nonnegative().optional(),
+  opportunities: z.number().int().nonnegative().optional(),
+  /** Fractions accumulate, so small levies neither lose all benefit nor become immune. */
+  recoverable: z.number().min(0).max(1).optional(),
 }).strict();
 export type MysticService = z.infer<typeof MysticServiceS>;
 
 export const MysticAssignmentS = z.object({
   id: z.string(),
   practitioner: z.string(),
+  /** Omitted for the player's house; foreign field duties use the same evaluator. */
+  house: z.string().optional(),
   working: z.string(),
   /**
    * One shared site vocabulary with #1868. B accepts `hall` (life care) and
@@ -137,6 +178,10 @@ export type MysticStudyPause = z.infer<typeof MysticStudyPauseS>;
 export const MysticStateS = z.object({
   assignments: z.array(MysticAssignmentS),
   pauses: z.array(MysticStudyPauseS),
+  /** Foreign practice spends from the house's authored wealth once, without replenishment. */
+  foreignSpent: z.record(z.string(), z.number().nonnegative()).optional(),
+  /** The economy still collects a reserved year if its reader dies or returns before the tally. */
+  reservedUpkeep: z.object({ year: z.number(), crowns: z.number().nonnegative() }).strict().optional(),
 }).strict();
 export type MysticState = z.infer<typeof MysticStateS>;
 export const emptyMysticState = (): MysticState => ({ assignments: [], pauses: [] });

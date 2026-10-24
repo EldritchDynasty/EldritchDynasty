@@ -1,5 +1,5 @@
 import type {
-  MysticAssignment, MysticGap, MysticWorkingDef, ParcelDef, ParcelKind, ParcelState, Person, SceneSite,
+  Commitment, MysticAssignment, MysticFieldBenefit, MysticGap, MysticWorkingDef, ParcelDef, ParcelKind, ParcelState, Person, SceneSite,
 } from '@ed/schema';
 import { assertNever, canLearn, currentMembership, isActiveBranch, MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx } from './world.js';
@@ -9,6 +9,9 @@ import { attendsHall, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily }
 import { msg } from './messages.js';
 import { ordinaryRisk } from './people/demography.js';
 import { proseForContentField } from './prose.js';
+import { streamFor } from './rng.js';
+import { captureFamily } from './people/captivity.js';
+import { relate, sentimentBetween } from './people/relationships.js';
 
 /**
  * MYSTIC DUTIES (#1866 B / #1873) — learn, assign, pay, serve, answer for it.
@@ -56,19 +59,48 @@ export function hasLearned(p: Person, w: MysticWorkingDef): boolean {
   return canLearn(p.sex, w.affinity) && w.books.every((b) => p.spellsKnown.some((k) => String(k) === b));
 }
 
+export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { benefit: MysticFieldBenefit } {
+  switch (w.benefit.kind) {
+    case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': return true;
+    case 'life_care': case 'estate_protection': return false;
+    default: return assertNever(w.benefit, 'field working');
+  }
+}
+
+type DutyContext = { house?: string; target?: SceneSite };
+function dutyHouse(ctx: SimCtx, a?: DutyContext): string { return a?.house ?? ctx.world.playerHouse; }
+
+function dutyFunds(ctx: SimCtx, house: string): number {
+  return house === ctx.world.playerHouse ? ctx.world.treasury - DEBT_FLOOR
+    : Math.max(0, (ctx.world.houses.get(house)?.wealth ?? 0) - (ctx.world.mystic.foreignSpent?.[house] ?? 0));
+}
+
+function spendForeign(ctx: SimCtx, house: string, crowns: number): void {
+  const ledger = ctx.world.mystic.foreignSpent ??= {};
+  ledger[house] = (ledger[house] ?? 0) + crowns;
+}
+
 /**
  * THE ONE AVAILABILITY READER. The quote, the yearly reservation and every
  * benefit ask it, so the Table cannot promise somebody the phase would refuse.
  */
-export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: MysticWorkingDef): MysticGap | undefined {
+export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: MysticWorkingDef,
+  assignment?: DutyContext): MysticGap | undefined {
   const w = ctx.world;
   if (!p || (p.status !== 'alive' && p.status !== 'missing')) return 'dead';
   if (currentMembership(p, w.year)?.kind === 'hostage') return 'hostage';
-  if (!isCurrentFamily(ctx, p)) return 'left_house';
+  const house = dutyHouse(ctx, assignment);
+  const membership = currentMembership(p, w.year);
+  if (house === w.playerHouse ? !isCurrentFamily(ctx, p) : membership?.house !== house
+    || !['blood', 'cadet', 'married_in'].includes(membership.kind)) return 'left_house';
   if (p.status === 'missing') return 'missing';
   if (!hasLearned(p, working)) return 'unlearned';
   if (w.year - p.born < MYSTIC_DUTY_AGE) return 'too_young';
-  if (deployedPeople(ctx).has(p.id)) return 'deployed';
+  if ((p.fieldRecoveryUntil ?? -Infinity) > w.year) return 'wounded';
+  const site = assignment?.target;
+  const ownFieldDuty = site?.kind === 'muster' && isFieldWorking(working)
+    && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field');
+  if (deployedPeople(ctx).has(p.id) && !ownFieldDuty) return 'deployed';
   if (p.career && ctx.content.career(p.career.career)?.resident !== 'home') return 'away_post';
   return undefined;
 }
@@ -96,6 +128,9 @@ export function targetGap(
       if (!b.parcelKinds.includes(held.def.kind) || held.def.acres > b.maxAcres) return 'target_lost';
       return undefined;
     }
+    case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment':
+      return site.kind === 'muster' && ctx.world.muster.commitments.some(c =>
+        c.id === site.commitment && c.status === 'in_the_field') ? undefined : 'target_lost';
     default: return assertNever(b, 'mystic benefit');
   }
 }
@@ -125,7 +160,7 @@ export interface MysticQuote {
 export interface MysticOrder { person: string; working: string; target: SceneSite; bindings?: Record<string, string> }
 
 /** Everything an order would cost and whether it can be given, before it is. */
-export function quoteDuty(ctx: SimCtx, o: MysticOrder): MysticQuote {
+export function quoteDuty(ctx: SimCtx, o: MysticOrder, house = ctx.world.playerHouse): MysticQuote {
   const w = ctx.world;
   const working = workingDef(ctx, o.working);
   const blank = { preparation: 0, ready: w.year + 1, upkeep: 0 };
@@ -140,17 +175,19 @@ export function quoteDuty(ctx: SimCtx, o: MysticOrder): MysticQuote {
   if (study) quote.pauses = { book: study.book, remainingYears: Math.max(1, study.completes - w.year) };
 
   const p = w.people.get(o.person);
-  const gap = practitionerGap(ctx, p, working) ?? targetGap(ctx, working, o.target, o.bindings ?? {});
+  const context = house === w.playerHouse ? undefined : { house };
+  const gap = practitionerGap(ctx, p, working, context) ?? targetGap(ctx, working, o.target, o.bindings ?? {});
   if (gap) return { ...quote, ok: false, gap, reason: gapReason(ctx, gap) };
   if (w.mystic.assignments.some((a) => a.practitioner === o.person)) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.one_duty', 'they already keep a duty') };
   }
   const place = JSON.stringify(dutyPlaceOf(ctx, o.target, o.bindings ?? {}));
-  if (w.mystic.assignments.some((a) => workingDef(ctx, a.working)?.benefit.kind === working.benefit.kind
+  if (w.mystic.assignments.some((a) => dutyHouse(ctx, a) === house
+    && workingDef(ctx, a.working)?.benefit.kind === working.benefit.kind
     && JSON.stringify(dutyPlaceOf(ctx, a.target, a.bindings)) === place)) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.covered', 'somebody already keeps that duty there') };
   }
-  if (w.treasury - quote.preparation < DEBT_FLOOR) {
+  if (dutyFunds(ctx, house) < quote.preparation) {
     return {
       ...quote, ok: false,
       reason: msg(ctx, 'mystic.refuse.cost', 'the house cannot raise {PRICE} crowns', { PRICE: String(quote.preparation) }),
@@ -161,17 +198,25 @@ export function quoteDuty(ctx: SimCtx, o: MysticOrder): MysticQuote {
 
 /** The Table's door. Pays the preparation, sets the reader's book down, and records the duty. */
 export function assignDuty(ctx: SimCtx, o: MysticOrder): OrderResult {
+  const result = commitDuty(ctx, o, ctx.world.playerHouse);
+  if (result.ok && o.target.kind === 'muster') prepareFieldOpposition(ctx, o.target.commitment!);
+  return result;
+}
+
+function commitDuty(ctx: SimCtx, o: MysticOrder, house: string): OrderResult {
   const w = ctx.world;
-  const quote = quoteDuty(ctx, o);
+  const quote = quoteDuty(ctx, o, house);
   if (!quote.ok) return { ok: false, reason: quote.reason };
   const working = workingDef(ctx, o.working)!;
   const p = w.people.get(o.person)!;
   const id = `mys_${(w.counters.mystic += 1).toString(36)}`;
 
-  w.treasury -= quote.preparation;
+  if (house === w.playerHouse) w.treasury -= quote.preparation;
+  else spendForeign(ctx, house, quote.preparation);
   w.mystic.assignments.push({
     id,
     practitioner: p.id,
+    ...(house !== w.playerHouse ? { house } : {}),
     working: working.id,
     target: structuredClone(o.target),
     bindings: { ...(o.bindings ?? {}) },
@@ -192,7 +237,7 @@ export function assignDuty(ctx: SimCtx, o: MysticOrder): OrderResult {
     });
   }
 
-  w.chronicle.push({
+  if (house === w.playerHouse) w.chronicle.push({
     year: w.year, weight: 'line', named: false, people: [p.id],
     text: msg(ctx, 'mystic.assigned',
       '{PERSON} took up {WORKING} for {PLACE}. The house paid {FEE} crowns to make ready, and will pay {UPKEEP} a year while it is kept.',
@@ -207,11 +252,11 @@ export function assignDuty(ctx: SimCtx, o: MysticOrder): OrderResult {
 /** Release a duty by the player's word. The paused book resumes if the copy is still on the shelf. */
 export function releaseDuty(ctx: SimCtx, assignment: string): OrderResult {
   const w = ctx.world;
-  const a = w.mystic.assignments.find((x) => x.id === assignment);
+  const a = w.mystic.assignments.find((x) => x.id === assignment && dutyHouse(ctx, x) === w.playerHouse);
   if (!a) return { ok: false, reason: msg(ctx, 'mystic.refuse.no_duty', 'there is no such duty') };
   const p = w.people.get(a.practitioner);
   const working = workingDef(ctx, a.working);
-  endDuty(ctx, a, w.year);
+  finishFieldDuty(ctx, a, w.year);
   if (p && working) {
     w.chronicle.push({
       year: w.year, weight: 'line', named: false, people: [p.id],
@@ -254,6 +299,7 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
       });
       continue;
     }
+    if (dutyHouse(ctx, a) !== w.playerHouse) continue;
     if (p.spellsKnown.some((k) => String(k) === pause.book) || w.studies.some((s) => s.person === p.id)) continue;
     w.studies.push({ person: p.id, book: pause.book, completes: lastTurned + pause.remainingYears });
   }
@@ -266,16 +312,19 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
  */
 export function tickMystic(ctx: SimCtx): void {
   const w = ctx.world;
+  delete w.mystic.reservedUpkeep;
+  let reserved = 0;
+  for (const c of w.muster.commitments) if (c.status === 'in_the_field' && c.opponent) prepareFieldOpposition(ctx, c.id);
   for (const a of [...w.mystic.assignments]) {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
     const gap = !working ? 'target_lost'
-      : practitionerGap(ctx, p, working) ?? targetGap(ctx, working, a.target, a.bindings);
+      : practitionerGap(ctx, p, working, a) ?? targetGap(ctx, working, a.target, a.bindings);
 
     if (gap && ENDS.has(gap)) {
       if (p && working) lapseLine(ctx, a, p, working, gap);
       // The year that ended it has started but the library has not read yet.
-      endDuty(ctx, a, w.year - 1);
+      finishFieldDuty(ctx, a, w.year - 1);
       continue;
     }
     if (gap) {
@@ -291,7 +340,8 @@ export function tickMystic(ctx: SimCtx): void {
       continue;
     }
     // Reserve the year's upkeep BEFORE any benefit; the economy collects it.
-    if (w.treasury - working!.upkeep < DEBT_FLOOR) {
+    const house = dutyHouse(ctx, a);
+    if (dutyFunds(ctx, house) - (house === w.playerHouse ? reserved : 0) < working!.upkeep) {
       if (a.status !== 'suspended' || a.reason !== 'unpaid') lapseLine(ctx, a, p!, working!, 'unpaid');
       a.status = 'suspended';
       a.reason = 'unpaid';
@@ -302,11 +352,16 @@ export function tickMystic(ctx: SimCtx): void {
     a.paidThrough = w.year;
     a.service.servedYears += 1;
     a.service.spent += working!.upkeep;
+    if (house !== w.playerHouse) spendForeign(ctx, house, working!.upkeep);
+    else {
+      reserved += working!.upkeep;
+      w.mystic.reservedUpkeep = { year: w.year, crowns: reserved };
+    }
     if (working!.benefit.kind === 'life_care') {
       const place = dutyPlaceOf(ctx, a.target, a.bindings);
       a.attended = place && 'hall' in place ? hallWards(ctx, place.hall, a.practitioner, working!.benefit.maxWards) : [];
     }
-    if (wasSuspended) {
+    if (wasSuspended && dutyHouse(ctx, a) === w.playerHouse) {
       w.chronicle.push({
         year: w.year, weight: 'line', named: false, people: [p!.id],
         text: msg(ctx, 'mystic.resumed', '{PERSON} took up {WORKING} again.',
@@ -337,9 +392,10 @@ function hallWards(ctx: SimCtx, hall: string, carer: string, max: number): strin
 /** Upkeep the economy collects this year: only what the phase actually reserved. */
 export function mysticUpkeep(ctx: SimCtx): number {
   const w = ctx.world;
+  if (w.mystic.reservedUpkeep?.year === w.year) return w.mystic.reservedUpkeep.crowns;
   let total = 0;
   for (const a of w.mystic.assignments) {
-    if (a.status === 'serving' && a.paidThrough === w.year) total += workingDef(ctx, a.working)?.upkeep ?? 0;
+    if (dutyHouse(ctx, a) === w.playerHouse && a.status === 'serving' && a.paidThrough === w.year) total += workingDef(ctx, a.working)?.upkeep ?? 0;
   }
   return total;
 }
@@ -353,7 +409,7 @@ function liveDuties(ctx: SimCtx, kind: MysticWorkingDef['benefit']['kind']) {
     const working = workingDef(ctx, a.working);
     if (!working || working.benefit.kind !== kind) continue;
     const p = w.people.get(a.practitioner);
-    if (practitionerGap(ctx, p, working)) continue;
+    if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings)) continue;
     out.push({ a, working, p: p! });
   }
   return out;
@@ -478,12 +534,18 @@ function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string
       const anchor = w.people.get(bindings[typeof site.hall === 'string' ? '' : site.hall.slot] ?? '');
       return msg(ctx, 'mystic.place.branch', 'the hall where {PERSON} lives', { PERSON: anchor?.name ?? '' });
     }
-    case 'party': case 'elsewhere': case 'muster': return msg(ctx, 'mystic.place.elsewhere', 'elsewhere');
+    case 'muster': {
+      const c = w.muster.commitments.find(c => c.id === site.commitment);
+      return c ? msg(ctx, 'mystic.place.field', 'the levy raised in {YEAR}', { YEAR: String(c.began) })
+        : msg(ctx, 'mystic.place.elsewhere', 'elsewhere');
+    }
+    case 'party': case 'elsewhere': return msg(ctx, 'mystic.place.elsewhere', 'elsewhere');
     default: return assertNever(site, 'duty place');
   }
 }
 
 function lapseLine(ctx: SimCtx, a: MysticAssignment, p: Person, working: MysticWorkingDef, gap: MysticGap): void {
+  if (dutyHouse(ctx, a) !== ctx.world.playerHouse) return;
   ctx.world.chronicle.push({
     year: ctx.world.year, weight: 'line', named: false, people: [p.id],
     text: gapLine(ctx, gap, { PERSON: p.name, WORKING: workingName(ctx, working) }),
@@ -504,6 +566,7 @@ export function gapReason(ctx: SimCtx, gap: MysticGap): string {
     case 'target_lost': return msg(ctx, 'mystic.gap.reason.target_lost', 'the working cannot reach that place');
     case 'unpaid': return msg(ctx, 'mystic.gap.reason.unpaid', 'the house cannot pay its upkeep');
     case 'too_young': return msg(ctx, 'mystic.gap.reason.too_young', 'they are too young to keep it');
+    case 'wounded': return msg(ctx, 'mystic.gap.reason.wounded', 'they are recovering from a field injury');
     default: return assertNever(gap, 'mystic gap');
   }
 }
@@ -522,7 +585,200 @@ function gapLine(ctx: SimCtx, gap: MysticGap, v: Record<string, string>): string
     case 'target_lost': return msg(ctx, 'mystic.gap.target_lost', '{WORKING} ended. What {PERSON} was keeping is no longer the house\'s to keep.', v);
     case 'unpaid': return msg(ctx, 'mystic.gap.unpaid', '{WORKING} lapsed this year. The house could not pay for it, and {PERSON} could not keep it on nothing.', v);
     case 'too_young': return msg(ctx, 'mystic.gap.too_young', '{WORKING} lapsed this year. {PERSON} is too young to keep it.', v);
+    case 'wounded': return msg(ctx, 'mystic.gap.wounded', '{PERSON} is recovering from a field injury. {WORKING} cannot be kept until the wound has healed.', v);
     default: return assertNever(gap, 'mystic gap line');
+  }
+}
+
+// Field service stays on the existing assignment lifecycle and upkeep ledger.
+function fieldDuty(ctx: SimCtx, c: Commitment, kind: MysticFieldBenefit['kind'], house = ctx.world.playerHouse) {
+  return liveDuties(ctx, kind).find(d => dutyHouse(ctx, d.a) === house
+    && d.a.target.kind === 'muster' && d.a.target.commitment === c.id);
+}
+
+export function fieldCareFor(ctx: SimCtx, c: Commitment) {
+  const d = fieldDuty(ctx, c, 'field_care');
+  return d?.working.benefit.kind === 'field_care' ? { ...d, benefit: d.working.benefit } : undefined;
+}
+
+export function fieldSupplySaving(ctx: SimCtx, c: Commitment): number {
+  const d = fieldDuty(ctx, c, 'field_supply');
+  const b = d?.working.benefit;
+  return b?.kind === 'field_supply' ? Math.min(c.men, b.maxMen) * b.crownsPerMan : 0;
+}
+
+function fieldReceipt(ctx: SimCtx, people: string[], key: string, original: string, values: Record<string, string>): void {
+  ctx.world.chronicle.push({ year: ctx.world.year, weight: 'line', named: true, people,
+    text: msg(ctx, key, original, values) });
+}
+
+/** Called only when the unchanged mortality draw falls between the two hazards. */
+export function noteFieldOfficerKept(ctx: SimCtx, c: Commitment, officer: Person): void {
+  const care = fieldCareFor(ctx, c);
+  if (!care) return;
+  care.a.service.livesKept += 1;
+  markUseful(care.a, ctx.world.year);
+  fieldReceipt(ctx, [care.p.id, officer.id], 'mystic.field.officer_kept',
+    '{PERSON} dressed {OFFICER}’s wound in the camp. {OFFICER} lived to come off the roll.',
+    { PERSON: care.p.name, OFFICER: officer.name });
+}
+
+/** Fractional recoverable losses are carried forward, bounded by this year's actual loss. */
+export function fieldCasualties(ctx: SimCtx, c: Commitment, ordinaryLost: number): number {
+  const care = fieldCareFor(ctx, c);
+  if (!care || ordinaryLost <= 0) return ordinaryLost;
+  const accumulated = (care.a.service.recoverable ?? 0) + ordinaryLost * care.benefit.casualtyReduction;
+  const saved = Math.min(ordinaryLost, Math.floor(accumulated));
+  care.a.service.recoverable = accumulated - Math.floor(accumulated);
+  if (!saved) return ordinaryLost;
+  care.a.service.menKept = (care.a.service.menKept ?? 0) + saved;
+  markUseful(care.a, ctx.world.year);
+  fieldReceipt(ctx, [care.p.id], 'mystic.field.men_kept',
+    '{PERSON} kept {MEN} of the levy alive through the camp sickness and the wounds. Their names stayed on the roll.',
+    { PERSON: care.p.name, MEN: String(saved) });
+  return ordinaryLost - saved;
+}
+
+/** Account after attrition, using exactly the supply quote the economy will collect. */
+export function tickFieldAccount(ctx: SimCtx, c: Commitment): void {
+  const supply = fieldDuty(ctx, c, 'field_supply');
+  const saved = fieldSupplySaving(ctx, c);
+  if (supply && saved > 0) {
+    supply.a.service.crownsKept = (supply.a.service.crownsKept ?? 0) + saved;
+    markUseful(supply.a, ctx.world.year);
+    fieldReceipt(ctx, [supply.p.id], 'mystic.field.supplies',
+      '{PERSON} kept the camp’s water and stores fit to use. The levy’s account came to {CROWNS} crowns less this year.',
+      { PERSON: supply.p.name, CROWNS: String(Math.round(saved * 100) / 100) });
+  }
+  const watch = fieldDuty(ctx, c, 'field_watch');
+  if (!watch || watch.working.benefit.kind !== 'field_watch') return;
+  const enemy = c.opponent ? fieldDuty(ctx, c, 'field_concealment', c.opponent) : undefined;
+  const hidden = enemy?.working.benefit.kind === 'field_concealment' ? enemy.working.benefit.observationReduction : 0;
+  const chance = watch.working.benefit.opportunityChance;
+  const roll = streamFor(ctx.world, 'mystic-field-opportunity', c.id).next();
+  if (roll < chance * (1 - hidden)) {
+    c.credit += watch.working.benefit.credit;
+    watch.a.service.opportunities = (watch.a.service.opportunities ?? 0) + 1;
+    markUseful(watch.a, ctx.world.year);
+    fieldReceipt(ctx, [watch.p.id], 'mystic.field.opportunity',
+      '{PERSON} found a way past the hidden approach. The Warden’s clerk entered {CREDIT} more credit against the house’s name.',
+      { PERSON: watch.p.name, CREDIT: String(watch.working.benefit.credit) });
+  } else if (enemy && roll < chance) {
+    markUseful(enemy.a, ctx.world.year);
+    fieldReceipt(ctx, [watch.p.id, enemy.p.id], 'mystic.field.contested_watch',
+      '{PERSON} could not read the enemy’s movement. {ENEMY} had been keeping it out of sight.',
+      { PERSON: watch.p.name, ENEMY: enemy.p.name });
+  }
+}
+
+/** An enemy is an existing hostile house with an actual learned reader, never a generated counter-score. */
+function prepareFieldOpposition(ctx: SimCtx, commitment: string): void {
+  const w = ctx.world;
+  const c = w.muster.commitments.find(c => c.id === commitment && c.status === 'in_the_field');
+  if (!c || !w.mystic.assignments.some(a => dutyHouse(ctx, a) === w.playerHouse
+    && a.target.kind === 'muster' && a.target.commitment === c.id)) return;
+  if (!c.opponent) {
+    const hostile = [...w.houses.keys()].filter(h => h !== w.playerHouse && (
+      sentimentBetween(w, h, w.playerHouse) < 0 || sentimentBetween(w, w.playerHouse, h) < 0
+      || [...w.relationships.values()].some(r => ((r.from === h && r.to === w.playerHouse)
+        || (r.from === w.playerHouse && r.to === h)) && r.grudges.some(g => g.severity > 0))));
+    const opponent = hostile.sort()[0];
+    if (opponent) c.opponent = opponent;
+  }
+  const house = c.opponent;
+  if (!house || w.mystic.assignments.some(a => a.house === house && a.target.kind === 'muster'
+    && a.target.commitment === c.id)) return;
+  // Pick independently of the player's chosen role. No matching counter is invented.
+  for (const p of w.people.all().filter(p => currentMembership(p, w.year)?.house === house)
+    .sort((a, b) => a.born - b.born || a.id.localeCompare(b.id))) {
+    for (const working of [...ctx.content.mysticWorkings].sort((a, b) => a.id.localeCompare(b.id))) {
+      if (working.benefit.kind !== 'field_watch' && working.benefit.kind !== 'field_concealment') continue;
+      const o = { person: String(p.id), working: working.id, target: { kind: 'muster' as const, commitment: c.id } };
+      if (quoteDuty(ctx, o, house).ok) { commitDuty(ctx, o, house); return; }
+    }
+  }
+}
+
+/** Separate keyed streams preserve the ordinary war-tide draw and every paired control. */
+export function tickFieldRisks(ctx: SimCtx, c: Commitment): void {
+  const w = ctx.world;
+  for (const a of [...w.mystic.assignments]) {
+    if (a.target.kind !== 'muster' || a.target.commitment !== c.id) continue;
+    const working = workingDef(ctx, a.working);
+    const p = w.people.get(a.practitioner);
+    if (!working || !isFieldWorking(working) || practitionerGap(ctx, p, working, a)) continue;
+    if (w.year < a.ready) continue;
+    const house = dutyHouse(ctx, a);
+    const conceal = fieldDuty(ctx, c, 'field_concealment', house);
+    const otherHouse = house === w.playerHouse ? c.opponent : w.playerHouse;
+    const observer = otherHouse ? fieldDuty(ctx, c, 'field_watch', otherHouse) : undefined;
+    const hidden = conceal?.working.benefit.kind === 'field_concealment' ? conceal.working.benefit.captureReduction : 0;
+    const protection = hidden * (observer ? 0.5 : 1);
+    const risk = working.benefit.risk;
+    const exposure = 1 + (100 - w.muster.tide) / 100;
+    const death = risk.death * exposure;
+    const capture = risk.capture * exposure;
+    const roll = streamFor(w, 'mystic-field-risk', c.id, p!.id).next();
+    if (roll < death) {
+      w.people.kill(p!.id, w.year, msg(ctx, 'mystic.field.cause', 'while keeping a working with the levy'));
+      fieldReceipt(ctx, [p!.id], 'mystic.field.lost', '{PERSON} did not come back from the field working. The house’s duty there ended.', { PERSON: p!.name });
+      finishFieldDuty(ctx, a, w.year - 1);
+    } else if (roll < death + capture * (1 - protection)) {
+      if (conceal && observer && roll >= death + capture * (1 - hidden)) {
+        markUseful(observer.a, w.year);
+        fieldReceipt(ctx, [p!.id, observer.p.id], 'mystic.field.screen_broken',
+          '{ENEMY} found the covered path. {PERSON}’s concealment did not hold.', { ENEMY: observer.p.name, PERSON: p!.name });
+      }
+      if (house !== w.playerHouse) {
+        // An opposing observer can abandon the field. Family captivity/ransom
+        // remains the player's established lifecycle; this creates no enemy prisoner model.
+        finishFieldDuty(ctx, a, w.year - 1);
+      } else if (c.opponent && captureFamily(ctx, p!.id, c.opponent, risk.ransom)) finishFieldDuty(ctx, a, w.year - 1);
+    } else if (conceal && roll < death + capture) {
+      markUseful(conceal.a, w.year);
+      fieldReceipt(ctx, [p!.id, conceal.p.id], 'mystic.field.hidden_return',
+        '{PERSON} came back by a covered path. {READER} kept the pursuers from finding it.', { PERSON: p!.name, READER: conceal.p.name });
+    } else if (roll < death + capture + risk.injury * exposure) {
+      p!.fieldRecoveryUntil = w.year + 2;
+      a.status = 'suspended';
+      a.reason = 'wounded';
+      fieldReceipt(ctx, [p!.id], 'mystic.field.wounded',
+        '{PERSON} was hurt while keeping the field working. The duty will wait until {YEAR}.',
+        { PERSON: p!.name, YEAR: String(p!.fieldRecoveryUntil) });
+    }
+  }
+}
+
+function finishFieldDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
+  const w = ctx.world;
+  if (a.target.kind === 'muster') {
+    const commitment = a.target.commitment;
+    const c = w.muster.commitments.find(c => c.id === commitment);
+    const p = w.people.get(a.practitioner);
+    if (c && dutyHouse(ctx, a) === w.playerHouse) {
+      (c.fieldService ??= []).push({ practitioner: a.practitioner, working: a.working,
+        service: { ...a.service }, ended: w.year,
+        fate: p?.captivity ? 'captured' : p?.status === 'dead' ? 'dead' : p && isCurrentFamily(ctx, p) ? 'returned' : 'departed' });
+    }
+  }
+  endDuty(ctx, a, lastTurned);
+}
+
+/** Settlement and withdrawal return every specialist; a later war cannot inherit their old orders. */
+export function finishFieldService(ctx: SimCtx, c: Commitment): void {
+  for (const a of [...ctx.world.mystic.assignments]) {
+    if (a.target.kind !== 'muster' || a.target.commitment !== c.id) continue;
+    if (dutyHouse(ctx, a) === ctx.world.playerHouse) {
+      const p = ctx.world.people.get(a.practitioner);
+      if (p) {
+        if (a.service.usefulYears) relate(ctx.world, ctx.world.playerHouse, p.id, Math.min(10, a.service.usefulYears), ['obligation']);
+        fieldReceipt(ctx, [p.id], 'mystic.field.returned',
+          '{PERSON}’s field account closed: {MEN} levy men kept, {LIVES} officers kept, {CROWNS} crowns saved on stores, and {SPENT} crowns spent on the duty.',
+          { PERSON: p.name, MEN: String(a.service.menKept ?? 0), LIVES: String(a.service.livesKept),
+            CROWNS: String(Math.round((a.service.crownsKept ?? 0) * 100) / 100), SPENT: String(a.service.spent) });
+      }
+    }
+    finishFieldDuty(ctx, a, ctx.world.year);
   }
 }
 
@@ -602,6 +858,14 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
       }
       return out.sort((x, y) => x.name.localeCompare(y.name));
     }
+    case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': {
+      for (const c of w.muster.commitments) {
+        if (c.status !== 'in_the_field') continue;
+        const target: SceneSite = { kind: 'muster', commitment: c.id };
+        out.push({ target, bindings: {}, name: msg(ctx, 'mystic.place.field', 'the levy raised in {YEAR}', { YEAR: String(c.began) }) });
+      }
+      return out;
+    }
     default: return assertNever(b, 'mystic targets');
   }
 }
@@ -609,7 +873,7 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
 export function mysticView(ctx: SimCtx): MysticView {
   const w = ctx.world;
   const household = w.people.household(w.playerHouse, w.year);
-  const duties = w.mystic.assignments.map((a): MysticDutyView => {
+  const duties = w.mystic.assignments.filter(a => dutyHouse(ctx, a) === w.playerHouse).map((a): MysticDutyView => {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
     const pause = w.mystic.pauses.find((x) => x.assignment === a.id);

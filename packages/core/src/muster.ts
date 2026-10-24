@@ -7,6 +7,7 @@ import { DEBT_FLOOR } from './economy.js';
 import { msg } from './messages.js';
 import { proseForContentField } from './prose.js';
 import { isCurrentFamily } from './presence.js';
+import { fieldCareFor, fieldCasualties, fieldSupplySaving, finishFieldService, tickFieldAccount, tickFieldRisks } from './mystic.js';
 
 /**
  * THE MUSTER'S NUMBERS (concept §6, world §10; issue #89, Stage 2 — #95).
@@ -87,7 +88,7 @@ function creditMultiplier(ctx: SimCtx, c: Commitment): number {
 export function musterUpkeep(ctx: SimCtx): number {
   const c = activeCommitment(ctx);
   if (!c) return 0;
-  return c.men * PER_MAN_PER_YEAR + (positionOf(ctx, c)?.perYear ?? 0);
+  return c.men * PER_MAN_PER_YEAR + (positionOf(ctx, c)?.perYear ?? 0) - fieldSupplySaving(ctx, c);
 }
 
 /**
@@ -99,10 +100,17 @@ export function musterUpkeep(ctx: SimCtx): number {
  * nothing to call on a house that has never mustered.
  */
 export function musterMortality(ctx: SimCtx, p: Person): number {
+  return musterExposure(ctx, p).hazard;
+}
+
+/** Both hazards use the same mortality draw; only a paid, present field carer changes the term. */
+export function musterExposure(ctx: SimCtx, p: Person): { hazard: number; ordinary: number; commitment?: Commitment } {
   const c = activeCommitment(ctx);
-  if (!c || p.captivity || !c.officers.includes(p.id)) return 0;
+  if (!c || p.captivity || !c.officers.includes(p.id)) return { hazard: 0, ordinary: 0 };
   const tideWorseness = (TIDE_MAX - ctx.world.muster.tide) / TIDE_MAX;
-  return OFFICER_HAZARD_BASE + OFFICER_HAZARD_TIDE_SPAN * tideWorseness;
+  const ordinary = OFFICER_HAZARD_BASE + OFFICER_HAZARD_TIDE_SPAN * tideWorseness;
+  const care = fieldCareFor(ctx, c);
+  return { ordinary, hazard: ordinary * (1 - (care?.benefit.officerReduction ?? 0)), commitment: c };
 }
 
 /** A line the player can feel and name — invariant 13 generalised past the Assize to any standing, quiet pressure. */
@@ -141,14 +149,16 @@ export function tickMuster(ctx: SimCtx, rng: Rng): void {
   if (!c) return;
 
   w.muster.tide = clamp(TIDE_MIN, TIDE_MAX, w.muster.tide + rng.range(-TIDE_WALK_MAX, TIDE_WALK_MAX));
+  tickFieldRisks(ctx, c);
 
   const tideWorseness = (TIDE_MAX - w.muster.tide) / TIDE_MAX;
   const escalation = escalationNow(ctx);
   const attritionRate = BASE_ATTRITION * (1 + tideWorseness) * escalation;
-  const lost = Math.min(c.men, Math.round(c.men * attritionRate));
+  const lost = fieldCasualties(ctx, c, Math.min(c.men, Math.round(c.men * attritionRate)));
   c.men -= lost;
 
   c.credit += CREDIT_RATE * c.men * escalation * creditMultiplier(ctx, c);
+  tickFieldAccount(ctx, c);
 
   w.chronicle.push({
     year: w.year,
@@ -207,6 +217,7 @@ export function addOfficer(ctx: SimCtx, personId: string): boolean {
   // place. Reject a stale/uncast slot instead of persisting a phantom officer.
   // Women can serve as Mystic field specialists, but not in military posts.
   if (!person || person.status !== 'alive' || !canHoldPost(person.sex) || !isCurrentFamily(ctx, person)) return false;
+  if (ctx.world.mystic.assignments.some(a => a.practitioner === personId && a.target.kind === 'muster')) return false;
   if (!c.officers.includes(personId)) c.officers.push(personId);
   return true;
 }
@@ -329,6 +340,7 @@ export function settleCommitment(ctx: SimCtx): boolean {
   const c = activeCommitment(ctx);
   if (!c) return false;
   c.status = 'settled';
+  finishFieldService(ctx, c);
   ctx.world.muster.lastSettled = ctx.world.year;
   return true;
 }
@@ -338,6 +350,7 @@ export function withdrawCommitment(ctx: SimCtx): boolean {
   const c = activeCommitment(ctx);
   if (!c) return false;
   c.status = 'withdrawn';
+  finishFieldService(ctx, c);
   return true;
 }
 
