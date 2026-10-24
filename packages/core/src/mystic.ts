@@ -236,6 +236,15 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
     const p = w.people.get(pause.person);
     const def = ctx.content.spellbook(pause.book);
     if (!p || p.status !== 'alive' || !def) continue;
+    // Ending a duty while its reader is captive must not resume home study
+    // abroad or discard the years already read. Return owns the copy check.
+    if (p.captivity) {
+      const studies = p.captivity.studies ??= [];
+      if (!studies.some(study => study.book === pause.book)) {
+        studies.push({ book: pause.book, remainingYears: pause.remainingYears });
+      }
+      continue;
+    }
     if (!w.library.has(pause.book) || w.library.get(pause.book)?.restoresAt !== undefined) {
       w.chronicle.push({
         year: w.year, weight: 'line', named: false, people: [p.id],

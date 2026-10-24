@@ -672,6 +672,19 @@ const MARRIAGE_ORDERS = [
       <p v-if="refusedIn('mysticAssign')" class="small rubric">{{ refusedIn('mysticAssign') }}</p>
     </div>
 
+    <div class="panel captives" :class="{ idle: idle('captives', (table.captives?.length ?? 0) > 0) }">
+      <h3 class="label">
+        <button class="fold" :aria-expanded="!idle('captives', (table.captives?.length ?? 0) > 0)" @click="shut['captives'] = !shut['captives']">{{ local('Held away', 'Captive family') }}</button>
+      </h3>
+      <p v-if="!table.captives?.length" class="small dim">{{ local('Nobody of the family is held for ransom.', 'No family member is being held for ransom.') }}</p>
+      <div v-for="held in table.captives ?? []" :key="held.person" class="line">
+        <div class="small"><strong>{{ held.name }}</strong> · {{ local('held by', 'captive of') }} {{ held.captor }} {{ local('since', 'since the year') }} {{ held.since }}</div>
+        <button class="small" :disabled="!held.ok" :aria-label="local('Ransom', 'Pay to free') + ' ' + held.name + ' — ' + held.price + ' crowns'" :aria-describedby="held.reason ? 'ransom-' + held.person : undefined" @click="actions.order({ kind: 'ransom', person: held.person })">{{ local('Bring them home', 'Pay for their release') }} — {{ held.price }} crowns</button>
+        <p v-if="held.reason" :id="'ransom-' + held.person" class="small dim">{{ held.reason }}</p>
+      </div>
+      <p v-if="refusedIn('ransom')" class="small rubric">{{ refusedIn('ransom') }}</p>
+    </div>
+
     <!-- §13's price table. The money is gone the day it is spent, and the
          auction is in eleven years. -->
     <div class="panel">

@@ -259,11 +259,12 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
   // turns a bare founder name into the authored founder under that name.
   const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
-  if (format !== SAVE_FORMAT && !legacySigning) {
+  if (format !== SAVE_FORMAT && format !== 35 && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
-  const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>) : raw);
+  const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>)
+    : format === 35 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -487,6 +488,7 @@ function storePerson(p: Person): StoredPerson {
     spellsKnown: [...p.spellsKnown],
     ...(p.career ? { career: { career: String(p.career.career), from: p.career.from } } : {}),
     membership: p.membership,
+    ...(p.captivity ? { captivity: structuredClone(p.captivity) } : {}),
     ...(p.contract ? { contract: p.contract } : {}),
     marriages: p.marriages,
     madness: p.madness,
@@ -551,6 +553,7 @@ function restorePerson(s: StoredPerson): Person {
   if (s.causeOfDeath !== undefined) p.causeOfDeath = s.causeOfDeath;
   if (s.career) p.career = { career: asId(s.career.career), from: s.career.from };
   if (s.contract) p.contract = s.contract;
+  if (s.captivity) p.captivity = structuredClone(s.captivity);
   if (s.becomesGuardian !== undefined) p.becomesGuardian = s.becomesGuardian;
   if (s.gender !== undefined) p.gender = s.gender;
   if (s.mintedFrom !== undefined) p.mintedFrom = s.mintedFrom;
@@ -631,6 +634,8 @@ export function digest(save: SavedGame): string {
   // Provenance says whether this save may be loaded against a content bundle;
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
+  // An unused capture vocabulary must not change an existing campaign's digest.
+  if (value.format === 36 && save.people.every(person => person.captivity === undefined)) value.format = 35;
   if (save.campaign === 'long') {
     // Campaign identity is additive on the current save envelope. Old
     // format-22 saves had no field and therefore mean Long; omit the explicit

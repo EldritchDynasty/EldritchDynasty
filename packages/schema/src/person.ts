@@ -61,6 +61,17 @@ export const MembershipRecordS = z.object({
 });
 export type MembershipRecord = z.infer<typeof MembershipRecordS>;
 
+/** A known living captive, with the home and unfinished work a safe return restores. */
+export const CaptivityS = z.object({
+  captor: HouseIdS,
+  since: YearS,
+  ransom: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  home: MembershipRecordS,
+  studies: z.array(z.object({ book: z.string(), remainingYears: z.number().int().positive() })).optional(),
+  tutoring: z.object({ attr: z.string(), remainingYears: z.number().int().positive() }).optional(),
+}).strict();
+export type Captivity = z.infer<typeof CaptivityS>;
+
 export const RetainerRoleS = z.enum([
   'tutor', 'steward', 'guard', 'midwife', 'archivist', 'singer', 'physician', 'chronicler',
 ]);
@@ -241,6 +252,7 @@ export interface Person {
   career?: { career: CareerId; from: Year };
 
   membership: MembershipRecord[];
+  captivity?: Captivity;
   contract?: RetainerContract;
   marriages: { spouse: PersonId; from: Year; to?: Year }[];
 
