@@ -219,11 +219,12 @@ describe('bounded named-threat resolver (#1914 / #1875)', () => {
         }); break;
         case 'duty_elsewhere': {
           const working = content.mysticWorkings.find(w => w.benefit.kind === 'estate_protection')!;
-          const parcel = [...ctx.world.parcels.values()].find(p => content.parcel(p.defId)?.kind === 'tenant_farm')!;
+          const parcel = content.parcels.find(p => p.kind === 'tenant_farm'
+            && [...ctx.world.parcels.values()].some(held => held.defId === p.id))!;
           guard.spellsKnown = working.books.map(book => asId(book));
           ctx.world.mystic.assignments.push({
             id: 'mys_other', practitioner: guard.id, working: working.id,
-            target: { kind: 'parcel', parcel: parcel.defId, slots: [] }, bindings: {},
+            target: { kind: 'parcel', parcel: parcel.id, slots: [] }, bindings: {},
             started: ctx.world.year - 1, ready: ctx.world.year, paidPreparation: 0,
             paidThrough: ctx.world.year, status: 'serving',
             service: { servedYears: 1, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 0 },
