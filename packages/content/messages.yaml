@@ -4067,3 +4067,70 @@ proseVariants:
   - address: "core:messages#mystic.field.returned"
     of: "fd5c125ab0768f36"
     plainenglish: "{PERSON}’s field duty ended: {MEN} levy men saved, {LIVES} officers saved, {CROWNS} crowns saved on supplies, and {SPENT} crowns paid for the duty."
+
+  - address: core:messages#covert.rumour
+    of: ac9f137b5c1706cf
+    plainenglish: The house received a warning that someone was asking how to approach {PERSON}. Guards can be arranged at the Table. The warning does not identify the sponsor.
+  - address: core:messages#covert.protection_used
+    of: 932f0b3f520144bb
+    plainenglish: "{READER} maintained protection for {PERSON}, and it changed the outcome. This useful service is recorded in the account."
+  - address: core:messages#covert.expired
+    of: dd73b01c99e22868
+    plainenglish: The warning about {PERSON} ended without an attack at this place.
+  - address: core:messages#covert.approach_seen
+    of: f3c752ee2412ab5a
+    plainenglish: An approaching attack on {PERSON} was noticed early. Safe lodging or an escort can still be arranged at the Table. The warning does not identify the sponsor.
+  - address: core:messages#covert.result.dead
+    of: 9b61205ecaba9402
+    plainenglish: "{PERSON} was killed in the attack. The family has lost that person."
+  - address: core:messages#covert.result.wounded
+    of: ed474888e8e3e9d4
+    plainenglish: "{PERSON} lived through the attack but was injured. The injury still needs time to heal."
+  - address: core:messages#covert.result.safe
+    of: d8c168c56a8a6a81
+    plainenglish: The precautions prevented the attack from harming {PERSON} in this encounter.
+  - address: core:messages#covert.death_cause
+    of: 934db0fef6e98de2
+    plainenglish: a bodily attack
+  - address: core:messages#covert.result.intervened
+    of: e6a759d683f9f23a
+    plainenglish: A sudden change in the room stopped the attack on {PERSON}. The intended victim remained alive.
+  - address: core:messages#covert.title
+    of: 55b215c35b4d5867
+    plainenglish: An Attack at Home
+  - address: core:messages#covert.intruder_held
+    of: 36cae2b71a6d14d3
+    plainenglish: "{PERSON} was captured and is held here. This identifies the operative but does not prove who sent them."
+  - address: core:messages#covert.refuse.closed
+    of: 6829e74a9ff2a09e
+    plainenglish: It is too late to change the response to this warning.
+  - address: core:messages#covert.refuse.guards
+    of: 18f223040bb0c870
+    plainenglish: Those people are not available to guard this place.
+  - address: core:messages#covert.refuse.no_trace
+    of: 44a5c535ccaaf229
+    plainenglish: This response needs a confirmed approach first.
+  - address: core:messages#covert.refuse.escort
+    of: "2983762672305862"
+    plainenglish: Choose an available person to act as escort.
+  - address: core:messages#covert.refuse.cost
+    of: 384817f40ec928c0
+    plainenglish: There is not enough money to pay for these precautions.
+  - address: core:messages#covert.precautions_paid
+    of: 2ed0198ff4760e1b
+    plainenglish: The house spent {PRICE} crowns to protect {PERSON}. The named guards serve for this encounter.
+  - address: core:messages#covert.refuse.prisoner
+    of: 169752e7bf8a169b
+    plainenglish: That intruder is not currently held here.
+  - address: core:messages#covert.intruder_released
+    of: 496c65746e468e10
+    plainenglish: "{PERSON} was freed from custody here and went home."
+  - address: core:messages#covert.response.ordinary
+    of: e6e4cab78686a1db
+    plainenglish: Use this watch
+  - address: core:messages#covert.response.lodging
+    of: 8975bb88a5c4ae84
+    plainenglish: Pay for safe lodging
+  - address: core:messages#covert.response.escort
+    of: 8e24e8625d3541a6
+    plainenglish: Pay for an escort

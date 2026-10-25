@@ -1,3 +1,4 @@
+import { tickHouseholdThreats } from '../covert-lifecycle.js';
 import type { Choice, EventTemplate, Person } from '@ed/schema';
 import { MAIN_BRANCH, renderForm } from '@ed/schema';
 import { grammarOf } from '../people/grammar.js';
@@ -420,6 +421,13 @@ export const YEAR_PHASES: readonly Phase[] = [
   },
 
   {
+    name: 'covert',
+    after: ['economy', 'mystic', 'muster'],
+    why: 'Paid local protection and current survivors precede an incident; the seat refills afterwards.',
+    run({ ctx }) { tickHouseholdThreats(ctx); },
+  },
+
+  {
     name: 'auction',
     after: ['economy'],
     why: 'Bidding spends the treasury `economy` just tallied, and a lot bought this year should '
@@ -431,7 +439,7 @@ export const YEAR_PHASES: readonly Phase[] = [
 
   {
     name: 'succession',
-    after: ['lifecycle'],
+    after: ['lifecycle', 'covert'],
     why: 'The seat and the recurring cast refill on this year\'s vacancies. Without '
       + 'this the head, tutor and rival slots empty within a generation and the '
       + 'event pool silently collapses to nothing.',

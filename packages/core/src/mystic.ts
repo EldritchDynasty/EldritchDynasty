@@ -5,7 +5,7 @@ import { assertNever, canLearn, currentMembership, isActiveBranch, MAIN_BRANCH }
 import type { SimCtx } from './world.js';
 import type { OrderResult } from './table.js';
 import { DEBT_FLOOR } from './economy.js';
-import { attendsHall, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily } from './presence.js';
+import { attendsHall, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily, resolvePresence } from './presence.js';
 import { msg } from './messages.js';
 import { ordinaryRisk } from './people/demography.js';
 import { proseForContentField } from './prose.js';
@@ -62,7 +62,7 @@ export function hasLearned(p: Person, w: MysticWorkingDef): boolean {
 export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { benefit: MysticFieldBenefit } {
   switch (w.benefit.kind) {
     case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': return true;
-    case 'life_care': case 'estate_protection': return false;
+    case 'life_care': case 'estate_protection': case 'household_protection': return false;
     default: return assertNever(w.benefit, 'field working');
   }
 }
@@ -70,12 +70,12 @@ export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { b
 type DutyContext = { house?: string; target?: SceneSite };
 function dutyHouse(ctx: SimCtx, a?: DutyContext): string { return a?.house ?? ctx.world.playerHouse; }
 
-function dutyFunds(ctx: SimCtx, house: string): number {
+export function dutyFunds(ctx: SimCtx, house: string): number {
   return house === ctx.world.playerHouse ? ctx.world.treasury - DEBT_FLOOR
     : Math.max(0, (ctx.world.houses.get(house)?.wealth ?? 0) - (ctx.world.mystic.foreignSpent?.[house] ?? 0));
 }
 
-function spendForeign(ctx: SimCtx, house: string, crowns: number): void {
+export function spendForeign(ctx: SimCtx, house: string, crowns: number): void {
   const ledger = ctx.world.mystic.foreignSpent ??= {};
   ledger[house] = (ledger[house] ?? 0) + crowns;
 }
@@ -97,6 +97,7 @@ export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: Mys
   if (!hasLearned(p, working)) return 'unlearned';
   if (w.year - p.born < MYSTIC_DUTY_AGE) return 'too_young';
   if ((p.fieldRecoveryUntil ?? -Infinity) > w.year) return 'wounded';
+  if ((p.acquired.health ?? 0) <= -20) return 'wounded';
   const site = assignment?.target;
   const ownFieldDuty = site?.kind === 'muster' && isFieldWorking(working)
     && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field');
@@ -111,6 +112,16 @@ export function targetGap(
 ): MysticGap | undefined {
   const b = working.benefit;
   switch (b.kind) {
+    case 'household_protection': {
+      if (site.kind !== b.scope) return 'target_lost';
+      if (site.kind === 'person') {
+        const p = ctx.world.people.get(site.person);
+        if (!p || p.status !== 'alive' || p.becomesGuardian || !isCurrentFamily(ctx, p)) return 'target_lost';
+        if (!resolvePresence(ctx, site, {}).people.includes(p.id)) return 'not_resident';
+      }
+      const place = dutyPlaceOf(ctx, site, bindings);
+      return place && 'hall' in place ? undefined : 'target_lost';
+    }
     case 'life_care': {
       if (site.kind !== 'hall') return 'target_lost';
       const place = dutyPlaceOf(ctx, site, bindings);
@@ -159,6 +170,13 @@ export interface MysticQuote {
 
 export interface MysticOrder { person: string; working: string; target: SceneSite; bindings?: Record<string, string> }
 
+function coverageKey(ctx: SimCtx, working: MysticWorkingDef, target: SceneSite, bindings: Record<string, string>): string {
+  const b = working.benefit;
+  return JSON.stringify({ place: dutyPlaceOf(ctx, target, bindings), kind: b.kind,
+    ...(b.kind === 'household_protection' ? { stage: b.stage, scope: b.scope,
+      person: target.kind === 'person' ? target.person : undefined } : {}) });
+}
+
 /** Everything an order would cost and whether it can be given, before it is. */
 export function quoteDuty(ctx: SimCtx, o: MysticOrder, house = ctx.world.playerHouse): MysticQuote {
   const w = ctx.world;
@@ -181,10 +199,9 @@ export function quoteDuty(ctx: SimCtx, o: MysticOrder, house = ctx.world.playerH
   if (w.mystic.assignments.some((a) => a.practitioner === o.person)) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.one_duty', 'they already keep a duty') };
   }
-  const place = JSON.stringify(dutyPlaceOf(ctx, o.target, o.bindings ?? {}));
+  const place = coverageKey(ctx, working, o.target, o.bindings ?? {});
   if (w.mystic.assignments.some((a) => dutyHouse(ctx, a) === house
-    && workingDef(ctx, a.working)?.benefit.kind === working.benefit.kind
-    && JSON.stringify(dutyPlaceOf(ctx, a.target, a.bindings)) === place)) {
+    && (() => { const def = workingDef(ctx, a.working); return def && coverageKey(ctx, def, a.target, a.bindings) === place; })())) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.covered', 'somebody already keeps that duty there') };
   }
   if (dutyFunds(ctx, house) < quote.preparation) {
@@ -423,6 +440,40 @@ function markUseful(a: MysticAssignment, year: number): void {
   s.firstUsefulAt ??= s.servedYears;
 }
 
+export interface HouseholdProtection {
+  stage: 'warning' | 'prevention' | 'survival';
+  bonus: number;
+  assignment: MysticAssignment;
+  practitioner: Person;
+}
+
+/** The strongest paid, learned, present maintainer per stage; neither hall nor person wards cover travel. */
+export function householdProtection(ctx: SimCtx, target: string, site: SceneSite, bindings: Record<string, string | string[]>): HouseholdProtection[] {
+  const attendance = resolvePresence(ctx, site, bindings);
+  if (!attendance.hall || !attendance.people.includes(target)) return [];
+  const best = new Map<HouseholdProtection['stage'], HouseholdProtection>();
+  for (const { a, working, p } of liveDuties(ctx, 'household_protection')) {
+    const b = working.benefit;
+    if (b.kind !== 'household_protection' || !attendance.people.includes(p.id)) continue;
+    if (a.target.kind === 'person' && a.target.person !== target) continue;
+    const place = dutyPlaceOf(ctx, a.target, a.bindings);
+    if (!place || !('hall' in place) || place.hall !== attendance.hall) continue;
+    const old = best.get(b.stage);
+    if (!old || b.bonus > old.bonus || b.bonus === old.bonus && a.id < old.assignment.id) {
+      best.set(b.stage, { stage: b.stage, bonus: b.bonus, assignment: a, practitioner: p });
+    }
+  }
+  return [...best.values()];
+}
+
+/** Account only for an attributed change, once per incident use; the caller freezes the receipt. */
+export function noteHouseholdProtection(ctx: SimCtx, assignment: string): void {
+  const a = ctx.world.mystic.assignments.find(a => a.id === assignment);
+  if (!a) return;
+  markUseful(a, ctx.world.year);
+  a.service.protections = (a.service.protections ?? 0) + 1;
+}
+
 export interface LifeCare {
   assignment: MysticAssignment;
   carer: Person;
@@ -537,6 +588,7 @@ function fieldTerms(ctx: SimCtx, working: MysticWorkingDef): string | undefined 
 function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): string {
   const w = ctx.world;
   switch (site.kind) {
+    case 'person': return w.people.get(site.person)?.name ?? site.person;
     case 'parcel': {
       const def = ctx.content.parcel(site.parcel);
       return def ? proseForContentField(ctx, 'parcels', def.id, 'name', def.name) : site.parcel;
@@ -842,6 +894,18 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
   const out: MysticTarget[] = [];
   const b = working.benefit;
   switch (b.kind) {
+    case 'household_protection': {
+      if (b.scope === 'person') {
+        for (const p of w.people.household(w.playerHouse, w.year)) {
+          if (p.becomesGuardian || !isCurrentFamily(ctx, p)) continue;
+          const target: SceneSite = { kind: 'person', person: p.id };
+          if (!targetGap(ctx, working, target, {})) out.push({ target, bindings: {}, name: p.name });
+        }
+        return out;
+      }
+      // Hall protection uses the same concrete halls as household care.
+      return mysticTargets(ctx, { ...working, benefit: { kind: 'life_care', mortalityReduction: 0, infantReduction: 0, maxWards: 1 } });
+    }
     case 'life_care': {
       out.push({ target: { kind: 'hall', hall: 'main' }, bindings: {}, name: placeName(ctx, { kind: 'hall', hall: 'main' }, {}) });
       for (const branch of w.branches.values()) {

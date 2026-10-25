@@ -6,7 +6,7 @@ import type {
 } from '@ed/schema';
 import { emptyAuctionState } from '@ed/schema';
 import { emptyAgeState, emptyFrequencyLedger, emptyMusterState, emptyMysticState } from '@ed/schema';
-import type { MysticState } from '@ed/schema';
+import { emptyCovertState, type CovertState, type MysticState } from '@ed/schema';
 import { PersonStore } from './people/store.js';
 import type { GeneticsCtx } from './people/factory.js';
 import type { BearingEntry } from './bearing.js';
@@ -619,6 +619,7 @@ export interface WorldState {
     person: number; mint: number; arc: number; branch: number; decision: number; grudge: number;
     chronicle: number; lot: number; parcel: number; muster: number; library: number; rival: number;
     mystic: number;
+    covert: number;
   };
 
   /**
@@ -678,6 +679,7 @@ export interface WorldState {
    * it did before the system existed. See `mystic.ts`.
    */
   mystic: MysticState;
+  covert: CovertState;
 }
 
 export function createWorld(content: Content, seed: number, startYear: Year, campaign: CampaignId = 'long'): WorldState {
@@ -696,7 +698,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
   // whole pool, and a def with no `ParcelState` behind it is exactly what
   // `buy` looks for.
   const counters = {
-    person: 0, mint: 0, arc: 0, branch: 0, decision: 0, grudge: 0, chronicle: 0, lot: 0, parcel: 0, muster: 0, library: 0, rival: 0, mystic: 0,
+    person: 0, mint: 0, arc: 0, branch: 0, decision: 0, grudge: 0, chronicle: 0, lot: 0, parcel: 0, muster: 0, library: 0, rival: 0, mystic: 0, covert: 0,
   };
   const parcels = new Map<string, ParcelState>();
   for (const def of content.parcels) {
@@ -773,6 +775,7 @@ export function createWorld(content: Content, seed: number, startYear: Year, cam
     parcels,
     muster: emptyMusterState(),
     mystic: emptyMysticState(),
+    covert: emptyCovertState(),
   };
 }
 

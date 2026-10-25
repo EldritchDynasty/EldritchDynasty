@@ -24,7 +24,7 @@ export const CovertAttemptS = z.object({
   preparation: CovertPreparationS,
   preparedAt: z.number().int().finite(),
   attemptYear: z.number().int().finite(),
-  /** A trusted payment receipt, supplied by the future lifecycle after spending. */
+  /** A trusted payment receipt, supplied by the lifecycle after spending. */
   paidCrowns: z.number().finite().nonnegative(),
 }).strict();
 export type CovertAttempt = z.infer<typeof CovertAttemptS>;
@@ -74,3 +74,22 @@ export const CovertObservationS = z.object({
   capturedOperative: z.string().optional(),
 }).strict();
 export type CovertObservation = z.infer<typeof CovertObservationS>;
+
+/** A paid, staged incident. Secrets stay here, outside the public Table view. */
+export const HouseholdThreatS = z.object({
+  plan: CovertAttemptS,
+  stage: z.enum(['preparing', 'approach', 'resolved', 'cancelled']),
+  defence: CovertDefenceS,
+  warned: z.boolean(),
+  observation: CovertObservationS.optional(),
+  /** Frozen rendered text is history; changing prose preference does not rewrite it. */
+  receipt: z.string().optional(),
+  page: z.string().optional(),
+  closedAt: z.number().int().optional(),
+  /** True only while the intruder is still actually held. */
+  prisoner: z.string().optional(),
+}).strict();
+export type HouseholdThreat = z.infer<typeof HouseholdThreatS>;
+export const CovertStateS = z.object({ threats: z.array(HouseholdThreatS) }).strict();
+export type CovertState = z.infer<typeof CovertStateS>;
+export const emptyCovertState = (): CovertState => ({ threats: [] });

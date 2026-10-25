@@ -769,6 +769,25 @@ describe('creating something new by appending to a file', () => {
 
 
 describe('authored Plain English variants (#414)', () => {
+  it('round-trips a working’s typed benefit, cost and prose without changing a sibling', async () => {
+    const working = store.bundle.mysticWorkings.find(w => w.id === 'the_bedside_thread')!;
+    const sibling = structuredClone(rawContent().mysticWorking('the_door_lamp'));
+    const address = 'content:mystic-workings.yaml#mysticWorkings[id=the_bedside_thread].description';
+    working.preparation.crowns = 17;
+    working.description = 'A reader keeps one named relative alive after a bodily injury.';
+    if (working.benefit.kind !== 'household_protection') throw new Error('expected a protection working');
+    working.benefit.bonus = 0.3;
+    markDirty('mysticWorkings', working.id);
+    const variant = stageProseVariant('mystic-workings.yaml', address, 'A learned reader helps one relative survive a physical injury.')!;
+    variant.plainenglish = 'A learned reader helps one relative survive a physical injury.';
+    const preview = pendingText('mysticWorkings', working.id)!;
+    expect(preview.after).toContain('crowns: 17');
+    expect((await saveItem('mysticWorkings', working.id)).ok).toBe(true);
+    const reloaded = assembleBundle(Object.fromEntries(h.disk), parse);
+    expect(reloaded.mysticWorkings.find(w => w.id === working.id)).toMatchObject({ preparation: { crowns: 17 }, benefit: { bonus: 0.3 } });
+    expect(reloaded.mysticWorkings.find(w => w.id === 'the_door_lamp')).toEqual(sibling);
+    expect(reloaded.proseVariants.find(v => v.address === address)?.plainenglish).toBe(variant.plainenglish);
+  });
   it('writes Original and Plain English together and reloads both from the source file', async () => {
     const target = event(EVENT);
     const address = `content:${CRUSADE}#events[id=${EVENT}].title`;

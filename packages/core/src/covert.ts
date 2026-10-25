@@ -7,6 +7,7 @@ import {
 import type { SimCtx } from './world.js';
 import { resolvePresence } from './presence.js';
 import { streamFor } from './rng.js';
+import { householdProtection } from './mystic.js';
 
 /**
  * Bounded incident resolution (#1914, part of #1875/#1866).
@@ -14,10 +15,10 @@ import { streamFor } from './rng.js';
  * This is a pure engine API, not a session verb or an annual threat generator.
  * It neither spends money nor commits consequences. A threat lifecycle must
  * obtain real payment receipts and explicit attendance before calling it, then
- * pass the normal harm through the existing deliberate-Mystic/primordial event
- * path. The lifecycle owns custody (captureFamily for a family operative).
- * No death gate,
- * court reaction, Mystic repertoire, or second whereabouts model lives here.
+ * read actual paid protection through the shared duty evaluator, and pass the
+ * remaining harm through the existing primordial event path. The lifecycle
+ * owns custody. No death gate, court reaction, or second whereabouts model
+ * lives here.
  */
 
 export function covertPreparationQuote(preparation: CovertPreparation): { crowns: number; years: number } {
@@ -42,6 +43,7 @@ interface Refused { kind: 'refused'; reason: CovertRefusal }
 interface Approach {
   kind: 'approach';
   warning?: CovertWarning;
+  support?: string;
 }
 
 function freeAdult(ctx: SimCtx, person: Person | undefined): person is Person {
@@ -66,9 +68,9 @@ function hasMotive(ctx: SimCtx, a: CovertAttempt, sponsor: Person, target: Perso
 }
 
 /** No draws. A stale actor, stale feud, unpaid preparation or absent party cannot attack. */
-function validateAttempt(ctx: SimCtx, a: CovertAttempt): CovertRefusal | undefined {
+function validateAttempt(ctx: SimCtx, a: CovertAttempt, approach = false): CovertRefusal | undefined {
   const w = ctx.world;
-  if (w.year !== a.attemptYear) return 'not_due';
+  if (w.year !== a.attemptYear && !(approach && w.year === a.attemptYear - 1)) return 'not_due';
   const terms = covertPreparationQuote(a.preparation);
   if (a.attemptYear - a.preparedAt < terms.years) return 'unprepared';
   if (a.paidCrowns < terms.crowns) return 'unpaid';
@@ -100,11 +102,16 @@ function validateGuards(ctx: SimCtx, a: CovertAttempt, guards: string[]): Covert
   return undefined;
 }
 
+/** Shared by the paid response quote and the final incident reader. */
+export function covertGuardGap(ctx: SimCtx, a: CovertAttempt, guards: string[]): CovertRefusal | undefined {
+  return validateGuards(ctx, a, guards);
+}
+
 /**
  * One keyed draw per stage. There is no mutable cursor and no dependency on
  * another incident's order, a response, household membership order or a ward.
  */
-export function covertDraws(ctx: SimCtx, a: CovertAttempt): CovertDraws {
+export function covertDraws(ctx: { world: { seed: number; year: number } }, a: Pick<CovertAttempt, 'id' | 'preparedAt'>): CovertDraws {
   const roll = (stage: keyof CovertDraws) => streamFor(ctx.world, 'covert_attempt', a.id, a.preparedAt, stage).next();
   return {
     warning: roll('warning'), prevention: roll('prevention'), strike: roll('strike'),
@@ -112,8 +119,8 @@ export function covertDraws(ctx: SimCtx, a: CovertAttempt): CovertDraws {
   };
 }
 
-function warningFor(ctx: SimCtx, a: CovertAttempt, guards: number, dice: CovertDraws): CovertWarning | undefined {
-  const chance = 0.12 + guards * 0.12 + (a.preparation === 'hasty' ? 0.08 : 0);
+function warningFor(ctx: SimCtx, a: CovertAttempt, guards: number, dice: CovertDraws, bonus = 0): CovertWarning | undefined {
+  const chance = Math.min(0.9, 0.12 + guards * 0.12 + (a.preparation === 'hasty' ? 0.08 : 0) + bonus);
   if (dice.warning >= chance) return undefined;
   return { occurrence: a.id, year: ctx.world.year, target: a.target, trace: 'observed_approach' };
 }
@@ -133,12 +140,16 @@ export function observeCovertApproach(
   if (!pa.success || !pd.success) return { kind: 'refused', reason: 'malformed' };
   const a = pa.data;
   const d = pd.data;
-  const gap = validateAttempt(ctx, a) ?? validateGuards(ctx, a, d.guards);
+  const gap = validateAttempt(ctx, a, true) ?? validateGuards(ctx, a, d.guards);
   if (gap) return { kind: 'refused', reason: gap };
   if (d.paidCrowns < covertDefenceQuote(d.guards.length, 'ordinary')) return { kind: 'refused', reason: 'unpaid' };
   const parsedDraws = CovertDrawsS.safeParse(draws ?? covertDraws(ctx, a));
   if (!parsedDraws.success) return { kind: 'refused', reason: 'malformed' };
-  return { kind: 'approach', warning: warningFor(ctx, a, d.guards.length, parsedDraws.data) };
+  const care = householdProtection(ctx, a.target, a.site, a.bindings).find(c => c.stage === 'warning');
+  const warning = warningFor(ctx, a, d.guards.length, parsedDraws.data, care?.bonus);
+  return { kind: 'approach', warning,
+    ...(warning && care && !warningFor(ctx, a, d.guards.length, parsedDraws.data)
+      ? { support: care.assignment.id } : {}) };
 }
 
 export interface CovertResolved {
@@ -157,6 +168,8 @@ export interface CovertResolved {
   normal: { effects: Effect[]; bindings: StoredSlotFill };
   /** Absent when nobody can know a withdrawal or a failed approach occurred. */
   observation?: CovertObservation;
+  /** Actual maintainers whose bounded intervention changed a stage's result. */
+  support?: { stage: 'warning' | 'prevention' | 'survival'; assignment: string }[];
 }
 
 /**
@@ -168,6 +181,7 @@ export interface CovertResolved {
 export function resolveCovertAttempt(
   ctx: SimCtx, attempt: CovertAttempt, defence: CovertDefence,
   disposition: 'attempt' | 'withdraw' = 'attempt', draws?: CovertDraws,
+  knowledge: { forewarned?: boolean } = {},
 ): CovertResolved | Refused {
   const pa = CovertAttemptS.safeParse(attempt);
   const pd = CovertDefenceS.safeParse(defence);
@@ -188,16 +202,20 @@ export function resolveCovertAttempt(
   const parsedDraws = CovertDrawsS.safeParse(draws ?? covertDraws(ctx, a));
   if (!parsedDraws.success) return { kind: 'refused', reason: 'malformed' };
   const dice = parsedDraws.data;
-  const warned = warningFor(ctx, a, d.guards.length, dice) !== undefined;
+  const care = householdProtection(ctx, a.target, a.site, a.bindings);
+  const bonus = (stage: 'warning' | 'prevention' | 'survival') => care.find(c => c.stage === stage)?.bonus ?? 0;
+  const warned = knowledge.forewarned === true || warningFor(ctx, a, d.guards.length, dice, bonus('warning')) !== undefined;
   if (d.response !== 'ordinary' && !warned) return { kind: 'refused', reason: 'no_warning' };
   if (d.response === 'safe_lodging' && a.site.kind !== 'hall') return { kind: 'refused', reason: 'wrong_place' };
   if (d.response === 'escort' && !d.guards.length) return { kind: 'refused', reason: 'invalid_guard' };
   const guards = d.guards.length;
   const shelter = d.response === 'safe_lodging';
   const escort = d.response === 'escort';
-  const prevented = dice.prevention < 0.08 + guards * 0.16 + (shelter ? 0.28 : 0) + (escort ? 0.12 : 0);
+  const ordinaryPrevention = 0.08 + guards * 0.16 + (shelter ? 0.28 : 0) + (escort ? 0.12 : 0);
+  const prevented = dice.prevention < Math.min(0.9, ordinaryPrevention + bonus('prevention'));
   const struck = !prevented && dice.strike < 0.55 + (a.preparation === 'careful' ? 0.1 : 0) - guards * 0.04;
-  const survives = dice.survival < 0.65 + (escort ? 0.08 : 0) - (a.preparation === 'careful' ? 0.06 : 0);
+  const ordinarySurvival = 0.65 + (escort ? 0.08 : 0) - (a.preparation === 'careful' ? 0.06 : 0);
+  const survives = dice.survival < Math.min(0.95, ordinarySurvival + bonus('survival'));
   const target = !struck ? 'unharmed' : survives ? 'wounded' : 'dead';
   // No guard, no captor. An unobserved retreat cannot create a phantom hostage.
   const captured = guards > 0 && dice.escape >= 0.75 - guards * 0.14 - (warned ? 0.1 : 0)
@@ -217,9 +235,16 @@ export function resolveCovertAttempt(
     observation.witnesses = witnesses;
   }
   if (captured) observation.capturedOperative = a.operative;
+  const support = care.filter(c => c.stage === 'warning'
+    ? !knowledge.forewarned && warned && !warningFor(ctx, a, guards, dice)
+    : c.stage === 'prevention' ? prevented && dice.prevention >= ordinaryPrevention
+      && dice.strike < 0.55 + (a.preparation === 'careful' ? 0.1 : 0) - guards * 0.04
+      : struck && survives && dice.survival >= ordinarySurvival)
+    .map(c => ({ stage: c.stage, assignment: c.assignment.id }));
   return {
     kind: 'resolved', target, operative: captured ? 'captured' : 'escaped', prevented, warned, normal,
     // A barrier stopping an unseen approach is not knowledge of an attack.
     observation: warned || !prevented || guards > 0 ? observation : undefined,
+    ...(support.length ? { support } : {}),
   };
 }

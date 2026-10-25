@@ -9,7 +9,7 @@ const emit = defineEmits<{ 'update:modelValue': [SceneSite | undefined] }>();
 
 // Both the union's variants and the fields of each variant come from the Zod
 // definition, not a second roster maintained by the editor.
-const variants = SceneSiteS.options.map((schema) => ({
+const variants = SceneSiteS.options.filter(s => s.description !== 'runtime assignment target').map((schema) => ({
   kind: schema.shape.kind.value,
   fields: fieldsOfSchema(schema, ['kind']),
 }));

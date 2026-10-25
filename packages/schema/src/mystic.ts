@@ -77,6 +77,12 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     maxAcres: z.number().positive(),
   }).strict(),
   ...MysticFieldBenefitS.options,
+  z.object({
+    kind: z.literal('household_protection'),
+    stage: z.enum(['warning', 'prevention', 'survival']),
+    scope: z.enum(['hall', 'person']),
+    bonus: z.number().positive().max(0.5),
+  }).strict(),
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
 export type MysticBenefitKind = MysticBenefit['kind'];
@@ -134,6 +140,7 @@ export const MysticServiceS = z.object({
   menKept: z.number().int().nonnegative().optional(),
   crownsKept: z.number().nonnegative().optional(),
   opportunities: z.number().int().nonnegative().optional(),
+  protections: z.number().int().nonnegative().optional(),
   /** Fractions accumulate, so small levies neither lose all benefit nor become immune. */
   recoverable: z.number().min(0).max(1).optional(),
 }).strict();
