@@ -202,7 +202,8 @@ function resolveOperation(ctx: SimCtx, o: CovertOperation): void {
   const injured = result.operative !== 'captured' && injuryDraw < Math.max(0, injuryChance - (carer?.bonus ?? 0));
   const effects: Effect[] = result.normal.effects.map(e => e.kind === 'status'
     ? { ...e, cause: msg(ctx, 'operation.death_cause', 'an attack') } : e);
-  if (result.operative === 'captured') effects.push({ kind: 'captivity', target: { slot: 'OPERATIVE' }, captor: currentMembership(target, w.year)!.house, ransom: 60 });
+  if (result.operative === 'captured') effects.push({ kind: 'status', status: 'missing', target: { slot: 'OPERATIVE' },
+    captivity: { captor: currentMembership(target, w.year)!.house, ransom: 60 } });
   if (injured) effects.push({ kind: 'attribute', target: { slot: 'OPERATIVE' }, attr: 'health', delta: -12 });
   const normalText = result.target === 'dead'
     ? msg(ctx, 'operation.result.dead', '{TARGET} died before the expedition returned. The account names {PERSON}, and leaves the house to reckon with the years after.', { TARGET: target.name, PERSON: operative.name })
@@ -213,7 +214,7 @@ function resolveOperation(ctx: SimCtx, o: CovertOperation): void {
     primordial: { id: 'liberty_kept', record: null,
       // The victim's already resolved harm remains. This emergency answers
       // the family's proposed captivity, not a promise to revive its enemy.
-      effects: effects.filter(e => e.kind !== 'captivity'),
+      effects: effects.filter(e => e.kind !== 'status' || !e.captivity),
       text: msg(ctx, 'operation.result.rescued', 'The expedition concerning {TARGET} ended with {PERSON} still free. The room changed before the guards could keep that life there.',
         { TARGET: target.name, PERSON: operative.name }),
     },

@@ -36,7 +36,10 @@ describe('physical attendance (#1868)', () => {
     const fill = { PARTY: [a.id, a.id, b.id, hostage.id, missing.id], AGAIN: b.id, FOREIGN: foreign.id };
     expect(resolvePresence(ctx, { kind: 'party', slots: ['PARTY', 'AGAIN'] }, fill).people).toEqual([a.id, b.id].sort());
     expect(resolvePresence(ctx, { kind: 'hall', hall: { slot: 'ABSENT' } }, fill).people).toEqual([]);
-    expect(resolvePresence(ctx, { kind: 'hall', hall: { slot: 'FOREIGN' } }, fill).people).toEqual([]);
+    const foreignHall = resolvePresence(ctx, { kind: 'hall', hall: { slot: 'FOREIGN' } }, fill);
+    expect(foreignHall.people).toContain(foreign.id);
+    expect(foreignHall.people).not.toContain(a.id);
+    expect(foreignHall.people).not.toContain(b.id);
     expect(resolvePresence(ctx, { kind: 'elsewhere', slots: [] }, fill).people).toEqual([]);
   });
 });

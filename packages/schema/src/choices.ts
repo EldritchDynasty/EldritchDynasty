@@ -93,7 +93,6 @@ export function categoryOf(kind: Effect['kind']): ChoiceCategory | 'memory' {
     case 'rite':
     case 'forge_lineage':
     case 'tutor':
-    case 'captivity':
       return 'persistent';
     case 'branch':
     case 'recast':

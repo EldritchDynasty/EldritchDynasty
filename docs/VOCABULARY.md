@@ -18,8 +18,7 @@ compile error until it is handled.
 |---|---|
 | `attribute` | `target: Target` `attr: string` `delta: number` |
 | `trait` | `target: Target` `trait: string` `op: add\|remove` |
-| `status` | `target: Target` `status: string` `cause: string?` |
-| `captivity` | `target: Target` `captor: string` `ransom: number` |
+| `status` | `target: Target` `status: string` `cause: string?` `captivity: {captor, ransom}?` |
 | `madness` | `target: Target` `delta: number` |
 | `awakening` | `target: Target` `forced: boolean?` |
 | `heirloom` | `op: grant\|use\|transfer = "grant"` `heirloom: string` `to: string?` |
