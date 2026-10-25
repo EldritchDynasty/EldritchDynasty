@@ -9,6 +9,7 @@ import { canonical, digestOf, loadGame, saveGame } from './save.js';
 import { rollDeath } from './people/demography.js';
 import { ransomCaptive } from './people/captivity.js';
 import { relate } from './people/relationships.js';
+import { ensureHead } from './people/succession.js';
 import { place, testWorld, testRng } from './testing.js';
 import { streamFor, type Rng } from './rng.js';
 import type { SimCtx } from './world.js';
@@ -219,6 +220,7 @@ describe('field risk, captivity and the saved account (#1874)', () => {
     send(ctx, reader(ctx, watch), watch);
     const opposing = ctx.world.mystic.assignments.find(a => a.house === house);
     expect(opposing?.practitioner).toBe(enemy.id);
+    expect(releaseDuty(ctx, opposing!.id).ok).toBe(false);
     expect(ctx.world.mystic.foreignSpent?.[house]).toBe(8);
     expect(mysticView(ctx).duties).toHaveLength(1);
     serve(ctx);
@@ -230,5 +232,111 @@ describe('field risk, captivity and the saved account (#1874)', () => {
     tickMystic(ctx);
     expect(ctx.world.mystic.assignments.some(a => a.house === house)).toBe(false);
     expect(c.opponent).toBe(house);
+  });
+
+  it('does not replace a foreign reader’s completed books or exhausted purse with innate ability', () => {
+    const { ctx } = world();
+    const house = content.houses.find(h => !h.isPlayerHouse)!.id;
+    relate(ctx.world, ctx.world.playerHouse, house, -30);
+    const enemy = reader(ctx, cloak, 'female', house);
+    enemy.spellsKnown = [];
+    send(ctx, reader(ctx, watch), watch);
+    expect(ctx.world.mystic.assignments.some(a => a.house === house)).toBe(false);
+    enemy.spellsKnown = cloak.books.map(b => asId(b));
+    const wealth = ctx.world.houses.get(house)!.wealth;
+    const ledger = ctx.world.mystic.foreignSpent = { [house]: wealth };
+    serve(ctx);
+    expect(ctx.world.mystic.assignments.some(a => a.house === house)).toBe(false);
+    // Setup can be paid alone, but does not buy a free serving year.
+    ledger[house] = wealth - cloak.preparation.crowns;
+    serve(ctx);
+    expect(ctx.world.mystic.assignments.find(a => a.house === house)?.status).toBe('preparing');
+    serve(ctx);
+    expect(ctx.world.mystic.assignments.find(a => a.house === house)).toMatchObject({ status: 'suspended', reason: 'unpaid' });
+    ledger[house] = wealth - cloak.upkeep;
+    serve(ctx);
+    expect(ctx.world.mystic.assignments.find(a => a.house === house)?.status).toBe('serving');
+    serve(ctx);
+    expect(ctx.world.mystic.assignments.find(a => a.house === house)).toMatchObject({ status: 'suspended', reason: 'unpaid' });
+  });
+
+  it('the actual opposing concealer changes only a matching local sighting', () => {
+    let witnessed = false;
+    for (let seed = 1; seed <= 80; seed++) {
+      const { ctx, c } = world(seed);
+      const house = content.houses.find(h => !h.isPlayerHouse)!.id;
+      relate(ctx.world, ctx.world.playerHouse, house, -30);
+      const enemy = reader(ctx, cloak, 'female', house);
+      send(ctx, reader(ctx, watch), watch); serve(ctx);
+      const roll = streamFor(ctx.world, 'mystic-field-opportunity', c.id).next();
+      if (roll < 0.2 || roll >= 0.5) continue;
+      const control = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+      control.world.people.get(enemy.id)!.status = 'missing';
+      tickFieldAccount(ctx, c);
+      tickFieldAccount(control, control.world.muster.commitments[0]!);
+      expect(c.credit).toBe(0);
+      expect(control.world.muster.commitments[0]!.credit).toBe(1);
+      expect(ctx.world.mystic.assignments.find(a => a.house === house)!.service.usefulYears).toBe(1);
+      witnessed = true; break;
+    }
+    expect(witnessed).toBe(true);
+  });
+
+  it('resolves a named person’s existing hostility to that person’s actual house', () => {
+    const { ctx, c } = world();
+    ctx.world.relationships.clear();
+    const house = content.houses.find(h => !h.isPlayerHouse)!.id;
+    const enemy = reader(ctx, cloak, 'female', house);
+    const own = reader(ctx, watch);
+    relate(ctx.world, own.id, enemy.id, -30);
+    send(ctx, own, watch);
+    expect(c.opponent).toBe(house);
+    expect(ctx.world.mystic.assignments.find(a => a.house === house)?.practitioner).toBe(enemy.id);
+  });
+
+  it('concealment prevents a real capture only while the assigned reader is present', () => {
+    let witnessed = false;
+    for (let seed = 1; seed <= 80; seed++) {
+      const { ctx, c, p, source } = riskyWorld(seed, { ...noRisk, capture: 0.1 });
+      send(ctx, p);
+      const hidden = reader(ctx, cloak); send(ctx, hidden, cloak); serve(ctx);
+      const roll = streamFor(ctx.world, 'mystic-field-risk', c.id, p.id).next();
+      if (roll < 0.06 || roll >= 0.15) continue;
+      const control = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), source);
+      control.world.people.get(hidden.id)!.status = 'missing';
+      tickFieldRisks(ctx, c);
+      tickFieldRisks(control, control.world.muster.commitments[0]!);
+      expect(p.captivity).toBeUndefined();
+      expect(control.world.people.get(p.id)!.captivity).toBeDefined();
+      witnessed = true; break;
+    }
+    expect(witnessed).toBe(true);
+  });
+
+  it('field deaths use the normal kill gate, including the founder’s guardian redirection', () => {
+    for (const founder of [false, true]) {
+      let witnessed = false;
+      for (let seed = 1; seed <= 80; seed++) {
+        const { ctx, c, p } = riskyWorld(seed, { ...noRisk, death: 0.05 });
+        const person = founder ? ctx.world.people.get(ctx.world.narrator!)! : reader(ctx, care, 'male');
+        if (!founder) {
+          for (const member of ctx.world.people.all()) member.castSlots = member.castSlots.filter(slot => slot !== 'head');
+          person.castSlots.push('head');
+        }
+        person.spellsKnown = care.books.map(b => asId(b));
+        send(ctx, person); serve(ctx);
+        if (streamFor(ctx.world, 'mystic-field-risk', c.id, person.id).next() >= 0.075) continue;
+        tickFieldRisks(ctx, c);
+        expect(person.status).toBe(founder ? 'guardian' : 'dead');
+        expect(fieldCareFor(ctx, c)).toBeUndefined();
+        expect(ctx.world.mystic.assignments).toHaveLength(0);
+        if (!founder) {
+          ensureHead(ctx, testRng('field succession'));
+          expect(ctx.world.people.living().some(member => member.castSlots.includes('head'))).toBe(true);
+        }
+        witnessed = true; break;
+      }
+      expect(witnessed).toBe(true);
+    }
   });
 });

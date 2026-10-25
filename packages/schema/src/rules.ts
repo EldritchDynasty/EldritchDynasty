@@ -2346,6 +2346,18 @@ const mysticWiring: ValidationRule = {
       const at = `mysticWorking:${w.id}`;
       if (seen.has(w.id)) issues.push(err(this.id, at, 'duplicate working id'));
       seen.add(w.id);
+      const affinityFits = (() => {
+        const benefit = w.benefit;
+        switch (benefit.kind) {
+          case 'life_care': case 'field_care': return w.affinity === 'life';
+          case 'estate_protection': return w.affinity === 'terra';
+          case 'field_supply': return w.affinity === 'fluid' || w.affinity === 'thermal';
+          case 'field_watch': return w.affinity === 'light' || w.affinity === 'aero';
+          case 'field_concealment': return w.affinity === 'darkness';
+          default: return assertNever(benefit, 'working affinity');
+        }
+      })();
+      if (!affinityFits) issues.push(err(this.id, at, `affinity '${w.affinity}' cannot supply ${w.benefit.kind}`));
       for (const id of w.books) {
         const book = content.spellbook(id);
         if (!book) issues.push(err(this.id, at, `names unknown book '${id}'`));

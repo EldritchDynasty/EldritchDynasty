@@ -220,7 +220,8 @@ describe('a duty is one occupation, paid once (#1873)', () => {
     const duty = ctx.world.mystic.assignments[0]!;
     expect(order(ctx, { kind: 'mysticRelease', assignment: duty.id }).ok).toBe(true);
     expect(ctx.world.studies).toEqual([{ person: carer.id, book: 'lesser_workings_of_death', completes: ctx.world.year + 3 }]);
-    expect(ctx.world.mystic).toEqual({ assignments: [], pauses: [] });
+    expect(ctx.world.mystic).toEqual({ assignments: [], pauses: [],
+      reservedUpkeep: { year: ctx.world.year, crowns: 4 } });
   });
 
   it('allows one duty a person and one keeper a place, and charges preparation once', () => {

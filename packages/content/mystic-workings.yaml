@@ -64,6 +64,91 @@ mysticWorkings:
       parcelKinds: [tenant_farm, wetland, mill, slate_work]
       maxAcres: 260
 
+  - id: the_field_infirmary
+    name: The Field Infirmary
+    affinity: life
+    books: [lesser_workings_of_life]
+    description: >-
+      One learned reader goes with one levy, tending the camp sickness and the
+      men brought back from the fighting. Some recoverable losses are kept off
+      the roll, and a wounded family officer has a better chance of living.
+      The reader cannot keep a sickroom at home from the camp.
+    preparation: { crowns: 8, years: 0 }
+    upkeep: 2
+    benefit:
+      kind: field_care
+      casualtyReduction: 0.35
+      officerReduction: 0.35
+      risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
+
+  - id: the_surgeons_tent
+    name: The Surgeon's Tent
+    affinity: life
+    books: [lesser_workings_of_life, greater_workings_of_life]
+    description: >-
+      The second book equips a reader to hold harder at the camp infirmary.
+      Half the recoverable levy losses can be saved, and the part of a family
+      officer's danger that comes from the fighting is halved. Neither work
+      stops old age or the blood. A year of preparation comes before the road.
+    preparation: { crowns: 14, years: 1 }
+    upkeep: 3
+    benefit:
+      kind: field_care
+      casualtyReduction: 0.5
+      officerReduction: 0.5
+      risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
+
+  - id: keeping_the_camp_water
+    name: Keeping the Camp Water
+    affinity: fluid
+    books: [lesser_workings_of_fluid]
+    description: >-
+      A reader keeps one levy supplied with clean water and keeps its stores
+      fit to use. The account falls by three tenths of a crown for each of up
+      to twelve men still serving. The reader's fee is a separate charge.
+      There is no saving on a position bought from the Warden.
+    preparation: { crowns: 8, years: 0 }
+    upkeep: 1
+    benefit:
+      kind: field_supply
+      crownsPerMan: 0.3
+      maxMen: 12
+      risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
+
+  - id: the_lantern_line
+    name: The Lantern Line
+    affinity: light
+    books: [lesser_workings_of_light]
+    description: >-
+      A reader watches the approaches around one levy. A useful sighting can
+      earn the house a little credit on the Warden's roll; it cannot turn the
+      whole war. A learned enemy concealer can hide the movement, and this
+      watch can contest an enemy's covered road.
+    preparation: { crowns: 8, years: 0 }
+    upkeep: 1
+    benefit:
+      kind: field_watch
+      opportunityChance: 0.35
+      credit: 1.5
+      risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
+
+  - id: the_covered_road
+    name: The Covered Road
+    affinity: darkness
+    books: [lesser_workings_of_darkness]
+    description: >-
+      A reader covers the paths used by the levy's working readers. Half their
+      ordinary capture risk is hidden, but no wound or death is taken away.
+      An enemy Light watch halves that protection. This same concealment can
+      hide a local movement from an opposing reader's lanterns.
+    preparation: { crowns: 8, years: 0 }
+    upkeep: 1
+    benefit:
+      kind: field_concealment
+      captureReduction: 0.5
+      observationReduction: 0.5
+      risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
+
 # Plain English counterparts for working descriptions; Originals above stay unchanged.
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
@@ -94,3 +179,33 @@ proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=the_quarrymans_face].name"
     of: e75c92d76597612b
     plainenglish: "Protecting Quarries and Mills"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_field_infirmary].name"
+    of: "30939d273a76151b"
+    plainenglish: "Treating the Levy"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_field_infirmary].description"
+    of: "244e7cfbd01b98af"
+    plainenglish: "One trained reader accompanies one levy and treats sickness and wounded men. Some losses are prevented, and a wounded family officer has a better chance of surviving. The reader cannot also care for people at home."
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_surgeons_tent].name"
+    of: "52450a06f818de0a"
+    plainenglish: "Greater Field Care"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_surgeons_tent].description"
+    of: "6349c3a4e18f7180"
+    plainenglish: "The second book gives the reader stronger field care. Half the recoverable levy losses can be prevented, and a family officer’s danger from fighting is halved. It does not prevent old age or harm from the blood. Preparation takes a year before travel begins."
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=keeping_the_camp_water].name"
+    of: "17dfe7c7403e265b"
+    plainenglish: "Protecting Camp Supplies"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=keeping_the_camp_water].description"
+    of: "14c2c8504b6ad994"
+    plainenglish: "A reader keeps one levy’s water clean and its supplies usable. Costs fall by 0.3 crowns for each of up to twelve men still serving. The reader’s fee is paid separately. It does not reduce the cost of a position bought from the Warden."
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_lantern_line].name"
+    of: "a28966d6a34dda9a"
+    plainenglish: "Watching the Approaches"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_lantern_line].description"
+    of: "fa1a759a79ce63e6"
+    plainenglish: "A reader watches the approaches around one levy. A useful sighting can earn a small amount of credit from the Warden, but cannot change the whole war. A trained enemy concealer can hide movements. This watch can also weaken an enemy’s concealment of a route."
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_covered_road].name"
+    of: "b9101288764320e4"
+    plainenglish: "Concealing the Route"
+  - address: "content:mystic-workings.yaml#mysticWorkings[id=the_covered_road].description"
+    of: "95bcdcd2a7d6c56e"
+    plainenglish: "A reader hides the routes used by the levy’s Mystic readers. This halves their normal capture risk, but does not prevent wounds or death. An enemy Light watch halves this protection. The same working can hide a local movement from an opposing reader."

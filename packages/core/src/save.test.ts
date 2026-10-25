@@ -41,6 +41,18 @@ describe('a run survives being written down', () => {
     expect(digestOf(after)).toBe(digestOf(before));
   });
 
+  it('reads format 37 without inventing field service, foreign spending or injuries', () => {
+    const before = bootstrap(content, 1874, 1042);
+    const legacy = { ...saveGame(before), format: 37 };
+    const original = structuredClone(legacy);
+    const after = loadGame(legacy, content);
+    expect(after.world.mystic.foreignSpent).toBeUndefined();
+    expect(after.world.people.all().every(p => p.fieldRecoveryUntil === undefined)).toBe(true);
+    expect(after.world.muster.commitments).toEqual([]);
+    expect(saveGame(after).format).toBe(SAVE_FORMAT);
+    expect(legacy).toEqual(original);
+  });
+
   it('reads format 35 without inventing captives or changing the input', () => {
     const before = bootstrap(content, 1042, 1042);
     const legacy = { ...saveGame(before), format: 35 };

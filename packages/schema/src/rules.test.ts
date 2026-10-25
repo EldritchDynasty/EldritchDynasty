@@ -4,6 +4,19 @@ import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD
 
 const content = loadContent();
 
+describe('a field working retains its actual affinity (#1874)', () => {
+  it('rejects a Life book used as a supply or concealment working', () => {
+    const original = content.bundle.mysticWorkings.find(w => w.id === 'the_field_infirmary')!;
+    const supply = content.bundle.mysticWorkings.find(w => w.id === 'keeping_the_camp_water')!;
+    const bad = { ...content.bundle, mysticWorkings: [{ ...supply, affinity: original.affinity, books: original.books }] };
+    expect(runRule('mystic/wiring', bad).some(issue => issue.message.includes('cannot supply field_supply'))).toBe(true);
+  });
+
+  it('accepts every authored field working and its completed-book prerequisites', () => {
+    expect(runRule('mystic/wiring', content.bundle)).toEqual([]);
+  });
+});
+
 describe('Record selector validation (#874)', () => {
   const fixture = () => {
     const source = content.bundle.events.find((event) => event.id === 'blood_on_our_own_land');
