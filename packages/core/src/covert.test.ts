@@ -679,8 +679,22 @@ describe('household lifecycle fixtures', () => {
       expect(quoteThreatResponse(ctx, { ...order, response: 'escort' }).ok).toBe(false);
       threat.warned = true;
       expect(quoteThreatResponse(ctx, { ...order, response: 'escort' }).price).toBe(12);
+      ctx.world.treasury = DEBT_FLOOR;
+      expect(quoteThreatResponse(ctx, { ...order, response: 'escort' })).toMatchObject({ ok: false, price: 12 });
       guard.status = 'missing';
       expect(quoteThreatResponse(ctx, order).ok).toBe(false);
+    });
+
+    it('refuses a new payment when the warned relative has left the scene or died', () => {
+      const { ctx, victim, guard, threat } = scene();
+      const order = { threat: threat.plan.id, guards: [guard.id], response: 'ordinary' as const };
+      const money = ctx.world.treasury;
+      victim.status = 'missing';
+      expect(defendHousehold(ctx, order).ok).toBe(false);
+      victim.status = 'alive';
+      ctx.world.people.kill(victim.id, ctx.world.year, 'test');
+      expect(defendHousehold(ctx, order).ok).toBe(false);
+      expect(ctx.world.treasury).toBe(money);
     });
 
     it('save/reload preserves preparation, payments, knowledge and frozen receipts through resolution', () => {

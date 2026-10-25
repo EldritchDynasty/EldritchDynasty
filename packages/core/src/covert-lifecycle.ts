@@ -193,12 +193,18 @@ type DefenceOrder = { threat: string; guards: string[]; response: CovertResponse
 export function quoteThreatResponse(ctx: SimCtx, order: DefenceOrder) {
   const t = active(ctx, order.threat);
   const refuse = (reason: string) => ({ ok: false, price: 0, reason });
-  if (!t || t.plan.attemptYear <= ctx.world.year) return refuse(msg(ctx, 'covert.refuse.closed', 'that warning can no longer be answered'));
+  const target = t && ctx.world.people.get(t.plan.target);
+  if (!t || t.plan.attemptYear <= ctx.world.year || target?.status !== 'alive'
+    || !resolvePresence(ctx, t.plan.site, t.plan.bindings).people.includes(target.id)) {
+    return refuse(msg(ctx, 'covert.refuse.closed', 'that warning can no longer be answered'));
+  }
   if (order.guards.length > 3 || covertGuardGap(ctx, t.plan, order.guards)) return refuse(msg(ctx, 'covert.refuse.guards', 'those guards cannot attend this place'));
   if (order.response !== 'ordinary' && !t.warned) return refuse(msg(ctx, 'covert.refuse.no_trace', 'an approach must be seen before arranging that response'));
   if (order.response === 'escort' && !order.guards.length) return refuse(msg(ctx, 'covert.refuse.escort', 'an escort needs a named person'));
   const price = Math.max(0, covertDefenceQuote(order.guards.length, order.response) - t.defence.paidCrowns);
-  if (ctx.world.treasury - price < DEBT_FLOOR) return refuse(msg(ctx, 'covert.refuse.cost', 'the house cannot pay for those precautions'));
+  if (ctx.world.treasury - price < DEBT_FLOOR) return {
+    ...refuse(msg(ctx, 'covert.refuse.cost', 'the house cannot pay for those precautions')), price,
+  };
   return { ok: true, price, reason: undefined };
 }
 
