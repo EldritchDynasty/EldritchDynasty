@@ -11,6 +11,7 @@ import { castIn, castPeople, type SlotFill } from './fill.js';
 export { castIn, castPeople, soleCast, type SlotFill } from './fill.js';
 import { foremostOf, secondForemostOf } from '../ascension.js';
 import type { Rng } from '../rng.js';
+import { practicalCandidate } from './practice.js';
 import { CHILDBEARING, eligibleToMarry } from '../people/demography.js';
 import { grammarOf } from '../people/grammar.js';
 import {
@@ -89,7 +90,7 @@ export function resolveSlots(
        * ask the right question about a party the player names: it asks through
        * `resolveSlots(...).ok`, and the answer is now honest for both castBy.
        */
-      if (candidatesFor(spec, ctx, fill).length < (spec.count?.min ?? 1)) {
+      if (practiceCandidates(e, sid, ctx, fill).length < (spec.count?.min ?? 1)) {
         if (spec.optional) continue;
         return { ok: false, fill, playerCast, missing: sid };
       }
@@ -98,7 +99,7 @@ export function resolveSlots(
     }
 
     if (spec.count) {
-      const party = castParty(sid, spec, ctx, fill, rng);
+      const party = castParty(e, sid, spec, ctx, fill, rng);
       if (party.length < spec.count.min) {
         if (spec.optional) continue;
         return { ok: false, fill, playerCast, missing: sid };
@@ -107,7 +108,7 @@ export function resolveSlots(
       continue;
     }
 
-    const candidates = candidatesFor(spec, ctx, fill);
+    const candidates = practiceCandidates(e, sid, ctx, fill);
     if (!candidates.length) {
       if (spec.optional) continue;
       return { ok: false, fill, playerCast, missing: sid };
@@ -133,14 +134,14 @@ export function resolveSlots(
  * party as well as against other slots — "not a brother of anyone already
  * going" is a thing an author can now write and have honoured.
  */
-function castParty(sid: string, spec: SlotSpec, ctx: SimCtx, bound: SlotFill, rng: Rng): string[] {
+function castParty(e: EventTemplate, sid: string, spec: SlotSpec, ctx: SimCtx, bound: SlotFill, rng: Rng): string[] {
   const { min, max } = spec.count!;
   const want = min + rng.int(Math.max(1, max - min + 1));
   const party: string[] = [];
   const working: SlotFill = { ...bound };
 
   for (let i = 0; i < want; i++) {
-    const pool = candidatesFor(spec, ctx, working).filter((p) => !party.includes(p.id));
+    const pool = practiceCandidates(e, sid, ctx, working).filter((p) => !party.includes(p.id));
     if (!pool.length) break;
     const chosen = pickCandidate(spec, ctx, rng, pool);
     if (!chosen) break;
@@ -416,14 +417,18 @@ export function autoCast(
       // A party the chronicler assembles is assembled the same way the
       // player's would be, short of `min` included: it casts what it can find
       // rather than refusing, because by here the event has already fired.
-      const party = castParty(sid, spec, ctx, out, rng);
+      const party = castParty(e, sid, spec, ctx, out, rng);
       if (party.length) out[sid] = party;
       continue;
     }
-    const chosen = pickCandidate(spec, ctx, rng, candidatesFor(spec, ctx, out));
+    const chosen = pickCandidate(spec, ctx, rng, practiceCandidates(e, sid, ctx, out));
     if (chosen) out[sid] = chosen.id;
   }
   return out;
+}
+
+function practiceCandidates(e: EventTemplate, slot: string, ctx: SimCtx, fill: SlotFill): Person[] {
+  return candidatesFor(e.slots[slot]!, ctx, fill).filter(p => practicalCandidate(e, slot, ctx, fill, p));
 }
 
 /** Live match count for the editor's slot builder. */

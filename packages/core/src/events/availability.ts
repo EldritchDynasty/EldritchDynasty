@@ -5,6 +5,7 @@ import { influencedAttr } from './influence.js';
 import { soleCast, type SlotFill } from './slots.js';
 import { msg } from '../messages.js';
 import { proseForContentField } from '../prose.js';
+import { missingPracticalReader } from './practice.js';
 
 /**
  * Lives here rather than in `decisions.ts` because `deciders.ts` needs it and
@@ -30,19 +31,18 @@ export interface DecisionChoice {
  * is the game.
  */
 export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event: EventTemplate): DecisionChoice {
+  const absentReader = missingPracticalReader(c, event, ctx, fill);
+  if (absentReader) return unavailableReader(c, ctx, absentReader);
   for (const req of c.requires) {
     const p = ctx.world.people.get(soleCast(fill, req.slot) ?? '');
     if (!p) {
       const knowledge = event.slots[req.slot]?.filters.find(filter => 'knows' in filter);
+      if (knowledge && 'knows' in knowledge) return unavailableReader(c, ctx, knowledge.knows.affinity);
       return {
         id: c.id,
         label: c.label,
         available: false,
-        blockedBy: knowledge && 'knows' in knowledge
-          ? msg(ctx, 'choice.blocked.reader', 'No eligible reader of {AFFINITY} is available.', {
-            AFFINITY: attributeName(ctx, knowledge.knows.affinity),
-          })
-          : msg(ctx, 'choice.blocked.uncast', 'nobody stands as {SLOT}', { SLOT: req.slot }),
+        blockedBy: msg(ctx, 'choice.blocked.uncast', 'nobody stands as {SLOT}', { SLOT: req.slot }),
       };
     }
     const role = event.slots[req.slot]?.role;
@@ -64,6 +64,13 @@ export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event
     }
   }
   return { id: c.id, label: c.label, available: true };
+}
+
+function unavailableReader(c: Choice, ctx: SimCtx, affinity: string): DecisionChoice {
+  return { id: c.id, label: c.label, available: false,
+    blockedBy: msg(ctx, 'choice.blocked.reader', 'No eligible reader of {AFFINITY} is available.', {
+      AFFINITY: attributeName(ctx, affinity),
+    }) };
 }
 
 function attributeName(ctx: SimCtx, id: string): string {
