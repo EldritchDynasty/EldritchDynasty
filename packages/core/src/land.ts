@@ -9,6 +9,7 @@ import { head } from './world.js';
 import { noteBearing } from './bearing.js';
 import { msg } from './messages.js';
 import { wardedDamage, wardedYieldFactor } from './mystic.js';
+import { improvementPrice, noteImprovementSupport } from './mystic-civilian.js';
 import { proseForContentField } from './prose.js';
 
 /**
@@ -335,7 +336,8 @@ export function beginImprovement(ctx: SimCtx, parcel: string): OrderResult {
     return { ok: false, reason: msg(ctx, 'land.refuse.improve_underway', 'already being improved') };
   }
 
-  const cost = parcelPrice(def);
+  const ordinary = parcelPrice(def);
+  const cost = improvementPrice(ctx, def.id, ordinary);
   if (w.treasury - cost < DEBT_FLOOR) {
     return {
       ok: false,
@@ -343,6 +345,7 @@ export function beginImprovement(ctx: SimCtx, parcel: string): OrderResult {
     };
   }
   w.treasury -= cost;
+  noteImprovementSupport(ctx, def.id, ordinary - cost);
   w.landImprovements.push({ parcel: id, completes: w.year + IMPROVE_YEARS });
   return { ok: true };
 }
@@ -757,6 +760,7 @@ export function landView(ctx: SimCtx): LandView {
     const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
     if (state.defId && !def) continue; // a def that vanished from content — nothing sane to draw
     const cost = def ? parcelPrice(def) : 0;
+    const projectCost = def ? improvementPrice(ctx, def.id, cost) : 0;
     const completes = improving.get(id);
     held.push({
       // `def.id` when there is one, matching what `sell`/`improve` orders and
@@ -778,9 +782,9 @@ export function landView(ctx: SimCtx): LandView {
       sellable: def !== undefined && def.kind !== 'demesne' && state.holder === undefined,
       sellPrice: Math.round(cost * SELL_FACTOR),
       ...(completes !== undefined ? { improving: completes } : {}),
-      improveCost: cost,
+      improveCost: projectCost,
       canImprove: def !== undefined && def.kind !== 'town_house'
-        && completes === undefined && w.treasury - cost >= DEBT_FLOOR,
+        && completes === undefined && w.treasury - projectCost >= DEBT_FLOOR,
       titleProved: state.titleProved ?? true,
       ...(state.contestedBy ? { contestedBy: state.contestedBy } : {}),
       caput: def !== undefined && isCaput(def),

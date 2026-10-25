@@ -2356,6 +2356,7 @@ const mysticWiring: ValidationRule = {
         switch (benefit.kind) {
           case 'life_care': case 'field_care': return w.affinity === 'life';
           case 'estate_protection': return w.affinity === 'terra';
+          case 'project_support': return w.affinity === 'terra' || w.affinity === 'thermal';
           case 'field_supply': return w.affinity === 'fluid' || w.affinity === 'thermal';
           case 'field_watch': return w.affinity === 'light' || w.affinity === 'aero';
           case 'field_concealment': return w.affinity === 'darkness';
@@ -2377,6 +2378,12 @@ const mysticWiring: ValidationRule = {
         }
       })();
       if (!affinityFits) issues.push(err(this.id, at, `affinity '${w.affinity}' cannot supply ${w.benefit.kind}`));
+      if (w.collaborator) {
+        const partner = content.mysticWorking(w.collaborator);
+        if (!partner || partner.id === w.id || partner.affinity === w.affinity || partner.collaborator !== w.id) {
+          issues.push(err(this.id, at, 'collaborator must name a reciprocal role of another affinity'));
+        }
+      }
       for (const id of w.books) {
         const book = content.spellbook(id);
         if (!book) issues.push(err(this.id, at, `names unknown book '${id}'`));

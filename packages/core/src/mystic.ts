@@ -62,7 +62,7 @@ export function hasLearned(p: Person, w: MysticWorkingDef): boolean {
 export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { benefit: MysticFieldBenefit } {
   switch (w.benefit.kind) {
     case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': return true;
-    case 'life_care': case 'estate_protection': case 'household_protection': case 'covert_support': return false;
+    case 'life_care': case 'estate_protection': case 'household_protection': case 'covert_support': case 'project_support': return false;
     default: return assertNever(w.benefit, 'field working');
   }
 }
@@ -115,6 +115,11 @@ export function targetGap(
 ): MysticGap | undefined {
   const b = working.benefit;
   switch (b.kind) {
+    case 'project_support': {
+      if (house !== ctx.world.playerHouse || site.kind !== 'parcel') return 'target_lost';
+      const held = heldParcel(ctx, site.parcel);
+      return held && b.parcelKinds.includes(held.def.kind) ? undefined : 'target_lost';
+    }
     case 'covert_support': {
       if (site.kind !== 'covert') return 'target_lost';
       const o = ctx.world.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
@@ -186,6 +191,7 @@ export interface MysticOrder { person: string; working: string; target: SceneSit
 function coverageKey(ctx: SimCtx, working: MysticWorkingDef, target: SceneSite, bindings: Record<string, string>): string {
   const b = working.benefit;
   return JSON.stringify({ place: dutyPlaceOf(ctx, target, bindings), kind: b.kind,
+    ...(working.collaborator ? { role: working.id } : {}),
     ...(b.kind === 'covert_support' ? { role: b.role } : {}),
     ...(b.kind === 'household_protection' ? { stage: b.stage, scope: b.scope,
       person: target.kind === 'person' ? target.person : undefined } : {}) });
@@ -450,21 +456,24 @@ export function mysticUpkeep(ctx: SimCtx): number {
 }
 
 /** A serving, paid duty whose maintainer is still able to do it at this moment. */
-function liveDuties(ctx: SimCtx, kind: MysticWorkingDef['benefit']['kind']) {
+export function liveDuties(ctx: SimCtx, kind: MysticWorkingDef['benefit']['kind']) {
   const w = ctx.world;
   const out: { a: MysticAssignment; working: MysticWorkingDef; p: Person }[] = [];
   for (const a of w.mystic.assignments) {
     if (a.status !== 'serving' || a.paidThrough !== w.year) continue;
     const working = workingDef(ctx, a.working);
-    if (!working || working.benefit.kind !== kind) continue;
+    if (!working) continue;
     const p = w.people.get(a.practitioner);
     if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a))) continue;
     out.push({ a, working, p: p! });
   }
-  return out;
+  return out.filter(({ a, working, p }) => working.benefit.kind === kind && (!working.collaborator || out.some(partner =>
+    partner.working.id === working.collaborator && partner.working.collaborator === working.id && partner.p.id !== p.id
+    && dutyHouse(ctx, partner.a) === dutyHouse(ctx, a)
+    && JSON.stringify(dutyPlaceOf(ctx, partner.a.target, partner.a.bindings)) === JSON.stringify(dutyPlaceOf(ctx, a.target, a.bindings)))));
 }
 
-function markUseful(a: MysticAssignment, year: number): void {
+export function markUseful(a: MysticAssignment, year: number): void {
   const s = a.service;
   if (s.lastUseful === year) return;
   s.lastUseful = year;
@@ -1011,6 +1020,7 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
       }
       return out;
     }
+    case 'project_support':
     case 'estate_protection': {
       const seen = new Set<string>();
       for (const state of w.parcels.values()) {

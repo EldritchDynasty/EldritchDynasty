@@ -91,6 +91,12 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     role: CovertSupportRoleS,
     bonus: z.number().positive().max(0.3),
   }).strict(),
+  /** One real improvement project; the strongest qualified team sets its price. */
+  z.object({
+    kind: z.literal('project_support'),
+    costReduction: z.number().positive().max(0.35),
+    parcelKinds: z.array(ParcelKindS).min(1),
+  }).strict(),
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
 export type MysticBenefitKind = MysticBenefit['kind'];
@@ -101,6 +107,8 @@ export const MysticWorkingDefS = z.object({
   affinity: z.enum(ALL_AFFINITIES),
   /** ALL named books must be completed by the practitioner; a shelf copy or a raw score is not enough. */
   books: z.array(z.string()).min(1),
+  /** Reciprocal named role: another learned, paid reader must keep it at this place. */
+  collaborator: z.string().min(1).optional(),
   /** What the working covers and what it does not, in the player's terms. */
   description: z.string(),
   preparation: z.object({
