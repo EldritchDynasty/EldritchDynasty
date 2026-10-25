@@ -59,7 +59,6 @@ export function primordialChance(ep: number): number {
  */
 export function effectHarmPolicy(e: Effect): HarmCategory | undefined {
   switch (e.kind) {
-    case 'captivity': return 'liberty';
     case 'status': return e.status === 'dead' ? 'life' : e.status === 'missing' ? 'liberty' : undefined;
     case 'treasury': return e.delta < 0 ? 'financial' : undefined;
     case 'respect': return e.delta < 0 ? 'political' : undefined;

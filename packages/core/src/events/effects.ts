@@ -103,9 +103,6 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
   const w = ctx.world;
 
   switch (eff.kind) {
-    case 'captivity':
-      for (const person of resolveTargets(eff.target, ctx, fill)) captureFamily(ctx, person.id, eff.captor, eff.ransom);
-      break;
     // INVARIANT 6: derived state is not storage — this writes to `acquired`.
     case 'attribute': {
       for (const p of resolveTargets(eff.target, ctx, fill)) {
@@ -135,7 +132,9 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
     }
     case 'status': {
       for (const p of resolveTargets(eff.target, ctx, fill)) {
-        if (eff.status === 'dead') w.people.kill(p.id, w.year, eff.cause ?? 'unrecorded');
+        if (eff.captivity) {
+          if (eff.status === 'missing') captureFamily(ctx, p.id, eff.captivity.captor, eff.captivity.ransom);
+        } else if (eff.status === 'dead') w.people.kill(p.id, w.year, eff.cause ?? 'unrecorded');
         else p.status = eff.status as Person['status'];
       }
       break;

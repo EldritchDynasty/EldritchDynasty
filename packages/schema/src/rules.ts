@@ -820,11 +820,10 @@ const knownReferences: ValidationRule = {
           if (eff.kind === 'spellbook' && !content.spellbook(eff.book)) {
             issues.push(err(this.id, `${at}/${o.id}`, `unknown spellbook '${eff.book}'`));
           }
-          if (eff.kind === 'captivity' && !content.house(eff.captor)) {
-            issues.push(err(this.id, `${at}/${o.id}`, `unknown captor house '${eff.captor}'`));
-          }
-          if (eff.kind === 'captivity' && content.house(eff.captor)?.isPlayerHouse) {
-            issues.push(err(this.id, `${at}/${o.id}`, 'family captivity requires an outside captor'));
+          if (eff.kind === 'status' && eff.captivity) {
+            if (eff.status !== 'missing') issues.push(err(this.id, `${at}/${o.id}`, 'captivity requires missing status'));
+            if (!content.house(eff.captivity.captor)) issues.push(err(this.id, `${at}/${o.id}`, `unknown captor house '${eff.captivity.captor}'`));
+            if (content.house(eff.captivity.captor)?.isPlayerHouse) issues.push(err(this.id, `${at}/${o.id}`, 'family captivity requires an outside captor'));
           }
           // A `land` effect naming a parcel by typo mints or seizes nothing —
           // `grantParcel`/`seizeParcel`/`damageParcel`/`restoreParcel` are all

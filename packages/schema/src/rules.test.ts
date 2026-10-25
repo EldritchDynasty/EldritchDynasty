@@ -9,7 +9,7 @@ describe('captivity identifies an actual outside captor (#1876)', () => {
     const event = EventTemplateS.parse({ id: 'captivity_validation', title: 'A captive', tier: 'family',
       frequency: 'common', weight: 1, purposes: ['change_relationship', 'worldbuild_through_action', 'test_magic_rule'], body: 'A relative is taken.',
       slots: { PERSON: { role: 'family_member' } }, interaction: { kind: 'narration', outcomes: [{ id: 'taken',
-        text: 'The captor asks for ransom.', effects: [{ kind: 'captivity', target: { slot: 'PERSON' }, captor, ransom: 60 }],
+        text: 'The captor asks for ransom.', effects: [{ kind: 'status', status: 'missing', target: { slot: 'PERSON' }, captivity: { captor, ransom: 60 } }],
       }] } });
     const issues = runRule('refs/known', { ...content.bundle, events: [event] });
     expect(issues.some(i => /captor/.test(i.message))).toBe(true);
