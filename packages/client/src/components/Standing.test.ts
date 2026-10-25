@@ -987,6 +987,7 @@ describe('Table wardship buy-back single-flight (#1559)', () => {
       shelf: [],
       studying: [],
       mystic: { duties: [], offers: [] },
+      security: { threats: [], history: [] },
       missingPrimers: [],
       pupils: [],
       teachable: [],

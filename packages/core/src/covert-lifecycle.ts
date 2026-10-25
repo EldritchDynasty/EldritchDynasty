@@ -130,6 +130,15 @@ export function tickHouseholdThreats(ctx: SimCtx): void {
     const result = resolveCovertAttempt(ctx, t.plan, defence, 'attempt', undefined, { forewarned: t.warned });
     if (result.kind === 'refused') { cancel(ctx, t); continue; }
     t.warned ||= result.warned;
+    if (!result.observation) {
+      // A barrier may spoil an unseen approach. Closing the known warning
+      // must not invent witnesses, an attack page or public proof of a plot.
+      t.stage = 'resolved'; t.closedAt = w.year;
+      t.receipt = msg(ctx, 'covert.expired', 'The warning about {PERSON} expired without an attack here.',
+        { PERSON: w.people.mustGet(t.plan.target).name });
+      line(ctx, [t.plan.target], t.receipt);
+      continue;
+    }
     for (const use of result.support ?? []) protectionReceipt(ctx, use.assignment, t.plan.target);
     const victim = w.people.mustGet(t.plan.target);
     const normalText = result.target === 'dead'
@@ -157,9 +166,7 @@ export function tickHouseholdThreats(ctx: SimCtx): void {
     const committed = commitOutcome(ctx, event, normal, { COVERT_TARGET: victim.id }, undefined,
       streamFor(w, 'covert_commit', t.plan.id), undefined, 'incident');
     t.stage = 'resolved'; t.closedAt = w.year; t.page = committed.entryId; t.receipt = committed.text;
-    t.observation = result.observation ? structuredClone(result.observation) : {
-      occurrence: t.plan.id, year: w.year, target: victim.id, result: 'prevented', witnesses: [],
-    };
+    t.observation = structuredClone(result.observation);
     if (committed.primordial) t.observation = {
       occurrence: t.plan.id, year: w.year, target: victim.id,
       result: victim.status === 'alive' ? 'prevented' : 'dead', witnesses: [],
