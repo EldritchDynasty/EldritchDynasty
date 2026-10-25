@@ -32,9 +32,12 @@ export type CovertAttempt = z.infer<typeof CovertAttemptS>;
 export const CovertResponseS = z.enum(['ordinary', 'safe_lodging', 'escort']);
 export type CovertResponse = z.infer<typeof CovertResponseS>;
 
+export const COVERT_GUARD_LIMIT = 3;
+export const CovertGuardCountS = z.number().finite().int().min(0).max(COVERT_GUARD_LIMIT);
+
 export const CovertDefenceS = z.object({
   /** At most three named, present, adult household guards; duplicates are invalid. */
-  guards: z.array(z.string().min(1)).max(3),
+  guards: z.array(z.string().min(1)).max(COVERT_GUARD_LIMIT),
   response: CovertResponseS,
   /** Total paid for this incident, including its watch. A response pays only the outstanding difference. */
   paidCrowns: z.number().finite().nonnegative(),

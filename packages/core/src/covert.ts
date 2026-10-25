@@ -1,5 +1,5 @@
 import {
-  assertNever, CovertAttemptS, CovertDefenceS, CovertDrawsS, currentMembership,
+  assertNever, CovertAttemptS, CovertDefenceS, CovertDrawsS, CovertGuardCountS, currentMembership,
   type CovertAttempt, type CovertDefence, type CovertDraws, type CovertObservation,
   type CovertPreparation, type CovertRefusal, type CovertResponse, type CovertWarning,
   type Effect, type Person, type StoredSlotFill,
@@ -29,7 +29,7 @@ export function covertPreparationQuote(preparation: CovertPreparation): { crowns
 }
 
 export function covertDefenceQuote(guards: number, response: CovertResponse): number {
-  if (!Number.isInteger(guards) || guards < 0 || guards > 3) throw new RangeError('covert guards must be 0–3');
+  CovertGuardCountS.parse(guards);
   switch (response) {
     case 'ordinary': return guards * 8;
     case 'safe_lodging': return guards * 8 + 16;

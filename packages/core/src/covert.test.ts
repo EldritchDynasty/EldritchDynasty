@@ -19,12 +19,12 @@ import {
 const content = loadContent();
 const dice: CovertDraws = { warning: 0.99, prevention: 0.99, strike: 0, survival: 0.99, escape: 0, evidence: 0.99 };
 
-function scene() {
+function scene(guardSex: 'male' | 'female' = 'female') {
   const ctx = testWorld(content, 1914);
   const target = place(ctx, { sex: 'female', age: 28, name: 'Intended target' });
   const sponsor = place(ctx, { sex: 'male', age: 40, house: 'house_marrow', name: 'Unseen patron' });
   const operative = place(ctx, { sex: 'female', age: 24, house: 'house_marrow', name: 'Unseen operative' });
-  const guard = place(ctx, { sex: 'female', age: 30, name: 'Named guard' });
+  const guard = place(ctx, { sex: guardSex, age: 30, name: 'Named guard' });
   const grudge = addGrudge(ctx, sponsor.id, target.id, { severity: 60, inheritance: 'house_wide' });
   const preparedAt = ctx.world.year;
   ctx.world.year += 2;
@@ -203,7 +203,7 @@ describe('bounded named-threat resolver (#1914 / #1875)', () => {
 
   it.each(['unknown', 'duplicate', 'target', 'operative', 'hostage', 'missing', 'away', 'deployed', 'disabled', 'duty_elsewhere'] as const)(
     'cannot buy guard coverage with a %s guard', gap => {
-      const { ctx, target, operative, guard, attempt, defence } = scene();
+      const { ctx, target, operative, guard, attempt, defence } = scene(gap === 'duty_elsewhere' ? 'male' : 'female');
       defence.guards = [guard.id]; defence.paidCrowns = 24;
       switch (gap) {
         case 'unknown': defence.guards = ['phantom']; break;
@@ -217,13 +217,18 @@ describe('bounded named-threat resolver (#1914 / #1875)', () => {
         case 'deployed': ctx.world.muster.commitments.push({
           id: 'field', began: ctx.world.year, age: 'the_wars', men: 10, from: {}, officers: [guard.id], credit: 0, status: 'in_the_field',
         }); break;
-        case 'duty_elsewhere': ctx.world.mystic.assignments.push({
-          id: 'mys_other', practitioner: guard.id, working: 'existing_duty',
-          target: { kind: 'parcel', parcel: 'remote_parcel', slots: [] }, bindings: {},
-          started: ctx.world.year - 1, ready: ctx.world.year, paidPreparation: 0,
-          paidThrough: ctx.world.year, status: 'serving',
-          service: { servedYears: 1, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 0 },
-        }); break;
+        case 'duty_elsewhere': {
+          const working = content.mysticWorkings.find(w => w.benefit.kind === 'estate_protection')!;
+          const parcel = [...ctx.world.parcels.values()].find(p => content.parcel(p.defId)?.kind === 'tenant_farm')!;
+          guard.spellsKnown = working.books.map(book => asId(book));
+          ctx.world.mystic.assignments.push({
+            id: 'mys_other', practitioner: guard.id, working: working.id,
+            target: { kind: 'parcel', parcel: parcel.defId, slots: [] }, bindings: {},
+            started: ctx.world.year - 1, ready: ctx.world.year, paidPreparation: 0,
+            paidThrough: ctx.world.year, status: 'serving',
+            service: { servedYears: 1, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 0 },
+          }); break;
+        }
       }
       expect(resolveCovertAttempt(ctx, attempt, defence)).toEqual({ kind: 'refused', reason: 'invalid_guard' });
     },
@@ -251,8 +256,8 @@ describe('bounded named-threat resolver (#1914 / #1875)', () => {
     defence.paidCrowns = 15;
     expect(resolveCovertAttempt(ctx, attempt, defence, 'attempt', { ...dice, warning: 0 })).toEqual({ kind: 'refused', reason: 'unpaid' });
     expect(covertDefenceQuote(3, 'ordinary')).toBe(24);
-    expect(() => covertDefenceQuote(4, 'ordinary')).toThrow(RangeError);
-    expect(() => covertDefenceQuote(1.5, 'ordinary')).toThrow(RangeError);
+    expect(() => covertDefenceQuote(4, 'ordinary')).toThrow();
+    expect(() => covertDefenceQuote(1.5, 'ordinary')).toThrow();
   });
 
   it('lodging does not cover an open journey, and an escort needs an actual escort', () => {
