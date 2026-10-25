@@ -221,7 +221,8 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
 /** Format 38 retains commitment-bound field service, foreign spending and recovery. */
 /** Format 39 retains staged household threats, paid responses and frozen evidence. */
 /** Format 40 retains committed covert expeditions, evidence and known rival succession. */
-export const SAVE_FORMAT = 40;
+/** Format 41 retains civilian lesson progress and completed paid service accounts. */
+export const SAVE_FORMAT = 41;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).

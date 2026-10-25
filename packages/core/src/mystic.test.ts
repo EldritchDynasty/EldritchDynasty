@@ -3,8 +3,8 @@ import { loadContent } from '@ed/content';
 import { asId, type Person, type SceneSite } from '@ed/schema';
 import { DEBT_FLOOR, economyReading } from './economy.js';
 import { rollDeath } from './people/demography.js';
-import { canStudySpellbook } from './people/library.js';
-import { damageParcel } from './land.js';
+import { beginStudy, canStudySpellbook, tickLibraryWear } from './people/library.js';
+import { beginImprovement, damageParcel, landView } from './land.js';
 import { order, tableView } from './table.js';
 import { lifeCareFor, mysticView, quoteDuty, wardedYieldFactor } from './mystic.js';
 import { resolvePresence } from './presence.js';
@@ -13,6 +13,8 @@ import { runYears } from './year/step.js';
 import { phase, place, testWorld } from './testing.js';
 import type { Rng } from './rng.js';
 import type { SimCtx } from './world.js';
+import { improvementSupport } from './mystic-civilian.js';
+import { tickEconomy } from './economy.js';
 
 /**
  * #1866 B / #1873 — the Life/Terra pilot's merge-blocking mechanism claims.
@@ -23,6 +25,132 @@ const bundle = loadContent();
 const SEAT: SceneSite = { kind: 'hall', hall: 'main' };
 const FARM = 'hallowfield';
 const farmSite: SceneSite = { kind: 'parcel', parcel: FARM, slots: ['WARDEN'] };
+
+describe('learned collaborators change a paid land project (#1877)', () => {
+  function team() {
+    const { ctx } = world();
+    const terra = reader(ctx, 'male', ['lesser_workings_of_terra', 'greater_workings_of_terra'], 'The surveyor');
+    const thermal = reader(ctx, 'male', ['lesser_workings_of_thermal', 'greater_workings_of_thermal'], 'The kiln reader');
+    const ordinary = landView(ctx).held.find(p => p.parcel === FARM)!.improveCost;
+    for (const [person, working] of [[terra.id, 'setting_the_culverts'], [thermal.id, 'firing_the_liners']]) {
+      expect(order(ctx, { kind: 'mysticAssign', person: person!, working: working!, target: farmSite }).ok).toBe(true);
+    }
+    ctx.world.year = Math.max(...ctx.world.mystic.assignments.map(a => a.ready));
+    phase('mystic', ctx);
+    return { ctx, terra, thermal, ordinary };
+  }
+  it('quotes and charges one bounded reduction while both paid readers occupy the same holding', () => {
+    const { ctx, ordinary } = team();
+    const quoted = landView(ctx).held.find(p => p.parcel === FARM)!.improveCost;
+    expect(quoted).toBe(Math.ceil(ordinary * .75));
+    expect(improvementSupport(ctx, FARM)!.assignments).toHaveLength(2);
+    const before = ctx.world.treasury;
+    expect(beginImprovement(ctx, FARM).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(before - quoted);
+    expect(ctx.world.landImprovements[0]!.completes).toBe(ctx.world.year + 4);
+    const services = ctx.world.mystic.assignments.map(a => a.service);
+    expect(services.every(s => s.usefulYears === 1)).toBe(true);
+    expect(services.reduce((n,s) => n + (s.crownsKept ?? 0), 0)).toBe(ordinary - quoted);
+  });
+  it.each(['missing', 'wounded', 'unpaid', 'another_place'] as const)('restores the ordinary price when only the Thermal role is %s', absence => {
+    const { ctx, thermal, ordinary } = team();
+    const duty = ctx.world.mystic.assignments.find(a => a.practitioner === thermal.id)!;
+    switch (absence) {
+      case 'missing': thermal.status = 'missing'; break;
+      case 'wounded': thermal.acquired.health = -20; break;
+      case 'unpaid': duty.paidThrough = ctx.world.year - 1; break;
+      case 'another_place': duty.target = { kind: 'parcel', parcel: bundle.bundle.parcels.find(p => p.kind === 'tenant_farm' && p.id !== FARM)!.id, slots: [] }; break;
+    }
+    expect(landView(ctx).held.find(p => p.parcel === FARM)!.improveCost).toBe(ordinary);
+    const before = ctx.world.treasury;
+    expect(beginImprovement(ctx, FARM).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(before - ordinary);
+  });
+  it('retains the real team, paid year and quoted project through save/reload', () => {
+    const { ctx } = team();
+    const loaded = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(landView(loaded).held).toEqual(landView(ctx).held);
+    beginImprovement(ctx, FARM); beginImprovement(loaded, FARM);
+    expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+  });
+});
+
+describe('recurring civilian readers (#1877)', () => {
+  const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+  it('a named woman preserves a real copy, and losing only her learning restores its normal wear', () => {
+    const { ctx } = world();
+    const book = 'lesser_workings_of_death';
+    ctx.world.library.set(book, { id: book, acquiredYear: 1041, condition: 80 });
+    const p = reader(ctx, 'female', [book], 'The vellum keeper');
+    expect(order(ctx, { kind: 'mysticAssign', person: p.id, working: 'the_still_binding', target: { kind: 'book', book } }).ok).toBe(true);
+    ctx.world.year++; phase('mystic', ctx);
+    const control = loadGame(transport(saveGame(ctx)), bundle);
+    control.world.people.mustGet(p.id).spellsKnown = [];
+    tickLibraryWear(ctx); tickLibraryWear(control);
+    expect(ctx.world.library.get(book)!.condition).toBe(79.9);
+    expect(control.world.library.get(book)!.condition).toBe(79.8);
+    expect(ctx.world.mystic.assignments[0]!.service.bookWearKept).toBeCloseTo(.1);
+    expect(p.career).toBeUndefined();
+  });
+  it('quotes and charges a real repair saving, then suspends care while the physical copy is away', () => {
+    const { ctx } = world(); const book = 'lesser_workings_of_death';
+    ctx.world.library.set(book, { id: book, acquiredYear: 1041, condition: 20 });
+    const p = reader(ctx, 'female', ['lesser_workings_of_light'], 'The copyist');
+    const ordinary = tableView(ctx).shelf.find(b => b.book === book)!.restore!.fee;
+    expect(order(ctx, { kind: 'mysticAssign', person: p.id, working: 'the_copyists_light', target: { kind: 'book', book } }).ok).toBe(true);
+    ctx.world.year++; phase('mystic', ctx);
+    const quote = tableView(ctx).shelf.find(b => b.book === book)!.restore!;
+    expect(quote.fee).toBeLessThan(ordinary);
+    const before = ctx.world.treasury;
+    expect(order(ctx, { kind: 'restore', book }).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(before - quote.fee);
+    ctx.world.year++; phase('mystic', ctx);
+    expect(ctx.world.mystic.assignments[0]).toMatchObject({ status: 'suspended', reason: 'not_resident' });
+  });
+  it('reduces actual food charges once and records the same saving in the single economy tally', () => {
+    const { ctx } = world(); const p = reader(ctx, 'female', ['lesser_workings_of_death'], 'The larder keeper');
+    expect(order(ctx, { kind: 'mysticAssign', person: p.id, working: 'the_still_larder', target: SEAT }).ok).toBe(true);
+    ctx.world.year++; phase('mystic', ctx);
+    const control = loadGame(transport(saveGame(ctx)), bundle);
+    control.world.people.mustGet(p.id).spellsKnown = [];
+    const kept = economyReading(ctx).provision!.reduce((sum,s) => sum + s.crowns, 0);
+    expect(kept).toBeGreaterThan(0); expect(kept).toBeLessThanOrEqual(8 * .3);
+    expect(economyReading(control).upkeep - economyReading(ctx).upkeep).toBeCloseTo(kept);
+    const before = ctx.world.treasury; const report = tickEconomy(ctx);
+    expect(ctx.world.treasury).toBeCloseTo(before + report.net);
+    expect(ctx.world.mystic.assignments[0]!.service.crownsKept).toBeCloseTo(kept);
+    const other = reader(ctx, 'male', ['lesser_workings_of_thermal'], 'Another keeper');
+    expect(order(ctx, { kind: 'mysticAssign', person: other.id, working: 'the_dry_store', target: SEAT }).ok).toBe(false);
+  });
+  it('changes an actual injury and recovery term only with the learned available carer', () => {
+    const { ctx } = world();
+    const patient = place(ctx, { sex: 'female', age: 30 }); patient.acquired.health = -8;
+    patient.fieldRecoveryUntil = ctx.world.year + 4;
+    const p = reader(ctx, 'female', ['lesser_workings_of_life', 'greater_workings_of_life'], 'The carer');
+    expect(order(ctx, { kind: 'mysticAssign', person: p.id, working: 'the_mending_watch', target: { kind: 'person', person: patient.id } }).ok).toBe(true);
+    const control = loadGame(transport(saveGame(ctx)), bundle); control.world.people.mustGet(p.id).spellsKnown = [];
+    ctx.world.year++; control.world.year++; phase('mystic', ctx); phase('mystic', control);
+    expect(patient.acquired.health).toBe(-5); expect(control.world.people.mustGet(patient.id).acquired.health).toBe(-8);
+    expect(patient.fieldRecoveryUntil).toBe(control.world.people.mustGet(patient.id).fieldRecoveryUntil! - 1);
+  });
+  it('earns a study year from three real lessons and preserves the lesson count across reload', () => {
+    const { ctx } = world();
+    const books = ctx.content.spellbooks.filter(b => b.affinity === 'light').sort((a,b) => b.studyYears - a.studyYears);
+    const book = books[0]!;
+    ctx.world.library.set(book.id, { id: book.id, acquiredYear: 1041, condition: 100 });
+    const pupil = reader(ctx, 'female', [], 'The successor'); pupil.acquired.light = 100;
+    expect(beginStudy(ctx, pupil, book)).toBe(true);
+    const teacher = reader(ctx, 'female', books.map(b => b.id), 'The teacher');
+    expect(order(ctx, { kind: 'mysticAssign', person: teacher.id, working: 'the_readers_lamp', target: { kind: 'person', person: pupil.id } }).ok).toBe(true);
+    const term = ctx.world.studies.find(s => s.person === pupil.id)!; const due = term.completes;
+    for (let year=0; year<2; year++) { ctx.world.year++; phase('mystic', ctx); }
+    const loaded = loadGame(transport(saveGame(ctx)), bundle);
+    ctx.world.year++; loaded.world.year++; phase('mystic', ctx); phase('mystic', loaded);
+    expect(term.completes).toBe(due - 1);
+    expect(ctx.world.mystic.assignments[0]!.service.studyYearsKept).toBe(1);
+    expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+  });
+});
 
 function reader(ctx: SimCtx, sex: 'male' | 'female', books: string[], name: string): Person {
   const p = place(ctx, { sex, age: 30, name, awakened: true });
@@ -220,7 +348,7 @@ describe('a duty is one occupation, paid once (#1873)', () => {
     const duty = ctx.world.mystic.assignments[0]!;
     expect(order(ctx, { kind: 'mysticRelease', assignment: duty.id }).ok).toBe(true);
     expect(ctx.world.studies).toEqual([{ person: carer.id, book: 'lesser_workings_of_death', completes: ctx.world.year + 3 }]);
-    expect(ctx.world.mystic).toEqual({ assignments: [], pauses: [],
+    expect(ctx.world.mystic).toMatchObject({ assignments: [], pauses: [], services: [expect.objectContaining({ id: duty.id, ended: ctx.world.year })],
       reservedUpkeep: { year: ctx.world.year, crowns: 4 } });
   });
 
@@ -294,6 +422,6 @@ describe('duties survive save and load (#1873)', () => {
     delete saved.mystic;
     saved.format = 33;
     const loaded = loadGame(saved, bundle);
-    expect(loaded.world.mystic).toEqual({ assignments: [], pauses: [] });
+    expect(loaded.world.mystic).toEqual({ assignments: [], services: [], pauses: [] });
   });
 });

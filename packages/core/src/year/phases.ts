@@ -25,6 +25,7 @@ import {
 } from '../land.js';
 import { tickMuster } from '../muster.js';
 import { tickMystic } from '../mystic.js';
+import { tickCivilianPractice } from '../mystic-civilian.js';
 import { tickEconomy } from '../economy.js';
 import { tickCondition } from '../people/condition.js';
 import { tickAssize } from '../assize.js';
@@ -177,6 +178,7 @@ export const YEAR_PHASES: readonly Phase[] = [
       + 'writes nothing while the house keeps no duty.',
     run({ ctx }) {
       tickMystic(ctx);
+      tickCivilianPractice(ctx);
     },
   },
 

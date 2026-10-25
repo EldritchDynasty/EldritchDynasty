@@ -4267,3 +4267,14 @@ proseVariants:
   - address: core:messages#assize.covert_testimony
     of: 9ea3f8caf7f68166
     plainenglish: The Warden’s assessor read copied testimony from {WITNESS} identifying {PERSON}. The assize collected {PRICE} crowns from the participant’s household. The heralds recorded the case against the house’s standing. The testimony did not prove the orders of an unseen sponsor.
+  - address: core:messages#mystic.gap.reason.no_need
+    of: fb2572dac1d823a6
+    plainenglish: there is currently no suitable work here
+  - address: core:messages#mystic.gap.no_need
+    of: 598b2f43e09f8b47
+    plainenglish: "{PERSON} has no current work to do for {WORKING}. The duty is
+      paused and charges no annual upkeep."
+  - address: core:messages#mystic.service.closed
+    of: 49cdb8a62192a992
+    plainenglish: "{PERSON} finished keeping {WORKING}. The account records {YEARS}
+      paid years and {PRICE} crowns spent."

@@ -2354,9 +2354,13 @@ const mysticWiring: ValidationRule = {
       const affinityFits = (() => {
         const benefit = w.benefit;
         switch (benefit.kind) {
-          case 'life_care': case 'field_care': return w.affinity === 'life';
-          case 'estate_protection': return w.affinity === 'terra';
+          case 'life_care': return w.affinity === 'life' || benefit.infantReduction === 0 && ['fluid', 'thermal', 'aero', 'darkness'].includes(w.affinity);
+          case 'field_care': case 'convalescence': return w.affinity === 'life';
+          case 'estate_protection': return ['terra', 'fluid', 'aero'].includes(w.affinity);
           case 'project_support': return w.affinity === 'terra' || w.affinity === 'thermal';
+          case 'library_care': return ['light', 'death', 'darkness'].includes(w.affinity);
+          case 'household_provision': return ['thermal', 'death', 'aero'].includes(w.affinity);
+          case 'teaching': return w.affinity === 'light';
           case 'field_supply': return w.affinity === 'fluid' || w.affinity === 'thermal';
           case 'field_watch': return w.affinity === 'light' || w.affinity === 'aero';
           case 'field_concealment': return w.affinity === 'darkness';

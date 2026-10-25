@@ -9,6 +9,7 @@ import { madnessCoverOf } from './people/careers.js';
 import { landIncome } from './land.js';
 import { musterUpkeep } from './muster.js';
 import { mysticUpkeep } from './mystic.js';
+import { provisionSavings, noteProvisionSavings } from './mystic-civilian.js';
 import { msg } from './messages.js';
 
 /**
@@ -195,6 +196,7 @@ export interface EconomyReport {
   war: number;
   /** Upkeep the `mystic` phase reserved for this year's standing duties (#1873) — zero with none. */
   mystic: number;
+  provision?: { assignment: string; crowns: number }[];
   net: number;
 }
 
@@ -256,6 +258,7 @@ export function economyReading(ctx: SimCtx): EconomyReport {
   let upkeep = STANDING_COST[w.respect];
   let wages = 0;
   let labour = 0;
+  const provisionCharges = new Map<string, number>();
   for (const p of roster) {
     if (p.contract) {
       // A servant's yearly wage is quoted in marks; twenty to the crown.
@@ -270,6 +273,7 @@ export function economyReading(ctx: SimCtx): EconomyReport {
       continue;
     }
     upkeep += UPKEEP_PER_HEAD;
+    provisionCharges.set(p.id, UPKEEP_PER_HEAD + (w.year - p.born < 20 ? CHILD_SURCHARGE : 0));
     if (w.year - p.born < 20) upkeep += CHILD_SURCHARGE;
     if (w.year - p.born >= WORKING_AGE) labour += LABOUR_PER_ADULT;
   }
@@ -281,6 +285,7 @@ export function economyReading(ctx: SimCtx): EconomyReport {
     const working = members.filter((p) => w.year - p.born >= 16 && !p.contract).length;
     tithe += working * TITHE_PER_ADULT * Math.max(0, 1 - b.grievance / 100);
     upkeep += members.length * KIN_UPKEEP_PER_HEAD;
+    for (const p of members) provisionCharges.set(p.id, KIN_UPKEEP_PER_HEAD);
   }
 
   // `resource` (issue #11) — a trait's own per-year income or drain, tied to
@@ -332,8 +337,10 @@ export function economyReading(ctx: SimCtx): EconomyReport {
   // The same discipline: the phase reserved it, this is the one place it is paid.
   const mystic = mysticUpkeep(ctx);
 
+  const provision = provisionSavings(ctx, provisionCharges);
+  upkeep -= provision.reduce((sum, saved) => sum + saved.crowns, 0);
   const net = income + tithe + labour + resource - upkeep - wages - war - mystic;
-  return { income, upkeep, wages, tithe, labour, resource, war, mystic, net };
+  return { income, upkeep, wages, tithe, labour, resource, war, mystic, net, ...(provision.length ? { provision } : {}) };
 }
 
 /** Recurring gross receipts before a shock; careers have their own year phase. */
@@ -347,6 +354,7 @@ export function recurringGrossIncome(ctx: SimCtx): number {
 export function tickEconomy(ctx: SimCtx): EconomyReport {
   const w = ctx.world;
   const report = economyReading(ctx);
+  noteProvisionSavings(ctx, report.provision ?? []);
   w.treasury += report.net;
 
   // A house cannot borrow forever. Debt bites standing rather than stopping

@@ -62,7 +62,8 @@ export function hasLearned(p: Person, w: MysticWorkingDef): boolean {
 export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { benefit: MysticFieldBenefit } {
   switch (w.benefit.kind) {
     case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': return true;
-    case 'life_care': case 'estate_protection': case 'household_protection': case 'covert_support': case 'project_support': return false;
+    case 'life_care': case 'estate_protection': case 'household_protection': case 'covert_support': case 'project_support':
+    case 'library_care': case 'household_provision': case 'convalescence': case 'teaching': return false;
     default: return assertNever(w.benefit, 'field working');
   }
 }
@@ -111,10 +112,24 @@ export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: Mys
 
 /** Can this working be done for this place at all, today? */
 export function targetGap(
-  ctx: SimCtx, working: MysticWorkingDef, site: SceneSite, bindings: Record<string, string>, house = ctx.world.playerHouse,
+  ctx: SimCtx, working: MysticWorkingDef, site: SceneSite, bindings: Record<string, string>, house = ctx.world.playerHouse, practitioner?: Person,
 ): MysticGap | undefined {
   const b = working.benefit;
   switch (b.kind) {
+    case 'library_care': {
+      if (house !== ctx.world.playerHouse || site.kind !== 'book' || !ctx.world.library.has(site.book)) return 'target_lost';
+      return ctx.world.library.get(site.book)?.restoresAt === undefined ? undefined : 'not_resident';
+    }
+    case 'convalescence': case 'teaching': {
+      if (site.kind !== 'person') return 'target_lost';
+      const p = ctx.world.people.get(site.person);
+      if (!p || p.status !== 'alive' || !isFamilyOf(ctx, p, house)) return 'target_lost';
+      if (!resolvePresence(ctx, site, {}).people.includes(p.id)) return 'not_resident';
+      if (b.kind === 'convalescence') return (p.acquired.health ?? 0) < 0 || (p.fieldRecoveryUntil ?? 0) > ctx.world.year ? undefined : 'no_need';
+      const study = ctx.world.studies.find(s => s.person === p.id);
+      if (!study) return 'no_need';
+      return practitioner && !practitioner.spellsKnown.some(id => String(id) === study.book) ? 'unlearned' : undefined;
+    }
     case 'project_support': {
       if (house !== ctx.world.playerHouse || site.kind !== 'parcel') return 'target_lost';
       const held = heldParcel(ctx, site.parcel);
@@ -140,7 +155,7 @@ export function targetGap(
       const place = dutyPlaceOf(ctx, site, bindings);
       return place && 'hall' in place ? undefined : 'target_lost';
     }
-    case 'life_care': {
+    case 'life_care': case 'household_provision': {
       if (site.kind !== 'hall') return 'target_lost';
       const place = dutyPlaceOf(ctx, site, bindings);
       if (!place || !('hall' in place)) return 'target_lost';
@@ -191,6 +206,7 @@ export interface MysticOrder { person: string; working: string; target: SceneSit
 function coverageKey(ctx: SimCtx, working: MysticWorkingDef, target: SceneSite, bindings: Record<string, string>): string {
   const b = working.benefit;
   return JSON.stringify({ place: dutyPlaceOf(ctx, target, bindings), kind: b.kind,
+    ...(target.kind === 'book' ? { book: target.book } : target.kind === 'person' ? { person: target.person } : {}),
     ...(working.collaborator ? { role: working.id } : {}),
     ...(b.kind === 'covert_support' ? { role: b.role } : {}),
     ...(b.kind === 'household_protection' ? { stage: b.stage, scope: b.scope,
@@ -214,7 +230,7 @@ export function quoteDuty(ctx: SimCtx, o: MysticOrder, house = ctx.world.playerH
 
   const p = w.people.get(o.person);
   const context = { house, ...(working.benefit.kind === 'covert_support' ? { target: o.target } : {}) };
-  const gap = practitionerGap(ctx, p, working, context) ?? targetGap(ctx, working, o.target, o.bindings ?? {}, house);
+  const gap = practitionerGap(ctx, p, working, context) ?? targetGap(ctx, working, o.target, o.bindings ?? {}, house, p);
   if (gap) return { ...quote, ok: false, gap, reason: gapReason(ctx, gap) };
   if (w.mystic.assignments.some((a) => a.practitioner === o.person)) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.one_duty', 'they already keep a duty') };
@@ -310,6 +326,15 @@ export function releaseDuty(ctx: SimCtx, assignment: string): OrderResult {
  */
 function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
   const w = ctx.world;
+  if (!w.mystic.services.some(s => s.id === a.id)) {
+    const person = w.people.get(a.practitioner);
+    const working = workingDef(ctx, a.working);
+    w.mystic.services.push({ ...structuredClone(a), ended: w.year,
+      account: msg(ctx, 'mystic.service.closed', '{PERSON}’s service keeping {WORKING} ended after {YEARS} paid years, with {PRICE} crowns spent.',
+        { PERSON: person?.name ?? a.practitioner, WORKING: working ? workingName(ctx, working) : a.working,
+          YEARS: String(a.service.servedYears), PRICE: String(Math.round(a.service.spent * 100) / 100) }),
+    });
+  }
   w.mystic.assignments = w.mystic.assignments.filter((x) => x !== a);
   resumeDutyStudies(ctx, a.id, lastTurned, dutyHouse(ctx, a));
 }
@@ -374,7 +399,7 @@ export function tickMystic(ctx: SimCtx): void {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
     const gap = !working ? 'target_lost'
-      : practitionerGap(ctx, p, working, a) ?? targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a));
+      : practitionerGap(ctx, p, working, a) ?? targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a), p);
 
     if (gap && ENDS.has(gap)) {
       if (p && working) lapseLine(ctx, a, p, working, gap);
@@ -414,7 +439,7 @@ export function tickMystic(ctx: SimCtx): void {
     }
     if (working!.benefit.kind === 'life_care') {
       const place = dutyPlaceOf(ctx, a.target, a.bindings);
-      a.attended = place && 'hall' in place ? hallWards(ctx, place.hall, a.practitioner, working!.benefit.maxWards) : [];
+      a.attended = place && 'hall' in place ? hallWards(ctx, place.hall, a.practitioner, working!.benefit.maxWards, working!.benefit.maxWardAge) : [];
     }
     if (wasSuspended && dutyHouse(ctx, a) === w.playerHouse) {
       w.chronicle.push({
@@ -432,12 +457,12 @@ export function tickMystic(ctx: SimCtx): void {
  * `maxWards`. A reader cannot sit up with eighteen people; they choose the
  * cradle and the old man's room, which is what anybody would.
  */
-function hallWards(ctx: SimCtx, hall: string, carer: string, max: number): string[] {
+function hallWards(ctx: SimCtx, hall: string, carer: string, max: number, maxAge = Infinity): string[] {
   const w = ctx.world;
   const deployed = deployedPeople(ctx);
   const duty = dutyPlaces(ctx);
   return w.people.household(w.playerHouse, w.year)
-    .filter((p) => p.id !== carer && attendsHall(ctx, hall, p, deployed, duty))
+    .filter((p) => p.id !== carer && w.year - p.born <= maxAge && attendsHall(ctx, hall, p, deployed, duty))
     .map((p) => ({ id: p.id, risk: ordinaryRisk(ctx, p) }))
     .sort((a, b) => b.risk - a.risk || a.id.localeCompare(b.id))
     .slice(0, max)
@@ -464,7 +489,7 @@ export function liveDuties(ctx: SimCtx, kind: MysticWorkingDef['benefit']['kind'
     const working = workingDef(ctx, a.working);
     if (!working) continue;
     const p = w.people.get(a.practitioner);
-    if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a))) continue;
+    if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a), p)) continue;
     out.push({ a, working, p: p! });
   }
   return out.filter(({ a, working, p }) => working.benefit.kind === kind && (!working.collaborator || out.some(partner =>
@@ -662,6 +687,10 @@ function fieldTerms(ctx: SimCtx, working: MysticWorkingDef): string | undefined 
 function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): string {
   const w = ctx.world;
   switch (site.kind) {
+    case 'book': {
+      const book = ctx.content.spellbook(site.book);
+      return book ? proseForContentField(ctx, 'spellbooks', book.id, 'name', book.name) : site.book;
+    }
     case 'covert': {
       const o = w.covert.operations.find(o => o.plan.id === site.operation);
       return msg(ctx, 'mystic.place.covert', 'the expedition concerning {PERSON}',
@@ -710,6 +739,7 @@ export function gapReason(ctx: SimCtx, gap: MysticGap): string {
     case 'unpaid': return msg(ctx, 'mystic.gap.reason.unpaid', 'the house cannot pay its upkeep');
     case 'too_young': return msg(ctx, 'mystic.gap.reason.too_young', 'they are too young to keep it');
     case 'wounded': return msg(ctx, 'mystic.gap.reason.wounded', 'they are recovering from a field injury');
+    case 'no_need': return msg(ctx, 'mystic.gap.reason.no_need', 'there is no current work of that kind here');
     default: return assertNever(gap, 'mystic gap');
   }
 }
@@ -729,6 +759,7 @@ function gapLine(ctx: SimCtx, gap: MysticGap, v: Record<string, string>): string
     case 'unpaid': return msg(ctx, 'mystic.gap.unpaid', '{WORKING} lapsed this year. The house could not pay for it, and {PERSON} could not keep it on nothing.', v);
     case 'too_young': return msg(ctx, 'mystic.gap.too_young', '{WORKING} lapsed this year. {PERSON} is too young to keep it.', v);
     case 'wounded': return msg(ctx, 'mystic.gap.wounded', '{PERSON} is recovering from a field injury. {WORKING} cannot be kept until the wound has healed.', v);
+    case 'no_need': return msg(ctx, 'mystic.gap.no_need', '{PERSON} kept the place for {WORKING}, but there was no current work of that kind. The duty waits without charging upkeep.', v);
     default: return assertNever(gap, 'mystic gap line');
   }
 }
@@ -988,6 +1019,13 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
   const out: MysticTarget[] = [];
   const b = working.benefit;
   switch (b.kind) {
+    case 'library_care':
+      return [...w.library.keys()].map(book => ({ target: { kind: 'book' as const, book }, bindings: {}, name: placeName(ctx, { kind: 'book', book }, {}) }));
+    case 'convalescence': case 'teaching':
+      return w.people.household(w.playerHouse, w.year).flatMap(p => {
+        const target: SceneSite = { kind: 'person', person: p.id };
+        return targetGap(ctx, working, target, {}) ? [] : [{ target, bindings: {}, name: p.name }];
+      });
     case 'covert_support':
       return w.covert.operations.filter(o => o.stage === 'preparing' || o.stage === 'approach').map(o => {
         const target: SceneSite = { kind: 'covert', operation: o.plan.id };
@@ -1005,7 +1043,7 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
       // Hall protection uses the same concrete halls as household care.
       return mysticTargets(ctx, { ...working, benefit: { kind: 'life_care', mortalityReduction: 0, infantReduction: 0, maxWards: 1 } });
     }
-    case 'life_care': {
+    case 'life_care': case 'household_provision': {
       out.push({ target: { kind: 'hall', hall: 'main' }, bindings: {}, name: placeName(ctx, { kind: 'hall', hall: 'main' }, {}) });
       for (const branch of w.branches.values()) {
         if (!isActiveBranch(branch)) continue;
