@@ -45,7 +45,7 @@ interface Approach {
 }
 
 function freeAdult(ctx: SimCtx, person: Person | undefined): person is Person {
-  return person !== undefined && person.status === 'alive' && !person.becomesGuardian
+  return person !== undefined && person.status === 'alive'
     && ctx.world.year - person.born >= 16
     && currentMembership(person, ctx.world.year)?.kind !== 'hostage';
 }
