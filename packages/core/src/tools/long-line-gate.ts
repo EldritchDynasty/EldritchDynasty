@@ -25,6 +25,7 @@ import { heldAcres } from '../land.js';
 import { chapterOf } from '../chapter.js';
 import { bearingOf, marketAppetite } from '../bearing.js';
 import { closeTheLedger, livingBlood, readTheChronicle } from '../ending.js';
+import { answerYears, clauseYears as recoveredClauseYears } from '../events/answers.js';
 import {
   ALL_ENDINGS, configureAscendant, prepareAscendantYear, resolveAscendantYear,
 } from './ending-gate.js';
@@ -133,7 +134,7 @@ export interface LongRun {
   frameFirst?: number;
   frameLast?: number;
   frameMaxSilence: number;
-  /** Longest gap between answers (frames ∪ clauses), edges included (#1897). */
+  /** Longest gap between answers (frames ∪ clauses ∪ glimpses), edges included (#1897). */
   answerMaxSilence: number;
   /** The year that gap opens: START_YEAR when the run is quiet from the signing. */
   answerSilenceFrom: number;
@@ -255,6 +256,11 @@ export function longestSilence(
     if (gap > best.years) best = { years: gap, from: edges[i - 1]! };
   }
   return best;
+}
+
+/** The same answers the frame reads, bounded by the campaign actually played. */
+export function longestAnswerSilence(ctx: SimCtx): { years: number; from: number } {
+  return longestSilence(answerYears(ctx), START_YEAR, Math.min(END_YEAR, ctx.world.year));
 }
 
 function summary(xs: number[]): string {
@@ -524,10 +530,7 @@ function runOne(bundle: Content, seed: number, years: number, policy: LongLinePo
   const matches = w.decisionLog.filter((d) => d.kind === 'match').length;
   const records = w.decisionLog.filter((d) => d.kind === 'record').length;
 
-  const clauseEntries = w.chronicle.filter((entry) =>
-    ctx.content.clauses.some((c) => c.name === entry.title && c.text === entry.text),
-  );
-  const clauseYears = clauseEntries.map((e) => e.year);
+  const clauseYears = recoveredClauseYears(ctx);
   const namedClauseBearingAges = w.age.ended.filter((age) =>
     age.named && ctx.content.age(age.age)?.clauseBearing === true
   ).length;
@@ -538,9 +541,7 @@ function runOne(bundle: Content, seed: number, years: number, policy: LongLinePo
   const frameYears = w.frame.entries.map((e) => e.year).sort((a, b) => a - b);
   const lastYear = Math.min(END_YEAR, w.year);
   const frameMaxSilence = longestSilence(frameYears, START_YEAR, lastYear).years;
-  // #1897's "answer": an interlude or a recovered clause, the two places the
-  // run tells the player something new about the bargain.
-  const answerSilence = longestSilence([...frameYears, ...clauseYears], START_YEAR, lastYear);
+  const answerSilence = longestAnswerSilence(ctx);
 
   const chapters = w.age.ended
     .map((ended) => chapterOf(ctx, ended))
@@ -802,7 +803,7 @@ export function reportLongLine(runs: LongRun[], years: number): string {
   lines.push('  max silence incl. campaign edges: ' + summary(nums((r) => r.frameMaxSilence)));
   const fromSigning = runs.filter((r) => r.answerSilenceFrom === START_YEAR).length;
   const midgameFrom = runs.flatMap((r) => r.answerSilenceFrom === START_YEAR ? [] : [r.answerSilenceFrom]);
-  lines.push('  longest answer silence (frames ∪ clauses): ' + summary(nums((r) => r.answerMaxSilence))
+  lines.push('  longest answer silence (frames ∪ clauses ∪ glimpses): ' + summary(nums((r) => r.answerMaxSilence))
     + ' · max ' + Math.max(0, ...nums((r) => r.answerMaxSilence)));
   lines.push('    opens at the signing ' + fromSigning + '/' + countRuns
     + (midgameFrom.length ? ' · otherwise opens ' + summary(midgameFrom) : ''));

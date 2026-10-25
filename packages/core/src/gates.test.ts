@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { EventTemplateS, SlotSpecS, type ContentBundle } from '@ed/schema';
+import { EventTemplateS, SlotSpecS, indexContent, outcomesOf, type ContentBundle } from '@ed/schema';
 import { playGateBatch } from './tools/gate-batch.js';
 import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateHost, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
@@ -25,7 +25,9 @@ import { gateWar, warGateInputs } from './tools/war-gate.js';
 import { gateSigning } from './tools/signing-gate.js';
 import { gateUnwitnessedOutcomeReach } from './tools/outcome-reach-blocking.js';
 import { libraryNeutralityVerdict, type LibraryNeutralityMetrics } from './tools/library-gate.js';
-import { judgeLongitudinalDelta, ladderBlockerKind, longestSilence } from './tools/long-line-gate.js';
+import { judgeLongitudinalDelta, ladderBlockerKind, longestAnswerSilence, longestSilence } from './tools/long-line-gate.js';
+import { proseForClause, setProseMode, setProseVariants } from './prose.js';
+import { digestOf } from './save.js';
 import { CAMPAIGN_YEARS } from './campaign.js';
 import { makeRng } from './rng.js';
 import { place, testWorld } from './testing.js';
@@ -504,6 +506,36 @@ describe('#201 late ladder diagnosis', () => {
 });
 
 describe('#1897 the longest answer silence', () => {
+  it.each(['original', 'plainenglish'] as const)('counts the game\'s three answer kinds in %s without changing the save (#1924)', mode => {
+    const content = loadContent();
+    const source = structuredClone(content.bundle);
+    const event = source.events.find(e => e.id === 'the_heir_reads_the_tally')!;
+    const glimpse = outcomesOf(event, true).find(o => o.id === 'the_three_sacks')!;
+    glimpse.tags.push('glimpse');
+    // Only tags changed; retain the authored file addresses for prose lookup.
+    const ctx = testWorld({ ...indexContent(source), sourceOf: id => content.sourceOf(id) });
+    setProseVariants(ctx, content.proseVariants);
+    setProseMode(ctx, mode);
+    ctx.world.year = 1542;
+    expect(longestAnswerSilence(ctx)).toEqual({ years: 500, from: 1042 });
+    ctx.world.frame.entries.push({ year: 1142, eventId: 'frame_x', outcomeId: 'o', text: 'An interlude.' });
+    expect(longestAnswerSilence(ctx)).toEqual({ years: 400, from: 1142 });
+    ctx.world.decisionLog.push({ kind: 'outcome', year: 1242, event: event.id, outcomeId: glimpse.id, fill: {} });
+    expect(longestAnswerSilence(ctx)).toEqual({ years: 300, from: 1242 });
+    const clause = content.clauses.find(c => !c.known)!;
+    const prose = proseForClause(ctx, clause);
+    if (mode === 'plainenglish') expect(prose.text).not.toBe(clause.text);
+    ctx.world.clausesRecovered.add(clause.id);
+    ctx.world.chronicle.push({ year: 1342, weight: 'illuminated', title: prose.name, text: prose.text, named: true });
+    ctx.world.chronicle.push({ year: 1442, weight: 'illuminated', title: prose.name, text: 'An unrelated page.', named: true });
+    ctx.world.decisionLog.push({ kind: 'outcome', year: 1443, event: event.id, outcomeId: 'unknown', fill: {} });
+    const before = digestOf(ctx);
+    expect(longestAnswerSilence(ctx)).toEqual({ years: 200, from: 1342 });
+    expect(digestOf(ctx)).toBe(before);
+    ctx.world.year = 1392;
+    expect(longestAnswerSilence(ctx)).toEqual({ years: 100, from: 1042 });
+  });
+
   it('counts the signing and the last year as ends of a gap', () => {
     expect(longestSilence([1100, 1180], 1042, 1542)).toEqual({ years: 362, from: 1180 });
     expect(longestSilence([1150, 1500], 1042, 1542)).toEqual({ years: 350, from: 1150 });
