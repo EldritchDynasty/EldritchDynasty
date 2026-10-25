@@ -11,13 +11,13 @@ import { ordinaryRisk } from './people/demography.js';
 import { proseForContentField } from './prose.js';
 import { streamFor } from './rng.js';
 import { captureFamily } from './people/captivity.js';
-import { relate, sentimentBetween } from './people/relationships.js';
+import { relate } from './people/relationships.js';
 
 /**
  * MYSTIC DUTIES (#1866 B / #1873) — learn, assign, pay, serve, answer for it.
  *
  * A learned reader can be named to ONE standing duty for one real place: a
- * carer for a hall, a warden for a parcel. The duty is a Table order; nothing
+ * carer for a hall, a warden for a parcel, or a specialist for one commitment. The duty is a Table order; nothing
  * renews it and nothing asks about it again. Each year the `mystic` phase
  * re-reads whether the practitioner can still do it and reserves the upkeep
  * before any benefit is possible. The benefit itself is read where the outcome
@@ -29,9 +29,9 @@ import { relate, sentimentBetween } from './people/relationships.js';
  * A practitioner is anybody `canLearn` admits who has finished the books; a
  * woman's Threshold working is exactly as good as a man's.
  * INVARIANT 16: practice is not a post. `canHoldPost` is never asked.
- * INVARIANT 2: the system only prevents deaths. It never causes one.
- * INVARIANT 8: the phase draws no dice. The life-care reader reuses the one
- * mortality draw `rollDeath` was already making.
+ * INVARIANT 2: field deaths use PersonStore.kill. Household care only prevents deaths.
+ * INVARIANT 8: the reservation phase draws no dice. Field risks/opportunities
+ * use separate named streams; Life care reuses the existing mortality draw.
  */
 
 /** The youngest a reader can be trusted alone with somebody else's life or land. */
@@ -290,6 +290,7 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
       }
       continue;
     }
+    if (dutyHouse(ctx, a) !== w.playerHouse) continue;
     if (!w.library.has(pause.book) || w.library.get(pause.book)?.restoresAt !== undefined) {
       w.chronicle.push({
         year: w.year, weight: 'line', named: false, people: [p.id],
@@ -299,7 +300,6 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
       });
       continue;
     }
-    if (dutyHouse(ctx, a) !== w.playerHouse) continue;
     if (p.spellsKnown.some((k) => String(k) === pause.book) || w.studies.some((s) => s.person === p.id)) continue;
     w.studies.push({ person: p.id, book: pause.book, completes: lastTurned + pause.remainingYears });
   }
@@ -314,7 +314,7 @@ export function tickMystic(ctx: SimCtx): void {
   const w = ctx.world;
   delete w.mystic.reservedUpkeep;
   let reserved = 0;
-  for (const c of w.muster.commitments) if (c.status === 'in_the_field' && c.opponent) prepareFieldOpposition(ctx, c.id);
+  for (const c of w.muster.commitments) if (c.status === 'in_the_field') prepareFieldOpposition(ctx, c.id);
   for (const a of [...w.mystic.assignments]) {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
@@ -521,6 +521,19 @@ function workingName(ctx: SimCtx, w: MysticWorkingDef): string {
   return proseForContentField(ctx, 'mysticWorkings', w.id, 'name', w.name);
 }
 
+function fieldPlaceName(ctx: SimCtx, year: number): string {
+  return msg(ctx, 'mystic.place.field', 'the levy raised in {YEAR}', { YEAR: String(year) });
+}
+
+function fieldTerms(ctx: SimCtx, working: MysticWorkingDef): string | undefined {
+  if (!isFieldWorking(working)) return undefined;
+  const risk = working.benefit.risk;
+  const range = (n: number) => `${Math.round(n * 1000) / 10}–${Math.round(n * 2000) / 10}%`;
+  return msg(ctx, 'mystic.field.terms',
+    'One year on the road. No home duty while away. Each field year, before concealment: death {DEATH}, capture {CAPTURE}, injury {INJURY}, according to the tide. Capture requires an opposing house able to hold the reader. An injury stops service for two years; ransom costs {RANSOM} crowns.',
+    { DEATH: range(risk.death), CAPTURE: range(risk.capture), INJURY: range(risk.injury), RANSOM: String(risk.ransom) });
+}
+
 function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): string {
   const w = ctx.world;
   switch (site.kind) {
@@ -534,12 +547,11 @@ function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string
       const anchor = w.people.get(bindings[typeof site.hall === 'string' ? '' : site.hall.slot] ?? '');
       return msg(ctx, 'mystic.place.branch', 'the hall where {PERSON} lives', { PERSON: anchor?.name ?? '' });
     }
-    case 'muster': {
-      const c = w.muster.commitments.find(c => c.id === site.commitment);
-      return c ? msg(ctx, 'mystic.place.field', 'the levy raised in {YEAR}', { YEAR: String(c.began) })
+    case 'party': case 'elsewhere': case 'muster': {
+      const c = site.kind === 'muster' ? w.muster.commitments.find(c => c.id === site.commitment) : undefined;
+      return c ? fieldPlaceName(ctx, c.began)
         : msg(ctx, 'mystic.place.elsewhere', 'elsewhere');
     }
-    case 'party': case 'elsewhere': return msg(ctx, 'mystic.place.elsewhere', 'elsewhere');
     default: return assertNever(site, 'duty place');
   }
 }
@@ -607,9 +619,9 @@ export function fieldSupplySaving(ctx: SimCtx, c: Commitment): number {
   return b?.kind === 'field_supply' ? Math.min(c.men, b.maxMen) * b.crownsPerMan : 0;
 }
 
-function fieldReceipt(ctx: SimCtx, people: string[], key: string, original: string, values: Record<string, string>): void {
+function fieldReceipt(ctx: SimCtx, people: string[], text: string): void {
   ctx.world.chronicle.push({ year: ctx.world.year, weight: 'line', named: true, people,
-    text: msg(ctx, key, original, values) });
+    text });
 }
 
 /** Called only when the unchanged mortality draw falls between the two hazards. */
@@ -618,9 +630,7 @@ export function noteFieldOfficerKept(ctx: SimCtx, c: Commitment, officer: Person
   if (!care) return;
   care.a.service.livesKept += 1;
   markUseful(care.a, ctx.world.year);
-  fieldReceipt(ctx, [care.p.id, officer.id], 'mystic.field.officer_kept',
-    '{PERSON} dressed {OFFICER}’s wound in the camp. {OFFICER} lived to come off the roll.',
-    { PERSON: care.p.name, OFFICER: officer.name });
+  fieldReceipt(ctx, [care.p.id, officer.id], msg(ctx, 'mystic.field.officer_kept', '{PERSON} dressed {OFFICER}’s wound in the camp. {OFFICER}’s name stayed on the roll.', { PERSON: care.p.name, OFFICER: officer.name }));
 }
 
 /** Fractional recoverable losses are carried forward, bounded by this year's actual loss. */
@@ -633,9 +643,7 @@ export function fieldCasualties(ctx: SimCtx, c: Commitment, ordinaryLost: number
   if (!saved) return ordinaryLost;
   care.a.service.menKept = (care.a.service.menKept ?? 0) + saved;
   markUseful(care.a, ctx.world.year);
-  fieldReceipt(ctx, [care.p.id], 'mystic.field.men_kept',
-    '{PERSON} kept {MEN} of the levy alive through the camp sickness and the wounds. Their names stayed on the roll.',
-    { PERSON: care.p.name, MEN: String(saved) });
+  fieldReceipt(ctx, [care.p.id], msg(ctx, 'mystic.field.men_kept', '{PERSON} kept {MEN} of the levy alive through the camp sickness and the wounds. Their names stayed on the roll.', { PERSON: care.p.name, MEN: String(saved) }));
   return ordinaryLost - saved;
 }
 
@@ -646,9 +654,7 @@ export function tickFieldAccount(ctx: SimCtx, c: Commitment): void {
   if (supply && saved > 0) {
     supply.a.service.crownsKept = (supply.a.service.crownsKept ?? 0) + saved;
     markUseful(supply.a, ctx.world.year);
-    fieldReceipt(ctx, [supply.p.id], 'mystic.field.supplies',
-      '{PERSON} kept the camp’s water and stores fit to use. The levy’s account came to {CROWNS} crowns less this year.',
-      { PERSON: supply.p.name, CROWNS: String(Math.round(saved * 100) / 100) });
+    fieldReceipt(ctx, [supply.p.id], msg(ctx, 'mystic.field.supplies', '{PERSON} kept the camp’s water and stores fit to use. The levy’s account came to {CROWNS} crowns less this year.', { PERSON: supply.p.name, CROWNS: String(Math.round(saved * 100) / 100) }));
   }
   const watch = fieldDuty(ctx, c, 'field_watch');
   if (!watch || watch.working.benefit.kind !== 'field_watch') return;
@@ -660,14 +666,10 @@ export function tickFieldAccount(ctx: SimCtx, c: Commitment): void {
     c.credit += watch.working.benefit.credit;
     watch.a.service.opportunities = (watch.a.service.opportunities ?? 0) + 1;
     markUseful(watch.a, ctx.world.year);
-    fieldReceipt(ctx, [watch.p.id], 'mystic.field.opportunity',
-      '{PERSON} found a way past the hidden approach. The Warden’s clerk entered {CREDIT} more credit against the house’s name.',
-      { PERSON: watch.p.name, CREDIT: String(watch.working.benefit.credit) });
+    fieldReceipt(ctx, [watch.p.id], msg(ctx, 'mystic.field.opportunity', '{PERSON} found a way past the hidden approach. The Warden’s clerk entered {CREDIT} more credit against the house’s name.', { PERSON: watch.p.name, CREDIT: String(watch.working.benefit.credit) }));
   } else if (enemy && roll < chance) {
     markUseful(enemy.a, ctx.world.year);
-    fieldReceipt(ctx, [watch.p.id, enemy.p.id], 'mystic.field.contested_watch',
-      '{PERSON} could not read the enemy’s movement. {ENEMY} had been keeping it out of sight.',
-      { PERSON: watch.p.name, ENEMY: enemy.p.name });
+    fieldReceipt(ctx, [watch.p.id, enemy.p.id], msg(ctx, 'mystic.field.contested_watch', '{PERSON} could not read the enemy’s movement. {ENEMY} had been keeping it out of sight.', { PERSON: watch.p.name, ENEMY: enemy.p.name }));
   }
 }
 
@@ -678,11 +680,22 @@ function prepareFieldOpposition(ctx: SimCtx, commitment: string): void {
   if (!c || !w.mystic.assignments.some(a => dutyHouse(ctx, a) === w.playerHouse
     && a.target.kind === 'muster' && a.target.commitment === c.id)) return;
   if (!c.opponent) {
-    const hostile = [...w.houses.keys()].filter(h => h !== w.playerHouse && (
-      sentimentBetween(w, h, w.playerHouse) < 0 || sentimentBetween(w, w.playerHouse, h) < 0
-      || [...w.relationships.values()].some(r => ((r.from === h && r.to === w.playerHouse)
-        || (r.from === w.playerHouse && r.to === h)) && r.grudges.some(g => g.severity > 0))));
-    const opponent = hostile.sort()[0];
+    const houseOf = (endpoint: string): string | undefined => {
+      if (w.houses.has(endpoint)) return endpoint;
+      const p = w.people.get(endpoint);
+      if (!p) return undefined;
+      const membership = currentMembership(p, w.year);
+      return membership?.kind === 'hostage' ? p.captivity?.home.house : membership?.house;
+    };
+    const hostile = new Set<string>();
+    for (const relationship of w.relationships.values()) {
+      if (relationship.sentiment >= 0 && !relationship.grudges.some(g => g.severity > 0)) continue;
+      const from = houseOf(relationship.from);
+      const to = houseOf(relationship.to);
+      const other = from === w.playerHouse ? to : to === w.playerHouse ? from : undefined;
+      if (other && other !== w.playerHouse && w.houses.has(other)) hostile.add(other);
+    }
+    const opponent = [...hostile].sort()[0];
     if (opponent) c.opponent = opponent;
   }
   const house = c.opponent;
@@ -721,13 +734,12 @@ export function tickFieldRisks(ctx: SimCtx, c: Commitment): void {
     const roll = streamFor(w, 'mystic-field-risk', c.id, p!.id).next();
     if (roll < death) {
       w.people.kill(p!.id, w.year, msg(ctx, 'mystic.field.cause', 'while keeping a working with the levy'));
-      fieldReceipt(ctx, [p!.id], 'mystic.field.lost', '{PERSON} did not come back from the field working. The house’s duty there ended.', { PERSON: p!.name });
+      fieldReceipt(ctx, [p!.id], msg(ctx, 'mystic.field.lost', '{PERSON} did not come back from the field working. The duty ended there.', { PERSON: p!.name }));
       finishFieldDuty(ctx, a, w.year - 1);
     } else if (roll < death + capture * (1 - protection)) {
       if (conceal && observer && roll >= death + capture * (1 - hidden)) {
         markUseful(observer.a, w.year);
-        fieldReceipt(ctx, [p!.id, observer.p.id], 'mystic.field.screen_broken',
-          '{ENEMY} found the covered path. {PERSON}’s concealment did not hold.', { ENEMY: observer.p.name, PERSON: p!.name });
+        fieldReceipt(ctx, [p!.id, observer.p.id], msg(ctx, 'mystic.field.screen_broken', '{ENEMY} found the covered path. {PERSON}’s concealment did not hold.', { ENEMY: observer.p.name, PERSON: p!.name }));
       }
       if (house !== w.playerHouse) {
         // An opposing observer can abandon the field. Family captivity/ransom
@@ -736,15 +748,12 @@ export function tickFieldRisks(ctx: SimCtx, c: Commitment): void {
       } else if (c.opponent && captureFamily(ctx, p!.id, c.opponent, risk.ransom)) finishFieldDuty(ctx, a, w.year - 1);
     } else if (conceal && roll < death + capture) {
       markUseful(conceal.a, w.year);
-      fieldReceipt(ctx, [p!.id, conceal.p.id], 'mystic.field.hidden_return',
-        '{PERSON} came back by a covered path. {READER} kept the pursuers from finding it.', { PERSON: p!.name, READER: conceal.p.name });
+      fieldReceipt(ctx, [p!.id, conceal.p.id], msg(ctx, 'mystic.field.hidden_return', '{PERSON} came back by a covered path. {READER} kept the pursuers from finding it.', { PERSON: p!.name, READER: conceal.p.name }));
     } else if (roll < death + capture + risk.injury * exposure) {
       p!.fieldRecoveryUntil = w.year + 2;
       a.status = 'suspended';
       a.reason = 'wounded';
-      fieldReceipt(ctx, [p!.id], 'mystic.field.wounded',
-        '{PERSON} was hurt while keeping the field working. The duty will wait until {YEAR}.',
-        { PERSON: p!.name, YEAR: String(p!.fieldRecoveryUntil) });
+      fieldReceipt(ctx, [p!.id], msg(ctx, 'mystic.field.wounded', '{PERSON} was hurt while keeping the field working. The duty will wait until {YEAR}.', { PERSON: p!.name, YEAR: String(p!.fieldRecoveryUntil) }));
     }
   }
 }
@@ -755,8 +764,9 @@ function finishFieldDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): 
     const commitment = a.target.commitment;
     const c = w.muster.commitments.find(c => c.id === commitment);
     const p = w.people.get(a.practitioner);
-    if (c && dutyHouse(ctx, a) === w.playerHouse) {
-      (c.fieldService ??= []).push({ practitioner: a.practitioner, working: a.working,
+    if (c) {
+      (c.fieldService ??= []).push({ id: a.id, practitioner: a.practitioner, working: a.working,
+        ...(a.house ? { house: a.house } : {}),
         service: { ...a.service }, ended: w.year,
         fate: p?.captivity ? 'captured' : p?.status === 'dead' ? 'dead' : p && isCurrentFamily(ctx, p) ? 'returned' : 'departed' });
     }
@@ -772,10 +782,8 @@ export function finishFieldService(ctx: SimCtx, c: Commitment): void {
       const p = ctx.world.people.get(a.practitioner);
       if (p) {
         if (a.service.usefulYears) relate(ctx.world, ctx.world.playerHouse, p.id, Math.min(10, a.service.usefulYears), ['obligation']);
-        fieldReceipt(ctx, [p.id], 'mystic.field.returned',
-          '{PERSON}’s field account closed: {MEN} levy men kept, {LIVES} officers kept, {CROWNS} crowns saved on stores, and {SPENT} crowns spent on the duty.',
-          { PERSON: p.name, MEN: String(a.service.menKept ?? 0), LIVES: String(a.service.livesKept),
-            CROWNS: String(Math.round((a.service.crownsKept ?? 0) * 100) / 100), SPENT: String(a.service.spent) });
+        fieldReceipt(ctx, [p.id], msg(ctx, 'mystic.field.returned', '{PERSON}’s field account closed: {MEN} levy men kept, {LIVES} officers kept, {CROWNS} crowns saved on stores, and {SPENT} crowns spent on the duty.', { PERSON: p.name, MEN: String(a.service.menKept ?? 0), LIVES: String(a.service.livesKept),
+            CROWNS: String(Math.round((a.service.crownsKept ?? 0) * 100) / 100), SPENT: String(a.service.spent) }));
       }
     }
     finishFieldDuty(ctx, a, ctx.world.year);
@@ -804,6 +812,7 @@ export interface MysticDutyView {
   paused?: { book: string; name: string; remainingYears: number };
   /** Whom a carer is sitting with this year. */
   attended?: { person: string; name: string }[];
+  fieldTerms?: string;
 }
 
 export interface MysticOfferView {
@@ -815,6 +824,7 @@ export interface MysticOfferView {
   preparation: number;
   preparationYears: number;
   upkeep: number;
+  fieldTerms?: string;
   /** Learned, available, and keeping no other duty — the people the order would accept. */
   practitioners: { person: string; name: string; studying?: { book: string; remainingYears: number } }[];
   /** Places this working can actually reach today. */
@@ -862,7 +872,7 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
       for (const c of w.muster.commitments) {
         if (c.status !== 'in_the_field') continue;
         const target: SceneSite = { kind: 'muster', commitment: c.id };
-        out.push({ target, bindings: {}, name: msg(ctx, 'mystic.place.field', 'the levy raised in {YEAR}', { YEAR: String(c.began) }) });
+        out.push({ target, bindings: {}, name: fieldPlaceName(ctx, c.began) });
       }
       return out;
     }
@@ -889,6 +899,7 @@ export function mysticView(ctx: SimCtx): MysticView {
       ...(a.reason ? { reason: gapReason(ctx, a.reason), gap: a.reason } : {}),
       ready: a.ready,
       upkeep: working?.upkeep ?? 0,
+      ...(working && isFieldWorking(working) ? { fieldTerms: fieldTerms(ctx, working) } : {}),
       service: { ...a.service },
       ...(a.attended ? { attended: a.attended.map((id) => ({ person: id, name: w.people.get(id)?.name ?? id })) } : {}),
       ...(pause ? {
@@ -909,6 +920,7 @@ export function mysticView(ctx: SimCtx): MysticView {
     preparation: working.preparation.crowns,
     preparationYears: working.preparation.years,
     upkeep: working.upkeep,
+    ...(isFieldWorking(working) ? { fieldTerms: fieldTerms(ctx, working) } : {}),
     practitioners: household
       .filter((p) => !practitionerGap(ctx, p, working) && !w.mystic.assignments.some((a) => a.practitioner === p.id))
       .map((p) => {

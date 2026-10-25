@@ -146,8 +146,9 @@ export const MysticAssignmentS = z.object({
   house: z.string().optional(),
   working: z.string(),
   /**
-   * One shared site vocabulary with #1868. B accepts `hall` (life care) and
-   * `parcel` (estate protection); `bindings` resolves the site's slots to the
+   * One shared site vocabulary with #1868. Household duties accept `hall` and
+   * `parcel`; field duties require the actual `muster.commitment` id.
+   * `bindings` resolves the site's slots to the
    * actual people they name, so the same presence resolver answers both.
    */
   target: SceneSiteS,

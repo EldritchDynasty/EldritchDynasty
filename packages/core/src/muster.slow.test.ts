@@ -7,8 +7,37 @@ import {
 } from '@ed/core';
 import type { SimCtx } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
+import { playFieldCampaign } from './tools/mystic-muster-report.js';
+import { replay } from './replay.js';
 
 const bundle = loadContent();
+
+describe('public field orders survive an actual played campaign (#1874)', () => {
+  it('replays a real deployment and continues identically after reloading its departure year', () => {
+    let witnessed = false;
+    // Declared before inspecting which house supplies both a levy and a reader.
+    for (let seed = 187400; seed < 187416; seed++) {
+      const run = playFieldCampaign(bundle, seed, 'short', 'deploy');
+      if (!Object.values(run.metrics.records).some(d => d.house === run.playerHouse && d.site === 'field' && d.service.servedYears > 0)) continue;
+      const departure = run.ctx.world.decisionLog.find(row => row.kind === 'command'
+        && row.command.kind === 'order' && row.command.order.kind === 'mysticAssign'
+        && row.command.order.target.kind === 'muster');
+      expect(departure).toBeDefined();
+      const unobserved = playFieldCampaign(bundle, seed, 'short', 'deploy', false);
+      expect(unobserved.fullSaveHash).toBe(run.fullSaveHash);
+      const resumed = playFieldCampaign(bundle, seed, 'short', 'deploy', true, departure!.year);
+      expect(resumed.fullSaveHash).toBe(run.fullSaveHash);
+      const rebuilt = replay(bundle, run.ctx.world.decisionLog, seed, 1042, run.ctx.world.year - 1042, 'short', [], {
+        expectedDigest: run.fingerprint,
+      });
+      expect(digestOf(rebuilt)).toBe(run.fingerprint);
+      expectHealthyWorld(rebuilt);
+      witnessed = true; break;
+    }
+    expect(witnessed, 'No declared seed supplied a real serving field reader').toBe(true);
+  });
+
+});
 
 /**
  * ISSUE #95's ACCEPTANCE, PLAYED RATHER THAN ASSERTED IN THE ABSTRACT.

@@ -14348,3 +14348,92 @@ chronicler) reads broken_line **27.1%** (band 22–45%), devoured **26.6%**
 reads. Fire rate passes for all **513 non-frame events**; the rarest are the
 same five as the #1906 baseline (`the_cellar_shelf_is_found` 0.75%), and all
 30 effect kinds are reached.
+
+
+## 2026-10-25 — #1874: a named reader goes with the levy
+
+**Scope.** Stage C adds five working definitions through four existing Muster
+readers: Life field care (lesser and greater books), Fluid supply, Light
+reconnaissance and Darkness concealment. These use the ordinary commitment,
+casualty, officer mortality, economy and settlement paths. Assignments consume
+one actual learned person, a year of travel, preparation coin and annual upkeep.
+Travel, injury and unpaid suspension keep that person away from home. No
+ambient event or frequency weight was added. Engineering, siege and the full
+eight-affinity matrix remain #1877; this is not G's final calibration.
+
+**Instrument and declared sample.** `npm run report:mystic-muster -- 24 187400
+/tmp/field-report.json` plays seeds **187400–187423** to their actual Short300
+and Long500 endings, with three public `GameSession` policies: equally trained
+but unassigned, home Life care, and deployment with home care when another
+reader is available. That is **144 campaigns**. The deployment policy can move
+a serving home carer to the levy, uses only offered learned readers, reserves
+five upkeep payments at assignment, and pays an affordable normal ransom.
+Acquisition/study policy is identical in all columns. It neither mints readers
+nor forces a war, a favourable genome or a hostile house. Each column's first
+seed has a second run without the observer: all **6 complete save hashes**
+match after removing only `savedAt`. The separate slow test scans the declared
+187400–187415 range for an actual serving field reader and proves that same
+played house's complete save with/without observation, departure-year reload
+and complete public-command replay agree. No balance gate was added or eased.
+
+**Miss found before the final run.** The first complete batch found zero
+captures and zero enemy duty-years. Inspection showed that opponent selection
+read only house-to-house hostility, although the founding grudge is between
+stored people. The resolver now maps either relationship endpoint through its
+actual membership (or a captive's saved home). It still chooses an existing
+hostile house independently of the player's working and requires a real reader,
+completed books, physical availability and finite authored wealth. The first
+batch was retained as a diagnostic; the table below is the complete rerun after
+that fix, on the same seeds and policies. No probabilities or prices were tuned.
+
+**Final paired results.** Means are per started house, including houses with no
+field exposure; ± is one sample standard error from `meanEvidence`. The field
+exposure rates use `rateEvidence`: Short **4/24 = 16.7% ± 7.6 percentage points**;
+Long **7/24 = 29.2% ± 9.3 points**. These are descriptive estimates, not a
+significance or payback claim.
+
+| Deployment measurement | Short300 | Long500 |
+|---|---:|---:|
+| Serving field duty-years | 4.79 ± 2.50 | 6.33 ± 2.44 |
+| Levy men actually kept | 0.125 ± 0.069 | 0.208 ± 0.085 |
+| Named officers actually kept | 0 | 0 |
+| Local opportunities credited | 0.417 ± 0.294 | 0.708 ± 0.419 |
+| Preparation + field upkeep, crowns | 12.21 ± 6.38 | 14.58 ± 5.34 |
+| Supply savings, crowns | 0.50 ± 0.43 | 1.94 ± 1.48 |
+| Ransom paid, crowns | 2.92 ± 2.92 | 0 |
+| Supply savings − field costs − ransom | −14.63 ± 8.60 | −12.65 ± 4.58 |
+| Home carers transferred | 0.250 ± 0.124 | 0.250 ± 0.109 |
+| Field care with no serving home carer, years | 2.79 ± 1.72 | 3.08 ± 1.61 |
+| Home lives kept, deployment minus home-only | −0.333 ± 0.305 | −0.500 ± 0.525 |
+| Final treasury, deployment minus home-only | −16.93 ± 36.41 | −95.02 ± 77.18 |
+| Final living blood, deployment minus home-only | −0.083 ± 0.485 | +1.292 ± 1.276 |
+
+The actual field accounts total **115/152 serving duty-years**, **3/5 levy men
+kept** and **10/17 local opportunities** (Short/Long). Six home carers were
+transferred in each campaign sample. There were **4/11 injury episodes**, **2/0
+captures**, and **6/6 reader accounts ending with death**; the last count includes
+ordinary mortality and is not a claim that every death came from a field-risk
+roll. Enemy serving duty-years remain **zero in both 24-house samples**: this
+policy does not train rival households, and a hostile name is not proof of a
+qualified opponent. Built-state paired tests instead prove the actual learned
+opposing watcher/concealer changes only its matching local resolution and
+stops doing so when unavailable. Finite spending, no-book refusal and hidden
+foreign assignments are checked independently.
+
+The sample does **not** establish frequent field payback, an officer-survival
+rate, broad-practice superiority or a treasury/blood improvement. Most houses
+never combine a war with an affordable qualified reader. Same-roll mechanism
+witnesses prove an available female Life reader can change named officer fate;
+ordinary campaigns here provide zero such officer events. Study pauses are
+reported separately (deployment means **6.96 ± 3.86 / 12.88 ± 5.05 years**), and
+net field coin excludes common book acquisition and foregone study value.
+Further repertoire and exposure work belongs to F/G, with these misses retained.
+
+**Persistence and noninterference.** SAVE_FORMAT 38 preserves commitment-bound
+assignments, returned service, foreign spending, injury recovery and the year's
+reserved upkeep; formats 31–37 still load. Death or release before collection
+does not erase the year's bill. Captured readers lose service and use the
+normal saved captivity/ransom lifecycle. Eight unassigned 400-year fingerprints
+match main `6e160086` byte for byte. Browser checks at desktop and 390px mobile
+show the actual Table's costs, travel, risk terms, service totals and release
+order in Original and Plain English, with no overflow or console errors.

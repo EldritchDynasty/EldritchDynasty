@@ -20,7 +20,8 @@ export function isCurrentFamily(ctx: SimCtx, person: Person): boolean {
  * WHERE A STANDING DUTY PUTS SOMEBODY (#1873) — the one piece of persisted
  * whereabouts. A warden on a parcel is at the parcel; a carer sent to a hall
  * is in that hall, whichever hall they sleep in otherwise. A duty that is
- * suspended places nobody: they are wherever the suspension left them.
+ * suspended household duty places nobody. A field reader remains deployed
+ * during travel and suspension until that commitment returns or releases them.
  */
 export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string };
 
@@ -55,7 +56,7 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
   }
 }
 
-/** Officers in the field this year. Small: it is the muster's officer list. */
+/** Named officers and assigned specialists, including those travelling or recovering. */
 export function deployedPeople(ctx: SimCtx): Set<string> {
   const active = ctx.world.muster.commitments.filter(c => c.status === 'in_the_field');
   const commitments = new Set(active.map(c => c.id));

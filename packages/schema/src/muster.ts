@@ -50,7 +50,8 @@ export const CommitmentS = z.object({
   opponent: z.string().optional(),
   /** Returned/disabled duties keep their paid service in this commitment's account. */
   fieldService: z.array(z.object({
-    practitioner: z.string(), working: z.string(), service: MysticServiceS,
+    id: z.string(), practitioner: z.string(), working: z.string(), service: MysticServiceS,
+    house: z.string().optional(),
     ended: z.number(), fate: z.enum(['returned', 'captured', 'dead', 'departed']),
   }).strict()).optional(),
 });

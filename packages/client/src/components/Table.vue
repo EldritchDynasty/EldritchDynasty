@@ -284,6 +284,9 @@ function dutyRecord(duty: TableView['mystic']['duties'][number]): string {
   const parts = [local(`${s.servedYears} years kept`, `${s.servedYears} years active`)];
   if (s.livesKept) parts.push(local(`${s.livesKept} ${s.livesKept === 1 ? 'life' : 'lives'} kept`, `${s.livesKept} ${s.livesKept === 1 ? 'person' : 'people'} saved`));
   if (s.yieldKept) parts.push(local(`${s.yieldKept.toFixed(1)} of yield held`, `${s.yieldKept.toFixed(1)} yield saved`));
+  if (s.menKept) parts.push(local(`${s.menKept} levy men kept`, `${s.menKept} levy men saved`));
+  if (s.crownsKept) parts.push(local(`${s.crownsKept.toFixed(1)} crowns kept on stores`, `${s.crownsKept.toFixed(1)} crowns saved on supplies`));
+  if (s.opportunities) parts.push(local(`${s.opportunities} useful sightings`, `${s.opportunities} useful sightings`));
   parts.push(local(`${Math.round(s.spent)} crowns spent`, `${Math.round(s.spent)} crowns paid`));
   return parts.join(' · ');
 }
@@ -649,6 +652,7 @@ const MARRIAGE_ORDERS = [
       <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
         <div class="small"><strong>{{ duty.name }}</strong> · {{ duty.workingName }} · {{ duty.place }} <span class="dim">· {{ dutyStatus(duty) }}</span></div>
         <p class="small dim">{{ duty.upkeep }} {{ local('crowns a year', 'crowns per year') }} · {{ dutyRecord(duty) }}</p>
+        <p v-if="duty.fieldTerms" class="small dim">{{ duty.fieldTerms }}</p>
         <p v-if="duty.attended?.length" class="small dim">{{ local('Sitting with:', 'Caring for:') }} {{ duty.attended.map((w) => w.name).join(', ') }}</p>
         <p v-if="duty.paused" class="small dim">{{ local('Set down for it:', 'Reading paused:') }} {{ duty.paused.name }}, {{ duty.paused.remainingYears }} {{ duty.paused.remainingYears === 1 ? 'year' : 'years' }} {{ local('left', 'remaining') }}</p>
         <button class="small" :aria-label="local('Release', 'End duty') + ' ' + duty.name" @click="actions.order({ kind: 'mysticRelease', assignment: duty.id })">{{ local('Release', 'End duty') }}</button>
@@ -657,6 +661,7 @@ const MARRIAGE_ORDERS = [
       <div v-for="offer in table.mystic.offers" :key="offer.working" class="line">
         <div class="small"><strong>{{ offer.name }}</strong> <span class="dim">· {{ offer.affinity }} · {{ offer.preparation }} {{ local('crowns to make ready', 'crowns to prepare') }}<template v-if="offer.preparationYears">, {{ offer.preparationYears }} {{ offer.preparationYears === 1 ? 'year' : 'years' }}</template> · {{ offer.upkeep }} {{ local('a year', 'per year') }}</span></div>
         <p class="small dim blurb">{{ offer.description }}</p>
+        <p v-if="offer.fieldTerms" class="small dim">{{ offer.fieldTerms }}</p>
         <div class="row">
           <select v-model="dutyWho[offer.working]" :disabled="!offer.practitioners.length" :aria-label="local('Choose who keeps', 'Choose who does') + ' ' + offer.name">
             <option value="">{{ offer.practitioners.length ? local('— whom —', '— choose reader —') : local('— nobody has read for it —', '— no qualified reader —') }}</option>
