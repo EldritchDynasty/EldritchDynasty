@@ -5,8 +5,9 @@ import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
-import { proseForClause, proseForOutcome } from '../prose.js';
+import { proseForOutcome } from '../prose.js';
 import { advanceArc, type ArcStep } from './arcs.js';
+import { lastAnswerYear } from './answers.js';
 
 /**
  * THE FRAME (concept §2, Layer 1; issue #13).
@@ -77,9 +78,10 @@ export const FRAME_MAX_GAP_YEARS = 108;
  * reach the debt at all.
  *
  * So the frame is also overdue once this many years have passed since the
- * last answer of either kind. The minimum gap between interludes still holds,
- * and so do their `reads`; a clause that landed recently keeps the frame on
- * its ordinary roll.
+ * last answer of any kind (`events/answers.ts`: an interlude, a clause page,
+ * or an authored glimpse). The minimum gap between interludes still holds,
+ * and so do their `reads`; a clause or glimpse that landed recently keeps the
+ * frame on its ordinary roll.
  *
  * Sixty is §5's expected gap from the note on the minimum above. Measured on
  * 24 Long Lines (`gate:long`, chronicler): mean longest answer silence 74.0
@@ -149,27 +151,7 @@ export function framePool(ctx: SimCtx): EventTemplate[] {
   });
 }
 
-/**
- * The year the run last told the player something new about the bargain: the
- * last interlude, or a later recovered clause, or the signing if neither.
- *
- * A clause is read off its own page in the chronicle, which is the page
- * `gate:long` counts too. The opening clause the house always had writes no
- * page, so it answers nothing here either.
- */
-export function lastAnswerYear(ctx: SimCtx): number {
-  const w = ctx.world;
-  let latest = w.frame.lastFired ?? w.assize.openedAt;
-  let pages: Map<string, string> | undefined;
-  for (const entry of w.chronicle) {
-    if (entry.year <= latest || entry.weight !== 'illuminated' || entry.title === undefined) continue;
-    pages ??= new Map(ctx.content.clauses
-      .filter((c) => w.clausesRecovered.has(c.id))
-      .map((c) => { const prose = proseForClause(ctx, c); return [prose.name, prose.text]; }));
-    if (pages.get(entry.title) === entry.text) latest = entry.year;
-  }
-  return latest;
-}
+export { lastAnswerYear };
 
 /** The cadence check alone, with no regard to what is actually in the pool. */
 export function frameDue(ctx: SimCtx, rng: Rng): boolean {
