@@ -198,11 +198,50 @@ export function evalCheck(ctx: SimCtx, check: Check, event: EventTemplate, fill:
   const { score, bonus, difficulty } = checkReading(ctx, check, event, fill);
   const sd = VARIANCE_SD[check.variance];
   const roll = sd > 0 ? rng.normal(score + bonus, sd) : score + bonus;
-  const margin = roll - difficulty;
+  return { score, bonus, difficulty, roll, outcomeId: bandFor(check, roll - difficulty).outcome };
+}
 
+/** The band a margin lands in: the highest it clears, else the lowest. */
+function bandFor(check: Check, margin: number): Check['bands'][number] {
   const sorted = [...check.bands].sort((a, b) => b.atLeast - a.atLeast);
-  const band = sorted.find((b) => margin >= b.atLeast) ?? sorted[sorted.length - 1];
-  return { score, bonus, difficulty, roll, outcomeId: band!.outcome };
+  return sorted.find((b) => margin >= b.atLeast) ?? sorted[sorted.length - 1]!;
+}
+
+/**
+ * WHAT THIS CAST COULD HAVE ROLLED (#1917): each band outcome's chance under
+ * the current reading, with no draw. `variance: none` gives one outcome a
+ * chance of 1. A weighted-outcome share is the wrong denominator for a
+ * checked choice: twelve readers who all clear a variance-free difficulty
+ * give its losing band no chance at all, not half of twelve.
+ */
+export function bandChances(ctx: SimCtx, check: Check, event: EventTemplate, fill: SlotFill): Map<string, number> {
+  const { score, bonus, difficulty } = checkReading(ctx, check, event, fill);
+  const mean = score + bonus - difficulty;
+  const sd = VARIANCE_SD[check.variance];
+  const out = new Map<string, number>();
+  if (sd === 0) {
+    out.set(bandFor(check, mean).outcome, 1);
+    return out;
+  }
+  // P(margin >= atLeast), read down the bands from the highest. Each band
+  // keeps what it clears and the higher bands did not; the lowest also keeps
+  // every margin that cleared nothing, as `bandFor` does.
+  const sorted = [...check.bands].sort((a, b) => b.atLeast - a.atLeast);
+  let above = 0;
+  sorted.forEach((band, i) => {
+    const clears = i === sorted.length - 1 ? 1 : 1 - normalCdf((band.atLeast - mean) / sd);
+    out.set(band.outcome, (out.get(band.outcome) ?? 0) + clears - above);
+    above = clears;
+  });
+  return out;
+}
+
+/** Standard normal CDF (Abramowitz and Stegun 7.1.26, error under 1.5e-7). */
+function normalCdf(z: number): number {
+  const x = Math.abs(z) / Math.SQRT2;
+  const t = 1 / (1 + 0.3275911 * x);
+  const erf = 1 - ((((1.061405429 * t - 1.453152027) * t + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+  return z >= 0 ? (1 + erf) / 2 : (1 - erf) / 2;
 }
 
 /**

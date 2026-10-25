@@ -1,7 +1,7 @@
 import { indexContent, type Content, type ContentBundle } from '@ed/schema';
 import { bootstrap, runYears } from '../sim.js';
 import { START_YEAR } from '../campaign.js';
-import { emptyReach, observeGuardedOutcome, readRun, recordChoiceOffers, type Reach } from '../events/reach.js';
+import { emptyReach, observeCheckedOutcome, observeGuardedOutcome, readRun, recordChoiceOffers, type Reach } from '../events/reach.js';
 import { GATE_BATCH_SEED_START, GATE_BATCH_SEED_STEP } from './gate-registry.js';
 
 export type GateSource = ContentBundle | Content;
@@ -36,12 +36,20 @@ export function playGateBatch(source: GateSource, runs: number, years: number): 
   const guarded = content.events.some((event) => event.interaction.kind === 'narration'
     ? event.interaction.outcomes.some((outcome) => outcome.onlyIf)
     : event.interaction.choices.some((choice) => choice.outcomes.some((outcome) => outcome.onlyIf)));
+  // A checked choice's chances depend on who rolled it (#1917), read the same
+  // pre-effect way. Both observers only read the world, so the batch plays
+  // exactly the runs it played without them.
+  const checked = content.events.some((event) => event.interaction.kind !== 'narration'
+    && event.interaction.choices.some((choice) => choice.check !== undefined));
   for (let i = 0; i < runs; i++) {
     const ctx = bootstrap(content, GATE_BATCH_SEED_START + i * GATE_BATCH_SEED_STEP, START_YEAR);
     ctx.observeSelection = observation => {
       if (observation.kind === 'choice_offered') recordChoiceOffers(batch.reach, observation.event, observation.choices);
     };
-    if (guarded) ctx.observeOutcome = (observation) => observeGuardedOutcome(ctx, observation, batch.reach);
+    if (guarded || checked) ctx.observeOutcome = (observation) => {
+      if (guarded) observeGuardedOutcome(ctx, observation, batch.reach);
+      if (checked) observeCheckedOutcome(ctx, observation, batch.reach);
+    };
     runYears(ctx, years);
     for (const [id, n] of Object.entries(ctx.world.frequency.templateFires)) {
       if (n > 0) batch.templateRuns.set(id, (batch.templateRuns.get(id) ?? 0) + 1);
