@@ -103,10 +103,14 @@ function protectionReceipt(ctx: SimCtx, assignment: string, target: string): voi
     { READER: p.name, PERSON: ward.name }));
 }
 
+function expiryReceipt(ctx: SimCtx, t: HouseholdThreat): string {
+  return msg(ctx, 'covert.expired', 'The warning about {PERSON} expired without an attack here.',
+    { PERSON: ctx.world.people.get(t.plan.target)?.name ?? t.plan.target });
+}
+
 function cancel(ctx: SimCtx, t: HouseholdThreat): void {
   t.stage = 'cancelled'; t.closedAt = ctx.world.year;
-  t.receipt = msg(ctx, 'covert.expired', 'The warning about {PERSON} expired without an attack here.',
-    { PERSON: ctx.world.people.get(t.plan.target)?.name ?? t.plan.target });
+  t.receipt = expiryReceipt(ctx, t);
   line(ctx, [t.plan.target], t.receipt);
 }
 
@@ -134,8 +138,7 @@ export function tickHouseholdThreats(ctx: SimCtx): void {
       // A barrier may spoil an unseen approach. Closing the known warning
       // must not invent witnesses, an attack page or public proof of a plot.
       t.stage = 'resolved'; t.closedAt = w.year;
-      t.receipt = msg(ctx, 'covert.expired', 'The warning about {PERSON} expired without an attack here.',
-        { PERSON: w.people.mustGet(t.plan.target).name });
+      t.receipt = expiryReceipt(ctx, t);
       line(ctx, [t.plan.target], t.receipt);
       continue;
     }
