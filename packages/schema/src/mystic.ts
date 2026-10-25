@@ -67,6 +67,7 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     mortalityReduction: z.number().min(0).max(0.5),
     infantReduction: z.number().min(0).max(0.75),
     maxWards: z.number().int().positive(),
+    maxWardAge: z.number().int().nonnegative().max(16).optional(),
   }).strict(),
   /**
    * A warden on one held parcel. When the year's risk roll falls below the
@@ -97,6 +98,22 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     costReduction: z.number().positive().max(0.35),
     parcelKinds: z.array(ParcelKindS).min(1),
   }).strict(),
+  z.object({
+    kind: z.literal('library_care'),
+    wearReduction: z.number().min(0).max(0.75),
+    restorationReduction: z.number().min(0).max(0.35),
+  }).strict(),
+  z.object({
+    kind: z.literal('household_provision'),
+    crownsPerPerson: z.number().positive().max(0.4),
+    maxPeople: z.number().int().positive().max(10),
+  }).strict(),
+  z.object({
+    kind: z.literal('convalescence'),
+    healthPerYear: z.number().positive().max(4),
+    recoveryYears: z.number().int().nonnegative().max(1),
+  }).strict(),
+  z.object({ kind: z.literal('teaching') }).strict(),
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
 export type MysticBenefitKind = MysticBenefit['kind'];
@@ -134,6 +151,7 @@ export type MysticStatus = z.infer<typeof MysticStatusS>;
 export const MysticGapS = z.enum([
   'dead', 'left_house', 'hostage', 'missing', 'deployed', 'away_post', 'not_resident',
   'unlearned', 'target_lost', 'unpaid', 'too_young', 'wounded',
+  'no_need',
 ]);
 export type MysticGap = z.infer<typeof MysticGapS>;
 
@@ -158,6 +176,9 @@ export const MysticServiceS = z.object({
   opportunities: z.number().int().nonnegative().optional(),
   protections: z.number().int().nonnegative().optional(),
   covertUses: z.number().int().nonnegative().optional(),
+  bookWearKept: z.number().nonnegative().optional(),
+  healthRestored: z.number().nonnegative().optional(),
+  studyYearsKept: z.number().int().nonnegative().optional(),
   /** Fractions accumulate, so small levies neither lose all benefit nor become immune. */
   recoverable: z.number().min(0).max(1).optional(),
 }).strict();
@@ -186,6 +207,8 @@ export const MysticAssignmentS = z.object({
   reason: MysticGapS.optional(),
   /** The residents a carer attends this year, chosen at the reservation by ordinary risk. */
   attended: z.array(z.string()).optional(),
+  /** Three actual lesson years earn one year of study; changing books starts a new term. */
+  lesson: z.object({ book: z.string(), years: z.number().int().nonnegative(), lastYear: z.number() }).strict().optional(),
   service: MysticServiceS,
 }).strict();
 export type MysticAssignment = z.infer<typeof MysticAssignmentS>;
@@ -202,6 +225,8 @@ export type MysticStudyPause = z.infer<typeof MysticStudyPauseS>;
 
 export const MysticStateS = z.object({
   assignments: z.array(MysticAssignmentS),
+  /** Historical paid service is retained after its maintainer leaves or dies. */
+  services: z.array(MysticAssignmentS.extend({ ended: z.number(), account: z.string() })).default([]),
   pauses: z.array(MysticStudyPauseS),
   /** Foreign practice spends from the house's authored wealth once, without replenishment. */
   foreignSpent: z.record(z.string(), z.number().nonnegative()).optional(),
@@ -209,4 +234,4 @@ export const MysticStateS = z.object({
   reservedUpkeep: z.object({ year: z.number(), crowns: z.number().nonnegative() }).strict().optional(),
 }).strict();
 export type MysticState = z.infer<typeof MysticStateS>;
-export const emptyMysticState = (): MysticState => ({ assignments: [], pauses: [] });
+export const emptyMysticState = (): MysticState => ({ assignments: [], services: [], pauses: [] });

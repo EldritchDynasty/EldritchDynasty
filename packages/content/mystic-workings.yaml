@@ -285,6 +285,380 @@ mysticWorkings:
       role: hostile
       bonus: 0.15
 
+  - id: the_foundation_line
+    name: The Foundation Line
+    affinity: terra
+    books:
+      - lesser_workings_of_terra
+    description: A reader surveys one holding and keeps the ground settled while its
+      drains and foundations are laid. Preparing an improvement there costs one
+      tenth less while the reader is paid and present. The work still takes four
+      years, and a good survey does not replace the labour.
+    preparation:
+      crowns: 3
+      years: 1
+    upkeep: 0.5
+    benefit:
+      kind: project_support
+      costReduction: 0.1
+      parcelKinds:
+        - tenant_farm
+        - wetland
+        - mill
+        - slate_work
+        - demesne
+  - id: setting_the_culverts
+    name: Setting the Culverts
+    affinity: terra
+    books:
+      - lesser_workings_of_terra
+      - greater_workings_of_terra
+    collaborator: firing_the_liners
+    description: A reader of both Terra books sets the falls and beds for lined
+      drains at one holding. A second reader must keep Firing the Liners at that
+      same place; both people, both preparations and both yearly fees are
+      needed. Together they cut the price of starting an improvement by one
+      quarter. The four years of labour remain.
+    preparation:
+      crowns: 4
+      years: 1
+    upkeep: 1
+    benefit:
+      kind: project_support
+      costReduction: 0.25
+      parcelKinds:
+        - tenant_farm
+        - wetland
+        - mill
+  - id: firing_the_liners
+    name: Firing the Liners
+    affinity: thermal
+    books:
+      - lesser_workings_of_thermal
+      - greater_workings_of_thermal
+    collaborator: setting_the_culverts
+    description: A reader of both Thermal books tends the small kiln that fires the
+      clay drain liners for one holding. Setting the Culverts must be kept there
+      by another learned reader. The two paid roles cut a new improvement’s
+      price by one quarter, without adding their reductions together or
+      shortening its four years. Neither reader can keep another duty at home.
+    preparation:
+      crowns: 4
+      years: 1
+    upkeep: 1
+    benefit:
+      kind: project_support
+      costReduction: 0.25
+      parcelKinds:
+        - tenant_farm
+        - wetland
+        - mill
+
+  - id: the_clear_well
+    name: The Clear Well
+    affinity: fluid
+    books:
+      - lesser_workings_of_fluid
+    description: One reader keeps the drinking water at one hall clean through the
+      year. The four residents at greatest ordinary risk receive a little
+      protection against frailty and illness. It does nothing for a blade, the
+      blood or a person who has gone away.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: life_care
+      mortalityReduction: 0.15
+      infantReduction: 0
+      maxWards: 4
+  - id: the_open_drain
+    name: The Open Drain
+    affinity: fluid
+    books:
+      - lesser_workings_of_fluid
+    description: A reader keeps the water moving on one farm or stretch of wet
+      ground. A bad season takes less of that holding’s yield, and damage costs
+      less to put right. Nothing is added to a good harvest.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.3
+    benefit:
+      kind: estate_protection
+      lossPrevented: 0.4
+      parcelKinds:
+        - tenant_farm
+        - wetland
+      maxAcres: 160
+  - id: the_running_race
+    name: The Running Race
+    affinity: fluid
+    books:
+      - lesser_workings_of_fluid
+    description: One reader keeps a mill race moving through a poor season. The
+      protection belongs to that mill and its current reader. Another mill, a
+      road and a levy receive nothing from it.
+    preparation:
+      crowns: 4
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: estate_protection
+      lossPrevented: 0.4
+      parcelKinds:
+        - mill
+      maxAcres: 160
+  - id: the_warm_room
+    name: The Warm Room
+    affinity: thermal
+    books:
+      - lesser_workings_of_thermal
+    description: One reader keeps four vulnerable residents warm in one hall. Their
+      ordinary risk falls while the room is kept, without treating a wound or
+      changing the end of a natural lifespan. The same reader cannot tend a kiln
+      or a levy.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: life_care
+      mortalityReduction: 0.15
+      infantReduction: 0
+      maxWards: 4
+  - id: the_dry_store
+    name: The Dry Store
+    affinity: thermal
+    books:
+      - lesser_workings_of_thermal
+    description: A reader keeps one hall’s grain and provisions from spoiling in
+      damp weather. Up to eight residents cost a little less to feed. The store
+      still needs food, and the working cannot remove more than a quarter of
+      anyone’s food bill.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: household_provision
+      crownsPerPerson: 0.3
+      maxPeople: 8
+  - id: the_open_shutters
+    name: The Open Shutters
+    affinity: aero
+    books:
+      - lesser_workings_of_aero
+    description: One reader keeps fresh air moving through the rooms of one hall.
+      Four vulnerable residents face a little less ordinary illness and frailty.
+      The working does not heal an injury or protect anyone travelling
+      elsewhere.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.3
+    benefit:
+      kind: life_care
+      mortalityReduction: 0.12
+      infantReduction: 0
+      maxWards: 4
+  - id: the_harvest_wind
+    name: The Harvest Wind
+    affinity: aero
+    books:
+      - lesser_workings_of_aero
+    description: A reader tends the weather over one farm or the home demesne during
+      the harvest work. A poor season takes less of that holding’s ordinary
+      yield. A good year stays a good year, rather than becoming a second
+      harvest.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.3
+    benefit:
+      kind: estate_protection
+      lossPrevented: 0.4
+      parcelKinds:
+        - tenant_farm
+        - demesne
+      maxAcres: 160
+  - id: the_raised_sacks
+    name: The Raised Sacks
+    affinity: aero
+    books:
+      - lesser_workings_of_aero
+    description: One reader keeps the air moving between the sacks in one hall’s
+      store. Up to six residents waste less food to damp and mould. The working
+      preserves what is there; somebody must still bring it in.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.3
+    benefit:
+      kind: household_provision
+      crownsPerPerson: 0.25
+      maxPeople: 6
+  - id: the_first_winter
+    name: The First Winter
+    affinity: life
+    books:
+      - lesser_workings_of_life
+    description: A reader sits with the children passing their first year in one
+      hall. Up to six of them receive help against ordinary infant mortality.
+      Nothing in this watch changes a stillbirth caused by close blood or
+      overflow before the child was born.
+    preparation:
+      crowns: 4
+      years: 0
+    upkeep: 0.6
+    benefit:
+      kind: life_care
+      mortalityReduction: 0
+      infantReduction: 0.6
+      maxWards: 6
+      maxWardAge: 1
+  - id: the_mending_watch
+    name: The Mending Watch
+    affinity: life
+    books:
+      - lesser_workings_of_life
+      - greater_workings_of_life
+    description: A reader keeps one injured relative company through a term of
+      recovery at home. Each paid year restores up to three points of lost
+      health and can shorten the remaining recovery by one year. It does not
+      improve a healthy body or bring someone home from a distant field.
+    preparation:
+      crowns: 5
+      years: 0
+    upkeep: 1
+    benefit:
+      kind: convalescence
+      healthPerYear: 3
+      recoveryYears: 1
+  - id: the_still_binding
+    name: The Still Binding
+    affinity: death
+    books:
+      - lesser_workings_of_death
+    description: A reader keeps rot from one vellum volume and its binding. The copy
+      wears half as quickly while it stays on the shelf under that reader’s
+      care. Lost pages, copied testimony and a book sent to the binder remain
+      what they were.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.1
+    benefit:
+      kind: library_care
+      wearReduction: 0.5
+      restorationReduction: 0
+  - id: the_still_larder
+    name: The Still Larder
+    affinity: death
+    books:
+      - lesser_workings_of_death
+    description: One reader slows decay in the meat and dead provisions kept for one
+      hall. Up to eight residents waste less of what the house has already
+      bought. Nothing living is grown, and no dead thing is brought back.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: household_provision
+      crownsPerPerson: 0.3
+      maxPeople: 8
+  - id: the_copyists_light
+    name: The Copyist’s Light
+    affinity: light
+    books:
+      - lesser_workings_of_light
+    description: One reader examines the ink and wear of one physical book. Its
+      annual wear is halved, and an examination made before sending it to the
+      binder cuts the repair fee by one quarter. A missing page is still a
+      missing page.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.2
+    benefit:
+      kind: library_care
+      wearReduction: 0.5
+      restorationReduction: 0.25
+  - id: the_readers_lamp
+    name: The Reader’s Lamp
+    affinity: light
+    books:
+      - lesser_workings_of_light
+      - greater_workings_of_light
+    description: A reader sits with one relative studying a book the reader has
+      already finished. Three actual years of lessons remove one year from that
+      same book’s remaining term. The teacher sets down any unfinished study of
+      their own, and a new book begins a new term of lessons.
+    preparation:
+      crowns: 3
+      years: 0
+    upkeep: 0.4
+    benefit:
+      kind: teaching
+  - id: the_shaded_volume
+    name: The Shaded Volume
+    affinity: darkness
+    books:
+      - lesser_workings_of_darkness
+    description: A reader keeps the sun and harsh lamplight from one closed volume
+      between readings. Its physical pages wear half as quickly. The shadow
+      hides no testimony already copied elsewhere and supplies no missing words.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.1
+    benefit:
+      kind: library_care
+      wearReduction: 0.5
+      restorationReduction: 0
+  - id: the_sleeping_room
+    name: The Sleeping Room
+    affinity: darkness
+    books:
+      - lesser_workings_of_darkness
+    description: One reader keeps a quiet dark room for three frail residents of one
+      hall. Rest lowers their ordinary risk a little while that reader remains
+      there. A wound, the blood and the natural limit of a life receive no such
+      bargain.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.3
+    benefit:
+      kind: life_care
+      mortalityReduction: 0.1
+      infantReduction: 0
+      maxWards: 3
+  - id: the_dry_baggage
+    name: The Dry Baggage
+    affinity: thermal
+    books:
+      - lesser_workings_of_thermal
+      - greater_workings_of_thermal
+    description: A reader of both books travels with one real levy and keeps a
+      limited part of its provisions from spoiling. At most twenty men cost a
+      little less to supply while the reader serves. The reader is absent from
+      home, exposed to the same field risks and owed the same return journey.
+    preparation:
+      crowns: 8
+      years: 0
+    upkeep: 1
+    benefit:
+      kind: field_supply
+      risk:
+        death: 0.008
+        capture: 0.02
+        injury: 0.03
+        ransom: 60
+      crownsPerMan: 0.2
+      maxMen: 20
+
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
     of: e4434738f3973e8c
@@ -400,3 +774,176 @@ proseVariants:
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_short_vigil].description
     of: 0c58968a244f6d06
     plainenglish: A reader who has completed both Death books accompanies an expedition against one named living enemy. The working can improve the chance of reaching that person and of a serious injury being fatal. Guards and Life care can still work. It cannot guarantee death or revive anyone. The reader must make the journey and return.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_foundation_line].name
+    of: a4b4e15d6fc342a1
+    plainenglish: Surveying the Foundations
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_foundation_line].description
+    of: 3d89e58734c4e043
+    plainenglish: A paid Terra reader surveys one holding. Starting a land
+      improvement there costs 10% less while that reader is available.
+      Preparation still takes a year and the improvement still takes four years.
+      Losing the reader removes the discount for future projects.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=setting_the_culverts].name
+    of: 0d4964f856dedb9c
+    plainenglish: Laying the Drains
+  - address: content:mystic-workings.yaml#mysticWorkings[id=setting_the_culverts].description
+    of: 0711b5d2fe6631f6
+    plainenglish: A reader who has completed both Terra books works at one holding.
+      Another reader must keep Firing the Liners at the same holding. Both roles
+      charge their preparation and annual fees. While both readers are
+      available, starting an improvement costs 25% less; it still takes four
+      years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=firing_the_liners].name
+    of: afee77aaa3ef0896
+    plainenglish: Firing the Drain Liners
+  - address: content:mystic-workings.yaml#mysticWorkings[id=firing_the_liners].description
+    of: 5e68c59ad1d66c76
+    plainenglish: A reader with both Thermal books fires clay drain liners at one
+      holding. A different reader must keep Setting the Culverts there. Both
+      roles must be paid and available. Together they reduce the price of
+      starting an improvement by 25%, and the improvement still takes four
+      years. This discount does not stack with another project discount.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_clear_well].name
+    of: aeb1800373e61d97
+    plainenglish: Keeping the Well Clean
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_clear_well].description
+    of: eb85f0f7f495b163
+    plainenglish: A paid Fluid reader works at one hall. Four residents with the
+      greatest ordinary health risk receive a bounded reduction in that risk.
+      Violence, inherited power and absent residents are unaffected.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_open_drain].name
+    of: 20a60a96a0220fd2
+    plainenglish: Keeping a Field Drained
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_open_drain].description
+    of: aa50b1441b8504e8
+    plainenglish: A Fluid reader maintains one farm or wetland of at most 160 acres.
+      The working reduces a poor yield or physical damage by 40%. It does not
+      increase a good year’s yield.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_running_race].name
+    of: 01c694543b615aa8
+    plainenglish: Keeping the Mill Race
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_running_race].description
+    of: cde5060770aaab5b
+    plainenglish: A Fluid reader protects one held mill against part of its poor
+      yield and damage. The reader must remain assigned, available and paid.
+      This working provides no coverage elsewhere.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_warm_room].name
+    of: 76382e7c4ebc6e90
+    plainenglish: Keeping a Hall Warm
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_warm_room].description
+    of: 7eb8dce60c3599b2
+    plainenglish: A paid Thermal reader stays in one hall and reduces ordinary
+      health risk for four vulnerable residents. This does not affect violence,
+      inherited power or the maximum-age boundary. The reader has no other duty.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_dry_store].name
+    of: e6019a5067031c0c
+    plainenglish: Keeping Provisions Dry
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_dry_store].description
+    of: 810c772ab679d8e6
+    plainenglish: A paid Thermal reader preserves provisions for up to eight
+      residents of one hall. Each person’s annual food cost falls by up to 0.3
+      crowns, capped at 25% of that actual charge. Wages, taxes and other
+      spending remain.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_open_shutters].name
+    of: c70578ded120b1b2
+    plainenglish: Ventilating a Hall
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_open_shutters].description
+    of: 863ba47467ecb7b8
+    plainenglish: An available paid Aero reader reduces ordinary health risk for
+      four vulnerable residents of one hall. It does not repair wounds, affect
+      inherited power or cover people away from that hall.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_harvest_wind].name
+    of: e05e29c9648e24fd
+    plainenglish: Sheltering Harvest Work
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_harvest_wind].description
+    of: 30328a08d5f09fe4
+    plainenglish: An Aero reader protects one farm or demesne of at most 160 acres.
+      The working reduces a poor yield or damage by 40%, with no improvement to
+      a good year. It applies only while its named reader is available and paid.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_raised_sacks].name
+    of: 60b001f70ddeadfb
+    plainenglish: Ventilating the Food Store
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_raised_sacks].description
+    of: 8484650ab3c72a5e
+    plainenglish: A paid Aero reader reduces food costs for up to six residents of
+      one hall by up to 0.25 crowns each per year. Savings are capped at 25% of
+      each actual food charge. The working creates no food.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_first_winter].name
+    of: 2d6c20f3c7cf0f97
+    plainenglish: Watching the Youngest Children
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_first_winter].description
+    of: 0ec07fa89d411c54
+    plainenglish: A paid Life reader attends up to six children aged one or younger
+      in one hall. Their ordinary infant risk falls by 60%. This does not change
+      genetic stillbirths, inherited power, violence or absent children.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_mending_watch].name
+    of: 02c35f6b359ef6b7
+    plainenglish: Helping an Injured Relative Recover
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_mending_watch].description
+    of: a12c7e05e15f0111
+    plainenglish: One available paid Life reader treats one resident relative. Each
+      year restores up to 3 lost health points, stopping at zero, and reduces
+      any remaining field recovery by at most one year. The relative must
+      actually be at home.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_binding].name
+    of: ef3217d7294d54db
+    plainenglish: Preserving a Vellum Book
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_binding].description
+    of: 7d00dffb7b624bbf
+    plainenglish: A paid Death reader protects one physical library copy from half
+      its annual wear. The working does not repair existing damage, restore lost
+      text or affect copies held elsewhere. It pauses while that copy is with
+      the binder.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_larder].name
+    of: a902d8b47e31dda8
+    plainenglish: Preserving Stored Meat
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_larder].description
+    of: 14aa32913d6f8df5
+    plainenglish: A paid Death reader preserves already-dead provisions for up to
+      eight residents of one hall. The saving is up to 0.3 crowns per person per
+      year, capped at 25% of actual food costs. This creates no food and
+      restores no life.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_copyists_light].name
+    of: 9df4a82bc06f185f
+    plainenglish: Examining a Library Copy
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_copyists_light].description
+    of: ab2df01c57d4a238
+    plainenglish: A paid Light reader tends one held book. It suffers half the
+      normal annual wear, and a repair ordered while the reader is available
+      costs 25% less. The working does not recover destroyed text or protect an
+      absent copy.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_readers_lamp].name
+    of: b08c955fe20613a3
+    plainenglish: Teaching a Successor Reader
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_readers_lamp].description
+    of: 080e5a03fa81aab7
+    plainenglish: A paid Light practitioner teaches one resident relative from a
+      book the teacher already knows. Three eligible lesson years shorten that
+      book’s remaining study by one year. Paused or absent students receive no
+      lessons, and changing books resets the lesson count.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_shaded_volume].name
+    of: 3f5b905301e8d8b7
+    plainenglish: Shading a Library Copy
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_shaded_volume].description
+    of: 031aeccebced5b3a
+    plainenglish: A paid Darkness reader protects one physical book from half its
+      annual wear. The working does not repair old damage, hide existing
+      witnesses or erase other copies. It pauses while the book is at the
+      binder.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_sleeping_room].name
+    of: d516188489c3f390
+    plainenglish: Keeping a Room for Rest
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_sleeping_room].description
+    of: 6f5619b0f2e9f62c
+    plainenglish: An available paid Darkness reader reduces ordinary health risk for
+      three vulnerable residents in one hall. The working supports rest; it does
+      not heal injuries, affect inherited power or change the maximum-age limit.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_dry_baggage].name
+    of: 238bcd6bb02f347f
+    plainenglish: Preserving Levy Supplies
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_dry_baggage].description
+    of: e5509cfdea657e59
+    plainenglish: A paid Thermal reader with both books accompanies one active levy.
+      Supply costs fall by up to 0.2 crowns for at most 20 men per year. The
+      reader travels with the commitment, faces its stated risks and provides no
+      home coverage.

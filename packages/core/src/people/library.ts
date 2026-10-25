@@ -7,6 +7,7 @@ import { DEBT_FLOOR } from '../economy.js';
 import { msg } from '../messages.js';
 import { renderContentProse } from '../prose.js';
 import { covertReservation } from '../presence.js';
+import { libraryCare, noteBookCare } from '../mystic-civilian.js';
 
 /**
  * THE LIBRARY — applying a spellbook, one mechanism for every book there will
@@ -144,7 +145,10 @@ function wearHeldCopy(copy: LibraryBookState, amount: number): void {
 export function tickLibraryWear(ctx: SimCtx): void {
   for (const copy of ctx.world.library.values()) {
     if (copy.acquiredYear >= ctx.world.year || copy.restoresAt !== undefined) continue;
-    wearHeldCopy(copy, YEARLY_BOOK_WEAR);
+    const before = copy.condition;
+    const reduction = libraryCare(ctx, copy.id)?.benefit.wearReduction ?? 0;
+    wearHeldCopy(copy, YEARLY_BOOK_WEAR * (1 - reduction));
+    noteBookCare(ctx, copy.id, Math.max(0, Math.min(before, YEARLY_BOOK_WEAR) - (before - copy.condition)));
   }
 }
 
@@ -162,7 +166,8 @@ export function restorationQuote(ctx: SimCtx, id: string): RestorationQuote | un
   const def = spellbookDef(ctx, id);
   if (!copy || !def) return undefined;
   const missing = Math.max(0, 100 - copy.condition);
-  const fee = Math.max(1, Math.ceil(def.price.min * 0.2 * missing / 100));
+  const reduction = libraryCare(ctx, id, 'restorationReduction')?.benefit.restorationReduction ?? 0;
+  const fee = Math.max(1, Math.ceil(def.price.min * 0.2 * missing / 100 * (1 - reduction)));
   const years = Math.max(1, Math.ceil(missing / 50));
   const returns = copy.restoresAt ?? ctx.world.year + years;
   if (copy.restoresAt !== undefined) {

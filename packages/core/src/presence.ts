@@ -62,6 +62,7 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
 export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): DutyPlace | undefined {
   const w = ctx.world;
   switch (site.kind) {
+    case 'book': return w.library.has(site.book) ? { hall: MAIN_BRANCH } : undefined;
     case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && o.stage !== 'closed')
       ? { operation: site.operation } : undefined;
     case 'person': {
@@ -129,6 +130,8 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const named = (slots: readonly string[]) => slots.flatMap(slot => castIn(fill, slot));
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
+    case 'book': return w.library.has(site.book) && w.library.get(site.book)?.restoresAt === undefined
+      ? { ...resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}), site } : { site, people: [] };
     case 'covert': {
       const o = w.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
       if (!o) return { site, people: [] };

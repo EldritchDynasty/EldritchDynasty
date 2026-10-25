@@ -99,8 +99,8 @@ export const primordialSite: ValidationRule = {
       const site = o.site ?? event.site;
       if (!site) { issues.push(fail(this.id, where, 'missing incident site')); continue; }
       const slots = site.kind === 'hall' ? [...(typeof site.hall === 'string' ? [] : [site.hall.slot]), ...(site.visitors ?? [])]
-        : site.kind === 'muster' || site.kind === 'person' || site.kind === 'covert' ? [] : site.slots;
-      if (site.kind === 'person' || site.kind === 'covert') issues.push(fail(this.id, where, 'authored scenes bind slots; concrete person/expedition sites are runtime assignment targets'));
+        : site.kind === 'muster' || site.kind === 'person' || site.kind === 'covert' || site.kind === 'book' ? [] : site.slots;
+      if (site.kind === 'person' || site.kind === 'covert' || site.kind === 'book') issues.push(fail(this.id, where, 'authored scenes bind slots; concrete assignment sites are runtime targets'));
       for (const slot of slots) if (!event.slots[slot] || event.slots[slot]!.optional) issues.push(fail(this.id, where, `site requires an existing required person slot: ${slot}`));
       for (const slot of slots) if (['heirloom', 'spellbook', 'rival_house', 'guardian'].includes(event.slots[slot]?.role ?? '')) issues.push(fail(this.id, where, `site slot ${slot} is not physical person attendance`));
       if (site.kind === 'parcel' && !content.parcel(site.parcel)) issues.push(fail(this.id, where, `site names an unknown parcel: ${site.parcel}`));

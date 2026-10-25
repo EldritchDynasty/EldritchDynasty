@@ -116,6 +116,7 @@ export function saveGame(ctx: SimCtx): SavedGame {
     },
     mystic: {
       assignments: w.mystic.assignments.map(copyAssignment),
+      services: structuredClone(w.mystic.services),
       pauses: w.mystic.pauses.map((p) => ({ ...p })),
       ...(w.mystic.foreignSpent ? { foreignSpent: { ...w.mystic.foreignSpent } } : {}),
       ...(w.mystic.reservedUpkeep ? { reservedUpkeep: { ...w.mystic.reservedUpkeep } } : {}),
@@ -218,6 +219,7 @@ function copyAssignment(a: MysticAssignment): MysticAssignment {
   return {
     ...a, target: structuredClone(a.target), bindings: { ...a.bindings }, service: { ...a.service },
     ...(a.attended ? { attended: [...a.attended] } : {}),
+    ...(a.lesson ? { lesson: { ...a.lesson } } : {}),
   };
 }
 
@@ -265,12 +267,12 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
   // turns a bare founder name into the authored founder under that name.
   const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
-  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && format !== 37 && format !== 38 && format !== 39 && !legacySigning) {
+  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && format !== 37 && format !== 38 && format !== 39 && format !== 40 && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
   const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>)
-    : format === 35 || format === 36 || format === 37 || format === 38 || format === 39 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
+    : format === 35 || format === 36 || format === 37 || format === 38 || format === 39 || format === 40 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -373,6 +375,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   };
   world.mystic = {
     assignments: s.mystic.assignments.map(copyAssignment),
+    services: structuredClone(s.mystic.services),
     pauses: s.mystic.pauses.map((p) => ({ ...p })),
     ...(s.mystic.foreignSpent ? { foreignSpent: { ...s.mystic.foreignSpent } } : {}),
     ...(s.mystic.reservedUpkeep ? { reservedUpkeep: { ...s.mystic.reservedUpkeep } } : {}),
@@ -649,6 +652,11 @@ export function digest(save: SavedGame): string {
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
   delete value.replayOrigin;
+  if (!save.mystic.services.length) {
+    value.mystic = { ...save.mystic };
+    delete (value.mystic as Record<string, unknown>).services;
+  }
+  if (value.format === 41) value.format = 40;
   if (!save.covert.operations.length) {
     value.covert = { ...save.covert };
     delete (value.covert as Record<string, unknown>).operations;

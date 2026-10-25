@@ -29,6 +29,7 @@ import { assignDuty, mysticView, releaseDuty, type MysticView } from './mystic.j
 import { captivityView, ransomCaptive } from './people/captivity.js';
 import { defendHousehold, householdSecurityView, releaseThreatPrisoner } from './covert-lifecycle.js';
 import { covertOperationsView, prepareCovertOperation, withdrawCovertOperation } from './covert-operations.js';
+import { noteBookRestoration } from './mystic-civilian.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -585,6 +586,7 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
         return { ok: false, reason: restoreFeeRefusal(ctx, quote.fee) };
       }
       w.treasury -= quote.fee;
+      noteBookRestoration(ctx, o.book, quote.fee);
       w.library.get(o.book)!.restoresAt = quote.returns;
       const def = spellbookDef(ctx, o.book)!;
       const name = proseForContentField(ctx, 'spellbooks', def.id, 'name', def.name);
