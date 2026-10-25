@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { SceneSiteS } from './primordial.js';
 import { SlotFillS } from './slot-fill.js';
+import { MysticServiceS } from './mystic.js';
 
 /**
  * #1914 / #1875: the incident resolver's input, not saved threat state or a
@@ -90,6 +91,45 @@ export const HouseholdThreatS = z.object({
   prisoner: z.string().optional(),
 }).strict();
 export type HouseholdThreat = z.infer<typeof HouseholdThreatS>;
-export const CovertStateS = z.object({ threats: z.array(HouseholdThreatS) }).strict();
+export const CovertPurposeS = z.enum(['settle_grudge', 'answer_attack']);
+export type CovertPurpose = z.infer<typeof CovertPurposeS>;
+
+/** A copied statement may outlive its witness. It identifies an operative,
+ * not an omniscient account of who privately ordered the act. */
+export const CovertExposureS = z.object({
+  year: z.number().int(), actor: z.string(), witnesses: z.array(z.string()),
+  basis: z.enum(['capture', 'testimony']),
+  heardAt: z.number().int().optional(),
+  receipt: z.string().optional(),
+}).strict();
+
+export const CovertOperationS = z.object({
+  /** A specific known grievance/access opportunity is consumed once. */
+  opportunity: z.string().min(1),
+  targetHouse: z.string(), targetMembershipFrom: z.number(),
+  purpose: CovertPurposeS,
+  plan: CovertAttemptS,
+  stage: z.enum(['preparing', 'approach', 'returning', 'closed']),
+  defence: CovertDefenceS,
+  enemyWarned: z.boolean(),
+  /** Named people remain with the journey even after setting down a working. */
+  crew: z.array(z.string()),
+  supportService: z.array(z.object({
+    id: z.string(), practitioner: z.string(), working: z.string(), ended: z.number(), service: MysticServiceS,
+  }).strict()),
+  returnsAt: z.number().int().optional(),
+  resolvedAt: z.number().int().optional(),
+  result: z.enum(['success', 'partial', 'failed', 'withdrawn', 'cancelled']).optional(),
+  operativeFate: z.enum(['escaped', 'captured', 'rescued', 'injured']).optional(),
+  observation: CovertObservationS.optional(),
+  exposure: CovertExposureS.optional(),
+  /** Rendered accounts are saved artefacts, never translated again on load. */
+  receipt: z.string().optional(), page: z.string().optional(),
+}).strict();
+export type CovertOperation = z.infer<typeof CovertOperationS>;
+export const CovertStateS = z.object({
+  threats: z.array(HouseholdThreatS),
+  operations: z.array(CovertOperationS).default([]),
+}).strict();
 export type CovertState = z.infer<typeof CovertStateS>;
-export const emptyCovertState = (): CovertState => ({ threats: [] });
+export const emptyCovertState = (): CovertState => ({ threats: [], operations: [] });

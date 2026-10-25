@@ -265,12 +265,12 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   // Formats 31–34 predate the founder's identity (#1867): `upgradeSigning`
   // turns a bare founder name into the authored founder under that name.
   const legacySigning = format === 31 || format === 32 || format === 33 || format === 34;
-  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && format !== 37 && format !== 38 && !legacySigning) {
+  if (format !== SAVE_FORMAT && format !== 35 && format !== 36 && format !== 37 && format !== 38 && format !== 39 && !legacySigning) {
     throw new SaveFormatError(`save format ${String(format)}, expected ${SAVE_FORMAT}`);
   }
 
   const parsed = SavedGameS.safeParse(legacySigning ? upgradeSigning(raw as Record<string, unknown>)
-    : format === 35 || format === 36 || format === 37 || format === 38 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
+    : format === 35 || format === 36 || format === 37 || format === 38 || format === 39 ? { ...(raw as Record<string, unknown>), format: SAVE_FORMAT } : raw);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
     throw new SaveFormatError(`save is not readable: ${first?.path.join('.')} — ${first?.message}`);
@@ -649,6 +649,11 @@ export function digest(save: SavedGame): string {
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
   delete value.replayOrigin;
+  if (!save.covert.operations.length) {
+    value.covert = { ...save.covert };
+    delete (value.covert as Record<string, unknown>).operations;
+    if (value.format === 40) value.format = 39;
+  }
   if (!save.covert.threats.length && save.counters.covert === 0) {
     delete value.covert;
     const { covert: _covert, ...withoutCovert } = value.counters as SavedGame['counters'];

@@ -9,6 +9,7 @@ export const PRIMORDIAL_ACTOR_SLOT = 'PRIMORDIAL_ACTOR';
 
 /** Physical attendance, never inferred from ownership or a prose token. */
 export const SceneSiteS = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('covert'), operation: z.string().min(1) }).strict().describe('runtime assignment target'),
   z.object({ kind: z.literal('person'), person: z.string() }).strict().describe('runtime assignment target'),
   z.object({ kind: z.literal('hall'), hall: z.union([z.literal('main'), z.object({ slot: z.string() }).strict()]), visitors: z.array(z.string()).optional() }).strict(),
   z.object({ kind: z.literal('party'), slots: z.array(z.string()).min(1) }).strict(),
@@ -58,6 +59,7 @@ export function primordialChance(ep: number): number {
  */
 export function effectHarmPolicy(e: Effect): HarmCategory | undefined {
   switch (e.kind) {
+    case 'captivity': return 'liberty';
     case 'status': return e.status === 'dead' ? 'life' : e.status === 'missing' ? 'liberty' : undefined;
     case 'treasury': return e.delta < 0 ? 'financial' : undefined;
     case 'respect': return e.delta < 0 ? 'political' : undefined;

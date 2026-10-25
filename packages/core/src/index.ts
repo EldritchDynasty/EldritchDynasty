@@ -96,6 +96,7 @@ export * from './presence.js';
 export * from './mystic.js';
 export * from './covert.js';
 export * from './covert-lifecycle.js';
+export * from './covert-operations.js';
 export * from './people/captivity.js';
 
 export * from './events/harm.js';

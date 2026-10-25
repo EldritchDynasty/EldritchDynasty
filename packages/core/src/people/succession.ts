@@ -1,5 +1,5 @@
 import type { Person, RetainerRole } from '@ed/schema';
-import { RECURRING_CAST_ROLES, RetainerRoleS } from '@ed/schema';
+import { RECURRING_CAST_ROLES, RetainerRoleS, currentMembership } from '@ed/schema';
 import { isRegent, type SimCtx } from '../world.js';
 import { formOf } from './grammar.js';
 import { DEBT_FLOOR } from '../economy.js';
@@ -29,6 +29,34 @@ import { msg } from '../messages.js';
 export interface SuccessionResult {
   newHead?: Person;
   regency: boolean;
+}
+
+/** Known foreign offices inherit through actual stored kin. The Eldritch
+ * House's expresser/regency rule remains specific to its own seal. */
+export function advanceKnownRivalHeads(ctx: SimCtx): void {
+  const w = ctx.world;
+  for (const lineage of w.rivalLineages.values()) {
+    const office = lineage.office;
+    if (!office?.head) continue;
+    const previous = w.people.get(office.head);
+    if (previous && previous.status !== 'dead') continue;
+    const children = new Set(previous ? w.people.children(previous.id).map(p => p.id) : []);
+    const next = w.people.household(lineage.house, w.year).filter(p => {
+      const m = currentMembership(p, w.year);
+      return p.status === 'alive' && m?.house === lineage.house && (m.kind === 'blood' || m.kind === 'cadet');
+    }).sort((a, b) => Number(!children.has(a.id)) - Number(!children.has(b.id)) || a.born - b.born || a.id.localeCompare(b.id))[0];
+    const held = [...office.history].reverse().find(h => h.to === undefined);
+    if (held) held.to = w.year;
+    if (!next) { delete office.head; continue; }
+    office.head = next.id;
+    office.history.push({ person: next.id, from: w.year });
+    if (!next.castSlots.includes('rival')) next.castSlots.push('rival');
+    w.chronicle.push({ year: w.year, weight: 'paragraph', named: true,
+      people: [next.id, ...(previous ? [previous.id] : [])],
+      text: msg(ctx, 'rival.known_succession', '{PERSON} took the seal of {HOUSE} after {PREVIOUS}. The house and its claims did not end with the funeral.',
+        { PERSON: next.name, HOUSE: w.houses.get(lineage.house)?.name ?? lineage.house, PREVIOUS: previous?.name ?? '' }),
+    });
+  }
 }
 
 /**

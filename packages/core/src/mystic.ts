@@ -5,7 +5,7 @@ import { assertNever, canLearn, currentMembership, isActiveBranch, MAIN_BRANCH }
 import type { SimCtx } from './world.js';
 import type { OrderResult } from './table.js';
 import { DEBT_FLOOR } from './economy.js';
-import { attendsHall, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily, resolvePresence } from './presence.js';
+import { attendsHall, covertReservation, deployedPeople, dutyPlaceOf, dutyPlaces, isCurrentFamily, isFamilyOf, resolvePresence } from './presence.js';
 import { msg } from './messages.js';
 import { ordinaryRisk } from './people/demography.js';
 import { proseForContentField } from './prose.js';
@@ -62,7 +62,7 @@ export function hasLearned(p: Person, w: MysticWorkingDef): boolean {
 export function isFieldWorking(w: MysticWorkingDef): w is MysticWorkingDef & { benefit: MysticFieldBenefit } {
   switch (w.benefit.kind) {
     case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment': return true;
-    case 'life_care': case 'estate_protection': case 'household_protection': return false;
+    case 'life_care': case 'estate_protection': case 'household_protection': case 'covert_support': return false;
     default: return assertNever(w.benefit, 'field working');
   }
 }
@@ -99,24 +99,37 @@ export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: Mys
   if ((p.fieldRecoveryUntil ?? -Infinity) > w.year) return 'wounded';
   if ((p.acquired.health ?? 0) <= -20) return 'wounded';
   const site = assignment?.target;
+  const reserved = covertReservation(ctx, p.id);
+  const ownCovertDuty = reserved !== undefined && site?.kind === 'covert' && site.operation === reserved;
+  if (reserved && !ownCovertDuty) return 'deployed';
   const ownFieldDuty = site?.kind === 'muster' && isFieldWorking(working)
     && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field');
-  if (deployedPeople(ctx).has(p.id) && !ownFieldDuty) return 'deployed';
+  if (deployedPeople(ctx).has(p.id) && !ownFieldDuty && !ownCovertDuty) return 'deployed';
   if (p.career && ctx.content.career(p.career.career)?.resident !== 'home') return 'away_post';
   return undefined;
 }
 
 /** Can this working be done for this place at all, today? */
 export function targetGap(
-  ctx: SimCtx, working: MysticWorkingDef, site: SceneSite, bindings: Record<string, string>,
+  ctx: SimCtx, working: MysticWorkingDef, site: SceneSite, bindings: Record<string, string>, house = ctx.world.playerHouse,
 ): MysticGap | undefined {
   const b = working.benefit;
   switch (b.kind) {
+    case 'covert_support': {
+      if (site.kind !== 'covert') return 'target_lost';
+      const o = ctx.world.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
+      return !o || house !== ctx.world.playerHouse ? 'target_lost' : o.stage === 'returning' ? 'not_resident' : undefined;
+    }
     case 'household_protection': {
       if (site.kind !== b.scope) return 'target_lost';
+      if (site.kind === 'hall') {
+        const anchor = typeof site.hall === 'string' ? undefined : ctx.world.people.get(bindings[site.hall.slot] ?? '');
+        if (typeof site.hall === 'string' ? house !== ctx.world.playerHouse
+          : !anchor || currentMembership(anchor, ctx.world.year)?.house !== house) return 'target_lost';
+      }
       if (site.kind === 'person') {
         const p = ctx.world.people.get(site.person);
-        if (!p || p.status !== 'alive' || p.becomesGuardian || !isCurrentFamily(ctx, p)) return 'target_lost';
+        if (!p || p.status !== 'alive' || p.becomesGuardian || !isFamilyOf(ctx, p, house)) return 'target_lost';
         if (!resolvePresence(ctx, site, {}).people.includes(p.id)) return 'not_resident';
       }
       const place = dutyPlaceOf(ctx, site, bindings);
@@ -173,6 +186,7 @@ export interface MysticOrder { person: string; working: string; target: SceneSit
 function coverageKey(ctx: SimCtx, working: MysticWorkingDef, target: SceneSite, bindings: Record<string, string>): string {
   const b = working.benefit;
   return JSON.stringify({ place: dutyPlaceOf(ctx, target, bindings), kind: b.kind,
+    ...(b.kind === 'covert_support' ? { role: b.role } : {}),
     ...(b.kind === 'household_protection' ? { stage: b.stage, scope: b.scope,
       person: target.kind === 'person' ? target.person : undefined } : {}) });
 }
@@ -193,8 +207,8 @@ export function quoteDuty(ctx: SimCtx, o: MysticOrder, house = ctx.world.playerH
   if (study) quote.pauses = { book: study.book, remainingYears: Math.max(1, study.completes - w.year) };
 
   const p = w.people.get(o.person);
-  const context = house === w.playerHouse ? undefined : { house };
-  const gap = practitionerGap(ctx, p, working, context) ?? targetGap(ctx, working, o.target, o.bindings ?? {});
+  const context = { house, ...(working.benefit.kind === 'covert_support' ? { target: o.target } : {}) };
+  const gap = practitionerGap(ctx, p, working, context) ?? targetGap(ctx, working, o.target, o.bindings ?? {}, house);
   if (gap) return { ...quote, ok: false, gap, reason: gapReason(ctx, gap) };
   if (w.mystic.assignments.some((a) => a.practitioner === o.person)) {
     return { ...quote, ok: false, reason: msg(ctx, 'mystic.refuse.one_duty', 'they already keep a duty') };
@@ -220,7 +234,7 @@ export function assignDuty(ctx: SimCtx, o: MysticOrder): OrderResult {
   return result;
 }
 
-function commitDuty(ctx: SimCtx, o: MysticOrder, house: string): OrderResult {
+export function commitDuty(ctx: SimCtx, o: MysticOrder, house: string): OrderResult {
   const w = ctx.world;
   const quote = quoteDuty(ctx, o, house);
   if (!quote.ok) return { ok: false, reason: quote.reason };
@@ -244,15 +258,14 @@ function commitDuty(ctx: SimCtx, o: MysticOrder, house: string): OrderResult {
     status: 'preparing',
     service: { servedYears: 0, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: quote.preparation },
   });
+  if (o.target.kind === 'covert') {
+    const operation = o.target.operation;
+    const expedition = w.covert.operations.find(x => x.plan.id === operation)!;
+    if (!expedition.crew.includes(p.id)) expedition.crew.push(p.id);
+  }
 
   // Intensive duty sets the book down by what is left of it, never by forfeit.
-  const study = w.studies.find((s) => s.person === p.id);
-  if (study) {
-    w.studies = w.studies.filter((s) => s !== study);
-    w.mystic.pauses.push({
-      person: p.id, book: study.book, remainingYears: Math.max(1, study.completes - w.year), pausedAt: w.year, assignment: id,
-    });
-  }
+  pauseDutyStudy(ctx, p.id, id);
 
   if (house === w.playerHouse) w.chronicle.push({
     year: w.year, weight: 'line', named: false, people: [p.id],
@@ -292,8 +305,22 @@ export function releaseDuty(ctx: SimCtx, assignment: string): OrderResult {
 function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
   const w = ctx.world;
   w.mystic.assignments = w.mystic.assignments.filter((x) => x !== a);
-  const paused = w.mystic.pauses.filter((x) => x.assignment === a.id);
-  w.mystic.pauses = w.mystic.pauses.filter((x) => x.assignment !== a.id);
+  resumeDutyStudies(ctx, a.id, lastTurned, dutyHouse(ctx, a));
+}
+
+/** Intensive work shares one remaining-term ledger, including an operative's journey. */
+export function pauseDutyStudy(ctx: SimCtx, person: string, assignment: string): void {
+  const w = ctx.world;
+  const study = w.studies.find(s => s.person === person);
+  if (!study) return;
+  w.studies = w.studies.filter(s => s !== study);
+  w.mystic.pauses.push({ person, book: study.book, remainingYears: Math.max(1, study.completes - w.year), pausedAt: w.year, assignment });
+}
+
+export function resumeDutyStudies(ctx: SimCtx, assignment: string, lastTurned: number, house = ctx.world.playerHouse): void {
+  const w = ctx.world;
+  const paused = w.mystic.pauses.filter(x => x.assignment === assignment);
+  w.mystic.pauses = w.mystic.pauses.filter(x => x.assignment !== assignment);
   for (const pause of paused) {
     const p = w.people.get(pause.person);
     const def = ctx.content.spellbook(pause.book);
@@ -307,7 +334,12 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
       }
       continue;
     }
-    if (dutyHouse(ctx, a) !== w.playerHouse) continue;
+    const reservation = covertReservation(ctx, p.id);
+    if (reservation) {
+      w.mystic.pauses.push({ ...pause, assignment: reservation });
+      continue;
+    }
+    if (house !== w.playerHouse) continue;
     if (!w.library.has(pause.book) || w.library.get(pause.book)?.restoresAt !== undefined) {
       w.chronicle.push({
         year: w.year, weight: 'line', named: false, people: [p.id],
@@ -336,7 +368,7 @@ export function tickMystic(ctx: SimCtx): void {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
     const gap = !working ? 'target_lost'
-      : practitionerGap(ctx, p, working, a) ?? targetGap(ctx, working, a.target, a.bindings);
+      : practitionerGap(ctx, p, working, a) ?? targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a));
 
     if (gap && ENDS.has(gap)) {
       if (p && working) lapseLine(ctx, a, p, working, gap);
@@ -426,7 +458,7 @@ function liveDuties(ctx: SimCtx, kind: MysticWorkingDef['benefit']['kind']) {
     const working = workingDef(ctx, a.working);
     if (!working || working.benefit.kind !== kind) continue;
     const p = w.people.get(a.practitioner);
-    if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings)) continue;
+    if (practitionerGap(ctx, p, working, a) || targetGap(ctx, working, a.target, a.bindings, dutyHouse(ctx, a))) continue;
     out.push({ a, working, p: p! });
   }
   return out;
@@ -445,6 +477,37 @@ export interface HouseholdProtection {
   bonus: number;
   assignment: MysticAssignment;
   practitioner: Person;
+}
+
+export interface CovertSupport {
+  role: Extract<MysticWorkingDef['benefit'], { kind: 'covert_support' }>['role'];
+  bonus: number;
+  assignment: MysticAssignment;
+  practitioner: Person;
+}
+
+/** A role's strongest actual paid specialist, read at this expedition's physical scene. */
+export function covertSupport(ctx: SimCtx, site: SceneSite): CovertSupport[] {
+  if (site.kind !== 'covert') return [];
+  const attendance = resolvePresence(ctx, site, {});
+  const best = new Map<CovertSupport['role'], CovertSupport>();
+  for (const { a, working, p } of liveDuties(ctx, 'covert_support')) {
+    const b = working.benefit;
+    if (b.kind !== 'covert_support' || a.target.kind !== 'covert' || a.target.operation !== site.operation
+      || !attendance.people.includes(p.id)) continue;
+    const old = best.get(b.role);
+    if (!old || b.bonus > old.bonus || b.bonus === old.bonus && a.id < old.assignment.id) {
+      best.set(b.role, { role: b.role, bonus: b.bonus, assignment: a, practitioner: p });
+    }
+  }
+  return [...best.values()];
+}
+
+export function noteCovertSupport(ctx: SimCtx, assignment: string): void {
+  const a = ctx.world.mystic.assignments.find(a => a.id === assignment);
+  if (!a) return;
+  markUseful(a, ctx.world.year);
+  a.service.covertUses = (a.service.covertUses ?? 0) + 1;
 }
 
 /** The strongest paid, learned, present maintainer per stage; neither hall nor person wards cover travel. */
@@ -577,6 +640,8 @@ function fieldPlaceName(ctx: SimCtx, year: number): string {
 }
 
 function fieldTerms(ctx: SimCtx, working: MysticWorkingDef): string | undefined {
+  if (working.benefit.kind === 'covert_support') return msg(ctx, 'mystic.covert.terms',
+    'The reader joins this expedition and provides no home coverage. Setting down the working does not end the return journey. Their book waits by its remaining term until they return; captivity keeps it waiting.');
   if (!isFieldWorking(working)) return undefined;
   const risk = working.benefit.risk;
   const range = (n: number) => `${Math.round(n * 1000) / 10}–${Math.round(n * 2000) / 10}%`;
@@ -588,6 +653,11 @@ function fieldTerms(ctx: SimCtx, working: MysticWorkingDef): string | undefined 
 function placeName(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): string {
   const w = ctx.world;
   switch (site.kind) {
+    case 'covert': {
+      const o = w.covert.operations.find(o => o.plan.id === site.operation);
+      return msg(ctx, 'mystic.place.covert', 'the expedition concerning {PERSON}',
+        { PERSON: o ? w.people.get(o.plan.target)?.name ?? o.plan.target : '' });
+    }
     case 'person': return w.people.get(site.person)?.name ?? site.person;
     case 'parcel': {
       const def = ctx.content.parcel(site.parcel);
@@ -812,6 +882,13 @@ export function tickFieldRisks(ctx: SimCtx, c: Commitment): void {
 
 function finishFieldDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number): void {
   const w = ctx.world;
+  if (a.target.kind === 'covert') {
+    const id = a.target.operation;
+    const o = w.covert.operations.find(o => o.plan.id === id);
+    if (o && !o.supportService.some(s => s.id === a.id)) o.supportService.push({
+      id: a.id, practitioner: a.practitioner, working: a.working, ended: w.year, service: structuredClone(a.service),
+    });
+  }
   if (a.target.kind === 'muster') {
     const commitment = a.target.commitment;
     const c = w.muster.commitments.find(c => c.id === commitment);
@@ -840,6 +917,14 @@ export function finishFieldService(ctx: SimCtx, c: Commitment): void {
     }
     finishFieldDuty(ctx, a, ctx.world.year);
   }
+}
+
+/** Called after the expedition closes, so neither the people nor their books teleport home early. */
+export function finishCovertService(ctx: SimCtx, operation: string, lastTurned: number): void {
+  for (const a of [...ctx.world.mystic.assignments]) {
+    if (a.target.kind === 'covert' && a.target.operation === operation) finishFieldDuty(ctx, a, lastTurned);
+  }
+  resumeDutyStudies(ctx, operation, lastTurned);
 }
 
 // ── What the Table shows ────────────────────────────────────────────────────
@@ -894,6 +979,11 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
   const out: MysticTarget[] = [];
   const b = working.benefit;
   switch (b.kind) {
+    case 'covert_support':
+      return w.covert.operations.filter(o => o.stage === 'preparing' || o.stage === 'approach').map(o => {
+        const target: SceneSite = { kind: 'covert', operation: o.plan.id };
+        return { target, bindings: {}, name: placeName(ctx, target, {}) };
+      });
     case 'household_protection': {
       if (b.scope === 'person') {
         for (const p of w.people.household(w.playerHouse, w.year)) {
@@ -984,9 +1074,14 @@ export function mysticView(ctx: SimCtx): MysticView {
     preparation: working.preparation.crowns,
     preparationYears: working.preparation.years,
     upkeep: working.upkeep,
-    ...(isFieldWorking(working) ? { fieldTerms: fieldTerms(ctx, working) } : {}),
+    ...(isFieldWorking(working) || working.benefit.kind === 'covert_support' ? { fieldTerms: fieldTerms(ctx, working) } : {}),
     practitioners: household
-      .filter((p) => !practitionerGap(ctx, p, working) && !w.mystic.assignments.some((a) => a.practitioner === p.id))
+      .filter((p) => {
+        const expedition = working.benefit.kind === 'covert_support'
+          ? w.covert.operations.find(o => o.stage === 'preparing' || o.stage === 'approach') : undefined;
+        const context = expedition ? { target: { kind: 'covert' as const, operation: expedition.plan.id } } : undefined;
+        return !practitionerGap(ctx, p, working, context) && !w.mystic.assignments.some(a => a.practitioner === p.id);
+      })
       .map((p) => {
         const study = w.studies.find((s) => s.person === p.id);
         return {

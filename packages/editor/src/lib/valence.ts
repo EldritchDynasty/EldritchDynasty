@@ -70,6 +70,7 @@ function scoreOf(e: Effect): number {
      * he is still a man the house has stopped being able to marry off.
      */
     case 'status':
+    case 'captivity':
       return -WEIGHT.death;
 
     /**

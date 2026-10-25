@@ -1,4 +1,5 @@
 import { CovertStateS, emptyCovertState } from './covert.js';
+import { KnownRivalOfficeS } from './rival.js';
 import { z } from 'zod';
 import { FrequencyS } from './frequency.js';
 import { RungS, RiteS } from './rung.js';
@@ -219,7 +220,8 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
  * Older saves load without inventing unrecorded historical commands. */
 /** Format 38 retains commitment-bound field service, foreign spending and recovery. */
 /** Format 39 retains staged household threats, paid responses and frozen evidence. */
-export const SAVE_FORMAT = 39;
+/** Format 40 retains committed covert expeditions, evidence and known rival succession. */
+export const SAVE_FORMAT = 40;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -370,6 +372,8 @@ export const RivalPersonS = z.object({
 export const RivalLineageStateS = z.object({
   house: z.string(),
   people: z.array(RivalPersonS),
+  /** Optional known political office: these ids address real stored Persons. */
+  office: KnownRivalOfficeS.optional(),
 });
 
 export const ArcInstanceS = z.object({

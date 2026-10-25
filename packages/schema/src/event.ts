@@ -212,6 +212,8 @@ export const EffectS = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('attribute'), target: TargetS, attr: z.string(), delta: z.number() }),
   z.object({ kind: z.literal('trait'), target: TargetS, trait: z.string(), op: z.enum(['add', 'remove']) }),
   z.object({ kind: z.literal('status'), target: TargetS, status: z.string(), cause: z.string().optional() }),
+  /** A real family captivity transition, assessed as liberty harm before committing. */
+  z.object({ kind: z.literal('captivity'), target: TargetS, captor: z.string(), ransom: z.number().int().nonnegative() }).strict(),
   /** Guarded: applying this where canExpress is false is a validation error. */
   z.object({ kind: z.literal('madness'), target: TargetS, delta: z.number() }),
   /**

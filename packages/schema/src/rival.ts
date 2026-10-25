@@ -1,6 +1,14 @@
 import type { Genome } from './genome.js';
 import type { Year } from './ids.js';
 import type { Sex } from './attributes.js';
+import { z } from 'zod';
+
+/** A known office points into PersonStore, never into the shadow genealogy. */
+export const KnownRivalOfficeS = z.object({
+  head: z.string().optional(),
+  history: z.array(z.object({ person: z.string(), from: z.number(), to: z.number().optional() }).strict()),
+}).strict();
+export type KnownRivalOffice = z.infer<typeof KnownRivalOfficeS>;
 
 /**
  * RIVAL-HOUSE DESCENT (issue #24 item 6).
@@ -78,6 +86,7 @@ export interface RivalPerson {
 /** One rival house's shadow lineage, keyed by house id on `WorldState.rivalLineages`. */
 export interface RivalLineageState {
   house: string;
+  office?: KnownRivalOffice;
   /** Append-only. The dead and the departed stay, because descent reads through them. */
   people: RivalPerson[];
 }

@@ -50,6 +50,9 @@ export const MysticFieldBenefitS = z.discriminatedUnion('kind', [
 ]);
 export type MysticFieldBenefit = z.infer<typeof MysticFieldBenefitS>;
 
+export const CovertSupportRoleS = z.enum(['approach', 'breach', 'escape', 'recovery', 'hostile']);
+export type CovertSupportRole = z.infer<typeof CovertSupportRoleS>;
+
 export const MysticBenefitS = z.discriminatedUnion('kind', [
   /**
    * A carer posted to one hall. Each year they attend the `maxWards`
@@ -82,6 +85,11 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     stage: z.enum(['warning', 'prevention', 'survival']),
     scope: z.enum(['hall', 'person']),
     bonus: z.number().positive().max(0.5),
+  }).strict(),
+  z.object({
+    kind: z.literal('covert_support'),
+    role: CovertSupportRoleS,
+    bonus: z.number().positive().max(0.3),
   }).strict(),
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
@@ -141,6 +149,7 @@ export const MysticServiceS = z.object({
   crownsKept: z.number().nonnegative().optional(),
   opportunities: z.number().int().nonnegative().optional(),
   protections: z.number().int().nonnegative().optional(),
+  covertUses: z.number().int().nonnegative().optional(),
   /** Fractions accumulate, so small levies neither lose all benefit nor become immune. */
   recoverable: z.number().min(0).max(1).optional(),
 }).strict();

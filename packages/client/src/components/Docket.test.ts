@@ -9,7 +9,7 @@ import { mount, type VueWrapper } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { tableView, tickHouseholdThreats } from '@ed/core';
+import { commitDuty, prepareCovertOperation, tableView, tickHouseholdThreats } from '@ed/core';
 import { place, testWorld } from '../../../core/src/testing.js';
 import { addGrudge } from '../../../core/src/people/relationships.js';
 import { PendingDecisionS, type FrameEntry } from '@ed/schema';
@@ -24,6 +24,7 @@ import type {
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
 import HouseholdSecurity from './HouseholdSecurity.vue';
+import CovertExpeditions from './CovertExpeditions.vue';
 import Interlude from './Interlude.vue';
 import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
@@ -38,6 +39,35 @@ import { revealTransition } from '../lib/reveal';
 import { installPseudoLocalisation } from '../pseudo-loc';
 
 const content = loadContent();
+
+describe('quoted expedition controls (#1876)', () => {
+  it.each(['original', 'plainenglish'] as const)('sends the core quote and recall orders without exposing enemy support in %s', async proseMode => {
+    const ctx = testWorld(content, 1876); ctx.world.relationships.clear(); ctx.world.treasury = 1000;
+    const target = ctx.world.people.living().find(p => p.castSlots.includes('rival'))!;
+    const operative = place(ctx, { sex: 'female', age: 30, name: 'Aster' });
+    const secret = place(ctx, { sex: 'female', age: 30, house: 'house_marrow', name: 'The hidden foreign carer', awakened: true });
+    secret.spellsKnown = [asId('lesser_workings_of_life')];
+    commitDuty(ctx, { person: secret.id, working: 'the_bedside_thread', target: { kind: 'person', person: target.id } }, 'house_marrow');
+    addGrudge(ctx, ctx.world.playerHouse, target.id, { severity: 75, inheritance: 'house_wide' });
+    const expeditions = tableView(ctx).expeditions;
+    const offer = expeditions.offers.find(o => o.ok && o.order.operative === operative.id && o.order.preparation === 'hasty')!;
+    const wrapper = mount(CovertExpeditions, { props: { expeditions: reactive(expeditions), proseMode } });
+    expect(wrapper.text()).toContain(target.name);
+    expect(wrapper.text()).not.toContain(secret.name);
+    expect(wrapper.get('button').attributes('disabled')).toBeDefined();
+    await wrapper.get('select').setValue(JSON.stringify(offer.order));
+    expect(wrapper.text()).toContain('20');
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('order')).toEqual([[offer.order]]);
+    expect(() => structuredClone(wrapper.emitted('order')![0]![0])).not.toThrow();
+    expect(prepareCovertOperation(ctx, offer.order).ok).toBe(true);
+    await wrapper.setProps({ expeditions: tableView(ctx).expeditions });
+    expect(wrapper.text()).toContain(operative.name);
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('order')![1]).toEqual([{ kind: 'covertWithdraw', operation: ctx.world.covert.operations[0]!.plan.id }]);
+    wrapper.unmount();
+  });
+});
 
 describe('household warning controls (#1875)', () => {
   function warning() {
@@ -1244,6 +1274,7 @@ function riteTable(assembly: RiteAssembly): TableView {
     studying: [],
   mystic: { duties: [], offers: [] },
   security: { threats: [], history: [] },
+  expeditions: { offers: [], current: [], history: [], cases: [], terms: '' },
     captives: [],
     market: [],
     longWait: [],

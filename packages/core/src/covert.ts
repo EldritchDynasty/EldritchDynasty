@@ -7,7 +7,7 @@ import {
 import type { SimCtx } from './world.js';
 import { resolvePresence } from './presence.js';
 import { streamFor } from './rng.js';
-import { householdProtection } from './mystic.js';
+import { householdProtection, covertSupport } from './mystic.js';
 
 /**
  * Bounded incident resolution (#1914, part of #1875/#1866).
@@ -170,6 +170,7 @@ export interface CovertResolved {
   observation?: CovertObservation;
   /** Actual maintainers whose bounded intervention changed a stage's result. */
   support?: { stage: 'warning' | 'prevention' | 'survival'; assignment: string }[];
+  offensiveSupport?: string[];
 }
 
 /**
@@ -206,20 +207,25 @@ export function resolveCovertAttempt(
   const bonus = (stage: 'warning' | 'prevention' | 'survival') => care.find(c => c.stage === stage)?.bonus ?? 0;
   const warned = knowledge.forewarned === true || warningFor(ctx, a, d.guards.length, dice, bonus('warning')) !== undefined;
   if (d.response !== 'ordinary' && !warned) return { kind: 'refused', reason: 'no_warning' };
-  if (d.response === 'safe_lodging' && a.site.kind !== 'hall') return { kind: 'refused', reason: 'wrong_place' };
+  if (d.response === 'safe_lodging' && !resolvePresence(ctx, a.site, a.bindings).hall) return { kind: 'refused', reason: 'wrong_place' };
   if (d.response === 'escort' && !d.guards.length) return { kind: 'refused', reason: 'invalid_guard' };
   const guards = d.guards.length;
   const shelter = d.response === 'safe_lodging';
   const escort = d.response === 'escort';
+  const specialists = covertSupport(ctx, a.site);
+  const aid = (role: (typeof specialists)[number]['role']) => specialists.find(c => c.role === role)?.bonus ?? 0;
   const ordinaryPrevention = 0.08 + guards * 0.16 + (shelter ? 0.28 : 0) + (escort ? 0.12 : 0);
-  const prevented = dice.prevention < Math.min(0.9, ordinaryPrevention + bonus('prevention'));
-  const struck = !prevented && dice.strike < 0.55 + (a.preparation === 'careful' ? 0.1 : 0) - guards * 0.04;
+  const defendedPrevention = Math.min(0.9, ordinaryPrevention + bonus('prevention'));
+  const prevented = dice.prevention < Math.max(0.02, defendedPrevention - aid('breach'));
+  const ordinaryStrike = 0.55 + (a.preparation === 'careful' ? 0.1 : 0) - guards * 0.04;
+  const struck = !prevented && dice.strike < Math.min(.9, ordinaryStrike + aid('approach') + aid('hostile'));
   const ordinarySurvival = 0.65 + (escort ? 0.08 : 0) - (a.preparation === 'careful' ? 0.06 : 0);
-  const survives = dice.survival < Math.min(0.95, ordinarySurvival + bonus('survival'));
+  const defendedSurvival = Math.min(0.95, ordinarySurvival + bonus('survival'));
+  const survives = dice.survival < Math.max(.3, defendedSurvival - aid('hostile'));
   const target = !struck ? 'unharmed' : survives ? 'wounded' : 'dead';
   // No guard, no captor. An unobserved retreat cannot create a phantom hostage.
-  const captured = guards > 0 && dice.escape >= 0.75 - guards * 0.14 - (warned ? 0.1 : 0)
-    + (a.preparation === 'careful' ? 0.06 : 0);
+  const ordinaryEscape = 0.75 - guards * 0.14 - (warned ? 0.1 : 0) + (a.preparation === 'careful' ? 0.06 : 0);
+  const captured = guards > 0 && dice.escape >= Math.min(.98, ordinaryEscape + aid('escape'));
 
   if (target === 'dead') normal.effects.push({ kind: 'status', target: { slot: 'COVERT_TARGET' }, status: 'dead', cause: 'covert_attack' });
   if (target === 'wounded') normal.effects.push({ kind: 'attribute', target: { slot: 'COVERT_TARGET' }, attr: 'health', delta: -8 });
@@ -230,21 +236,34 @@ export function resolveCovertAttempt(
   // Traces do not identify a patron. Even custody gives only the operative's
   // identity; later testimony needs an actual evidence source, not this roll.
   const witnesses = [...d.guards, ...(!prevented && target !== 'dead' ? [a.target] : [])].sort();
-  if (captured || (witnesses.length > 0 && dice.evidence < 0.15 + (warned ? 0.15 : 0) + guards * 0.08)) {
+  const ordinaryEvidence = 0.15 + (warned ? 0.15 : 0) + guards * 0.08;
+  if (captured || (witnesses.length > 0 && dice.evidence < Math.max(.02, ordinaryEvidence - aid('approach')))) {
     observation.identifiedOperative = a.operative;
     observation.witnesses = witnesses;
   }
   if (captured) observation.capturedOperative = a.operative;
   const support = care.filter(c => c.stage === 'warning'
     ? !knowledge.forewarned && warned && !warningFor(ctx, a, guards, dice)
-    : c.stage === 'prevention' ? prevented && dice.prevention >= ordinaryPrevention
-      && dice.strike < 0.55 + (a.preparation === 'careful' ? 0.1 : 0) - guards * 0.04
-      : struck && survives && dice.survival >= ordinarySurvival)
+    : c.stage === 'prevention' ? prevented && dice.prevention >= Math.max(.02, ordinaryPrevention - aid('breach'))
+      && dice.strike < Math.min(.9, ordinaryStrike + aid('approach') + aid('hostile'))
+      : struck && survives && dice.survival >= Math.max(.3, ordinarySurvival - aid('hostile')))
     .map(c => ({ stage: c.stage, assignment: c.assignment.id }));
+  const offensiveSupport = specialists.filter(c => {
+    switch (c.role) {
+      case 'breach': return struck && dice.prevention < defendedPrevention;
+      case 'escape': return !captured && guards > 0 && dice.escape >= ordinaryEscape;
+      case 'hostile': return struck && (dice.strike >= Math.min(.9, ordinaryStrike + aid('approach')) || !survives && dice.survival < defendedSurvival);
+      case 'approach': return struck && dice.strike >= Math.min(.9, ordinaryStrike + aid('hostile'))
+        || !captured && witnesses.length > 0 && !observation.identifiedOperative && dice.evidence < ordinaryEvidence;
+      case 'recovery': return false; // Injury is assessed separately from the victim's fate.
+      default: return assertNever(c.role, 'covert support');
+    }
+  }).map(c => c.assignment.id);
   return {
     kind: 'resolved', target, operative: captured ? 'captured' : 'escaped', prevented, warned, normal,
     // A barrier stopping an unseen approach is not knowledge of an attack.
     observation: warned || !prevented || guards > 0 ? observation : undefined,
     ...(support.length ? { support } : {}),
+    ...(offensiveSupport.length ? { offensiveSupport } : {}),
   };
 }

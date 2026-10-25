@@ -153,7 +153,8 @@ watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEveryth
 
   const transition = revealTransition(nextView, nextTable, prior, {
     showEverything,
-    needed: nextView.muster || nextTable?.security?.threats.length ? ['table'] : [],
+    needed: nextView.muster || nextTable?.security?.threats.length || nextTable?.expeditions?.offers.length
+      || nextTable?.expeditions?.current.length ? ['table'] : [],
   });
 
   revealRunKey = key;

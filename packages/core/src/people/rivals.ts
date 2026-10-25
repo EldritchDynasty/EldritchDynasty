@@ -1,4 +1,5 @@
 import type { RivalLineageState, RivalPerson, Sex } from '@ed/schema';
+import { currentMembership } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { streamFor } from '../rng.js';
@@ -257,4 +258,20 @@ export function pickRivalCandidate(
 /** Look a rival person up directly, by house and id, without filtering on eligibility. */
 export function findRivalPerson(ctx: SimCtx, houseId: string, rivalId: string): RivalPerson | undefined {
   return ctx.world.rivalLineages.get(houseId)?.people.find((p) => p.id === rivalId);
+}
+
+/** Track a political office only when the house engages its real, known holder.
+ * Shadow genealogical ids never become assassination targets. */
+export function trackKnownRivalHead(ctx: SimCtx, person: string): void {
+  const w = ctx.world;
+  const p = w.people.get(person);
+  const house = p && currentMembership(p, w.year)?.house;
+  if (!p || p.status !== 'alive' || !p.castSlots.includes('rival') || !house || house === w.playerHouse
+    || !RIVAL_LINEAGE_HOUSES.includes(house)) return;
+  if (!w.rivalLineages.has(house)) growRivalLineage(ctx, house);
+  const lineage = w.rivalLineages.get(house)!;
+  if (lineage.office?.head) return;
+  const office = lineage.office ??= { history: [] };
+  office.head = p.id;
+  office.history.push({ person: p.id, from: w.year });
 }

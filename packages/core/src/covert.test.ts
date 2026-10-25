@@ -25,6 +25,291 @@ import { genomeOf, phenotypeOf } from './people/factory.js';
 import { ELDRITCH_GIFT } from './genetics/expression.js';
 import { newGame, resumeGame } from './session.js';
 import { replay } from './replay.js';
+import { covertOpportunities, prepareCovertOperation, quoteCovertOperation, tickCovertOperations, withdrawCovertOperation } from './covert-operations.js';
+import { advanceKnownRivalHeads } from './people/succession.js';
+import { tickAssize } from './assize.js';
+import { tickRelationships } from './people/relationships.js';
+import { commitDuty } from './mystic.js';
+import { covertOperationsView } from './covert-operations.js';
+
+describe('committed offensive expeditions (#1876)', () => {
+  const start = 1042;
+  function seedFor(predicate: (dice: CovertDraws, approach: CovertDraws, seed: number) => boolean) {
+    for (let seed = 1; seed < 100_000; seed++) {
+      const plan = { id: 'cop_1', preparedAt: start };
+      const dice = covertDraws({ world: { seed, year: start + 2 } }, plan);
+      const approach = covertDraws({ world: { seed, year: start + 1 } }, plan);
+      if (predicate(dice, approach, seed)) return seed;
+    }
+    throw new Error('no built-state operation witness');
+  }
+  const fatal = seedFor((d, a) => d.prevention > .85 && d.strike < .2 && d.survival > .8 && d.survival < .93 && a.warning > .7 && d.warning > .7);
+  const captured = seedFor((d, a) => d.prevention > .85 && d.strike > .9 && d.escape > .95 && a.warning > .7 && d.warning > .7);
+  function scene(seed = fatal) {
+    const ctx = testWorld(content, seed);
+    for (const p of ctx.world.people.all()) p.awakening.awakened = false;
+    ctx.world.relationships.clear(); ctx.world.treasury = 1000;
+    const target = ctx.world.people.living().find(p => p.castSlots.includes('rival'))!;
+    const operative = place(ctx, { sex: 'female', age: 30, name: 'The named operative', awakened: true });
+    addGrudge(ctx, ctx.world.playerHouse, target.id, { severity: 75, inheritance: 'house_wide' });
+    const opportunity = covertOpportunities(ctx).find(o => o.target.id === target.id)!;
+    const order = { opportunity: opportunity.id, operative: operative.id, purpose: 'settle_grudge' as const, preparation: 'hasty' as const };
+    return { ctx, target, operative, opportunity, order };
+  }
+  function turn(ctx: ReturnType<typeof scene>['ctx']) {
+    ctx.world.year++; tickMystic(ctx); tickEconomy(ctx); tickCovertOperations(ctx); advanceKnownRivalHeads(ctx);
+  }
+  const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+  it('commits an actual known person, real payment and a consumed opportunity, once', () => {
+    const { ctx, target, operative, order } = scene();
+    const before = ctx.world.treasury;
+    expect(quoteCovertOperation(ctx, order)).toMatchObject({ ok: true, price: 20, ready: start + 2 });
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(before - 20);
+    expect(ctx.world.covert.operations[0]!.plan).toMatchObject({ target: target.id, operative: operative.id, paidCrowns: 20 });
+    expect(covertOpportunities(ctx).map(o => o.id)).not.toContain(order.opportunity);
+    expect(prepareCovertOperation(ctx, order).ok).toBe(false);
+    expect(ctx.world.treasury).toBe(before - 20);
+    expect(prepareCovertOperation(ctx, { ...order, opportunity: 'a_shadow_rival_id' }).ok).toBe(false);
+  });
+
+  it('excludes a founder, an absent operative, an existing primary duty and unwilling service', () => {
+    const { ctx, operative, order } = scene();
+    const founder = ctx.world.people.living().find(p => p.becomesGuardian)!;
+    expect(quoteCovertOperation(ctx, { ...order, operative: founder.id }).ok).toBe(false);
+    operative.status = 'missing'; expect(quoteCovertOperation(ctx, order).ok).toBe(false); operative.status = 'alive';
+    operative.spellsKnown = [asId('lesser_workings_of_life')];
+    assignDuty(ctx, { person: operative.id, working: 'sickroom_watch', target: { kind: 'hall', hall: 'main' } });
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+    releaseDuty(ctx, ctx.world.mystic.assignments[0]!.id);
+    addGrudge(ctx, operative.id, ctx.world.playerHouse, { severity: 70, inheritance: 'none' });
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+  });
+
+  it('withdraws before attempting, spends preparation and keeps people and study away until return', () => {
+    const { ctx, operative, order } = scene();
+    const book = 'lesser_workings_of_light';
+    ctx.world.library.set(book, { id: book, condition: 100, acquiredYear: start });
+    ctx.world.studies.push({ person: operative.id, book, completes: start + 4 });
+    prepareCovertOperation(ctx, order);
+    const op = ctx.world.covert.operations[0]!;
+    expect(ctx.world.studies).toEqual([]);
+    expect(ctx.world.mystic.pauses.find(p => p.person === operative.id)).toMatchObject({ remainingYears: 4 });
+    expect(withdrawCovertOperation(ctx, op.plan.id).ok).toBe(true);
+    expect(ctx.world.studies).toEqual([]);
+    expect(withdrawCovertOperation(ctx, op.plan.id).ok).toBe(false);
+    turn(ctx);
+    expect(op).toMatchObject({ stage: 'closed', result: 'withdrawn' });
+    expect(ctx.world.studies.some(s => s.person === operative.id && s.book === book)).toBe(true);
+    expect(covertOpportunities(ctx).some(o => o.id === order.opportunity)).toBe(false);
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+  });
+
+  it('kills through the normal commit and gives the real rival daughter the known seal', () => {
+    const { ctx, target, order } = scene();
+    const heir = ctx.world.people.children(target.id).find(p => p.status === 'alive')!;
+    const kill = vi.spyOn(ctx.world.people, 'kill');
+    prepareCovertOperation(ctx, order); turn(ctx); turn(ctx);
+    const op = ctx.world.covert.operations[0]!;
+    expect(op.result).toBe('success');
+    expect(target.status).toBe('dead');
+    expect(kill).toHaveBeenCalledWith(target.id, start + 2, 'an attack');
+    expect(ctx.world.rivalLineages.get(op.targetHouse)!.office?.head).toBe(heir.id);
+    expect(heir.castSlots).toContain('rival');
+    kill.mockRestore();
+  });
+
+  it('a real female enemy carer changes the same fatal roll; removing only her restores death', () => {
+    const { ctx, target, order } = scene();
+    place(ctx, { sex: 'male', age: 25, house: 'house_marrow' });
+    place(ctx, { sex: 'male', age: 26, house: 'house_marrow' });
+    const reader = place(ctx, { sex: 'female', age: 30, house: 'house_marrow', awakened: true });
+    reader.spellsKnown = [asId('lesser_workings_of_life')];
+    expect(commitDuty(ctx, { person: reader.id, working: 'the_bedside_thread', target: { kind: 'person', person: target.id } }, 'house_marrow').ok).toBe(true);
+    prepareCovertOperation(ctx, order); turn(ctx);
+    expect(ctx.world.covert.operations[0]!.defence.guards).not.toContain(reader.id);
+    const control = loadGame(transport(saveGame(ctx)), content);
+    control.world.people.mustGet(reader.id).status = 'missing';
+    turn(ctx); turn(control);
+    expect(target.status).toBe('alive');
+    expect(control.world.people.mustGet(target.id).status).toBe('dead');
+    expect(ctx.world.covert.operations[0]!.defence.guards).toEqual(control.world.covert.operations[0]!.defence.guards);
+    expect(ctx.world.mystic.assignments.find(a => a.practitioner === reader.id)?.service.protections).toBe(1);
+  });
+
+  it('captures an actual operative into normal ransom custody and preserves copied testimony after death', () => {
+    const { ctx, operative, order } = scene(captured);
+    prepareCovertOperation(ctx, order); turn(ctx); turn(ctx);
+    const op = ctx.world.covert.operations[0]!;
+    expect(op).toMatchObject({ result: 'failed', operativeFate: 'captured' });
+    expect(operative.captivity).toMatchObject({ home: { house: ctx.world.playerHouse }, captor: op.targetHouse, ransom: 60 });
+    expect(op.exposure?.basis).toBe('capture');
+    const copy = transport(op.exposure);
+    for (const id of op.exposure!.witnesses) ctx.world.people.kill(id, ctx.world.year, 'test');
+    expect(op.exposure).toEqual(copy);
+    turn(ctx);
+    const money = ctx.world.treasury;
+    tickAssize(ctx, streamFor(ctx.world, 'assize'));
+    expect(op.exposure?.heardAt).toBe(ctx.world.year);
+    expect(ctx.world.treasury).toBe(money - 30);
+    expect(op.exposure?.receipt).toContain('copied testimony');
+    const evidence = transport(op.exposure);
+    ctx.world.people.kill(operative.id, ctx.world.year, 'test'); ctx.world.year += 20; tickRelationships(ctx);
+    expect(op.exposure).toEqual(evidence);
+    expect([...ctx.world.relationships.values()].some(r => r.from === op.targetHouse && r.to === ctx.world.playerHouse && r.grudges.some(g => g.inheritance === 'house_wide'))).toBe(true);
+  });
+
+  it('continues every saved stage, payment, custody and frozen receipt after reload', () => {
+    const { ctx, order } = scene(captured); prepareCovertOperation(ctx, order);
+    const loaded = loadGame(transport(saveGame(ctx)), content);
+    for (let n = 0; n < 3; n++) {
+      turn(ctx); turn(loaded);
+      expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+    }
+  });
+
+  it('keeps a wounded partial result separate from capture and exposure', () => {
+    const seed = seedFor((d, a) => d.prevention > .85 && d.strike < .2 && d.survival < .5 && d.escape < .1 && d.evidence > .9);
+    const { ctx, target, order } = scene(seed); prepareCovertOperation(ctx, order); turn(ctx); turn(ctx);
+    const op = ctx.world.covert.operations[0]!;
+    expect(op.result).toBe('partial'); expect(target.status).toBe('alive'); expect(target.acquired.health).toBe(-8);
+    expect(op.operativeFate).not.toBe('captured'); expect(op.exposure).toBeUndefined();
+  });
+
+  it('can succeed without known attribution, and creates no omniscient court fine', () => {
+    const seed = seedFor(d => d.prevention > .85 && d.strike < .2 && d.survival > .85 && d.escape < .1 && d.evidence > .9);
+    const { ctx, order } = scene(seed); prepareCovertOperation(ctx, order); turn(ctx); turn(ctx); turn(ctx);
+    const op = ctx.world.covert.operations[0]!;
+    expect(op.result).toBe('success'); expect(op.exposure).toBeUndefined();
+    const money = ctx.world.treasury; const standing = ctx.world.respect;
+    tickAssize(ctx, streamFor(ctx.world, 'assize'));
+    expect(ctx.world.treasury).toBe(money); expect(ctx.world.respect).toBe(standing);
+  });
+
+  it('a local expresser can prevent proposed captivity without reviving the dead enemy or keeping false testimony', () => {
+    const seed = seedFor((d, a, s) => d.prevention > .85 && d.strike < .2 && d.survival > .85 && d.escape > .95
+      && streamFor({ seed: s, year: start + 2 }, 'primordial:chr_1').next() < .8);
+    const { ctx, target, operative, order } = scene(seed);
+    const source = ctx.world.people.living().find(p => phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress)!;
+    const supporter = place(ctx, { sex: 'male', age: 30, awakened: true });
+    supporter.genome = { kind: 'materialized', genome: genomeOf(source, ctx.genetics) }; supporter.phenotype = undefined;
+    supporter.acquired[ELDRITCH_GIFT] = 1000; supporter.spellsKnown = [asId('lesser_workings_of_darkness')];
+    prepareCovertOperation(ctx, order);
+    const op = ctx.world.covert.operations[0]!;
+    expect(assignDuty(ctx, { person: supporter.id, working: 'the_covered_approach', target: { kind: 'covert', operation: op.plan.id } }).ok).toBe(true);
+    turn(ctx); turn(ctx);
+    expect(target.status).toBe('dead'); expect(op.result).toBe('success');
+    expect(op.operativeFate).toBe('rescued'); expect(operative.captivity).toBeUndefined();
+    expect(op.observation?.capturedOperative).toBeUndefined(); expect(op.observation?.identifiedOperative).toBeUndefined();
+    expect(op.exposure).toBeUndefined();
+  });
+
+  it('setting down support does not teleport its reader or complete a paused book', () => {
+    const { ctx, order } = scene();
+    const reader = place(ctx, { sex: 'female', age: 30, awakened: true }); reader.spellsKnown = [asId('lesser_workings_of_darkness')];
+    const book = 'lesser_workings_of_light';
+    ctx.world.library.set(book, { id: book, condition: 100, acquiredYear: start });
+    ctx.world.studies.push({ person: reader.id, book, completes: start + 4 });
+    prepareCovertOperation(ctx, order); const op = ctx.world.covert.operations[0]!;
+    expect(assignDuty(ctx, { person: reader.id, working: 'the_covered_approach', target: { kind: 'covert', operation: op.plan.id } }).ok).toBe(true);
+    const assignment = ctx.world.mystic.assignments.find(a => a.practitioner === reader.id)!;
+    releaseDuty(ctx, assignment.id);
+    const ward = ctx.world.people.household(ctx.world.playerHouse, start).find(p => p.sex === 'female' && p.id !== reader.id)!;
+    expect(quoteDuty(ctx, { person: reader.id, working: 'the_unwatched_room', target: { kind: 'person', person: ward.id } }).gap).toBe('deployed');
+    expect(ctx.world.studies.some(s => s.person === reader.id)).toBe(false);
+    expect(ctx.world.mystic.pauses.find(p => p.person === reader.id)).toMatchObject({ remainingYears: 4, assignment: op.plan.id });
+    withdrawCovertOperation(ctx, op.plan.id); turn(ctx);
+    expect(ctx.world.studies.some(s => s.person === reader.id && s.book === book)).toBe(true);
+    expect(op.supportService[0]!.practitioner).toBe(reader.id);
+  });
+
+  it('cancels stale access after the target changes households instead of following them for free', () => {
+    const { ctx, target, order } = scene(); prepareCovertOperation(ctx, order); turn(ctx);
+    target.membership.find(m => m.to === undefined)!.to = ctx.world.year;
+    target.membership.push({ house: asId('house_calder'), kind: 'blood', from: ctx.world.year });
+    turn(ctx);
+    expect(ctx.world.covert.operations[0]!.result).toBe('cancelled'); expect(target.status).toBe('alive');
+  });
+
+  it('actual female recovery support changes the operative’s injury without changing the enemy’s fate', () => {
+    const seed = seedFor((d, a, s) => d.escape < .1 && streamFor({ seed: s, year: start + 2 }, 'covert_recovery', 'cop_1').next() < .15);
+    const { ctx, operative, target, order } = scene(seed);
+    const reader = place(ctx, { sex: 'female', age: 30, awakened: true }); reader.spellsKnown = [asId('lesser_workings_of_life')];
+    prepareCovertOperation(ctx, order); const op = ctx.world.covert.operations[0]!;
+    expect(assignDuty(ctx, { person: reader.id, working: 'the_travelling_thread', target: { kind: 'covert', operation: op.plan.id } }).ok).toBe(true);
+    turn(ctx); const control = loadGame(transport(saveGame(ctx)), content);
+    control.world.people.mustGet(reader.id).status = 'missing';
+    turn(ctx); turn(control);
+    expect(operative.acquired.health ?? 0).toBe(0);
+    expect(control.world.people.mustGet(operative.id).acquired.health).toBe(-12);
+    expect(control.world.people.mustGet(target.id).status).toBe(target.status);
+    expect(ctx.world.mystic.assignments.find(a => a.practitioner === reader.id)!.service.covertUses).toBe(1);
+  });
+
+  it('projects known orders and heard cases without revealing unseen guards, wards or testimony', () => {
+    const { ctx, order } = scene(captured); prepareCovertOperation(ctx, order); turn(ctx); turn(ctx);
+    const op = ctx.world.covert.operations[0]!;
+    expect(op.exposure).toBeDefined();
+    const view = covertOperationsView(ctx);
+    expect(view.cases).toEqual([]);
+    expect(JSON.stringify(view)).not.toMatch(/enemyWarned|supportService|identifiedOperative|guard[s]"|bindings|sponsor|probability/);
+    turn(ctx); tickAssize(ctx, streamFor(ctx.world, 'assize'));
+    expect(covertOperationsView(ctx).cases[0]!.receipt).toBe(op.exposure!.receipt);
+  });
+});
+
+describe('public offensive operation commands (#1876)', () => {
+  const bundle = loadContent().bundle;
+  const event = EventTemplateS.parse({ id: 'operation_reader_fixture', title: 'A grievance and a learned reader',
+    tier: 'family', frequency: 'common', weight: 1e9, repeatable: false,
+    purposes: ['test_magic_rule', 'worldbuild_through_action', 'change_relationship'],
+    conditions: { all: [{ year: { op: 'lte', value: 1050 } }, { grudgeAgainstUs: { op: 'gte', value: 0 } }] },
+    slots: { READER: { role: 'tutor', filters: [{ sex: 'female' }] }, ENEMY: { role: 'rival' } }, body: 'The reader has learned the working.',
+    interaction: { kind: 'narration', outcomes: [{ id: 'learned', text: 'The grievance is recorded.', effects: [
+      { kind: 'awakening', target: { slot: 'READER' } },
+      { kind: 'spellbook', op: 'gain', target: { slot: 'READER' }, book: 'lesser_workings_of_darkness' },
+      { kind: 'relationship', from: { slot: 'ENEMY' }, to: { slot: 'READER' }, grudge: { severity: 75, inheritance: 'house_wide' } },
+    ] }] },
+  });
+  const source = { ...bundle, characters: [...bundle.characters, SeedPersonS.parse({
+    key: 'operation_reader', name: 'Maud of the Journey', sex: 'female', born: 1007,
+    house: 'house_gearithy', castSlots: ['tutor'],
+  })], events: [...bundle.events, event] };
+  const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+  it.each<ProseMode>(['original', 'plainenglish'])('preserves the committed people, journey and complete command replay in %s', mode => {
+    const game = newGame(source, { seed: 3, decider: 'chronicler', proseMode: mode });
+    const prologue = game.prologue()!;
+    expect(game.found({ houseName: 'The House of the Journey', heirloom: prologue.heirlooms[0]!.heirloom, grudge: prologue.grudges[0]!.house }).ok).toBe(true);
+    let checkpoint: SavedGame | undefined;
+    for (let years = 0; years < 7; years++) {
+      const offer = game.table().expeditions.offers.find(o => o.ok && o.operativeName === 'Maud of the Journey' && o.order.preparation === 'hasty');
+      if (!checkpoint && offer) {
+        expect(game.order({ kind: 'withhold', person: offer.order.operative, hold: true }).ok).toBe(true);
+        expect(game.order(offer.order).ok).toBe(true);
+        const operation = game.table().expeditions.current[0]!;
+        const working = game.table().mystic.offers.find(o => o.working === 'the_covered_approach')!;
+        expect(working.practitioners.some(p => p.person === offer.order.operative)).toBe(true);
+        const assigned = game.order({ kind: 'mysticAssign', person: offer.order.operative, working: working.working,
+          target: { kind: 'covert', operation: operation.id } });
+        expect(assigned.ok, assigned.reason).toBe(true);
+        checkpoint = transport(game.save());
+      }
+      game.advance(1);
+    }
+    expect(checkpoint).toBeDefined(); expect(game.year).toBe(1049);
+    const saved = transport(game.save());
+    expect(saved.covert.operations[0]!.stage).toBe('closed');
+    expect(saved.covert.operations[0]!.supportService[0]!.practitioner).toBe(saved.covert.operations[0]!.plan.operative);
+    const replayed = replay(source, saved.decisionLog, saved.seed, 1042, 7, saved.campaign);
+    expect(canonical(saveGame(replayed))).toBe(canonical(saved));
+    const loaded = resumeGame(checkpoint!, source, { decider: 'chronicler', proseMode: mode });
+    for (let years = game.year - loaded.year; years > 0; years--) loaded.advance(1);
+    expect(canonical(loaded.save())).toBe(canonical(saved));
+    const otherMode = resumeGame(saved, source, { proseMode: mode === 'original' ? 'plainenglish' : 'original' });
+    expect(otherMode.table().expeditions.history.map(o => o.receipt)).toEqual(game.table().expeditions.history.map(o => o.receipt));
+  });
+});
 
 const content = loadContent();
 const dice: CovertDraws = { warning: 0.99, prevention: 0.99, strike: 0, survival: 0.99, escape: 0, evidence: 0.99 };
@@ -714,7 +999,7 @@ describe('household lifecycle fixtures', () => {
       const old = JSON.parse(JSON.stringify(saveGame(ctx)));
       old.format = 38; delete old.covert; delete old.counters.covert;
       const loaded = loadGame(old, content);
-      expect(loaded.world.covert).toEqual({ threats: [] });
+      expect(loaded.world.covert).toEqual({ threats: [], operations: [] });
       expect(loaded.world.counters.covert).toBe(0);
     });
 

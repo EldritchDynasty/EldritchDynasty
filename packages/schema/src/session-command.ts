@@ -4,7 +4,7 @@ import { RentPolicyS } from './parcel.js';
 import { SlotFillS } from './slot-fill.js';
 import { HouseAmbitionIdS } from './ambition.js';
 import { ProseModeS } from './prose.js';
-import { CovertResponseS } from './covert.js';
+import { CovertResponseS, CovertPurposeS, CovertPreparationS } from './covert.js';
 
 /** Initial archived wording, not the reader's current preference. Needed before the first input exists. */
 export const ReplayOriginS = z.object({
@@ -19,6 +19,8 @@ export const RecordOptionS = z.enum(['record', 'omit', 'embellish']);
 
 /** The Table's external order vocabulary, shared by the engine and saved inputs. */
 export const TableOrderS = z.union([
+  z.object({ kind: z.literal('covertPrepare'), opportunity: z.string(), operative: z.string(), purpose: CovertPurposeS, preparation: CovertPreparationS }).strict(),
+  z.object({ kind: z.literal('covertWithdraw'), operation: z.string() }).strict(),
   z.object({ kind: z.literal('covertDefend'), threat: z.string(), guards: z.array(z.string()).max(3), response: CovertResponseS }).strict(),
   z.object({ kind: z.literal('releaseIntruder'), threat: z.string() }).strict(),
   /** Pay the incident's fixed ransom once and bring a captive family member home. */

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue';
 import { MysticWorkingDefS, MysticBenefitS, asId, fieldsOfSchema, type FieldSpec, type MysticWorkingDef } from '@ed/schema';
-import { bootstrap, beginCommitment, isFieldWorking, mysticTargets, quoteDuty } from '@ed/core';
+import { addGrudge, bootstrap, beginCommitment, covertOpportunities, isFieldWorking, mysticTargets, prepareCovertOperation, quoteDuty } from '@ed/core';
 import { fileOf, rawContent, store } from '../lib/store';
 import { isWritableContentPath } from '../lib/content';
 import { watchEdits } from '../lib/watch-edits';
@@ -51,11 +51,19 @@ function evaluate() {
   if (!current.value || issues.value.length) return;
   const ctx = bootstrap(rawContent(), 1875, 1042);
   const w = ctx.content.mysticWorking(current.value.id)!;
-  const p = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year).find(p => p.sex === sex.value)!;
+  const p = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+    .find(p => p.sex === sex.value && (w.benefit.kind !== 'covert_support' || !p.becomesGuardian))!;
   // This is a private, explicitly qualified fixture, not a new way to learn in play.
   p.spellsKnown = w.books.map(b => asId(b));
   p.awakening.awakened = true;
   if (isFieldWorking(w)) beginCommitment(ctx, 10, 'the_wars');
+  if (w.benefit.kind === 'covert_support') {
+    const enemy = ctx.world.people.living().find(p => p.castSlots.includes('rival'))!;
+    addGrudge(ctx, ctx.world.playerHouse, enemy.id, { severity: 75, inheritance: 'house_wide' });
+    const opportunity = covertOpportunities(ctx).find(o => o.target.id === enemy.id)!;
+    prepareCovertOperation(ctx, { opportunity: opportunity.id, operative: p.id,
+      purpose: 'settle_grudge', preparation: 'hasty' });
+  }
   const target = mysticTargets(ctx, w)[0];
   preview.value = quoteDuty(ctx, { person: p.id, working: w.id,
     target: target?.target ?? { kind: 'hall', hall: 'main' }, bindings: target?.bindings });
@@ -93,6 +101,7 @@ function evaluate() {
       <hr>
       <h4>Qualified-reader quote</h4>
       <p class="muted">A private founding-world fixture assumes the required books are completed. No live world, study or counter is changed.</p>
+      <p v-if="current.benefit.kind === 'covert_support'" class="muted">This private fixture also prepares a paid expedition against a known rival with a qualifying grievance. The reader travels on that expedition.</p>
       <label>Reader <select v-model="sex"><option value="female">woman</option><option value="male">man</option></select></label>
       <button class="btn" :disabled="issues.length > 0" @click="evaluate">Evaluate the actual quote</button>
       <p v-if="preview">{{ preview.ok ? 'Available' : preview.reason }} · {{ preview.preparation }} crowns to prepare

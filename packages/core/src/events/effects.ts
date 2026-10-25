@@ -8,6 +8,7 @@ import { forceAwakening, phenotypeOf, wakeNaturally } from '../people/factory.js
 import { BEARER, grantHeirloom, transferHeirloom, useHeirloom } from '../people/heirlooms.js';
 import { acquireLibraryCopy, beginStudy, degradeLibraryCopy, gainSpellbook, loseLibraryCopy, loseSpellbookKnowledge, spellbookDef } from '../people/library.js';
 import { bindService, freeBond } from '../people/bond.js';
+import { captureFamily } from '../people/captivity.js';
 import { branchOf } from '../people/branches.js';
 import { addGrudge, relate } from '../people/relationships.js';
 import type { Rng } from '../rng.js';
@@ -102,6 +103,9 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
   const w = ctx.world;
 
   switch (eff.kind) {
+    case 'captivity':
+      for (const person of resolveTargets(eff.target, ctx, fill)) captureFamily(ctx, person.id, eff.captor, eff.ransom);
+      break;
     // INVARIANT 6: derived state is not storage — this writes to `acquired`.
     case 'attribute': {
       for (const p of resolveTargets(eff.target, ctx, fill)) {

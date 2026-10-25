@@ -1,4 +1,5 @@
 import { tickHouseholdThreats } from '../covert-lifecycle.js';
+import { tickCovertOperations } from '../covert-operations.js';
 import type { Choice, EventTemplate, Person } from '@ed/schema';
 import { MAIN_BRANCH, renderForm } from '@ed/schema';
 import { grammarOf } from '../people/grammar.js';
@@ -12,7 +13,7 @@ import { autoMarry, rollBirths, rollDeath } from '../people/demography.js';
 import { dealMatch, matchSubjects, promisedBy, refreshHand } from '../people/match.js';
 import { nameWorthAsking } from '../people/naming.js';
 import { settleBranches, tickBranches } from '../people/branches.js';
-import { ensureHead, maintainCast, releaseContracts } from '../people/succession.js';
+import { advanceKnownRivalHeads, ensureHead, maintainCast, releaseContracts } from '../people/succession.js';
 import { tickFamilyQuarrels, tickRelationships } from '../people/relationships.js';
 import { tickSecrets } from '../people/secrets.js';
 import { tickPapers } from '../people/papers.js';
@@ -424,7 +425,7 @@ export const YEAR_PHASES: readonly Phase[] = [
     name: 'covert',
     after: ['economy', 'mystic', 'muster'],
     why: 'Paid local protection and current survivors precede an incident; the seat refills afterwards.',
-    run({ ctx }) { tickHouseholdThreats(ctx); },
+    run({ ctx }) { tickHouseholdThreats(ctx); tickCovertOperations(ctx); },
   },
 
   {
@@ -445,6 +446,7 @@ export const YEAR_PHASES: readonly Phase[] = [
       + 'event pool silently collapses to nothing.',
     run({ ctx, rng }) {
       ensureHead(ctx, rng);
+      advanceKnownRivalHeads(ctx);
       if (ctx.world.year % 4 === 0) maintainCast(ctx, rng);
     },
   },
