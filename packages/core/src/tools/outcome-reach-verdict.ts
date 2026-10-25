@@ -55,7 +55,13 @@ export function judgeZeroReach(
 
 /** A guarded result gets only the opportunities its actual cast admitted.
  * Parent firings and a best-case conditional share would overstate its chance.
- * Missing observations fail explicitly instead of silently inventing a chance. */
+ * Missing observations fail explicitly instead of silently inventing a chance.
+ *
+ * A checked result gets what the actual casts could roll (#1917), and a
+ * guarded one is credited with everyone its slot could have cast, when the
+ * batch recorded that. Both are expected counts under the same five-expected
+ * proof boundary. An expectation of exactly zero is still no exposure, and
+ * still dead: the batch gave the outcome no chance at all. */
 export function judgeOutcomeReachZero(
   key: string,
   outcome: DeclaredOutcome,
@@ -63,12 +69,25 @@ export function judgeOutcomeReachZero(
   runs: number,
 ): ZeroReachVerdict {
   const fired = reach.firings.get(outcome.choice) ?? 0;
-  if (!outcome.guarded || fired === 0) {
+  if (fired === 0 || (!outcome.guarded && !outcome.checked)) {
     return judgeZeroReach(fired, outcome.share, runs, choiceExposure(reach, outcome.choice));
+  }
+  if (outcome.checked) {
+    const expected = reach.checked?.expected.get(key);
+    if (expected === undefined) return { kind: 'dead', why: 'checked outcome has no pre-effect check observation' };
+    if (expected === 0) return { kind: 'dead', why: `no actual check reading reached its band in ${fired} firings` };
+    const verdict = judgeExpected(expected, fired, runs);
+    return { ...verdict, why: `check readings: ${verdict.why}` };
   }
   const guarded = reach.guarded;
   if (!guarded?.expected.has(key) || !guarded.opportunities.has(key)) {
     return { kind: 'dead', why: 'guarded outcome has no pre-effect opportunity observation' };
+  }
+  const pooled = guarded.poolExpected?.get(key);
+  if (pooled !== undefined) {
+    if (pooled === 0) return { kind: 'dead', why: `no eligible cast in any pool across ${fired} firings of its choice` };
+    const verdict = judgeExpected(pooled, fired, runs);
+    return { ...verdict, why: `eligible pools: ${verdict.why}` };
   }
   const opportunities = guarded.opportunities.get(key)!;
   if (!opportunities) {
@@ -77,6 +96,18 @@ export function judgeOutcomeReachZero(
   const expected = guarded.expected.get(key)!;
   const verdict = judgeZeroReach(opportunities, expected / opportunities, runs);
   return { ...verdict, why: `eligible casts: ${verdict.why}` };
+}
+
+/** `judgeZeroReach`'s boundary, for an expected count already summed over firings. */
+function judgeExpected(expected: number, fired: number, runs: number): ZeroReachVerdict {
+  if (expected >= OUTCOME_REACH_PROOF_EXPECTED) {
+    return { kind: 'dead', why: `expected ~${expected.toFixed(1)} of ${fired} firings, resolved none` };
+  }
+  const needed = Math.ceil((runs * OUTCOME_REACH_PROOF_EXPECTED) / expected);
+  return {
+    kind: 'unproven',
+    why: `only ~${expected.toFixed(1)} expected of ${fired} firings; would need ~${needed} runs to prove`,
+  };
 }
 
 export interface ScopedOutcomeReachVerdict {

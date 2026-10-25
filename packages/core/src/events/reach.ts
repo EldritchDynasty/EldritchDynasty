@@ -4,10 +4,10 @@ import { bootstrap } from '../sim.js';
 import type { SimCtx } from '../world.js';
 import { runYears } from '../year/step.js';
 import type { Rng } from '../rng.js';
-import { resolveSlots, type SlotFill } from './slots.js';
+import { candidatesFor, resolveSlots, type SlotFill } from './slots.js';
 import { decideBranch } from './deciders.js';
 import { choiceAvailability } from './availability.js';
-import { evalDifficulty, resolveChoiceOutcome } from './checks.js';
+import { bandChances, evalDifficulty, resolveChoiceOutcome } from './checks.js';
 import { commitOutcome, queueChoice, resolveChoice } from './decisions.js';
 import { outcomeAdmits, pickOutcome } from './effects.js';
 import type { OutcomeObservation } from './decisions.js';
@@ -65,6 +65,8 @@ export interface DeclaredOutcome {
   share: number;
   /** Its group's pool depends on the cast; use live opportunities to judge it. */
   guarded?: true;
+  /** A check's band names it; judge it by what the actual casts could roll (#1917). */
+  checked?: true;
 }
 
 /**
@@ -85,6 +87,7 @@ export function declaredOutcomes(
     e: EventTemplate,
     choiceId: string | undefined,
     outcomes: readonly Outcome[],
+    checked = false,
   ) => {
     // `weight` is authored per outcome and the roll is over their sum, so a
     // choice whose weights are 80/20 and one whose weights are 8/2 are the
@@ -107,6 +110,7 @@ export function declaredOutcomes(
         choice: choiceKey(String(e.id), choiceId),
         share,
         ...(outcomes.some((outcome) => outcome.onlyIf) ? { guarded: true as const } : {}),
+        ...(checked ? { checked: true as const } : {}),
       });
     }
   };
@@ -114,7 +118,7 @@ export function declaredOutcomes(
   for (const e of content.events) {
     if (!include(e)) continue;
     if (e.interaction.kind === 'narration') add(e, undefined, e.interaction.outcomes);
-    else for (const c of e.interaction.choices) add(e, c.id, c.outcomes);
+    else for (const c of e.interaction.choices) add(e, c.id, c.outcomes, c.check !== undefined);
   }
   return out;
 }
@@ -705,7 +709,16 @@ export interface Reach {
     opportunities: Map<string, number>;
     /** Sum of the authored share inside each actual eligible pool. */
     expected: Map<string, number>;
+    /**
+     * The same sum taken over everyone the guarded slot could have cast, not
+     * only the one it did (#1917). A rite whose pool holds one boy who can
+     * express among three had a third of a chance at him; the actual cast
+     * reads that as nothing whenever the pick went the other way.
+     */
+    poolExpected?: Map<string, number>;
   };
+  /** Sum over firings of each checked outcome's chance under the actual cast's reading. */
+  checked?: { expected: Map<string, number> };
   /** Actual available player answers at resolved dockets in a canonical
    * uniform-chronicler batch. Missing means this evidence was not collected. */
   choiceOffers?: {
@@ -741,14 +754,65 @@ export function observeGuardedOutcome(ctx: SimCtx, observation: OutcomeObservati
     ? event.interaction.outcomes
     : event.interaction.choices.find((choice) => choice.id === choiceId)?.outcomes;
   if (!group?.some((outcome) => outcome.onlyIf)) return;
-  const guarded = into.guarded ??= { opportunities: new Map(), expected: new Map() };
-  const eligible = group.filter((outcome) => outcomeAdmits(outcome, ctx, fill, event));
-  const total = eligible.reduce((sum, outcome) => sum + outcome.weight, 0);
+  const guarded = into.guarded ??= { opportunities: new Map(), expected: new Map(), poolExpected: new Map() };
+  const poolExpected = guarded.poolExpected ??= new Map<string, number>();
+  const shares = guardedShares(ctx, event, group, fill);
+  const pool = poolShares(ctx, event, group, fill);
   for (const outcome of group) {
     const key = outcomeKey(String(event.id), choiceId, outcome.id);
-    const admitted = eligible.includes(outcome) && outcome.weight > 0 && total > 0;
-    guarded.opportunities.set(key, (guarded.opportunities.get(key) ?? 0) + Number(admitted));
-    guarded.expected.set(key, (guarded.expected.get(key) ?? 0) + (admitted ? outcome.weight / total : 0));
+    const share = shares.get(outcome) ?? 0;
+    guarded.opportunities.set(key, (guarded.opportunities.get(key) ?? 0) + Number(share > 0));
+    guarded.expected.set(key, (guarded.expected.get(key) ?? 0) + share);
+    poolExpected.set(key, (poolExpected.get(key) ?? 0) + (pool.get(outcome) ?? 0));
+  }
+}
+
+/** Each outcome's share of the draw this cast admits. */
+function guardedShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill): Map<Outcome, number> {
+  const eligible = group.filter((outcome) => outcome.weight > 0 && outcomeAdmits(outcome, ctx, fill, event));
+  const total = eligible.reduce((sum, outcome) => sum + outcome.weight, 0);
+  return new Map(eligible.map((outcome) => [outcome, total > 0 ? outcome.weight / total : 0]));
+}
+
+/**
+ * The share averaged over the guarded slot's whole pool, holding the rest of
+ * the cast fixed. `outcomes/guard` keeps a group to one guarded slot, engine-
+ * cast, single and required, and `pickCandidate` takes such a slot uniformly
+ * unless it has a `select`, which casts the best and is already the actual
+ * cast. Reads the world and draws nothing.
+ */
+function poolShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill): Map<Outcome, number> {
+  const slot = group.find((outcome) => outcome.onlyIf)!.onlyIf!.slot;
+  const spec = event.slots[slot];
+  if (!spec || spec.select) return guardedShares(ctx, event, group, fill);
+  const others: SlotFill = { ...fill };
+  delete others[slot];
+  const candidates = candidatesFor(spec, ctx, others);
+  if (!candidates.length) return guardedShares(ctx, event, group, fill);
+  const out = new Map<Outcome, number>();
+  for (const candidate of candidates) {
+    for (const [outcome, share] of guardedShares(ctx, event, group, { ...others, [slot]: candidate.id })) {
+      out.set(outcome, (out.get(outcome) ?? 0) + share / candidates.length);
+    }
+  }
+  return out;
+}
+
+/**
+ * A checked choice's band chances under the cast that actually fired it
+ * (#1917), read before effects through the same observer. Draws nothing.
+ */
+export function observeCheckedOutcome(ctx: SimCtx, observation: OutcomeObservation, into: Reach): void {
+  const { event, choiceId, fill } = observation;
+  if (event.interaction.kind === 'narration') return;
+  const choice = event.interaction.choices.find((candidate) => candidate.id === choiceId);
+  const check = choice?.check ? event.checks.find((candidate) => candidate.id === choice.check) : undefined;
+  if (!choice || !check) return;
+  const checked = into.checked ??= { expected: new Map() };
+  const chances = bandChances(ctx, check, event, fill);
+  for (const outcome of choice.outcomes) {
+    const key = outcomeKey(String(event.id), choiceId, outcome.id);
+    checked.expected.set(key, (checked.expected.get(key) ?? 0) + (chances.get(outcome.id) ?? 0));
   }
 }
 
