@@ -11,12 +11,25 @@ import { cancelDecisionArcs } from '../events/arcs.js';
  * This function rolls nothing and never kills, seats a Head or creates a post.
  */
 export function captureFamily(ctx: SimCtx, person: string, captor: string, ransom: number): boolean {
+  const p = ctx.world.people.get(person);
+  if (!p || !isCurrentFamily(ctx, p) || captor === ctx.world.playerHouse) return false;
+  return takeCaptive(ctx, person, captor, ransom, true);
+}
+
+/** A caught, named outsider uses the same saved custody and home, without a fabricated family ransom. */
+export function captureIntruder(ctx: SimCtx, person: string): boolean {
+  const p = ctx.world.people.get(person);
+  if (!p || isCurrentFamily(ctx, p)) return false;
+  return takeCaptive(ctx, person, ctx.world.playerHouse, 0, false);
+}
+
+function takeCaptive(ctx: SimCtx, person: string, captor: string, ransom: number, announce: boolean): boolean {
   const w = ctx.world;
   const p = w.people.get(person);
   const home = p && currentMembership(p, w.year);
-  if (!p || p.status !== 'alive' || p.captivity || !isCurrentFamily(ctx, p)
+  if (!p || p.status !== 'alive' || p.captivity
     || !home || home.to !== undefined || p.membership.filter(m => m.to === undefined).length !== 1
-    || captor === w.playerHouse || !ctx.content.house(captor)
+    || home.house === captor || !ctx.content.house(captor)
     || !Number.isSafeInteger(ransom) || ransom < 0) return false;
 
   const studies = w.studies.filter(term => term.person === p.id);
@@ -33,12 +46,22 @@ export function captureFamily(ctx: SimCtx, person: string, captor: string, ranso
   if (tutoring) cancelDecisionArcs(ctx, 'tutor', p.id);
   home.to = w.year;
   p.membership.push({ house: asId(captor), kind: 'hostage', from: w.year });
-  w.chronicle.push({
+  if (announce) w.chronicle.push({
     year: w.year, weight: 'paragraph', named: true, people: [p.id],
     text: msg(ctx, 'captivity.taken',
       '{CAPTOR} holds {PERSON}. The price of bringing {PERSON} home is {PRICE} crowns.',
       { CAPTOR: captorName(ctx, captor), PERSON: p.name, PRICE: String(ransom) }),
   });
+  return true;
+}
+
+/** Release a foreign prisoner without restoring a role somebody else now holds. */
+export function releaseIntruder(ctx: SimCtx, person: string): boolean {
+  const p = ctx.world.people.get(person);
+  if (!p || p.status !== 'alive' || p.captivity?.captor !== ctx.world.playerHouse
+    || p.captivity.home.house === ctx.world.playerHouse
+    || currentMembership(p, ctx.world.year)?.kind !== 'hostage') return false;
+  returnHome(ctx, p);
   return true;
 }
 

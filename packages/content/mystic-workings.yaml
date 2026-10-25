@@ -150,6 +150,67 @@ mysticWorkings:
       risk: { death: 0.006, capture: 0.018, injury: 0.025, ransom: 35 }
 
 # Plain English counterparts for working descriptions; Originals above stay unchanged.
+  - id: the_door_lamp
+    name: The Door Lamp
+    affinity: light
+    books:
+      - lesser_workings_of_light
+    description: One learned watcher keeps one hall. A disturbed approach is more likely to be seen before it reaches a relative, leaving time to arrange lodging or an escort. The light shows a trace, never the name of an unseen patron.
+    preparation:
+      crowns: 8
+      years: 0
+    upkeep: 1
+    benefit:
+      kind: household_protection
+      stage: warning
+      scope: hall
+      bonus: 0.4
+  - id: the_shut_threshold
+    name: The Shut Threshold
+    affinity: terra
+    books:
+      - lesser_workings_of_terra
+    description: One reader prepares the doors and passages of one hall. A bodily attack is less likely to reach anyone living there while the reader remains present and paid. An uncovered road stays uncovered, and a determined intruder may still get through.
+    preparation:
+      crowns: 10
+      years: 0
+    upkeep: 2
+    benefit:
+      kind: household_protection
+      stage: prevention
+      scope: hall
+      bonus: 0.35
+  - id: the_unwatched_room
+    name: The Unwatched Room
+    affinity: darkness
+    books:
+      - lesser_workings_of_darkness
+    description: One reader shelters one named relative from an intruder looking for them at home. The working can spoil an approach; it neither erases a witness nor follows the relative on a journey. The reader must keep the duty throughout.
+    preparation:
+      crowns: 10
+      years: 0
+    upkeep: 2
+    benefit:
+      kind: household_protection
+      stage: prevention
+      scope: person
+      bonus: 0.3
+  - id: the_bedside_thread
+    name: The Bedside Thread
+    affinity: life
+    books:
+      - lesser_workings_of_life
+    description: One reader stays with one named relative at home. If a bodily attack reaches that person, the reader can keep an otherwise fatal injury from killing them. The injury remains; the working cannot restore the dead or answer the blood.
+    preparation:
+      crowns: 12
+      years: 0
+    upkeep: 2
+    benefit:
+      kind: household_protection
+      stage: survival
+      scope: person
+      bonus: 0.35
+
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
     of: e4434738f3973e8c
@@ -209,3 +270,28 @@ proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=the_covered_road].description"
     of: "95bcdcd2a7d6c56e"
     plainenglish: "A reader hides the routes used by the levy’s Mystic readers. This halves their normal capture risk, but does not prevent wounds or death. An enemy Light watch halves this protection. The same working can hide a local movement from an opposing reader."
+
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_door_lamp].name
+    of: e9128c265cd95e7a
+    plainenglish: Watching the Door
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_door_lamp].description
+    of: c43c72eb75a68007
+    plainenglish: A learned watcher protects one hall. The watcher is more likely to notice an approaching attack early, giving time to arrange safe lodging or an escort. A warning does not identify an unseen sponsor.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_shut_threshold].name
+    of: eece8d2d846eba29
+    plainenglish: Securing the Hall
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_shut_threshold].description
+    of: 2e25b84d11f33291
+    plainenglish: A reader protects the entrances and passages of one hall. While the reader is present and maintained, a physical attack is less likely to reach its target there. Travel outside the hall is unprotected. The protection can fail.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_unwatched_room].name
+    of: d34663927cf0349e
+    plainenglish: Concealing a Relative
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_unwatched_room].description
+    of: dc594963a20fdc27
+    plainenglish: A reader helps hide one named relative from an intruder at home. This can prevent an attack from reaching that person. It does not erase witnesses or protect travel. The reader must remain on duty.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_bedside_thread].name
+    of: 9a618238cef27bf4
+    plainenglish: Keeping a Victim Alive
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_bedside_thread].description
+    of: 1836cfc02aaeccb4
+    plainenglish: A reader protects one named relative at home. After a physical attack, the reader can help the victim survive an injury that would otherwise be fatal. The injury remains. The working cannot revive the dead or counter Eldritch Power.

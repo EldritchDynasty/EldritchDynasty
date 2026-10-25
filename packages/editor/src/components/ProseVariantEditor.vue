@@ -11,7 +11,7 @@ import { fileOf, markDirty, removeProseVariant, stageProseVariant, store } from 
 import { proseVariantStatus } from '../lib/prose-status';
 
 const props = withDefaults(defineProps<{
-  collectionKey: 'events' | 'arcs' | 'characterTemplates';
+  collectionKey: 'events' | 'arcs' | 'characterTemplates' | 'mysticWorkings';
   id: string;
   modelValue: object;
   disabled?: boolean;

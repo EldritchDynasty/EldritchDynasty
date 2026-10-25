@@ -2354,6 +2354,11 @@ const mysticWiring: ValidationRule = {
           case 'field_supply': return w.affinity === 'fluid' || w.affinity === 'thermal';
           case 'field_watch': return w.affinity === 'light' || w.affinity === 'aero';
           case 'field_concealment': return w.affinity === 'darkness';
+          case 'household_protection':
+            if (benefit.stage === 'warning') return benefit.scope === 'hall' && ['light', 'aero'].includes(w.affinity);
+            if (benefit.stage === 'prevention') return w.affinity === 'terra' && benefit.scope === 'hall'
+              || w.affinity === 'darkness' && benefit.scope === 'person';
+            return w.affinity === 'life' && benefit.scope === 'person';
           default: return assertNever(benefit, 'working affinity');
         }
       })();

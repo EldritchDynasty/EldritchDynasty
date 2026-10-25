@@ -19,6 +19,7 @@ const VIEWS = [
   ['Events', 'Events'],
   ['Substories', 'Substories'],
   ['Characters', 'Character templates'],
+  ['Workings', 'Mystic workings'],
   ['Core prose', 'Core prose · Plain English'],
   ['Family tree', 'The family tree'],
   ['Simulate', 'Simulate'],
@@ -59,6 +60,25 @@ test('builds worlds: the family tree grows and the simulation begins', async ({ 
   await view(page, 'Simulate').click();
   await page.getByRole('button', { name: 'Begin, 1042' }).click();
   await expect(page.getByText('Nothing is running. Press begin.')).toBeHidden({ timeout: 60_000 });
+});
+
+test('edits a working and previews the same engine quote without writing content (#1875)', async ({ page }) => {
+  await view(page, 'Workings').click();
+  for (const name of ['The Door Lamp', 'The Shut Threshold', 'The Unwatched Room', 'The Bedside Thread']) {
+    await page.getByRole('button', { name: new RegExp(name) }).click();
+  }
+  await expect(state(page)).toContainText('nothing unsaved');
+  const form = page.locator('.working-form');
+  await form.getByRole('button', { name: 'Evaluate the actual quote' }).click();
+  await expect(form).toContainText('Available · 12 crowns to prepare · 2 yearly');
+  const crowns = form.locator('.fk').filter({ hasText: /^crowns$/ }).locator('..').getByRole('spinbutton');
+  await crowns.fill('13');
+  await form.getByRole('button', { name: 'Evaluate the actual quote' }).click();
+  await expect(form).toContainText('Available · 13 crowns to prepare · 2 yearly');
+  await expect(state(page)).toContainText('1 file unsaved');
+  await form.getByRole('button', { name: 'Review & save' }).click();
+  await expect(page.locator('.diff')).toContainText('crowns: 13');
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 });
 
 test('browsing is not editing; an edit marks exactly its own file', async ({ page }) => {

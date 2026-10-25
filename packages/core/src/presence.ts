@@ -40,6 +40,10 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
 export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): DutyPlace | undefined {
   const w = ctx.world;
   switch (site.kind) {
+    case 'person': {
+      const p = w.people.get(site.person);
+      return p && p.status === 'alive' && isCurrentFamily(ctx, p) ? { hall: branchOf(w, p, w.year) } : undefined;
+    }
     case 'parcel': return { parcel: site.parcel };
     case 'hall': {
       if (typeof site.hall === 'string') return { hall: MAIN_BRANCH };
@@ -99,6 +103,12 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const named = (slots: readonly string[]) => slots.flatMap(slot => castIn(fill, slot));
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
+    case 'person': {
+      const p = w.people.get(site.person);
+      if (!p || !isCurrentFamily(ctx, p) || !attendsHall(ctx, branchOf(w, p, w.year), p)) return { site, people: [] };
+      const attendance = resolvePresence(ctx, { kind: 'hall', hall: { slot: 'WARD' } }, { WARD: p.id });
+      return { ...attendance, site };
+    }
     case 'party': case 'elsewhere': case 'parcel': return { site, people: distinct(named(site.slots)) };
     case 'muster': {
       if (site.commitment !== undefined && !w.muster.commitments.some(c =>

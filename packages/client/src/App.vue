@@ -153,7 +153,7 @@ watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEveryth
 
   const transition = revealTransition(nextView, nextTable, prior, {
     showEverything,
-    needed: nextView.muster ? ['table'] : [],
+    needed: nextView.muster || nextTable?.security?.threats.length ? ['table'] : [],
   });
 
   revealRunKey = key;
@@ -640,7 +640,7 @@ const yearAndBirths = computed(() => {
             :class="{ on: pane === 'table' }"
             :aria-pressed="pane === 'table'"
             @click="pane = 'table'"
-          >{{ shellCopy.navTable }}</button>
+          >{{ shellCopy.navTable }}<span v-if="table?.security.threats.length" class="rubric"> · {{ table.security.threats.length }} {{ accessibility.proseMode === 'plainenglish' ? 'security warning' : 'warning at the door' }}</span></button>
           <button
             v-if="isRevealed('abroad')"
             class="quiet small"

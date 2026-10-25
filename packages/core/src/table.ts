@@ -27,6 +27,7 @@ import { proseForClause, proseForContentField, proseForEventTitle, proseForPromi
 import { msg } from './messages.js';
 import { assignDuty, mysticView, releaseDuty, type MysticView } from './mystic.js';
 import { captivityView, ransomCaptive } from './people/captivity.js';
+import { defendHousehold, householdSecurityView, releaseThreatPrisoner } from './covert-lifecycle.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -556,6 +557,8 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
   const w = ctx.world;
 
   switch (o.kind) {
+    case 'covertDefend': return defendHousehold(ctx, o);
+    case 'releaseIntruder': return releaseThreatPrisoner(ctx, o.threat);
     case 'ransom':
       return ransomCaptive(ctx, o.person);
     case 'study': {
@@ -977,6 +980,7 @@ export interface TableView {
   studying: { person: string; name: string; book: string; completes: Year }[];
   /** Standing Mystic duties, and every working the house could set somebody to (#1873). */
   mystic: MysticView;
+  security: ReturnType<typeof householdSecurityView>;
   /** Named family held elsewhere, with the engine's fixed ransom and affordability quote. */
   captives: ReturnType<typeof captivityView>;
   /**
@@ -1265,6 +1269,7 @@ export function tableView(ctx: SimCtx): TableView {
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
     mystic: mysticView(ctx),
+    security: householdSecurityView(ctx),
     captives: captivityView(ctx),
     longWait: (() => {
       const possible = new Set(knownSuccession(ctx).possible);

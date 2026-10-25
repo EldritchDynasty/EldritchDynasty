@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { reactive } from 'vue';
-import { EventTemplateS, FilterS } from '@ed/schema';
+import { EventTemplateS, FilterS, asId } from '@ed/schema';
 import FilterBuilder from '../../../editor/src/components/FilterBuilder.vue';
 import SlotEditor from '../../../editor/src/components/SlotEditor.vue';
 import CheckEditor from '../../../editor/src/components/CheckEditor.vue';
@@ -9,6 +9,9 @@ import { mount, type VueWrapper } from '@vue/test-utils';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
+import { tableView, tickHouseholdThreats } from '@ed/core';
+import { place, testWorld } from '../../../core/src/testing.js';
+import { addGrudge } from '../../../core/src/people/relationships.js';
 import { PendingDecisionS, type FrameEntry } from '@ed/schema';
 import type {
   LandView,
@@ -20,6 +23,7 @@ import type {
 } from '@ed/core';
 import Chronicle from './Chronicle.vue';
 import Docket from './Docket.vue';
+import HouseholdSecurity from './HouseholdSecurity.vue';
 import Interlude from './Interlude.vue';
 import Naming from './Naming.vue';
 import Chapter from './Chapter.vue';
@@ -34,6 +38,48 @@ import { revealTransition } from '../lib/reveal';
 import { installPseudoLocalisation } from '../pseudo-loc';
 
 const content = loadContent();
+
+describe('household warning controls (#1875)', () => {
+  function warning() {
+    // A real core-generated warning and its quotes, not client-authored rules.
+    for (let seed = 1; seed < 200; seed++) {
+      const ctx = testWorld(content, seed);
+      ctx.world.relationships.clear(); ctx.world.treasury = 1000;
+      const target = place(ctx, { name: 'Nella', sex: 'female', age: 25 });
+      const enemy = place(ctx, { name: 'The hidden sender', sex: 'male', age: 40, house: 'house_marrow' });
+      addGrudge(ctx, enemy.id, target.id, { severity: 80, inheritance: 'house_wide' });
+      tickHouseholdThreats(ctx);
+      const security = tableView(ctx).security;
+      if (security.threats.length) return security;
+    }
+    throw new Error('no warning witness');
+  }
+  it.each(['original', 'plainenglish'] as const)('shows known cost and sends a plain quoted order in %s', async proseMode => {
+    const security = warning();
+    const wrapper = mount(HouseholdSecurity, { props: { security: reactive(security), proseMode } });
+    expect(wrapper.text()).toContain('Nella');
+    expect(wrapper.text()).toContain(String(security.threats[0]!.due));
+    expect(wrapper.text()).not.toContain('The hidden sender');
+    expect(wrapper.find('button').attributes('disabled')).toBeDefined();
+    const option = security.threats[0]!.options.find(o => o.ok && o.order.guards.length === 1)!;
+    expect(option.price).toBe(8);
+    await wrapper.get('select').setValue(JSON.stringify(option.order));
+    expect(wrapper.text()).toContain(option.guards[0]);
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('order')).toEqual([[option.order]]);
+    expect(() => structuredClone(wrapper.emitted('order')![0]![0])).not.toThrow();
+    wrapper.unmount();
+  });
+  it('shows a refusal and releases only a known prisoner through the session order', async () => {
+    const security: TableView['security'] = { threats: [], history: [{ id: 'cov_1', year: 1044,
+      receipt: 'The attack was stopped.', page: 'chr_1', prisoner: { person: asId('p_caught'), name: 'The caught intruder' } }] };
+    const wrapper = mount(HouseholdSecurity, { props: { security, refusal: 'No such intruder is held here.' } });
+    expect(wrapper.get('[role=status]').text()).toContain('No such intruder');
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.emitted('order')).toEqual([[{ kind: 'releaseIntruder', threat: 'cov_1' }]]);
+    wrapper.unmount();
+  });
+});
 
 /**
  * ── THE FIRST TEST THAT RENDERS ANYTHING ──────────────────────────────────
@@ -1196,7 +1242,8 @@ function riteTable(assembly: RiteAssembly): TableView {
     unmaking: { ready: false, reason: 'not yet' },
     tutoring: [],
     studying: [],
-    mystic: { duties: [], offers: [] },
+  mystic: { duties: [], offers: [] },
+  security: { threats: [], history: [] },
     captives: [],
     market: [],
     longWait: [],

@@ -349,6 +349,7 @@ export function commitOutcome(
   choiceId: string | undefined,
   rng: Rng,
   arcStep?: ArcStep,
+  origin: 'ambient' | 'incident' = 'ambient',
 ): ResolvedEvent {
   const selectedOutcome = outcome;
   const intervention = resolvePrimordial(ctx, e, selectedOutcome, fill,
@@ -385,7 +386,8 @@ export function commitOutcome(
   // pressure pools entirely, so no cooldown and no per-run cap is ever
   // consulted before it fires. It must not spend one either — see
   // `recordTemplateFire`. It still counts as itself.
-  if (e.arc) recordTemplateFire(e.id, ctx.world.frequency, ctx.world.year);
+  if (origin === 'incident') { /* Incidents own a bounded lifecycle, not an ambient frequency ration. */ }
+  else if (e.arc) recordTemplateFire(e.id, ctx.world.frequency, ctx.world.year);
   else recordFire(e.id, e.frequency, ctx.world.frequency, ctx.world.year);
 
   const entry: LoggedDecision = {

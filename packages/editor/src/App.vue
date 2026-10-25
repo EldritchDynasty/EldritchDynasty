@@ -14,6 +14,7 @@ import FamilyTree from './components/FamilyTree.vue';
 import SimRunner from './components/SimRunner.vue';
 import Instruments from './components/Instruments.vue';
 import CoreProseEditor from './components/CoreProseEditor.vue';
+import WorkingsEditor from './components/WorkingsEditor.vue';
 
 /**
  * `content` is re-indexed from `store.bundle` — the live, shared, reactive
@@ -98,12 +99,13 @@ function toggleSound() {
   if (!sound.muted) sound.cue('bell');
 }
 
-type Tab = 'events' | 'arcs' | 'characters' | 'tree' | 'sim' | 'instruments' | 'core-prose';
+type Tab = 'events' | 'arcs' | 'characters' | 'tree' | 'sim' | 'instruments' | 'core-prose' | 'workings';
 
 const tabs: { id: Tab; label: string; mark: MarkName }[] = [
   { id: 'events', label: 'Events', mark: 'quill' },
   { id: 'arcs', label: 'Substories', mark: 'thread' },
   { id: 'characters', label: 'Characters', mark: 'escutcheon' },
+  { id: 'workings', label: 'Workings', mark: 'quill' },
   { id: 'core-prose', label: 'Core prose', mark: 'quill' },
   { id: 'tree', label: 'Family tree', mark: 'bough' },
   { id: 'sim', label: 'Simulate', mark: 'hourglass' },
@@ -165,6 +167,7 @@ function select(id: Tab) {
       <EventEditor v-if="tab === 'events'" :content="content" :issues="issues" :focus-event="focusEvent" />
       <ArcEditor v-else-if="tab === 'arcs'" :content="content" :issues="issues" />
       <CharacterEditor v-else-if="tab === 'characters'" :content="content" />
+      <WorkingsEditor v-else-if="tab === 'workings'" />
       <FamilyTree v-else-if="tab === 'tree'" :content="content" />
       <SimRunner v-else-if="tab === 'sim'" :content="content" />
       <CoreProseEditor v-else-if="tab === 'core-prose'" />

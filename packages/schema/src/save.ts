@@ -1,3 +1,4 @@
+import { CovertStateS, emptyCovertState } from './covert.js';
 import { z } from 'zod';
 import { FrequencyS } from './frequency.js';
 import { RungS, RiteS } from './rung.js';
@@ -217,7 +218,8 @@ import { emptyMysticState, MysticStateS } from './mystic.js';
 /** Format 37 records public session inputs in their decision-log position.
  * Older saves load without inventing unrecorded historical commands. */
 /** Format 38 retains commitment-bound field service, foreign spending and recovery. */
-export const SAVE_FORMAT = 38;
+/** Format 39 retains staged household threats, paid responses and frozen evidence. */
+export const SAVE_FORMAT = 39;
 
 /**
  * How a Match or Vessel panel row stands to the candidate, as data (#1005).
@@ -1003,6 +1005,7 @@ export const SavedGameS = z.object({
   muster: MusterStateS,
   /** Standing Mystic duties and paused studies (#1873). See `WorldState.mystic`. */
   mystic: MysticStateS.default(emptyMysticState),
+  covert: CovertStateS.default(emptyCovertState),
   /** The Library's shelf, by spellbook id (issue #15). */
   library: z.array(z.tuple([z.string(), LibraryBookStateS])),
   /** The auction (issue #17). */
@@ -1106,7 +1109,7 @@ export const SavedGameS = z.object({
     person: z.number(), mint: z.number(), arc: z.number(),
     branch: z.number(), decision: z.number(), grudge: z.number(), chronicle: z.number(), lot: z.number(),
     parcel: z.number(), muster: z.number(), library: z.number().default(0), rival: z.number().default(0),
-    mystic: z.number().default(0),
+    mystic: z.number().default(0), covert: z.number().default(0),
   }),
 });
 export type SavedGame = z.infer<typeof SavedGameS>;
