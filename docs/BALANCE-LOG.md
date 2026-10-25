@@ -14826,3 +14826,59 @@ cooldown, so no other Age's draw moves.
   | blood alive at term | 32.4 | 34.1 |
 
   Inside the judged bands (broken_line 22–45%, devoured under 45%).
+
+## 2026-10-25 — #1917: three outcome-reach zeroes, and the denominators they were judged on
+
+**Reproduced.** `npm run gates -- outcome-reach` (800 Long Lines × 500 years,
+seeds `5000 + 7i`) on main `c82fe2a` fails exactly as the issue reports:
+`use_terra -> lost` "expected ~6.0 of 12 firings", and the dark year fast's
+`woke` and `nothing`, "no eligible cast in 22 firings". The counts match the
+report's #1874 branch, so stage C did not move them.
+
+**Attribution.** A read-only probe replayed the same 800 seeds and recorded,
+at each commit, every `use_terra` firing's actual check reading and every
+dark year fast cast with its pool:
+
+| | before #1898 (`7f1af30`) | main (`c82fe2a`) |
+|---|---|---|
+| `use_terra` firings | 13: one best reader scored 9.5 → `lost` | 12: best readers 16.4–43.2, all `held` |
+| fast resolutions / casts who can express | 46 / 1 (`keep_the_fast` → `died`) | 45 / 0 |
+| fast firings whose pool held an expresser | 6 | 6 |
+
+No mechanism changed. #1898's arcs draw from the arcs phase and re-roll later
+scenes, and run 635's single weak Terra reader left the batch. Both outcomes
+sit at about one exposure per 800 runs.
+
+**The judgement was the wrong instrument for both.**
+
+- `use_terra` is a `variance: none` check: the best Terra reader's reading
+  against difficulty 16 fixes the band. The verdict credited `lost` with its
+  weight share, 0.5 × 12. Its real chances were the firings whose reader fell
+  short: none.
+- The fast casts its boy uniformly from the pool. A zero eligible *actual*
+  cast was dead outright, but the pools offered about one eligible cast over
+  the 22 `keep_the_fast` firings; the pick went elsewhere.
+
+**Change (gates lane).** `bandChances` gives each band outcome's chance under
+the actual reading (0/1 without variance, a normal CDF with it, sharing
+`bandFor` with `evalCheck`); `observeCheckedOutcome` sums it per firing.
+`observeGuardedOutcome` also sums each guarded share over the slot's whole
+pool (the actual cast under `select`). The verdict judges those expected
+counts under the unchanged five-expected boundary; an expectation of exactly
+zero is still no exposure and still dead. Observers read and draw nothing.
+
+**After, same command and seeds:**
+
+```
+the_dark_year_fast/keep_the_fast -> woke     eligible pools: only ~0.5 expected of 22 firings (unproven)
+the_dark_year_fast/keep_the_fast -> nothing  eligible pools: only ~0.1 expected of 22 firings (unproven)
+the_drowning/full_count -> woke              eligible pools: only ~2.4 expected of 61 firings (was ~2.3 on actual casts)
+FAIL the_wind_under_the_slates/use_terra -> lost — no actual check reading reached its band in 12 firings
+```
+
+What the sample establishes: the fast's expressive branches are reachable and
+thin (a deterministic witness proves the path; 800 runs offer about half an
+expected resolution). Terra `lost` had no exposure at all, which is a
+calibration finding, not a sampling one: its own comment sets difficulty 16
+against pilot readers of 9.1, 17.2 and 32.0, one in three failing, while
+fifteen distinct best readers across both batches failed once.
