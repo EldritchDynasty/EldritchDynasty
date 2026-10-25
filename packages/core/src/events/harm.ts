@@ -50,6 +50,12 @@ export function assessHarm(ctx: SimCtx, outcome: Pick<Outcome, 'effects' | 'agre
       case 'status':
         for (const p of resolveTargets(e.target, ctx, fill)) if (family.has(p.id)) statuses.set(p.id, e.status);
         break;
+      case 'captivity':
+        for (const p of resolveTargets(e.target, ctx, fill)) {
+          if (family.has(p.id) && p.status === 'alive' && !p.captivity && ctx.content.house(e.captor)
+            && e.captor !== w.playerHouse) statuses.set(p.id, 'missing');
+        }
+        break;
       case 'heirloom':
         if (e.op === 'transfer') regalia.delete(e.heirloom);
         if (e.op === 'grant' && ctx.content.heirloom(e.heirloom)?.kind === 'regalia') regalia.add(e.heirloom);

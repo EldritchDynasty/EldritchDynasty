@@ -15,6 +15,7 @@ function fixture(boughtBack = false): TableView {
     unmaking: { ready: false, reason: 'Not ready' },
     ledgerSearch: { ready: false, reason: 'Not ready' },
     shelf: [], studying: [], mystic: { duties: [], offers: [] }, security: { threats: [], history: [] },
+    expeditions: { offers: [], current: [], history: [], cases: [], terms: '' },
     captives: [], missingPrimers: [], pupils: [], teachable: [],
     canTutor: false, tutoring: [], posts: [], marriagePolicy: 'in',
     programmeCandidates: [], scion: null, scionHeir: null,

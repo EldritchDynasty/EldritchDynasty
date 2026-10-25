@@ -820,6 +820,12 @@ const knownReferences: ValidationRule = {
           if (eff.kind === 'spellbook' && !content.spellbook(eff.book)) {
             issues.push(err(this.id, `${at}/${o.id}`, `unknown spellbook '${eff.book}'`));
           }
+          if (eff.kind === 'captivity' && !content.house(eff.captor)) {
+            issues.push(err(this.id, `${at}/${o.id}`, `unknown captor house '${eff.captor}'`));
+          }
+          if (eff.kind === 'captivity' && content.house(eff.captor)?.isPlayerHouse) {
+            issues.push(err(this.id, `${at}/${o.id}`, 'family captivity requires an outside captor'));
+          }
           // A `land` effect naming a parcel by typo mints or seizes nothing —
           // `grantParcel`/`seizeParcel`/`damageParcel`/`restoreParcel` are all
           // no-ops on an id `content.parcel` cannot resolve, the same silent
@@ -2359,6 +2365,15 @@ const mysticWiring: ValidationRule = {
             if (benefit.stage === 'prevention') return w.affinity === 'terra' && benefit.scope === 'hall'
               || w.affinity === 'darkness' && benefit.scope === 'person';
             return w.affinity === 'life' && benefit.scope === 'person';
+          case 'covert_support':
+            switch (benefit.role) {
+              case 'approach': return w.affinity === 'darkness';
+              case 'breach': return w.affinity === 'terra';
+              case 'escape': return w.affinity === 'aero';
+              case 'recovery': return w.affinity === 'life';
+              case 'hostile': return w.affinity === 'death';
+              default: return assertNever(benefit.role, 'covert role');
+            }
           default: return assertNever(benefit, 'working affinity');
         }
       })();

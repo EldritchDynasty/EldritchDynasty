@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HouseholdSecurity from './HouseholdSecurity.vue';
+import CovertExpeditions from './CovertExpeditions.vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
@@ -289,6 +290,7 @@ function dutyRecord(duty: TableView['mystic']['duties'][number]): string {
   if (s.crownsKept) parts.push(local(`${s.crownsKept.toFixed(1)} crowns kept on stores`, `${s.crownsKept.toFixed(1)} crowns saved on supplies`));
   if (s.opportunities) parts.push(local(`${s.opportunities} useful sightings`, `${s.opportunities} useful sightings`));
   if (s.protections) parts.push(local(`${s.protections} protections used`, `${s.protections} protective interventions`));
+  if (s.covertUses) parts.push(local(`${s.covertUses} useful expedition workings`, `${s.covertUses} useful operation effects`));
   parts.push(local(`${Math.round(s.spent)} crowns spent`, `${Math.round(s.spent)} crowns paid`));
   return parts.join(' · ');
 }
@@ -588,6 +590,8 @@ const MARRIAGE_ORDERS = [
 
     <HouseholdSecurity :security="table.security" :prose-mode="proseMode"
       :refusal="refusedIn('covertDefend') || refusedIn('releaseIntruder')" @order="actions.order" />
+    <CovertExpeditions :expeditions="table.expeditions" :prose-mode="proseMode"
+      :refusal="refusedIn('covertPrepare') || refusedIn('covertWithdraw')" @order="actions.order" />
 
     <!-- THE LIBRARY. Books are the ladder: Adept wants three, Hierophant
          eight. Nobody reads one unless somebody is put on it. -->

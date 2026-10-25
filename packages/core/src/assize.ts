@@ -1,5 +1,6 @@
 import type { Year } from '@ed/schema';
-import { MAIN_BRANCH, assertNever } from '@ed/schema';
+import { MAIN_BRANCH, assertNever, RESPECT_ORDER } from '@ed/schema';
+import { DEBT_FLOOR } from './economy.js';
 import { chronicleEntryId, type SimCtx } from './world.js';
 import type { Rng } from './rng.js';
 import { hall, activeBranches } from './people/branches.js';
@@ -362,6 +363,7 @@ export interface AssizeReport {
  */
 export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
   const w = ctx.world;
+  hearCovertTestimony(ctx);
   const pressure = assizePressure(ctx);
   w.assize.pressure = pressure;
 
@@ -394,6 +396,30 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
     named: false,
   });
   return { pressure, acted: chosen };
+}
+
+/** Criminal consequences belong to the assize and a named copied statement,
+ * never to the operation resolver's knowledge of the true private sponsor. */
+function hearCovertTestimony(ctx: SimCtx): void {
+  const w = ctx.world;
+  for (const o of w.covert.operations) {
+    const proof = o.exposure;
+    if (!proof || proof.heardAt !== undefined || proof.year >= w.year) continue;
+    const witness = w.people.get(proof.actor);
+    const operative = w.people.get(o.plan.operative);
+    if (!witness || !operative) continue;
+    const assessed = o.result === 'success' ? 60 : 30;
+    const paid = Math.min(assessed, Math.max(0, w.treasury - DEBT_FLOOR));
+    w.treasury -= paid;
+    const tier = RESPECT_ORDER.indexOf(w.respect);
+    w.respect = RESPECT_ORDER[Math.max(0, tier - 1)]!;
+    proof.heardAt = w.year;
+    proof.receipt = msg(ctx, 'assize.covert_testimony',
+      'The Warden’s assessor read {WITNESS}’s copied testimony naming {PERSON}. The assize took {PRICE} crowns from the house that sheltered that participant. The heralds entered the case against the house’s name. The statement did not establish an unseen patron’s orders.',
+      { WITNESS: witness.name, PERSON: operative.name, PRICE: String(paid) });
+    w.chronicle.push({ id: chronicleEntryId(ctx), year: w.year, weight: 'paragraph', named: true,
+      people: [witness.id, operative.id], text: proof.receipt });
+  }
 }
 
 /** Is a temporary favour of the Assize in force this year? */

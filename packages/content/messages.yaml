@@ -4134,3 +4134,136 @@ proseVariants:
   - address: core:messages#covert.response.escort
     of: 8e24e8625d3541a6
     plainenglish: Pay for an escort
+
+  - address: core:messages#operation.refuse.busy
+    of: de19259942d3b3b5
+    plainenglish: Another operation is already active.
+  - address: core:messages#operation.refuse.interval
+    of: b78510bd713d2fe1
+    plainenglish: The house must wait before committing another expedition.
+  - address: core:messages#operation.refuse.opportunity
+    of: 5f221dfbb21931a7
+    plainenglish: There is no current opportunity for this purpose against that person.
+  - address: core:messages#operation.refuse.person
+    of: 85bcf8936ac1e91f
+    plainenglish: This person is unavailable for the expedition.
+  - address: core:messages#operation.refuse.willingness
+    of: 583e500dea9c2579
+    plainenglish: This person refuses to undertake that purpose for the house.
+  - address: core:messages#operation.refuse.cost
+    of: b90ca3cbd0f9d737
+    plainenglish: The house cannot afford the preparation fee.
+  - address: core:messages#operation.prepared
+    of: e353d569077ff285
+    plainenglish: "{PERSON} joined the operation against {TARGET}. Preparation cost {PRICE} crowns. The attempt is planned for {YEAR}, followed by a return journey for survivors. Learned support can be assigned before the attempt."
+  - address: core:messages#operation.refuse.withdraw
+    of: f7f18d2a24edc166
+    plainenglish: This operation can no longer be withdrawn before the attempt.
+  - address: core:messages#operation.withdrawn
+    of: 60dc859076a49ec4
+    plainenglish: The operation against {TARGET} was withdrawn. Preparation is not refunded, and the same opportunity cannot be reused. The participants must return before resuming work or their paused studies.
+  - address: core:messages#operation.cancelled
+    of: 83dae932954d486e
+    plainenglish: The opportunity against {TARGET} ended before the attempt. Preparation was already paid. Survivors must still travel home.
+  - address: core:messages#operation.death_cause
+    of: 934db0fef6e98de2
+    plainenglish: a violent attack
+  - address: core:messages#operation.result.dead
+    of: 5b6daaadd6a5a1a1
+    plainenglish: "{TARGET} died before the expedition returned. {PERSON} is named in the account. The consequences continue after this attempt."
+  - address: core:messages#operation.result.wounded
+    of: 2c195df8aff82f7c
+    plainenglish: "{TARGET} survived with an injury. The expedition is recorded under {PERSON}’s name."
+  - address: core:messages#operation.result.failed
+    of: d558a1025150d736
+    plainenglish: The operation failed to reach {TARGET}. {PERSON}’s preparation fee is spent, and this opportunity cannot be reused.
+  - address: core:messages#operation.result.rescued
+    of: c9f696b62b56d962
+    plainenglish: The operation against {TARGET} ended with {PERSON} still free. An involuntary intervention prevented the guards from taking that person captive.
+  - address: core:messages#operation.title
+    of: 77444529ee17c07d
+    plainenglish: The operation account
+  - address: core:messages#operation.captured
+    of: d5c44176d32ebb12
+    plainenglish: "{PERSON} was captured during the operation. The fixed ransom and recorded home are listed with the other captives."
+  - address: core:messages#operation.returning
+    of: 266220596ac4e7cd
+    plainenglish: "{PERSON} started travelling home. This person remains unavailable for home work until the journey ends."
+  - address: core:messages#operation.account_closed
+    of: 7051719d1be08149
+    plainenglish: The operation account is closed. Returned participants can work and resume the remaining terms of their studies. Captives remain in custody.
+  - address: core:messages#operation.approach
+    of: 493459b28ebc79be
+    plainenglish: The expedition reached the approach. You can still withdraw it before the attempt. Its report does not identify every enemy watcher.
+  - address: core:messages#operation.missed_window
+    of: 2bd0c0230f46d9bf
+    plainenglish: The operation missed its opportunity. Participants must return, and that opportunity cannot be attempted again.
+  - address: core:messages#operation.purpose.attack
+    of: 3fac6b5c821f9be8
+    plainenglish: Respond to the previous attack
+  - address: core:messages#operation.purpose.grudge
+    of: 237205f12e52be0d
+    plainenglish: Act on the recorded grudge
+  - address: core:messages#operation.stage.preparing
+    of: 98bfff6f6f134733
+    plainenglish: In preparation
+  - address: core:messages#operation.stage.approach
+    of: 055a985509e9a751
+    plainenglish: Approach reached
+  - address: core:messages#operation.stage.returning
+    of: cd4c975987e6ef15
+    plainenglish: Travelling home
+  - address: core:messages#operation.stage.closed
+    of: 74ceea640c736378
+    plainenglish: Operation closed
+  - address: core:messages#operation.result_label.success
+    of: 11f96527828a600b
+    plainenglish: The target died
+  - address: core:messages#operation.result_label.partial
+    of: 257b1bb758abeb73
+    plainenglish: The target survived with an injury
+  - address: core:messages#operation.result_label.failed
+    of: 54dbc47294850a5e
+    plainenglish: The operation failed
+  - address: core:messages#operation.result_label.withdrawn
+    of: 2b5b1beec7d8824a
+    plainenglish: Withdrawn before the attempt
+  - address: core:messages#operation.result_label.cancelled
+    of: caf2987845fa077c
+    plainenglish: The opportunity ended
+  - address: core:messages#operation.fate.escaped
+    of: 4deaef739c39eddf
+    plainenglish: The operative escaped
+  - address: core:messages#operation.fate.captured
+    of: 7171339e89bad712
+    plainenglish: The operative was taken captive
+  - address: core:messages#operation.fate.rescued
+    of: c2ee1bbdb29fe799
+    plainenglish: An involuntary intervention prevented capture
+  - address: core:messages#operation.fate.injured
+    of: 6e6622098eb69ec5
+    plainenglish: The operative suffered an injury
+  - address: core:messages#operation.preparation.hasty
+    of: 36e4437f21431a9b
+    plainenglish: Basic preparation
+  - address: core:messages#operation.preparation.careful
+    of: 4e91c151c25c9d6d
+    plainenglish: Thorough preparation
+  - address: core:messages#operation.terms
+    of: 6733f25066e4e574
+    plainenglish: This is an attempt to kill one named living enemy. Only one operation can be active. Preparation is charged now and is not refunded. Preparation and the approach take two years; survivors take another year to return. The attempt can fail, injure the operative or lead to capture. Learned support costs its quoted preparation fee and annual upkeep. Supporting readers remain away until the expedition returns. The fixed ransom after capture is 60 crowns. Failure or withdrawal consumes the opportunity. A known participant may leave copied testimony and an inherited feud. This does not automatically prove who privately ordered the act.
+  - address: core:messages#mystic.covert.terms
+    of: 1b53b19c107c71b8
+    plainenglish: The reader accompanies this expedition and cannot provide home protection. Releasing the working does not return the reader early. Study remains paused by its unfinished term until return. Captivity keeps it paused.
+  - address: core:messages#mystic.place.covert
+    of: fcf5c920a7e2cb44
+    plainenglish: the operation concerning {PERSON}
+  - address: core:messages#library.refuse.expedition
+    of: 3fab58ede8e7cad9
+    plainenglish: this person is away on an expedition
+  - address: core:messages#rival.known_succession
+    of: 16c120e72107f96b
+    plainenglish: "{PERSON} succeeded {PREVIOUS} as the known head of {HOUSE}. The house and its claims continue."
+  - address: core:messages#assize.covert_testimony
+    of: 9ea3f8caf7f68166
+    plainenglish: The Warden’s assessor read copied testimony from {WITNESS} identifying {PERSON}. The assize collected {PRICE} crowns from the participant’s household. The heralds recorded the case against the house’s standing. The testimony did not prove the orders of an unseen sponsor.

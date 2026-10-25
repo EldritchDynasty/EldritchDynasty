@@ -11,9 +11,31 @@ export interface SceneAttendance {
 }
 
 export function isCurrentFamily(ctx: SimCtx, person: Person): boolean {
+  return isFamilyOf(ctx, person, ctx.world.playerHouse);
+}
+
+export function isFamilyOf(ctx: SimCtx, person: Person, house: string): boolean {
   const m = currentMembership(person, ctx.world.year);
-  return m?.house === ctx.world.playerHouse
+  return m?.house === house
     && (m.kind === 'blood' || m.kind === 'cadet' || m.kind === 'married_in');
+}
+
+/** The same hall identity for a resident, an anchored scene and a maintained ward. */
+export function homeHall(ctx: SimCtx, person: Person): string | undefined {
+  const house = currentMembership(person, ctx.world.year)?.house;
+  return house === undefined ? undefined : house === ctx.world.playerHouse
+    ? branchOf(ctx.world, person, ctx.world.year) : `foreign:${house}`;
+}
+
+export function covertParticipants(ctx: SimCtx, operation: string): string[] {
+  const o = ctx.world.covert.operations.find(o => o.plan.id === operation && o.stage !== 'closed');
+  return o ? [...new Set([o.plan.operative, ...o.crew, ...ctx.world.mystic.assignments
+    .filter(a => a.target.kind === 'covert' && a.target.operation === operation).map(a => a.practitioner)])] : [];
+}
+
+export function covertReservation(ctx: SimCtx, person: string): string | undefined {
+  return ctx.world.covert.operations.find(o => o.stage !== 'closed'
+    && covertParticipants(ctx, o.plan.id).includes(person))?.plan.id;
 }
 
 /**
@@ -23,7 +45,7 @@ export function isCurrentFamily(ctx: SimCtx, person: Person): boolean {
  * suspended household duty places nobody. A field reader remains deployed
  * during travel and suspension until that commitment returns or releases them.
  */
-export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string };
+export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string } | { operation: string };
 
 export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
   const w = ctx.world;
@@ -40,16 +62,19 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
 export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): DutyPlace | undefined {
   const w = ctx.world;
   switch (site.kind) {
+    case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && o.stage !== 'closed')
+      ? { operation: site.operation } : undefined;
     case 'person': {
       const p = w.people.get(site.person);
-      return p && p.status === 'alive' && isCurrentFamily(ctx, p) ? { hall: branchOf(w, p, w.year) } : undefined;
+      const hall = p && p.status === 'alive' ? homeHall(ctx, p) : undefined;
+      return hall ? { hall } : undefined;
     }
     case 'parcel': return { parcel: site.parcel };
     case 'hall': {
       if (typeof site.hall === 'string') return { hall: MAIN_BRANCH };
       const anchor = w.people.get(bindings[site.hall.slot] ?? '');
-      if (!anchor || currentMembership(anchor, w.year)?.house !== w.playerHouse) return undefined;
-      return { hall: branchOf(w, anchor, w.year) };
+      const hall = anchor && homeHall(ctx, anchor);
+      return hall ? { hall } : undefined;
     }
     case 'muster': {
       const c = w.muster.commitments.find(c => c.id === site.commitment && c.status === 'in_the_field');
@@ -69,6 +94,7 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
     // Travel, unpaid service and recovery do not teleport somebody home.
     ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
       && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
+    ...ctx.world.covert.operations.filter(o => o.stage !== 'closed').flatMap(o => covertParticipants(ctx, o.plan.id)),
   ]);
 }
 
@@ -91,7 +117,7 @@ export function attendsHall(
   if (!free(ctx, p) || deployed.has(p.id)) return false;
   const posted = duty.get(p.id);
   if (posted) return 'hall' in posted && posted.hall === hall;
-  if (w.people.householdOf(p.id, w.year) !== w.playerHouse || branchOf(w, p, w.year) !== hall) return false;
+  if (homeHall(ctx, p) !== hall) return false;
   // Unknown career residence is an absence, not permission to teleport.
   return !p.career || ctx.content.career(p.career.career)?.resident === 'home';
 }
@@ -103,9 +129,20 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const named = (slots: readonly string[]) => slots.flatMap(slot => castIn(fill, slot));
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
+    case 'covert': {
+      const o = w.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
+      if (!o) return { site, people: [] };
+      const party = covertParticipants(ctx, o.plan.id);
+      // A preparing or returning expedition is away, but has not become a
+      // visitor at a foreign hall merely because an order named that target.
+      if (w.year < o.plan.attemptYear - 1 || o.stage === 'returning') return { site, people: distinct(party) };
+      const attendance = resolvePresence(ctx, { kind: 'hall', hall: { slot: 'DESTINATION' } }, { DESTINATION: o.plan.target });
+      return { ...attendance, site, people: distinct([...attendance.people, ...party]) };
+    }
     case 'person': {
       const p = w.people.get(site.person);
-      if (!p || !isCurrentFamily(ctx, p) || !attendsHall(ctx, branchOf(w, p, w.year), p)) return { site, people: [] };
+      const hall = p && homeHall(ctx, p);
+      if (!p || !hall || !attendsHall(ctx, hall, p)) return { site, people: [] };
       const attendance = resolvePresence(ctx, { kind: 'hall', hall: { slot: 'WARD' } }, { WARD: p.id });
       return { ...attendance, site };
     }
@@ -117,12 +154,14 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
     }
     case 'hall': {
       const anchor = typeof site.hall === 'string' ? undefined : w.people.get(soleCast(fill, site.hall.slot) ?? '');
-      if (typeof site.hall !== 'string' && (!anchor || currentMembership(anchor, w.year)?.house !== w.playerHouse)) {
+      if (typeof site.hall !== 'string' && (!anchor || !homeHall(ctx, anchor))) {
         return { site, people: [] };
       }
-      const hall = anchor ? branchOf(w, anchor, w.year) : MAIN_BRANCH;
+      const hall = anchor ? homeHall(ctx, anchor)! : MAIN_BRANCH;
+      const house = anchor ? currentMembership(anchor, w.year)!.house : w.playerHouse;
       const duty = dutyPlaces(ctx);
-      const residents = (halls(w, w.year).get(hall) ?? []).filter(p => attendsHall(ctx, hall, p, deployed, duty));
+      const residents = (house === w.playerHouse ? halls(w, w.year).get(hall) ?? [] : w.people.household(house, w.year))
+        .filter(p => attendsHall(ctx, hall, p, deployed, duty));
       const posted = [...duty].filter(([, place]) => 'hall' in place && place.hall === hall).map(([id]) => id)
         .filter(id => !deployed.has(id));
       const visitors = named(site.visitors ?? []).filter(id => !deployed.has(id));

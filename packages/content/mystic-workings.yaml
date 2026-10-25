@@ -211,6 +211,80 @@ mysticWorkings:
       scope: person
       bonus: 0.35
 
+  - id: the_covered_approach
+    name: The Covered Approach
+    affinity: darkness
+    books:
+      - lesser_workings_of_darkness
+    description: A reader travels with one named expedition and keeps its approach from casual observation. Reaching a person and leaving an identifiable witness remain different risks. The working cannot remove a statement already copied. Setting it down does not bring the reader home before the expedition returns.
+    preparation:
+      crowns: 8
+      years: 1
+    upkeep: 1
+    benefit:
+      kind: covert_support
+      role: approach
+      bonus: 0.15
+  - id: a_passage_prepared
+    name: A Passage Prepared
+    affinity: terra
+    books:
+      - lesser_workings_of_terra
+      - greater_workings_of_terra
+    description: The second book lets a reader prepare one physical approach with an expedition. A guarded or reinforced passage is less likely to stop that approach. People can still stand in the way, and reaching the intended person does not settle what follows. The reader stays with the journey until its return.
+    preparation:
+      crowns: 12
+      years: 1
+    upkeep: 2
+    benefit:
+      kind: covert_support
+      role: breach
+      bonus: 0.2
+  - id: the_returning_wind
+    name: The Returning Wind
+    affinity: aero
+    books:
+      - lesser_workings_of_aero
+      - greater_workings_of_aero
+    description: One reader prepares an expedition’s local way out. A named operative is less likely to be caught by the people actually watching that place. The wind neither shortens the journey home to nothing nor removes a witness who has already spoken. The reader must make the same return.
+    preparation:
+      crowns: 10
+      years: 1
+    upkeep: 1
+    benefit:
+      kind: covert_support
+      role: escape
+      bonus: 0.2
+  - id: the_travelling_thread
+    name: The Travelling Thread
+    affinity: life
+    books:
+      - lesser_workings_of_life
+    description: A learned carer goes with an expedition and attends its named operative after the encounter. Fewer of the wounds suffered while getting away stop that person from serving again. This care does not open a locked place, prevent captivity or restore a person already dead. The carer is absent from home throughout.
+    preparation:
+      crowns: 10
+      years: 1
+    upkeep: 2
+    benefit:
+      kind: covert_support
+      role: recovery
+      bonus: 0.2
+  - id: the_short_vigil
+    name: The Short Vigil
+    affinity: death
+    books:
+      - lesser_workings_of_death
+      - greater_workings_of_death
+    description: A reader of both books prepares a bodily working against the expedition’s one named living enemy. It can help the attempt reach that person and make an injury harder to survive. Real guards and Life care still matter. It promises neither a death nor a second life, and its reader must travel and return with the expedition.
+    preparation:
+      crowns: 18
+      years: 1
+    upkeep: 2
+    benefit:
+      kind: covert_support
+      role: hostile
+      bonus: 0.15
+
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
     of: e4434738f3973e8c
@@ -295,3 +369,34 @@ proseVariants:
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_bedside_thread].description
     of: 1836cfc02aaeccb4
     plainenglish: A reader protects one named relative at home. After a physical attack, the reader can help the victim survive an injury that would otherwise be fatal. The injury remains. The working cannot revive the dead or counter Eldritch Power.
+
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_covered_approach].name
+    of: 0ed18c9a2033b37e
+    plainenglish: Concealing an Approach
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_covered_approach].description
+    of: 35787432fd2192e6
+    plainenglish: A reader accompanies one expedition. The working can help it reach its target and reduce the chance that a witness identifies the operative. Existing copied testimony remains. The reader stays away until the expedition returns, even if the working is released.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=a_passage_prepared].name
+    of: 0146bb1973087885
+    plainenglish: Preparing a Passage
+  - address: content:mystic-workings.yaml#mysticWorkings[id=a_passage_prepared].description
+    of: 5190bcc6161bdfaa
+    plainenglish: A reader who has completed both Terra books accompanies an expedition and helps it pass a guarded or reinforced approach. Guards can still prevent the attack. Reaching the target does not guarantee success or escape. The reader remains with the expedition until it returns.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_returning_wind].name
+    of: dea6cc906cd28d8c
+    plainenglish: Preparing an Escape
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_returning_wind].description
+    of: b5256c9521ccf5e9
+    plainenglish: A reader with both Aero books helps an expedition leave the immediate scene. Actual guards are less likely to capture the operative. Travel home still takes time, and existing witnesses remain. The reader must return with the expedition.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_travelling_thread].name
+    of: ed3f0b9c6bcddc68
+    plainenglish: Expedition Recovery Care
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_travelling_thread].description
+    of: a2357fce2f15b622
+    plainenglish: A Life reader accompanies the expedition and helps the operative avoid an injury during escape. The working does not help the approach, prevent capture or revive the dead. The reader provides no home protection while away.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_short_vigil].name
+    of: 88b876857a804bc9
+    plainenglish: A Prepared Bodily Working
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_short_vigil].description
+    of: 0c58968a244f6d06
+    plainenglish: A reader who has completed both Death books accompanies an expedition against one named living enemy. The working can improve the chance of reaching that person and of a serious injury being fatal. Guards and Life care can still work. It cannot guarantee death or revive anyone. The reader must make the journey and return.

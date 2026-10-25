@@ -4,6 +4,18 @@ import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD
 
 const content = loadContent();
 
+describe('captivity identifies an actual outside captor (#1876)', () => {
+  it.each(['unknown_house', 'house_gearithy'])('rejects %s as a captor', captor => {
+    const event = EventTemplateS.parse({ id: 'captivity_validation', title: 'A captive', tier: 'family',
+      frequency: 'common', weight: 1, purposes: ['change_relationship', 'worldbuild_through_action', 'test_magic_rule'], body: 'A relative is taken.',
+      slots: { PERSON: { role: 'family_member' } }, interaction: { kind: 'narration', outcomes: [{ id: 'taken',
+        text: 'The captor asks for ransom.', effects: [{ kind: 'captivity', target: { slot: 'PERSON' }, captor, ransom: 60 }],
+      }] } });
+    const issues = runRule('refs/known', { ...content.bundle, events: [event] });
+    expect(issues.some(i => /captor/.test(i.message))).toBe(true);
+  });
+});
+
 describe('a field working retains its actual affinity (#1874)', () => {
   it('rejects a Life book used as a supply or concealment working', () => {
     const original = content.bundle.mysticWorkings.find(w => w.id === 'the_field_infirmary')!;

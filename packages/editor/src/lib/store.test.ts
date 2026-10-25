@@ -769,6 +769,20 @@ describe('creating something new by appending to a file', () => {
 
 
 describe('authored Plain English variants (#414)', () => {
+  it('round-trips an expedition support role without changing another working', async () => {
+    const working = store.bundle.mysticWorkings.find(w => w.id === 'the_covered_approach')!;
+    const sibling = structuredClone(rawContent().mysticWorking('the_returning_wind'));
+    if (working.benefit.kind !== 'covert_support') throw new Error('expected expedition support');
+    working.benefit.bonus = 0.12;
+    working.preparation.crowns = 9;
+    markDirty('mysticWorkings', working.id);
+    expect((await saveItem('mysticWorkings', working.id)).ok).toBe(true);
+    const reloaded = assembleBundle(Object.fromEntries(h.disk), parse);
+    expect(reloaded.mysticWorkings.find(w => w.id === working.id)).toMatchObject({
+      preparation: { crowns: 9 }, benefit: { kind: 'covert_support', role: 'approach', bonus: 0.12 },
+    });
+    expect(reloaded.mysticWorkings.find(w => w.id === sibling!.id)).toEqual(sibling);
+  });
   it('round-trips a working’s typed benefit, cost and prose without changing a sibling', async () => {
     const working = store.bundle.mysticWorkings.find(w => w.id === 'the_bedside_thread')!;
     const sibling = structuredClone(rawContent().mysticWorking('the_door_lamp'));

@@ -6,6 +6,7 @@ import { ageCareerFactor } from '../ages/strategy.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { msg } from '../messages.js';
 import { renderContentProse } from '../prose.js';
+import { covertReservation } from '../presence.js';
 
 /**
  * THE LIBRARY — applying a spellbook, one mechanism for every book there will
@@ -213,6 +214,7 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   // taught. Dead and guardian records cannot take up new books either.
   if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
   if (p.captivity) return { ok: false, reason: msg(ctx, 'library.refuse.captive', 'they are held away from the house') };
+  if (covertReservation(ctx, p.id)) return { ok: false, reason: msg(ctx, 'library.refuse.expedition', 'they are away with an expedition') };
   // A standing Mystic duty is the reader's one intensive occupation (#1873).
   // Their book waits in `world.mystic.pauses` and resumes when the duty ends.
   if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id)) {
