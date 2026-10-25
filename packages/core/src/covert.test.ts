@@ -109,6 +109,17 @@ describe('bounded named-threat resolver (#1914 / #1875)', () => {
     expect(resolveCovertAttempt(ctx, attempt, defence)).toEqual({ kind: 'refused', reason: 'invalid_target' });
   });
 
+  it('does not turn the founder’s death exemption into a ban on living actors or guards', () => {
+    const { ctx, sponsor, operative, guard, attempt, defence } = scene();
+    sponsor.becomesGuardian = true;
+    operative.becomesGuardian = true;
+    guard.becomesGuardian = true;
+    expect(resolveCovertAttempt(ctx, attempt, { ...defence, guards: [guard.id], paidCrowns: 8 }).kind).toBe('resolved');
+    guard.status = 'guardian';
+    expect(resolveCovertAttempt(ctx, attempt, { ...defence, guards: [guard.id], paidCrowns: 8 }))
+      .toEqual({ kind: 'refused', reason: 'invalid_guard' });
+  });
+
   it.each(['missing', 'hostage', 'child', 'disabled', 'different_house'] as const)('refuses a %s operative', gap => {
     const { ctx, operative, attempt, defence } = scene();
     switch (gap) {
