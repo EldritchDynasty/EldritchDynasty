@@ -8,7 +8,7 @@ export function civilianApplication(working: MysticWorkingDef): string | undefin
   const benefit = working.benefit;
   switch (benefit.kind) {
     case 'life_care': return benefit.maxWardAge === undefined ? 'ordinary_health' : 'infant_care';
-    case 'estate_protection': return `estate:${[...benefit.parcelKinds].sort().join(',')}`;
+    case 'estate_protection': return 'estate_protection';
     case 'project_support': return 'construction';
     case 'library_care': return 'physical_library';
     case 'household_provision': return 'provisions';

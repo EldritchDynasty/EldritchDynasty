@@ -186,7 +186,10 @@ export function summariseRepertoire(runs:readonly Run[]){
     const within=(r:Run)=>{const duties=Object.values(r.metrics.records).filter(d=>d.service.servedYears>=10||d.service.firstUsefulAt!==undefined);
       return duties.filter(d=>d.service.firstUsefulAt!==undefined&&d.service.firstUsefulAt<=10).length>duties.length/2;};
     const trained=rows.filter(r=>r.metrics.trainedGenerations.length);
-    const domains=(r:Run)=>r.metrics.trainedGenerations.reduce((n,g)=>n+(r.metrics.usefulDomains[g]?.filter(d=>d!=='conflict').length??0),0)/r.metrics.trainedGenerations.length;
+    // Older report rows named parcel scopes separately. A broader protection
+    // scope is an upgrade, not a second application, in every cohort.
+    const domains=(r:Run)=>r.metrics.trainedGenerations.reduce((n,g)=>n+new Set((r.metrics.usefulDomains[g]??[])
+      .filter(d=>d!=='conflict').map(d=>d.startsWith('estate:')?'estate_protection':d)).size,0)/r.metrics.trainedGenerations.length;
     const goal=(evaluate:()=>number)=>{try{return {supported:true,marginSE:evaluate()};}catch(e){return {supported:false,reason:(e as Error).message};}};
     return {campaign,policy,runs:rows.length,years:rows.reduce((n,r)=>n+r.years,0),
       trainedHouseFraction:rateEvidence(trained.length,rows.length),availablePersonYears:estimate(r=>r.metrics.availablePersonYears),
