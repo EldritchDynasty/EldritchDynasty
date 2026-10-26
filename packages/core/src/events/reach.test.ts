@@ -7876,3 +7876,41 @@ describe('decision callbacks, witnessed through their own arcs (#1898)', () => {
     theReturn(ctx, instance, 'the_waking_shows', returned);
   });
 });
+
+describe('#1897 glimpse chain execution witnesses', () => {
+  // Each link is scheduled by the one before (glimpses.yaml); a witness takes
+  // the same forced route, in the window its conditions name, with the flag
+  // the previous link leaves behind.
+  const links = [
+    { id: 'the_line_carried_forward', outcome: 'carried', year: 1070, flags: [] as string[] },
+    { id: 'the_letters_to_the_weighers', outcome: 'nobody_holds_it', year: 1092, flags: ['glimpse_line_carried'] },
+    { id: 'the_branch_hall_book', outcome: 'the_same_line', year: 1180, flags: ['glimpse_line_carried', 'glimpse_weighers_asked'] },
+  ] as const;
+
+  for (const [index, link] of links.entries()) {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      it(`${link.id} executes from its schedule in ${mode}`, () => {
+        const ctx = fixture(189700 + index);
+        ctx.world.year = link.year;
+        for (const flag of link.flags) ctx.world.flags.set(flag, true);
+        if (link.id === 'the_branch_hall_book') {
+          const cousin = place(ctx, { sex: 'male', age: 30, name: 'Witness Cousin', branch: 'branch_witness' });
+          ctx.world.branches.set('branch_witness' as never, {
+            id: 'branch_witness', name: 'Witness Hall', house: ctx.world.playerHouse, founder: cousin.id,
+            splitFrom: 'main', foundedYear: link.year - 20, grievance: 0,
+          } as never);
+        }
+        setProseVariants(ctx, content.proseVariants);
+        setProseMode(ctx, mode);
+        ctx.world.scheduled.push({ event: link.id, year: ctx.world.year });
+        expect(selectEvents(ctx, makeRng(189710 + index), 0).some((candidate) =>
+          candidate.source === 'forced' && candidate.event.id === link.id)).toBe(true);
+        const result = executeOutcomeWitness(ctx, content.mustEvent(link.id), {
+          expectedOutcomeId: link.outcome, rng: makeRng(189720 + index),
+        });
+        expect(result.ok, result.reason).toBe(true);
+        expect(missingPlainEnglish(ctx)).toEqual([]);
+      });
+    }
+  }
+});

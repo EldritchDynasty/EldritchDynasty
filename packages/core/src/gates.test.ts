@@ -924,10 +924,18 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * pair on a sample of one. Four runs is the smallest batch that carries the
    * shipped ladder; the verdict that counts is the 32-run blocking gate, which
    * passes (god pair cleared by 24.8% of expressers).
+   *
+   * Twelve, not four (#1897). Above a measured population the gate also calls
+   * a floor nobody reaches STALE, and on main the four runs kept the
+   * Demigod's and God's power floors (85, 88) alive on one expresser sample
+   * in about 170. The glimpse chain's re-roll moved that one run, the ceiling
+   * fell to the founder's own 82.4, and both floors read stale, while the
+   * hierophant share rose (9.8% to 21.3%) and the 32-run gate still passed.
+   * 4×400, 4×500 and 6×400 do not carry it; 12×300 does.
    */
-  const cheap = { runs: 4, years: 300, every: 50 } as const;
+  const cheap = { runs: 12, years: 300, every: 50 } as const;
   /**
-   * The same four runs, sampled half as often. The three tests that hand the
+   * Four of the same runs, sampled half as often. The three tests that hand the
    * gate an impossible floor are about the verdicts it gives WITHOUT a
    * measured ceiling: a floor "cleared by nobody" above a populated rung, and
    * an untested one above a rung nobody reached. Gate 9 measures a ceiling
@@ -936,8 +944,10 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * sat just under it until #1896's pannage re-roll took it to 180, which
    * silently moved all three into the other branch. At `every: 100` it holds
    * about 93: well clear of the line, so a re-roll cannot flip the regime.
+   * Pinned to four runs, not derived from `cheap`, since twelve would carry
+   * it back over.
    */
-  const uncapped = { ...cheap, every: 100 } as const;
+  const uncapped = { runs: 4, years: 300, every: 100 } as const;
 
   it('accepts a purchased Madness floor only when a measured population reaches it (#378)', () => {
     expect(judgeLadderFloor(90, 0, 3, 61.8, 112)).toBe('reached');
@@ -997,6 +1007,14 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     }
   });
 
+  // Straight after the shipped-ladder test, on purpose: gate 9 memoizes ONE
+  // batch, and `uncapped` in between would evict the twelve-run `cheap` batch
+  // and make this replay it.
+  it('reports the real power floors it is judging', () => {
+    const { lines } = gateLadderScales(content, cheap);
+    expect(lines.join('\n')).toMatch(/wants power 50/);
+  });
+
   /**
    * The rejection. Normalising made the real floors scale-INVARIANT — which is
    * the point of them, and also means no edit to `attributes.yaml` can produce
@@ -1024,11 +1042,6 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     const { ok, lines } = gateLadderScales(content, { ...uncapped, powerFloor: { hierophant: 10_000 } });
     expect(ok, lines.join('\n')).toBe(false);
     expect(lines.join('\n')).toMatch(/power >= 10000 is cleared by nobody/);
-  });
-
-  it('reports the real power floors it is judging', () => {
-    const { lines } = gateLadderScales(content, cheap);
-    expect(lines.join('\n')).toMatch(/wants power 50/);
   });
 
   /**
@@ -1148,7 +1161,10 @@ describe('the shared batch answers about the content it was handed', () => {
    * answers have to belong to what was asked.
    */
   it('gate 9 judges the bundle it was handed, not the one before it', () => {
-    // The same four runs as gate 9's own block above, and for the same reason.
+    // A memo test, not a ladder test: whether the shipped ladder passes is
+    // asserted above at the batch that carries it. Four runs are enough to
+    // populate the hierophant rung, and three batches of twelve would make this
+    // the fast lane's longest test (#1897).
     const cheap = { runs: 4, years: 300, every: 50 } as const;
 
     // Same batch, different floors: the population is shared, the verdict is not.
@@ -1161,8 +1177,11 @@ describe('the shared batch answers about the content it was handed', () => {
      * and would make this a test of nothing.
      */
     const impossible = gateLadderScales(content, { ...cheap, mindFloor: { hierophant: 10_000 } });
-    expect(shipped.ok, shipped.lines.join('\n')).toBe(true);
-    expect(impossible.ok, 'a floor of 10,000 was cleared by somebody').toBe(false);
+    expect(impossible.lines[0], 'the two verdicts read different populations').toBe(shipped.lines[0]);
+    const convicts = (lines: string[]) => lines.some((l) => /hierophant: mind >= 10000/.test(l));
+    expect(convicts(shipped.lines), 'the shipped verdict borrowed the impossible floor').toBe(false);
+    expect(convicts(impossible.lines), 'a floor of 10,000 was cleared by somebody').toBe(true);
+    expect(impossible.ok).toBe(false);
 
     // A different bundle in the middle must not be answered from the memo,
     // and the shipped one must not be answered from ITS memo afterwards.
