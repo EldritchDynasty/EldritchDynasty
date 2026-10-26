@@ -296,12 +296,18 @@ describe('real outside service and inherited promises (#1877)', () => {
     expect(hire).toBeDefined();expect(game.order(hire.order).ok).toBe(true);
     expect(game.order({kind:'mysticRelease',assignment:game.table().mystic.duties[0]!.id}).ok).toBe(true);
     game.advance();
+    const returnYear=commission.ready+11;
+    while(game.year<returnYear)game.advance();
+    const returning=game.table().outsideServices.returns.find(o=>o.ok)!;
+    expect(returning).toBeDefined();expect(game.order(returning.order).ok).toBe(true);game.advance(3);
     const saved=transport(game.save());const years=game.year-1042;
     expect(canonical(saveGame(replay(bundle,saved.decisionLog,1877,1042,years,saved.campaign)))).toBe(canonical(saved));
     const loaded=resumeGame(checkpoint,bundle,{decider:'chronicler',proseMode:mode});
     for(let i=0;i<3;i++)loaded.advance();
     expect(loaded.order(hire.order).ok).toBe(true);
     expect(loaded.order({kind:'mysticRelease',assignment:loaded.table().mystic.duties[0]!.id}).ok).toBe(true);loaded.advance();
+    while(loaded.year<returnYear)loaded.advance();
+    expect(loaded.order(returning.order).ok).toBe(true);loaded.advance(3);
     expect(canonical(loaded.save())).toBe(canonical(saved));
     const switched=resumeGame(saved,bundle,{proseMode:mode==='original'?'plainenglish':'original'});
     expect(switched.table().outsideServices.history).toEqual(game.table().outsideServices.history);
