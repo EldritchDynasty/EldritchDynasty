@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue';
 import { MysticWorkingDefS, MysticBenefitS, asId, fieldsOfSchema, type FieldSpec, type MysticWorkingDef } from '@ed/schema';
-import { addGrudge, bootstrap, beginCommitment, beginStudy, covertOpportunities, isFieldWorking, mysticTargets, prepareCovertOperation, quoteCommission, quoteDuty } from '@ed/core';
+import { addGrudge, bootstrap, beginCommitment, beginStudy, covertOpportunities, isCurrentFamily, isFieldWorking, mysticTargets, prepareCovertOperation, quoteCommission, quoteDuty } from '@ed/core';
 import { fileOf, rawContent, store } from '../lib/store';
 import { isWritableContentPath } from '../lib/content';
 import { watchEdits } from '../lib/watch-edits';
@@ -70,7 +70,7 @@ function evaluate() {
   }
   if (w.benefit.kind === 'convalescence' || w.benefit.kind === 'teaching') {
     const relative = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
-      .find(person => person.id !== p.id && !person.becomesGuardian && person.sex === 'female')!;
+      .find(person => person.id !== p.id && !person.becomesGuardian && person.sex === 'female' && isCurrentFamily(ctx, person))!;
     if (w.benefit.kind === 'convalescence') relative.acquired.health = -8;
     else {
       const book = ctx.content.spellbook(w.books[0]!)!;

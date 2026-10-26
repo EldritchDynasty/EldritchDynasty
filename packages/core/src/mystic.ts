@@ -129,6 +129,7 @@ export function targetGap(
   switch (b.kind) {
     case 'commission': {
       if (site.kind !== 'service' || house !== ctx.world.playerHouse) return 'target_lost';
+      if (practitioner && !hasWarrant(practitioner)) return 'target_lost';
       const c = ctx.world.mystic.contracts.find(c => c.id === site.contract && c.kind === 'commission' && c.stage !== 'closed' && c.working === working.id);
       if (!c || practitioner && c.practitioner !== practitioner.id) return 'target_lost';
       return c.stage === 'returning' ? 'not_resident' : undefined;

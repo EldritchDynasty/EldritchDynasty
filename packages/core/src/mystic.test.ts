@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { ALL_AFFINITIES, asId, canLearn, type Person, type SceneSite } from '@ed/schema';
+import { ALL_AFFINITIES, asId, assertNever, canLearn, type Person, type SceneSite } from '@ed/schema';
 import { DEBT_FLOOR, economyReading } from './economy.js';
 import { rollDeath } from './people/demography.js';
 import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
-import { beginImprovement, damageParcel, landView } from './land.js';
+import { beginImprovement, damageParcel, grantParcel, landView } from './land.js';
 import { order, tableView } from './table.js';
-import { lifeCareFor, mysticView, quoteDuty, wardedYieldFactor } from './mystic.js';
+import { commitDuty, fieldSupplySaving, lifeCareFor, mysticView, quoteDuty, wardedYieldFactor } from './mystic.js';
 import { resolvePresence } from './presence.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import { runYears } from './year/step.js';
@@ -15,12 +15,14 @@ import type { Rng } from './rng.js';
 import type { SimCtx } from './world.js';
 import { civilianApplication, improvementSupport } from './mystic-civilian.js';
 import { tickEconomy } from './economy.js';
-import { hirePractitioner, honourServicePromise, outsideServicesView, quoteCommission, quoteHire, seekPractitioner, undertakeCommission } from './mystic-contracts.js';
+import { hirePractitioner, honourServicePromise, outsideServicesView, quoteCommission, quoteHire, quotePractitionerSearch, seekPractitioner, undertakeCommission } from './mystic-contracts.js';
 import { captureContractor, ransomCaptive } from './people/captivity.js';
 import { beginCommitment } from './muster.js';
 import { relate } from './people/relationships.js';
 import { libraryCare } from './mystic-civilian.js';
 import { attr } from './people/factory.js';
+import { newGame, resumeGame } from './session.js';
+import { replay } from './replay.js';
 
 /**
  * #1866 B / #1873 — the Life/Terra pilot's merge-blocking mechanism claims.
@@ -31,6 +33,76 @@ const bundle = loadContent();
 const SEAT: SceneSite = { kind: 'hall', hall: 'main' };
 const FARM = 'hallowfield';
 const farmSite: SceneSite = { kind: 'parcel', parcel: FARM, slots: ['WARDEN'] };
+
+describe('every authored civilian definition has a live system reader (#1877)', () => {
+  it.each(bundle.bundle.mysticWorkings.filter(w => civilianApplication(w) !== undefined && w.benefit.kind !== 'commission'))(
+    'changes the actual system for $id, and losing only its reader removes the change', working => {
+      const { ctx, infant } = world(); const b = working.benefit;
+      const p = reader(ctx, canLearn('female',working.affinity) ? 'female' : 'male',working.books,'The maintainer');
+      const pupil = place(ctx,{sex:'female',age:25,awakened:true});pupil.acquired.health=-8;
+      let target:SceneSite=SEAT;
+      if(b.kind==='project_support'||b.kind==='estate_protection'){
+        const parcel=bundle.bundle.parcels.find(d=>b.parcelKinds.includes(d.kind))!;grantParcel(ctx,parcel.id);
+        target={kind:'parcel',parcel:parcel.id,slots:['WARDEN']};
+      }else if(b.kind==='library_care'){
+        const book=working.books[0]!;ctx.world.library.set(book,{id:book,condition:60,acquiredYear:1041});target={kind:'book',book};
+      }else if(b.kind==='teaching'||b.kind==='convalescence'){
+        target={kind:'person',person:pupil.id};
+        if(b.kind==='teaching'){
+          const book=working.books[0]!;ctx.world.library.set(book,{id:book,condition:80,acquiredYear:1041});
+          ctx.world.studies.push({person:pupil.id,book,completes:ctx.world.year+20});
+        }
+      }
+      if(working.collaborator){
+        const partner=bundle.mysticWorking(working.collaborator)!;
+        const colleague=reader(ctx,canLearn('female',partner.affinity)?'female':'male',partner.books,'The colleague');
+        expect(order(ctx,{kind:'mysticAssign',person:colleague.id,working:partner.id,target}).ok).toBe(true);
+      }
+      expect(order(ctx,{kind:'mysticAssign',person:p.id,working:working.id,target}).ok).toBe(true);
+      ctx.world.year=Math.max(...ctx.world.mystic.assignments.map(a=>a.ready));
+      const control=loadGame(JSON.parse(JSON.stringify(saveGame(ctx))),bundle);
+      control.world.people.mustGet(p.id).spellsKnown=[];
+      phase('mystic',ctx);phase('mystic',control);
+      switch(b.kind){
+        case 'life_care':{
+          const risks:number[]=[];rollDeath(control.world.people.mustGet(infant.id),control,fixedRng(.999999,risks));
+          expect(lifeCareFor(ctx,infant)).toBeDefined();
+          const roll=risks[0]!*0.999;
+          expect(rollDeath(infant,ctx,fixedRng(roll))).toBe(false);
+          expect(rollDeath(control.world.people.mustGet(infant.id),control,fixedRng(roll))).toBe(true);break;
+        }
+        case 'estate_protection':{
+          if(target.kind!=='parcel')throw Error('parcel fixture');
+          const parcel=target.parcel;damageParcel(ctx,parcel,4);damageParcel(control,parcel,4);
+          expect(landView(ctx).held.find(p=>p.parcel===parcel)!.yieldBonus)
+            .toBeGreaterThan(landView(control).held.find(p=>p.parcel===parcel)!.yieldBonus);break;
+        }
+        case 'project_support':{
+          if(target.kind!=='parcel')throw Error('parcel fixture');
+          const before=ctx.world.treasury;const base=control.world.treasury;
+          expect(beginImprovement(ctx,target.parcel).ok).toBe(true);expect(beginImprovement(control,target.parcel).ok).toBe(true);
+          expect(before-ctx.world.treasury).toBeLessThan(base-control.world.treasury);break;
+        }
+        case 'library_care':{
+          if(target.kind!=='book')throw Error('book fixture');
+          tickLibraryWear(ctx);tickLibraryWear(control);
+          expect(ctx.world.library.get(target.book)!.condition).toBeGreaterThan(control.world.library.get(target.book)!.condition);break;
+        }
+        case 'household_provision':{
+          expect(economyReading(ctx).upkeep).toBeLessThan(economyReading(control).upkeep);tickEconomy(ctx);break;
+        }
+        case 'convalescence':expect(pupil.acquired.health).toBeGreaterThan(control.world.people.mustGet(pupil.id).acquired.health!);break;
+        case 'teaching':{
+          for(let i=0;i<2;i++){ctx.world.year++;control.world.year++;phase('mystic',ctx);phase('mystic',control);}
+          expect(ctx.world.studies[0]!.completes).toBeLessThan(control.world.studies[0]!.completes);break;
+        }
+        case 'commission':case 'field_care':case 'field_supply':case 'field_watch':case 'field_concealment':
+        case 'household_protection':case 'covert_support':throw Error('not a civilian fixture');
+        default:assertNever(b);
+      }
+      expect(ctx.world.mystic.assignments.find(a=>a.practitioner===p.id)!.service.usefulYears).toBeGreaterThan(0);
+    });
+});
 
 describe('learned collaborators change a paid land project (#1877)', () => {
   function team() {
@@ -186,6 +258,54 @@ describe('real outside service and inherited promises (#1877)', () => {
     return p;
   }
   function turn(ctx: SimCtx) { ctx.world.year++; phase('mystic',ctx); tickEconomy(ctx); }
+  it.each(['the_wars','the_plague'])('quotes the real longer search during %s without changing the broker clock by reading it', age => {
+    const {ctx}=world();const ordinary=quotePractitionerSearch(ctx);
+    ctx.world.age.active.push({age,began:ctx.world.year,named:true,paid:{standing:false}});
+    const before=canonical(saveGame(ctx));const scarce=quotePractitionerSearch(ctx);
+    expect(scarce).toMatchObject({price:ordinary.price,scarce:true,due:ctx.world.year+3});
+    expect(canonical(saveGame(ctx))).toBe(before);expect(seekPractitioner(ctx).ok).toBe(true);
+    turn(ctx);expect(ctx.world.mystic.contacts).toEqual([]);turn(ctx);expect(ctx.world.mystic.contacts).toEqual([]);
+    turn(ctx);expect(ctx.world.mystic.contacts).toHaveLength(1);
+  });
+  it('a real foreign professional serves their own house through the same evaluator and cannot also be hired', () => {
+    const {ctx}=world();const p=professional(ctx,'life');
+    const quote=quoteDuty(ctx,{person:p.id,working:'the_bedside_thread',target:{kind:'person',person:p.id}},'house_calder');
+    expect(quote.ok,quote.reason).toBe(true);
+    expect(commitDuty(ctx,{person:p.id,working:'the_bedside_thread',target:{kind:'person',person:p.id}},'house_calder').ok).toBe(true);
+    const spent=ctx.world.mystic.foreignSpent!.house_calder!;
+    expect(spent).toBe(quote.preparation);
+    expect(quoteHire(ctx,{person:p.id,working:'sickroom_watch',target:SEAT}).ok).toBe(false);
+    p.spellsKnown=[];turn(ctx);expect(ctx.world.mystic.assignments).toEqual([]);
+  });
+  it('ends a family commission if the actual warrant is withdrawn', () => {
+    const {ctx}=world();const p=reader(ctx,'female',['lesser_workings_of_death','greater_workings_of_death'],'The licensed relative');
+    p.traits.add(asId('colleges_warrant'));expect(undertakeCommission(ctx,p.id,'the_funeral_contract','house_marrow').ok).toBe(true);
+    p.traits.delete(asId('colleges_warrant'));turn(ctx);
+    expect(ctx.world.mystic.contracts[0]).toMatchObject({stage:'returning',result:'failed',worked:0});
+  });
+  it.each(['original','plainenglish'] as const)('replays actual public broker, commission and hire orders, with reload and frozen receipts in %s', mode => {
+    const game=newGame(bundle,{seed:1877,decider:'chronicler',proseMode:mode});
+    const prologue=game.prologue()!;
+    expect(game.found({houseName:'The House of the Reader',heirloom:prologue.heirlooms[0]!.heirloom,grudge:prologue.grudges[0]!.house}).ok).toBe(true);
+    expect(game.order({kind:'mysticSearch'}).ok).toBe(true);game.advance();
+    const commission=game.table().outsideServices.commissions.find(o=>o.ok)!;
+    expect(commission).toBeDefined();expect(game.order(commission.order).ok).toBe(true);
+    const checkpoint=transport(game.save());
+    for(let i=0;i<3;i++)game.advance();
+    const hire=game.table().outsideServices.hires.find(o=>o.ok)!;
+    expect(hire).toBeDefined();expect(game.order(hire.order).ok).toBe(true);
+    expect(game.order({kind:'mysticRelease',assignment:game.table().mystic.duties[0]!.id}).ok).toBe(true);
+    game.advance();
+    const saved=transport(game.save());const years=game.year-1042;
+    expect(canonical(saveGame(replay(bundle,saved.decisionLog,1877,1042,years,saved.campaign)))).toBe(canonical(saved));
+    const loaded=resumeGame(checkpoint,bundle,{decider:'chronicler',proseMode:mode});
+    for(let i=0;i<3;i++)loaded.advance();
+    expect(loaded.order(hire.order).ok).toBe(true);
+    expect(loaded.order({kind:'mysticRelease',assignment:loaded.table().mystic.duties[0]!.id}).ok).toBe(true);loaded.advance();
+    expect(canonical(loaded.save())).toBe(canonical(saved));
+    const switched=resumeGame(saved,bundle,{proseMode:mode==='original'?'plainenglish':'original'});
+    expect(switched.table().outsideServices.history).toEqual(game.table().outsideServices.history);
+  });
   it('keeps offer reads inert, charges one broker search and returns a real learned named person', () => {
     const { ctx } = world(); const before=canonical(saveGame(ctx));
     outsideServicesView(ctx); outsideServicesView(ctx);
@@ -291,6 +411,9 @@ describe('real outside service and inherited promises (#1877)', () => {
     const commitment=beginCommitment(ctx,5,'the_wars');
     const working=bundle.bundle.mysticWorkings.find(w=>w.affinity==='thermal'&&w.benefit.kind==='field_supply')!;
     expect(hirePractitioner(ctx,{person:p.id,working:working.id,target:{kind:'muster',commitment:commitment.id}}).ok).toBe(true);
+    turn(ctx);expect(fieldSupplySaving(ctx,commitment)).toBeGreaterThan(0);
+    const control=loadGame(transport(saveGame(ctx)),bundle);control.world.people.mustGet(p.id).spellsKnown=[];
+    expect(fieldSupplySaving(control,control.world.muster.commitments[0]!)).toBe(0);
     expect(captureContractor(ctx,p.id,'house_marrow',12)).toBe(true);
     expect(p.captivity?.home.house).toBe('house_calder');
     const c=ctx.world.mystic.contracts[0]!;while(c.stage!=='closed')turn(ctx);

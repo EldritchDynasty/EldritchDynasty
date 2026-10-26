@@ -25,6 +25,8 @@ function commit() {
 }
 const stage = (value: string) => value === 'preparing' ? local('on the outward road', 'travelling and preparing')
   : value === 'working' ? local('keeping the agreed work', 'serving') : local('on the return road', 'returning');
+const outcome = (value: string | undefined) => value === 'fulfilled' ? local('agreed work completed', 'fulfilled')
+  : value === 'withdrawn' ? local('recalled by the house', 'withdrawn') : value === 'failed' ? local('agreed work unfinished', 'failed') : '';
 </script>
 
 <template>
@@ -42,6 +44,7 @@ const stage = (value: string) => value === 'preparing' ? local('on the outward r
       <p><strong>{{ contract.person }}</strong> · {{ stage(contract.stage) }}</p>
       <p class="dim">{{ local('Work begins', 'Ready in') }} {{ contract.ready }} · {{ local('last working year', 'work ends in') }} {{ contract.ends }} · {{ local('return due', 'return expected in') }} {{ contract.returnsAt }}</p>
       <p class="dim">{{ contract.paid.toFixed(1) }} {{ local('crowns spent', 'crowns paid') }} · {{ contract.earned }} {{ local('crowns received', 'crowns earned') }}</p>
+      <p v-if="contract.result" class="dim">{{ outcome(contract.result) }}</p>
     </div>
     <template v-if="offers.length">
       <label class="small service-choice">{{ local('The proposed service', 'Choose an outside service') }}
@@ -73,7 +76,7 @@ const stage = (value: string) => value === 'preparing' ? local('on the outward r
     <details v-if="services.history.length" class="small service-entry">
       <summary>{{ local('Closed road accounts', 'Completed outside service accounts') }}</summary>
       <div v-for="past in services.history" :key="past.id" class="service-entry">
-        <p>{{ past.receipt }}</p><p class="dim">{{ past.earned }} {{ local('crowns received', 'crowns earned') }}</p>
+        <p>{{ past.receipt }}</p><p class="dim">{{ outcome(past.result) }} · {{ past.earned }} {{ local('crowns received', 'crowns earned') }}</p>
       </div>
     </details>
   </section>
