@@ -9,6 +9,9 @@ import {
 import { GLIMPSE_TAG, answerYears, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
 import { proseForClause } from './prose.js';
 import { makeRng } from './rng.js';
+import { evalCondition } from './events/conditions.js';
+import { resolveSlots } from './events/slots.js';
+import { place, testWorld } from './testing.js';
 
 const bundle = loadContent();
 
@@ -139,23 +142,25 @@ const FOLLOW_UPS: Record<string, string> = {
   three_names_in_the_day_book: 'everybody_reads_the_bill',
 };
 
-/** The shipped bundle with the follow-ups' outcomes tagged, and nothing else changed. */
-function tagged(source: ContentBundle): ContentBundle {
+/**
+ * The shipped bundle with every glimpse tag taken off, and nothing else
+ * changed: the control. The shipped bundle itself carries the tags (#1897's
+ * content half), so it is the one the glimpse tests read.
+ */
+function untagged(source: ContentBundle): ContentBundle {
+  const strip = (o: Outcome): Outcome => ({ ...o, tags: o.tags.filter((t) => t !== GLIMPSE_TAG) });
   return {
     ...source,
     events: source.events.map((e) => {
-      const outcome = FOLLOW_UPS[e.id];
-      if (!outcome) return e;
-      const tag = (o: Outcome): Outcome => (o.id === outcome ? { ...o, tags: [...o.tags, GLIMPSE_TAG] } : o);
       const i = e.interaction;
       return i.kind === 'narration'
-        ? { ...e, interaction: { ...i, outcomes: i.outcomes.map(tag) } }
-        : { ...e, interaction: { ...i, choices: i.choices.map((c) => ({ ...c, outcomes: c.outcomes.map(tag) })) } };
+        ? { ...e, interaction: { ...i, outcomes: i.outcomes.map(strip) } }
+        : { ...e, interaction: { ...i, choices: i.choices.map((c) => ({ ...c, outcomes: c.outcomes.map(strip) })) } };
     }),
   };
 }
 
-const glimpsing = tagged(bundle.bundle);
+const glimpsing = bundle.bundle;
 
 function glimpseWorld(source: ContentBundle | typeof bundle, year: number) {
   const ctx = bootstrap(source, 4242, SIGNING);
@@ -182,8 +187,15 @@ describe('an authored glimpse answers the player', () => {
     expect(isGlimpse(ctx, 'the_heir_reads_the_tally', 'the_three_sacks')).toBe(true);
     expect(isGlimpse(ctx, 'the_heir_reads_the_tally', 'no_such_outcome')).toBe(false);
     expect(isGlimpse(ctx, 'no_such_event', 'the_three_sacks')).toBe(false);
-    expect(isGlimpse(glimpseWorld(bundle, SIGNING), 'the_heir_reads_the_tally', 'the_three_sacks'),
+    expect(isGlimpse(glimpseWorld(untagged(bundle.bundle), SIGNING), 'the_heir_reads_the_tally', 'the_three_sacks'),
       'the untagged bundle has no glimpse here').toBe(false);
+  });
+
+  it('ships every tutor follow-up tagged, whichever the opening picks', () => {
+    const ctx = glimpseWorld(glimpsing, SIGNING);
+    for (const [event, outcome] of Object.entries(FOLLOW_UPS)) {
+      expect(isGlimpse(ctx, event, outcome), `${event}#${outcome}`).toBe(true);
+    }
   });
 
   it('counts a logged glimpse as the last answer, and keeps the frame on its roll', () => {
@@ -238,5 +250,71 @@ describe('an authored glimpse answers the player', () => {
     expect(shown.length, 'the opening reached its follow-up').toBeGreaterThan(0);
     expect(glimpseYears(ctx)).toEqual(shown.map((d) => d.year));
     expect(lastAnswerYear(ctx)).toBeGreaterThanOrEqual(shown.at(-1)!.year);
+  });
+});
+
+/**
+ * THE GLIMPSE CHAIN (#1897 option (c), option 2).
+ *
+ * Three one-shot scenes, each tagged, each waiting on the flag the one before
+ * sets, so they arrive in order and never twice. Built state, not a played
+ * run: whether they REACH ordinary play is the fire-rate gate's question, and
+ * whether they shorten the silence is `gate:long`'s (docs/BALANCE-LOG.md).
+ */
+describe('the glimpse chain', () => {
+  const CHAIN = ['the_line_carried_forward', 'the_letters_to_the_weighers', 'the_branch_hall_book'];
+  const due = (ctx: ReturnType<typeof testWorld>, id: string) => evalCondition(ctx.content.event(id)!.conditions, ctx);
+
+  it('is three one-shot scenes whose every outcome is a glimpse', () => {
+    const ctx = testWorld(bundle);
+    for (const id of CHAIN) {
+      const e = ctx.content.event(id)!;
+      expect(e, id).toBeDefined();
+      expect(e.repeatable, id).toBe(false);
+      for (const o of outcomesOf(e, true)) expect(isGlimpse(ctx, id, o.id), `${id}#${o.id}`).toBe(true);
+    }
+  });
+
+  it('arrives in order, once each', () => {
+    const ctx = testWorld(bundle, 1042, 1080);
+    const flags = ctx.world.flags;
+    expect(CHAIN.map((id) => due(ctx, id)), 'nothing shown yet').toEqual([true, false, false]);
+    flags.set('glimpse_line_carried', true);
+    expect(CHAIN.map((id) => due(ctx, id)), 'the steward has seen it').toEqual([false, true, false]);
+    flags.set('glimpse_weighers_asked', true);
+    ctx.world.year = 1200;
+    expect(due(ctx, CHAIN[2]!), 'no branch hall, no branch book').toBe(false);
+
+    const cadet = place(ctx, { sex: 'female', age: 30, name: 'A Cousin', branch: 'branch_glimpse' });
+    ctx.world.branches.set('branch_glimpse' as never, {
+      id: 'branch_glimpse', name: 'Glimpse Hall', house: ctx.world.playerHouse, founder: cadet.id,
+      splitFrom: 'main', foundedYear: 1180, grievance: 0,
+    } as never);
+    expect(CHAIN.map((id) => due(ctx, id)), 'a branch hall keeps its own book').toEqual([false, false, true]);
+    expect(resolveSlots(ctx.content.event(CHAIN[2]!)!, ctx, makeRng(1)).ok, 'a cousin of the branch is there to bring it').toBe(true);
+    flags.set('glimpse_branch_book', true);
+    expect(due(ctx, CHAIN[2]!), 'once').toBe(false);
+  });
+
+  // The ambient draw cannot carry a one-shot through a fifty-year window: with
+  // only conditions, all three fired in 0 of 24 Long Lines. Each link is
+  // therefore scheduled by the one before, starting from every tutor
+  // follow-up, and a broken link would silently strand the rest.
+  it('is scheduled link by link, from every tutor follow-up', () => {
+    const ctx = testWorld(bundle);
+    const schedules = (event: string, outcome: string) => outcomesOf(ctx.content.event(event)!, true)
+      .find((o) => o.id === outcome)!.effects.flatMap((e) => (e.kind === 'schedule' ? [e.event] : []));
+    for (const [event, outcome] of Object.entries(FOLLOW_UPS)) {
+      expect(schedules(event, outcome), `${event}#${outcome}`).toContain(CHAIN[0]);
+    }
+    expect(schedules(CHAIN[0]!, 'carried')).toEqual([CHAIN[1]]);
+    expect(schedules(CHAIN[1]!, 'nobody_holds_it')).toEqual([CHAIN[2]]);
+  });
+
+  it('answers the frame through the same reader as the tutor\'s glimpse', () => {
+    const ctx = glimpseWorld(glimpsing, 1130);
+    logOutcome(ctx, 1095, 'the_letters_to_the_weighers', 'nobody_holds_it');
+    expect(glimpseYears(ctx)).toEqual([1095]);
+    expect(lastAnswerYear(ctx)).toBe(1095);
   });
 });

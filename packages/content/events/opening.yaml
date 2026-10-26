@@ -150,6 +150,7 @@ events:
       outcomes:
         - id: the_three_sacks
           weight: 100
+          tags: [glimpse]   # #1897: a first glimpse of the bargain
           text: >-
             The reeve reads the autumn tally aloud and {SON} stops him at the mill:
             eleven sacks, where the miller's own tally says fourteen. The reeve finds
@@ -160,6 +161,8 @@ events:
             blank and the creditor left blank. It has been carried forward every quarter
             since. The reeve has never once been asked why.
           effects:
+            # #1897: the next glimpse, a generation on.
+            - { kind: schedule, event: the_line_carried_forward, inYears: 24 }
             - { kind: treasury, delta: 15 }
 
   - id: the_daughter_at_the_fair
@@ -197,6 +200,7 @@ events:
       outcomes:
         - id: the_other_question
           weight: 100
+          tags: [glimpse]   # #1897: a first glimpse of the bargain
           text: >-
             At the Bramme fair a widow from one of the river houses asks {ELDER} a
             question meant to find out what the house can pay, and she answers a
@@ -206,6 +210,8 @@ events:
             She says it cost nothing, and the widow laughs as if she has been told a
             good one. By the next market three houses have asked after her.
           effects:
+            # #1897: the next glimpse, a generation on.
+            - { kind: schedule, event: the_line_carried_forward, inYears: 24 }
             - { kind: respect, delta: 1 }
 
   - id: the_books_about_dying
@@ -242,6 +248,7 @@ events:
       outcomes:
         - id: the_carpenters_mother
           weight: 100
+          tags: [glimpse]   # #1897: a first glimpse of the bargain
           text: >-
             In the dark of the year {YOUNGER} sits with the carpenter's mother through
             the last of a fever, and does what the books say, and the old woman goes
@@ -252,6 +259,8 @@ events:
             about dying, where she keeps the things nobody else will. The household has
             no word for what she did. It starts using hers.
           effects:
+            # #1897: the next glimpse, a generation on.
+            - { kind: schedule, event: the_line_carried_forward, inYears: 24 }
             - { kind: attribute, target: { slot: YOUNGER }, attr: death, delta: 2 }
 
   - id: three_names_in_the_day_book
@@ -284,6 +293,7 @@ events:
       outcomes:
         - id: everybody_reads_the_bill
           weight: 100
+          tags: [glimpse]   # #1897: a first glimpse of the bargain
           text: >-
             The children have signed the autumn page of the day-book, badly. Further
             back is the page {NARRATOR} wrote in the spring of the signing, and under
@@ -292,6 +302,8 @@ events:
             is a scholar. Everybody in it can read a bill before paying it, which the
             reeve minds more than he expected to.
           effects:
+            # #1897: the next glimpse, a generation on.
+            - { kind: schedule, event: the_line_carried_forward, inYears: 24 }
             - { kind: treasury, delta: 5 }
 proseVariants:
   - address: "content:events/opening.yaml#events[id=the_tutors_good_years].title"
