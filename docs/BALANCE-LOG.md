@@ -14437,3 +14437,303 @@ normal saved captivity/ransom lifecycle. Eight unassigned 400-year fingerprints
 match main `6e160086` byte for byte. Browser checks at desktop and 390px mobile
 show the actual Table's costs, travel, risk terms, service totals and release
 order in Original and Plain English, with no overflow or console errors.
+
+## #1866 / #1878 — recurring Mystic practice: final calibration (26 October 2026)
+
+**Delivery and decision.** Stages A–F are implemented; F shipped in PR #1927 at
+`1f10ce4f` with full source CI `40264819794` and native integration CI
+`40265799096`. The 46-working repertoire has actual readers for every affinity,
+including two-person construction, physical books, recovery, teaching, paid
+outside service and inherited return obligations. Format 41 retains the state.
+This entry adopts those rules and records their measured limits. It does not
+turn the proposed product goals into historical gates or lower an existing bar.
+
+The deployment changes lives, paid work and real estate quotes. **The broad
+policy still misses two useful non-ladder domains per trained generation, and
+the priced coin ledger remains negative.** No broad-breeding superiority or
+guaranteed return on books follows from this measurement. Training supply,
+occupation choices and actual incident exposure remain the limiting funnels.
+There is no automatic annual renewal question.
+
+**Protocol.** The ordinary sample is 24 fixed seeds, `187700–187723`, in each
+of no-extra, narrow Death/Darkness, and rotating-eight-affinity broad practice,
+at the actual Short300 and Long500 campaign contracts: 144 scenarios. The
+chronicler, ordinary automatic study, suggested naming and affordable 20-year
+land-project policy are common. Deliberate policies may make one training and
+one practice order a year; practice allows two owned duties and one outside
+service. All decisions use public Table quotes and completed training. A house
+that ends early remains in its original column.
+
+A second 48-scenario sample uses eight fixed seeds `187800–187807` at both
+terms and all three policies. Every column makes the same real public founding
+choice, can buy ordinary precautions/ransom, and may accept one affordable
+known hasty covert opportunity per 25 years while retaining 100 crowns. It
+injects no incident, motive, actor, book or result. This sample is labelled
+“chartered pressure” below; its small size cannot establish rare-event rates.
+
+Every one of these **192 original observed scenarios was rerun without
+instrumentation**. The SHA256 of the complete canonical save, with only
+`savedAt` blanked, matched in **192/192** cases. Final-state account, named
+receipt, custody and persisted decision counts were then reduced from those
+identical worlds. Original annual cost/exposure ledgers were retained. The four
+conditional-security observer controls below also match. The supplied commands
+emit tool and complete-content SHA256 values; no seed was dropped or changed.
+
+```
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-repertoire-report.ts 24 187700 ordinary.json ordinary
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-repertoire-report.ts 8 187800 pressure.json hostile
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-threat-sweep.ts 128 187850 security.json
+```
+
+The verified campaign tool SHA256 is
+`c0c6a1157501928682d7b9dc8b1eb50f78169d4a0fa99ac206b1828320260c12`; complete content is
+`3e6ace5464e46d27353e28b4d804b8e72489ab2017753f8d2893279f247b72e4`.
+
+**Units and uncertainty.** Tables show independent-house means ± one standard
+error, with paired differences on the same seeds. Practitioner-years count
+living household readers; available person-years additionally require an actual
+affordable target quote and free capacity. Selected duties, paid/available
+service and actual useful effects are separate. A useful year is an attributed
+system change, not evidence that its price was recovered. Life counts are
+life-saving incidents, potentially repeated for one named person. Archive
+receipts retain the actual names and words. A scope upgrade counts as one
+application. Study and foregone-study years, lives and ascension have no invented
+coin price.
+
+### Ordinary exposure and opportunity
+
+| Term / policy | Untrained house-years | Reader-years | Free eligible person-years | Selected duty-years | Paid duty-years | Paused study-years |
+| --- | --- | --- | --- | --- | --- | --- |
+| Short / no extra | 41.88 ± 8.61 | 1091.83 ± 202.50 | 888.62 ± 170.82 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Short / narrow | 22.42 ± 4.72 | 1338.96 ± 234.15 | 1086.00 ± 194.88 | 46.62 ± 7.38 | 46.29 ± 7.38 | 0.00 ± 0.00 |
+| Short / broad | 18.79 ± 4.53 | 1381.42 ± 221.00 | 772.42 ± 164.96 | 429.04 ± 35.63 | 400.67 ± 33.39 | 16.58 ± 7.51 |
+| Long / no extra | 59.04 ± 10.37 | 1595.42 ± 272.88 | 1250.79 ± 220.47 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Long / narrow | 45.38 ± 13.30 | 1998.42 ± 339.37 | 1592.54 ± 275.02 | 80.38 ± 10.24 | 79.96 ± 10.24 | 0.00 ± 0.00 |
+| Long / broad | 39.25 ± 8.76 | 1999.71 ± 316.17 | 1133.92 ± 229.47 | 660.71 ± 67.28 | 627.04 ± 63.83 | 78.25 ± 15.84 |
+
+Counts of trained-but-unassigned readers and per-working available/selected/
+paid years are emitted separately in the report. External professionals retain
+their real foreign membership and are not silently counted as family readers.
+The policies can leave scarce readers on existing duties: this is a bounded
+playable strategy comparison, not an optimal assignment solver.
+
+### Value, waiting time and cost
+
+Recurring net coin includes actual recorded savings and funded commission pay,
+less preparation, reserved upkeep, professional/broker fees and all gross book
+acquisition/restoration costs in the Library ledger. Yield preservation is
+estimated with that year's respect-tier land scale; Charm and rent modifiers
+are excluded and the estimate is emitted separately. Unintervened same-check
+avoided losses are shown separately, then added to the priced subtotal. That
+subtotal is an attribution ledger, not a whole-campaign return on investment:
+changed future births, income and optional advancement have no local coin
+counterfactual. The acquisition column below includes original and replacement books;
+there is no defensible separate allocation of one shared copy's price to a
+particular replacement reader.
+
+| Term / policy | Life-saving incidents | Recurring net after Library costs | Same-check avoided loss | Priced subtotal including checks | Useful non-ladder domains / trained generation |
+| --- | --- | --- | --- | --- | --- |
+| Short / no extra | 0.00 ± 0.00 | -1340.72 ± 182.25 | 2.08 ± 1.44 | -1338.64 ± 182.52 | 0.00 ± 0.00 |
+| Short / narrow | 0.21 ± 0.10 | -1774.25 ± 242.62 | 3.12 ± 1.72 | -1771.13 ± 242.97 | 0.14 ± 0.04 |
+| Short / broad | 3.71 ± 0.66 | -3587.27 ± 332.30 | 2.08 ± 1.44 | -3585.19 ± 332.25 | 1.32 ± 0.11 |
+| Long / no extra | 0.00 ± 0.00 | -2093.47 ± 272.92 | 3.12 ± 1.72 | -2090.35 ± 272.81 | 0.00 ± 0.00 |
+| Long / narrow | 0.79 ± 0.21 | -2764.50 ± 354.07 | 5.21 ± 2.12 | -2759.29 ± 354.44 | 0.18 ± 0.04 |
+| Long / broad | 7.17 ± 0.94 | -4772.69 ± 521.80 | 6.25 ± 3.10 | -4766.44 ± 521.20 | 1.33 ± 0.08 |
+
+| Term / policy | Houses judged useful within ten paid years | Duties with observed first use | Censored before ten / no use after ten | Observed first-use house mean (paid years) |
+| --- | --- | --- | --- | --- |
+| Short / no extra | 0/0 | 0/0 | 0 / 0 | unmeasured |
+| Short / narrow | 10/13 | 34/208 | 169 / 5 | 1.85 ± 0.43 |
+| Short / broad | 20/23 | 333/971 | 542 / 96 | 3.02 ± 0.32 |
+| Long / no extra | 0/0 | 0/0 | 0 / 0 | unmeasured |
+| Long / narrow | 16/18 | 87/408 | 312 / 9 | 2.30 ± 0.54 |
+| Long / broad | 20/23 | 480/1611 | 985 / 146 | 2.91 ± 0.30 |
+
+The within-ten house test passes through `expectRate` for both assigned
+policies at both terms. Each independent trial is a house whose majority of
+judged duties had a use by ten paid years; duties without a use and fewer than
+ten paid years are censored. First-use means condition on an observed use and
+must be read with those censoring counts. The two-domain goal is checked with
+`expectMean` on independent house averages and **misses**. Conflict contributes
+a non-ladder domain; the earlier F civilian-only proxy was stricter and also
+missed. No unsuccessful test was changed into a pass by relabelling a scope or
+moving a threshold.
+
+| Term / policy | Library crowns | Duty preparation/upkeep crowns | Outside/broker crowns | Funded commission crowns |
+| --- | --- | --- | --- | --- |
+| Short / no extra | 1340.72 ± 182.25 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Short / narrow | 1680.88 ± 237.06 | 33.45 ± 5.07 | 95.79 ± 11.48 | 3.33 ± 1.35 |
+| Short / broad | 3114.01 ± 310.89 | 351.69 ± 37.02 | 242.33 ± 21.55 | 25.33 ± 3.72 |
+| Long / no extra | 2093.47 ± 272.92 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Long / narrow | 2573.91 ± 334.71 | 61.40 ± 7.38 | 176.33 ± 20.99 | 6.00 ± 1.88 |
+| Long / broad | 4023.53 ± 459.90 | 550.24 ± 56.74 | 421.92 ± 47.10 | 30.00 ± 4.65 |
+
+### Affinity and domain readers in actual Long broad play
+
+Each affinity has at least three authored civilian applications and a conflict
+reader. The following are actual observed service effects, not availability
+constructed from a raw gene score. Costs here are the duty's own preparation
+and upkeep; shared Library purchases and external professional fees stay in
+the house ledger above. Commission wages are in the separate funded accounts.
+
+| Affinity | Reader-years | Paid duty-years | Useful years | Life-saving incidents | Levy men kept | Direct crowns kept | Duty crowns spent |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Fluid | 713.83 ± 128.70 | 73.92 ± 12.52 | 6.71 ± 1.76 | 1.58 ± 0.34 | 0.00 ± 0.00 | 0.00 ± 0.00 | 65.73 ± 10.97 |
+| Thermal | 555.08 ± 110.25 | 51.50 ± 10.07 | 20.25 ± 5.83 | 0.83 ± 0.29 | 0.00 ± 0.00 | 40.19 ± 12.75 | 50.18 ± 8.90 |
+| Aero | 525.08 ± 109.46 | 188.17 ± 33.05 | 80.00 ± 14.27 | 2.29 ± 0.49 | 0.00 ± 0.00 | 115.75 ± 20.91 | 97.37 ± 16.10 |
+| Terra | 85.04 ± 40.29 | 9.54 ± 3.03 | 2.54 ± 1.04 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 9.60 ± 2.72 |
+| Life | 1626.79 ± 288.21 | 142.46 ± 18.04 | 3.21 ± 0.65 | 1.71 ± 0.43 | 0.00 ± 0.00 | 0.00 ± 0.00 | 246.83 ± 37.67 |
+| Death | 114.17 ± 63.27 | 19.38 ± 3.81 | 17.62 ± 3.57 | 0.00 ± 0.00 | 0.00 ± 0.00 | 36.49 ± 7.92 | 11.58 ± 2.13 |
+| Light | 1643.54 ± 288.77 | 106.38 ± 13.64 | 66.12 ± 10.15 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 40.37 ± 5.11 |
+| Darkness | 59.75 ± 48.25 | 35.50 ± 8.62 | 2.12 ± 1.37 | 0.75 ± 0.30 | 0.00 ± 0.00 | 0.00 ± 0.00 | 28.58 ± 6.60 |
+
+Terra's real project-price reader and the paid Terra/Thermal collaboration are
+proved by per-definition quote/debit/lost-maintainer witnesses. These policies
+rarely completed a paid project team; the sample does not establish recurring
+Terra payback. Advanced knowledge has a qualitative benefit when used, while
+the ordinary training/occupation funnel frequently does not reach that use.
+The light teaching, physical-copy wear and health-recovery totals are emitted
+as their own units, rather than converted into speculative crowns.
+
+### House outcomes, outside obligations and decision load
+
+| Term / policy | Paired final treasury Δ | Paired living blood Δ | Paired population Δ | Paired standing-tier Δ | Blood extinct at ending | Persisted decisions / 25 years |
+| --- | --- | --- | --- | --- | --- | --- |
+| Short / no extra | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 5/24 | 9.81 ± 0.19 |
+| Short / narrow | -244.80 ± 263.89 | 2.33 ± 4.63 | -1.71 ± 4.68 | 0.21 ± 0.33 | 6/24 | 9.94 ± 0.17 |
+| Short / broad | -162.20 ± 232.46 | -1.62 ± 5.00 | -4.42 ± 5.24 | 0.12 ± 0.34 | 6/24 | 9.83 ± 0.18 |
+| Long / no extra | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 6/24 | 9.89 ± 0.15 |
+| Long / narrow | 65.87 ± 310.99 | 2.92 ± 3.71 | 2.67 ± 3.86 | 0.42 ± 0.38 | 6/24 | 10.04 ± 0.15 |
+| Long / broad | -88.97 ± 335.13 | -0.67 ± 4.81 | -4.62 ± 4.75 | -0.04 ± 0.42 | 7/24 | 9.99 ± 0.20 |
+
+Persisted decision counts include player-choice/cast, Record and Match events,
+even when the chronicler answered them. Table orders and naming records are
+separate counters. The older callback-only answer count omitted immediately
+resolved choices and is not the density denominator. No new renewal decision
+kind or annual confirmation is introduced by practice. Rung distributions are
+reported as reached categories, without treating their ordinal numbers as a
+coin utility scale.
+
+| Term / policy | Best reached rung distribution | Fulfilled outside services | Promises honoured / missed | Field years / home-duty gap years |
+| --- | --- | --- | --- | --- |
+| Short / no extra | adept: 15, hierophant: 5, none: 3, vessel: 1 | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 |
+| Short / narrow | adept: 14, hierophant: 8, none: 2 | 7.08 ± 1.16 | 0.54 ± 0.27 / 0.33 ± 0.16 | 0.00 ± 0.00 / 1.42 ± 0.64 |
+| Short / broad | adept: 14, hierophant: 6, none: 1, vessel: 3 | 25.50 ± 2.41 | 4.25 ± 0.76 / 2.04 ± 0.36 | 0.50 ± 0.50 / 1.92 ± 0.42 |
+| Long / no extra | adept: 14, hierophant: 7, none: 3 | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 |
+| Long / narrow | adept: 12, hierophant: 9, none: 2, vessel: 1 | 14.71 ± 2.03 | 1.92 ± 0.65 / 0.62 ± 0.21 | 0.00 ± 0.00 / 4.58 ± 1.52 |
+| Long / broad | adept: 12, demigod: 2, hierophant: 8, none: 1, vessel: 1 | 44.83 ± 5.15 | 5.71 ± 1.03 / 2.62 ± 0.45 | 0.50 ± 0.50 / 1.62 ± 0.38 |
+
+“Home-duty gap” means somebody is away on muster, covert work or outside
+service while no hall, person or book duty is serving at home. It is a
+conservative allocation indicator; protection of a particular person still
+requires that person's actual named ward.
+
+Ransom payments, captured field-service records, reader deaths while actually
+serving, study years and named contract accounts are retained in the raw
+report. A stored field-capture account survives release or death; a final
+custody snapshot alone is not a count of all past captures. Returned obligations
+can pass to a different trained worker. Missed promises retain their historical
+breach even when a later worker honours a return. This is ordinary household
+sentiment/grievance, not a court penalty applied outside the assize.
+
+| Term / policy | Study person-years | Reader deaths during service | Recorded field captures | Ransom crowns | Material commissions completed |
+| --- | --- | --- | --- | --- | --- |
+| Short / no extra | 193.71 ± 38.14 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Short / narrow | 253.46 ± 52.90 | 1.54 ± 0.21 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.75 ± 0.34 |
+| Short / broad | 200.58 ± 39.12 | 13.62 ± 1.16 | 0.04 ± 0.04 | 1.46 ± 1.46 | 5.83 ± 0.95 |
+| Long / no extra | 325.08 ± 62.14 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Long / narrow | 390.04 ± 78.70 | 2.62 ± 0.33 | 0.00 ± 0.00 | 0.00 ± 0.00 | 2.29 ± 0.76 |
+| Long / broad | 339.67 ± 64.48 | 21.21 ± 2.21 | 0.04 ± 0.04 | 1.46 ± 1.46 | 7.58 ± 1.25 |
+
+Service deaths include ordinary mortality during the recorded assignment term;
+they are not attributed deaths caused by practice. The capture column counts
+stored field-service episodes, not a final custody snapshot. Material commissions
+require actual useful service and a fulfilled funded contract.
+
+### Chartered pressure: exposure remains the limiting funnel
+
+| Term / policy (n=8) | Paid duty-years | Life-saving incidents | Priced subtotal including checks | Non-ladder domains / trained generation | Blood extinct |
+| --- | --- | --- | --- | --- | --- |
+| Short / no extra | 0.00 ± 0.00 | 0.00 ± 0.00 | -1299.38 ± 286.63 | 0.00 ± 0.00 | 4/8 |
+| Short / narrow | 52.62 ± 14.42 | 0.50 ± 0.27 | -1911.58 ± 341.83 | 0.26 ± 0.08 | 2/8 |
+| Short / broad | 424.12 ± 66.06 | 4.62 ± 1.31 | -3799.51 ± 640.26 | 1.49 ± 0.12 | 1/8 |
+| Long / no extra | 0.00 ± 0.00 | 0.00 ± 0.00 | -1654.50 ± 560.61 | 0.00 ± 0.00 | 5/8 |
+| Long / narrow | 101.88 ± 23.74 | 0.50 ± 0.27 | -2868.24 ± 566.19 | 0.25 ± 0.09 | 2/8 |
+| Long / broad | 753.38 ± 105.80 | 10.00 ± 1.69 | -5094.18 ± 799.89 | 1.57 ± 0.14 | 1/8 |
+
+Both the ordinary and chartered-pressure samples have **zero prepared household
+attacks and zero initiated covert operations**. Warnings, casualties,
+attribution, courts and inherited retaliation therefore have zero campaign
+incident denominators here. This is not evidence that wards prevent every
+attack, that assassination is safe, or that exposure costs balance its value.
+The founding grievance is against the protected founder/head. The initial
+household threat scope excludes guardians, sitting Heads and small houses;
+that grievance does not provide an eligible non-head target. The public covert
+opportunity policy cannot manufacture an outgoing motive. The sample's few
+field years likewise establish no officer-fate or capture-rate conclusion.
+These are upstream exposure limits, not a reason to add matching counters,
+relax a learning gate or flood the ambient event pool.
+
+### Conditional security sweep — a different denominator
+
+To measure the actual defensive reader, 128 fixed seeds `187850–187977` are
+played for ten years in four paired built-state cells. Each world contains the
+same named eligible adult, one real rival's severity-75 grievance, and the same
+completed female Life reader. Only assignment and affordable ordinary
+precautions vary. Actual annual preparation chance, cooldown, money,
+availability, ordinary mortality, primordial commitment and the shared resolver
+remain in force. No plot or result is forced. This is a conditional security
+measurement, **not** an ordinary-campaign exposure estimate. It supplies 512
+worlds plus four exact full-save observer controls.
+
+| Policy | Prepared | Resolved | Cancelled | Pending at end | Prevented | Dead | Wounded | Attributed | Ward uses | Guard crowns / house | Duty crowns / house |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| unassigned | 56/128 | 41 | 0 | 15 | 2 | 11 | 12 | 4 | 0 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| life | 56/128 | 41 | 0 | 15 | 1 | 2 | 22 | 6 | 10 | 0.00 ± 0.00 | 31.05 ± 0.30 |
+| guards | 56/128 | 41 | 0 | 15 | 26 | 4 | 3 | 33 | 0 | 11.94 ± 1.41 | 0.00 ± 0.00 |
+| life and guards | 56/128 | 41 | 0 | 15 | 26 | 1 | 6 | 33 | 3 | 11.94 ± 1.41 | 31.05 ± 0.30 |
+
+The ten-year boundary leaves unresolved preparations explicit. On independent
+paired-house comparisons, Life reduced committed attack deaths by **9/128**
+(mean 0.0703, SE 0.0227; 3.1 SE above zero); ordinary guards reduced them by
+**7/128** (0.0547, SE 0.0202; 2.7 SE). Both claims pass `expectMean`. Life behind
+ordinary guards reduced deaths by **3/128** (0.0234, SE 0.0134), only **1.7 SE**:
+the added benefit is **not established** at the unchanged two-SE bar. Wounding
+can replace death. Ordinary paid precautions remain a viable alternative, and
+the extra ward is not assigned an invented coin value for the life it keeps.
+The assigned practitioner occupies one real body and pays the actual upkeep;
+the unassigned cell has exactly the same completed knowledge.
+
+### Named evidence and verification
+
+- Seed 187700, short, 1330: Edric the third was very ill this year. Leofric of Marrow sat up with Edric the third through the worst of it, and Edric the third lived.
+- Seed 187701, short, 1057: Morwen was very ill this year. Maura sat up with Morwen through the worst of it, and Morwen lived.
+- Seed 187701, short, 1124: Lisbeth was very ill this year. Aldous of Calder sat up with Lisbeth through the worst of it, and Lisbeth lived.
+
+These saved examples identify actual people; they are illustrations, not
+additional trials. Per-definition mechanism witnesses remove only the actual
+maintainer or their learning, and paid collaborator tests restore the ordinary
+project quote when either role is absent. Public broker/commission/hire/return
+commands, study pauses, protection, custody, evidence and costs agree through
+JSON reload and command-log replay in both readings. The no-Madness/no-Eldritch
+execution rule and equally learned female Threshold effect remain intact.
+
+F's fresh canonical outcome reach passed **800 × 500 years** on unchanged bars,
+with **six explicitly thin routes**. Both Dark Year outcomes had only one
+eligible cast (expected about 0.5 and 0.1 resolutions); this establishes no fix
+for #1917. There were no new ambient templates or frequency changes. Full source
+and native F CI retained blood, war, land, endings, replay, deterministic
+outcome witnesses and the remaining required gates. The isolated F preflight
+passed **198 fast suites / 5,998 tests**, all typechecks and 52 content rules
+(0 errors, 3 existing warnings). Nine editor browser tests and desktop/390px
+Original/Plain checks passed. Startup remains **1,530,106 bytes** against the
+unchanged 1,600,000-byte ceiling through lossless field-name packing.
+
+**Limits retained before retuning.** Ordinary multi-domain use, Terra project
+uptake, campaign threat exposure and total priced coin payback remain misses.
+Replacement training shares capital books, and study time is reported rather
+than monetised. The finite two-duty policy may crowd out collaboration or leave
+a reader on a low-value occupation; this comparison is not a proof of optimal
+play. The eight-seed pressure sample and conditional death comparison cannot
+justify a rare-event frequency or broad-breeding claim. Further tuning needs
+those actual upstream denominators; no historical acceptance bar was waived.

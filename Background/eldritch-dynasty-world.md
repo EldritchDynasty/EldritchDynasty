@@ -636,8 +636,8 @@ in ordinary times, and promises no particular affinity. A known reader may alrea
 ill, absent or unwilling. Coin cannot put that person in two rooms.
 
 Standing household practice pays preparation and yearly upkeep. Retaining an outside reader
-also carries a professional fee and a finite service term. The prices above concern individual visits. A household
-carer attends a finite number of actual residents; ordinary care cannot prevent violence, the
+also carries a professional fee and a finite service term. The prices above concern individual
+visits. A household carer attends a finite number of actual residents; ordinary care cannot prevent violence, the
 maximum-age wall or the blood's own dangers. An infant watch protects living children rather
 than changing inherited stillbirth. Work on banks, stores and books reaches the particular
 holding, hall or physical copy named in the order. A binder's absent copy receives no home care.
