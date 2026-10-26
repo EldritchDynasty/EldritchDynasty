@@ -77,7 +77,12 @@ events:
     title: Two Rows on the Trestle
     tier: head
     frequency: uncommon
-    weight: 75
+    # 300, not 75 (#1897): eligible in 76 of 100 houses but drawn in 4 of
+    # 1553 eligible years, so `the_cellar_shelf_is_found`, which only its
+    # `hide_them` branch schedules, sat exactly on gate 4's 0.5% floor and
+    # fell under it on the next unrelated re-roll. Crusade-only, six years
+    # in and on a forty-year cooldown, so the weight cannot reach another Age.
+    weight: 300
     cooldownYears: 40
     tags: [church, crusade, books, library]
     purposes: [establish_magic_rule, change_standing, worldbuild_through_action]
