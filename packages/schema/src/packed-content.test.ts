@@ -16,4 +16,23 @@ describe('compiled content interning (#1868)', () => {
     expect(() => unpackContentDocument({ $edPacked: 1, dictionary: [{ $ed: 0 }], document: { $ed: 0 } })).toThrow('cyclic');
     expect(() => unpackContentDocument({ $edPacked: 2, dictionary: [], document: null })).toThrow('envelope');
   });
+  it('interns repeated field names without changing unique text, arrays or nested values', () => {
+    const authored = { entries: Array.from({ length: 80 }, (_, id) => ({
+      preparation: { crowns: id, years: id % 4 }, description: `A distinct account numbered ${id}.`,
+      benefit: { kind: 'commission', annualCrowns: id, favour: 2 },
+    })) };
+    const packed = packContentDocument(authored) as { $edPacked: number };
+    expect(packed.$edPacked).toBe(2);
+    expect(JSON.stringify(packed).length).toBeLessThan(JSON.stringify(authored).length);
+    expect(unpackContentDocument(JSON.parse(JSON.stringify(packed)))).toEqual(authored);
+    expect(packContentDocument({ entries: [{ '~0': 'authored key' }] })).toEqual({ entries: [{ '~0': 'authored key' }] });
+  });
+  it('keeps legacy envelopes readable and rejects malformed compacted fields', () => {
+    expect(unpackContentDocument({ $edPacked: 1, dictionary: ['old wording'], document: { text: { $ed: 0 } } }))
+      .toEqual({ text: 'old wording' });
+    for (const document of [{ '~1': 1 }, { '~00': 1 }, { '~!': 1 }, { '~0': 1, name: 2 }]) {
+      expect(() => unpackContentDocument({ $edPacked: 2, fields: ['name'], dictionary: [], document })).toThrow('field');
+    }
+    expect(() => unpackContentDocument({ $edPacked: 2, fields: ['name', 'name'], dictionary: [], document: {} })).toThrow('envelope');
+  });
 });
