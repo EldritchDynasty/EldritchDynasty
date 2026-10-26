@@ -6,9 +6,11 @@ import type { ChronicleEntry } from '@ed/core';
 import {
   bootstrap, runYears, stepYear, applyEffect, makeRng, mint, previewTemplate,
   tickRelationships, tickRespect,
-  expectMean,
+  expectMean, expectRate,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
+import { playedRun } from './corpus.js';
+import { longestAnswerSilence } from './tools/long-line-gate.js';
 
 const bundle = loadContent();
 /**
@@ -240,5 +242,39 @@ describe('hostility is an edge (concept §7)', () => {
     expect(Math.max(...seen), 'the edge map grew without bound').toBeLessThan(160);
     expect(Math.min(...seen), 'the edge map never emptied — nothing is being pruned')
       .toBeLessThan(12);
+  });
+});
+
+/**
+ * THE LONG LINE IS NOT LEFT QUIET (#1897).
+ *
+ * An answer is an interlude, a recovered clause's page or a glimpse
+ * (`events/answers.ts`). The issue measured the run's longest gap between
+ * answers at 72.1 years over these 24 seeds; the frame's sixty-year answer
+ * ceiling (#1904) and the glimpse chain (`glimpses.yaml`) are what bring it
+ * down. The same seeds and reader as `gate:long`'s 5C line, through the run
+ * corpus rather than a second loop.
+ *
+ * The chain's reach is asserted alongside, on the same runs, because it is the
+ * part that silently dies: with conditions alone its first link fired in 0 of
+ * 24 runs, and nothing else here would have noticed.
+ */
+describe('the Long Line is not left quiet (#1897)', () => {
+  const LONG_SEEDS = Array.from({ length: 24 }, (_, i) => 20_000 + i * 37);
+  let runs: ReturnType<typeof playedRun>[] = [];
+  beforeAll(() => { runs = LONG_SEEDS.map((seed) => playedRun(bundle, seed, CAMPAIGN_YEARS)); });
+
+  it('keeps the longest silence between answers well under the 72 years it was', () => {
+    expectMean({
+      values: runs.map((ctx) => longestAnswerSilence(ctx).years),
+      ceiling: 72,
+      what: 'longest gap between answers, years',
+    });
+  });
+
+  it('reaches the glimpse chain\'s first link in ordinary play', () => {
+    const shown = runs.filter((ctx) => ctx.world.decisionLog.some((d) =>
+      d.kind === 'outcome' && d.event === 'the_line_carried_forward')).length;
+    expectRate({ hits: shown, n: runs.length, floor: 0.6, what: 'runs showing the_line_carried_forward' });
   });
 });

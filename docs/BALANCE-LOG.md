@@ -14737,3 +14737,61 @@ a reader on a low-value occupation; this comparison is not a proof of optimal
 play. The eight-seed pressure sample and conditional death comparison cannot
 justify a rare-event frequency or broad-breeding claim. Further tuning needs
 those actual upstream denominators; no historical acceptance bar was waived.
+
+## 2026-10-26 — #1897 option (c), content: a scheduled chain of glimpses
+
+**The change.** The content half of (c), option (2) as the owner chose it on
+the issue. `glimpses.yaml` adds three one-shot scenes on the blank line in the
+day book, each removing one reading of it and none saying what it is: *the
+line carried forward* (a clerk's habit), *letters to the weighers* (a debt to
+somebody who can be found and paid; its Record's flattering page is the minor
+Discrepancy `the_debt_called_settled`, provable by `house_bracc`), and *the
+branch hall's book* (a thing that lives in the main hall's books). The four
+tutor follow-ups in `opening.yaml` are tagged `glimpse`, so the answer ceiling
+and `gate:long` count the first glimpse they always carried. No engine change.
+
+**Conditions alone did not reach play.** With only their year windows and flags
+the three fired in **0 of 24** Long Lines. The funnel
+(`npm run gate:funnel -- the_line_carried_forward --runs=8`) found 150 eligible
+years and no selection: an `uncommon` template at weight 60 draws at 240
+against several hundred `common` templates at 1000 × their weight, and a
+fifty-year window is too short to win that. So each tutor follow-up schedules
+the first link 24 years on, and each link schedules the next (22, then 75
+years). A schedule still honours the event's conditions and retries for forty
+years (`forcedCandidates`), so the windows and the branch-hall requirement
+hold. Scheduled, they fire in **23, 22 and 20 of 24** runs (auto-resolve,
+same seeds); the one run with none is a house whose tutor arc expired.
+
+**Measured** with `npm run gate:long -- 24 500 chronicler` (seeds
+`20000 + 37i`) on main `1f10ce4f` (before) and this branch:
+
+| Reading (24 runs) | before | after |
+|---|---:|---:|
+| longest answer silence, mean | 64.7 | **53.9** |
+| · median / p75 / max | 60 / 67 / 96 | 60 / 60 / **60** |
+| · opens at the signing | 8/24 | **0/24** |
+| interludes per run, mean | 6.9 | 6.8 |
+| first interlude, mean | 1118.0 | 1101.8 |
+| frame-only max silence, mean | 83.3 | 72.4 |
+| clauses, mean | 5.8 | 5.5 |
+| term reached | 20/24 | 19/24 |
+| endings (unmade / broken / forgotten / devoured) | 0 / 4 / 15 / 5 | 1 / 5 / 12 / 6 |
+| prompts per generation, mean | 11.24 | 10.94 |
+
+The tag alone (before scheduling) moved the mean to 62.5 and emptied the
+signing-opened row; the chain does the rest. The run's longest silence is now
+the frame's own sixty-year ceiling in most runs: going below it needs answers
+in the midgame, not more early glimpses.
+
+The first interlude comes earlier because the chronicler sometimes embellishes
+the weighers' Record, which opens a Discrepancy that interludes read. Clauses,
+term, endings and living blood moved by about one run each or within one
+standard error at n = 24 — the re-roll every content change makes. They are
+judged by the gates below rather than by this table.
+
+**Asserted** in `ledger.slow.test.ts` over the same 24 seeds through the run
+corpus: `expectMean` puts the mean longest answer silence under 72, and
+`expectRate` puts the first link's reach above 60%. The second is the claim
+that would have caught the dead first cut.
+
+**Gates.** GATES_PLACEHOLDER
