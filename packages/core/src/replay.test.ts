@@ -51,6 +51,9 @@ describe('public session input replay (#1910)', () => {
     const before = snapshot(s);
     expect(s.advance(8).years).toEqual([]);
     expect(snapshot(s)).toBe(before);
+    // #1932: reload while the arc choice is still pending, so its answer must
+    // advance the same authoritative instance that uninterrupted replay uses.
+    s = resumeGame(JSON.parse(JSON.stringify(s.save())), content);
     const choice = d.choices.filter(c => c.available).at(-1)!;
     expect(s.choose(d.id, choice.id).ok).toBe(true);
     expect(digestOf(rebuild(s))).toBe(digestOf(s.ctx));
