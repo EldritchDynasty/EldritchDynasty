@@ -5,10 +5,18 @@ in the way. [DesignConcepts/eldritch-dynasty-concept-brief.md](../DesignConcepts
 is the authority on all of this — its section numbers are cited below — and wins wherever
 this page simplifies something into a rougher shape than the brief gives it.
 
-Reviewed against `main` at `098bfe02` on 22 October 2026. The code's calibrated
+Reviewed against `main` at `8b09dbee` on 26 October 2026. The code's calibrated
 gates, rather than older design counts, govern the climb.
 
 ## The basic loop
+
+At the signing you name the founder and choose their gender and **founding
+configuration** (§3). As blood father, the founder passes the font to every
+daughter; as blood mother, the founder carries it and bears the children.
+Gender controls how the founder is referred to; the configuration determines
+the founding parents. The founder holds the seal in their own right, including
+as blood mother. The opening Examination, heirloom and first grudge set real
+terms for the house that follows.
 
 You begin as the signing founder and continue as the house's guardian. You steer
 the **family**, generation after generation
@@ -16,6 +24,42 @@ the **family**, generation after generation
 marriage partner for your heir from three candidate cards, a handful of text events fire,
 children are born, you decide what the chronicle records about the generation just lived,
 and you name an heir. The shipped start screen defaults to **A Short Line: 300 years (1042–1342)**; **A Long Line** is the full **500-year (1042–1542)** campaign, roughly twenty generations. See §5, Core Loop.
+
+When the docket asks for a choice, a party, a Match or a Record, **the clock
+waits for the answer**. Between those decisions the house table lets you
+choose study, careers, standing duties, land work and other deliberate
+actions. The Ascension display names the next unmet requirement. A voluntary
+House Ambition can keep one plan visible — deepen the blood, prepare the
+ascent, restore the Ledger or secure the branches — without adding a bonus
+or a second progress system.
+
+## Learned magic has work beyond the ladder
+
+**Mystic magic is learned; Eldritch Power is inherited.** A book on the shelf
+and an affinity high enough to read it are the beginning of training. The
+reader must wake, qualify and finish studying before they know the working.
+Women can learn the four Threshold affinities — Life, Death, Light and
+Darkness — while men can learn all eight. Mystic work itself adds no Madness
+and requires no expressed Eldritch Power. See §12.
+
+At the house table, assign a trained, available person to an offered duty
+and its target. The offer states preparation, upkeep and scope. Duties can
+care for people and books, provide for a hall, protect an estate, support
+construction or serve in a levy or expedition. An intensive duty pauses the
+reader's unfinished study; an absent, injured, captured or unpaid practitioner
+cannot supply the promised coverage. Releasing the duty lets an available
+reader resume their remaining study if the book is still on the shelf.
+
+Warranted outside practitioners can be sought and hired. Sending a qualified
+reader on a commission occupies that person through preparation, service and
+return, and can leave an obligation for a later trained reader. Sending a
+family practitioner away also leaves their home duties uncovered. Preparing
+an expedition or answering a household threat has costs, attendance and
+possible custody consequences; learned support does not erase those risks.
+
+These are available strategies, not a promise that training pays back in
+coin or that every run offers frequent attacks. The dated paired evidence
+and remaining limits are in [BALANCE-LOG.md](BALANCE-LOG.md).
 
 ## How the family actually advances
 
