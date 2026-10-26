@@ -163,3 +163,47 @@ codemap and Codex suites then passed all 85 assertions. Command-cost and
 preflight outcomes are recorded in the PR; timing belongs only in the generated
 AGENTS command block. The full population/coverage studies were not rerun for
 a prose-only change.
+
+## 2026-10-26 — #1931: onboarding and shipped-system documentation
+
+Reviewed against `main` at `8b09dbee`. The README now gives Git/Node/npm
+prerequisites, a fresh-clone browser/editor path, separate native-host links,
+task-based guide navigation and an executable session/persistence example.
+[COMMANDS.md](COMMANDS.md#make-a-contribution) carries the contribution sequence
+from issue and claim through commit, preflight and the ready PR. Root AGENTS
+routes to the updated architecture map without duplicating its implementation
+inventory.
+
+The architecture map now routes founding configuration, civilian/field Mystic
+practice, outside contracts, covert operations and outcome-reach evidence to
+their owners and existing tests. Its diagram was compared with all 29 entries
+in `YEAR_PHASES`, including `mystic`, `covert` and `promises`. The game-loop
+guide explains the signing, docket, voluntary ambition and practical learned
+magic. The modding guide distinguishes template fire rate, guarded/check
+outcome exposure, deterministic reachability and finite-sample proof. The
+concept brief's stale §26 claim that recurring practice was unbuilt is
+corrected to agree with its already-updated §12.
+
+Validation before preflight: the existing docs, codemap and Codex budget
+suites passed all 85 assertions; `npm run gen:docs` left the vocabulary
+unchanged. Both documented development servers started concurrently and
+served their page and TypeScript entry on ports 5174/5173. The README example
+ran directly from its code block and restored the same year and docket ids;
+its validated saved state matched immediately after loading. Relative links,
+heading targets and named source paths were checked. Preflight results are
+recorded in the PR, rather than anticipated here.
+
+**A continuation check exposed an existing bug.** Saving the pending
+`the_tutors_good_years` choice on seed 1042 and answering it through the
+chronicler repeats that scene at 1044 after reload; uninterrupted play reaches
+`the_green_hand` at 1046 instead. [Issue #1932](https://github.com/EldritchDynasty/EldritchDynasty/issues/1932)
+retains the executable reproduction. README and ARCHITECTURE now state the
+limitation rather than claiming unconditional identical continuation. This
+documentation change does not fix that runtime bug.
+
+The baseline's existing CI verdict was red in the editor browser job
+([run 40406062800](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/40406062800));
+typechecking, content validation and Linux/Windows fast lanes passed there.
+No simulation, authored YAML, dependency, workflow, gate threshold or generated
+file changed. Historical balance/coverage logs remain intact, and no new
+population study or human playtest is claimed.

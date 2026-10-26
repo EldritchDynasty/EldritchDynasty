@@ -28,6 +28,41 @@ all merged. The hook unshallows so the answers are real, then prints which
 issues other sessions are holding. What that cost before it existed is in
 [PARALLEL.md](PARALLEL.md).
 
+## Make a contribution
+
+Start with [README.md's local setup](../README.md#run-locally), then read
+[AGENTS.md](../AGENTS.md) and the `AGENTS.md` inside each package you will
+change. [ARCHITECTURE.md](../ARCHITECTURE.md) routes a task to its source and
+existing tests. Read the concept brief before changing game rules and the
+world bible before authoring content.
+
+1. Read or create the issue that owns the change. Check current claims with
+   `npm run agents`; follow the repository's priority and dependency rules
+   when choosing work.
+2. Work on a dedicated branch, for example `git switch -c codex/<topic>`.
+   Claim the issue with `npm run agents -- take <issue> --paths <paths>`;
+   list the files or directories you will write. A refused claim blocks work
+   on that issue. Content and gate/CI changes also need their lane claim; see
+   [PARALLEL.md](PARALLEL.md#lanes).
+3. Make the change and run the relevant existing tests. Use
+   `npm run typecheck`, `npm run validate` and `npm run test:fast` for the
+   ordinary loop. Content and balance work also need the measurements their
+   claim requires. Regenerate generated files through their npm commands.
+4. Commit the completed change, with a closing keyword such as `Closes #93`
+   for each issue it completes. Keep the working tree clean, run
+   `npm run agents -- check`, then `npm run land`. If it rebases, its checks
+   apply to that new head. Use a harness-tracked background run for a long
+   preflight and inspect it with `npm run land -- --status`.
+5. Push the topic branch with `git push -u origin HEAD` and open or update
+   one ready PR against `main`, describing the result, validation and any
+   remaining limits. Keep partial work explicit with `Refs #N` and the
+   preflight's `--no-issue-check` option instead of closing it prematurely.
+
+The [landing contract below](#the-landing) explains the automatic queue and
+the distinction between a local preflight, PR CI and integration CI. The
+janitor retires claims after landing; a surviving branch alone does not mean
+work is still in flight.
+
 ## The landing
 
 `npm run land` is a **session preflight**, not a main-pushing command.

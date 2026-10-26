@@ -3,8 +3,9 @@
 The map. `AGENTS.md` carries the rules you cannot derive from the code; this
 file tells you where the code is and how to add to it.
 
-Reviewed against `main` at `098bfe02` on 22 October 2026. The code remains the
-authority when a later change moves an owner or predicate.
+Owner map and year-phase order reviewed against `main` at `8b09dbee` on
+26 October 2026. The code remains the authority when a later change moves an
+owner or predicate; older measurements below retain their original context.
 
 **Reading order for an agent.** Load the least you can:
 
@@ -102,10 +103,14 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **The Long Wait / Late Waking** — declaring an unwoken man mundane, learning and scripted waking after thirty | `core/src/table.ts`, `core/src/people/library.ts`, `core/src/people/factory.ts`, `packages/content/events/rare_blood.yaml`, `packages/client/src/components/Table.vue` | `table.test.ts`, `library.test.ts`, `core/src/events/reach.test.ts` |
 | The physical **library** — wear, restoration, sale, burn, tribute and theft | `core/src/people/library.ts`, `core/src/table.ts` | `library.test.ts`, `table.test.ts` |
 | Money and standing | `core/src/economy.ts` | `economy.slow.test.ts`, `ledger.slow.test.ts` |
-| Standing **Mystic duties** — a learned reader keeping one hall or parcel | `core/src/mystic.ts`, `presence.ts`; `schema/src/mystic.ts`; `packages/content/mystic-workings.yaml` | `mystic.test.ts` |
+| Standing **Mystic duties** — learned, available, paid practice and paused study | `core/src/mystic.ts`, `presence.ts`; `schema/src/mystic.ts`; `packages/content/mystic-workings.yaml` | `mystic.test.ts` |
+| **Civilian practice** — library care, provisions, recovery, teaching and construction | `core/src/mystic-civilian.ts`, `mystic.ts`, `people/library.ts`, `land.ts` | `mystic.test.ts` |
+| **Outside Mystic service** — contacts, contracts, commissions and inherited return obligations | `core/src/mystic-contracts.ts`, `schema/src/mystic.ts` | `mystic.test.ts` |
+| **Field Mystic support** — deployment, coverage, attrition and capture | `core/src/muster.ts`, `mystic.ts`, `presence.ts` | `mystic-muster.test.ts`, `muster.test.ts` |
+| **Covert threats and expeditions** — preparation, defence, evidence, custody and return | `core/src/covert.ts`, `covert-lifecycle.ts`, `covert-operations.ts`, `presence.ts` | `covert.test.ts` |
 | Emergency Primordial interventions | `core/src/events/harm.ts`, `events/primordial.ts`, `presence.ts`; `schema/src/primordial.ts` | `events/primordial.test.ts`, `events/primordial-catalogue.test.ts`, `presence.test.ts`; `tools/primordial-report.mjs` |
 | The Ledger — Ages and clauses | `core/src/ages/scheduler.ts` | `ledger.slow.test.ts` |
-| The **prologue** — founder name, Examination and founding choices | `core/src/prologue.ts`, `sim.ts`, `session.ts` + `packages/content/prologue.yaml` | `prologue.test.ts`, `tools/signing-gate.test.ts` |
+| The **prologue** — founder identity, Examination and founding choices | `schema/src/founder.ts`; `core/src/people/founding-cast.ts`, `prologue.ts`, `sim.ts`, `session.ts`; `packages/content/prologue.yaml` | `founder-identity.test.ts`, `founding-inheritance.test.ts`, `prologue.test.ts`, `tools/signing-gate.test.ts` |
 | The **ending** — the last night, and the ring | `core/src/ending.ts` + `packages/content/endings.yaml` | `ending.test.ts` |
 | A **chapter** — the years between one Age closing and the next (issue #65) | `core/src/chapter.ts` → `chapterOf`/`openingOf` | `chapter.test.ts` |
 | What a **client** can do | `core/src/session.ts` | `session.slow.test.ts` |
@@ -131,6 +136,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | The **decision log** and replay | `core/src/replay.ts` | `replay.slow.test.ts` |
 | The **Library of Houses** — what a finished run leaves the next | `core/src/run-library.ts` | `run-library.slow.test.ts` |
 | A **gate** — a design claim measured over a batch | `core/src/tools/gates.ts` → `GATES` | `gates.test.ts` |
+| **Outcome reach** — cast/check exposure, finite-sample proof and deterministic witnesses | `core/src/events/reach.ts`; `core/src/tools/outcome-reach-verdict.ts`, `outcome-reach-blocking.ts`; `tools/gen-outcome-witnesses.mjs` | `events/reach.test.ts`, `tools/outcome-reach-verdict.test.ts` |
 | How a choice **feels** — interaction shapes | `core/src/tools/shapes.ts` | `shapes.test.ts` |
 | Test scaffolding | `core/src/testing.ts` | `year.test.ts` |
 | The generated reference | `schema/src/reference.ts` + `core/src/tools/gen-docs.ts` | `docs.test.ts` |
@@ -146,7 +152,22 @@ current work is in the issue tracker.
   reads a living, eligible reader's completed `spellsKnown`; `family_knows`
   asks the household for one. Raw affinity and a book on the shelf are not
   completed training. The Death, Terra and Darkness routes have authored book
-  and reader supply; recurring assignments and covert operations remain #1866.
+  and reader supply.
+- **Recurring Mystic practice is shipped** (#1866, #1872–#1878). A standing
+  duty names a learned practitioner and a real target. `practitionerGap`
+  checks availability, and the `mystic` year phase reserves upkeep before
+  benefits are read. An intensive duty pauses unfinished study. Civilian,
+  field and security readers apply bounded benefits; outside service occupies
+  a real person and may leave inherited obligations. Covert operations keep
+  preparation, attendance, attribution, custody and return in saved state.
+  These mechanisms do not establish profitable books or frequent attacks:
+  paired calibration and unresolved limits are in [docs/BALANCE-LOG.md](docs/BALANCE-LOG.md).
+- **The founding configuration changes the founding family** (#1867).
+  `resolveFounder` keeps name and grammatical gender separate from blood
+  father/blood mother; `configureFoundingCast` sets parents before genomes
+  are rolled. `GameSession.found` rebuilds the initial world for the signing
+  answer. The founder holds the seal in their own right; the charter exemption
+  lives in `isRegent`, rather than in a client rule.
 - **The ladder explains its next blocker** (#1806). `ascensionBlockersFor`
   supplies concurrent failures for diagnostics from the actual predicates.
   `SessionView.ascension` carries the ordered rungs, the next unmet predicate
@@ -200,7 +221,11 @@ current work is in the issue tracker.
   dated measurements in `docs/BALANCE-LOG.md`, not a universal run guarantee.
 - **Hostility is an edge.** Grudges are recorded, inherited down the generations by their own policy, and decay. Content can gate on `grudgeAgainstUs`.
 - **Standing decays.** A quiet forty-five years costs a tier, visible Madness costs tiers faster, and decay floors at Known — Unknown has to be done to you.
-- **A run is a value.** `saveGame` produces a versioned, Zod-validated snapshot of everything the run has caused, and `loadGame` rebuilds it; a reloaded run continues bit-identically. Derived state — the phenotype cache, the house table, the content — is rebuilt rather than stored.
+- **A run is a value.** `saveGame` produces a versioned snapshot and `loadGame`
+  validates and rebuilds it. Derived state — the phenotype cache, the house
+  table, the content — is rebuilt rather than stored. Identical continuation
+  is the contract; a reproduced exception for pending story decisions is
+  tracked in [#1932](https://github.com/EldritchDynasty/EldritchDynasty/issues/1932).
 - **The client has a surface.** `core/src/session.ts` owns every gameplay verb and read model a client needs; `packages/client/src/lib/game.ts` is the Vue client's only door into it, and components never reach through to `.ctx`. `view()` and the other reads return plain values, so the UI takes a fresh snapshot after a verb rather than holding live simulation references.
 - **The front door is real.** `Start.vue` offers the 300-year Short Line by default and the 500-year Long Line beside it, resumes the last sitting, lists/imports/exports saves, shows the Library of completed houses, and keeps the deterministic seed behind an Advanced disclosure rather than making it the product.
 - **A run has a decision log.** `commitOutcome`, `applyRecord` and `renameChild` append a `LoggedDecision` beside the save; `replay()` reconstructs a run from it and throws if the rebuild disagrees with its own record, rather than trusting a log nothing checks. See [#8](https://github.com/EldritchDynasty/EldritchDynasty/issues/8).
@@ -217,10 +242,10 @@ Each phase declares what it must run **after** and why, and `year.test.ts`
 holds the table to its own declarations.
 
 ```
-ages → lifecycle → guardian → quarrels → secrets → papers → assize → bearing
-     → careers → table → library → muster → land → economy → auction → succession
-     → branches → rivals → marriage → births → arcs → ambient → frame → ascension
-     → generation → docket
+ages → mystic → lifecycle → guardian → quarrels → secrets → papers → assize
+     → bearing → careers → table → library → muster → land → economy → covert
+     → auction → succession → branches → rivals → marriage → births → promises
+     → arcs → ambient → frame → ascension → generation → docket
 ```
 
 Every phase draws from `streamFor(world, phase.name)` — its own stream, derived

@@ -2,7 +2,7 @@
 
 A text-based generational strategy game. **A Long Line is five hundred years, roughly twenty generations, one bloodline.**
 
-You begin as the signing founder, named by you, and continue as the house's guardian when his mortal life ends. Across later generations you are the will of a bloodline: you decide **who marries whom**, **who is spent**, **what gets written down**, and what each child is called. You do not directly fight or explore; the opening Examination is the one dialogue you answer yourself.
+You begin as the signing founder, named by you, and continue as the house's guardian when their mortal life ends. You choose the founder's gender and, separately, whether they found the bloodline as its blood father or blood mother. Across later generations you are the will of a bloodline: you decide **who marries whom**, **who is spent**, **what gets written down**, and what each child is called. You do not directly fight or explore; the opening Examination is the one dialogue you answer yourself.
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
@@ -67,20 +67,59 @@ The original build order and commercial pass ([#277](https://github.com/Eldritch
 
 ## Run locally
 
-```bash
-npm install
-npm run check     # typecheck + validate + tests; not the gates/landing
-npm run dev         # authoring tool at localhost:5173
-npm run play        # browser game at localhost:5174
-npm run shell       # the game client in the Electron host
-npm run android     # rebuild, sync and run the Android debug build
-npm run ios         # rebuild, sync and run on iOS (macOS)
-npm run ios:build   # unsigned iOS Simulator build (macOS / CI)
-npm run build:shell # Windows NSIS installer (local builds may be unsigned)
+Use **Git, Node.js 22 and its bundled npm**; CI uses Node 22 on Windows and
+Linux. Run workspace commands from the repository root.
 
+```bash
+git clone https://github.com/EldritchDynasty/EldritchDynasty.git
+cd EldritchDynasty
+npm ci
+npm run play
+```
+
+Open **http://localhost:5174** for the game. In a second terminal at the same
+repository root, run `npm run dev` and open **http://localhost:5173** for the
+authoring tool. Both can run together. Read Vite's printed address if either
+port is already occupied; stop a server with Ctrl+C.
+
+For a first code or documentation change, run:
+
+```bash
+npm run typecheck   # TypeScript plus both Vue apps' templates
+npm run validate    # validate the authored content bundle
+npm run test:fast   # the ordinary edit-and-check loop
+```
+
+`npm run check` includes the slow tests as well. Before submitting, follow the
+issue, claim and preflight sequence in [docs/COMMANDS.md](docs/COMMANDS.md#make-a-contribution).
+Native merge-queue CI runs the authoritative integration checks.
+
+Native hosts require their own toolchains; the browser game and editor do not.
+
+| Target | Command | Setup and boundaries |
+|---|---|---|
+| Windows desktop game | `npm run shell` | [Desktop host guide](packages/shell/AGENTS.md); `npm run build:shell` packages the Windows NSIS installer. |
+| Windows Mod Editor | `npm run mod-editor --workspace @ed/shell` | [Modding guide](docs/MODDING.md); shares the desktop game's local content folder. |
+| Android | `npm run android` | Android SDK/emulator or device; see the [mobile host guide](packages/mobile/AGENTS.md) and [build workflow](.github/workflows/check.yml). |
+| iOS | `npm run ios` | macOS with Xcode; `npm run ios:build` makes an unsigned Simulator build. See the [mobile host guide](packages/mobile/AGENTS.md). |
+
+For headless simulation tools:
+
+```bash
 npm run harness -- 16 500    # 16 headless Long Lines, with balance numbers
 npm run digest  -- 8 400     # fingerprint 8 runs; diff across commits
 ```
+
+## Find the right guide
+
+| I want to… | Start here |
+|---|---|
+| Understand the player decisions and progression | [Game loop](docs/GAME-LOOP.md) |
+| Add local desktop content | [Modding](docs/MODDING.md) |
+| Find an implementation or extend the engine | [Architecture](ARCHITECTURE.md) and the package's `AGENTS.md` |
+| Check authored effects, conditions or validation rules | [Generated vocabulary](docs/VOCABULARY.md) and [content authoring rules](packages/content/AGENTS.md) |
+| Contribute, claim work or understand CI | [Commands and contribution workflow](docs/COMMANDS.md), [shared rules](AGENTS.md) and [parallel-work protocol](docs/PARALLEL.md) |
+| Interpret balance evidence or plan a human playtest | [Dated balance log](docs/BALANCE-LOG.md) and [playtest runbook](docs/PLAYTEST.md) |
 
 ## The interesting part: genetics
 
@@ -128,14 +167,31 @@ A mythic event is rationed: at most three ambient fires in a Long Line. A drough
 A run is reached through one narrow `GameSession` surface rather than through simulation internals. It owns prompted decisions (`choose`, `send`, `match`, `record`), deliberate house actions (`order`, `muster`, naming and founding), and read models (`view`, `table`, `land`, `book`, `line`); persistence stays on the same module through `save` and `resumeGame`. The Vue client centralises every call to that seam in `packages/client/src/lib/game.ts`:
 
 ```ts
-const game = newGame(loadContent(), { seed: 1042, campaign: 'long' });
-game.advance(400);                       // stops the moment something needs an answer
-const [decision] = game.pending;
-game.choose(decision.id, 'send_the_boy');
-const view = game.view();                // plain data: halls, chronicle, docket, clauses
-const table = game.table();               // deliberate actions and their current costs
-const save = game.save();                 // versioned, validated, and it reloads bit-identically
+import { loadContent } from '@ed/content';
+import { newGame, resumeGame } from '@ed/core';
+
+const content = loadContent();
+const game = newGame(content, { seed: 1042, campaign: 'short' });
+const progress = game.advance(10);        // stops early if a decision needs an answer
+console.log(game.year, progress.stoppedBy, game.view().docket.map(d => d.kind));
+
+const saved = JSON.parse(JSON.stringify(game.save()));
+const resumed = resumeGame(saved, content);
+console.log(resumed.year, resumed.view().docket.length); // the same year and pending count
 ```
+
+Run this from a TypeScript file at the repository root with
+`npx tsx --tsconfig tsconfig.base.json <your-file.ts>`. This headless example
+keeps the authored founding defaults. An interactive host calls `prologue()`
+and `found()` before advancing, then answers the actual pending decision by
+kind through `choose`, `send`, `match` or `record`. `letHimDecide()` delegates
+the standing docket to the chronicler. Choice ids come from that docket;
+they are not guaranteed by a seed or a requested number of years.
+
+**Known save limitation:** a pending story scene can repeat after reload when
+play continues. [Issue #1932](https://github.com/EldritchDynasty/EldritchDynasty/issues/1932)
+has the reproduction; restoring the snapshot alone does not prove identical
+continuation.
 
 A year is an ordered table of named phases, each with its own RNG stream, so a system can be added, reordered or retimed without moving anybody else's dice. Content is loaded by one loader from one declared layout, indexed once, and every closed union in the engine ends in `assertNever` — the failure mode here is silence, and the compiler is the cheapest thing that breaks it.
 

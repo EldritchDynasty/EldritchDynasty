@@ -5,6 +5,12 @@ adding local content. It is deliberately not a Workshop, package manager, or
 compatibility layer. It exposes the same content model, validator, and
 simulation instruments used by the game repository.
 
+Reviewed against `main` at `8b09dbee` on 26 October 2026. Start with
+[README.md's setup](../README.md#run-locally) for repository development and
+[packages/content/AGENTS.md](../packages/content/AGENTS.md) for authoring
+rules. [VOCABULARY.md](VOCABULARY.md) is the generated reference for the
+schema's effects, conditions, filters and validation rules.
+
 ## Where local content lives
 
 The desktop host owns one writable mod root:
@@ -72,6 +78,30 @@ inside a tier's global cooldown. Measure the whole affected pool.
 
 Frame events are different: they run on the record-reading frame cadence rather
 than the ambient Frequency ledger.
+
+## Check what can actually resolve
+
+Fire rate counts runs in which an event fires. It does not prove that every
+choice is affordable, every required person can be cast, or every outcome can
+resolve. When an outcome uses `onlyIf`, its guard filters the weighted draw
+against the actual cast; the remaining outcomes are renormalised. Provide an
+unguarded fallback or complementary guards on the same required engine-cast
+slot. Validation rejects unsupported guard combinations and uncovered draws.
+Checked choices use their check bands instead of outcome guards.
+
+For repository content, run `npm run gates -- outcome-reach` to inspect the
+full sampled report. It distinguishes event/choice exposure, eligible guarded
+casts and check readings. A sampled zero with positive but insufficient
+expected exposure remains **unproven**; no exposure and a sufficiently powered
+miss are different failures. Deterministic execution witnesses establish that
+a constructed outcome can resolve, without establishing its ordinary campaign
+frequency. The merge-blocking scope uses those witnesses, while the full
+sample remains scheduled evidence; see
+[COMMANDS.md](COMMANDS.md#ci-and-the-janitor).
+
+Gate reports are evidence about the bundle and policies measured. Adding a
+template changes competition, so recheck affected events and outcomes rather
+than treating an earlier green report as proof for the new bundle.
 
 ## Play with local content
 

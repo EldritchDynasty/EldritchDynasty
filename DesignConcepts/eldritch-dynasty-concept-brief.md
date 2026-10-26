@@ -746,10 +746,15 @@ Rothfuss circulated his manuscript to 60–80 readers before it sold. Our analog
 | 15 | Calibrated book/power gates and the four-pair final circle; public ladder diagnosis | Describes the shipped predicates and actionable evidence rather than older raw design counts (§22; #1802, #1806) |
 | 16 | Callable forcing with guarded outcomes, learned Mystic checks and recurring-role recast | Makes the existing Table, knowledge and cast mechanics explicit (#1796, #1812, #1817, #1830) |
 | 17 | The founder is **the player**: name, gender and **founding configuration** (blood father or blood mother), and the **founder's charter** | Lets the player sign as themselves without coercing a body from a pronoun; a blood mother founds the house rather than keeping it for a son (#1867) |
+| 18 | Recurring Mystic practice, outside service and covert operations | Completed books support paid, present duties across civilian and conflict systems; calibration and unresolved limits are recorded in `docs/BALANCE-LOG.md` (§12; #1866, #1878) |
 
 The five package guides and [ARCHITECTURE.md](../ARCHITECTURE.md) route authors
 to these implementations. Mystic checks now require completed study where the
-scene promises practice; #1866's recurring assignments are still unbuilt.
+scene promises practice; #1866's recurring assignments, outside service and
+covert operations are shipped as described in §12. This status was checked
+against `main` at `8b09dbee` on 26 October 2026; the calibration evidence
+retains its dated cohorts and unresolved limits in
+[docs/BALANCE-LOG.md](../docs/BALANCE-LOG.md).
 Forcing rites consume one lifetime attempt per boy, and `onlyIf` preserves
 hidden capability while guaranteeing an outcome. Their presence does not
 make spontaneous Eldritch manifestations a player-controlled action.
