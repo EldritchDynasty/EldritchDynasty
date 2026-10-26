@@ -9,6 +9,19 @@ import {
 const bundle = loadContent();
 
 describe('character templates', () => {
+  it('mints actual warranted readers with completed authored training for all eight affinities (#1877)', () => {
+    const ctx = bootstrap(bundle, 1877, 1042);
+    const professionals = bundle.characterTemplates.filter(t => t.role === 'practitioner');
+    expect(professionals).toHaveLength(8);
+    for (const template of professionals) {
+      const p = mint(template, ctx, makeRng(1877));
+      expect(ctx.world.people.get(p.id)).toBe(p);
+      expect(p.spellsKnown).toEqual(template.spellsKnown);
+      expect(p.spellsKnown).toHaveLength(2);
+      expect([...p.traits]).toContain('colleges_warrant');
+      expect(p.career).toBeUndefined();
+    }
+  });
   it('authors at least one template for every role the sim asks for', () => {
     const needed = ['suitor', 'groom', 'retainer', 'rival', 'the_match'];
     for (const role of needed) {

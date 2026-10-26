@@ -997,6 +997,7 @@ describe('study and the posts refuse in the reader\'s setting (#805)', () => {
       'library.refuse.captive': 'they are held away from the house',
       'library.refuse.on_duty': 'they are keeping a Mystic duty',
       'library.refuse.expedition': 'they are away with an expedition',
+      'library.refuse.service': 'they are committed to an outside service',
       'library.refuse.binder': 'the copy is with the binder',
       'library.refuse.not_woken': 'not woken',
       'library.refuse.not_hers': 'not hers to learn',

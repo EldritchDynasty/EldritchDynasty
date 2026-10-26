@@ -17,6 +17,15 @@ describe('captivity identifies an actual outside captor (#1876)', () => {
 });
 
 describe('a field working retains its actual affinity (#1874)', () => {
+  it('rejects unknown or sex-ineligible completed background training (#1877)', () => {
+    const professional = content.bundle.characterTemplates.find(p => p.id === 'warranted_fluid_reader')!;
+    const unknown = { ...content.bundle, characterTemplates: [{ ...professional, spellsKnown: ['not_a_book'] }] };
+    expect(runRule('mystic/wiring', unknown).some(i => i.message.includes('unknown book'))).toBe(true);
+    for (const sex of ['female', 'any'] as const) {
+      const ineligible = { ...content.bundle, characterTemplates: [{ ...professional, sex }] };
+      expect(runRule('mystic/wiring', ineligible).some(i => i.message.includes('sex learnability'))).toBe(true);
+    }
+  });
   it('rejects a Life book used as a supply or concealment working', () => {
     const original = content.bundle.mysticWorkings.find(w => w.id === 'the_field_infirmary')!;
     const supply = content.bundle.mysticWorkings.find(w => w.id === 'keeping_the_camp_water')!;
