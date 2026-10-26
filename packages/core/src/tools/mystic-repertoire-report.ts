@@ -176,7 +176,7 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
 }
 
 type Run=ReturnType<typeof playRepertoireCampaign>;
-export function summariseRepertoire(runs:readonly Run[]){
+export function summariseRepertoire(runs:readonly Run[],content:Content=loadContent()){
   return (['short','long'] as const).flatMap(campaign=>REPERTOIRE_POLICIES.map(policy=>{
     const rows=runs.filter(r=>r.campaign===campaign&&r.policy===policy);if(!rows.length)return undefined;
     const controls=new Map(runs.filter(r=>r.campaign===campaign&&r.policy==='no_extra').map(r=>[r.seed,r]));
@@ -192,12 +192,23 @@ export function summariseRepertoire(runs:readonly Run[]){
       .filter(d=>d!=='conflict').map(d=>d.startsWith('estate:')?'estate_protection':d)).size,0)/r.metrics.trainedGenerations.length;
     const goal=(evaluate:()=>number)=>{try{return {supported:true,marginSE:evaluate()};}catch(e){return {supported:false,reason:(e as Error).message};}};
     return {campaign,policy,runs:rows.length,years:rows.reduce((n,r)=>n+r.years,0),
-      trainedHouseFraction:rateEvidence(trained.length,rows.length),availablePersonYears:estimate(r=>r.metrics.availablePersonYears),
+      trainedHouseFraction:rateEvidence(trained.length,rows.length),practitionerYears:estimate(r=>r.ledger.practitionerYears),
+      untrainedHouseYears:estimate(r=>r.ledger.sampledYears-r.ledger.trainedHouseYears),availablePersonYears:estimate(r=>r.metrics.availablePersonYears),
       trainedUnassignedPersonYears:estimate(r=>r.metrics.trainedUnassignedPersonYears),dutyYears:estimate(r=>r.metrics.dutyYears),
       paidDutyYears:estimate(r=>r.metrics.paidDutyYears),pausedStudyYears:estimate(r=>r.metrics.pausedStudyYears),
       homeCoverageLostYears:estimate(r=>r.metrics.homeCoverageLostYears),netAttributedCoin:estimate(r=>r.coin.netAttributed),
       directSavings:estimate(r=>r.coin.directSavings),commissionIncome:estimate(r=>r.coin.commissionIncome),externalFees:estimate(r=>r.coin.externalFees),
       livesKept:estimate(r=>r.livesKept),menKept:estimate(r=>r.menKept),studyYearsKept:estimate(r=>r.studyYearsKept),
+      actualChallengeVisits:estimate(r=>r.ledger.challengeVisits),learnedAttempts:estimate(r=>r.ledger.learnedAttempts),learnedSuccesses:estimate(r=>r.ledger.learnedSuccesses),
+      usefulWithin10:rateEvidence(eligible.filter(within).length,eligible.length),civilianDomainsPerTrainedGeneration:meanEvidence(trained.map(domains)),
+      byAffinity:ALL_AFFINITIES.map(affinity=>{
+        const total=(r:Run,read:(s:MysticService)=>number)=>Object.values(r.metrics.records)
+          .filter(d=>content.mysticWorking(d.working)?.affinity===affinity).reduce((n,d)=>n+read(d.service),0);
+        return {affinity,practitionerYears:estimate(r=>r.ledger.practitionerYearsByAffinity[affinity]),
+          paidDutyYears:estimate(r=>total(r,s=>s.servedYears)),usefulYears:estimate(r=>total(r,s=>s.usefulYears)),
+          livesKept:estimate(r=>total(r,s=>s.livesKept)),menKept:estimate(r=>total(r,s=>s.menKept??0)),
+          directSavings:estimate(r=>total(r,s=>s.crownsKept??0)),spent:estimate(r=>total(r,s=>s.spent))};
+      }),
       decisionsPer25Years:estimate(r=>r.metrics.decisionAnswers/Math.max(1,r.years)*25),
       goals:{usefulWithin10:goal(()=>expectRate({hits:eligible.filter(within).length,n:eligible.length,floor:.5,what:'majority of eligible houses have a majority of duties useful within ten paid years'})),
         civilianDomainsPerTrainedGeneration:goal(()=>expectMean({values:trained.map(domains),floor:2,what:'two actual civilian domains per trained generation'}))},
@@ -222,7 +233,7 @@ if(process.argv[1]?.replace(/\\/g,'/').endsWith('/mystic-repertoire-report.ts'))
     accounting:'Actual service accounts, finite contract payments and fees. Book acquisition includes authored and auction purchases. Yield savings use the current respect-tier land scale without Charm/rent modifiers; report that estimate separately. Lives, physical book wear and study opportunity are not priced as coin.',
     uncertainty:'One independent house per seed; paired differences and standard errors. Product goals pass through expectRate/expectMean; a miss is retained as a finding. No new historical gate is invented.',
     controls:'First seed of every campaign/policy repeated without any instrumentation; SHA256 of the complete canonical save with savedAt blanked.',
-  },inventory:ALL_AFFINITIES.map(affinity=>({affinity,workings:content.mysticWorkings.filter(w=>w.affinity===affinity).map(w=>({id:w.id,application:civilianApplication(w)??'conflict',reader:w.benefit.kind,books:w.books,collaborator:w.collaborator}))})),summary:summariseRepertoire(samples),samples};
+  },inventory:ALL_AFFINITIES.map(affinity=>({affinity,workings:content.mysticWorkings.filter(w=>w.affinity===affinity).map(w=>({id:w.id,application:civilianApplication(w)??'conflict',reader:w.benefit.kind,books:w.books,collaborator:w.collaborator}))})),summary:summariseRepertoire(samples,content),samples};
   if(process.argv[4])writeFileSync(process.argv[4],JSON.stringify(report,null,2)+'\n');
   process.stdout.write(JSON.stringify({controls,summary:report.summary},null,2)+'\n');
 }
