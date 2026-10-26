@@ -1,0 +1,251 @@
+# GLIMPSES (#1897 (c), option 2). One-shot scenes that show the debt once each,
+# in the event register, without explaining it. Each outcome is tagged
+# `glimpse`, which `events/answers.ts` counts as an answer; nothing weights or
+# routes on the tag. Each sets the flag the next one waits for, so they arrive
+# in order and never twice.
+#
+# They come after the tutor's follow-ups (opening.yaml), each of which is the
+# run's first glimpse, and they all turn on the one fact every path through the
+# opening can see: a line in the day book, in the founder's hand, with no sum
+# and no creditor. Each body states the line itself rather than assuming the
+# heir's path. Each removes one reading of it: a clerk's habit, a debt to
+# somebody who can be found and paid, a thing that lives in the main hall's
+# books. None says what it is. That is the Class
+# C rule — a payoff eliminates a reading and never confirms one — and none of
+# them front-runs a clause: the third shows the line following the family
+# without saying the blood owes it, which is `clause_of_the_blood_entire`'s job.
+#
+# The first two sit in the window #1897 measured as the run's longest quiet,
+# from the tutor's follow-up (~1046) to the first interlude (1113–1133). The
+# third waits for a branch hall to exist, which is the midgame.
+events:
+  - id: the_line_carried_forward
+    title: The Line Carried Forward
+    tier: family
+    frequency: uncommon
+    weight: 60
+    campaigns: [short, long]
+    repeatable: false
+    tags: [accounts, debt]
+    purposes: [worldbuild_through_action, plant_rumour, buy_patience]
+    conditions:
+      all:
+        - { year: { op: gte, value: 1062 } }
+        - { year: { op: lte, value: 1110 } }
+        - { not: { flag: glimpse_line_carried } }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      The new steward was taught his figures by the chapter clerks at Bramme,
+      and he does not like the blank line. It sits at the foot of every
+      quarter in the day book: a debt with no sum and no creditor, carried
+      forward since the spring of the signing. At the Thaw accounts he asks
+      {HEAD} whether it may be left off. Nobody at the table can tell him why
+      it should not be.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: carried
+          weight: 100
+          tags: [glimpse]
+          text: >-
+            He leaves it off the spring quarter and shows {HEAD} the clean
+            page. In Highsun he brings the book up again without being asked.
+            The line is there at the foot of the spring quarter, in his own
+            small hand, the ink as brown as the page around it. He says he did
+            not write it. He has stopped asking whether it may be left off.
+          effects:
+            - { kind: flag, flag: glimpse_line_carried, set: true }
+            # The next link, half a generation on. Scheduled rather than left to
+            # the ambient draw: a one-shot in a fifty-year window loses that draw
+            # to several hundred common templates (measured: 0 of 24 runs).
+            - { kind: schedule, event: the_letters_to_the_weighers, inYears: 22 }
+
+  - id: the_letters_to_the_weighers
+    title: Letters to the Weighers
+    tier: family
+    frequency: uncommon
+    weight: 60
+    campaigns: [short, long]
+    repeatable: false
+    tags: [accounts, debt, letters]
+    purposes: [worldbuild_through_action, plant_rumour, force_record_choice]
+    conditions:
+      all:
+        - { flag: glimpse_line_carried }
+        - { not: { flag: glimpse_weighers_asked } }
+        - { year: { op: gte, value: 1075 } }
+        - { year: { op: lte, value: 1140 } }
+    slots:
+      HEAD: { role: head }
+    body: >-
+      {HEAD} means to pay the blank line and be done with it. Letters go out
+      in Highsun to the weighers' houses, the one at Cawdry and the three at
+      Sarrow, each sealed, each offering a fair sum to whoever holds paper on
+      the family from the year of the signing. The answers come back slowly,
+      one at a time, through the end of the year.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: nobody_holds_it
+          weight: 100
+          tags: [glimpse]
+          text: >-
+            Every house answers, and every answer says the same. Nobody holds
+            paper on the family. Nobody lent to it that winter. The oldest
+            house at Sarrow sends a page copied from its own ledger for the
+            year, sworn on the weight: three small loans to neighbours on the
+            Wend, all repaid, and nothing at all against the hall on the hill.
+            The coin set aside for the debt goes back into the chest. It is
+            still owed.
+          effects:
+            - { kind: flag, flag: glimpse_weighers_asked, set: true }
+            # Waits on a branch hall; the schedule's own five-year retries keep
+            # it pending for forty years past this.
+            - { kind: schedule, event: the_branch_hall_book, inYears: 75 }
+    # What the house says it did. The honest page records an offer nobody
+    # would take; the flattering one says the debt was settled, which every
+    # weigher's ledger on the Wend can contradict.
+    record:
+      subject: the letters to the weighers
+      options:
+        record:
+          chronicle: The house offered to settle its oldest debt in full, and every weigher on the Wend
+            swore that nobody holds it.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: offered to settle the house's oldest debt }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: The house settled its oldest debt in full, and the weighers swore it paid.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: settled the house's oldest debt }
+          # The weighers' own copies say nobody was paid, and their ledger
+          # outlives everyone (world §16).
+          discrepancy:
+            id: the_debt_called_settled
+            severity: minor
+            provableBy: [house_bracc]
+
+  - id: the_branch_hall_book
+    title: The Branch Hall's Book
+    tier: family
+    frequency: uncommon
+    weight: 50
+    campaigns: [short, long]
+    repeatable: false
+    tags: [accounts, debt, cadet]
+    purposes: [worldbuild_through_action, change_relationship, plant_rumour]
+    conditions:
+      all:
+        - { flag: glimpse_weighers_asked }
+        - { not: { flag: glimpse_branch_book } }
+        - { cadetBranches: { op: gte, value: 1 } }
+        - { year: { op: gte, value: 1160 } }
+        - { year: { op: lte, value: 1400 } }
+    slots:
+      HEAD: { role: head }
+      CADET:
+        role: cadet
+        filters: [{ status: [alive] }, { age: { op: gte, value: 20 } }]
+    body: >-
+      The branch hall keeps its own book now. The day books at Ardwen are the
+      Head's, and {CADET} has never been shown them. At Thaw the first year's
+      accounts come up the hill for {HEAD} to see, ruled and totalled in a
+      careful hand. The sums are small and honest. They have been kept well.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: the_same_line
+          weight: 100
+          tags: [glimpse]
+          text: >-
+            At the foot of every quarter there is a line with no sum and no
+            creditor, dated the spring of the signing. {CADET} did not copy it
+            from anywhere. When {HEAD} opens the old day book beside the new
+            one, {CADET} goes quiet and then pale, and asks whether it ought to
+            be struck out. Nobody at the table says yes.
+          effects:
+            - { kind: flag, flag: glimpse_branch_book, set: true }
+
+proseVariants:
+  - address: "content:events/glimpses.yaml#events[id=the_line_carried_forward].title"
+    of: "d2f9911d582b8709"
+    plainenglish: >-
+      The Debt Copied Forward
+  - address: "content:events/glimpses.yaml#events[id=the_line_carried_forward].body"
+    of: "c8439a63b446a08f"
+    plainenglish: >-
+      The new steward learned his arithmetic from the church clerks at Bramme, and he does not
+      like the blank line. It is at the bottom of every quarter in the accounts book: a debt with
+      no amount and no name of who is owed, copied forward since the spring the agreement was
+      signed. At the Thaw accounts he asks {HEAD} whether he can leave it out. Nobody at the
+      table can tell him why not.
+  - address: "content:events/glimpses.yaml#events[id=the_line_carried_forward].interaction.outcomes[id=carried].text"
+    of: "739611a4f0984378"
+    plainenglish: >-
+      He leaves it out of the spring quarter and shows {HEAD} the clean page. In Highsun he
+      brings the book back without being asked. The line is there at the bottom of the spring
+      quarter, in his own small handwriting, and the ink is as old and brown as the page. He says
+      he did not write it. He has stopped asking whether it can be left out.
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].title"
+    of: "78ef0558620ac8fc"
+    plainenglish: >-
+      Letters to the Moneylenders
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].body"
+    of: "1817ee21d2bf526d"
+    plainenglish: >-
+      {HEAD} wants to pay the blank debt and be done with it. In Highsun, letters go to the
+      Braccish moneylenders: the counting house at Cawdry and the three at Sarrow. Each letter is
+      sealed, and each offers a fair amount to anyone who holds a claim on the family from the
+      year the agreement was signed. The answers come back slowly, one at a time, until the end of
+      the year.
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].interaction.outcomes[id=nobody_holds_it].text"
+    of: "9ec7be4f480d0feb"
+    plainenglish: >-
+      Every counting house answers, and every answer says the same thing. Nobody holds a claim on
+      the family. Nobody lent it money that winter. The oldest house at Sarrow sends a page copied
+      from its own records for that year, sworn on its weights: three small loans to neighbours
+      along the Wend, all repaid, and nothing at all owed by the hall on the hill. The money put
+      aside for the debt goes back into the chest. The debt is still there.
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.subject"
+    of: "efd1f8af10a9d583"
+    plainenglish: >-
+      the letters to the moneylenders
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.record.chronicle"
+    of: "f843393fce614583"
+    plainenglish: >-
+      The house offered to pay its oldest debt in full, and every moneylender along the Wend swore
+      that nobody holds it.
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.record.claims[0].text"
+    of: "90398499901f8b5d"
+    plainenglish: >-
+      offered to pay the house's oldest debt
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.embellish.chronicle"
+    of: "003b4bb8dc0a35ec"
+    plainenglish: >-
+      The house paid its oldest debt in full, and the moneylenders swore it was paid.
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.embellish.claims[0].text"
+    of: "c655763fe0eed88b"
+    plainenglish: >-
+      paid the house's oldest debt
+  - address: "content:events/glimpses.yaml#events[id=the_branch_hall_book].title"
+    of: "f678fe9e2a7f31d2"
+    plainenglish: >-
+      The Branch Hall's Accounts
+  - address: "content:events/glimpses.yaml#events[id=the_branch_hall_book].body"
+    of: "700dae0da987f081"
+    plainenglish: >-
+      The branch hall keeps its own accounts book now. The accounts books at Ardwen belong to the
+      Head, and {CADET} has never been shown them. At Thaw the branch's first year of accounts
+      comes up the hill for {HEAD} to see, ruled and added up in careful handwriting. The amounts
+      are small and honest. The job has been done well.
+  - address: "content:events/glimpses.yaml#events[id=the_branch_hall_book].interaction.outcomes[id=the_same_line].text"
+    of: "5adfcac3dffca19f"
+    plainenglish: >-
+      At the bottom of every quarter there is a line with no amount and no name of who is owed,
+      dated the spring the agreement was signed. {CADET} did not copy it from anywhere. When
+      {HEAD} opens the old accounts book next to the new one, {CADET} goes quiet, then pale, and
+      asks whether it should be crossed out. Nobody at the table says yes.
