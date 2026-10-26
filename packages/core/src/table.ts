@@ -30,6 +30,7 @@ import { captivityView, ransomCaptive } from './people/captivity.js';
 import { defendHousehold, householdSecurityView, releaseThreatPrisoner } from './covert-lifecycle.js';
 import { covertOperationsView, prepareCovertOperation, withdrawCovertOperation } from './covert-operations.js';
 import { noteBookRestoration } from './mystic-civilian.js';
+import { hirePractitioner, honourServicePromise, outsideServicesView, seekPractitioner, undertakeCommission } from './mystic-contracts.js';
 
 /**
  * THE TABLE — the half of the game the player was never allowed to play.
@@ -559,6 +560,10 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
   const w = ctx.world;
 
   switch (o.kind) {
+    case 'mysticSearch': return seekPractitioner(ctx);
+    case 'mysticHire': return hirePractitioner(ctx, o);
+    case 'mysticCommission': return undertakeCommission(ctx, o.person, o.working, o.patron);
+    case 'mysticReturn': return honourServicePromise(ctx, o.person, o.promise);
     case 'covertPrepare': return prepareCovertOperation(ctx, o);
     case 'covertWithdraw': return withdrawCovertOperation(ctx, o.operation);
     case 'covertDefend': return defendHousehold(ctx, o);
@@ -985,6 +990,7 @@ export interface TableView {
   studying: { person: string; name: string; book: string; completes: Year }[];
   /** Standing Mystic duties, and every working the house could set somebody to (#1873). */
   mystic: MysticView;
+  outsideServices: ReturnType<typeof outsideServicesView>;
   security: ReturnType<typeof householdSecurityView>;
   expeditions: ReturnType<typeof covertOperationsView>;
   /** Named family held elsewhere, with the engine's fixed ransom and affordability quote. */
@@ -1275,6 +1281,7 @@ export function tableView(ctx: SimCtx): TableView {
     tutoring: w.tutoring.map((t) => ({ ...t, name: name(t.person) })),
     studying: w.studies.map((s) => ({ ...s, name: name(s.person) })),
     mystic: mysticView(ctx),
+    outsideServices: outsideServicesView(ctx),
     security: householdSecurityView(ctx),
     expeditions: covertOperationsView(ctx),
     captives: captivityView(ctx),

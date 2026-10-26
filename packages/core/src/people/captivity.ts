@@ -16,6 +16,15 @@ export function captureFamily(ctx: SimCtx, person: string, captor: string, ranso
   return takeCaptive(ctx, person, captor, ransom, true);
 }
 
+/** A named contracted field reader is held under the same real custody/home record. */
+export function captureContractor(ctx: SimCtx, person: string, captor: string, ransom: number): boolean {
+  const c = ctx.world.mystic.contracts.find(c => c.practitioner === person && c.stage !== 'closed' && c.providerFee > 0);
+  const duty = c && ctx.world.mystic.assignments.find(a => a.contract === c.id);
+  const commitment = duty?.target.kind === 'muster' ? duty.target.commitment : undefined;
+  if (!commitment || !ctx.world.muster.commitments.some(m => m.id === commitment && m.status === 'in_the_field')) return false;
+  return takeCaptive(ctx, person, captor, ransom, true);
+}
+
 /** A caught, named outsider uses the same saved custody and home, without a fabricated family ransom. */
 export function captureIntruder(ctx: SimCtx, person: string): boolean {
   const p = ctx.world.people.get(person);
@@ -67,7 +76,9 @@ export function releaseIntruder(ctx: SimCtx, person: string): boolean {
 
 function captive(ctx: SimCtx, id: string): Person | undefined {
   const p = ctx.world.people.get(id);
-  if (!p || p.status !== 'alive' || !p.captivity || p.captivity.home.house !== ctx.world.playerHouse) return undefined;
+  if (!p || p.status !== 'alive' || !p.captivity) return undefined;
+  if (p.captivity.home.house !== ctx.world.playerHouse
+    && !ctx.world.mystic.contracts.some(c => c.practitioner === p.id && c.providerFee > 0)) return undefined;
   const membership = currentMembership(p, ctx.world.year);
   return membership?.kind === 'hostage' && membership.house === p.captivity.captor
     && p.membership.filter(m => m.to === undefined).length === 1 ? p : undefined;
@@ -110,13 +121,16 @@ export function ransomCaptive(ctx: SimCtx, person: string): RansomQuote {
   if (!quote.ok) return quote;
   const p = captive(ctx, person)!;
   const captor = p.captivity!.captor;
+  const family = p.captivity!.home.house === ctx.world.playerHouse;
   ctx.world.treasury -= quote.price;
   returnHome(ctx, p);
   ctx.world.chronicle.push({
     year: ctx.world.year, weight: 'paragraph', named: true, people: [p.id],
-    text: msg(ctx, 'captivity.ransomed',
+    text: family ? msg(ctx, 'captivity.ransomed',
       'The house paid {CAPTOR} {PRICE} crowns for {PERSON}. {PERSON} came home.',
-      { CAPTOR: captorName(ctx, captor), PRICE: String(quote.price), PERSON: p.name }),
+      { CAPTOR: captorName(ctx, captor), PRICE: String(quote.price), PERSON: p.name })
+      : msg(ctx, 'captivity.contractor_ransomed', 'The house paid {CAPTOR} {PRICE} crowns for {PERSON}’s release. The reader’s own household was entered on the receipt.',
+        { CAPTOR: captorName(ctx, captor), PRICE: String(quote.price), PERSON: p.name }),
   });
   return quote;
 }
@@ -157,7 +171,7 @@ function captorName(ctx: SimCtx, house: string): string {
 }
 
 export function captivityView(ctx: SimCtx) {
-  return ctx.world.people.all().filter(p => p.status === 'alive' && p.captivity?.home.house === ctx.world.playerHouse)
+  return ctx.world.people.all().filter(p => captive(ctx, p.id) !== undefined)
     .map(p => ({ person: String(p.id), name: p.name, captor: captorName(ctx, p.captivity!.captor),
       since: p.captivity!.since, ...quoteRansom(ctx, p.id) }));
 }

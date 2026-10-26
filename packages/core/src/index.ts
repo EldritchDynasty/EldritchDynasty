@@ -94,6 +94,8 @@ export * from './testing.js';
 
 export * from './presence.js';
 export * from './mystic.js';
+export * from './mystic-civilian.js';
+export * from './mystic-contracts.js';
 export * from './covert.js';
 export * from './covert-lifecycle.js';
 export * from './covert-operations.js';

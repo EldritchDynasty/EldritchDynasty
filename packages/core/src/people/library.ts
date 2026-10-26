@@ -6,7 +6,7 @@ import { ageCareerFactor } from '../ages/strategy.js';
 import { DEBT_FLOOR } from '../economy.js';
 import { msg } from '../messages.js';
 import { renderContentProse } from '../prose.js';
-import { covertReservation } from '../presence.js';
+import { covertReservation, serviceReservation } from '../presence.js';
 import { libraryCare, noteBookCare } from '../mystic-civilian.js';
 
 /**
@@ -134,6 +134,13 @@ function wearHeldCopy(copy: LibraryBookState, amount: number): void {
   copy.condition = Math.round(Math.max(0, copy.condition - amount) * 10) / 10;
 }
 
+function wearCaredCopy(ctx: SimCtx, copy: LibraryBookState, amount: number): void {
+  const before = copy.condition;
+  const reduction = libraryCare(ctx, copy.id)?.benefit.wearReduction ?? 0;
+  wearHeldCopy(copy, amount * (1 - reduction));
+  noteBookCare(ctx, copy.id, Math.max(0, Math.min(before, amount) - (before - copy.condition)));
+}
+
 /**
  * Each previously acquired physical copy wears in the Library year phase.
  * A newly obtained copy is not charged for a year it was not on the shelf.
@@ -145,10 +152,7 @@ function wearHeldCopy(copy: LibraryBookState, amount: number): void {
 export function tickLibraryWear(ctx: SimCtx): void {
   for (const copy of ctx.world.library.values()) {
     if (copy.acquiredYear >= ctx.world.year || copy.restoresAt !== undefined) continue;
-    const before = copy.condition;
-    const reduction = libraryCare(ctx, copy.id)?.benefit.wearReduction ?? 0;
-    wearHeldCopy(copy, YEARLY_BOOK_WEAR * (1 - reduction));
-    noteBookCare(ctx, copy.id, Math.max(0, Math.min(before, YEARLY_BOOK_WEAR) - (before - copy.condition)));
+    wearCaredCopy(ctx, copy, YEARLY_BOOK_WEAR);
   }
 }
 
@@ -220,6 +224,7 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
   if (p.captivity) return { ok: false, reason: msg(ctx, 'library.refuse.captive', 'they are held away from the house') };
   if (covertReservation(ctx, p.id)) return { ok: false, reason: msg(ctx, 'library.refuse.expedition', 'they are away with an expedition') };
+  if (serviceReservation(ctx, p.id)) return { ok: false, reason: msg(ctx, 'library.refuse.service', 'they are committed to an outside service') };
   // A standing Mystic duty is the reader's one intensive occupation (#1873).
   // Their book waits in `world.mystic.pauses` and resumes when the duty ends.
   if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id)) {
@@ -456,7 +461,7 @@ export function completeStudies(ctx: SimCtx): FinishedStudy[] {
       // Study wear is incurred only after learning really succeeds. Dead or
       // newly ineligible readers drop out above without damaging the copy.
       const copy = w.library.get(s.book);
-      if (copy) wearHeldCopy(copy, SUCCESSFUL_STUDY_WEAR);
+      if (copy) wearCaredCopy(ctx, copy, SUCCESSFUL_STUDY_WEAR);
       finished.push({ person: s.person, book: s.book, first });
     }
   }

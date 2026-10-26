@@ -53,6 +53,9 @@ export type MysticFieldBenefit = z.infer<typeof MysticFieldBenefitS>;
 export const CovertSupportRoleS = z.enum(['approach', 'breach', 'escape', 'recovery', 'hostile']);
 export type CovertSupportRole = z.infer<typeof CovertSupportRoleS>;
 
+export const MysticCommissionDomainS = z.enum(['waterworks', 'workshop', 'journey', 'funeral', 'inspection', 'confidence', 'medicine', 'survey']);
+export type MysticCommissionDomain = z.infer<typeof MysticCommissionDomainS>;
+
 export const MysticBenefitS = z.discriminatedUnion('kind', [
   /**
    * A carer posted to one hall. Each year they attend the `maxWards`
@@ -114,6 +117,12 @@ export const MysticBenefitS = z.discriminatedUnion('kind', [
     recoveryYears: z.number().int().nonnegative().max(1),
   }).strict(),
   z.object({ kind: z.literal('teaching') }).strict(),
+  z.object({
+    kind: z.literal('commission'), domain: MysticCommissionDomainS,
+    years: z.number().int().min(1).max(3),
+    annualCrowns: z.number().min(0).max(12),
+    favour: z.number().int().min(0).max(10),
+  }).strict(),
 ]);
 export type MysticBenefit = z.infer<typeof MysticBenefitS>;
 export type MysticBenefitKind = MysticBenefit['kind'];
@@ -190,6 +199,7 @@ export const MysticAssignmentS = z.object({
   /** Omitted for the player's house; foreign field duties use the same evaluator. */
   house: z.string().optional(),
   working: z.string(),
+  contract: z.string().optional(),
   /**
    * One shared site vocabulary with #1868. Household duties accept `hall` and
    * `parcel`; field duties require the actual `muster.commitment` id.
@@ -223,8 +233,27 @@ export const MysticStudyPauseS = z.object({
 }).strict();
 export type MysticStudyPause = z.infer<typeof MysticStudyPauseS>;
 
+export const MysticContractS = z.object({
+  id: z.string(), kind: z.enum(['hire', 'commission']), practitioner: z.string(), working: z.string(),
+  patron: z.string().optional(), patronActor: z.string().optional(),
+  satisfiesPromise: z.string().optional(),
+  stage: z.enum(['preparing', 'working', 'returning', 'closed']),
+  started: z.number(), ready: z.number(), ends: z.number(), returnsAt: z.number().optional(),
+  providerFee: z.number().nonnegative(), escrow: z.number().nonnegative(), worked: z.number().int().nonnegative(),
+  lastWorked: z.number().optional(),
+  payments: z.array(z.object({ year: z.number(), amount: z.number().nonnegative() }).strict()),
+  result: z.enum(['fulfilled', 'withdrawn', 'failed']).optional(), receipt: z.string().optional(),
+  renewBy: z.number().optional(), promiseAnswered: z.boolean().optional(), promiseBrokenAt: z.number().optional(),
+}).strict();
+export type MysticContract = z.infer<typeof MysticContractS>;
+
 export const MysticStateS = z.object({
   assignments: z.array(MysticAssignmentS),
+  contracts: z.array(MysticContractS).default([]),
+  contacts: z.array(z.string()).default([]),
+  search: z.object({ asked: z.number(), due: z.number(), paid: z.number().nonnegative() }).strict().optional(),
+  lastSearch: z.number().optional(),
+  brokerSpent: z.number().nonnegative().optional(),
   /** Historical paid service is retained after its maintainer leaves or dies. */
   services: z.array(MysticAssignmentS.extend({ ended: z.number(), account: z.string() })).default([]),
   pauses: z.array(MysticStudyPauseS),
@@ -234,4 +263,4 @@ export const MysticStateS = z.object({
   reservedUpkeep: z.object({ year: z.number(), crowns: z.number().nonnegative() }).strict().optional(),
 }).strict();
 export type MysticState = z.infer<typeof MysticStateS>;
-export const emptyMysticState = (): MysticState => ({ assignments: [], services: [], pauses: [] });
+export const emptyMysticState = (): MysticState => ({ assignments: [], services: [], contracts: [], contacts: [], pauses: [] });

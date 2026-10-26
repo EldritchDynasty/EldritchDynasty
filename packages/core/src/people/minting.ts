@@ -252,6 +252,7 @@ export function mintRecipe(
   p.mintedFrom = template.id;
   p.castSlots = [...template.castSlots];
   for (const t of template.traits) p.traits.add(asId(t));
+  for (const book of template.spellsKnown ?? []) p.spellsKnown.push(asId(book));
   // Bound to the HEAD who hired them, not to the house. Binding to the house
   // made `onEmployerDeath` unreachable — the employer could never die — and so
   // no contract in the game had any way to end.

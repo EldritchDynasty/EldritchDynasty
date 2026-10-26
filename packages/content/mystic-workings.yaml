@@ -540,10 +540,10 @@ mysticWorkings:
     affinity: death
     books:
       - lesser_workings_of_death
-    description: A reader keeps rot from one vellum volume and its binding. The copy
-      wears half as quickly while it stays on the shelf under that reader’s
-      care. Lost pages, copied testimony and a book sent to the binder remain
-      what they were.
+    description: A reader keeps rot from one vellum volume and its binding. Annual
+      wear and wear from completed study are halved while the physical copy
+      remains under that reader’s care. Lost pages, copied testimony and a book
+      sent to the binder remain what they were.
     preparation:
       crowns: 2
       years: 0
@@ -573,10 +573,10 @@ mysticWorkings:
     affinity: light
     books:
       - lesser_workings_of_light
-    description: One reader examines the ink and wear of one physical book. Its
-      annual wear is halved, and an examination made before sending it to the
-      binder cuts the repair fee by one quarter. A missing page is still a
-      missing page.
+    description: One reader examines the ink and wear of one physical book. Annual
+      wear and wear from completed study are halved, and an examination made
+      before sending it to the binder cuts the repair fee by one quarter. A
+      missing page is still a missing page.
     preparation:
       crowns: 3
       years: 0
@@ -606,9 +606,10 @@ mysticWorkings:
     affinity: darkness
     books:
       - lesser_workings_of_darkness
-    description: A reader keeps the sun and harsh lamplight from one closed volume
-      between readings. Its physical pages wear half as quickly. The shadow
-      hides no testimony already copied elsewhere and supplies no missing words.
+    description: A reader keeps the sun and harsh lamplight from one volume. Annual
+      wear and wear from completed study are halved while the physical copy
+      remains under the reader’s care. The shadow hides no testimony already
+      copied elsewhere and supplies no missing words.
     preparation:
       crowns: 2
       years: 0
@@ -658,6 +659,191 @@ mysticWorkings:
         ransom: 60
       crownsPerMan: 0.2
       maxMen: 20
+
+  - id: the_water_contract
+    name: One Local Water Contract
+    affinity: fluid
+    books:
+      - lesser_workings_of_fluid
+      - greater_workings_of_fluid
+    description: A warranted reader takes a two-year commission for one local
+      waterwork in a known neighbouring household. The reader travels there and
+      returns before taking work at home; their own unfinished book waits. The
+      patron funds eight crowns for each year of actual work, with no pay for a
+      year the reader cannot serve. Completing the commission promises the
+      return of a trained reader within twenty years, even if the first worker
+      has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: waterworks
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_kiln_contract
+    name: The Small Kiln Contract
+    affinity: thermal
+    books:
+      - lesser_workings_of_thermal
+      - greater_workings_of_thermal
+    description: A warranted reader takes a two-year commission for one small
+      workshop kiln in a known neighbouring household. The reader travels there
+      and returns before taking work at home; their own unfinished book waits.
+      The patron funds eight crowns for each year of actual work, with no pay
+      for a year the reader cannot serve. Completing the commission promises the
+      return of a trained reader within twenty years, even if the first worker
+      has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: workshop
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_local_passage
+    name: The Local Passage
+    affinity: aero
+    books:
+      - lesser_workings_of_aero
+      - greater_workings_of_aero
+    description: A warranted reader takes a two-year commission for one local
+      passage and its baggage in a known neighbouring household. The reader
+      travels there and returns before taking work at home; their own unfinished
+      book waits. The patron funds eight crowns for each year of actual work,
+      with no pay for a year the reader cannot serve. Completing the commission
+      promises the return of a trained reader within twenty years, even if the
+      first worker has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: journey
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_surveyors_round
+    name: The Surveyor’s Round
+    affinity: terra
+    books:
+      - lesser_workings_of_terra
+      - greater_workings_of_terra
+    description: A warranted reader takes a two-year commission for one bounded
+      survey in a known neighbouring household. The reader travels there and
+      returns before taking work at home; their own unfinished book waits. The
+      patron funds eight crowns for each year of actual work, with no pay for a
+      year the reader cannot serve. Completing the commission promises the
+      return of a trained reader within twenty years, even if the first worker
+      has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: survey
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_hired_watch
+    name: The Hired Watch
+    affinity: life
+    books:
+      - lesser_workings_of_life
+      - greater_workings_of_life
+    description: A warranted reader takes a two-year commission for one paid
+      household watch in a known neighbouring household. The reader travels
+      there and returns before taking work at home; their own unfinished book
+      waits. The patron funds eight crowns for each year of actual work, with no
+      pay for a year the reader cannot serve. Completing the commission promises
+      the return of a trained reader within twenty years, even if the first
+      worker has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: medicine
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_funeral_contract
+    name: The Funeral Contract
+    affinity: death
+    books:
+      - lesser_workings_of_death
+      - greater_workings_of_death
+    description: A warranted reader takes a two-year commission for one funeral
+      vigil and the return of remains in a known neighbouring household. The
+      reader travels there and returns before taking work at home; their own
+      unfinished book waits. The patron funds eight crowns for each year of
+      actual work, with no pay for a year the reader cannot serve. Completing
+      the commission promises the return of a trained reader within twenty
+      years, even if the first worker has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: funeral
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_inspection_contract
+    name: The Inspection Contract
+    affinity: light
+    books:
+      - lesser_workings_of_light
+      - greater_workings_of_light
+    description: A warranted reader takes a two-year commission for one documentary
+      inspection in a known neighbouring household. The reader travels there and
+      returns before taking work at home; their own unfinished book waits. The
+      patron funds eight crowns for each year of actual work, with no pay for a
+      year the reader cannot serve. Completing the commission promises the
+      return of a trained reader within twenty years, even if the first worker
+      has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: inspection
+      years: 2
+      annualCrowns: 8
+      favour: 2
+  - id: the_closed_meeting
+    name: The Closed Meeting
+    affinity: darkness
+    books:
+      - lesser_workings_of_darkness
+      - greater_workings_of_darkness
+    description: A warranted reader takes a two-year commission for one private
+      meeting in a known neighbouring household. The reader travels there and
+      returns before taking work at home; their own unfinished book waits. The
+      completed meeting earns a bounded favour from its patron, without changing
+      any witness or copied account. Completing the commission promises the
+      return of a trained reader within twenty years, even if the first worker
+      has died.
+    preparation:
+      crowns: 2
+      years: 0
+    upkeep: 0.5
+    benefit:
+      kind: commission
+      domain: confidence
+      years: 2
+      annualCrowns: 0
+      favour: 10
 
 proseVariants:
   - address: "content:mystic-workings.yaml#mysticWorkings[id=sickroom_watch].description"
@@ -889,11 +1075,11 @@ proseVariants:
     of: ef3217d7294d54db
     plainenglish: Preserving a Vellum Book
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_binding].description
-    of: 7d00dffb7b624bbf
+    of: 0b6bbecf90ac962b
     plainenglish: A paid Death reader protects one physical library copy from half
-      its annual wear. The working does not repair existing damage, restore lost
-      text or affect copies held elsewhere. It pauses while that copy is with
-      the binder.
+      its annual wear and wear from completed study. The working does not repair
+      existing damage, restore lost text or affect copies held elsewhere. It
+      pauses while that copy is with the binder.
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_still_larder].name
     of: a902d8b47e31dda8
     plainenglish: Preserving Stored Meat
@@ -907,11 +1093,11 @@ proseVariants:
     of: 9df4a82bc06f185f
     plainenglish: Examining a Library Copy
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_copyists_light].description
-    of: ab2df01c57d4a238
+    of: 21b325bc64f035b8
     plainenglish: A paid Light reader tends one held book. It suffers half the
-      normal annual wear, and a repair ordered while the reader is available
-      costs 25% less. The working does not recover destroyed text or protect an
-      absent copy.
+      normal annual wear and wear from completed study, and a repair ordered
+      while the reader is available costs 25% less. The working does not recover
+      destroyed text or protect an absent copy.
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_readers_lamp].name
     of: b08c955fe20613a3
     plainenglish: Teaching a Successor Reader
@@ -925,11 +1111,11 @@ proseVariants:
     of: 3f5b905301e8d8b7
     plainenglish: Shading a Library Copy
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_shaded_volume].description
-    of: 031aeccebced5b3a
+    of: 3d788ca659b0c5ba
     plainenglish: A paid Darkness reader protects one physical book from half its
-      annual wear. The working does not repair old damage, hide existing
-      witnesses or erase other copies. It pauses while the book is at the
-      binder.
+      annual wear and wear from completed study. The working does not repair old
+      damage, hide existing witnesses or erase other copies. It pauses while the
+      book is at the binder.
   - address: content:mystic-workings.yaml#mysticWorkings[id=the_sleeping_room].name
     of: d516188489c3f390
     plainenglish: Keeping a Room for Rest
@@ -947,3 +1133,86 @@ proseVariants:
       Supply costs fall by up to 0.2 crowns for at most 20 men per year. The
       reader travels with the commitment, faces its stated risks and provides no
       home coverage.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_water_contract].name
+    of: 6b24e5bb047b9417
+    plainenglish: Waterwork Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_water_contract].description
+    of: 8b9e7d86ac86b182
+    plainenglish: A licensed reader who has completed both books works on one local
+      waterwork for one known patron. The term is two working years plus travel
+      and return. The patron reserves 16 crowns and pays 8 for each year
+      actually served; unused money returns to the patron. This also creates a
+      house obligation to provide a trained reader again within twenty years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_kiln_contract].name
+    of: 19098e9ba3ca4fdf
+    plainenglish: Kiln Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_kiln_contract].description
+    of: 683c5b3bc412ec17
+    plainenglish: A licensed reader who has completed both books works on one small
+      workshop kiln for one known patron. The term is two working years plus
+      travel and return. The patron reserves 16 crowns and pays 8 for each year
+      actually served; unused money returns to the patron. This also creates a
+      house obligation to provide a trained reader again within twenty years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_local_passage].name
+    of: ea89781bfd5fa7cf
+    plainenglish: Local Travel Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_local_passage].description
+    of: c41c0167dc13e163
+    plainenglish: A licensed reader who has completed both books works on one local
+      passage and its baggage for one known patron. The term is two working
+      years plus travel and return. The patron reserves 16 crowns and pays 8 for
+      each year actually served; unused money returns to the patron. This also
+      creates a house obligation to provide a trained reader again within twenty
+      years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_surveyors_round].name
+    of: d78882c73039bfeb
+    plainenglish: Survey Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_surveyors_round].description
+    of: 6835702a495eff96
+    plainenglish: A licensed reader who has completed both books works on one
+      bounded survey for one known patron. The term is two working years plus
+      travel and return. The patron reserves 16 crowns and pays 8 for each year
+      actually served; unused money returns to the patron. This also creates a
+      house obligation to provide a trained reader again within twenty years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_hired_watch].name
+    of: 87254e71d0f4656d
+    plainenglish: Medical Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_hired_watch].description
+    of: 23e158cdc1fb23f9
+    plainenglish: A licensed reader who has completed both books works on one paid
+      household watch for one known patron. The term is two working years plus
+      travel and return. The patron reserves 16 crowns and pays 8 for each year
+      actually served; unused money returns to the patron. This also creates a
+      house obligation to provide a trained reader again within twenty years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_funeral_contract].name
+    of: 99437b0fa1b4414b
+    plainenglish: Funeral Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_funeral_contract].description
+    of: e37beee5bccf3069
+    plainenglish: A licensed reader who has completed both books works on one
+      funeral vigil and the return of remains for one known patron. The term is
+      two working years plus travel and return. The patron reserves 16 crowns
+      and pays 8 for each year actually served; unused money returns to the
+      patron. This also creates a house obligation to provide a trained reader
+      again within twenty years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_inspection_contract].name
+    of: 3d796e08398396ac
+    plainenglish: Inspection Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_inspection_contract].description
+    of: 51e9310e00516252
+    plainenglish: A licensed reader who has completed both books works on one
+      documentary inspection for one known patron. The term is two working years
+      plus travel and return. The patron reserves 16 crowns and pays 8 for each
+      year actually served; unused money returns to the patron. This also
+      creates a house obligation to provide a trained reader again within twenty
+      years.
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_closed_meeting].name
+    of: df288cf51893ba89
+    plainenglish: Confidential Meeting Commission
+  - address: content:mystic-workings.yaml#mysticWorkings[id=the_closed_meeting].description
+    of: 580f025b27eb17c7
+    plainenglish: A licensed reader who has completed both books works on one
+      private meeting for one known patron. The term is two working years plus
+      travel and return. Completing the work earns 10 points of the patron’s
+      favour; it does not remove existing evidence. This also creates a house
+      obligation to provide a trained reader again within twenty years.

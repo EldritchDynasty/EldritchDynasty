@@ -237,6 +237,7 @@ events:
                 - { kind: career, target: { slot: SON }, op: assign, career: scholar }
                 - { kind: treasury, delta: 60 }
                 - { kind: respect, delta: 1 }
+                - { kind: trait, target: { slot: SON }, trait: colleges_warrant, op: add }
         - id: pay_him_off
           label: Pay him and send him on. A name is not a proof and we have no proofs.
           outcomes:

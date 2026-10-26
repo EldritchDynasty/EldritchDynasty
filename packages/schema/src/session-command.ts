@@ -19,6 +19,10 @@ export const RecordOptionS = z.enum(['record', 'omit', 'embellish']);
 
 /** The Table's external order vocabulary, shared by the engine and saved inputs. */
 export const TableOrderS = z.union([
+  z.object({ kind: z.literal('mysticSearch') }).strict(),
+  z.object({ kind: z.literal('mysticHire'), person: z.string(), working: z.string(), target: SceneSiteS, bindings: z.record(z.string(), z.string()).optional() }).strict(),
+  z.object({ kind: z.literal('mysticCommission'), person: z.string(), working: z.string(), patron: z.string() }).strict(),
+  z.object({ kind: z.literal('mysticReturn'), person: z.string(), promise: z.string() }).strict(),
   z.object({ kind: z.literal('covertPrepare'), opportunity: z.string(), operative: z.string(), purpose: CovertPurposeS, preparation: CovertPreparationS }).strict(),
   z.object({ kind: z.literal('covertWithdraw'), operation: z.string() }).strict(),
   z.object({ kind: z.literal('covertDefend'), threat: z.string(), guards: z.array(z.string()).max(3), response: CovertResponseS }).strict(),

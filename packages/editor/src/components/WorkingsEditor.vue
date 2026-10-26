@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue';
 import { MysticWorkingDefS, MysticBenefitS, asId, fieldsOfSchema, type FieldSpec, type MysticWorkingDef } from '@ed/schema';
-import { addGrudge, bootstrap, beginCommitment, covertOpportunities, isFieldWorking, mysticTargets, prepareCovertOperation, quoteDuty } from '@ed/core';
+import { addGrudge, bootstrap, beginCommitment, beginStudy, covertOpportunities, isFieldWorking, mysticTargets, prepareCovertOperation, quoteCommission, quoteDuty } from '@ed/core';
 import { fileOf, rawContent, store } from '../lib/store';
 import { isWritableContentPath } from '../lib/content';
 import { watchEdits } from '../lib/watch-edits';
@@ -56,6 +56,30 @@ function evaluate() {
   // This is a private, explicitly qualified fixture, not a new way to learn in play.
   p.spellsKnown = w.books.map(b => asId(b));
   p.awakening.awakened = true;
+  if (w.benefit.kind === 'commission') {
+    p.traits.add(asId('colleges_warrant'));
+    const patron = ctx.world.people.living().find(person => person.castSlots.includes('rival'))!;
+    const house = ctx.world.people.householdOf(patron.id, ctx.world.year)!;
+    const quote = quoteCommission(ctx, p.id, w.id, house);
+    preview.value = { ...quote, preparation: quote.price };
+    return;
+  }
+  if (w.benefit.kind === 'library_care') {
+    const book = w.books[0]!;
+    ctx.world.library.set(book, { id: book, acquiredYear: 1041, condition: 60 });
+  }
+  if (w.benefit.kind === 'convalescence' || w.benefit.kind === 'teaching') {
+    const relative = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find(person => person.id !== p.id && !person.becomesGuardian && person.sex === 'female')!;
+    if (w.benefit.kind === 'convalescence') relative.acquired.health = -8;
+    else {
+      const book = ctx.content.spellbook(w.books[0]!)!;
+      ctx.world.library.set(book.id, { id: book.id, acquiredYear: 1041, condition: 80 });
+      relative.awakening.awakened = true; relative.acquired[book.affinity] = 100;
+      if (relative.phenotype) relative.phenotype.dirty = true;
+      beginStudy(ctx, relative, book);
+    }
+  }
   if (isFieldWorking(w)) beginCommitment(ctx, 10, 'the_wars');
   if (w.benefit.kind === 'covert_support') {
     const enemy = ctx.world.people.living().find(p => p.castSlots.includes('rival'))!;
@@ -102,6 +126,10 @@ function evaluate() {
       <h4>Qualified-reader quote</h4>
       <p class="muted">A private founding-world fixture assumes the required books are completed. No live world, study or counter is changed.</p>
       <p v-if="current.benefit.kind === 'covert_support'" class="muted">This private fixture also prepares a paid expedition against a known rival with a qualifying grievance. The reader travels on that expedition.</p>
+      <p v-if="current.benefit.kind === 'commission'" class="muted">This fixture adds the actual warrant and quotes a finite commission from a known rival house. It grants no warrant in a live game.</p>
+      <p v-if="current.collaborator" class="muted">The order can be prepared alone, but its benefit requires a different learned, available and paid reader keeping {{ current.collaborator }} at the same site.</p>
+      <p v-if="current.benefit.kind === 'library_care'" class="muted">The fixture holds one real damaged copy. Care cannot reach an absent copy or a book at the binder.</p>
+      <p v-if="current.benefit.kind === 'teaching' || current.benefit.kind === 'convalescence'" class="muted">The fixture provides an actual resident pupil or injured relative for the shared target evaluator.</p>
       <label>Reader <select v-model="sex"><option value="female">woman</option><option value="male">man</option></select></label>
       <button class="btn" :disabled="issues.length > 0" @click="evaluate">Evaluate the actual quote</button>
       <p v-if="preview">{{ preview.ok ? 'Available' : preview.reason }} · {{ preview.preparation }} crowns to prepare

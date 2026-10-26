@@ -2347,6 +2347,11 @@ const mysticWiring: ValidationRule = {
   check(content) {
     const issues: Issue[] = [];
     const seen = new Set<string>();
+    for (const t of content.characterTemplates) for (const id of t.spellsKnown ?? []) {
+      const book = content.spellbook(id);
+      if (!book) issues.push(err(this.id, `character:${t.id}`, `completed training names unknown book '${id}'`));
+      else if (t.sex === 'any' ? !canLearn('female', book.affinity) : !canLearn(t.sex, book.affinity)) issues.push(err(this.id, `character:${t.id}`, 'completed training must obey sex learnability'));
+    }
     for (const w of content.mysticWorkings) {
       const at = `mysticWorking:${w.id}`;
       if (seen.has(w.id)) issues.push(err(this.id, at, 'duplicate working id'));
@@ -2361,6 +2366,18 @@ const mysticWiring: ValidationRule = {
           case 'library_care': return ['light', 'death', 'darkness'].includes(w.affinity);
           case 'household_provision': return ['thermal', 'death', 'aero'].includes(w.affinity);
           case 'teaching': return w.affinity === 'light';
+          case 'commission':
+            switch (benefit.domain) {
+              case 'waterworks': return w.affinity === 'fluid';
+              case 'workshop': return w.affinity === 'thermal';
+              case 'journey': return w.affinity === 'aero';
+              case 'funeral': return w.affinity === 'death';
+              case 'inspection': return w.affinity === 'light';
+              case 'confidence': return w.affinity === 'darkness';
+              case 'medicine': return w.affinity === 'life';
+              case 'survey': return w.affinity === 'terra';
+              default: return assertNever(benefit.domain, 'commission domain');
+            }
           case 'field_supply': return w.affinity === 'fluid' || w.affinity === 'thermal';
           case 'field_watch': return w.affinity === 'light' || w.affinity === 'aero';
           case 'field_concealment': return w.affinity === 'darkness';
