@@ -4278,3 +4278,98 @@ proseVariants:
     of: 49cdb8a62192a992
     plainenglish: "{PERSON} finished keeping {WORKING}. The account records {YEARS}
       paid years and {PRICE} crowns spent."
+  - address: core:messages#mystic.contract.busy
+    of: de23eb8e63840a5a
+    plainenglish: an outside service is still active, including the return trip
+  - address: core:messages#mystic.broker.pending
+    of: 3a3e1ed137b11e15
+    plainenglish: the current search has not finished
+  - address: core:messages#mystic.broker.interval
+    of: 802f6175241af279
+    plainenglish: another search can begin in {YEAR}
+  - address: core:messages#mystic.broker.cost
+    of: 6ea0d7df9c482203
+    plainenglish: the broker’s fee is unaffordable
+  - address: core:messages#mystic.broker.sent
+    of: b52d301909e0c09d
+    plainenglish: The house paid {PRICE} crowns for a search for a licensed
+      practitioner. The search should finish in {YEAR}. War and plague cause
+      delays; no affinity is guaranteed.
+  - address: core:messages#mystic.hire.person
+    of: baee1cc3a6fac8f7
+    plainenglish: this known licensed practitioner is unable or unwilling to accept the work
+  - address: core:messages#mystic.hire.scope
+    of: d4af6955ab8b2689
+    plainenglish: the licence does not permit this kind of work
+  - address: core:messages#mystic.hire.cost
+    of: f6742bad8c9577f1
+    plainenglish: the professional fee and preparation together are unaffordable
+  - address: core:messages#mystic.commission.reader
+    of: ac436b659ae9c1d1
+    plainenglish: outside commissions require an available practitioner with both a
+      licence and the completed books
+  - address: core:messages#mystic.commission.unavailable
+    of: 021ced34542bfdc8
+    plainenglish: this reader cannot currently accept the commission
+  - address: core:messages#mystic.commission.promise_lost
+    of: 854ae4c6f1bcfe0a
+    plainenglish: this return obligation has already ended
+  - address: core:messages#mystic.commission.client
+    of: 758ba2738a0eed7f
+    plainenglish: no known patron is currently reachable for this commission
+  - address: core:messages#mystic.commission.interval
+    of: 43e9c5e3b5b348c7
+    plainenglish: this patron will offer another commission in {YEAR} at the earliest
+  - address: core:messages#mystic.commission.unfunded
+    of: 6cd85960ed816cac
+    plainenglish: the patron cannot fund the agreed pay
+  - address: core:messages#mystic.commission.cost
+    of: 222c487c0b3bbeb0
+    plainenglish: the preparation fee is unaffordable
+  - address: core:messages#mystic.contract.started
+    of: 91ca668052586a94
+    plainenglish: "{PERSON} accepted {WORKING}. The preparation and professional
+      fees have been paid. Service starts in {YEAR}; the commitment also
+      includes travel back."
+  - address: core:messages#mystic.commission.no_promise
+    of: bfdc81d804771cfc
+    plainenglish: this return has no recorded client
+  - address: core:messages#mystic.broker.found
+    of: 839b6ec876f750d4
+    plainenglish: The search identified {PERSON}, a licensed practitioner. Offers
+      list the completed books. This contact may still be busy or unable to
+      accept work.
+  - address: core:messages#mystic.broker.empty
+    of: f0b50ca2f219c17e
+    plainenglish: The search found no practitioner able to accept work. Travel used
+      up the search fee.
+  - address: core:messages#mystic.contract.closed
+    of: 7ed54d75c4459dd1
+    plainenglish: The outside service for {PERSON} has ended. Available returnees
+      can take new work; captives remain in custody. Paid service and remaining
+      study are preserved.
+  - address: core:messages#mystic.contract.promise
+    of: 9a40b6fa9ddac98e
+    plainenglish: "{HOUSE} sent a letter about the promised return visit by a
+      qualified practitioner. The deadline passed without a visit. The
+      obligation continues even when the original practitioner dies."
+  - address: core:messages#mystic.contract.terms
+    of: 1a43292e40a21512
+    plainenglish: Searching costs {BROKER} crowns without guaranteeing an affinity.
+      Hiring an outside practitioner adds a {FEE} crown professional fee to
+      preparation and annual upkeep. Only one outside service may be active,
+      including travel back. Hires serve for {TERM} working years; commissions
+      show their funded income and duration. Travel prevents other duties, and
+      unfinished study pauses with its remaining years preserved. Finishing a
+      commission commits the house to send a trained reader back within
+      {PROMISE} years. That obligation survives the first practitioner’s death.
+  - address: core:messages#mystic.place.service
+    of: e72c2a04d1c8b428
+    plainenglish: the contracted work away from home
+  - address: core:messages#library.refuse.service
+    of: 11697913d948412f
+    plainenglish: an outside service currently occupies this reader
+  - address: core:messages#captivity.contractor_ransomed
+    of: e4befda047737d1c
+    plainenglish: "{CAPTOR} received {PRICE} crowns to release {PERSON}. The receipt
+      records the practitioner’s original household."

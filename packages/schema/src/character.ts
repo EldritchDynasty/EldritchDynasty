@@ -28,6 +28,7 @@ export const CharacterRoleS = z.enum([
   'ward',
   'hostage',
   'wanderer',    // turns up, is not explained
+  'practitioner', // a named professional found by an explicitly paid search
 ]);
 export type CharacterRole = z.infer<typeof CharacterRoleS>;
 
@@ -66,6 +67,8 @@ export const CharacterTemplateS = z.object({
   /** Nudges the rolled genome toward an intent WITHOUT pinning it. */
   bias: z.record(z.string(), z.number()).default({}),
   traits: z.array(z.string()).default([]),
+  /** Authored completed training, independent of rolled raw affinity. */
+  spellsKnown: z.array(z.string()).optional(),
   castSlots: z.array(z.string()).default([]),
   contract: RetainerContractS.optional(),
 

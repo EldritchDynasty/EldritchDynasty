@@ -10,6 +10,8 @@ import { landIncome } from './land.js';
 import { musterUpkeep } from './muster.js';
 import { mysticUpkeep } from './mystic.js';
 import { provisionSavings, noteProvisionSavings } from './mystic-civilian.js';
+import { commissionIncome, settleMysticContracts } from './mystic-contracts.js';
+import { deployedPeople, serviceReservation } from './presence.js';
 import { msg } from './messages.js';
 
 /**
@@ -185,6 +187,7 @@ export const DEBT_FLOOR = -120;
 
 export interface EconomyReport {
   income: number;
+  commissions?: number;
   upkeep: number;
   wages: number;
   tithe: number;
@@ -240,6 +243,7 @@ const LIVING_UP = 0.03;
 export function economyReading(ctx: SimCtx): EconomyReport {
   const w = ctx.world;
   const roster = hall(w, MAIN_BRANCH, w.year);
+  const awayOnService = new Set([...deployedPeople(ctx)].filter(id => serviceReservation(ctx, id) !== undefined));
 
   // Income derives from holdings, modified by the Head's Charm and standing
   // (issue #93, `land.ts`) — this comment used to describe a system that was
@@ -253,7 +257,9 @@ export function economyReading(ctx: SimCtx): EconomyReport {
   // "keep the profits" means for the treasury. `boughtBack` restores it
   // without ending the minority itself: buying the wardship back is the
   // house resuming the estate's management, not the ward turning sixteen.
-  const income = w.wardship && !w.wardship.boughtBack ? 0 : landIncome(ctx) * (1 + charm / 220);
+  const ordinaryIncome = w.wardship && !w.wardship.boughtBack ? 0 : landIncome(ctx) * (1 + charm / 220);
+  const commissions = commissionIncome(ctx);
+  const income = ordinaryIncome + commissions;
 
   let upkeep = STANDING_COST[w.respect];
   let wages = 0;
@@ -275,14 +281,14 @@ export function economyReading(ctx: SimCtx): EconomyReport {
     upkeep += UPKEEP_PER_HEAD;
     provisionCharges.set(p.id, UPKEEP_PER_HEAD + (w.year - p.born < 20 ? CHILD_SURCHARGE : 0));
     if (w.year - p.born < 20) upkeep += CHILD_SURCHARGE;
-    if (w.year - p.born >= WORKING_AGE) labour += LABOUR_PER_ADULT;
+    if (w.year - p.born >= WORKING_AGE && !awayOnService.has(p.id)) labour += LABOUR_PER_ADULT;
   }
 
   // The branches keep their own books and send up a tithe (concept §16).
   let tithe = 0;
   for (const b of activeBranches(w)) {
     const members = hall(w, b.id, w.year);
-    const working = members.filter((p) => w.year - p.born >= 16 && !p.contract).length;
+    const working = members.filter((p) => w.year - p.born >= 16 && !p.contract && !awayOnService.has(p.id)).length;
     tithe += working * TITHE_PER_ADULT * Math.max(0, 1 - b.grievance / 100);
     upkeep += members.length * KIN_UPKEEP_PER_HEAD;
     for (const p of members) provisionCharges.set(p.id, KIN_UPKEEP_PER_HEAD);
@@ -340,7 +346,8 @@ export function economyReading(ctx: SimCtx): EconomyReport {
   const provision = provisionSavings(ctx, provisionCharges);
   upkeep -= provision.reduce((sum, saved) => sum + saved.crowns, 0);
   const net = income + tithe + labour + resource - upkeep - wages - war - mystic;
-  return { income, upkeep, wages, tithe, labour, resource, war, mystic, net, ...(provision.length ? { provision } : {}) };
+  return { income, upkeep, wages, tithe, labour, resource, war, mystic, net,
+    ...(commissions ? { commissions } : {}), ...(provision.length ? { provision } : {}) };
 }
 
 /** Recurring gross receipts before a shock; careers have their own year phase. */
@@ -353,6 +360,7 @@ export function recurringGrossIncome(ctx: SimCtx): number {
 
 export function tickEconomy(ctx: SimCtx): EconomyReport {
   const w = ctx.world;
+  settleMysticContracts(ctx);
   const report = economyReading(ctx);
   noteProvisionSavings(ctx, report.provision ?? []);
   w.treasury += report.net;

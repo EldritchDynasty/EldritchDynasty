@@ -758,6 +758,215 @@ characterTemplates:
       done the work for a living. He keeps the night watch and not the
       tollgate, because he cannot read a toll book and has never said so.
 
+  - id: warranted_fluid_reader
+    title: A Warranted Water Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: male
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_calder
+        weight: 100
+    bias:
+      mind: 15
+      fluid: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_fluid
+      - greater_workings_of_fluid
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater fluid books, and quotes a term rather
+      than promising to be in two houses at once.
+  - id: warranted_thermal_reader
+    title: A Warranted Kiln Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: male
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_ilm
+        weight: 100
+    bias:
+      mind: 15
+      thermal: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_thermal
+      - greater_workings_of_thermal
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater thermal books, and quotes a term rather
+      than promising to be in two houses at once.
+  - id: warranted_aero_reader
+    title: A Warranted Wind Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: male
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_marrow
+        weight: 100
+    bias:
+      mind: 15
+      aero: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_aero
+      - greater_workings_of_aero
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater aero books, and quotes a term rather than
+      promising to be in two houses at once.
+  - id: warranted_terra_reader
+    title: A Warranted Ground Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: male
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_calder
+        weight: 100
+    bias:
+      mind: 15
+      terra: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_terra
+      - greater_workings_of_terra
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater terra books, and quotes a term rather
+      than promising to be in two houses at once.
+  - id: warranted_life_reader
+    title: A Warranted Carer
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: female
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_marrow
+        weight: 100
+    bias:
+      mind: 15
+      life: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_life
+      - greater_workings_of_life
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater life books, and quotes a term rather than
+      promising to be in two houses at once.
+  - id: warranted_death_reader
+    title: A Warranted Vigil Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: female
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_ilm
+        weight: 100
+    bias:
+      mind: 15
+      death: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_death
+      - greater_workings_of_death
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater death books, and quotes a term rather
+      than promising to be in two houses at once.
+  - id: warranted_light_reader
+    title: A Warranted Copy Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: female
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_calder
+        weight: 100
+    bias:
+      mind: 15
+      light: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_light
+      - greater_workings_of_light
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater light books, and quotes a term rather
+      than promising to be in two houses at once.
+  - id: warranted_darkness_reader
+    title: A Warranted Private Reader
+    role: practitioner
+    frequency: common
+    weight: 100
+    sex: female
+    ageAtArrival:
+      min: 32
+      max: 48
+    houses:
+      - house: house_marrow
+        weight: 100
+    bias:
+      mind: 15
+      darkness: 25
+    traits:
+      - colleges_warrant
+    spellsKnown:
+      - lesser_workings_of_darkness
+      - greater_workings_of_darkness
+    castSlots: []
+    naming: of_house
+    unique: true
+    blurb: The brass token is stamped for lawful paid work. This reader has
+      completed the lesser and greater darkness books, and quotes a term rather
+      than promising to be in two houses at once.
+
 proseVariants:
   - address: "content:characters/templates.yaml#characterTemplates[id=suitor_common_stock].title"
     of: "e10d8bf32cd86287"
@@ -1135,3 +1344,67 @@ proseVariants:
       Every time it is a different woman from the same house, but the marriage terms
       are always impossible to accept. The family still wonders what could have happened.
       Its records contain four letters about this, written by four people over 110 years.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_fluid_reader].title
+    of: 8d2d1db2ba4af84e
+    plainenglish: Licensed Fluid Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_fluid_reader].blurb
+    of: ee1af49b926bb327
+    plainenglish: This licensed professional has completed both fluid books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_thermal_reader].title
+    of: 2d40ce2160f8b84d
+    plainenglish: Licensed Thermal Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_thermal_reader].blurb
+    of: e90e6284166f3990
+    plainenglish: This licensed professional has completed both thermal books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_aero_reader].title
+    of: e8ccee11b1f95095
+    plainenglish: Licensed Aero Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_aero_reader].blurb
+    of: ba54fc50a41607f4
+    plainenglish: This licensed professional has completed both aero books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_terra_reader].title
+    of: 77563db683f4807a
+    plainenglish: Licensed Terra Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_terra_reader].blurb
+    of: 8b394fb1144dee3d
+    plainenglish: This licensed professional has completed both terra books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_life_reader].title
+    of: 0befe5bd54409559
+    plainenglish: Licensed Life Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_life_reader].blurb
+    of: 0f6bbdff182b9ceb
+    plainenglish: This licensed professional has completed both life books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_death_reader].title
+    of: a90530ca10a226d6
+    plainenglish: Licensed Death Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_death_reader].blurb
+    of: 8bb71cd1481c2de5
+    plainenglish: This licensed professional has completed both death books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_light_reader].title
+    of: f1665e641025d528
+    plainenglish: Licensed Light Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_light_reader].blurb
+    of: cd9acd877f8f457b
+    plainenglish: This licensed professional has completed both light books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_darkness_reader].title
+    of: febe03aeb8b0a22a
+    plainenglish: Licensed Darkness Practitioner
+  - address: content:characters/templates.yaml#characterTemplates[id=warranted_darkness_reader].blurb
+    of: 13308fe2e6cc7e3e
+    plainenglish: This licensed professional has completed both darkness books. They
+      charge a quoted fee, occupy one real assignment and must travel home after
+      the term.

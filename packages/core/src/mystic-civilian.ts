@@ -1,6 +1,25 @@
 import type { SimCtx } from './world.js';
 import { liveDuties, markUseful } from './mystic.js';
 import { resolvePresence } from './presence.js';
+import { assertNever, type MysticWorkingDef } from '@ed/schema';
+
+/** Application inventory used by the repertoire evidence; upgrades share an application. */
+export function civilianApplication(working: MysticWorkingDef): string | undefined {
+  const benefit = working.benefit;
+  switch (benefit.kind) {
+    case 'life_care': return benefit.maxWardAge === undefined ? 'ordinary_health' : 'infant_care';
+    case 'estate_protection': return `estate:${[...benefit.parcelKinds].sort().join(',')}`;
+    case 'project_support': return 'construction';
+    case 'library_care': return 'physical_library';
+    case 'household_provision': return 'provisions';
+    case 'convalescence': return 'recovery';
+    case 'teaching': return 'teaching';
+    case 'commission': return `commission:${benefit.domain}`;
+    case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment':
+    case 'household_protection': case 'covert_support': return undefined;
+    default: return assertNever(benefit, 'civilian application');
+  }
+}
 
 /** A real paid team at this holding, capped by its strongest role rather than summed. */
 export function improvementSupport(ctx: SimCtx, parcel: string) {
@@ -96,7 +115,10 @@ export function tickCivilianPractice(ctx: SimCtx): void {
     const rest = Math.max(w.year, (p.fieldRecoveryUntil ?? w.year) - benefit.recoveryYears);
     const accelerated = rest < (p.fieldRecoveryUntil ?? w.year);
     if (!healed && !accelerated) continue;
-    if (healed) p.acquired.health = (p.acquired.health ?? 0) + healed;
+    if (healed) {
+      p.acquired.health = (p.acquired.health ?? 0) + healed;
+      if (p.phenotype) p.phenotype.dirty = true;
+    }
     if (accelerated) p.fieldRecoveryUntil = rest;
     markUseful(a, w.year);
     a.service.healthRestored = (a.service.healthRestored ?? 0) + healed;

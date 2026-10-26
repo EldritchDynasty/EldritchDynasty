@@ -378,6 +378,16 @@ traits:
       He cleared the mill race above Wick in an afternoon. The village has not
       forgotten, and it has not been told what the afternoon cost.
 
+  - id: colleges_warrant
+    name: The Colleges’ Warrant
+    tags:
+      - mystic
+      - credential
+    acquisition:
+      kind: assigned
+    description: A stamped warrant licenses this person’s lawful paid Mystic work.
+      The token supplies no learning, affinity or place in an institution.
+
 proseVariants:
   - address: "content:traits.yaml#traits[id=reads_the_signs].name"
     of: "d8541b135021750f"
@@ -610,3 +620,11 @@ proseVariants:
     plainenglish: >-
       He cleared the mill stream above Wick in one afternoon. The village has not forgotten, and
       nobody has told it what that afternoon cost.
+  - address: content:traits.yaml#traits[id=colleges_warrant].name
+    of: dce44a60423f77d4
+    plainenglish: Licensed Mystic Practitioner
+  - address: content:traits.yaml#traits[id=colleges_warrant].description
+    of: 4cdca0cdb02b6c81
+    plainenglish: This person holds a legal warrant for paid Mystic work. Casting
+      still requires the actual completed books and available capacity; the
+      warrant grants neither knowledge nor an institutional post.

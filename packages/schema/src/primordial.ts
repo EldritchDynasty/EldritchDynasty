@@ -9,6 +9,7 @@ export const PRIMORDIAL_ACTOR_SLOT = 'PRIMORDIAL_ACTOR';
 
 /** Physical attendance, never inferred from ownership or a prose token. */
 export const SceneSiteS = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('service'), contract: z.string().min(1) }).strict().describe('runtime assignment target'),
   z.object({ kind: z.literal('book'), book: z.string().min(1) }).strict().describe('runtime assignment target'),
   z.object({ kind: z.literal('covert'), operation: z.string().min(1) }).strict().describe('runtime assignment target'),
   z.object({ kind: z.literal('person'), person: z.string() }).strict().describe('runtime assignment target'),

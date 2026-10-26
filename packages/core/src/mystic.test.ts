@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, type Person, type SceneSite } from '@ed/schema';
+import { ALL_AFFINITIES, asId, canLearn, type Person, type SceneSite } from '@ed/schema';
 import { DEBT_FLOOR, economyReading } from './economy.js';
 import { rollDeath } from './people/demography.js';
-import { beginStudy, canStudySpellbook, tickLibraryWear } from './people/library.js';
+import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
 import { beginImprovement, damageParcel, landView } from './land.js';
 import { order, tableView } from './table.js';
 import { lifeCareFor, mysticView, quoteDuty, wardedYieldFactor } from './mystic.js';
@@ -13,8 +13,14 @@ import { runYears } from './year/step.js';
 import { phase, place, testWorld } from './testing.js';
 import type { Rng } from './rng.js';
 import type { SimCtx } from './world.js';
-import { improvementSupport } from './mystic-civilian.js';
+import { civilianApplication, improvementSupport } from './mystic-civilian.js';
 import { tickEconomy } from './economy.js';
+import { hirePractitioner, honourServicePromise, outsideServicesView, quoteCommission, quoteHire, seekPractitioner, undertakeCommission } from './mystic-contracts.js';
+import { captureContractor, ransomCaptive } from './people/captivity.js';
+import { beginCommitment } from './muster.js';
+import { relate } from './people/relationships.js';
+import { libraryCare } from './mystic-civilian.js';
+import { attr } from './people/factory.js';
 
 /**
  * #1866 B / #1873 — the Life/Terra pilot's merge-blocking mechanism claims.
@@ -77,6 +83,21 @@ describe('learned collaborators change a paid land project (#1877)', () => {
 
 describe('recurring civilian readers (#1877)', () => {
   const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+  it('protects a physical copy from successful study wear without granting the pupil knowledge early', () => {
+    const { ctx } = world(); const book = 'lesser_workings_of_death';
+    ctx.world.library.set(book, { id: book, acquiredYear: 1041, condition: 80 });
+    const keeper = reader(ctx, 'female', [book], 'The keeper');
+    const pupil = reader(ctx, 'female', [], 'The pupil');
+    expect(order(ctx, { kind:'mysticAssign', person:keeper.id, working:'the_still_binding', target:{kind:'book',book} }).ok).toBe(true);
+    ctx.world.year++; phase('mystic',ctx);
+    ctx.world.studies.push({person:pupil.id,book,completes:ctx.world.year});
+    const control = loadGame(transport(saveGame(ctx)),bundle);
+    control.world.people.mustGet(keeper.id).spellsKnown=[];
+    expect(pupil.spellsKnown).toEqual([]);
+    expect(completeStudies(ctx)).toHaveLength(1); expect(completeStudies(control)).toHaveLength(1);
+    expect(ctx.world.library.get(book)!.condition).toBeGreaterThan(control.world.library.get(book)!.condition);
+    expect(pupil.spellsKnown).toContain(book);
+  });
   it('a named woman preserves a real copy, and losing only her learning restores its normal wear', () => {
     const { ctx } = world();
     const book = 'lesser_workings_of_death';
@@ -129,8 +150,11 @@ describe('recurring civilian readers (#1877)', () => {
     const p = reader(ctx, 'female', ['lesser_workings_of_life', 'greater_workings_of_life'], 'The carer');
     expect(order(ctx, { kind: 'mysticAssign', person: p.id, working: 'the_mending_watch', target: { kind: 'person', person: patient.id } }).ok).toBe(true);
     const control = loadGame(transport(saveGame(ctx)), bundle); control.world.people.mustGet(p.id).spellsKnown = [];
-    ctx.world.year++; control.world.year++; phase('mystic', ctx); phase('mystic', control);
+    ctx.world.year++; control.world.year++;
+    const beforeHealth=attr(patient,'health',ctx.genetics,ctx.world.year);
+    phase('mystic', ctx); phase('mystic', control);
     expect(patient.acquired.health).toBe(-5); expect(control.world.people.mustGet(patient.id).acquired.health).toBe(-8);
+    expect(attr(patient,'health',ctx.genetics,ctx.world.year)).toBeGreaterThan(beforeHealth);
     expect(patient.fieldRecoveryUntil).toBe(control.world.people.mustGet(patient.id).fieldRecoveryUntil! - 1);
   });
   it('earns a study year from three real lessons and preserves the lesson count across reload', () => {
@@ -149,6 +173,140 @@ describe('recurring civilian readers (#1877)', () => {
     expect(term.completes).toBe(due - 1);
     expect(ctx.world.mystic.assignments[0]!.service.studyYearsKept).toBe(1);
     expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+  });
+});
+
+describe('real outside service and inherited promises (#1877)', () => {
+  const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+  function professional(ctx: SimCtx, affinity: string) {
+    const p = reader(ctx, canLearn('female',affinity) ? 'female' : 'male',
+      [`lesser_workings_of_${affinity}`,`greater_workings_of_${affinity}`], 'The named professional');
+    p.membership = [{ house: asId('house_calder'), kind:'blood', from:1042 }];
+    p.traits.add(asId('colleges_warrant')); ctx.world.mystic.contacts.push(p.id);
+    return p;
+  }
+  function turn(ctx: SimCtx) { ctx.world.year++; phase('mystic',ctx); tickEconomy(ctx); }
+  it('keeps offer reads inert, charges one broker search and returns a real learned named person', () => {
+    const { ctx } = world(); const before=canonical(saveGame(ctx));
+    outsideServicesView(ctx); outsideServicesView(ctx);
+    expect(canonical(saveGame(ctx))).toBe(before);
+    const treasury=ctx.world.treasury; expect(seekPractitioner(ctx).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(treasury-3); expect(seekPractitioner(ctx).ok).toBe(false);
+    turn(ctx);
+    expect(ctx.world.mystic.contacts).toHaveLength(1);
+    const p=ctx.world.people.mustGet(ctx.world.mystic.contacts[0]!);
+    expect(p.traits.has(asId('colleges_warrant'))).toBe(true);
+    expect(p.spellsKnown).toHaveLength(2); expect(p.mintedFrom).toMatch(/^warranted_/);
+    expect(ctx.world.mystic.brokerSpent).toBe(3);
+    expect(outsideServicesView(ctx).hires.some(o=>o.order.person===p.id&&o.ok)).toBe(true);
+  });
+  it('requires actual books as well as the warrant, and cannot spend the same worker twice', () => {
+    const { ctx }=world(); const p=professional(ctx,'death'); const book='lesser_workings_of_death';
+    ctx.world.library.set(book,{id:book,condition:80,acquiredYear:1041});
+    const order={person:p.id,working:'the_still_binding',target:{kind:'book' as const,book}};
+    const quote=quoteHire(ctx,order);expect(quote).toMatchObject({ok:true,providerFee:8,workingFee:2,price:10});
+    p.spellsKnown=[];expect(quoteHire(ctx,order).ok).toBe(false);
+    p.spellsKnown=[asId(book)];p.traits.delete(asId('colleges_warrant'));expect(quoteHire(ctx,order).ok).toBe(false);
+    p.traits.add(asId('colleges_warrant'));const treasury=ctx.world.treasury;
+    expect(hirePractitioner(ctx,order).ok).toBe(true);expect(ctx.world.treasury).toBe(treasury-10);
+    expect(hirePractitioner(ctx,order).ok).toBe(false);
+    turn(ctx); const c=ctx.world.mystic.contracts[0]!;expect(libraryCare(ctx,book)).toBeDefined();
+    while(ctx.world.year<c.ends)turn(ctx);
+    expect(libraryCare(ctx,book)).toBeDefined(); // the whole last paid year remains covered
+    expect(c.result).toBe('fulfilled');turn(ctx);
+    expect(c.stage).toBe('closed');expect(libraryCare(ctx,book)).toBeUndefined();
+    expect(ctx.world.people.householdOf(p.id,ctx.world.year)).toBe('house_calder');
+    expect(ctx.world.mystic.services[0]!.contract).toBe(c.id);
+  });
+  it.each(bundle.bundle.mysticWorkings.filter(w=>w.benefit.kind==='commission'))('funds and actually serves $id through the one economy reader', working => {
+    const { ctx }=world();ctx.world.treasury=1000;
+    const p=professional(ctx,working.affinity);
+    const quote=quoteCommission(ctx,p.id,working.id,'house_marrow');expect(quote.ok,quote.reason).toBe(true);
+    const ordinary=ctx.world.treasury;
+    expect(undertakeCommission(ctx,p.id,working.id,'house_marrow').ok).toBe(true);
+    expect(ctx.world.treasury).toBe(ordinary-quote.price);
+    const c=ctx.world.mystic.contracts[0]!;
+    expect(ctx.world.mystic.foreignSpent?.house_marrow??0).toBe(quote.income);
+    const loaded=loadGame(transport(saveGame(ctx)),bundle);
+    while(ctx.world.year<c.ends){turn(ctx);turn(loaded);}
+    expect(c.worked).toBe(2);expect(c.payments.reduce((n,p)=>n+p.amount,0)).toBe(quote.income);
+    expect(economyReading(ctx).commissions??0).toBe(quote.income/2);
+    expect(c.result).toBe('fulfilled');
+    turn(ctx);turn(loaded);expect(c.stage).toBe('closed');expect(c.renewBy).toBe(ctx.world.year+20);
+    expect(canonical(saveGame(loaded))).toBe(canonical(saveGame(ctx)));
+  });
+  it('returns only unearned client money after withdrawal and keeps people/study committed until return', () => {
+    const { ctx }=world();const p=reader(ctx,'female',['lesser_workings_of_death','greater_workings_of_death'],'The family reader');
+    p.traits.add(asId('colleges_warrant'));
+    const book='lesser_workings_of_light';ctx.world.library.set(book,{id:book,condition:100,acquiredYear:1041});
+    ctx.world.studies.push({person:p.id,book,completes:ctx.world.year+4});
+    expect(undertakeCommission(ctx,p.id,'the_funeral_contract','house_marrow').ok).toBe(true);
+    const c=ctx.world.mystic.contracts[0]!;turn(ctx);expect(c.worked).toBe(1);
+    expect(order(ctx,{kind:'mysticRelease',assignment:ctx.world.mystic.assignments[0]!.id}).ok).toBe(true);
+    expect(c.stage).toBe('returning');expect(ctx.world.studies.some(s=>s.person===p.id)).toBe(false);
+    expect(ctx.world.mystic.pauses.find(s=>s.person===p.id)?.assignment).toBe(c.id);
+    turn(ctx);expect(c.stage).toBe('closed');expect(c.payments.reduce((n,p)=>n+p.amount,0)).toBe(8);
+    expect(ctx.world.mystic.foreignSpent?.house_marrow).toBe(8);
+    expect(ctx.world.studies.find(s=>s.person===p.id)).toMatchObject({book,completes:ctx.world.year-1+4});
+  });
+  it('retains an actual house obligation after the original worker and patron die', () => {
+    const { ctx }=world();const p=professional(ctx,'death');
+    expect(undertakeCommission(ctx,p.id,'the_funeral_contract','house_marrow').ok).toBe(true);
+    const c=ctx.world.mystic.contracts[0]!;while(c.stage!=='closed')turn(ctx);
+    ctx.world.people.kill(p.id,ctx.world.year,'test');ctx.world.people.kill(c.patronActor!,ctx.world.year,'test');
+    ctx.world.year=c.renewBy!;turn(ctx);
+    expect(c.promiseBrokenAt).toBe(ctx.world.year);
+    const grievance=[...ctx.world.relationships.values()].find(r=>r.from==='house_marrow'&&r.to===ctx.world.playerHouse)!;
+    expect(grievance.grudges.some(g=>g.inheritance==='house_wide'&&g.severity>=15)).toBe(true);
+    const count=grievance.grudges.length;turn(ctx);expect(grievance.grudges).toHaveLength(count);
+  });
+  it('honours a late inherited return with a successor despite exhausted client funds, retaining the grievance', () => {
+    const { ctx }=world();const first=professional(ctx,'death');
+    expect(undertakeCommission(ctx,first.id,'the_funeral_contract','house_marrow').ok).toBe(true);
+    const original=ctx.world.mystic.contracts[0]!;while(original.stage!=='closed')turn(ctx);
+    ctx.world.people.kill(first.id,ctx.world.year,'test');
+    ctx.world.people.kill(original.patronActor!,ctx.world.year,'test');
+    ctx.world.year=original.renewBy!;turn(ctx);
+    const successor=professional(ctx,'death');ctx.world.mystic.foreignSpent={house_marrow:1_000_000};
+    const grievances=[...ctx.world.relationships.values()].flatMap(r=>r.grudges).map(g=>g.id);
+    expect(outsideServicesView(ctx).returns.some(o=>o.order.person===successor.id&&o.ok)).toBe(true);
+    expect(honourServicePromise(ctx,successor.id,original.id).ok).toBe(true);
+    const renewed=ctx.world.mystic.contracts.at(-1)!;
+    while(renewed.stage!=='closed')turn(ctx);
+    expect(renewed).toMatchObject({result:'fulfilled',satisfiesPromise:original.id,escrow:0});
+    expect(renewed.payments.reduce((n,p)=>n+p.amount,0)).toBe(0);
+    expect(original.promiseAnswered).toBe(true);
+    expect([...ctx.world.relationships.values()].flatMap(r=>r.grudges).map(g=>g.id)).toEqual(grievances);
+    expect(ctx.world.mystic.foreignSpent.house_marrow).toBe(1_000_000);
+  });
+  it('does not count a capped favour as a material use', () => {
+    const { ctx }=world();const p=professional(ctx,'darkness');
+    relate(ctx.world,'house_marrow',ctx.world.playerHouse,100);
+    expect(undertakeCommission(ctx,p.id,'the_closed_meeting','house_marrow').ok).toBe(true);
+    const c=ctx.world.mystic.contracts[0]!;while(c.stage!=='closed')turn(ctx);
+    expect(c.result).toBe('fulfilled');expect(ctx.world.mystic.services[0]!.service.usefulYears).toBe(0);
+  });
+  it('captures and ransoms an actual hired field reader through ordinary custody, preserving the foreign home', () => {
+    const { ctx }=world();const p=professional(ctx,'thermal');
+    const commitment=beginCommitment(ctx,5,'the_wars');
+    const working=bundle.bundle.mysticWorkings.find(w=>w.affinity==='thermal'&&w.benefit.kind==='field_supply')!;
+    expect(hirePractitioner(ctx,{person:p.id,working:working.id,target:{kind:'muster',commitment:commitment.id}}).ok).toBe(true);
+    expect(captureContractor(ctx,p.id,'house_marrow',12)).toBe(true);
+    expect(p.captivity?.home.house).toBe('house_calder');
+    const c=ctx.world.mystic.contracts[0]!;while(c.stage!=='closed')turn(ctx);
+    expect(c.result).toBe('failed');expect(p.captivity).toBeDefined();
+    const loaded=loadGame(transport(saveGame(ctx)),bundle);const before=loaded.world.treasury;
+    expect(ransomCaptive(loaded,p.id).ok).toBe(true);expect(loaded.world.treasury).toBe(before-12);
+    expect(loaded.world.people.householdOf(p.id,loaded.world.year)).toBe('house_calder');
+    expect(ransomCaptive(loaded,p.id).ok).toBe(false);
+  });
+  it('has three distinct civilian applications and one conflict reader per canonical affinity', () => {
+    for(const affinity of ALL_AFFINITIES){
+      const works=bundle.bundle.mysticWorkings.filter(w=>w.affinity===affinity);
+      const applications=new Set(works.map(civilianApplication).filter(application=>application!==undefined));
+      expect(applications.size,affinity).toBeGreaterThanOrEqual(3);
+      expect(works.some(w=>civilianApplication(w)===undefined),affinity).toBe(true);
+    }
   });
 });
 
@@ -422,6 +580,6 @@ describe('duties survive save and load (#1873)', () => {
     delete saved.mystic;
     saved.format = 33;
     const loaded = loadGame(saved, bundle);
-    expect(loaded.world.mystic).toEqual({ assignments: [], services: [], pauses: [] });
+    expect(loaded.world.mystic).toEqual({ assignments: [], services: [], contracts: [], contacts: [], pauses: [] });
   });
 });

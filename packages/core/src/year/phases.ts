@@ -26,6 +26,7 @@ import {
 import { tickMuster } from '../muster.js';
 import { tickMystic } from '../mystic.js';
 import { tickCivilianPractice } from '../mystic-civilian.js';
+import { prepareMysticContracts } from '../mystic-contracts.js';
 import { tickEconomy } from '../economy.js';
 import { tickCondition } from '../people/condition.js';
 import { tickAssize } from '../assize.js';
@@ -177,6 +178,7 @@ export const YEAR_PHASES: readonly Phase[] = [
       + 'a year nobody paid for, or from somebody who left last winter (#1873). Draws no dice and '
       + 'writes nothing while the house keeps no duty.',
     run({ ctx }) {
+      prepareMysticContracts(ctx);
       tickMystic(ctx);
       tickCivilianPractice(ctx);
     },

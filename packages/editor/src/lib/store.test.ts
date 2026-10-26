@@ -769,6 +769,23 @@ describe('creating something new by appending to a file', () => {
 
 
 describe('authored Plain English variants (#414)', () => {
+  it('round-trips civilian applications, learned collaboration and outside training (#1877)', async () => {
+    for (const id of ['setting_the_culverts', 'the_still_binding', 'the_mending_watch', 'the_readers_lamp', 'the_kiln_contract']) {
+      const working = store.bundle.mysticWorkings.find(w => w.id === id)!;
+      working.upkeep += .05;
+      const expected = JSON.parse(JSON.stringify(working));
+      markDirty('mysticWorkings', id);
+      expect((await saveItem('mysticWorkings', id)).ok).toBe(true);
+      const loaded = assembleBundle(Object.fromEntries(h.disk), parse);
+      expect(loaded.mysticWorkings.find(w => w.id === id)).toEqual(expected);
+    }
+    const template = store.bundle.characterTemplates.find(p => p.id === 'warranted_life_reader')!;
+    template.spellsKnown = [...template.spellsKnown!, 'lesser_workings_of_light'];
+    markDirty('characterTemplates', template.id);
+    expect((await saveCharacterTemplate(template.id)).ok).toBe(true);
+    const loaded = assembleBundle(Object.fromEntries(h.disk), parse);
+    expect(loaded.characterTemplates.find(p => p.id === template.id)?.spellsKnown).toEqual(template.spellsKnown);
+  });
   it('round-trips an expedition support role without changing another working', async () => {
     const working = store.bundle.mysticWorkings.find(w => w.id === 'the_covered_approach')!;
     const sibling = structuredClone(rawContent().mysticWorking('the_returning_wind'));

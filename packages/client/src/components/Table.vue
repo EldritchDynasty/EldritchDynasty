@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import HouseholdSecurity from './HouseholdSecurity.vue';
 import CovertExpeditions from './CovertExpeditions.vue';
+import OutsideServices from './OutsideServices.vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
@@ -259,6 +260,8 @@ function confirmForcing(): void {
  */
 const dutyWho = ref<Record<string, string>>({});
 const dutyWhere = ref<Record<string, string>>({});
+const showUnlearned = ref(false);
+const visibleDuties = computed(() => props.table.mystic.offers.filter(offer => showUnlearned.value || offer.known));
 watch(() => props.table.mystic.offers, (offers) => {
   for (const offer of offers) {
     const who = dutyWho.value[offer.working] ?? '';
@@ -281,13 +284,16 @@ function dutyStatus(duty: TableView['mystic']['duties'][number]): string {
     case 'suspended': return local(`lapsed — ${duty.reason ?? ''}`, `stopped: ${duty.reason ?? ''}`);
   }
 }
-function dutyRecord(duty: TableView['mystic']['duties'][number]): string {
+function dutyRecord(duty: { service: TableView['mystic']['duties'][number]['service'] }): string {
   const s = duty.service;
   const parts = [local(`${s.servedYears} years kept`, `${s.servedYears} years active`)];
   if (s.livesKept) parts.push(local(`${s.livesKept} ${s.livesKept === 1 ? 'life' : 'lives'} kept`, `${s.livesKept} ${s.livesKept === 1 ? 'person' : 'people'} saved`));
   if (s.yieldKept) parts.push(local(`${s.yieldKept.toFixed(1)} of yield held`, `${s.yieldKept.toFixed(1)} yield saved`));
   if (s.menKept) parts.push(local(`${s.menKept} levy men kept`, `${s.menKept} levy men saved`));
-  if (s.crownsKept) parts.push(local(`${s.crownsKept.toFixed(1)} crowns kept on stores`, `${s.crownsKept.toFixed(1)} crowns saved on supplies`));
+  if (s.crownsKept) parts.push(local(`${s.crownsKept.toFixed(1)} crowns kept`, `${s.crownsKept.toFixed(1)} crowns saved`));
+  if (s.bookWearKept) parts.push(local(`${s.bookWearKept.toFixed(1)} page wear kept`, `${s.bookWearKept.toFixed(1)} book condition saved`));
+  if (s.healthRestored) parts.push(local(`${s.healthRestored.toFixed(1)} health restored`, `${s.healthRestored.toFixed(1)} health recovered`));
+  if (s.studyYearsKept) parts.push(local(`${s.studyYearsKept} reading years kept`, `${s.studyYearsKept} study years saved`));
   if (s.opportunities) parts.push(local(`${s.opportunities} useful sightings`, `${s.opportunities} useful sightings`));
   if (s.protections) parts.push(local(`${s.protections} protections used`, `${s.protections} protective interventions`));
   if (s.covertUses) parts.push(local(`${s.covertUses} useful expedition workings`, `${s.covertUses} useful operation effects`));
@@ -653,9 +659,9 @@ const MARRIAGE_ORDERS = [
     <!-- MYSTIC DUTIES (#1873). A finished book is a reader who can be set to
          keep something: one hall's sick, one parcel's banks. It is paid for
          every year and asked about never. -->
-    <div class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0) }">
+    <div class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0)" @click="shut['duties'] = !shut['duties']">{{ local('Standing duties', 'Mystic duties') }}</button>
+        <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0)" @click="shut['duties'] = !shut['duties']">{{ local('Standing duties', 'Mystic duties') }}</button>
       </h3>
       <p v-if="!table.mystic.duties.length" class="small dim">{{ local('Nobody keeps a working for the house.', 'No one has a Mystic duty.') }}</p>
       <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
@@ -667,13 +673,16 @@ const MARRIAGE_ORDERS = [
         <button class="small" :aria-label="local('Release', 'End duty') + ' ' + duty.name" @click="actions.order({ kind: 'mysticRelease', assignment: duty.id })">{{ local('Release', 'End duty') }}</button>
       </div>
       <p v-if="refusedIn('mysticRelease')" class="small rubric">{{ refusedIn('mysticRelease') }}</p>
-      <div v-for="offer in table.mystic.offers" :key="offer.working" class="line">
+      <label class="small dim"><input v-model="showUnlearned" type="checkbox"> {{ local('Include workings nobody has read for', 'Show workings without a trained reader') }}</label>
+      <div v-for="offer in visibleDuties" :key="offer.working" class="line">
         <div class="small"><strong>{{ offer.name }}</strong> <span class="dim">· {{ offer.affinity }} · {{ offer.preparation }} {{ local('crowns to make ready', 'crowns to prepare') }}<template v-if="offer.preparationYears">, {{ offer.preparationYears }} {{ offer.preparationYears === 1 ? 'year' : 'years' }}</template> · {{ offer.upkeep }} {{ local('a year', 'per year') }}</span></div>
         <p class="small dim blurb">{{ offer.description }}</p>
+        <p class="small dim">{{ local('Books read:', 'Required completed books:') }} {{ offer.books.join(', ') }}</p>
+        <p v-if="offer.collaborator" class="small dim">{{ local('Works only beside a different paid reader keeping', 'Requires a different available, paid reader doing') }} {{ offer.collaborator }} {{ local('at the same place.', 'at the same location.') }}</p>
         <p v-if="offer.fieldTerms" class="small dim">{{ offer.fieldTerms }}</p>
         <div class="row">
           <select v-model="dutyWho[offer.working]" :disabled="!offer.practitioners.length" :aria-label="local('Choose who keeps', 'Choose who does') + ' ' + offer.name">
-            <option value="">{{ offer.practitioners.length ? local('— whom —', '— choose reader —') : local('— nobody has read for it —', '— no qualified reader —') }}</option>
+            <option value="">{{ offer.practitioners.length ? local('— whom —', '— choose reader —') : offer.known ? local('— the reader is occupied or absent —', '— trained readers are unavailable —') : local('— nobody has read for it —', '— no trained reader —') }}</option>
             <option v-for="r in offer.practitioners" :key="r.person" :value="r.person">{{ r.name }}{{ r.studying ? local(' (sets a book down)', ' (pauses reading)') : '' }}</option>
           </select>
           <select v-model="dutyWhere[offer.working]" :disabled="!offer.targets.length" :aria-label="local('Choose where for', 'Choose the place for') + ' ' + offer.name">
@@ -684,13 +693,19 @@ const MARRIAGE_ORDERS = [
         </div>
       </div>
       <p v-if="refusedIn('mysticAssign')" class="small rubric">{{ refusedIn('mysticAssign') }}</p>
+      <details v-if="table.mystic.history.length" class="small">
+        <summary>{{ local('Closed service accounts', 'Past service accounts') }}</summary>
+        <div v-for="past in table.mystic.history" :key="past.id" class="line"><p>{{ past.account }}</p><p class="dim">{{ dutyRecord(past) }}</p></div>
+      </details>
     </div>
+
+    <OutsideServices :services="table.outsideServices" :actions="actions" :refusal="refusal" :prose-mode="proseMode" />
 
     <div class="panel captives" :class="{ idle: idle('captives', (table.captives?.length ?? 0) > 0) }">
       <h3 class="label">
         <button class="fold" :aria-expanded="!idle('captives', (table.captives?.length ?? 0) > 0)" @click="shut['captives'] = !shut['captives']">{{ local('Held away', 'Captive family') }}</button>
       </h3>
-      <p v-if="!table.captives?.length" class="small dim">{{ local('Nobody of the family is held for ransom.', 'No family member is being held for ransom.') }}</p>
+      <p v-if="!table.captives?.length" class="small dim">{{ local('Nobody on the house’s account is held for ransom.', 'No family member or contracted reader is held for ransom.') }}</p>
       <div v-for="held in table.captives ?? []" :key="held.person" class="line">
         <div class="small"><strong>{{ held.name }}</strong> · {{ local('held by', 'captive of') }} {{ held.captor }} {{ local('since', 'since the year') }} {{ held.since }}</div>
         <button class="small" :disabled="!held.ok" :aria-label="local('Ransom', 'Pay to free') + ' ' + held.name + ' — ' + held.price + ' crowns'" :aria-describedby="held.reason ? 'ransom-' + held.person : undefined" @click="actions.order({ kind: 'ransom', person: held.person })">{{ local('Bring them home', 'Pay for their release') }} — {{ held.price }} crowns</button>

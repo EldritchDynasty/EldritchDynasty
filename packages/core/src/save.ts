@@ -1,5 +1,5 @@
 import type {
-  Content, ContentBundle, Genome, MysticAssignment, Person, PersonId, RivalLineageState, SavedGame, StoredGenome, StoredPerson,
+  Content, ContentBundle, Genome, Person, PersonId, RivalLineageState, SavedGame, StoredGenome, StoredPerson,
   SpellbookId, TraitId,
 } from '@ed/schema';
 import { asId, AUTHORED_FOUNDER, indexContent, SAVE_FORMAT, SavedGameS } from '@ed/schema';
@@ -114,13 +114,7 @@ export function saveGame(ctx: SimCtx): SavedGame {
       tide: w.muster.tide,
       ...(w.muster.lastSettled !== undefined ? { lastSettled: w.muster.lastSettled } : {}),
     },
-    mystic: {
-      assignments: w.mystic.assignments.map(copyAssignment),
-      services: structuredClone(w.mystic.services),
-      pauses: w.mystic.pauses.map((p) => ({ ...p })),
-      ...(w.mystic.foreignSpent ? { foreignSpent: { ...w.mystic.foreignSpent } } : {}),
-      ...(w.mystic.reservedUpkeep ? { reservedUpkeep: { ...w.mystic.reservedUpkeep } } : {}),
-    },
+    mystic: structuredClone(w.mystic),
     library: [...w.library.entries()],
     auction: w.auction,
     marriagePromises: w.marriagePromises,
@@ -214,14 +208,6 @@ export type SavedMatchAgrees = Same<
   Extract<SavedGame['pendingDecisions'][number], { kind: 'match' }>
 >;
 export const SAVED_MATCH_AGREES: SavedMatchAgrees = true;
-
-function copyAssignment(a: MysticAssignment): MysticAssignment {
-  return {
-    ...a, target: structuredClone(a.target), bindings: { ...a.bindings }, service: { ...a.service },
-    ...(a.attended ? { attended: [...a.attended] } : {}),
-    ...(a.lesson ? { lesson: { ...a.lesson } } : {}),
-  };
-}
 
 export class SaveFormatError extends Error {
   constructor(message: string) {
@@ -373,13 +359,7 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
     tide: s.muster.tide,
     ...(s.muster.lastSettled !== undefined ? { lastSettled: s.muster.lastSettled } : {}),
   };
-  world.mystic = {
-    assignments: s.mystic.assignments.map(copyAssignment),
-    services: structuredClone(s.mystic.services),
-    pauses: s.mystic.pauses.map((p) => ({ ...p })),
-    ...(s.mystic.foreignSpent ? { foreignSpent: { ...s.mystic.foreignSpent } } : {}),
-    ...(s.mystic.reservedUpkeep ? { reservedUpkeep: { ...s.mystic.reservedUpkeep } } : {}),
-  };
+  world.mystic = structuredClone(s.mystic);
   world.library = new Map(s.library);
   world.auction = s.auction;
   world.marriagePromises = s.marriagePromises;
@@ -652,8 +632,11 @@ export function digest(save: SavedGame): string {
   // it is not simulation state and must not move deterministic fingerprints.
   delete value.contentSources;
   delete value.replayOrigin;
+  value.mystic = { ...save.mystic };
+  for (const key of ['contracts', 'contacts'] as const) {
+    if (!save.mystic[key].length) delete (value.mystic as Record<string, unknown>)[key];
+  }
   if (!save.mystic.services.length) {
-    value.mystic = { ...save.mystic };
     delete (value.mystic as Record<string, unknown>).services;
   }
   if (value.format === 41) value.format = 40;

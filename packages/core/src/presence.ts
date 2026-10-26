@@ -38,6 +38,10 @@ export function covertReservation(ctx: SimCtx, person: string): string | undefin
     && covertParticipants(ctx, o.plan.id).includes(person))?.plan.id;
 }
 
+export function serviceReservation(ctx: SimCtx, person: string): string | undefined {
+  return ctx.world.mystic.contracts.find(c => c.practitioner === person && c.stage !== 'closed')?.id;
+}
+
 /**
  * WHERE A STANDING DUTY PUTS SOMEBODY (#1873) — the one piece of persisted
  * whereabouts. A warden on a parcel is at the parcel; a carer sent to a hall
@@ -45,7 +49,7 @@ export function covertReservation(ctx: SimCtx, person: string): string | undefin
  * suspended household duty places nobody. A field reader remains deployed
  * during travel and suspension until that commitment returns or releases them.
  */
-export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string } | { operation: string };
+export type DutyPlace = { hall: string } | { parcel: string } | { commitment: string } | { operation: string } | { service: string };
 
 export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
   const w = ctx.world;
@@ -62,6 +66,7 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
 export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): DutyPlace | undefined {
   const w = ctx.world;
   switch (site.kind) {
+    case 'service': return ctx.world.mystic.contracts.some(c => c.id === site.contract && c.stage !== 'closed') ? { service: site.contract } : undefined;
     case 'book': return w.library.has(site.book) ? { hall: MAIN_BRANCH } : undefined;
     case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && o.stage !== 'closed')
       ? { operation: site.operation } : undefined;
@@ -96,6 +101,7 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
     ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
       && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
     ...ctx.world.covert.operations.filter(o => o.stage !== 'closed').flatMap(o => covertParticipants(ctx, o.plan.id)),
+    ...ctx.world.mystic.contracts.filter(c => c.stage !== 'closed' && (c.kind === 'commission' || c.stage !== 'working')).map(c => c.practitioner),
   ]);
 }
 
@@ -130,6 +136,16 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const named = (slots: readonly string[]) => slots.flatMap(slot => castIn(fill, slot));
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
+    case 'service': {
+      const c = w.mystic.contracts.find(c => c.id === site.contract && c.stage !== 'closed');
+      if (!c) return { site, people: [] };
+      const party = distinct([c.practitioner]);
+      if (c.stage !== 'working' || !c.patron) return { site, people: party };
+      const anchor = w.people.household(c.patron, w.year).find(p => free(ctx, p));
+      if (!anchor) return { site, people: party };
+      const hall = resolvePresence(ctx, { kind: 'hall', hall: { slot: 'CLIENT' } }, { CLIENT: anchor.id });
+      return { ...hall, site, people: distinct([...hall.people, ...party]) };
+    }
     case 'book': return w.library.has(site.book) && w.library.get(site.book)?.restoresAt === undefined
       ? { ...resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}), site } : { site, people: [] };
     case 'covert': {
