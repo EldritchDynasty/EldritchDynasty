@@ -1,11 +1,11 @@
 /** #1877/#1878: public-session strategies, paired fixed seeds and inert full-save observers.
- * Run with tsx --tsconfig tsconfig.base.json <this file> [runs=24] [seedBase=187700] [output.json].
+ * Run with tsx --tsconfig tsconfig.base.json <this file> [runs=24] [seedBase=187700] [output.json] [ordinary|hostile].
  * Descriptive evidence; failed product goals remain findings, never substitute gate passes.
  */
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { ALL_AFFINITIES, RESPECT_ORDER, type AffinityName, type Content, type MysticService, type TableOrder } from '@ed/schema';
+import { ALL_AFFINITIES, RESPECT_ORDER, RUNG_ORDER, type AffinityName, type Content, type MysticService, type TableOrder } from '@ed/schema';
 import { CAMPAIGNS } from '../campaign.js';
 import { livingBlood } from '../ending.js';
 import { landCrownsPerYield } from '../land.js';
@@ -20,7 +20,9 @@ import { meanEvidence, rateEvidence } from './mystic-baseline.js';
 
 export const REPERTOIRE_POLICIES = ['no_extra', 'narrow', 'broad'] as const;
 type Policy = typeof REPERTOIRE_POLICIES[number];
+type Scenario = 'ordinary' | 'hostile';
 const focusOf = (policy: Policy): readonly AffinityName[] => policy === 'narrow' ? ['death', 'darkness'] : ALL_AFFINITIES;
+const TOOL_HASH = createHash('sha256').update(readFileSync(new URL(import.meta.url))).digest('hex');
 
 /** At most one training purchase/order each year. Only public quotes and completed books guide it. */
 function train(s: GameSession, content: Content, focus: readonly AffinityName[], elapsed: number, send: (o: TableOrder) => boolean): void {
@@ -86,17 +88,25 @@ function practise(s: GameSession, content: Content, focus: readonly AffinityName
     send({kind:'mysticSearch'});
 }
 
-type RecordRow = { working: string; practitioner: string; started: number; ended?: number; service: MysticService };
+type RecordRow = { working: string; practitioner: string; started: number; ended?: number; contract?: string; service: MysticService };
 const hashSave = (s: GameSession) => createHash('sha256').update(canonical({...s.save(),savedAt:''})).digest('hex');
 
-export function playRepertoireCampaign(content: Content, seed: number, campaign: 'short'|'long', policy: Policy, observed = true) {
+export function playRepertoireCampaign(content: Content, seed: number, campaign: 'short'|'long', policy: Policy, observed = true, scenario: Scenario = 'ordinary') {
   const s = newGame(content,{seed,campaign,decider:'chronicler'}); const ledger=emptyMysticLedger();
+  if (scenario === 'hostile') {
+    const prologue = s.prologue()!;
+    const founded = s.found({ houseName: 'The Eldritch House', heirloom: prologue.heirlooms[0]!.heirloom, grudge: prologue.grudges[0]!.house });
+    if (!founded.ok) throw Error(`Public founding refused: ${founded.reason}`);
+  }
   const metrics = { orders:0, refused:0, orderSpending:{} as Record<string,number>, decisionAnswers:0,
     availablePersonYears:0, trainedUnassignedPersonYears:0, dutyYears:0, paidDutyYears:0, pausedStudyYears:0,
     homeCoverageLostYears:0, fieldYears:0, outsideYears:0, enemyPaidDutyYears:0, yieldCoinEstimate:0,
     byWorking:{} as Record<string,{availableYears:number;selectedYears:number;paidYears:number}>, records:{} as Record<string,RecordRow>,
-    trainedGenerations:[] as number[], usefulDomains:{} as Record<string,string[]> };
-  if(observed){attachMysticLedger(s.ctx,ledger);s.ctx.observeDecision=()=>{metrics.decisionAnswers++;};}
+    trainedGenerations:[] as number[], usefulDomains:{} as Record<string,string[]>, captures:[] as {person:string;since:number}[],
+    decisionKinds:{} as Record<string,number>, studyingByPerson:{} as Record<string,number> };
+  if(observed){attachMysticLedger(s.ctx,ledger);s.ctx.observeDecision=({decision})=>{
+    metrics.decisionAnswers++;metrics.decisionKinds[decision.kind]=(metrics.decisionKinds[decision.kind]??0)+1;
+  };}
   const send=(o:TableOrder)=>{
     const before=s.ctx.world.treasury;const result=s.order(o);
     if(observed){metrics.orders++;if(!result.ok)metrics.refused++;else metrics.orderSpending[o.kind]=(metrics.orderSpending[o.kind]??0)+before-s.ctx.world.treasury;
@@ -106,6 +116,7 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
   const previousYield = new Map<string,number>();
   const sample=()=>{
     const ctx=s.ctx,w=ctx.world;sampleMysticYear(ctx,ledger);
+    for (const term of w.studies) metrics.studyingByPerson[term.person]=(metrics.studyingByPerson[term.person]??0)+1;
     const family=w.people.household(w.playerHouse,w.year);const available=new Set<string>();
     const assigned=new Set(w.mystic.assignments.filter(a=>!a.house).map(a=>a.practitioner));
     const commissions=outsideServicesView(ctx).commissions;
@@ -133,7 +144,9 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
     if(family.some(p=>p.spellsKnown.length)&&!metrics.trainedGenerations.includes(generation))metrics.trainedGenerations.push(generation);
     for(const a of [...w.mystic.services,...w.mystic.assignments].filter(a=>!a.house)){
       const ended='ended' in a&&typeof a.ended==='number'?a.ended:undefined;
-      metrics.records[a.id]={working:a.working,practitioner:a.practitioner,started:a.started,ended,service:structuredClone(a.service)};
+      metrics.records[a.id]={working:a.working,practitioner:a.practitioner,started:a.started,ended,contract:a.contract,service:structuredClone(a.service)};
+      const captivity=w.people.get(a.practitioner)?.captivity;
+      if(captivity&&!metrics.captures.some(c=>c.person===a.practitioner&&c.since===captivity.since))metrics.captures.push({person:a.practitioner,since:captivity.since});
       const last=previousYield.get(a.id)??0;const now=a.service.yieldKept;
       metrics.yieldCoinEstimate+=Math.max(0,now-last)*landCrownsPerYield(ctx);previousYield.set(a.id,now);
       if(a.service.lastUseful===w.year){
@@ -144,17 +157,51 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
   };
   for(let elapsed=0;elapsed<CAMPAIGNS[campaign].years&&!s.ctx.world.ending;elapsed++){
     if(s.pending.length)s.letHimDecide();
+    if(scenario==='hostile'){
+      // Common, nonmagical policy in every column. All terms come from the
+      // public Table; a known warning never reveals the hidden sponsor.
+      const table=s.table();
+      for(const captive of table.captives)if(captive.ok&&table.treasury>=captive.price+40)send({kind:'ransom',person:captive.person});
+      const response=table.security.threats[0]?.options.filter(o=>o.ok&&o.price>0&&o.price+40<=table.treasury).sort((a,b)=>b.price-a.price)[0];
+      if(response)send(response.order);
+      if(elapsed%25===0){
+        const offer=table.expeditions.offers.filter(o=>o.ok&&o.order.preparation==='hasty'&&o.price+100<=table.treasury)
+          .sort((a,b)=>a.targetName.localeCompare(b.targetName)||a.operativeName.localeCompare(b.operativeName))[0];
+        if(offer)send(offer.order);
+      }
+    }
     if(policy!=='no_extra'){practise(s,content,focusOf(policy),elapsed,send);train(s,content,focusOf(policy),elapsed,send);}
     // Identical nonmagical project policy in every column; a real quote pays for every project.
     if(elapsed%20===0){const parcel=s.land().held.find(p=>p.canImprove&&p.improveCost+40<=s.table().treasury);if(parcel)send({kind:'improve',parcel:parcel.parcel});}
     s.keepSuggestedNames();s.advance();if(observed)sample();
   }
-  const w=s.ctx.world,records=Object.values(metrics.records),contracts=w.mystic.contracts;
+  const w=s.ctx.world,contracts=w.mystic.contracts;
+  const records:RecordRow[]=[...w.mystic.services,...w.mystic.assignments].filter(a=>!a.house).map(a=>({
+    working:a.working,practitioner:a.practitioner,started:a.started,contract:a.contract,
+    ended:'ended' in a&&typeof a.ended==='number'?a.ended:undefined,service:structuredClone(a.service),
+  }));
   const sum=(read:(service:MysticService)=>number)=>records.reduce((n,r)=>n+read(r.service),0);
   const externalFees=(w.mystic.brokerSpent??0)+contracts.reduce((n,c)=>n+c.providerFee,0);
   const commissionIncome=contracts.reduce((n,c)=>n+c.payments.reduce((p,r)=>p+r.amount,0),0);
   const acquisition=Object.values(ledger.costs).reduce((a,b)=>a+b,0);
-  return {seed,campaign,policy,years:s.year-CAMPAIGNS[campaign].startYear,fullSaveHash:hashSave(s),metrics,ledger,
+  const readers=new Set(records.map(r=>r.practitioner));
+  const contentChoices=w.decisionLog.filter(row=>{
+    if(row.kind!=='outcome')return false;
+    const event=content.event(row.event);
+    return event!==undefined&&(Object.values(event.slots).some(slot=>slot.castBy==='player')
+      || event.interaction.kind!=='narration'&&(event.interaction.decidedBy==='player'
+        || typeof event.interaction.decidedBy==='object'&&'party' in event.interaction.decidedBy));
+  }).length;
+  const recordChoices=w.decisionLog.filter(row=>row.kind==='record').length;
+  const matchChoices=w.decisionLog.filter(row=>row.kind==='match').length;
+  const politicalWork=contracts.filter(c=>c.result==='fulfilled'&&content.mysticWorking(c.working)?.benefit.kind==='commission'
+    && records.some(r=>r.contract===c.id&&r.service.usefulYears>0));
+  return {seed,campaign,policy,scenario,years:s.year-CAMPAIGNS[campaign].startYear,fullSaveHash:hashSave(s),metrics,ledger,
+    decisionLoad:{contentChoices,recordChoices,matchChoices,total:contentChoices+recordChoices+matchChoices,
+      tableOrders:w.decisionLog.filter(row=>row.kind==='command'&&row.command.kind==='order').length,
+      namingRecords:w.decisionLog.filter(row=>row.kind==='name').length},
+    fieldCaptureEpisodes:w.muster.commitments.flatMap(c=>(c.fieldService??[]).filter(s=>s.fate==='captured')
+      .map(s=>({commitment:c.id,person:s.practitioner,year:s.ended,working:s.working}))),
     treasury:w.treasury,blood:livingBlood(w),population:w.people.household(w.playerHouse,w.year).length,
     standing:RESPECT_ORDER.indexOf(w.respect),ascension:w.ascension.best,ending:w.ending?.id,
     livesKept:sum(s=>s.livesKept),menKept:sum(s=>s.menKept??0),healthRestored:sum(s=>s.healthRestored??0),
@@ -162,12 +209,18 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
     coin:{directSavings:sum(s=>s.crownsKept??0),yieldEstimate:metrics.yieldCoinEstimate,commissionIncome,serviceSpent:sum(s=>s.spent),externalFees,acquisition,
       netAttributed:sum(s=>(s.crownsKept??0)-s.spent)+metrics.yieldCoinEstimate+commissionIncome-externalFees-acquisition},
     contracts:{started:contracts.length,fulfilled:contracts.filter(c=>c.result==='fulfilled').length,promises:contracts.filter(c=>c.renewBy!==undefined).length,
-      broken:contracts.filter(c=>c.promiseBrokenAt!==undefined).length,honoured:contracts.filter(c=>c.promiseAnswered).length},
+      broken:contracts.filter(c=>c.promiseBrokenAt!==undefined).length,honoured:contracts.filter(c=>c.promiseAnswered).length,
+      materialCompletions:politicalWork.length,successorReturns:contracts.filter(c=>c.satisfiesPromise&&contracts.find(old=>old.id===c.satisfiesPromise)?.practitioner!==c.practitioner).length},
+    contractAccounts:structuredClone(contracts),
+    namedServiceReceipts:w.chronicle.filter(entry=>entry.named&&entry.people?.some(id=>readers.has(id)))
+      .map(entry=>({year:entry.year,people:(entry.people??[]).map(id=>({id,name:w.people.get(id)?.name??id})),text:entry.text})),
     threats:{attempts:w.covert.threats.length,warned:w.covert.threats.filter(t=>t.warned).length,
       prevented:w.covert.threats.filter(t=>t.observation?.result==='prevented').length,
       dead:w.covert.threats.filter(t=>t.observation?.result==='dead').length,wounded:w.covert.threats.filter(t=>t.observation?.result==='wounded').length,
       attributed:w.covert.threats.filter(t=>t.observation?.identifiedOperative).length,
-      operations:w.covert.operations.length,exposed:w.covert.operations.filter(o=>o.exposure).length,court:w.covert.operations.filter(o=>o.exposure?.heardAt).length,
+      operations:w.covert.operations.length,operationResults:w.covert.operations.map(o=>({id:o.plan.id,result:o.result,fate:o.operativeFate,
+        target:o.plan.target,operative:o.plan.operative,exposure:o.exposure,receipt:o.receipt})),
+      exposed:w.covert.operations.filter(o=>o.exposure).length,court:w.covert.operations.filter(o=>o.exposure?.heardAt).length,
       inheritedGrudges:[...w.relationships.values()].flatMap(r=>r.grudges).filter(g=>g.originEvent==='covert_operation_attempt'&&g.inheritance==='house_wide').length},
     readerDeathsDuringService:new Set(records.filter(r=>{const died=w.people.get(r.practitioner)?.died;
       return died!==undefined&&died>=r.started&&(r.ended===undefined||died<=r.ended);}).map(r=>r.practitioner)).size,
@@ -177,30 +230,41 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
 
 type Run=ReturnType<typeof playRepertoireCampaign>;
 export function summariseRepertoire(runs:readonly Run[],content:Content=loadContent()){
-  return (['short','long'] as const).flatMap(campaign=>REPERTOIRE_POLICIES.map(policy=>{
-    const rows=runs.filter(r=>r.campaign===campaign&&r.policy===policy);if(!rows.length)return undefined;
-    const controls=new Map(runs.filter(r=>r.campaign===campaign&&r.policy==='no_extra').map(r=>[r.seed,r]));
+  return [...new Set(runs.map(r=>r.scenario??'ordinary'))].flatMap(scenario=>(['short','long'] as const).flatMap(campaign=>REPERTOIRE_POLICIES.map(policy=>{
+    const rows=runs.filter(r=>(r.scenario??'ordinary')===scenario&&r.campaign===campaign&&r.policy===policy);if(!rows.length)return undefined;
+    const controls=new Map(runs.filter(r=>(r.scenario??'ordinary')===scenario&&r.campaign===campaign&&r.policy==='no_extra').map(r=>[r.seed,r]));
     const estimate=(read:(r:Run)=>number)=>meanEvidence(rows.map(read));
     const paired=(read:(r:Run)=>number)=>meanEvidence(rows.map(r=>read(r)-read(controls.get(r.seed)!)));
     const eligible=rows.filter(r=>Object.values(r.metrics.records).some(d=>d.service.servedYears>=10||d.service.firstUsefulAt!==undefined));
     const within=(r:Run)=>{const duties=Object.values(r.metrics.records).filter(d=>d.service.servedYears>=10||d.service.firstUsefulAt!==undefined);
       return duties.filter(d=>d.service.firstUsefulAt!==undefined&&d.service.firstUsefulAt<=10).length>duties.length/2;};
     const trained=rows.filter(r=>r.metrics.trainedGenerations.length);
+    const allDuties=rows.flatMap(r=>Object.values(r.metrics.records));
+    const firstUses=rows.map(r=>Object.values(r.metrics.records).flatMap(d=>d.service.firstUsefulAt===undefined?[]:[d.service.firstUsefulAt]))
+      .filter(values=>values.length).map(values=>values.reduce((a,b)=>a+b,0)/values.length);
     // Older report rows named parcel scopes separately. A broader protection
     // scope is an upgrade, not a second application, in every cohort.
-    const domains=(r:Run)=>r.metrics.trainedGenerations.reduce((n,g)=>n+new Set((r.metrics.usefulDomains[g]??[])
-      .filter(d=>d!=='conflict').map(d=>d.startsWith('estate:')?'estate_protection':d)).size,0)/r.metrics.trainedGenerations.length;
+    const domains=(r:Run,civilianOnly=false)=>r.metrics.trainedGenerations.reduce((n,g)=>n+new Set((r.metrics.usefulDomains[g]??[])
+      .filter(d=>!civilianOnly||d!=='conflict').map(d=>d.startsWith('estate:')?'estate_protection':d)).size,0)/r.metrics.trainedGenerations.length;
     const goal=(evaluate:()=>number)=>{try{return {supported:true,marginSE:evaluate()};}catch(e){return {supported:false,reason:(e as Error).message};}};
-    return {campaign,policy,runs:rows.length,years:rows.reduce((n,r)=>n+r.years,0),
+    return {campaign,policy,scenario,runs:rows.length,years:rows.reduce((n,r)=>n+r.years,0),
       trainedHouseFraction:rateEvidence(trained.length,rows.length),practitionerYears:estimate(r=>r.ledger.practitionerYears),
       untrainedHouseYears:estimate(r=>r.ledger.sampledYears-r.ledger.trainedHouseYears),availablePersonYears:estimate(r=>r.metrics.availablePersonYears),
       trainedUnassignedPersonYears:estimate(r=>r.metrics.trainedUnassignedPersonYears),dutyYears:estimate(r=>r.metrics.dutyYears),
       paidDutyYears:estimate(r=>r.metrics.paidDutyYears),pausedStudyYears:estimate(r=>r.metrics.pausedStudyYears),
       homeCoverageLostYears:estimate(r=>r.metrics.homeCoverageLostYears),netAttributedCoin:estimate(r=>r.coin.netAttributed),
+      sameCheckAvoidedLoss:estimate(r=>r.ledger.unintervenedAvoidedLoss),
+      pricedLedgerIncludingChecks:estimate(r=>r.coin.netAttributed+r.ledger.unintervenedAvoidedLoss),
       directSavings:estimate(r=>r.coin.directSavings),commissionIncome:estimate(r=>r.coin.commissionIncome),externalFees:estimate(r=>r.coin.externalFees),
       livesKept:estimate(r=>r.livesKept),menKept:estimate(r=>r.menKept),studyYearsKept:estimate(r=>r.studyYearsKept),
       actualChallengeVisits:estimate(r=>r.ledger.challengeVisits),learnedAttempts:estimate(r=>r.ledger.learnedAttempts),learnedSuccesses:estimate(r=>r.ledger.learnedSuccesses),
-      usefulWithin10:rateEvidence(eligible.filter(within).length,eligible.length),civilianDomainsPerTrainedGeneration:meanEvidence(trained.map(domains)),
+      usefulWithin10:rateEvidence(eligible.filter(within).length,eligible.length),
+      firstUse:{duties:allDuties.length,observed:allDuties.filter(d=>d.service.firstUsefulAt!==undefined).length,
+        censoredBefore10:allDuties.filter(d=>d.service.firstUsefulAt===undefined&&d.service.servedYears<10).length,
+        noUseAfter10:allDuties.filter(d=>d.service.firstUsefulAt===undefined&&d.service.servedYears>=10).length,
+        observedHouseMeanPaidYears:meanEvidence(firstUses)},
+      nonLadderDomainsPerTrainedGeneration:meanEvidence(trained.map(r=>domains(r))),
+      civilianDomainsPerTrainedGeneration:meanEvidence(trained.map(r=>domains(r,true))),
       byAffinity:ALL_AFFINITIES.map(affinity=>{
         const total=(r:Run,read:(s:MysticService)=>number)=>Object.values(r.metrics.records)
           .filter(d=>content.mysticWorking(d.working)?.affinity===affinity).reduce((n,d)=>n+read(d.service),0);
@@ -210,29 +274,41 @@ export function summariseRepertoire(runs:readonly Run[],content:Content=loadCont
           directSavings:estimate(r=>total(r,s=>s.crownsKept??0)),spent:estimate(r=>total(r,s=>s.spent))};
       }),
       decisionsPer25Years:estimate(r=>r.metrics.decisionAnswers/Math.max(1,r.years)*25),
+      persistedContentDecisionsPer25Years:meanEvidence(rows.flatMap(r=>r.decisionLoad?[r.decisionLoad.total/Math.max(1,r.years)*25]:[])),
+      threatAttempts:estimate(r=>r.threats.attempts),warnings:estimate(r=>r.threats.warned),prevented:estimate(r=>r.threats.prevented),
+      threatDeaths:estimate(r=>r.threats.dead),attribution:estimate(r=>r.threats.attributed),operations:estimate(r=>r.threats.operations),
+      exposure:estimate(r=>r.threats.exposed),courts:estimate(r=>r.threats.court),inheritedRetaliation:estimate(r=>r.threats.inheritedGrudges),
+      captureEpisodes:estimate(r=>r.metrics.captures?.length??r.capturedReaders),readerDeaths:estimate(r=>r.readerDeathsDuringService),
+      ransomPaid:estimate(r=>r.metrics.orderSpending.ransom??0),fieldYears:estimate(r=>r.metrics.fieldYears),
+      fulfilledContracts:estimate(r=>r.contracts.fulfilled),brokenPromises:estimate(r=>r.contracts.broken),honouredPromises:estimate(r=>r.contracts.honoured),
+      ascension:estimate(r=>RUNG_ORDER.indexOf(r.ascension)),
       goals:{usefulWithin10:goal(()=>expectRate({hits:eligible.filter(within).length,n:eligible.length,floor:.5,what:'majority of eligible houses have a majority of duties useful within ten paid years'})),
-        civilianDomainsPerTrainedGeneration:goal(()=>expectMean({values:trained.map(domains),floor:2,what:'two actual civilian domains per trained generation'}))},
+        nonLadderDomainsPerTrainedGeneration:goal(()=>expectMean({values:trained.map(r=>domains(r)),floor:2,what:'two actual non-ladder domains per trained generation'}))},
       paired:{treasury:paired(r=>r.treasury),blood:paired(r=>r.blood),population:paired(r=>r.population),standing:paired(r=>r.standing),
         extinct:rateEvidence(rows.filter(r=>r.blood===0).length,rows.length),endingChanged:rateEvidence(rows.filter(r=>r.ending!==controls.get(r.seed)!.ending).length,rows.length)},
     };
-  })).filter(row=>row!==undefined);
+  }))).filter(row=>row!==undefined);
 }
 
 if(process.argv[1]?.replace(/\\/g,'/').endsWith('/mystic-repertoire-report.ts')){
   const n=Number(process.argv[2]??24),seedBase=Number(process.argv[3]??187700);
+  const scenario=process.argv[5]??'ordinary';
+  if(scenario!=='ordinary'&&scenario!=='hostile')throw Error('Expected ordinary or hostile scenario');
   if(!Number.isSafeInteger(n)||n<1||!Number.isSafeInteger(seedBase))throw Error('Expected positive runs and integer seed base');
   const content=loadContent(),samples:Run[]=[],controls:{campaign:string;policy:string;seed:number;equal:boolean}[]=[];
+  const contentHash=createHash('sha256').update(canonical(content.bundle)).digest('hex');
   for(const campaign of ['short','long'] as const)for(const policy of REPERTOIRE_POLICIES)for(let i=0;i<n;i++){
-    const run=playRepertoireCampaign(content,seedBase+i,campaign,policy);samples.push(run);
-    if(i===0){const unobserved=playRepertoireCampaign(content,seedBase+i,campaign,policy,false);const equal=unobserved.fullSaveHash===run.fullSaveHash;
+    const run=playRepertoireCampaign(content,seedBase+i,campaign,policy,true,scenario);samples.push(run);
+    if(i===0){const unobserved=playRepertoireCampaign(content,seedBase+i,campaign,policy,false,scenario);const equal=unobserved.fullSaveHash===run.fullSaveHash;
       controls.push({campaign,policy,seed:seedBase+i,equal});if(!equal)throw Error(`Observer changed full save: ${campaign}/${policy}/${seedBase+i}`);}
     process.stderr.write(`${campaign}/${policy}: ${i+1}/${n}\n`);
   }
-  const report={seedBase,runsPerColumn:n,controls,method:{
+  const report={seedBase,runsPerColumn:n,scenario,toolHash:TOOL_HASH,contentHash,controls,method:{
     policies:'No extra Mystic orders versus Death/Darkness study/practice versus rotating all eight. Same chronicler, ordinary automatic study, naming and 20-year affordable land-project policy. One training and one practice order/year, with real quotes. No hidden rival data.',
     accounting:'Actual service accounts, finite contract payments and fees. Book acquisition includes authored and auction purchases. Yield savings use the current respect-tier land scale without Charm/rent modifiers; report that estimate separately. Lives, physical book wear and study opportunity are not priced as coin.',
     uncertainty:'One independent house per seed; paired differences and standard errors. Product goals pass through expectRate/expectMean; a miss is retained as a finding. No new historical gate is invented.',
     controls:'First seed of every campaign/policy repeated without any instrumentation; SHA256 of the complete canonical save with savedAt blanked.',
+    pressure:scenario==='hostile'?'All columns make the same public founding gift/grudge choice, buy affordable ordinary protection/ransoms, and may accept one known hasty covert opportunity each 25 years with 100 crowns retained. No incident, motive, actor, learned book or result is injected.':'Original quiet policy, without extra founding or attack orders; no threat-frequency claim follows from zero exposure.',
   },inventory:ALL_AFFINITIES.map(affinity=>({affinity,workings:content.mysticWorkings.filter(w=>w.affinity===affinity).map(w=>({id:w.id,application:civilianApplication(w)??'conflict',reader:w.benefit.kind,books:w.books,collaborator:w.collaborator}))})),summary:summariseRepertoire(samples,content),samples};
   if(process.argv[4])writeFileSync(process.argv[4],JSON.stringify(report,null,2)+'\n');
   process.stdout.write(JSON.stringify({controls,summary:report.summary},null,2)+'\n');
