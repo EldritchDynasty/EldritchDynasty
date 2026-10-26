@@ -14882,3 +14882,26 @@ expected resolution). Terra `lost` had no exposure at all, which is a
 calibration finding, not a sampling one: its own comment sets difficulty 16
 against pilot readers of 9.1, 17.2 and 32.0, one in three failing, while
 fifteen distinct best readers across both batches failed once.
+
+**Re-measured after #1877 and #1897 landed (2026-10-26, branch rebased onto
+`337bbba`).** The calibration change proposed above is withdrawn. The same
+800-seed probe now sees four `use_terra` firings whose best readers scored
+9.3, 11.2, 14.5 and 19.2: three `lost`, one `held`. #1877's repertoire changed
+who is cast as the Terra reader, and the readers that fail 16 now exist, so
+raising the difficulty would make nearly every firing lose. The fast's pools
+now produce four eligible casts and three `woke`. `npm run gates --
+outcome-reach` on this head passes:
+
+```
+the_drowning/full_count -> woke                eligible pools: only ~2.2 expected of 66 firings (unproven)
+the_drowning_repeated -> nothing               eligible pools: only ~0.3 expected of 64 firings (unproven)
+the_seven_lamp_vigil/keep_the_lamps -> woke    eligible pools: only ~0.9 expected of 19 firings (unproven)
+the_dark_year_fast/keep_the_fast -> nothing    eligible pools: only ~0.3 expected of 26 firings (unproven)
+the_unmaking/go_through_with_it -> taken / failed_at_the_last_step   (unproven, 3 firings)
+```
+
+So #1917's three zeroes were each about one exposure per 800 runs, re-rolled
+in and out of the batch by unrelated content. What the issue needed was the
+judgement: a guarded zero is now weighed on its whole pool and a checked zero
+on its actual readings, under the unchanged boundary, so the next re-roll of
+a thin branch reports "unproven" with its real chance instead of "dead".
