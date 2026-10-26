@@ -422,6 +422,22 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
   world.pendingNames = s.pendingNames;
   world.pendingDecisions = s.pendingDecisions as typeof world.pendingDecisions;
 
+  // JSON and schema parsing duplicate the arc instance embedded in a pending
+  // choice. Its effects and advancement must write the authoritative world
+  // instance; keep the saved event, node, cast and displayed offer intact.
+  for (const decision of world.pendingDecisions) {
+    if (decision.kind !== 'choice' || !decision.arcStep) continue;
+    const savedInstance = decision.arcStep.instance;
+    const instance = world.arcs.get(savedInstance.id);
+    if (!instance) {
+      throw new SaveFormatError(`pending decision ${decision.id} references missing arc instance ${savedInstance.id}`);
+    }
+    if (instance.arc !== savedInstance.arc) {
+      throw new SaveFormatError(`pending decision ${decision.id} references a different arc for instance ${savedInstance.id}`);
+    }
+    decision.arcStep.instance = instance;
+  }
+
   // A legacy docket keeps the wording and odds already promised. Add only
   // the attempt metadata for this known rite. A pending Record proves the
   // attempt already happened; a pending choice is marked by commitOutcome.

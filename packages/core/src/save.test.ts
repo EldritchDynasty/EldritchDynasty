@@ -9,6 +9,7 @@ import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixtur
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf, order, resolveChoice, resolveRecord, testRng,
+  canonical, commitOutcome, dueArcSteps, queueChoice, startArc, testWorld,
 } from '@ed/core';
 
 const content = loadContent();
@@ -409,6 +410,86 @@ describe('a run survives being written down', () => {
     const report = stepYear(after, false);
     expect(report.blocked?.length).toBeGreaterThan(0);
     expect(after.world.year).toBe(year);
+  });
+
+  function pendingArc() {
+    const ctx = testWorld(content, 1932);
+    const bindings = {
+      TUTOR: place(ctx, { sex: 'male', age: 45, name: 'The tutor' }).id,
+      SON: place(ctx, { sex: 'male', age: 8, name: 'The son' }).id,
+      ELDER: place(ctx, { sex: 'female', age: 12, name: 'The elder' }).id,
+      YOUNGER: place(ctx, { sex: 'female', age: 6, name: 'The younger' }).id,
+    };
+    const instance = startArc(ctx.content.mustArc('arc_the_tutors_good_years'), ctx, testRng(), bindings)!;
+    const step = dueArcSteps(ctx, testRng()).find(s => s.instance.id === instance.id)!;
+    const event = ctx.content.mustEvent(step.node.event);
+    const pending = queueChoice(ctx, event, event.body, step.fill, step.playerCast, step);
+    return { ctx, instance, pending };
+  }
+
+  it.each([
+    ['teach_the_heir', 'heir', 'the_day_book', 'the_heir_reads_the_tally'],
+    ['share_the_hours', 'shared', 'the_signatures', 'three_names_in_the_day_book'],
+  ])('continues the authoritative arc after loading its pending %s choice (#1932)', (choice, pupil, node, event) => {
+    const { ctx, instance, pending } = pendingArc();
+    const raw = JSON.parse(JSON.stringify(saveGame(ctx)));
+    const promised = SavedGameS.parse(raw).pendingDecisions[0];
+    const input = structuredClone(raw);
+
+    // An editor may have changed the event and its outgoing edges since the
+    // question was displayed. Reconnect only the instance, keeping the offer.
+    const edited = structuredClone(content.bundle);
+    const template = edited.events.find(e => e.id === pending.event.id)!;
+    template.title = 'A later title';
+    template.body = 'A later question';
+    template.interaction = { kind: 'narration', outcomes: [] };
+    const arc = edited.arcs.find(a => a.id === instance.arc)!;
+    arc.nodes.find(n => n.id === instance.node)!.successors = [{ to: 'end', weight: 100 }];
+
+    let restored = loadGame(raw, edited);
+    const decision = restored.world.pendingDecisions[0]!;
+    if (decision.kind !== 'choice') throw new Error('expected the saved story choice');
+    expect(decision).toEqual(promised);
+    expect(decision.arcStep!.instance).toBe(restored.world.arcs.get(instance.id));
+    expect(raw).toEqual(input);
+
+    for (const world of [ctx, restored]) {
+      expect(resolveChoice(world, pending.id, choice, testRng('answer')).ok).toBe(true);
+      expect(world.world.arcs.get(instance.id)).toMatchObject({
+        node, dueYear: world.world.year + 3, status: 'active',
+        localFlags: { pupil }, bindings: instance.bindings,
+        history: [{ node: 'the_choice', choice, year: world.world.year }],
+      });
+    }
+    // The edited in-memory bundle has no file provenance; the digest compares
+    // all simulation state without treating that metadata as a game change.
+    expect(digestOf(restored)).toBe(digestOf(ctx));
+    expect(raw).toEqual(input);
+
+    restored = loadGame(JSON.parse(JSON.stringify(saveGame(restored))), content);
+    for (const world of [ctx, restored]) {
+      expect(dueArcSteps(world, testRng())).toHaveLength(0);
+      world.world.year += 3;
+      const next = dueArcSteps(world, testRng()).find(s => s.instance.id === instance.id)!;
+      expect(next.node.event).toBe(event);
+      expect(next.instance.history).toHaveLength(1);
+      const followup = world.content.mustEvent(next.node.event);
+      if (followup.interaction.kind !== 'narration') throw new Error('expected the story consequence');
+      commitOutcome(world, followup, followup.interaction.outcomes[0]!, next.fill, undefined, testRng(), next);
+      expect(world.world.arcs.get(instance.id)?.status).toBe('ended');
+      expect(next.instance.history).toHaveLength(2);
+      expect(dueArcSteps(world, testRng()).some(s => s.instance.id === instance.id)).toBe(false);
+    }
+    expect(JSON.parse(canonical(saveGame(restored)))).toEqual(JSON.parse(canonical(saveGame(ctx))));
+  });
+
+  it.each(['missing', 'different'] as const)('refuses a pending choice referencing a %s arc instance (#1932)', (problem) => {
+    const { ctx } = pendingArc();
+    const raw = JSON.parse(JSON.stringify(saveGame(ctx)));
+    if (problem === 'missing') raw.arcs = [];
+    else raw.arcs[0][1].arc = 'another_story';
+    expect(() => loadGame(raw, content)).toThrow(SaveFormatError);
+    expect(() => loadGame(raw, content)).toThrow(/pending decision .* arc.* instance/);
   });
 
   it('preserves every queued choice decider and openness through schema parse and load (#1380)', () => {
