@@ -56,11 +56,12 @@ The editor imports `core` directly and never reimplements simulation logic. That
 
 A `SavedGame` is the whole world as plain, validated data; `SAVE_FORMAT` is 41.
 
-Documentation reviewed against `main` at `098bfe02` on 22 October 2026.
+Documentation baseline reviewed against `main` at `098bfe02` on 22 October 2026;
+Mystic practice status reviewed at `1f10ce4f` on 26 October 2026.
 Living guides describe shipped code; dated surveys, narrative drafts and
 append-only logs retain their original evidence. See the audit entry in
-[docs/AGENT-LOG.md](docs/AGENT-LOG.md). Founder configuration and recurring
-Mystic duties remain tracker work (#1867 and #1866).
+[docs/AGENT-LOG.md](docs/AGENT-LOG.md). Recurring Mystic practice A–F is shipped;
+calibration evidence and limits are in `docs/BALANCE-LOG.md` (#1878, parent #1866).
 
 ## Commands
 
