@@ -14767,16 +14767,16 @@ same seeds); the one run with none is a house whose tutor arc expired.
 
 | Reading (24 runs) | before | after |
 |---|---:|---:|
-| longest answer silence, mean | 64.7 | **53.9** |
-| · median / p75 / max | 60 / 67 / 96 | 60 / 60 / **60** |
+| longest answer silence, mean | 64.7 | **53.8** |
+| · median / p75 / max | 60 / 67 / 96 | 60 / 60 / **62** |
 | · opens at the signing | 8/24 | **0/24** |
-| interludes per run, mean | 6.9 | 6.8 |
+| interludes per run, mean | 6.9 | 6.7 |
 | first interlude, mean | 1118.0 | 1101.8 |
-| frame-only max silence, mean | 83.3 | 72.4 |
+| frame-only max silence, mean | 83.3 | 73.0 |
 | clauses, mean | 5.8 | 5.5 |
-| term reached | 20/24 | 19/24 |
-| endings (unmade / broken / forgotten / devoured) | 0 / 4 / 15 / 5 | 1 / 5 / 12 / 6 |
-| prompts per generation, mean | 11.24 | 10.94 |
+| term reached | 20/24 | 18/24 |
+| endings (unmade / broken / forgotten / devoured) | 0 / 4 / 15 / 5 | 1 / 6 / 10 / 7 |
+| prompts per generation, mean | 11.24 | 11.04 |
 
 The tag alone (before scheduling) moved the mean to 62.5 and emptied the
 signing-opened row; the chain does the rest. The run's longest silence is now
@@ -14785,13 +14785,44 @@ in the midgame, not more early glimpses.
 
 The first interlude comes earlier because the chronicler sometimes embellishes
 the weighers' Record, which opens a Discrepancy that interludes read. Clauses,
-term, endings and living blood moved by about one run each or within one
-standard error at n = 24 — the re-roll every content change makes. They are
-judged by the gates below rather than by this table.
+term and endings moved by one or two runs at n = 24, the re-roll every
+content change makes, and at that size they point the wrong way: the endings
+gate's 512 runs below show fewer broken lines, not more.
 
 **Asserted** in `ledger.slow.test.ts` over the same 24 seeds through the run
 corpus: `expectMean` puts the mean longest answer silence under 72, and
 `expectRate` puts the first link's reach above 60%. The second is the claim
 that would have caught the dead first cut.
 
-**Gates.** GATES_PLACEHOLDER
+**The cellar shelf.** Gate 4 then failed one event:
+`the_cellar_shelf_is_found` at **3/800** (0.375%) against the 0.5% floor. It is
+not on the glimpses' path. It was **4/800 on main**, exactly on the floor, and
+the re-roll moved it one run. Its only route is the `hide_them` branch of
+`the_shelf_that_has_to_go`, and the funnel (100 runs) found that scene
+eligible in 76 houses and drawn in 4 of 1553 eligible years. Its weight is
+raised from 75 to 300. It is Crusade-only, six years in and on a forty-year
+cooldown, so no other Age's draw moves.
+
+**Gates**, on the final head (rebased on `774e5715`, whose only change since
+`1f10ce4f` is reporting tools):
+
+- `npm run gates -- --lane batch`: **12/12 pass**, including
+  outcome-reach-blocking, short-line (100 × 300y) and slot-fillability
+  (547 events). Gate 7 clauses 5.44 of 9 across 80 runs.
+- `npm run gates -- fire-rate` (800 × 500y): **pass**. `the_cellar_shelf_is_found`
+  leaves the rarest five. The rarest are now `the_herald_opens_the_old_question`
+  and `the_hall_is_answered` at 0.625% (5/800). On main both sat above 1.5%,
+  so their margin is thin. That is consistent with rare-tail re-roll and is
+  recorded rather than tuned.
+- `npm run gates -- endings` (512 × 500y), main → this branch:
+
+  | | main | this branch |
+  |---|---:|---:|
+  | broken_line | 136 (26.6%) | 126 (24.6%) |
+  | forgotten | 244 (47.7%) | 254 (49.6%) |
+  | devoured | 132 (25.8%) | 129 (25.2%) |
+  | unmade | 0 | 3 |
+  | survivors / clauses | 51.8 / 5.47 | 53.9 / 5.58 |
+  | blood alive at term | 32.4 | 34.1 |
+
+  Inside the judged bands (broken_line 22–45%, devoured under 45%).
