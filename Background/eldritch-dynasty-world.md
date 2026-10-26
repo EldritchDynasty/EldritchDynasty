@@ -3,9 +3,9 @@
 **Status:** canon. Where this file and `packages/content/**` disagree, the content wins and this
 file gets corrected. Where this file and the concept brief disagree, the brief wins.
 
-Implementation review: `main` at `098bfe02`, 22 October 2026. The canon registry
-below describes shipped campaign and founder defaults; proposed founder
-configurations (#1867) and recurring Mystic duties (#1866) are not canon yet.
+Implementation review: the campaign and founder registry retains its review at
+`098bfe02`, 22 October 2026. The Mystic practice passages describe #1866 stages
+B–F; their measured limits are recorded in [BALANCE-LOG](../docs/BALANCE-LOG.md).
 
 **What it is for.** The simulation knows how blood moves. It does not know what a mile costs, who
 may arrest a Head, how long a letter takes to reach the king's city, or whether anyone in this
@@ -631,7 +631,28 @@ sentence the Colleges hate.
 Practice is priced like plumbing. A green hand attends a difficult birth for 2 marks. A
 death-worker is fetched for a bad death at 5 marks and is worth it. A stone-wright surveying a
 foundation charges 1 crown and is cheaper than the wall falling down. A Life-affine practitioner
-in a plague year cannot be hired at any price, which is the whole of the Plague Age's economy.
+is scarce in a plague year. A paid search takes three years during war or plague, against one
+in ordinary times, and promises no particular affinity. A known reader may already be occupied,
+ill, absent or unwilling. Coin cannot put that person in two rooms.
+
+Standing household practice pays preparation and yearly upkeep. Retaining an outside reader
+also carries a professional fee and a finite service term. The prices above concern individual visits. A household
+carer attends a finite number of actual residents; ordinary care cannot prevent violence, the
+maximum-age wall or the blood's own dangers. An infant watch protects living children rather
+than changing inherited stillbirth. Work on banks, stores and books reaches the particular
+holding, hall or physical copy named in the order. A binder's absent copy receives no home care.
+
+Two learned people can keep the paired Terra and Thermal construction roles at one holding.
+Both must be present and paid. Their strongest joint reduction applies once to the quoted
+project price; the ordinary labour term remains. Teaching likewise requires the teacher to
+have completed the pupil's actual book. A shelf full of unread volumes supplies no teacher.
+
+An outside commission names its practitioner and neighbouring patron. The patron funds a finite
+term, and wages accrue only for years actually served. Preparation, travel and return occupy
+the same person who might otherwise protect the household or finish a book. A completed
+commission promises a trained reader's return within twenty years. A successor may honour the
+promise; a missed return leaves a household grievance even after the first worker and patron
+have died. Service never erases a copied account or grants knowledge of a distant room.
 
 ### Eldritch Power — the family's trouble
 
@@ -663,6 +684,12 @@ to you.**
 Five ranks: **petitioner → reader → warranted → master → the Provost.** The **warrant** itself is a
 stamped brass token, worn at the collar, and it is a licence to practise for money anywhere in the
 Settled Lands. Unwarranted practice is prosecuted in both courts.
+
+The token and the learning are separate facts. The paid outside-service orders require the
+actual warrant and the completed books; returning successfully from Corran records the warrant
+without manufacturing an Awakening or finished studies. Named outside practitioners bring
+authored completed training and obey the same costs, presence and capacity limits as the family.
+Women may hold the warrant and practise the Threshold Arts without holding an institutional post.
 
 Four faculties: **the Rolls** (law and letters) · **the Infirmary** (medicine) · **the Works**
 (arithmetic, survey, building) · **the Practical** (the eight affinities). The library is **the
@@ -1116,6 +1143,7 @@ Established in code and content. This file must not contradict any of it, and ne
 | The two feasts | The house gathers twice a year; the branches come up for both | `events/cadets.yaml` |
 | The smaller house | Four miles of bad gravel, unmended for thirty years | `events/cadets.yaml` |
 | The eight affinities | Fluid↔Thermal, Aero↔Terra (Elemental); Life↔Death, Light↔Darkness (Threshold) | brief §9, `attributes.yaml` |
+| Recurring Mystic practice | Completed books, one named intensive duty, actual paid presence, bounded civilian and conflict readers, lawful outside service and inherited return obligations | brief §12; `mystic-workings.yaml`; `core/src/mystic.ts`, `mystic-civilian.ts`, `mystic-contracts.ts` |
 | Who may go mad | If and only if capable of expressing Eldritch Power | brief §10, invariant 1 |
 | Portions | Agelessness (240 crowns, one dose) and Fertility (170 crowns, three doses, sixty years apart) | `heirlooms.yaml`, `events/portions.yaml` |
 

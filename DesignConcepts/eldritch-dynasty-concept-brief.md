@@ -331,10 +331,48 @@ Fully legible. Costs stated in years and coin. The player can plan four generati
 
 A character has perhaps 40 productive years. **Every spell learned is a generation not advanced.**
 
+Completed learning supports standing practice as well as occasional checks. The house names one
+actual reader and one person, hall, physical book, holding, levy or expedition. Preparation takes
+coin and time; each eligible working year reserves upkeep before its benefit is used. This is
+the reader's intensive occupation. Their own unfinished book pauses with its remaining years
+preserved. Death, departure, custody, injury, absence and inability to pay remove coverage; a
+stored copy and an absent expert supply none. Women have the same Threshold practice as equally
+learned men, independently of institutional posts. Execution costs neither Madness nor Eldritch
+Power.
+
+The civilian readers reach ordinary mortality, infant care and recovery, particular estates and
+construction quotes, household provisions, physical library wear and successor teaching. Each
+affinity also has a field or security use. Scope and stacking stay finite: one strongest relevant
+benefit applies, and an advanced book extends the actual working. Selected construction work
+requires two different learned, available, paid collaborators at the same holding. One person's
+two affinity scores cannot supply both bodies. These services grant neither resurrection nor
+perfect protection.
+
+Outside practice is a local, warranted trade. Paid searches establish named contacts without
+guaranteeing an affinity; war and plague lengthen the search. A contract occupies a real person
+through preparation, service and return, and shares the household's availability evaluator.
+Commissions draw finite patron funds and earn their pay only for actual service. A completed
+commission also commits the house to a later trained reader's return; the obligation can outlive
+both original participants. A warrant establishes the right to earn, while completed books
+establish the ability to work. Neither substitutes for the other.
+
+Field deployments leave home duties uncovered. Household attacks and player-initiated covert
+expeditions use the same attendance and contest rules, including real learned defenders, ordinary
+custody and ransom, succession and surviving copied testimony. Only the assize applies its legal
+penalties. Concealment contests attribution rather than erasing an act, a witness or a Discrepancy.
+The Table shows known preparations, scope, costs and observed results; unseen rival coverage and
+the true sponsor remain private. Service accounts and rendered receipts survive saves and replay.
+
+The proposed calibration goals are a useful effect within ten eligible paid years and two
+non-ladder domains over a trained generation. They are measured goals, not promises of profitable
+books or historical acceptance gates. [BALANCE-LOG](../docs/BALANCE-LOG.md) records the paired
+Short/Long evidence, acquisition and upkeep costs, study opportunity, and unresolved coverage
+limits for #1866.
+
 ### Eldritch Power is given — the numinous system
 Arrives unbidden, costs nothing, cannot be sought. In an authored emergency, after the ordinary result is selected and before it is committed, awakened men of the family physically present may manifest without being asked. Each present expresser rolls independently at `min(EP / 100, 0.9)`, in a seeded shuffled order; the first success supplies one authored response. There is no preliminary crisis roll, pooled EP, player order, payment or new Madness gate. A single actor can fail even at 100 EP. Several local actors compound to `1 − product(1 − pᵢ)`; absent relatives contribute nothing.
 
-The emergency must threaten a current family life or liberty, unexpected financial shock (at least half recurring gross income or 50 crowns, whichever is greater, or first crossing below zero), a quarter of estate income or the seat, Regalia/a Named Art/a third of library titles, or two Respect tiers. Agreed purchases, tribute, contractual fees and rite sacrifices are effect-specific prices. A dangerous choice does not exempt its unforeseen casualty. Only one final result is applied, and the private account names the actor and the actual harm prevented. Annual mortality, military attrition and ordinary economic upkeep require separate incident adapters; they are outside this event rule. There is no typed incapacitating-injury or captivity effect yet.
+The emergency must threaten a current family life or liberty, unexpected financial shock (at least half recurring gross income or 50 crowns, whichever is greater, or first crossing below zero), a quarter of estate income or the seat, Regalia/a Named Art/a third of library titles, or two Respect tiers. Agreed purchases, tribute, contractual fees and rite sacrifices are effect-specific prices. A dangerous choice does not exempt its unforeseen casualty. Only one final result is applied, and the private account names the actor and the actual harm prevented. Annual mortality, military attrition and ordinary economic upkeep require separate incident adapters; they are outside this event rule. A committed status outcome can carry custody and ransom through the shared captivity lifecycle; an eligible emergency manifestation replaces that threatened loss of liberty before commitment.
 
 Other spontaneous manifestations remain a future design: affinity profile determines *which* spells are possible, Eldritch Power determines *which tier* is rolled, Madness determines *how often* that roll happens. The emergency rule does not add that second system.
 
