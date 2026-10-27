@@ -1145,7 +1145,7 @@ export function gateVocabularyReachTelemetry(
 
 /**
  * The merge-blocking vocabulary verdict is entirely structural. The sampled
- * reached/unreached diagnostic remains useful, but belongs beside nightly
+ * reached/unreached diagnostic remains useful, but belongs beside scheduled
  * fire-rate rather than on the merge path.
  */
 export function gateVocabularyReach(
@@ -1256,9 +1256,9 @@ export const TELEMETRY_GATES: Record<string, (source?: Source) => GateResult> = 
  * expensive independent gates can run in parallel.
  *
  * Merge CI now has one blocking lane: batch. Expensive sampled gates are
- * direct scheduled commands in TELEMETRY_GATES; nightly runs fire-rate, war
- * and endings, while weekly evidence runs blood and signing plus full outcome-reach
- * telemetry. The derived batch also carries `outcome-reach-blocking`, scoped by
+ * direct scheduled commands in TELEMETRY_GATES; the weekly run carries
+ * fire-rate, war, endings, blood and signing (the nightly retired, #1949), and
+ * outcome-reach telemetry runs weekly on its own cadence. The derived batch also carries `outcome-reach-blocking`, scoped by
  * the generated deterministic witness manifest. The fire-rate scheduled wrapper keeps sampled
  * vocabulary reach beside the memoized corpus it reads.
  *

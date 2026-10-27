@@ -2,7 +2,9 @@ name: scheduled regression watch
 
 on:
   workflow_run:
-    workflows: [nightly regression, weekly statistical, sampled outcome reach telemetry]
+    # nightly regression retired into weekly statistical (#1949); its last
+    # refs/scheduled/nightly verdict is history and orient no longer reads it.
+    workflows: [weekly statistical, sampled outcome reach telemetry]
     types: [completed]
 
 permissions:
@@ -37,7 +39,6 @@ jobs:
           set -euo pipefail
 
           case "$RUN_NAME" in
-            "nightly regression") KEY="nightly" ;;
             "weekly statistical") KEY="weekly" ;;
             "sampled outcome reach telemetry") KEY="outcome-reach" ;;
             *) echo "Unrecognised scheduled workflow: $RUN_NAME"; exit 1 ;;
@@ -139,9 +140,6 @@ jobs:
           set -euo pipefail
 
           case "$RUN_NAME" in
-            "nightly regression")
-              TITLE="[scheduled-regression] nightly regression is red"
-              ;;
             "weekly statistical")
               TITLE="[scheduled-regression] weekly statistical evidence is red"
               ;;

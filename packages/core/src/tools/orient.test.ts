@@ -106,21 +106,30 @@ describe('session orientation', () => {
   });
 
   it('prints the first scheduled red SHA and refuses to call a missing cadence green', () => {
-    pushScheduled('nightly', [
-      'scheduled nightly failure',
+    pushScheduled('weekly', [
+      'scheduled weekly failure',
       '',
       'sha: abcdef0123456789abcdef0123456789abcdef01',
       'conclusion: failure',
       'since: 1234567890abcdef1234567890abcdef12345678',
-      'run: https://example.invalid/nightly',
+      'run: https://example.invalid/weekly',
       'recorded: 2026-10-06T00:00:00Z',
+    ].join('\n'));
+    // The nightly's last verdict outlives the workflow (#1949). A green that
+    // can never be renewed must not be reported as today's trunk health.
+    pushScheduled('nightly', [
+      'scheduled nightly success',
+      '',
+      'sha: 0123456789abcdef0123456789abcdef01234567',
+      'conclusion: success',
+      'recorded: 2026-10-26T00:00:00Z',
     ].join('\n'));
 
     const r = orient(join(root, 'work'));
     expect(r.code).toBe(0);
-    expect(r.out).toContain('nightly: red since 1234567 (failure)');
-    expect(r.out).toContain('weekly: NO VERDICT — scheduled evidence has not answered yet. Not a pass.');
+    expect(r.out).toContain('weekly: red since 1234567 (failure)');
     expect(r.out).toContain('outcome-reach: NO VERDICT — scheduled evidence has not answered yet. Not a pass.');
+    expect(r.out).not.toContain('nightly:');
   });
 
   it('prints the dedicated outcome-reach telemetry verdict', () => {

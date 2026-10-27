@@ -154,7 +154,7 @@ when public or a fast-forward of that exact head when private.
 (typecheck + validate + prose annotations) and `fast lane` — runs on every
 event, always. The full one adds the checked merge-blocking slow suites in four duration-packed
 vitest shards, `gates` in
-one merge-blocking `batch` lane (sampled `fire-rate`, `war`, `endings` run nightly; `blood` and `outcome-reach` run weekly), a `windows` runner and a `corpus` warm that
+one merge-blocking `batch` lane (sampled `fire-rate`, `war`, `endings`, `blood` and `outcome-reach` run weekly), a `windows` runner and a `corpus` warm that
 nothing waits on, and it runs on every push to `main`, every tag, every manual
 dispatch and every pull request that is **not a draft**. A draft pull request
 gets the short tier, and the `full-ci` label raises it without undrafting.
@@ -214,19 +214,29 @@ is only a candidate, and any `moveBlockedBy` keeps that evidence on the merge
 path until the named deterministic/mechanism proof exists. Do not turn the
 inventory into an optimistic path-filter list.
 
-`.github/workflows/nightly-regression.yml` runs daily on `main` (and by
-manual dispatch): **all** slow-test shards, the `fire-rate`, `war` and
-`endings` gate lanes, and the broad iOS build/install/launch smoke.
-`.github/workflows/weekly-statistical.yml` runs the canonical `blood` sample
-weekly (and by manual dispatch). `.github/workflows/outcome-reach-telemetry.yml`
-runs the canonical sampled `outcome-reach` report weekly on its own cadence.
-The scheduled-regression watcher records all three workflow streams, so a red
-nightly, blood, or outcome-reach run becomes visible to `orient` and persistent
-P0 project work rather than a dashboard-only failure.
+`.github/workflows/weekly-statistical.yml` runs on Sunday at 04:23 UTC on
+`main` (and by manual dispatch): **all** slow-test shards, the `fire-rate`,
+`war` and `endings` gate lanes, the broad iOS build/install/launch smoke, and
+the canonical `blood` and `signing` samples.
+`.github/workflows/outcome-reach-telemetry.yml` runs the canonical sampled
+`outcome-reach` report weekly on its own cadence. The scheduled-regression
+watcher records both workflow streams, so a red weekly or outcome-reach run
+becomes visible to `orient` and persistent P0 project work rather than a
+dashboard-only failure.
+
+Until 2026-10-27 the slow shards, the three sampled gate lanes and the iOS
+smoke ran **nightly**. They moved to the weekend run when the repository went
+private on the Free plan, whose 2,000 included Actions minutes a month the
+nightly alone would have spent (#1949). Merge CI did not change. What changed
+is how soon a scheduled red is seen: a sampled gate that goes red on content
+nobody touched now surfaces within a week rather than a day, so expect a week
+of commits to bisect, or dispatch the workflow by hand when a risky change
+lands. `refs/scheduled/nightly` keeps the nightly's last verdict as history;
+`orient` no longer reads it.
 
 The slow-test cadence split is now real rather than aspirational. Full PR and
 merge-group CI still run every fast test plus the slow suites whose checked
-inventory entry says `currentTier: merge-blocking`; nightly runs the complete
+inventory entry says `currentTier: merge-blocking`; the weekly run executes the complete
 slow suite, including the broad population/cadence regressions moved off the
 merge path. The selected merge-slow set is duration-packed into four shards from the
 committed duration table, and `ci-evidence.test.ts` fails if that measured
@@ -236,8 +246,8 @@ deterministic witnesses replace played-run evidence. A slow suite stays
 merge-blocking when it contains a deterministic/stateful contract without a
 cheaper witness — runtime alone is never permission to move it. The broad iOS
 runtime smoke follows the same policy shape: merge CI runs it
-when native mobile/toolchain inputs change, while nightly exercises it
-regardless of the day's diffs. Gate cutovers remain separately justified by
+when native mobile/toolchain inputs change, while the weekly run exercises it
+regardless of the week's diffs. Gate cutovers remain separately justified by
 their own inventory rows; a scheduled copy is not by itself permission to stop
 blocking merges.
 

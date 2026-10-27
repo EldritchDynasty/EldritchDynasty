@@ -369,10 +369,11 @@ are, and what a run of them costs, is in the command block above.
 - **`*.slow.test.ts` plays whole games.** `test:fast` skips them;
   `lanes.test.ts` keeps millennium batches out of that loop. `npm run check`
   runs all tests locally. Hosted CI reads `tools/ci-evidence.json`: checked
-  `merge-blocking` suites run on full PR/merge-group CI; `nightly` suites
-  run in the complete daily slow suite. `npm run land` defaults to typecheck,
-  validate and `test:fast`; `--full-preflight` runs the complete local set.
-  The native merge-group `CI required` remains authoritative.
+  `merge-blocking` suites run on full PR/merge-group CI; `weekly` suites
+  run in the complete Sunday slow suite (the nightly retired, #1949).
+  `npm run land` defaults to typecheck, validate and `test:fast`;
+  `--full-preflight` runs the complete local set. `CI required` on the exact
+  commit that lands remains authoritative.
 - **A suite can play whole games with no `advance` in it.** `gates.test.ts` was
   41% of the fast lane; the runs happen inside the gates it calls. Driving a
   batch through `tools/` is declared in `lanes.test.ts` for exactly that reason.

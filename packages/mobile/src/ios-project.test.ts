@@ -137,8 +137,8 @@ describe('Capacitor iOS project', () => {
     expect(build).toBeGreaterThan(boot);
   });
 
-  it('prewarms the nightly simulator during the iOS build and reuses its device', () => {
-    const workflow = readFileSync(join(MOBILE, '../../.github/workflows/nightly-regression.yml'), 'utf8');
+  it('prewarms the weekly simulator during the iOS build and reuses its device', () => {
+    const workflow = readFileSync(join(MOBILE, '../../.github/workflows/weekly-statistical.yml'), 'utf8');
     const startBoot = workflow.indexOf('- name: start an iPhone simulator while the app builds');
     const startBuild = workflow.indexOf('- name: build unsigned iPhone simulator app');
     const startSmoke = workflow.indexOf('- name: install and launch on an iPhone simulator');

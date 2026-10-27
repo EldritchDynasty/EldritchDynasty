@@ -1051,7 +1051,7 @@ export function gateEndings(
 ): EndingVerdict {
   const content = indexContent(source);
   const bundle = content.bundle;
-  // Fast fixture calls stay serial; the 512-pair nightly batch benefits from
+  // Fast fixture calls stay serial; the 512-pair scheduled batch benefits from
   // the same bounded workers already exercised by blood and war gates.
   const workers = opts.workers ?? (runs >= 8 ? gatePartitionWorkerCount() : 1);
   const setup = opts.setup ?? {};
