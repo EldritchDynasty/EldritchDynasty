@@ -50,7 +50,7 @@ describe('live guarded reach in the canonical batch (#1817)', () => {
     const table = readFileSync(join(import.meta.dirname, 'table.ts'), 'utf8');
     const standingOrders = table.slice(table.indexOf('export function runStandingOrders('), table.indexOf('export function onTheMarket('));
     expect(standingOrders).toContain('const taught: string[]');
-    expect(standingOrders).not.toMatch(/\bforcingRite\b|\b(?:order|carryOut|forcingOffer)\s*\(/);
+    expect(standingOrders).not.toMatch(/\bforcingRite\b|\b(?:order|carryOut|forcingOffer|carryOutRite|carryOutForcingRite)\s*\(/);
   });
 
   it('credits actual eligible pools, including an open outcome shared by both casts', () => {

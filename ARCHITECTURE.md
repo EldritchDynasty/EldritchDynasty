@@ -101,7 +101,8 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **Achievements** and their measured earn rates | `core/src/achievements.ts`, `core/src/achievement-rates.ts` | `achievements.test.ts` |
 | The **rites** — what the top three rungs cost | `core/src/events/rites.ts` | `rites.test.ts`, `rites.slow.test.ts` |
 | Standing orders — the table | `core/src/table.ts` | `table.test.ts` |
-| Callable **forcing rites**, one lifetime attempt per boy | `core/src/table.ts`, `events/decisions.ts`; `schema/src/rules.ts` → `rites/forcing` | `table.test.ts`, `influence.test.ts`, `rules.test.ts` |
+| Calling the major **rites** and assembling their public cast | `core/src/rite-orders.ts` | `rites.test.ts`, `table.test.ts` |
+| Callable **forcing rites**, one lifetime attempt per boy | `core/src/rite-orders.ts`, `events/decisions.ts`; `schema/src/rules.ts` → `rites/forcing` | `table.test.ts`, `influence.test.ts`, `rules.test.ts` |
 | **The Long Wait / Late Waking** — declaring an unwoken man mundane, learning and scripted waking after thirty | `core/src/table.ts`, `core/src/people/library.ts`, `core/src/people/factory.ts`, `packages/content/events/rare_blood.yaml`, `packages/client/src/components/Table.vue` | `table.test.ts`, `library.test.ts`, `core/src/events/reach.test.ts` |
 | The physical **library** — wear, restoration, sale, burn, tribute and theft | `core/src/people/library.ts`, `core/src/table.ts` | `library.test.ts`, `table.test.ts` |
 | Money and standing | `core/src/economy.ts` | `economy.slow.test.ts`, `ledger.slow.test.ts` |

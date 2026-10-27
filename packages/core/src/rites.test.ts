@@ -22,6 +22,7 @@ import { adviceForDecision } from './advisers.js';
 import type { MatchCard } from './people/match.js';
 import { canonical, saveGame } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
+import { GameSession, resumeGame } from './session.js';
 
 const content = indexContent(loadContent());
 
@@ -930,6 +931,7 @@ function expectAssemblyMatchesDocket(
   eventId: string,
   expectedCandidate?: string,
 ): void {
+  const game = new GameSession(ctx);
   const before = {
     treasury: ctx.world.treasury,
     chronicle: ctx.world.chronicle.length,
@@ -937,7 +939,7 @@ function expectAssemblyMatchesDocket(
     statuses: ctx.world.people.living().map((p) => [p.id, p.status, [...p.rites]] as const),
   };
 
-  const offer = tableView(ctx)[key];
+  const offer = game.table()[key];
   expect(offer.ready, offer.reason).toBe(true);
   expect(offer.assembly).toBeDefined();
   const assembly = offer.assembly!;
@@ -958,9 +960,14 @@ function expectAssemblyMatchesDocket(
     'a preparation line named somebody outside the resolved rite cast',
   ).toBe(true);
 
-  const result = order(ctx, command);
+  const result = game.order(command);
   expect(result.ok, result.reason).toBe(true);
   const pending = pendingRite(ctx, eventId);
+  expect(game.table()[key]).toEqual({ ready: false,
+    reason: 'this rite is already before the house' });
+  const saved = JSON.parse(JSON.stringify(game.save()));
+  const resumed = resumeGame(saved, content.bundle);
+  expect(canonical(resumed.save())).toBe(canonical(game.save()));
 
   // The people photographed by the pre-rite assembly are the people the
   // actual resolver put on the card. No second client-side casting model.
@@ -1009,7 +1016,8 @@ describe('the rite names who it would spend, as the house remembers them (#1867 
 });
 
 describe('rite confirmation prose (#920)', () => {
-  const messages = coreMessageEntries(readFileSync(new URL('./table.ts', import.meta.url), 'utf8'))
+  const messages = ['./table.ts', './rite-orders.ts']
+    .flatMap(path => coreMessageEntries(readFileSync(new URL(path, import.meta.url), 'utf8')))
     .filter((entry) => entry.address.startsWith(coreMessageAddress('table.assembly.')));
   const messageVariants = messages.map((entry) => ({
     address: entry.address, of: proseOriginalHash(entry.text), plainenglish: `Plain: ${entry.text}`,
@@ -1102,8 +1110,9 @@ describe('rite confirmation prose (#920)', () => {
 });
 
 describe('major rite assembly (#218)', () => {
-  it('photographs the Vessel from the same slot resolution the docket uses', () => {
+  it.each(['original', 'plainenglish'] as const)('photographs the Vessel through GameSession in %s', (mode) => {
     const ctx = testWorld(content, 8218);
+    setProseMode(ctx, mode);
     const ascendant = readyClimber(ctx);
     const vessel = place(ctx, { sex: 'female', age: 20, name: 'The Named Vessel' });
     beget(ctx, vessel, undefined, ascendant);
@@ -1132,8 +1141,9 @@ describe('major rite assembly (#218)', () => {
     expect(candidatesFor(spec, ctx, {}).map((person) => person.id)).not.toContain(ascendant.id);
   });
 
-  it('photographs the Great Rite from the same slot resolution the docket uses', () => {
+  it.each(['original', 'plainenglish'] as const)('photographs the Great Rite through GameSession in %s', (mode) => {
     const ctx = testWorld(content, 8219);
+    setProseMode(ctx, mode);
     readyClimber(ctx);
     place(ctx, { sex: 'male', age: 30, name: 'The Witness' });
 
@@ -1145,8 +1155,9 @@ describe('major rite assembly (#218)', () => {
     );
   });
 
-  it('photographs the Unmaking elder and exact descendant candidates the docket uses', () => {
+  it.each(['original', 'plainenglish'] as const)('photographs the Unmaking through GameSession in %s', (mode) => {
     const ctx = testWorld(content, 8220);
+    setProseMode(ctx, mode);
     const elder = readyClimber(ctx);
     elder.rites.push('vessel', 'great_rite');
     elder.acquired[ELDRITCH_REACH] = 9;
