@@ -282,7 +282,7 @@ describe('#441 trusted proof boundary', () => {
     ['pull request event', (r: TrustedWorkflowRun) => { r.event = 'pull_request'; }],
     ['feature branch', (r: TrustedWorkflowRun) => { r.head_branch = 'feature'; }],
     ['failed run', (r: TrustedWorkflowRun) => { r.conclusion = 'failure'; }],
-    ['wrong workflow', (r: TrustedWorkflowRun) => { r.path = '.github/workflows/nightly-regression.yml'; }],
+    ['wrong workflow', (r: TrustedWorkflowRun) => { r.path = '.github/workflows/weekly-statistical.yml'; }],
     ['fork', (r: TrustedWorkflowRun) => { r.head_repository = { full_name: 'fork/EldritchDynasty' }; }],
   ])('rejects a poisoned source: %s', (_name, poison) => {
     const run = trustedRun();

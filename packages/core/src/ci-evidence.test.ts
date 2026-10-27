@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { shardCosts } from '../../../tools/shards.mjs';
 
@@ -169,7 +169,7 @@ describe('CI evidence inventory', () => {
       expect(entry.proposedTier.trim(), JSON.stringify(entry)).not.toBe('');
     }
   });
-  it('keeps war sampled evidence nightly with concrete merge witnesses', () => {
+  it('keeps war sampled evidence weekly with concrete merge witnesses', () => {
     const war = inventory.gateAssertions.filter((entry) => entry.lane === 'war');
     expect(war.map((entry) => entry.id).sort()).toEqual([
       'war:gap-widens',
@@ -177,8 +177,8 @@ describe('CI evidence inventory', () => {
       'war:it-pays',
       'war:progress-divergence',
     ]);
-    expect(war.every((entry) => entry.currentTier === 'nightly')).toBe(true);
-    expect(war.every((entry) => entry.proposedTier === 'nightly')).toBe(true);
+    expect(war.every((entry) => entry.currentTier === 'weekly')).toBe(true);
+    expect(war.every((entry) => entry.proposedTier === 'weekly')).toBe(true);
 
     const asserted = war.filter((entry) => entry.evidenceType === 'statistical');
     expect(asserted.map((entry) => entry.id).sort()).toEqual([
@@ -194,11 +194,11 @@ describe('CI evidence inventory', () => {
     ]);
   });
 
-  it('keeps sampled ending distribution nightly with deterministic merge witnesses', () => {
+  it('keeps sampled ending distribution weekly with deterministic merge witnesses', () => {
     const gate = inventory.telemetryGates.find((entry) => entry.id === 'endings');
     expect(gate?.evidenceType).toBe('statistical ending-distribution regression');
-    expect(gate?.currentTier).toBe('nightly');
-    expect(gate?.proposedTier).toBe('nightly');
+    expect(gate?.currentTier).toBe('weekly');
+    expect(gate?.proposedTier).toBe('weekly');
     expect(gate?.coveredBy).toContain(
       'packages/core/src/ending.test.ts#names every one of the five, exhaustively',
     );
@@ -214,8 +214,8 @@ describe('CI evidence inventory', () => {
 
     expect(inventory.gateLanes.map((entry) => entry.id)).toEqual(['batch']);
     expect(fire?.evidenceType).toBe('statistical occurrence-rate regression');
-    expect(fire?.currentTier).toBe('nightly');
-    expect(fire?.proposedTier).toBe('nightly');
+    expect(fire?.currentTier).toBe('weekly');
+    expect(fire?.proposedTier).toBe('weekly');
     expect(fire?.source).toContain('gateFireRateNightly');
     expect(vocabulary?.lane).toBe('batch');
     expect(vocabulary?.evidenceType).toBe('deterministic structural verdict');
@@ -257,19 +257,26 @@ describe('CI evidence inventory', () => {
       expect(entry.coveredBy?.length, `scheduled assertion lacks coveredBy: ${entry.id}`).toBeGreaterThan(0);
       for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
     }
-    for (const entry of inventory.slowSuites.filter((candidate) => candidate.currentTier === 'nightly')) {
-      expect(entry.coveredBy?.length, `nightly slow suite lacks coveredBy: ${entry.path}`).toBeGreaterThan(0);
+    for (const entry of inventory.slowSuites.filter((candidate) => candidate.currentTier === 'weekly')) {
+      expect(entry.coveredBy?.length, `weekly slow suite lacks coveredBy: ${entry.path}`).toBeGreaterThan(0);
       for (const reference of entry.coveredBy ?? []) expectTestReference(reference);
     }
   });
 
   it('splits slow regression by checked evidence tier without dropping either side', () => {
     const check = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
-    const nightly = readFileSync(join(root, '.github/workflows/nightly-regression.yml'), 'utf8');
     const weekly = readFileSync(join(root, '.github/workflows/weekly-statistical.yml'), 'utf8');
     const outcomeReach = readFileSync(join(root, '.github/workflows/outcome-reach-telemetry.yml'), 'utf8');
 
-    for (const workflow of [nightly, weekly]) {
+    // The nightly ran this evidence until #1949 moved it to the weekend run.
+    // A second scheduled copy would spend the private minute budget twice.
+    expect(existsSync(join(root, '.github/workflows/nightly-regression.yml'))).toBe(false);
+    const tiers = [...inventory.jobs, ...inventory.gateLanes, ...inventory.gates, ...inventory.telemetryGates,
+      ...inventory.gateAssertions, ...inventory.slowSuites]
+      .flatMap((entry) => [entry.currentTier, entry.proposedTier]);
+    expect(tiers.filter((tier) => /nightly/i.test(tier))).toEqual([]);
+
+    for (const workflow of [weekly]) {
       expect(workflow).toContain('schedule:');
       expect(workflow).toContain('workflow_dispatch:');
       expect(workflow).toContain('test "$GITHUB_REF" = "refs/heads/main"');
@@ -281,11 +288,11 @@ describe('CI evidence inventory', () => {
     }
 
     const mergeSlow = inventory.slowSuites.filter((entry) => entry.currentTier === 'merge-blocking');
-    const nightlySlow = inventory.slowSuites.filter((entry) => entry.currentTier === 'nightly');
+    const weeklySlow = inventory.slowSuites.filter((entry) => entry.currentTier === 'weekly');
     expect(mergeSlow.length).toBeGreaterThan(0);
-    expect(nightlySlow.length).toBeGreaterThan(0);
+    expect(weeklySlow.length).toBeGreaterThan(0);
     expect(new Set(inventory.slowSuites.map((entry) => entry.currentTier))).toEqual(
-      new Set(['merge-blocking', 'nightly']),
+      new Set(['merge-blocking', 'weekly']),
     );
 
     const mergeTestStart = check.indexOf('\n  test:\n');
@@ -319,26 +326,23 @@ describe('CI evidence inventory', () => {
     expect(releaseSlowJob).toContain('npm test -- --shard=${{ matrix.shard }}/4');
     expect(releaseGateNames).toEqual(inventory.telemetryGates.map((entry) => entry.id).sort());
     expect(releaseGatesJob).toContain('npm run gates -- ${{ matrix.gate }}');
-    expect(nightly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
-    const nightlyGateMatrix = /\bgate:\s*\[([^\]]+)\]/.exec(nightly);
-    expect(nightlyGateMatrix, 'nightly gate matrix').not.toBeNull();
-    const nightlyGateNames = nightlyGateMatrix![1]!
+    expect(weekly).toContain('npm run test:slow -- --shard=${{ matrix.shard }}/4');
+    const weeklyGateMatrix = /\bgate:\s*\[([^\]]+)\]/.exec(weekly);
+    expect(weeklyGateMatrix, 'weekly gate matrix').not.toBeNull();
+    expect(weekly).toContain('npm run gates -- ${{ matrix.gate }}');
+    const weeklyMatrixGates = weeklyGateMatrix![1]!
       .split(',')
       .map((name) => name.trim())
-      .filter(Boolean)
-      .sort();
-    expect(nightlyGateNames).toEqual(
-      inventory.telemetryGates
-        .filter((entry) => entry.currentTier === 'nightly')
-        .map((entry) => entry.id)
-        .sort(),
-    );
-    expect(nightly).toContain('npm run gates -- ${{ matrix.gate }}');
+      .filter(Boolean);
+    expect(weeklyMatrixGates.sort()).toEqual(['endings', 'fire-rate', 'war']);
 
-    const weeklyGateNames = [...`${weekly}\n${outcomeReach}`
+    // The matrix lanes plus every gate named directly: blood, signing, and
+    // outcome-reach on its own cadence. Each scheduled gate runs exactly once.
+    const weeklyGateNames = [...weeklyMatrixGates, ...[...`${weekly}\n${outcomeReach}`
       .matchAll(/npm run gates -- ([a-z0-9-]+)(?:\s|$)/g)]
-      .map((match) => match[1]!)
+      .map((match) => match[1]!)]
       .sort();
+    expect(new Set(weeklyGateNames).size, 'a scheduled gate runs twice').toBe(weeklyGateNames.length);
     expect(weeklyGateNames).toEqual(
       inventory.telemetryGates
         .filter((entry) => entry.currentTier.startsWith('weekly'))
@@ -357,9 +361,9 @@ describe('CI evidence inventory', () => {
     expect(check).toContain('needs: [lint, windows, test, gates, release-slow, release-gates]');
   });
 
-  it('keeps the broad iOS runtime smoke nightly and targets merge CI to native-host changes', () => {
+  it('keeps the broad iOS runtime smoke weekly and targets merge CI to native-host changes', () => {
     const checkWorkflow = readFileSync(join(root, '.github/workflows/check.yml'), 'utf8');
-    const nightlyWorkflow = readFileSync(join(root, '.github/workflows/nightly-regression.yml'), 'utf8');
+    const weeklyWorkflow = readFileSync(join(root, '.github/workflows/weekly-statistical.yml'), 'utf8');
 
     expect(checkWorkflow).toContain('ios: ${{ steps.decide.outputs.ios }}');
     expect(checkWorkflow).toContain('packages/mobile/');
@@ -367,11 +371,12 @@ describe('CI evidence inventory', () => {
     expect(checkWorkflow).toContain("needs.tier.outputs.ios == 'true'");
     expect(checkWorkflow).toContain("name === 'ios' && job.result === 'skipped' && !iosRequired");
 
-    expect(nightlyWorkflow).toContain('name: nightly iOS simulator build');
-    expect(nightlyWorkflow).toContain('xcrun simctl bootstatus "$UDID" -b');
-    expect(nightlyWorkflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
+    expect(checkWorkflow).toContain('.github/workflows/(check|weekly-statistical)\\.yml$');
+    expect(weeklyWorkflow).toContain('name: weekly iOS simulator build');
+    expect(weeklyWorkflow).toContain('xcrun simctl bootstatus "$UDID" -b');
+    expect(weeklyWorkflow).toContain('xcrun simctl launch "$UDID" nz.eldritchdynasty.game');
 
-    for (const workflow of [checkWorkflow, nightlyWorkflow]) {
+    for (const workflow of [checkWorkflow, weeklyWorkflow]) {
       const smokeStart = workflow.indexOf('- name: install and launch on an iPhone simulator');
       expect(smokeStart, 'iOS runtime smoke step').toBeGreaterThanOrEqual(0);
       const smoke = workflow.slice(smokeStart);
@@ -489,7 +494,8 @@ describe('CI evidence inventory', () => {
     const orient = readFileSync(join(root, 'tools/orient.mjs'), 'utf8');
 
     expect(watcher).toContain('workflow_run:');
-    expect(watcher).toContain('workflows: [nightly regression, weekly statistical, sampled outcome reach telemetry]');
+    expect(watcher).toContain('workflows: [weekly statistical, sampled outcome reach telemetry]');
+    expect(watcher).not.toContain('"nightly regression")');
     expect(watcher).toContain("github.event.workflow_run.head_branch == 'main'");
     expect(watcher).toContain('issues: write');
     expect(watcher).toContain('BAD_SHA: ${{ github.event.workflow_run.head_sha }}');
@@ -515,7 +521,7 @@ describe('CI evidence inventory', () => {
     expect(watcher).toContain('refs/scheduled/$KEY');
     expect(watcher).toContain('since: %s');
     expect(orient).toContain("'+refs/scheduled/*:refs/scheduled/*'");
-    expect(orient).toContain("for (const cadence of ['nightly', 'weekly', 'outcome-reach'])");
+    expect(orient).toContain("for (const cadence of ['weekly', 'outcome-reach'])");
     expect(orient).toContain('red since');
     expect(orient).toContain('scheduled evidence has not answered yet');
   });

@@ -228,13 +228,13 @@ jobs:
 
           # The broad native iOS runtime smoke is expensive and runner-sensitive.
           # Keep it merge-blocking only when the PR/integration head can change
-          # the native host/toolchain contract; nightly still exercises it on main.
+          # the native host/toolchain contract; the weekly run still exercises it on main.
           IOS=false
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] || [[ "$GITHUB_REF" == refs/tags/* ]]; then
             IOS=true
           else
             IOS_FILES="$(git diff --name-only "$BASE" "$HEAD_SHA")"
-            if printf '%s\n' "$IOS_FILES" | grep -Eq '^(packages/mobile/|packages/client/src/platform(\.test)?\.ts$|package(-lock)?\.json$|\.github/workflows/(check|nightly-regression)\.yml$)'; then
+            if printf '%s\n' "$IOS_FILES" | grep -Eq '^(packages/mobile/|packages/client/src/platform(\.test)?\.ts$|package(-lock)?\.json$|\.github/workflows/(check|weekly-statistical)\.yml$)'; then
               IOS=true
             fi
           fi
@@ -628,7 +628,7 @@ jobs:
   # The fast lane above already runs every non-slow suite. This matrix runs
   # ONLY the slow suites whose checked evidence classification still says
   # this exact integration commit needs them. Broad population/cadence
-  # regressions run in nightly-regression.yml instead.
+  # regressions run in weekly-statistical.yml instead.
   #
   # tools/ci-evidence.json is the single source of truth for that boundary.
   # The selected set is still packed by tools/shards.mjs using the committed
@@ -681,7 +681,7 @@ jobs:
   #
   # packages/core/src/tools/gates.ts derives the merge-blocking batch from
   # GATES. Expensive sampled evidence is intentionally absent here and runs in
-  # nightly/weekly workflows; release-only jobs below restore the complete set
+  # the weekly workflows; release-only jobs below restore the complete set
   # before anything is packaged. gates.test.ts proves this matrix and GATES
   # still agree.
   #

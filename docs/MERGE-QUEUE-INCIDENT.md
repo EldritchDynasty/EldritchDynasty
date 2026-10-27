@@ -126,4 +126,5 @@ client ID itself instead of leaving the token action's message to explain it.
   Linux job-minutes and an 8-minute macOS job; macOS bills at about ten times
   the Linux rate (`billing/actions-standard-runner-prices.md`). Without a
   payment method, GitHub blocks Actions once the quota is spent, and then no
-  landing of either kind can run.
+  landing of either kind can run. The nightly's jobs moved to the Sunday run
+  for that reason (#1949).
