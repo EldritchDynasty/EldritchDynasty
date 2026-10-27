@@ -38,6 +38,20 @@ import { eldritchPower, madnessOf, mindOf } from './ascension.js';
 const content = loadContent();
 
 describe('live guarded reach in the canonical batch (#1817)', () => {
+  it('keeps Table orders out of gate-batch play and the steward (#1930)', () => {
+    // Forcing orders fix CHILD, whereas ambient rites draw him. Until the
+    // docket saves that provenance, the canonical policy must stay on the
+    // ambient path. Guard the policy entry points as well as the steward.
+    for (const path of ['tools/gate-batch.ts', 'sim.ts', 'year/phases.ts']) {
+      const source = readFileSync(join(import.meta.dirname, path), 'utf8');
+      expect(source, path).not.toMatch(/\bforcingRite\b|\bforcing-policy\b|\border\s*\(/);
+    }
+    const table = readFileSync(join(import.meta.dirname, 'table.ts'), 'utf8');
+    const standingOrders = table.slice(table.indexOf('export function runStandingOrders('), table.indexOf('export function onTheMarket('));
+    expect(standingOrders).toContain('const taught: string[]');
+    expect(standingOrders).not.toMatch(/\bforcingRite\b|\b(?:order|carryOut|forcingOffer)\s*\(/);
+  });
+
   it('credits actual eligible pools, including an open outcome shared by both casts', () => {
     const bundle = structuredClone(content.bundle);
     bundle.events = [EventTemplateS.parse({

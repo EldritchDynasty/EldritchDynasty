@@ -8,7 +8,7 @@ import { choiceAvailability, type DecisionChoice } from './availability.js';
 import { applyEffect, applyOutcome, type ResolvedEvent } from './effects.js';
 import { resolvePrimordial } from './primordial.js';
 import { resolveChoiceOutcome } from './checks.js';
-import { advanceArc, startArc, startDecisionArcs, type ArcStep } from './arcs.js';
+import { advanceArc, soleBindings, startArc, startDecisionArcs, type ArcStep } from './arcs.js';
 import { resolveClaim } from '../record.js';
 import { RUNGS, rungIndex } from '../ascension.js';
 import { noteBearing } from '../bearing.js';
@@ -331,6 +331,8 @@ export interface OutcomeObservation {
   readonly selectedOutcome: Outcome;
   /** A private copy: an instrument cannot change the actual cast through this value. */
   readonly fill: SlotFill;
+  /** Slots supplied by the caller rather than drawn at this firing. */
+  readonly preset?: readonly string[];
   readonly choiceId?: string;
 }
 
@@ -362,6 +364,10 @@ export function commitOutcome(
   // No listener means no snapshot allocation, and observation draws no dice.
   const observation = ctx.observeOutcome || ctx.observeAppliedOutcome
     ? { event: e, outcome, selectedOutcome, fill: structuredClone(fill),
+      // advanceArc has not saved this step's newly drawn bindings yet, so
+      // these are exactly the presets dueArcSteps handed to resolveSlots.
+      ...(arcStep ? { preset: Object.keys(soleBindings(arcStep.instance.bindings,
+        ctx.content.mustArc(arcStep.instance.arc).bindings)) } : {}),
       ...(choiceId !== undefined ? { choiceId } : {}) }
     : undefined;
   if (observation) ctx.observeOutcome?.(observation);

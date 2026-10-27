@@ -757,7 +757,7 @@ export function observeGuardedOutcome(ctx: SimCtx, observation: OutcomeObservati
   const guarded = into.guarded ??= { opportunities: new Map(), expected: new Map(), poolExpected: new Map() };
   const poolExpected = guarded.poolExpected ??= new Map<string, number>();
   const shares = guardedShares(ctx, event, group, fill);
-  const pool = poolShares(ctx, event, group, fill);
+  const pool = poolShares(ctx, event, group, fill, observation.preset);
   for (const outcome of group) {
     const key = outcomeKey(String(event.id), choiceId, outcome.id);
     const share = shares.get(outcome) ?? 0;
@@ -778,13 +778,13 @@ function guardedShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcom
  * The share averaged over the guarded slot's whole pool, holding the rest of
  * the cast fixed. `outcomes/guard` keeps a group to one guarded slot, engine-
  * cast, single and required, and `pickCandidate` takes such a slot uniformly
- * unless it has a `select`, which casts the best and is already the actual
- * cast. Reads the world and draws nothing.
+ * unless it has a `select` or was supplied as a runtime preset. Those slots
+ * are already fixed to the actual cast. Reads the world and draws nothing.
  */
-function poolShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill): Map<Outcome, number> {
+function poolShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill, preset?: readonly string[]): Map<Outcome, number> {
   const slot = group.find((outcome) => outcome.onlyIf)!.onlyIf!.slot;
   const spec = event.slots[slot];
-  if (!spec || spec.select) return guardedShares(ctx, event, group, fill);
+  if (!spec || spec.select || preset?.includes(slot)) return guardedShares(ctx, event, group, fill);
   const others: SlotFill = { ...fill };
   delete others[slot];
   const candidates = candidatesFor(spec, ctx, others);
