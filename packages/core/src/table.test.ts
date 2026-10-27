@@ -1409,9 +1409,10 @@ describe('the table pages speak the reader\'s setting (#746)', () => {
   });
 });
 
-const tableSource = readFileSync(new URL('./table.ts', import.meta.url), 'utf8');
+const tableSource = ['./table.ts', './rite-orders.ts']
+  .map(path => readFileSync(new URL(path, import.meta.url), 'utf8')).join('\n');
 
-/** Every `msg(ctx, key, original…)` call in table.ts whose key starts with one of `prefixes`. */
+/** Every Table message call, including the extracted rites, with one of `prefixes`. */
 function keyed(prefixes: readonly string[]): [string, string][] {
   return [...tableSource.matchAll(/msg\(ctx,\s*'([^']+)',\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g)]
     .map(([, key, literal]) => [key!, literal!.slice(1, -1)] as [string, string])
