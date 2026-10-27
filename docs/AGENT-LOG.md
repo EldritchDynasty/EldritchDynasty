@@ -254,3 +254,34 @@ checks passed. This is provisioning evidence, not an application-test failure.
 The rebased head goes through the normal checks again, without changing CI
 deadlines, assertions or workflows. Final preflight/CI results belong to the
 current PR head.
+
+## 2026-10-27 — #1936: advisory verification from the current diff
+
+Added `npm run verify -- --plan [--base <ref>] [--json]`, backed by a pure
+`planFor` and the shared `tools/codemap.mjs` architecture-table parser. The
+map remains in ARCHITECTURE.md; no second path-to-test inventory was added.
+Existing documentation classification was extracted without changing its
+results. Recommendations read only `currentTier`, with the existing workflow
+reader supplying its script inventory. Required integration CI and scheduled
+evidence stay distinct from local iteration commands.
+
+The CLI reads cached local facts, including dirty/untracked changes. It does
+not fetch missing history or verdicts, run setup, or repair uncertainty.
+Missing bases, shallow clones, unresolved routes, renames, deletions, shared
+spines and package boundaries recommend full preflight. Explicit `--run`
+uses the shared portable npm launcher, reports actual exit statuses and stops
+after failure. `land --dry-run` prints the advisory plan without changing the
+landing's verification policy or exit contract.
+
+Focused verification passed 219 tests across the planner, codemap, landing
+and portability suites; core typechecking passed. Fixtures record actual
+recent main diffs for core reach, YAML content, client, schema and docs; their
+cached-verdict scenarios are explicit test inputs, not historical CI claims.
+Temporary-checkout tests establish unchanged files and metadata during
+planning, credential-free operation, missing-base/shallow handling and a real
+npm exit status of 7 without running later commands. Every architecture map
+path and guard resolves, including ambiguous basenames resolved within the
+source package. Manual `land --dry-run` prints both its unchanged preflight
+policy and the advisory plan. No required check, threshold, proof-reuse rule,
+merge-queue rule or workflow changed. Final rebased preflight and CI results
+belong to the PR head.

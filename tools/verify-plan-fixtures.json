@@ -1,0 +1,51 @@
+{
+  "note": "Paths and SHAs from actual main commits; tests supply explicit cached-verdict scenarios, not historical CI claims.",
+  "fixtures": [
+    {
+      "name": "core preset-reach fix",
+      "baseSha": "524ea5fed6cf31261fd97cd6472dfa56020dd2bc",
+      "headSha": "f00367425c930aead9cfe8573fab3d8f71f039b5",
+      "files": [
+        "packages/core/src/events/arcs.ts",
+        "packages/core/src/events/decisions.ts",
+        "packages/core/src/events/reach.ts",
+        "packages/core/src/gates.test.ts",
+        "packages/core/src/replay.test.ts",
+        "packages/core/src/tools/outcome-reach-verdict.test.ts"
+      ]
+    },
+    {
+      "name": "documentation audit",
+      "baseSha": "048463713d8f8df06f1603ccc7f18627dfbaafe4",
+      "headSha": "8bef2b7f9160c385e74fc13738a63da8b31d6821",
+      "files": [
+        "docs/AGENT-LOG.md"
+      ]
+    },
+    {
+      "name": "content YAML",
+      "baseSha": "ce93e5f072de40889b7692016b47c5e4188c3c65",
+      "headSha": "c62ed505061921bdf1e8d65a1238e9071b8dd9ae",
+      "files": [
+        "packages/content/events/age_crusade.yaml"
+      ]
+    },
+    {
+      "name": "client",
+      "baseSha": "6b4fd7033c3bf1114a7965062b624b0986459380",
+      "headSha": "7a2b73d32738549cff2fd872cafe2949cbee9e4e",
+      "files": [
+        "packages/client/src/components/Prologue.vue",
+        "packages/client/src/lib/game.ts"
+      ]
+    },
+    {
+      "name": "schema",
+      "baseSha": "985950e10c7875a186b18de1c62aefe8ba12ae93",
+      "headSha": "722242bf6fa8180111b8c73782f6951930508145",
+      "files": [
+        "packages/schema/src/assemble.ts"
+      ]
+    }
+  ]
+}

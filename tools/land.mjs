@@ -711,6 +711,11 @@ async function main() {
   if (DRY) {
     say(`\n  would run the ${requestedPlan.kind} set — ${requestedPlan.reason}`);
     for (const b of blockers) say(`\n  would stop: ${b}`);
+    // Discovery only: this child reads local git facts and cached evidence.
+    // It cannot change the preflight steps, blockers, or dry-run exit status.
+    const advisory = spawnSync(process.execPath, [join(REPO, 'tools/verify-plan.mjs'), '--plan'],
+      { cwd: REPO, stdio: 'inherit' });
+    if (advisory.status !== 0) say('  advisory verification plan unavailable; preflight policy is unchanged.');
     say(`\n--dry-run: nothing was fetched, rebased, run or pushed.`);
     process.exit(blockers.length ? 1 : 0);
   }

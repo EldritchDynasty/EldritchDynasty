@@ -140,6 +140,43 @@ leaves it open. For staged work use `npm run land -- --no-issue-check` and use
 `Refs #N` or `Part of #N` in the PR/commit text. Do not negate a closing
 keyword because GitHub still interprets the keyword.
 
+### Find focused local checks
+
+`npm run verify -- --plan` recommends checks for the current diff against the
+merge base of `origin/main` and HEAD. `--base <ref>` changes that comparison;
+`--json` emits the same plan as data. It includes committed, staged, unstaged
+and untracked paths. The head SHA identifies the commit, not a snapshot of
+uncommitted edits.
+
+Planning reads local git facts and cached verdict refs. It never fetches,
+rebases, installs dependencies or runs checks, and needs no GitHub API token.
+An unavailable base, shallow history or incomplete map produces an uncertain
+full-preflight recommendation. Cached base verdicts can be absent or stale;
+only the existing green-base Markdown policy permits the short documentation
+set. Renames, deletions, shared simulation files, package boundaries and
+unmapped dependencies broaden the recommendation.
+
+The path-to-suite source is [ARCHITECTURE.md](../ARCHITECTURE.md#where-a-thing-lives),
+parsed once by `tools/codemap.mjs` for verification and task briefs. Colocated
+tests add evidence but cannot establish coverage alone. Tiers come from
+`tools/ci-evidence.json`'s `currentTier` and the existing workflow reader;
+`proposedTier` never selects a check. YAML changes include validation, loader
+tests and the scheduled fire-rate/outcome-reach measurements. The planner does
+not use import-graph selection: barrels fan out widely and authored YAML is
+outside that graph.
+
+The output separates **recommended local**, **required integration CI** and
+**scheduled evidence**, with a reason and source for each recommendation.
+`npm run land -- --dry-run` also prints this advisory plan. It does not change
+the landing's actual steps, blockers, proof reuse or CI requirements.
+
+Add `--run` to execute only the recommended local commands through the shared
+portable npm launcher. It reports each actual exit status and stops at the
+first failure; scheduled commands remain a separate evidence list. Explicit
+execution can run the recommended full preflight, whose normal fetch, rebase
+and install behavior is described above. A focused recommendation is an
+iteration aid; required integration CI remains authoritative.
+
 ### A change made only of markdown gets the short set
 
 When every file in a pull request is `.md` **and** its base has a green verdict,

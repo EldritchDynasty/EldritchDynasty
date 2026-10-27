@@ -72,7 +72,8 @@ export const nodeModulesLinkType = (platform = process.platform) =>
 export function runNpm(args, { cwd = process.cwd(), stdio = 'inherit' } = {}) {
   const npm = npmInvocation();
   const r = spawnSync(npm.command, [...npm.prefix, ...args], { cwd, stdio, encoding: 'utf8' });
-  return { ok: r.status === 0, out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
+  return { ok: r.status === 0, status: r.status, signal: r.signal,
+    ...(r.error ? { error: r.error.message } : {}), out: `${r.stdout ?? ''}${r.stderr ?? ''}` };
 }
 
 /** Is this executable on PATH? `command -v`, without a shell to run it in. */
