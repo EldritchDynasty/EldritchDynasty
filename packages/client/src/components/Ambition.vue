@@ -3,8 +3,11 @@ import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
+import type { TableTarget, TableTask } from '../lib/table-nav';
+import TableTaskLinks from './TableTaskLinks.vue';
 
-const props = defineProps<{ view: SessionView; actions: GameActions; proseMode?: ProseMode }>();
+const props = defineProps<{ view: SessionView; actions: GameActions; proseMode?: ProseMode; navigation?: TableTask | null }>();
+const emit = defineEmits<{ navigate: [target: TableTarget, origin: HTMLElement] }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
 const choosing = ref(false);
 // #1867 §4: the first ambition arrives with a reason. Pre-select what the
@@ -105,7 +108,7 @@ function cancel(): void {
 <template>
   <section class="panel ambition" aria-labelledby="ambition-heading">
     <div class="ambition-head">
-      <h3 id="ambition-heading" class="label">{{ plain ? 'Family goal' : 'House ambition' }}</h3>
+      <h3 id="ambition-heading" class="label" tabindex="-1">{{ plain ? 'Family goal' : 'House ambition' }}</h3>
       <button v-if="view.ambition && !choosing" class="quiet small" @click="beginChoosing()">{{ plain ? 'Change goal' : 'Change' }}</button>
     </div>
 
@@ -115,6 +118,10 @@ function cancel(): void {
       <p class="small ambition-progress">{{ view.ambition.progress.label }}</p>
       <p class="dim small">{{ view.ambition.status }}</p>
       <p class="small next"><span class="rubric">{{ plain ? 'Next step:' : 'Next:' }}</span> {{ view.ambition.next }}</p>
+      <details v-if="navigation?.id === view.ambition.id" class="ambition-routes">
+        <summary class="small">{{ plain ? 'Find orders for this goal' : 'Find orders for this ambition' }}</summary>
+        <TableTaskLinks :task="navigation" :prose-mode="proseMode" @navigate="(target, origin) => emit('navigate', target, origin)" />
+      </details>
       <p v-if="view.ambition.ahead" class="small ahead"><span class="rubric">{{ plain ? 'Plan ahead:' : 'Ahead:' }}</span> {{ view.ambition.ahead }}</p>
       <p v-if="pressing" class="small pressing">
         <span class="dim">{{ plain ? 'The family\'s situation now points to' : 'The house\'s situation now points to' }}</span>
@@ -159,6 +166,8 @@ function cancel(): void {
   font-variant-numeric: tabular-nums;
 }
 .next { margin-bottom: 0; }
+.ambition-routes { margin-top: 8px; }
+.ambition-routes summary { min-height: 44px; align-content: center; cursor: pointer; }
 .ahead { margin: 6px 0 0; }
 .rubric { color: var(--rubric); }
 label { display: grid; gap: 6px; }

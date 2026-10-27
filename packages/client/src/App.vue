@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { createGame, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import { createProseModeSelector } from './lib/prose-selection';
@@ -42,6 +42,7 @@ import {
   saveRevealed,
   type RevealElement,
 } from './lib/reveal';
+import { tableTasksFor, type OpenedTablePanels, type TableReveal, type TableTarget } from './lib/table-nav';
 
 /**
  * THE WHOLE CLIENT, above one store and one read model.
@@ -120,6 +121,54 @@ function readingStorage(): Storage | null {
 
 const revealStorage = readingStorage();
 const revealed = ref<Set<RevealElement>>(new Set());
+const openedTablePanels = ref<OpenedTablePanels>({});
+const tableReveal = ref<TableReveal | null>(null);
+let tableRevealToken = 0;
+const tableOrigin = shallowRef<{ element: HTMLElement; pane: typeof pane.value; ambitionId: string } | null>(null);
+const tableTasks = computed(() => view.value && table.value ? tableTasksFor(view.value, table.value, {
+  revealed: revealed.value, showEverything: showEverythingFromStart.value, proseMode: accessibility.value.proseMode,
+}) : []);
+const ambitionTask = computed(() => tableTasks.value.find(task => task.id === view.value?.ambition?.id) ?? null);
+const tableReturnLabel = computed(() => tableOrigin.value
+  ? (accessibility.value.proseMode === 'plainenglish' ? 'Back to goal' : 'Back to ambition') : undefined);
+
+function resetTableNavigation(): void {
+  openedTablePanels.value = {};
+  tableReveal.value = null;
+  tableOrigin.value = null;
+}
+
+function navigateTable(target: TableTarget): void {
+  if (!isRevealed('table')) return;
+  openedTablePanels.value = { ...openedTablePanels.value, [target]: true };
+  tableReveal.value = { target, token: ++tableRevealToken };
+  pane.value = 'table';
+}
+
+function navigateFromAmbition(target: TableTarget, origin: HTMLElement): void {
+  if (!isRevealed('table')) return;
+  // A rendered cross-reference may outlive its quote or ambition for one tick.
+  // Its destination is still safe: navigate to today's section, carrying no order.
+  tableOrigin.value = { element: origin, pane: pane.value, ambitionId: view.value?.ambition?.id ?? '' };
+  navigateTable(target);
+}
+
+function consumeTableReveal(token: number): void {
+  if (tableReveal.value?.token === token) tableReveal.value = null;
+}
+
+async function returnToAmbition(): Promise<void> {
+  const origin = tableOrigin.value;
+  if (!origin) return;
+  pane.value = origin.pane;
+  tableReveal.value = null;
+  tableOrigin.value = null;
+  await nextTick();
+  const destination = origin.element.isConnected && !origin.element.closest('details:not([open])')
+    && view.value?.ambition?.id === origin.ambitionId
+    ? origin.element : document.getElementById('ambition-heading');
+  destination?.focus();
+}
 /** Store stable identities, so the current reader mode always owns the visible words. */
 const revealNotices = ref<RevealElement[]>([]);
 let revealRunKey: string | null = null;
@@ -139,6 +188,7 @@ function dismissReveal(element: RevealElement): void {
  */
 watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEverything]) => {
   if (!nextView) {
+    resetTableNavigation();
     revealRunKey = null;
     revealed.value = new Set();
     revealNotices.value = [];
@@ -149,7 +199,10 @@ watch([view, table, showEverythingFromStart], ([nextView, nextTable, showEveryth
   const prior = key === revealRunKey
     ? revealed.value
     : loadRevealed(revealStorage, key);
-  if (key !== revealRunKey) revealNotices.value = [];
+  if (key !== revealRunKey) {
+    revealNotices.value = [];
+    resetTableNavigation();
+  }
 
   const transition = revealTransition(nextView, nextTable, prior, {
     showEverything,
@@ -533,7 +586,8 @@ const yearAndBirths = computed(() => {
              already extends to a choice nobody can take: "an unavailable choice
              is itself information (concept §16), so it is shown greyed with the
              reason rather than filtered away." -->
-        <Ambition :view="view" :actions="actions" :prose-mode="accessibility.proseMode" />
+        <Ambition :view="view" :actions="actions" :prose-mode="accessibility.proseMode"
+          :navigation="ambitionTask" @navigate="navigateFromAmbition" />
 
         <div class="panel clock">
           <h3 class="label">{{ shellCopy.clockHeading }}</h3>
@@ -676,13 +730,21 @@ const yearAndBirths = computed(() => {
                years between them. -->
           <Muster v-if="view.muster" :view="view" :prose-mode="accessibility.proseMode" :actions="actions" :refusal="musterRefusal" />
           <GameTable
+            v-model:opened="openedTablePanels"
             :table="table"
             :prose-mode="accessibility.proseMode"
             :land="land"
             :actions="actions"
             :refusal="refusal"
             :receipt="receipt"
+            :reveal="tableReveal"
+            :tasks="tableTasks"
+            :show-everything="showEverythingFromStart"
+            :return-label="tableReturnLabel"
             @open-plat="platOpen = true"
+            @navigate="navigateTable"
+            @revealed="consumeTableReveal"
+            @return="returnToAmbition"
           />
         </template>
         <Abroad v-else-if="middle === 'abroad'" :view="view" :prose-mode="accessibility.proseMode" />

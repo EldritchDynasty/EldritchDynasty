@@ -1,9 +1,18 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
-import type { LandView, TableView } from '@ed/core';
+import { flushPromises, mount } from '@vue/test-utils';
+import { nextTick } from 'vue';
+import { canonical, type LandView, type SessionView, type TableView } from '@ed/core';
+import { loadBundle } from '@ed/content';
+import type { SavedGame } from '@ed/schema';
 import type { GameActions } from '../lib/game';
+import * as gameModule from '../lib/game';
+import { browserPlatform } from '../platform';
+import { ACCESSIBILITY_STORAGE_KEY } from '../lib/accessibility';
+import { TABLE_TARGETS, tableTargetAttrs, tableTasksFor } from '../lib/table-nav';
 import GameTable from './Table.vue';
+import TableTaskLinks from './TableTaskLinks.vue';
+import App from '../App.vue';
 
 function fixture(boughtBack = false): TableView {
   return {
@@ -24,6 +33,166 @@ function fixture(boughtBack = false): TableView {
     papers: [], pedigreePrices: [], servants: [], maxBond: 20,
   } as unknown as TableView;
 }
+
+describe('Table destinations and read-only navigation (#1941)', () => {
+  const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
+
+  it.each(['original', 'plainenglish'] as const)('explains an unrevealed Table without exposing destinations in %s', (proseMode) => {
+    const task = tableTasksFor({} as SessionView, fixture(), { revealed: new Set(), proseMode })[0]!;
+    const w = mount(TableTaskLinks, { props: { task, proseMode } });
+    try {
+      expect(w.findAll('button')).toHaveLength(0);
+      expect(w.text()).toContain(proseMode === 'original' ? 'The Table will open' : 'Family orders will open');
+      expect(w.find('[data-table-go]').exists()).toBe(false);
+    } finally { w.unmount(); }
+  });
+
+  it.each(['original', 'plainenglish'] as const)('gives every destination exactly one rendered anchor in %s', (proseMode) => {
+    const w = mount(GameTable, { props: {
+      table: fixture(), land, actions: { order: vi.fn() } as unknown as GameActions,
+      refusal: null, receipt: null, showEverything: true, proseMode,
+    } });
+    try {
+      const anchors = w.findAll('[data-table-target]');
+      expect(anchors.map(a => a.attributes('data-table-target')).sort()).toEqual([...TABLE_TARGETS].sort());
+      for (const target of TABLE_TARGETS) {
+        expect(w.get(`#${tableTargetAttrs(target).id}`).attributes('data-table-target')).toBe(target);
+      }
+    } finally { w.unmount(); }
+  });
+
+  it('reopens idle sections, refocuses repeated requests and keeps a vanished offer reachable', async () => {
+    const order = vi.fn();
+    const w = mount(GameTable, { attachTo: document.body, props: {
+      table: fixture(), land, actions: { order } as unknown as GameActions,
+      refusal: null, receipt: null,
+    } });
+    try {
+      await w.setProps({ reveal: { target: 'shelf', token: 1 } });
+      await nextTick();
+      const fold = w.get('#table-shelf h3 button');
+      expect(fold.attributes('aria-expanded')).toBe('true');
+      expect(document.activeElement).toBe(fold.element);
+      (w.get('#table-purse input').element as HTMLElement).focus();
+      await w.setProps({ reveal: { target: 'shelf', token: 2 } });
+      await nextTick();
+      expect(document.activeElement).toBe(fold.element);
+      expect(w.emitted('revealed')).toEqual([[1], [2]]);
+      // The quote disappeared after the link was drawn. Open only today's empty panel.
+      await w.setProps({ reveal: { target: 'security', token: 3 } });
+      await nextTick();
+      expect(document.activeElement).toBe(w.get('#table-security h3').element);
+      expect(w.get('#table-security').text()).toContain('No warnings are outstanding.');
+      expect(order).not.toHaveBeenCalled();
+    } finally { w.unmount(); }
+  });
+
+  it('honours a rendered link after its conditional public offer disappears', async () => {
+    const table: TableView = { ...fixture(), security: { threats: [{
+      id: 'warning', target: 'relative', name: 'Ada', due: 1230, warned: true, spent: 0, watch: [], options: [],
+    }], history: [] } };
+    const tasks = tableTasksFor({} as SessionView, table, { revealed: new Set(['table']) });
+    const w = mount(GameTable, { props: {
+      table, tasks, land, actions: { order: vi.fn() } as unknown as GameActions, refusal: null, receipt: null,
+    } });
+    try {
+      const oldLink = w.get('[data-table-go="security"]');
+      const next = fixture();
+      const render = w.setProps({ table: next, tasks: tableTasksFor({} as SessionView, next, { revealed: new Set(['table']) }) });
+      // Click before Vue replaces the rendered quote: navigation still has only a section name.
+      (oldLink.element as HTMLButtonElement).click();
+      await render;
+      expect(w.emitted('navigate')).toEqual([['security']]);
+      await w.setProps({ reveal: { target: 'security', token: 1 } });
+      await nextTick();
+      expect(w.get('#table-security').text()).toContain('No warnings are outstanding.');
+    } finally { w.unmount(); }
+  });
+
+  it('keeps unaffordable prices and verbatim refusal text beside the reachable controls', async () => {
+    const table = fixture();
+    table.outsideServices.search = { ...table.outsideServices.search, ok: false, price: 37, reason: 'The purse cannot meet 37 crowns.' };
+    const tasks = tableTasksFor({} as SessionView, table, { revealed: new Set(['table']) });
+    const order = vi.fn();
+    const w = mount(GameTable, { attachTo: document.body, props: {
+      table, land, tasks, actions: { order } as unknown as GameActions, refusal: null, receipt: null,
+    } });
+    try {
+      const reader = w.get('details:nth-of-type(2)');
+      (reader.element as HTMLDetailsElement).open = true;
+      await nextTick();
+      expect(reader.text()).toContain('The purse cannot meet 37 crowns.');
+      const route = reader.get('[data-table-go="outsideServices"]');
+      expect(route.attributes('disabled')).toBeUndefined();
+      await route.trigger('click');
+      expect(w.emitted('navigate')).toEqual([['outsideServices']]);
+      await w.setProps({ reveal: { target: 'outsideServices', token: 1 } });
+      await nextTick();
+      const panel = w.get('#table-outsideServices');
+      expect(panel.text()).toContain('37');
+      expect(panel.text()).toContain('The purse cannot meet 37 crowns.');
+      expect(panel.findAll('button').some(button => button.attributes('disabled') !== undefined)).toBe(true);
+      expect(panel.element.contains(document.activeElement)).toBe(true);
+      expect(order).not.toHaveBeenCalled();
+    } finally { w.unmount(); }
+  });
+
+  it.each(['original', 'plainenglish'] as const)('returns to an ambition, retains opened panels and preserves the complete save in %s', async (proseMode) => {
+    localStorage.clear();
+    localStorage.setItem(ACCESSIBILITY_STORAGE_KEY, JSON.stringify({ proseMode, showEverythingFromStart: true }));
+    let pause = () => {};
+    let exported: SavedGame | undefined;
+    const host = { ...browserPlatform(),
+      onPause: (listener: () => void) => { pause = listener; return () => {}; },
+      exportSave: async (save: unknown) => { exported = save as SavedGame; },
+    };
+    const game = gameModule.createGame(loadBundle(), host);
+    game.actions.begin(1941);
+    const signing = game.prologue.value!;
+    expect(game.actions.found({
+      houseName: 'House Navigation', heirloom: signing.heirlooms[0]!.heirloom, grudge: signing.grudges[0]!.house,
+      answers: Object.fromEntries(signing.examination.map(question => [question.id, question.answers[0]!.id])),
+    }).ok).toBe(true);
+    game.actions.enter();
+    expect(game.actions.setAmbition('restore_ledger')).toBe(true);
+    const create = vi.spyOn(gameModule, 'createGame').mockReturnValue(game);
+    const w = mount(App, { attachTo: document.body });
+    try {
+      await flushPromises();
+      pause();
+      await game.actions.exportSave('autosave');
+      const before = structuredClone(exported!);
+      expect(before.decisionLog.some(row => row.kind === 'command')).toBe(true);
+      const route = w.get('.ambition [data-table-go="shelf"]');
+      (w.get('.ambition-routes').element as HTMLDetailsElement).open = true;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        await route.trigger('click');
+        await nextTick();
+        const shelf = w.get('#table-shelf h3 button');
+        expect(shelf.attributes('aria-expanded')).toBe('true');
+        expect(document.activeElement).toBe(shelf.element);
+        await w.get('.return-goal').trigger('click');
+        expect(document.activeElement).toBe(route.element);
+        expect(w.find('.table').exists()).toBe(false);
+      }
+      // Ordinary pane switches retain overrides without replaying an old focus request.
+      const tableTab = w.findAll('.panes button').find(button => button.text() === (proseMode === 'plainenglish' ? 'Family orders' : 'The table'));
+      expect(tableTab).toBeDefined();
+      await tableTab!.trigger('click');
+      expect(w.get('#table-shelf h3 button').attributes('aria-expanded')).toBe('true');
+      pause();
+      await game.actions.exportSave('autosave');
+      expect(canonical({ ...exported, savedAt: '' })).toBe(canonical({ ...before, savedAt: '' }));
+      expect(exported!.decisionLog).toEqual(before.decisionLog);
+      // An ambition can be cleared while its Table destination remains open.
+      await route.trigger('click');
+      game.actions.setAmbition(null);
+      await nextTick();
+      await w.get('.return-goal').trigger('click');
+      expect(document.activeElement).toBe(w.get('#ambition-heading').element);
+    } finally { w.unmount(); create.mockRestore(); localStorage.clear(); }
+  });
+});
 
 describe('Table captive return (#1908)', () => {
   it('names captor and fixed price, preserves refusals and sends the same ransom order in both readings', async () => {
