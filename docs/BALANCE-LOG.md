@@ -14926,3 +14926,83 @@ prints NOT JUDGED, with a warning naming what to record, for a class nobody has
 measured. `fire-rate`, `war`, `endings` and `blood` have no 2-CPU measurement
 yet: record each from the first private weekly run rather than scaling the
 4-CPU numbers.
+
+## 2026-10-27 — #1930: guarded reach respects the arc's preset cast
+
+Measured code `11294bb4060754a64330eff87a96da58ea123948`, on `main` base
+`524ea5fe`; content tree `6c62ba184074a1b96e14d79dfe16a19ef9855867` is unchanged.
+Node v22.23.4. Canonical **800 Long Lines × 500 years**, seeds **5000 + 7i**,
+`i = 0…799`, ordinary gate-batch auto-resolution and steward policy. The run
+started at 03:31:27 UTC and completed at 03:50:43 UTC. It called the command's
+`gateOutcomeReach(source)` with its canonical defaults, then read that same
+source's cached `playGateBatch(source, 800, 500)` for the denominators below.
+
+The correction changes measurement, not casting. `commitOutcome` derives the
+runtime preset from the same `soleBindings` helper as `dueArcSteps`, before
+`advanceArc` saves newly drawn bindings. An observed preset slot contributes
+only its actual cast's guarded share. An arc slot without a saved binding
+still contributes its genuinely drawn pool. The shipped content has five
+guarded callback groups (`family_member`, arc-bound) and five guarded rite
+groups (`unwoken`, uniformly drawn). No content, frequency ration, campaign
+policy, proof threshold, witness inventory or save field changed.
+
+**Callback denominators.** Firings count every resolution of the parent
+narration across the batch; resolving runs count each campaign at most once.
+The complementary sex/relation guards leave one unit-share branch per fixed
+cast, so each branch's actual expected count is also its resolution count.
+Pool expectation now agrees with that count rather than crediting unrelated
+household members.
+
+| Outcome | Parent firings | Resolving runs / 800 | Actual expected | Pool expected |
+| --- | ---: | ---: | ---: | ---: |
+| `the_match_made / a_son_married` | 7,316 | 712 | 3,218 | 3,218 |
+| `the_match_made / a_daughter_married` | 7,316 | 794 | 4,098 | 4,098 |
+| `the_match_returned / the_match_held` | 6,922 | 793 | 6,920 | 6,920 |
+| `the_match_returned / the_match_undone` | 6,922 | 2 | 2 | 2 |
+| `the_term_shows / it_shows_in_him` | 9,362 | 757 | 5,255 | 5,255 |
+| `the_term_shows / it_shows_in_her` | 9,362 | 761 | 4,107 | 4,107 |
+| `the_waking_noticed / a_son_woke` | 7,631 | 689 | 3,077 | 3,077 |
+| `the_waking_noticed / a_daughter_woke` | 7,631 | 785 | 4,554 | 4,554 |
+| `the_waking_shows / what_his_waking_became` | 7,394 | 683 | 2,985 | 2,985 |
+| `the_waking_shows / what_her_waking_became` | 7,394 | 783 | 4,409 | 4,409 |
+
+Both sexes occur across this canonical sample, and all ten callback branches
+resolve. Consequently no aggregate callback verdict moves to no exposure in
+this run. The production-path regressions establish the conditional claim:
+for one fixed male Match subject, the daughter branch has actual and pool
+expectation **exactly zero**, irrespective of unrelated women. Fixed female
+subjects, other bindings, mixed preset/random casts, and saved arc choices
+exercise the converse cases. The unchanged verdict calls an impossible cast
+`dead` with “no eligible cast in any pool”, rather than inventing exposure.
+
+**Gate result: PASS**, 1,181 declared outcomes, six sampled zeroes still
+**unproven** under the unchanged five-expected boundary:
+
+| Outcome | Firings | Actual expected | Pool expected | Actual eligible casts | Runs needed to prove |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `the_drowning / full_count / woke` | 66 | 0.92 | 2.224429 | 2 | 1,799 |
+| `the_drowning_repeated / nothing` | 64 | 0.20 | 0.268333 | 2 | 14,907 |
+| `the_seven_lamp_vigil / keep_the_lamps / woke` | 19 | 0.58 | 0.856190 | 1 | 4,672 |
+| `the_dark_year_fast / keep_the_fast / nothing` | 26 | 0.40 | 0.316667 | 4 | 12,632 |
+| `the_unmaking / go_through_with_it / taken` | 3 | ~1.9 (weight share) | — | — | 2,084 |
+| `the_unmaking / go_through_with_it / failed_at_the_last_step` | 3 | ~1.1 (weight share) | — | — | 3,704 |
+
+Each listed zero resolves in **0/800** runs. Rite pool expectations still
+include real draws missed by the actual cast; the three-boy regression keeps
+`(1 / 3) × (52 / 100)` for the fast's expressive outcome. These thin results
+remain limits of this sample, not evidence that the branches are impossible.
+
+**Provenance boundary.** Table forcing orders preset CHILD but their saved
+docket lacks that provenance; this separate compatibility decision is tracked
+in [#1951](https://github.com/EldritchDynasty/EldritchDynasty/issues/1951).
+A regression guards the canonical policy's absence of Table orders, including
+the steward, so this latent path cannot silently become part of this evidence.
+The two generated covert incident templates contain no `onlyIf` and therefore
+need no guarded-exposure change here.
+
+Focused verification passed **652 tests across six suites**, including
+complete canonical-save comparisons (excluding `savedAt`) and RNG comparisons
+with neither/before/applied observers, saved docket continuation, and public
+session replay. Core typechecking and content validation passed (52 rules,
+zero errors, three existing warnings). Historical measurements above are
+unchanged; subsequent content or policy changes require fresh evidence.
