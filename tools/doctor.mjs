@@ -145,7 +145,7 @@ export function dependencyCheck(root, io = {}) {
 export function chromiumCheck(root, { exists = existsSync, load, launch = launchChromium, probe = true } = {}) {
   const fix = 'npm run setup -- --browser';
   if (!exists(join(root, 'node_modules', ...PLAYWRIGHT_PACKAGE.split('/')))) {
-    return check('chromium', 'unavailable', `${PLAYWRIGHT_PACKAGE} is not installed`, { fix: 'npm run setup -- --browser', required: false });
+    return check('chromium', 'unavailable', `${PLAYWRIGHT_PACKAGE} is not installed`, { fix, required: false });
   }
   if (!playwrightChromiumInstalled(root, exists, ...(load ? [load] : []))) {
     return check('chromium', 'unavailable', 'the Chromium executable Playwright needs is not installed', { fix, required: false });
