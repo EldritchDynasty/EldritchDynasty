@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { gunzipSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/schema';
+import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS, SlotSpecS } from '@ed/schema';
 import { createProseRuntime } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
@@ -417,6 +417,38 @@ describe('a run survives being written down', () => {
     return buildPendingArc(content);
   }
 
+  it.each([false, true])('hydrates the saved arc player cast (player slot: %s, #1952)', playerSlot => {
+    const bundle = structuredClone(content.bundle);
+    if (playerSlot) {
+      const event = bundle.events.find(candidate => candidate.id === 'the_tutors_good_years')!;
+      event.slots.HELPER = SlotSpecS.parse({ role: 'family_member', castBy: 'player' });
+    }
+    // The shared fixture uses startArc -> dueArcSteps -> queueChoice; its
+    // ArcStep includes the real resolver's empty or nonempty playerCast.
+    const { ctx, instance, pending } = buildPendingArc(bundle);
+    const slots = playerSlot ? ['HELPER'] : [];
+    expect(pending.arcStep!.playerCast).toEqual(slots);
+    expect(pending.cast.map(request => request.slot)).toEqual(slots);
+    const raw = JSON.parse(JSON.stringify(saveGame(ctx)));
+    const input = structuredClone(raw);
+    const restored = loadGame(raw, bundle);
+    const decision = restored.world.pendingDecisions[0]!;
+    if (decision.kind !== 'choice') throw new Error('expected the saved story choice');
+    expect(decision.arcStep!.playerCast).toEqual(slots);
+    expect(decision.arcStep!.instance).toBe(restored.world.arcs.get(instance.id));
+    expect(canonical(saveGame(restored))).toBe(canonical(raw));
+    expect(raw).toEqual(input);
+
+    const cast = playerSlot ? { HELPER: String(pending.fill.TUTOR) } : undefined;
+    for (const world of [ctx, restored]) {
+      const result = resolveChoice(world, pending.id, 'teach_the_heir', testRng('cast-resume'), cast);
+      expect(result.ok).toBe(true);
+      if (playerSlot) expect(result.resolved!.fill.HELPER).toBe(pending.fill.TUTOR);
+    }
+    expect(canonical(saveGame(restored))).toBe(canonical(saveGame(ctx)));
+    expect(raw).toEqual(input);
+  });
+
   it.each([
     ['teach_the_heir', 'heir', 'the_day_book', 'the_heir_reads_the_tally'],
     ['share_the_hours', 'shared', 'the_signatures', 'three_names_in_the_day_book'],
@@ -439,7 +471,9 @@ describe('a run survives being written down', () => {
     let restored = loadGame(raw, edited);
     const decision = restored.world.pendingDecisions[0]!;
     if (decision.kind !== 'choice') throw new Error('expected the saved story choice');
-    expect(decision).toEqual(promised);
+    // Compare the persisted promise; playerCast is reconstructed runtime
+    // metadata, already represented by the docket's saved cast requests.
+    expect(SavedGameS.parse(saveGame(restored)).pendingDecisions[0]).toEqual(promised);
     expect(decision.arcStep!.instance).toBe(restored.world.arcs.get(instance.id));
     expect(raw).toEqual(input);
 

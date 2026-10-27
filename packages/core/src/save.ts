@@ -436,6 +436,9 @@ export function loadGame(raw: unknown, source: ContentBundle | Content): SimCtx 
       throw new SaveFormatError(`pending decision ${decision.id} references a different arc for instance ${savedInstance.id}`);
     }
     decision.arcStep.instance = instance;
+    // The schema stores these requests on the docket, not a second copy on
+    // ArcStep. Restore the runtime list, including the empty engine-cast case.
+    decision.arcStep.playerCast = decision.cast.map(request => request.slot);
   }
 
   // A legacy docket keeps the wording and odds already promised. Add only
