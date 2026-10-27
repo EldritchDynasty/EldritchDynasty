@@ -66,7 +66,21 @@ const tool = (await import(pathToFileURL(join(REPO, 'tools/setup.mjs')).href)) a
   describeSetup: (result: { dependencies: Dependencies; browser: Browser | null }) => string[];
 };
 
-const HOST: Host = { node: '22.22.0', platform: 'linux', arch: 'x64' };
+/**
+ * THE MACHINE RUNNING THIS SUITE, NOT A MACHINE IT IMAGINES.
+ *
+ * `sessionReady` reads the real platform, because that is the question the
+ * hook asks. The first cut stamped every fixture as linux-x64, which matched
+ * the Linux runner by coincidence; the Windows runner then saw — correctly —
+ * an install made for another platform, and two tests failed on the very
+ * fingerprint they were written to defend. "Another" platform, architecture
+ * and Node major are derived from this one, so each case means the same thing
+ * on every runner.
+ */
+const HOST: Host = { node: process.versions.node, platform: process.platform, arch: process.arch };
+const OTHER_PLATFORM = HOST.platform === 'win32' ? 'linux' : 'win32';
+const OTHER_ARCH = HOST.arch === 'arm64' ? 'x64' : 'arm64';
+const OTHER_NODE = `${Number(process.versions.node.split('.')[0]) - 2}.1.0`;
 const LOCK = '{"name":"eldritch-dynasty","lockfileVersion":3}\n';
 const CHROMIUM = '/browser-cache/chromium';
 const playwright: Load = () => ({ chromium: { executablePath: () => CHROMIUM } });
@@ -148,9 +162,11 @@ describe('the dependency fingerprint', () => {
    * container matches its lockfile perfectly and carries the wrong esbuild.
    */
   it('reads an install made on another platform as stale', () => {
-    const repo = checkout({ installed: true, stamp: { ...HOST, platform: 'win32' } });
-    expect(tool.dependencyState('/repo', { ...repo.io, host: HOST }))
-      .toEqual({ state: 'stale', detail: 'installed for win32-x64, running on linux-x64' });
+    const repo = checkout({ installed: true, stamp: { ...HOST, platform: OTHER_PLATFORM } });
+    expect(tool.dependencyState('/repo', { ...repo.io, host: HOST })).toEqual({
+      state: 'stale',
+      detail: `installed for ${OTHER_PLATFORM}-${HOST.arch}, running on ${HOST.platform}-${HOST.arch}`,
+    });
   });
 
   it('lives inside node_modules, so it cannot outlive the install it describes', () => {
@@ -203,8 +219,8 @@ describe('npm run setup', () => {
   it('never runs npm ci on a warm tree, however it is stale', () => {
     const variants: Array<[string, ReturnType<typeof checkout>]> = [
       ['no fingerprint (installed by a plain npm install)', checkout({ installed: true, stamp: 'none' })],
-      ['installed under another Node major', checkout({ installed: true, stamp: { ...HOST, node: '20.1.0' } })],
-      ['installed for another architecture', checkout({ installed: true, stamp: { ...HOST, arch: 'arm64' } })],
+      ['installed under another Node major', checkout({ installed: true, stamp: { ...HOST, node: OTHER_NODE } })],
+      ['installed for another architecture', checkout({ installed: true, stamp: { ...HOST, arch: OTHER_ARCH } })],
     ];
     const pruned = checkout({ installed: true });
     pruned.dirs.delete('/repo/node_modules/vitest');
