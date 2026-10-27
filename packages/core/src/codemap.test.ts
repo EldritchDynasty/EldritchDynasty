@@ -1,9 +1,43 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { SAVE_FORMAT } from '@ed/schema';
 
 const REPO = join(import.meta.dirname, '../../..');
+
+const mapParser = await import(pathToFileURL(join(REPO, 'tools/codemap.mjs')).href) as {
+  parseCodemap: (text: string, options: { files: string[] }) => {
+    entries: { paths: string[]; suites: string[] }[]; problems: object[];
+  };
+};
+
+describe('the architecture map consumed by verification and task briefs', () => {
+  it('resolves every Go to path and Guarded by suite without ambiguity', () => {
+    const files = execFileSync('git', ['ls-files', '-z'], { cwd: REPO, encoding: 'utf8' }).split('\0').filter(Boolean);
+    const map = mapParser.parseCodemap(readFileSync(join(REPO, 'ARCHITECTURE.md'), 'utf8'), { files });
+    expect(map.entries.length).toBeGreaterThan(0);
+    expect(map.problems).toEqual([]);
+    for (const entry of map.entries) {
+      for (const path of [...entry.paths, ...entry.suites]) expect(existsSync(join(REPO, path)), path).toBe(true);
+    }
+    // Identical basenames exist in core and schema, or core and tools. The
+    // source's package/directory is evidence; a global first-match is not.
+    expect(map.entries.find((entry) => entry.paths.includes('packages/core/src/events/tales.ts'))?.suites)
+      .toContain('packages/core/src/tales.test.ts');
+    expect(map.entries.find((entry) => entry.paths.length === 1 && entry.paths[0] === 'packages/core/src/land.ts')?.suites)
+      .toContain('packages/core/src/land.test.ts');
+  });
+
+  it('refuses an ambiguous shorthand and missing guards rather than picking a filename', () => {
+    const map = mapParser.parseCodemap('## Where a thing lives\n| Fixture | `same.ts` | `missing.test.ts` |\n---', {
+      files: ['packages/core/src/same.ts', 'packages/schema/src/same.ts'],
+    });
+    expect(map.problems).toHaveLength(2);
+    expect(map.entries[0]?.paths).toEqual([]);
+  });
+});
 
 /**
  * THE MAP MUST MATCH THE GROUND.

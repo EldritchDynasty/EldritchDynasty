@@ -44,40 +44,16 @@
  */
 import { execFileSync } from 'node:child_process';
 import { parseVerdict, stateOf } from './verdict.mjs';
+import { classify } from './diff-kind.mjs';
 
 /**
  * What a docs-only change runs. The same three scripts as CI's short tier —
  * `land.test.ts` derives that tier from `check.yml` and fails if they differ,
  * so the landing and the build cannot disagree about what "short" means.
  */
-export const DOCS_ONLY_STEPS = ['typecheck', 'validate', 'test:fast'];
+export { DOCS_ONLY_STEPS, classify } from './diff-kind.mjs';
 
 const MARKDOWN = /\.md$/i;
-
-/**
- * short or full, and why, from the changed paths and the base's verdict state.
- *
- * Pure, like `ciScripts` and `issueLeftOpen`: a test hands it the diff it must
- * refuse. `files` must come from a rename-blind diff (`--no-renames`) — with
- * rename detection, `a.ts → a.md` lists only `a.md`, and a deleted TypeScript
- * file would pass as documentation.
- */
-export function classify(files, baseState) {
-  if (!files.length) return { short: false, reason: 'no changed files to classify' };
-  const code = files.filter((f) => !MARKDOWN.test(f));
-  if (code.length) {
-    const named = code.slice(0, 3).join(', ') + (code.length > 3 ? `, and ${code.length - 3} more` : '');
-    return { short: false, reason: `not markdown only: ${named}` };
-  }
-  if (baseState !== 'green') {
-    return {
-      short: false,
-      reason: `markdown only, but the base is ${baseState.toUpperCase()}, not green — ` +
-        'a short run on top of it would report green for a trunk that is not',
-    };
-  }
-  return { short: true, reason: `markdown only (${files.length} file${files.length === 1 ? '' : 's'}) on a green base` };
-}
 
 const gitIn = (cwd) => (...args) =>
   execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
