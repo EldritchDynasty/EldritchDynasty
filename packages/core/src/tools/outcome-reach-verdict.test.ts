@@ -184,6 +184,44 @@ describe('scoped blocking outcome reach (#502)', () => {
 describe('the denominator a zero is judged on (#1917)', () => {
   const content = indexContent(loadContent());
 
+  it('keeps incomplete legacy pool evidence explicit without adding overlapping expectations (#1951)', () => {
+    const key = 'fast|keep|woke';
+    const outcome: DeclaredOutcome = { label: 'fast/keep -> woke', choice: 'fast|keep', share: 0.52, guarded: true };
+    const observed = reach({}, { 'fast|keep': 20 });
+    observed.guarded = { opportunities: new Map([[key, 0]]), expected: new Map([[key, 0]]),
+      poolExpected: new Map(), poolUnknown: new Map([[key, 1]]) };
+    expect(judgeOutcomeReachZero(key, outcome, observed, 800)).toMatchObject({ kind: 'unproven' });
+    expect(judgeOutcomeReachZero(key, outcome, observed, 800).why).toContain('provenance unavailable for 1 of 20');
+    // Both measurements cover some of the same firings. 3 + 3 is not six.
+    observed.guarded.opportunities.set(key, 10);
+    observed.guarded.expected.set(key, 3);
+    observed.guarded.poolExpected!.set(key, 3);
+    expect(judgeOutcomeReachZero(key, outcome, observed, 800).kind).toBe('unproven');
+    // Either supported lower bound still uses the existing five-expected bar.
+    observed.guarded.poolExpected!.set(key, 5);
+    expect(judgeOutcomeReachZero(key, outcome, observed, 800).kind).toBe('dead');
+    observed.guarded.poolExpected!.set(key, 3);
+    observed.guarded.expected.set(key, 5);
+    expect(judgeOutcomeReachZero(key, outcome, observed, 800).kind).toBe('dead');
+  });
+
+  it('does not mark a known fixed or best-selected guarded slot as unknown (#1951)', () => {
+    const ctx = testWorld(content, 1951);
+    const subject = place(ctx, { sex: 'male', age: 30, name: 'Fixed male subject' });
+    const original = content.mustEvent('the_match_made');
+    for (const best of [false, true]) {
+      const event = best ? EventTemplateS.parse({ ...original, slots: { ...original.slots,
+        SUBJECT: { ...original.slots.SUBJECT, select: { bestBy: 'mind' } } } }) : original;
+      if (event.interaction.kind !== 'narration') throw new Error('narration required');
+      const into = emptyReach();
+      observeGuardedOutcome(ctx, { event, outcome: event.interaction.outcomes[0]!, selectedOutcome: event.interaction.outcomes[0]!,
+        fill: { SUBJECT: subject.id }, presetKnown: false, ...(best ? {} : { preset: ['SUBJECT'] }) }, into);
+      const key = 'the_match_made||a_daughter_married';
+      expect(into.guarded!.poolExpected!.get(key)).toBe(0);
+      expect(into.guarded!.poolUnknown?.get(key) ?? 0).toBe(0);
+    }
+  });
+
   it('judges a checked outcome by what the actual casts could roll, not by its weight share', () => {
     const key = 'slates|use_terra|lost';
     const outcome: DeclaredOutcome = { label: 'slates/use_terra -> lost', choice: 'slates|use_terra', share: 0.5, checked: true };

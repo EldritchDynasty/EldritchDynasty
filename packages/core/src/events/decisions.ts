@@ -74,6 +74,8 @@ export interface PendingChoice {
   fill: SlotFill;
   choices: DecisionChoice[];
   cast: CastRequest[];
+  /** Presets for forcing/explicit casts; missing legacy forcing provenance stays unknown. */
+  preset?: string[];
   /**
    * Who takes the branch (`schema/src/decider.ts`). A client reads this to know
    * WHAT it is being asked for: `player` means pick a branch, `party` means name
@@ -177,6 +179,7 @@ export function queueChoice(
   fill: SlotFill,
   playerCast: string[],
   arcStep?: ArcStep,
+  preset?: readonly string[],
 ): PendingChoice {
   const choices = e.interaction.kind === 'narration' ? [] : e.interaction.choices;
   const decidedBy: Decider = e.interaction.kind === 'narration' ? 'chance' : e.interaction.decidedBy;
@@ -189,6 +192,9 @@ export function queueChoice(
     body: renderBody(proseForEventBody(ctx, e, body), fill, ctx),
     ...(callback ? { callback } : {}),
     fill,
+    // Forcing can arrive either from a fixed Table order or an ambient draw.
+    // Record [] for the latter; leave unrelated dockets' saved shape alone.
+    ...(preset || e.forcing ? { preset: [...(preset ?? [])] } : {}),
     choices: choices.map((c) => ({
       ...choiceAvailability(c, ctx, fill, e),
       // Tokens render here as they do in the body: a label that names {KIN}
@@ -333,6 +339,8 @@ export interface OutcomeObservation {
   readonly fill: SlotFill;
   /** Slots supplied by the caller rather than drawn at this firing. */
   readonly preset?: readonly string[];
+  /** False for a legacy forcing docket that did not record its casting provenance. */
+  readonly presetKnown?: boolean;
   readonly choiceId?: string;
 }
 
@@ -352,6 +360,8 @@ export function commitOutcome(
   rng: Rng,
   arcStep?: ArcStep,
   origin: 'ambient' | 'incident' = 'ambient',
+  /** null means the original preset/draw distinction is unavailable. */
+  preset?: readonly string[] | null,
 ): ResolvedEvent {
   const selectedOutcome = outcome;
   const intervention = resolvePrimordial(ctx, e, selectedOutcome, fill,
@@ -364,10 +374,14 @@ export function commitOutcome(
   // No listener means no snapshot allocation, and observation draws no dice.
   const observation = ctx.observeOutcome || ctx.observeAppliedOutcome
     ? { event: e, outcome, selectedOutcome, fill: structuredClone(fill),
-      // advanceArc has not saved this step's newly drawn bindings yet, so
-      // these are exactly the presets dueArcSteps handed to resolveSlots.
-      ...(arcStep ? { preset: Object.keys(soleBindings(arcStep.instance.bindings,
-        ctx.content.mustArc(arcStep.instance.arc).bindings)) } : {}),
+      // Keep incoming arc bindings and explicit caller presets. advanceArc
+      // has not yet saved any newly drawn slots from this step.
+      ...(arcStep || preset ? { preset: [...new Set([
+        ...(arcStep ? Object.keys(soleBindings(arcStep.instance.bindings,
+          ctx.content.mustArc(arcStep.instance.arc).bindings)) : []),
+        ...(preset ?? []),
+      ])] } : {}),
+      ...(preset === null ? { presetKnown: false } : {}),
       ...(choiceId !== undefined ? { choiceId } : {}) }
     : undefined;
   if (observation) ctx.observeOutcome?.(observation);
@@ -543,7 +557,8 @@ export function resolveChoice(
   ctx.observeDecision?.({ decision: structuredClone({ ...pending, fill }), answer: choice.id });
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
-  const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep);
+  const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep, undefined,
+    pending.preset ?? (e.forcing ? null : undefined));
   queueRecord(ctx, resolved.event, resolved.entryId, resolved.fill, choice.id, resolved.outcome.id);
   return { ok: true, resolved };
 }

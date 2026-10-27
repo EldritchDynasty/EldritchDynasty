@@ -84,6 +84,16 @@ export function judgeOutcomeReachZero(
     return { kind: 'dead', why: 'guarded outcome has no pre-effect opportunity observation' };
   }
   const pooled = guarded.poolExpected?.get(key);
+  const unknown = guarded.poolUnknown?.get(key) ?? 0;
+  if (unknown) {
+    // Either observed casts or the known pool history can independently
+    // support the proof bar. Never add their overlapping expected counts.
+    const actual = guarded.expected.get(key)!;
+    const why = `cast provenance unavailable for ${unknown} of ${fired} firings; actual casts ~${actual.toFixed(1)} expected, known pools ~${(pooled ?? 0).toFixed(1)} expected`;
+    return actual >= OUTCOME_REACH_PROOF_EXPECTED || (pooled ?? 0) >= OUTCOME_REACH_PROOF_EXPECTED
+      ? { kind: 'dead', why: `${why}, resolved none` }
+      : { kind: 'unproven', why: `${why}; eligible-pool exposure remains unproven` };
+  }
   if (pooled !== undefined) {
     if (pooled === 0) return { kind: 'dead', why: `no eligible cast in any pool across ${fired} firings of its choice` };
     const verdict = judgeExpected(pooled, fired, runs);

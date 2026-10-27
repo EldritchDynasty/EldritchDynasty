@@ -32,6 +32,27 @@ function opening(s: GameSession) {
 }
 
 describe('public session input replay (#1910)', () => {
+  it('replays a forcing order answered after saving its preset cast (#1951)', () => {
+    let s = newGame(content, { seed: SEED });
+    const rite = s.table().forcing.find(row => row.ready && row.boys.length)!;
+    expect(rite).toBeDefined();
+    expect(s.order({ kind: 'forcingRite', rite: rite.rite, person: rite.boys[0]!.person }).ok).toBe(true);
+    const saved = s.save();
+    s = resumeGame(JSON.parse(JSON.stringify(saved)), content);
+    expect(snapshot(s)).toBe(canonical(saved));
+    const pending = s.pending.find(decision => decision.kind === 'choice' && decision.event.id === rite.rite)!;
+    if (pending.kind !== 'choice') throw new Error('forcing choice required');
+    expect(pending.preset).toEqual(['CHILD']);
+    const presets: (readonly string[] | undefined)[] = [];
+    s.ctx.observeOutcome = observation => presets.push(observation.preset);
+    expect(s.choose(pending.id, pending.choices.find(choice => choice.available)!.id).ok).toBe(true);
+    expect(presets[0]).toEqual(['CHILD']);
+    s.letHimDecide();
+    s.decider = 'chronicler';
+    s.advance(1);
+    expect(canonical(saveGame(rebuild(s)))).toBe(snapshot(s));
+  });
+
   it('preserves the complete public-session save and replay with reach observation (#1930)', () => {
     const play = (observed: boolean) => {
       const s = newGame(content, { seed: SEED, decider: 'chronicler' });
