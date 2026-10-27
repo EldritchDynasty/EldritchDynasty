@@ -6,6 +6,11 @@
   "workspaces": [
     "packages/*"
   ],
+  "//engines": "Advisory. `.nvmrc` is the one statement of the Node major; CI reads it through node-version-file and toolchain.test.ts fails if this range stops admitting it.",
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10"
+  },
   "scripts": {
     "dev": "npm run dev --workspace @ed/editor",
     "//play": "The game, on 5174. The editor keeps 5173, and running both at once is the normal way to work on content.",
@@ -93,6 +98,10 @@
     "gen:docs": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/gen-docs.ts",
     "//8": "Who is working on what, when several agents run at once. The claim is a git ref because every agent authenticates to GitHub as the same user — docs/PARALLEL.md.",
     "agents": "node tools/agents.mjs",
+    "//setup": "Install, or reuse, dependencies matching package-lock.json (`--browser` adds Chromium). The SessionStart hook takes the same path. Never rewrites the tracked lockfile.",
+    "setup": "node tools/setup.mjs",
+    "//doctor": "Read-only: toolchain, dependency freshness, Chromium, hook wiring and the last CI verdict, each with the command that fixes it. `--json` for the same facts.",
+    "doctor": "node tools/doctor.mjs",
     "test:e2e": "playwright test",
     "playwright:install": "playwright install chromium",
     "gen:witnesses": "node tools/gen-outcome-witnesses.mjs"

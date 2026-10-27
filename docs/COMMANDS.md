@@ -14,10 +14,23 @@ commands answer a question nothing else can.
 
 ## How a session starts
 
-A fresh session on the web orients itself, installs dependencies and warms the
-content cache before an agent reads anything — `.claude/hooks/session-start.mjs`,
-registered as a SessionStart hook. Locally it does nothing; you already have
-`node_modules` and a whole history.
+A fresh session on the web orients itself, sets up dependencies and Chromium,
+and warms the content cache before an agent reads anything —
+`.claude/hooks/session-start.mjs`, registered as a SessionStart hook. Locally it
+runs only when the checkout is not ready: no Chromium, or dependencies whose
+fingerprint no longer matches `package-lock.json`. An install that is merely
+*present* no longer counts.
+
+**Setup is `tools/setup.mjs`, and a person runs the same function**: `npm run
+setup` (`-- --browser` for Chromium). `npm ci` only when `node_modules` is absent,
+nothing when the fingerprint — lockfile hash, Node major, platform — matches,
+`npm install` otherwise, because `ci` deletes `node_modules` and would throw away
+a cached container image. If `npm install` rewrites the tracked lockfile, setup
+puts it back and says so. **`npm run doctor`** is the read-only half: Node and
+npm against `.nvmrc` and `engines`, dependency freshness, whether Chromium
+starts, whether both hook registrations name scripts that exist, and `main`'s
+last CI verdict (`unknown` offline) — each not-ready line with its fix, and
+`-- --json` for the same facts. It installs, fetches and writes nothing.
 
 **Orienting is `tools/orient.mjs`, and it is not cosmetic.** The clone arrives
 SHALLOW — a third of the history — and a shallow clone does not refuse ancestry

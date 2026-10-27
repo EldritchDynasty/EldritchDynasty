@@ -1,0 +1,18 @@
+{
+  "name": "Eldritch Dynasty: game and editor",
+
+  // Node only. The major in this tag is the one in `.nvmrc`, and
+  // packages/core/src/tools/toolchain.test.ts fails if the two disagree:
+  // a floating `lts` here is how a contributor ended up on 24 while CI ran 22.
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22-bookworm",
+
+  // The documented setup path, the same one the agent SessionStart hook takes:
+  // `npm ci` into an empty node_modules, then Chromium for the browser tests.
+  "postCreateCommand": "npm run setup -- --browser",
+
+  "forwardPorts": [5173, 5174],
+  "portsAttributes": {
+    "5173": { "label": "editor (npm run dev)" },
+    "5174": { "label": "game (npm run play)" }
+  }
+}
