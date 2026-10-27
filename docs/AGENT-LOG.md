@@ -296,3 +296,67 @@ three suites. No duration figure was invented, and the measurement budget and
 shard-balance limits are unchanged. The earlier four-suite focused result
 records the original layout; this is its final ownership layout. The rebased
 preflight is rerun with the same substantive cases.
+
+## 2026-10-27 — #1939: callable rites and their Table assemblies
+
+Source `c1f28889f91eb7ad0e8900aad53cbd34c05ff87e`, based on `49808320`
+after the preset telemetry, pending-save and documentation fixes landed. The
+issue recorded the chosen boundary before source edits. `table.ts` retains
+the exhaustive dispatcher, order receipt wrapper and view composition;
+`rite-orders.ts` owns the offers, refusals, assemblies, order handlers and four
+rite/forcing view fields. `table-helpers.ts` owns the one shared household
+lookup. Existing `forcingWindow` and `RiteAssembly` exports still come through
+Table and the core barrel. All client imports continue to typecheck.
+
+The dependency walk found pre-existing Table cycles through effects, marriage
+policy, library and conditions. The sibling module binds six existing function
+declarations once through `riteOrderHandlers`; their implementation imports
+are type-only. It captures neither a world nor RNG. Its relative runtime edges
+are only fill, rng, messages, prose and the shared lookup: six modules in the
+transitive walk, with no path back to Table. The original queue function,
+`rite-order` and `forcing-order` stream names, draw order and saved forcing
+preset remain intact. All sixteen normalized source comparisons match: nine
+helper bodies, two order blocks, the household lookup and four view values.
+
+`table.ts` moved from **1,754 lines / 84,725 bytes** to **1,444 / 69,286**.
+The rite module is **365 / 18,046** and its shared lookup **11 / 435**. This is
+an ownership boundary; fewer merge conflicts require later evidence.
+
+Before moving source, the strengthened public-order cases passed with the
+existing rite/forcing and replay cases: **215 tests**. Each major rite now
+uses `GameSession.table/order` in both prose modes, compares the assembly with
+the exact docket cast, checks the pending refusal and verifies canonical
+save/resume equality. The final four focused suites passed **293 tests**,
+including the unchanged forcing-order save/provenance/replay cases. Original
+message guards now read both owning modules without changing any expected
+phrase. The canonical-policy guard also rejects the extracted handler names.
+All package TypeScript and Vue typechecks passed with no client edits.
+
+Before/after `npm run digest -- 8 400` rows are identical (Node v22.23.4):
+
+```text
+1000  ca819f9b6abd06b7:1565655
+1007  bc2e9563092a696b:1510807
+1014  8b77aeff382ebf3f:1625229
+1021  a7fc95cddfac1879:1573254
+1028  060ad8ac0e201ea6:1538790
+1035  63c6113ff34dc629:288885
+1042  2365ac8f6829e12b:1594737
+1049  fdd0ba056758ef15:1639752
+```
+
+The ordinary digest policy issues no forcing orders; those are covered by
+the production-order cases above. No content, game rule, threshold, save
+format, replay command or RNG change is bundled here. Final rebased preflight
+and required CI results belong to the PR head.
+
+**Next candidates.** Study/library still spans the 276-line dispatcher,
+213-line view builder and 196-line steward, so moving it would need its own
+boundary. `session.ts` is 1,840 lines / 84,531 bytes; its nine view-only types
+occupy 445 lines, a coherent follow-up recorded as
+[#1957](https://github.com/EldritchDynasty/EldritchDynasty/issues/1957) after
+#1941/#1944 settle the public fields. Schema rules remain 2,699 / 119,704;
+the largest measured families are arcs (288 lines, five rules), slots
+(195, four) and references (157, one). Their shared helpers need a separate
+dependency review before selecting another extraction. None is a prerequisite
+for this bounded rites slice.
