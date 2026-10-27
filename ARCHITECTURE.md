@@ -6,6 +6,8 @@ file tells you where the code is and how to add to it.
 Owner map and year-phase order reviewed against `main` at `8b09dbee` on
 26 October 2026. The code remains the authority when a later change moves an
 owner or predicate; older measurements below retain their original context.
+Save continuation and the replay owner map were rechecked at `524ea5fe` on
+27 October 2026.
 
 **Reading order for an agent.** Load the least you can:
 
@@ -133,7 +135,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **Echo repetition** across systems — counting structural frames rather than prose | `core/src/echoes.ts` | `echo-chains.test.ts`, `echo.slow.test.ts` |
 | Which page **answers** which — Chronicle backlinks | `core/src/cause.ts` | `packages/client/src/lib/causes.test.ts` |
 | **Nested tales** in circulation | `core/src/events/tales.ts` | `tales.test.ts`, `tales.slow.test.ts` |
-| The **decision log** and replay | `core/src/replay.ts` | `replay.slow.test.ts` |
+| The **decision log** and replay | `core/src/replay.ts` | `replay.test.ts`, `replay.slow.test.ts` |
 | The **Library of Houses** — what a finished run leaves the next | `core/src/run-library.ts` | `run-library.slow.test.ts` |
 | A **gate** — a design claim measured over a batch | `core/src/tools/gates.ts` → `GATES` | `gates.test.ts` |
 | **Outcome reach** — cast/check exposure, finite-sample proof and deterministic witnesses | `core/src/events/reach.ts`; `core/src/tools/outcome-reach-verdict.ts`, `outcome-reach-blocking.ts`; `tools/gen-outcome-witnesses.mjs` | `events/reach.test.ts`, `tools/outcome-reach-verdict.test.ts` |
@@ -223,9 +225,9 @@ current work is in the issue tracker.
 - **Standing decays.** A quiet forty-five years costs a tier, visible Madness costs tiers faster, and decay floors at Known — Unknown has to be done to you.
 - **A run is a value.** `saveGame` produces a versioned snapshot and `loadGame`
   validates and rebuilds it. Derived state — the phenotype cache, the house
-  table, the content — is rebuilt rather than stored. Identical continuation
-  is the contract; a reproduced exception for pending story decisions is
-  tracked in [#1932](https://github.com/EldritchDynasty/EldritchDynasty/issues/1932).
+  table, the content — is rebuilt rather than stored. Pending story decisions
+  reconnect to the world's restored arc instance, so answering them advances
+  that story once. `save.test.ts` and `replay.test.ts` cover continuation.
 - **The client has a surface.** `core/src/session.ts` owns every gameplay verb and read model a client needs; `packages/client/src/lib/game.ts` is the Vue client's only door into it, and components never reach through to `.ctx`. `view()` and the other reads return plain values, so the UI takes a fresh snapshot after a verb rather than holding live simulation references.
 - **The front door is real.** `Start.vue` offers the 300-year Short Line by default and the 500-year Long Line beside it, resumes the last sitting, lists/imports/exports saves, shows the Library of completed houses, and keeps the deterministic seed behind an Advanced disclosure rather than making it the product.
 - **A run has a decision log.** `commitOutcome`, `applyRecord` and `renameChild` append a `LoggedDecision` beside the save; `replay()` reconstructs a run from it and throws if the rebuild disagrees with its own record, rather than trusting a log nothing checks. See [#8](https://github.com/EldritchDynasty/EldritchDynasty/issues/8).

@@ -188,10 +188,9 @@ kind through `choose`, `send`, `match` or `record`. `letHimDecide()` delegates
 the standing docket to the chronicler. Choice ids come from that docket;
 they are not guaranteed by a seed or a requested number of years.
 
-**Known save limitation:** a pending story scene can repeat after reload when
-play continues. [Issue #1932](https://github.com/EldritchDynasty/EldritchDynasty/issues/1932)
-has the reproduction; restoring the snapshot alone does not prove identical
-continuation.
+Save/resume continuation and decision-log replay are covered by the
+[public-session scenarios](packages/core/src/replay.test.ts), including a
+story choice saved while it is still pending.
 
 A year is an ordered table of named phases, each with its own RNG stream, so a system can be added, reordered or retimed without moving anybody else's dice. Content is loaded by one loader from one declared layout, indexed once, and every closed union in the engine ends in `assertNever` — the failure mode here is silence, and the compiler is the cheapest thing that breaks it.
 
