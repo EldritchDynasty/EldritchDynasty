@@ -65,12 +65,22 @@ describe('what the reader asked for', () => {
     expect(reads(entry({ year: 1204, text: 'Nothing numeric.' }), { ...all, find: '1204' })).toBe(false);
   });
 
-  it('ands the lens with the search, because "the blanks, about Wystan" is a question', () => {
+  it('does not search a blank page by its retained title (#1944)', () => {
     const blankAboutHim = entry({ text: null, title: 'Wystan' });
     const writtenAboutHim = entry({ text: 'Wystan did something.' });
 
-    expect(reads(blankAboutHim, { lens: 'blank', from: null, find: 'wystan' })).toBe(true);
+    expect(reads(blankAboutHim, { lens: 'blank', from: null, find: 'wystan' })).toBe(false);
     expect(reads(writtenAboutHim, { lens: 'blank', from: null, find: 'wystan' })).toBe(false);
+  });
+
+  it('keeps imported omissions out of search, exported prose and remembered quotes (#1944)', () => {
+    const omitted = entry({ year: 1204, text: 'PRIVATE retained body', title: 'PRIVATE retained title', record: 'omit', weight: 'illuminated' });
+    expect(reads(omitted, { ...all, lens: 'blank' })).toBe(true);
+    expect(reads(omitted, { ...all, find: 'private' })).toBe(false);
+    const rows = plateRows([omitted], monospace);
+    expect(rows.some((row) => row.rule)).toBe(true);
+    expect(JSON.stringify(rows)).not.toContain('PRIVATE');
+    expect(afterimageQuote([omitted])).toBeUndefined();
   });
 
   it('draws nothing before the century jumped to', () => {
@@ -472,6 +482,15 @@ describe('the house afterimage (#260)', () => {
     expect(long.rows.filter((row) => row.size === 18).length).toBeGreaterThan(short.rows.filter((row) => row.size === 18).length);
     expect(long.rows.filter((row) => row.italic).length).toBeGreaterThan(short.rows.filter((row) => row.italic).length);
     expect(long.height).toBeGreaterThan(short.height);
+  });
+
+  it('keeps the afterimage source projection blank when its saved choice was omit (#1944)', () => {
+    const model = afterimageModel(source);
+    const layout = afterimageLayout({ ...model, memories: [{ heading: 'A dated blank', text: 'The family left a blank.',
+      source: { year: 1204, title: 'PRIVATE retained title', text: 'PRIVATE retained body', choice: 'omit' },
+    }] }, monospace);
+    expect(JSON.stringify(layout)).not.toContain('PRIVATE');
+    expect(layout.rows.some((row) => row.rule)).toBe(true);
   });
 
   it('keeps the card factual rather than grading the run', () => {

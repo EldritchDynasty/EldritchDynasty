@@ -56,7 +56,7 @@ import { tableTasksFor, type OpenedTablePanels, type TableReveal, type TableTarg
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, achievements, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, mentions, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, milestones, actions,
 } = game;
 
 /**
@@ -329,8 +329,19 @@ const helpOpen = ref(false);
 const bookOpen = shallowRef<ReturnType<GameActions['book']> | null>(null);
 /** The page a link asked the volume to open at (issue #269). */
 const bookFocus = ref<string | undefined>(undefined);
+const bookPerson = ref<string | undefined>(undefined);
 function openBook(page?: string): void {
+  bookPerson.value = undefined;
   bookFocus.value = page;
+  bookOpen.value = actions.book();
+}
+
+/** Living relatives retain the tree route; an ancestor's kept account opens in the Book. */
+function lookOrReadLife(person: string): void {
+  if (view.value?.halls.some((hall) => hall.members.some((member) => member.id === person))) return look(person, true);
+  if (!view.value?.chroniclePeople.some((recorded) => recorded.id === person)) return;
+  bookFocus.value = undefined;
+  bookPerson.value = person;
   bookOpen.value = actions.book();
 }
 
@@ -354,6 +365,7 @@ function openLine(): void {
 function leaveToStart(): void {
   bookOpen.value = null;
   bookFocus.value = undefined;
+  bookPerson.value = undefined;
   platOpen.value = false;
   lineOpen.value = null;
   helpOpen.value = false;
@@ -362,19 +374,6 @@ function leaveToStart(): void {
   treeReveal.value = null;
   pane.value = 'house';
   actions.leave();
-}
-
-/**
- * DATED BACKLINKS FROM A PERSON TO THE BOOK (#268). mentions() gives stable
- * page ids from the engine; the book read supplies years for human labels.
- * No component searches prose for a name, so renames and namesakes cannot
- * create false links.
- */
-function mentionPages(person: string): { id: string; year: number }[] {
-  const ids = new Set(mentions(person));
-  if (!ids.size) return [];
-  return actions.book().flatMap((entry) =>
-    entry.id && ids.has(entry.id) ? [{ id: entry.id, year: entry.year }] : []);
 }
 
 function onKey(e: KeyboardEvent): void {
@@ -495,8 +494,8 @@ const yearAndBirths = computed(() => {
 
   <template v-else-if="ended && epilogue">
     <Ending :view="view" :epilogue="epilogue" :achievements="achievements" :actions="actions" :prose-mode="accessibility.proseMode" @update:prose-mode="void selectProseMode($event)" @open="openBook()" />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
-    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
+    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :milestones="milestones" :close="() => (lineOpen = null)" @book="openBook" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :person="bookPerson" :people="view.chroniclePeople" :milestones="milestones" :close="() => (bookOpen = null)" />
   </template>
 
   <template v-else>
@@ -741,6 +740,8 @@ const yearAndBirths = computed(() => {
             :tasks="tableTasks"
             :show-everything="showEverythingFromStart"
             :return-label="tableReturnLabel"
+            :milestones="milestones"
+            @book="openBook"
             @open-plat="platOpen = true"
             @navigate="navigateTable"
             @revealed="consumeTableReveal"
@@ -767,7 +768,7 @@ const yearAndBirths = computed(() => {
             :prose-mode="accessibility.proseMode"
             :reveal="treeReveal"
             :line="actions.line()"
-            :mentions="mentionPages"
+            :milestones="milestones"
             @select="select"
             @line="openLine()"
             @book="openBook"
@@ -778,11 +779,12 @@ const yearAndBirths = computed(() => {
       <div class="right">
         <Chronicle
           :view="view"
+          :history="true"
           :frame="frame"
           :actions="actions"
           :prose-mode="accessibility.proseMode"
           @open="openBook"
-          @person="look"
+          @person="lookOrReadLife"
         />
       </div>
     </div>
@@ -795,9 +797,9 @@ const yearAndBirths = computed(() => {
       :prose-mode="accessibility.proseMode"
       :skip-seen-prose="accessibility.skipSeenProse"
     />
-    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :close="() => (bookOpen = null)" />
     <Plat v-if="platOpen && land" :land="land" :halls="view.halls" :house-name="view.houseName" :prose-mode="accessibility.proseMode" :actions="actions" :close="() => (platOpen = false)" />
-    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :close="() => (lineOpen = null)" />
+    <Line v-if="lineOpen" :line="lineOpen" :prose-mode="accessibility.proseMode" :milestones="milestones" :close="() => (lineOpen = null)" @book="openBook" />
+    <Book v-if="bookOpen" :book="bookOpen" :ages="view.ages" :house-name="view.houseName" :actions="actions" :prose-mode="accessibility.proseMode" :focus="bookFocus" :person="bookPerson" :people="view.chroniclePeople" :milestones="milestones" :close="() => (bookOpen = null)" />
   </template>
 </template>
 
@@ -865,9 +867,9 @@ const yearAndBirths = computed(() => {
     padding: 4px 6px calc(4px + env(safe-area-inset-bottom));
   }
   .panes button { flex: 1 1 0; text-align: center; }
-  /* Room at the foot of the page for the bar that now lives there, plus the
-     device's own gesture chrome under it. */
-  .board { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  /* Wrapped pane labels grow with the reader's text. Keep the final history
+     links clear of that bar, including when focus returns from the Book. */
+  .board { padding-bottom: calc(7rem + env(safe-area-inset-bottom)); }
 }
 .keys dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; }
 .keys dt, .keys dd { margin: 0; }

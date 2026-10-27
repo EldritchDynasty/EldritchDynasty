@@ -12,6 +12,8 @@ const props = defineProps<{
   frame: FrameEntry[];
   /** Fresh Chronicle UI notes follow the reader's current prose preference. */
   proseMode?: ProseMode;
+  /** An ancestor's recorded life can be opened in the Book outside living halls. */
+  history?: boolean;
   /** Only the two reads behind a page's way back (issue #269). */
   actions: Pick<GameActions, 'causeOf' | 'answeredBy' | 'advice'>;
 }>();
@@ -34,7 +36,7 @@ watch(() => props.view, () => { snapshot.value += 1; });
 /**
  * STRUCTURAL PEOPLE LINKS (#268). A Chronicle page outlives its cast:
  * current halls omit the dead, so resolve the IDs against the engine's
- * window-scoped provenance names. Never infer identities from prose.
+ * kept-page provenance names. Never infer identities from prose.
  */
 const chronicleNamesById = computed(() => new Map(
   (props.view.chroniclePeople ?? []).map((person) => [person.id, person.name]),
@@ -49,7 +51,7 @@ function peopleFor(entry: SessionView['chronicle'][number]): { id: string; name:
     if (seen.has(id)) continue;
     seen.add(id);
     const name = chronicleNamesById.value.get(id);
-    if (name) out.push({ id, name, available: navigableIds.value.has(id) });
+    if (name) out.push({ id, name, available: !!props.history || navigableIds.value.has(id) });
   }
   return out;
 }

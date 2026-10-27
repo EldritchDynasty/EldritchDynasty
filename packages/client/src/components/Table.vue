@@ -3,10 +3,11 @@ import HouseholdSecurity from './HouseholdSecurity.vue';
 import CovertExpeditions from './CovertExpeditions.vue';
 import OutsideServices from './OutsideServices.vue';
 import TableTaskLinks from './TableTaskLinks.vue';
+import RecordedLife from './RecordedLife.vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
-import type { GameActions } from '../lib/game';
+import type { GameActions, GameStore } from '../lib/game';
 import { modalFocusable as focusableWithin } from '../lib/modal';
 import { tableTargetAttrs, type OpenedTablePanels, type TableReveal, type TableTarget, type TableTask } from '../lib/table-nav';
 
@@ -28,6 +29,7 @@ const props = defineProps<{
   tasks?: readonly TableTask[];
   showEverything?: boolean;
   returnLabel?: string;
+  milestones?: GameStore['milestones'];
 }>();
 
 function studyYears(book: TableView['shelf'][number]): number {
@@ -41,6 +43,7 @@ function studyYears(book: TableView['shelf'][number]): number {
  * opens it has to start here, where the land panel already is.
  */
 const emit = defineEmits<{
+  book: [page: string];
   'open-plat': [];
   navigate: [target: TableTarget];
   revealed: [token: number];
@@ -541,7 +544,13 @@ const MARRIAGE_ORDERS = [
           {{ risk.candidates.map((candidate) => candidate.name).join(', ') }}.
           <!-- Who would be spent, as the house remembers them (#1867 §6). -->
           <ul class="remembered">
-            <li v-for="candidate in risk.candidates" :key="candidate.person" class="dim">{{ candidate.remembered }}</li>
+            <li v-for="candidate in risk.candidates" :key="candidate.person" class="dim">
+              {{ candidate.remembered }}
+              <details v-if="milestones" class="candidate-life">
+                <summary>{{ local(`Read the life the book gives ${candidate.name}`, `Read ${candidate.name}'s recorded history`) }}</summary>
+                <RecordedLife :person="candidate.person" :read="milestones" :prose-mode="proseMode" @book="$emit('book', $event)" />
+              </details>
+            </li>
           </ul>
         </div>
         <p v-for="line in riteAssembly.preparations" :key="line" class="small dim">{{ line }}</p>
@@ -1133,6 +1142,7 @@ const MARRIAGE_ORDERS = [
 </template>
 
 <style scoped>
+.candidate-life summary { min-height: 44px; padding: 8px 0; cursor: pointer; }
 .table-tasks { border-bottom: 1px solid var(--rule); padding-bottom: 12px; min-width: 0; }
 .table-tasks h3 { margin: 0; }
 .table-tasks details { border-top: 1px solid var(--rule); }

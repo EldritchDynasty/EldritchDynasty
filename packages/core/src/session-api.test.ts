@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash, type SigningTerm } from '@ed/schema';
+import { DiscrepancyStateS, FoundingConfigurationS, ProseModeS, proseOriginalHash, type SigningTerm } from '@ed/schema';
 import {
   applyEffect, beget, branchReport, consumeVessel, describeDecision, digestOf, frequencyReport, hallOf, heldBooks, hashSeed,
   loseLibraryCopy, marry, newGame, phenotypeOf, place, replay, resumeGame, spellbookDef, gainSpellbook, standingMoved,
@@ -13,8 +13,133 @@ import {
   buildPair, earlyComesFirst, parseArgs, renderAnswerKey, renderReaderSheet, stripClockTells,
 } from '../../../tools/blind-reader-material.js';
 import { coreMessageAddress } from './messages.js';
+import { testWorld } from './testing.js';
 
 const content = loadContent();
+
+describe('source-linked recorded milestones (#1944)', () => {
+  function history() {
+    const g = new GameSession(testWorld(content, 1944));
+    const relative = place(g.ctx, { sex: 'female', age: 30, name: 'Alys of Bramme' });
+    const person = relative.id;
+    const page = (id: string | undefined, year: number, extra: Partial<ChronicleEntry> = {}): ChronicleEntry => ({
+      ...(id ? { id } : {}), year, weight: 'paragraph', named: false,
+      text: 'The recorded account.', people: [person], title: `Kept title ${year}`, ...extra,
+    });
+    g.ctx.world.chronicle = [
+      page('title-first', 1042),
+      page('deed-late', 1047, { claims: [
+        { kind: 'deed', person, text: 'returned from service' },
+        { kind: 'deed', person, text: 'paid the fees at Cawdry' },
+      ] }),
+      page('title-second', 1043),
+      page('blank', 1044, { text: null, record: 'omit', eventId: 'private_omitted_event', title: 'PRIVATE omitted title',
+        discrepancyId: 'hidden_dispute', claims: [{ kind: 'deed', person, text: 'PRIVATE omitted deed' }] }),
+      page('deed-early', 1043, { people: [], claims: [{ kind: 'deed', person, text: 'was tutored by Osric' }] }),
+      page(undefined, 1045),
+      page('untitled', 1046, { title: undefined }),
+      page('title-last', 1048),
+    ];
+    return { g, relative, person, page };
+  }
+
+  it('prefers deeds within the limit, orders chronologically, and keeps every page reachable', () => {
+    const { g, person } = history();
+    expect(g.milestones(person)).toEqual([
+      { entryId: 'title-first', year: 1042, source: 'title', label: 'Kept title 1042' },
+      { entryId: 'title-second', year: 1043, source: 'title', label: 'Kept title 1043' },
+      { entryId: 'deed-early', year: 1043, source: 'deed', label: 'was tutored by Osric' },
+      { entryId: 'legacy-chronicle:5', year: 1045, source: 'title', label: 'Kept title 1045' },
+      { entryId: 'deed-late', year: 1047, source: 'deed', label: 'returned from service' },
+    ]);
+    expect(g.milestones(person, { limit: 1 }).map((row) => row.entryId)).toEqual(['deed-early']);
+    expect(g.milestones(person, { limit: 0 })).toEqual([]);
+    expect(g.milestones(person, { limit: -1 })).toEqual([]);
+    const all = g.milestones(person, { limit: Infinity });
+    expect(all).toHaveLength(8);
+    expect(all.every((row) => g.book().some((page) => page.id === row.entryId))).toBe(true);
+    expect(all.find((row) => row.entryId === 'untitled')).toEqual({ entryId: 'untitled', year: 1046, source: 'title' });
+    expect(g.milestones('a person never recorded')).toEqual([]);
+  });
+
+  it('strips every private field from omissions before reading a title, claim or dispute', () => {
+    const { g, person, page } = history();
+    g.ctx.world.discrepancies.set('hidden_dispute', { severity: 'great', provableBy: [], state: 'proven' });
+    // Also cover imported/legacy omit metadata even if text was retained.
+    g.ctx.world.chronicle.push(page('legacy-omit', 1049, { record: 'omit', text: 'PRIVATE retained body',
+      title: 'PRIVATE retained title', eventId: 'private_retained_event', claims: [{ kind: 'deed', person, text: 'PRIVATE retained deed' }] }));
+    const reading = g.milestones(person, { limit: Infinity });
+    expect(reading.find((row) => row.entryId === 'blank')).toEqual({ entryId: 'blank', year: 1044, source: 'blank' });
+    expect(reading.find((row) => row.entryId === 'legacy-omit')).toEqual({ entryId: 'legacy-omit', year: 1049, source: 'blank' });
+    expect(JSON.stringify(reading)).not.toMatch(/PRIVATE|private_|hidden_dispute/);
+  });
+
+  it.each(DiscrepancyStateS.options)('keeps the embellished claim and its %s discrepancy without choosing an account', (state) => {
+    const { g, person, page } = history();
+    g.ctx.world.discrepancies.set('dispute', { severity: 'great', provableBy: [], state });
+    g.ctx.world.chronicle = [page('embellished', 1043, { record: 'embellish', discrepancyId: 'dispute',
+      claims: [{ kind: 'deed', person, text: 'saved the whole family, as the house tells it' }] })];
+    expect(g.milestones(person)).toEqual([{ entryId: 'embellished', year: 1043, source: 'deed',
+      label: 'saved the whole family, as the house tells it', disputed: state }]);
+  });
+
+  it.each(ProseModeS.options)('reads an archived relative without changing saves, RNG inputs or the command log (%s)', (mode) => {
+    const { g, person, relative } = history();
+    g.ctx.world.people.kill(person, 1042, 'a recorded illness');
+    g.ctx.world.people.archive(person);
+    g.setProseMode(mode);
+    const stable = () => ({ ...g.save(), savedAt: '' });
+    const before = JSON.stringify(stable());
+    const commands = structuredClone(g.ctx.world.decisionLog);
+    const reading = g.milestones(person, { limit: Infinity });
+    expect(g.ctx.world.people.get(person)).toBe(relative);
+    expect(relative.tier).toBe('archived');
+    for (let repeat = 0; repeat < 3; repeat++) expect(g.milestones(person, { limit: Infinity })).toEqual(reading);
+    expect(JSON.stringify(stable())).toBe(before);
+    expect(g.ctx.world.decisionLog).toEqual(commands);
+    const resumed = resumeGame(g.save(), content);
+    expect(resumed.milestones(person, { limit: Infinity })).toEqual(reading);
+    reading[0]!.label = 'A reader cannot rewrite the source';
+    expect(g.milestones(person)[0]!.label).toBe('Kept title 1042');
+  });
+
+  it.each(FoundingConfigurationS.options)('keeps identity links for the guardian, a married-in spouse and a renamed child (%s)', (configuration) => {
+    const g = newGame(content, { seed: 1944 });
+    const signing = g.prologue()!;
+    expect(g.found({ houseName: 'The Recorded House', founder: { name: 'Arlen', gender: 'nonbinary', configuration },
+      heirloom: signing.heirlooms[0]!.heirloom, grudge: signing.grudges[0]!.house,
+      answers: Object.fromEntries(signing.examination.map((question) => [question.id, question.answers[0]!.id])),
+    }).ok).toBe(true);
+    const w = g.ctx.world;
+    const founder = w.people.mustGet(w.narrator!);
+    const spouse = w.people.mustGet(founder.marriages.find((marriage) => marriage.to === undefined)!.spouse);
+    expect(spouse).toBeDefined();
+    const child = place(g.ctx, { sex: 'female', age: 0, name: 'Suggested name' });
+    w.pendingNames.push({ person: child.id, born: w.year, suggested: child.name, sex: child.sex, because: 'the Head has a daughter' });
+    w.chronicle.push({ id: 'the-family-page', year: w.year, text: 'The name as it was written.', named: true, weight: 'paragraph',
+      people: [founder.id, spouse.id, child.id], claims: [{ kind: 'deed', person: child.id, text: 'was named in the family book' }] });
+    expect(g.name(child.id, 'Renamed child')).toBe(true);
+    w.people.kill(founder.id, w.year, 'the guardian transition');
+    expect(founder.status).toBe('guardian');
+    for (const person of [founder, spouse, child]) {
+      expect(g.milestones(person.id, { limit: Infinity }).some((row) => row.entryId === 'the-family-page')).toBe(true);
+    }
+    const names = g.view().chroniclePeople;
+    expect(names.find((row) => row.id === child.id)?.name).toBe('Renamed child');
+    expect(g.milestones(child.id)[0]!.label).toBe('was named in the family book');
+  });
+
+  it('keeps old recorded names available beyond the Chronicle window, but does not index omitted-only identities', () => {
+    const { g, person, page } = history();
+    const omitted = place(g.ctx, { sex: 'male', age: 30, name: 'Omitted-only person' });
+    g.ctx.world.chronicle.push(page('omitted-only', 1049, { text: null, record: 'omit', people: [omitted.id] }));
+    for (let year = 1050; year < 1120; year++) g.ctx.world.chronicle.push({ year, weight: 'line', named: false, text: 'A quiet year.' });
+    const view = g.view();
+    expect(view.chronicle.some((entry) => entry.people?.includes(person))).toBe(false);
+    expect(view.chroniclePeople.some((entry) => entry.id === person)).toBe(true);
+    expect(view.chroniclePeople.some((entry) => entry.id === omitted.id)).toBe(false);
+  });
+});
 
 function powerEvidenceFixture(mode: 'original' | 'plainenglish') {
   const g = newGame(content, { seed: 1805, proseMode: mode });

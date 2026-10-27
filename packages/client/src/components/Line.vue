@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { ProseMode } from '@ed/schema';
-import type { GameActions } from '../lib/game';
+import type { GameActions, GameStore } from '../lib/game';
 import { useModal } from '../lib/modal';
+import RecordedLife from './RecordedLife.vue';
 
 const props = withDefaults(defineProps<{
   line: ReturnType<GameActions['line']>;
   close: () => void;
   proseMode?: ProseMode;
+  milestones?: GameStore['milestones'];
 }>(), { proseMode: 'original' });
+defineEmits<{ (e: 'book', page: string): void }>();
 
 /** This history is a fresh reading, not a saved Chronicle page. */
 const copy = computed(() => props.proseMode === 'plainenglish' ? {
@@ -107,6 +110,10 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
               {{ copy.death(h.born, h.died) }}
             </div>
             <div v-else-if="h.born !== undefined" class="dim small">{{ copy.born(h.born) }}</div>
+            <details v-if="milestones" class="life">
+              <summary>{{ proseMode === 'plainenglish' ? `Read ${h.name}'s recorded history` : `Read the life the book gives ${h.name}` }}</summary>
+              <RecordedLife :person="h.person" :read="milestones" :prose-mode="proseMode" @book="$emit('book', $event)" />
+            </details>
           </div>
         </li>
       </ol>
@@ -118,6 +125,8 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
 </template>
 
 <style scoped>
+.life { margin-top: 8px; font-size: var(--t-fine); }
+.life summary { min-height: 44px; padding: 8px 0; cursor: pointer; }
 .scrim {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);

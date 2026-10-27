@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import type { ChronicleCause, ChronicleEntry, EpilogueView, SessionView } from '@ed/core';
+import type { ChronicleCause, ChronicleEntry, EpilogueView, RecordedMilestone, SessionView } from '@ed/core';
+import { ref } from 'vue';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FrameEntry } from '@ed/schema';
@@ -13,6 +14,7 @@ import Entry from './Entry.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
 import Tree from './Tree.vue';
+import Line from './Line.vue';
 import ReadingSettings from './ReadingSettings.vue';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
@@ -60,6 +62,96 @@ const mountBook = (focus?: string) => mount(Book, {
 
 const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
+
+describe('recorded lives in the Book and spine (#1944)', () => {
+  const pages: ChronicleEntry[] = [
+    { ...entry('recorded-deed', 1100, 'The family kept this account.'), people: ['ancestor'], title: 'The fee', claims: [{ kind: 'deed', person: 'ancestor', text: 'paid the Corran fees' }] },
+    { ...entry('recorded-blank', 1101, null), people: ['ancestor'], title: 'PRIVATE omitted title', record: 'omit',
+      claims: [{ kind: 'deed', person: 'ancestor', text: 'PRIVATE omitted deed' }] },
+  ];
+  const milestones = (_person: string): RecordedMilestone[] => [
+    { entryId: 'recorded-deed', year: 1100, source: 'deed', label: 'paid the Corran fees', disputed: 'buried' },
+    { entryId: 'recorded-blank', year: 1101, source: 'blank' },
+  ];
+
+  it.each([null, 'PRIVATE retained body'])('renders only a dated blank when omitted metadata retains %s', (text) => {
+    const wrapper = mount(Entry, { props: {
+      entry: { ...entry('blank-source', 1101, text), record: 'omit', title: 'PRIVATE title', eventId: 'PRIVATE event',
+        people: ['ancestor'], claims: [{ kind: 'deed', person: 'ancestor', text: 'PRIVATE deed' }] },
+      people: [{ id: 'ancestor', name: 'PRIVATE person' }],
+    } });
+    try {
+      expect(wrapper.text()).toContain('1101');
+      expect(wrapper.text()).toContain('left blank, on purpose');
+      expect(wrapper.text()).not.toContain('PRIVATE');
+      expect(wrapper.find('.claims').exists()).toBe(false);
+      expect(wrapper.find('[data-person]').exists()).toBe(false);
+    } finally { wrapper.unmount(); }
+  });
+
+  it.each(['original', 'plainenglish'] as const)('opens an ancestor, follows a source through filters, and returns focus to the history link (%s)', async (proseMode) => {
+    const wrapper = mount(Book, { attachTo: document.body, props: {
+      book: pages, ages: [], houseName: 'The Recorded House', close: () => {}, actions: readsOver(pages), proseMode,
+      milestones, people: [{ id: 'ancestor', name: 'Alys of Bramme' }],
+    } });
+    try {
+      await wrapper.get('[data-person="ancestor"]').trigger('click');
+      await flushPromises();
+      expect(document.activeElement).toBe(wrapper.get('.person-history').element);
+      expect(wrapper.get('.person-history h4').text()).toBe('Alys of Bramme');
+      await wrapper.get('#chronicle-book-search').setValue('nothing matches');
+      const origin = wrapper.get('[data-milestone="recorded-deed"]');
+      (origin.element as HTMLElement).focus();
+      await origin.trigger('click');
+      await flushPromises();
+      expect(wrapper.get('[data-entry="recorded-deed"]').classes()).toContain('marked');
+      expect(document.activeElement).toBe(wrapper.get('[data-entry="recorded-deed"]').element);
+      await wrapper.get('.return-life').trigger('click');
+      expect(document.activeElement).toBe(origin.element);
+      const blank = wrapper.get('[data-milestone="recorded-blank"]');
+      await blank.trigger('click');
+      await flushPromises();
+      expect(document.activeElement).toBe(wrapper.get('[data-entry="recorded-blank"]').element);
+      expect(wrapper.text()).not.toContain('PRIVATE');
+      expect(wrapper.get('[data-entry="recorded-blank"]').find('[data-person]').exists()).toBe(false);
+      const all = wrapper.get('.person-history .all-pages');
+      (all.element as HTMLDetailsElement).open = true;
+      const detailedOrigin = all.get('[data-history-page="recorded-deed"]');
+      (detailedOrigin.element as HTMLElement).focus();
+      await detailedOrigin.trigger('click');
+      await flushPromises();
+      (all.element as HTMLDetailsElement).open = false;
+      await wrapper.get('.return-life').trigger('click');
+      expect(document.activeElement).toBe(wrapper.get('.person-history').element);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('opens the source above the spine and returns to its originating milestone on Escape', async () => {
+    const wrapper = mount({
+      components: { Book, Line },
+      setup() {
+        const opened = ref(false);
+        const focus = ref<string>();
+        return { opened, focus, pages, milestones, actions: readsOver(pages), line: [{ person: 'ancestor', name: 'Alys of Bramme', from: 1100, to: 1108 }] };
+      },
+      template: `<div><Line :line="line" :milestones="milestones" :close="() => {}" @book="focus = $event; opened = true" /><Book v-if="opened" :book="pages" :focus="focus" :ages="[]" house-name="The Recorded House" :actions="actions" :close="() => (opened = false)" /></div>`,
+    }, { attachTo: document.body });
+    try {
+      (wrapper.get('.spine .life').element as HTMLDetailsElement).open = true;
+      const origin = wrapper.get('.spine [data-milestone="recorded-deed"]');
+      (origin.element as HTMLElement).focus();
+      await origin.trigger('click');
+      await flushPromises();
+      expect(document.activeElement).toBe(wrapper.get('.volume [data-entry="recorded-deed"]').element);
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await flushPromises();
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      expect(wrapper.find('.volume').exists()).toBe(false);
+      expect(wrapper.find('.spine').exists()).toBe(true);
+      expect(document.activeElement).toBe(origin.element);
+    } finally { wrapper.unmount(); }
+  });
+});
 
 describe('Passage panel reader vocabulary (#1658)', () => {
   it('switches the factual log heading without rewriting events or changing who can be opened', async () => {

@@ -261,6 +261,8 @@ export interface GameStore {
   libraryReadError: Ref<boolean>;
   /** Chronicle entry ids whose authored cast explicitly included this person. */
   mentions(person: string): string[];
+  /** Detached recorded-life labels, including dated blanks and their source pages. */
+  milestones: GameSession['milestones'];
   actions: GameActions;
 }
 
@@ -546,6 +548,9 @@ export function createGame(
   function mentions(person: string): string[] {
     return session.value?.mentions(person) ?? [];
   }
+
+  const milestones: GameSession['milestones'] = (person, opts) =>
+    view.value ? session.value?.milestones(person, opts) ?? [] : [];
 
   /**
    * Take the picture again. Called after every verb, and it is the only thing
@@ -1296,6 +1301,6 @@ export function createGame(
 
   return {
     view, table, land, prologue, openingSeen, epilogue, achievements, docket, passages, jump, interlude, chapter, frame, ended,
-    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, libraryReadError, mentions, actions,
+    refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, saves, library, libraryReady, libraryReadError, mentions, milestones, actions,
   };
 }

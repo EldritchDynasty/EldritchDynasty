@@ -42,12 +42,16 @@ export interface Reading {
   find: string;
 }
 
+/** Omitted metadata is not prose, even in an imported page retaining old text. */
+export function isWritten<T extends Pick<ChronicleEntry, 'text' | 'record'>>(entry: T): entry is T & { text: string } {
+  return entry.text !== null && entry.record !== 'omit';
+}
+
 /**
  * Whether one entry survives what the reader has asked for.
  *
- * The lens and the search are ANDed rather than exclusive: "the blanks, about
- * Wystan" is a question a player has, and it is the question this pane exists
- * to answer.
+ * The lens and search are ANDed. An omission has no searchable title or body;
+ * matching its retained metadata would reconstruct what was left unwritten.
  *
  * The search never matches the YEAR. Typing `12` should not hand back the
  * whole twelfth century as though it had matched a word — the century buttons
@@ -56,12 +60,13 @@ export interface Reading {
  */
 export function reads(entry: ChronicleEntry, r: Reading): boolean {
   if (r.from !== null && entry.year < r.from) return false;
-  if (r.lens === 'blank' && entry.text !== null) return false;
+  if (r.lens === 'blank' && isWritten(entry)) return false;
   if (r.lens === 'improved' && entry.record !== 'embellish') return false;
   if (r.lens === 'illuminated' && entry.weight !== 'illuminated') return false;
 
   const needle = r.find.trim().toLowerCase();
   if (!needle) return true;
+  if (!isWritten(entry)) return false;
   return `${entry.title ?? ''} ${entry.text ?? ''}`.toLowerCase().includes(needle);
 }
 
@@ -195,7 +200,7 @@ export function plateRows(entries: readonly ChronicleEntry[], measure: Measure):
     rows.push({ text: String(e.year), size: 11, colour: PLATE.faint, gap: 6 });
     const size = SIZE[e.weight] ?? 15;
 
-    if (e.title && e.text !== null) {
+    if (e.title && isWritten(e)) {
       const font = `500 ${size + 1}px ${PLATE.serif}`;
       for (const l of wrap(e.title, font, inner, measure)) {
         rows.push({
@@ -207,7 +212,7 @@ export function plateRows(entries: readonly ChronicleEntry[], measure: Measure):
       }
     }
 
-    if (e.text === null) {
+    if (!isWritten(e)) {
       rows.push({ text: '', size: 15, colour: PLATE.ink, rule: true, gap: 18 });
       continue;
     }
@@ -383,9 +388,7 @@ export interface AfterimageModel {
 export function afterimageQuote(
   read: readonly ChronicleEntry[],
 ): AfterimageModel['quote'] | undefined {
-  const written = [...read].reverse().filter(
-    (entry): entry is ChronicleEntry & { text: string } => entry.text !== null,
-  );
+  const written = [...read].reverse().filter(isWritten);
   const picked = written.find((entry) => entry.weight === 'illuminated') ?? written[0];
   if (!picked) return undefined;
   return {
@@ -497,10 +500,12 @@ export function afterimageLayout(model: AfterimageModel, measure: Measure): Afte
     add(memory.text, 19, PLATE.ink, 8);
     if (memory.source) {
       const source = memory.source;
+      // Afterimage sources call the saved Record option `choice`.
+      const page = { text: source.text, record: source.choice === 'omit' ? 'omit' as const : undefined };
       // An omission's title/cast is not a licence to reconstruct its contents.
-      add(`${source.year}${source.text !== null && source.title ? ` · ${source.title}` : ''}`, 13, PLATE.faint, 4);
-      if (source.text === null) rows.push({ text: '', size: 16, colour: PLATE.rule, rule: true, gap: 20 });
-      else add(source.text, 16, PLATE.soft, 20, true);
+      add(`${source.year}${isWritten(page) && source.title ? ` · ${source.title}` : ''}`, 13, PLATE.faint, 4);
+      if (isWritten(page)) add(page.text, 16, PLATE.soft, 20, true);
+      else rows.push({ text: '', size: 16, colour: PLATE.rule, rule: true, gap: 20 });
     }
   }
   if (model.quote) {

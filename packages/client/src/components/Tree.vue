@@ -4,6 +4,7 @@ import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import Kin from './Kin.vue';
 import { kinshipPath, roots, type MemberView } from '../lib/kin';
+import type { GameStore } from '../lib/game';
 
 /**
  * `selected` is the APP's, not this component's. One card is open at a time —
@@ -21,6 +22,7 @@ const props = defineProps<{
   reveal?: { id: string; token: number; focus?: boolean } | null;
   line?: readonly LineEntry[];
   mentions?: (person: string) => MentionPage[];
+  milestones?: GameStore['milestones'];
 }>();
 /** A fresh reading of the same tree; changing prose mode never resets its filters. */
 const plain = computed(() => props.proseMode === 'plainenglish');
@@ -446,6 +448,7 @@ watch(() => props.reveal?.token, () => {
           :prose-mode="proseMode"
           :show-relevance="showRelevance"
           :mentions="mentions"
+          :milestones="milestones"
           :relationship-anchor="relationAnchor"
           @select="$emit('select', $event)"
           @line="$emit('line')"
