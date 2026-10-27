@@ -315,14 +315,19 @@ describe('local landing preflight tiers', () => {
     expect(source).not.toMatch(/run\('git',\s*\['push'[^\]]*:main/);
   });
 
-  it('hands a green preflight to the native merge queue without a push callback', () => {
+  it('hands a green preflight to the automatic landing without a push callback', () => {
     const result = land.finishLanding({
       target: '0123456789abcdef',
       branch: 'feature',
     });
     expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
-    expect(result.message).toContain('Merge when ready');
+    expect(result.message).toContain('Do not merge it');
+    expect(result.message).toContain('auto-merge-queue.yml');
     expect(result.message).toContain('native merge queue');
+    expect(result.message).toContain('fast-forward');
+    // The button an agent was once told to press is the one AGENTS.md forbids,
+    // and a private repository on the Free plan does not have it (#1947).
+    expect(result.message).not.toContain('Merge when ready');
   });
 
   it('uses that plan for the steps the command actually executes', () => {
@@ -666,7 +671,8 @@ describe('a killed preflight safely reads legacy landing locks', () => {
       expect(r.status).toBe(0);
       expect(out).toContain('preflight-green');
       expect(out).toContain('NOT pushed to main');
-      expect(out).toContain('Merge when ready');
+      expect(out).toContain('leave it as a ready PR');
+      expect(out).not.toContain('Merge when ready');
       expect(readFileSync(last, 'utf8')).toBe(saved);
       expect(existsSync(join(gitDir, 'land.lock'))).toBe(false);
     });
@@ -856,14 +862,15 @@ describe('local preflight cannot move main', () => {
     expect(source).toMatch(/remember\('preflight-green', \{ target, branch \}\)/);
   });
 
-  it('always returns a native-queue handoff', () => {
+  it('always returns a ready-PR handoff, whichever landing will run', () => {
     const result = land.finishLanding({
       target: '0123456789abcdef',
       branch: 'feature/native-queue',
     });
     expect(result).toMatchObject({ ok: true, state: 'preflight-green' });
-    expect(result.message).toContain('Merge when ready');
+    expect(result.message).toContain('ready PR');
     expect(result.message).toContain('native merge queue');
+    expect(result.message).toContain('fast-forward');
   });
 });
 
@@ -1142,7 +1149,298 @@ describe('native queue recovery after green main CI (#1458)', () => {
   });
 });
 
-const verdictReader = (await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
+/**
+ * ── A PRIVATE REPOSITORY HAS NO QUEUE, SO IT FAST-FORWARDS (#1947) ────────
+ *
+ * The native queue exists only for public org repositories (or Enterprise
+ * Cloud), and the repository went private on Free. The private landing has to
+ * keep the one promise `merge_group` made: the commit that reaches `main` is
+ * the commit CI tested. Everything below is a way that promise could break
+ * quietly — landing a head that is behind, forcing `main`, trusting a stale
+ * check, or pausing without saying so.
+ */
+type Pr = {
+  number: number; state: string; draft: boolean; node_id: string;
+  base: { ref: string }; head: { sha: string; ref: string; repo: { full_name: string } };
+};
+type Comparison = { ahead_by: number; behind_by: number };
+type Io = {
+  log: (line: string) => void;
+  summary: (line: string) => void;
+  pr: (n: number) => Promise<Pr>;
+  openPulls: () => Promise<Pr[]>;
+  required: (sha: string) => Promise<string>;
+  compare: (sha: string) => Promise<Comparison>;
+  touchesWorkflows: (n: number) => Promise<boolean>;
+  mainSha: () => Promise<string>;
+  fastForward: (sha: string) => Promise<{ ok: boolean; status?: number; message?: string }>;
+  rebase: (node: string, head: string) => Promise<{ ok: boolean; message?: string }>;
+  commentOnce: (n: number, mark: string, body: string) => Promise<boolean>;
+};
+type LandArgs = {
+  number: number; expectedHead?: string; required: string; repository: string; canWriteWorkflows: boolean;
+};
+const ff = (await import(pathToFileURL(join(REPO, 'tools/fast-forward-landing.mjs')).href)) as {
+  newestRequired: (runs: { id: number; name: string; status: string; conclusion: string | null }[]) => string;
+  decide: (input: {
+    pr: Pr; repository: string; expectedHead?: string; required: string;
+    comparison: Comparison | null; workflows: boolean; canWriteWorkflows: boolean;
+  }) => { action: string; reason: string };
+  touchesWorkflows: (files: { filename: string; previous_filename?: string }[]) => boolean;
+  marker: (kind: string, sha: string) => string;
+  landOne: (io: Io, args: LandArgs) => Promise<string>;
+  sweep: (io: Io, args: { expectedMain: string; repository: string; canWriteWorkflows: boolean }) =>
+    Promise<{ failed: number; outcomes: Record<number, string> }>;
+};
+
+const REPOSITORY = 'EldritchDynasty/EldritchDynasty';
+const pull = (number: number, sha: string, extra: Partial<Pr> = {}): Pr => ({
+  number, state: 'open', draft: false, node_id: `PR_${number}`, base: { ref: 'main' },
+  head: { sha, ref: `branch-${number}`, repo: { full_name: REPOSITORY } }, ...extra,
+});
+
+/**
+ * A remote small enough to read: `main` is a list of commits, and each head
+ * knows which `main` commits it contains. `fastForward` refuses exactly when
+ * git would, which is the point of asking for `force: false`.
+ */
+function remote() {
+  const w = {
+    history: ['m0'],
+    pulls: new Map<number, Pr>(),
+    contains: new Map<string, string[]>(),
+    required: new Map<string, string>(),
+    workflows: new Set<number>(),
+    conflicts: new Set<number>(),
+    comments: [] as { n: number; body: string }[],
+    rebased: [] as { node: string; head: string }[],
+    landed: [] as string[],
+    log: [] as string[],
+  };
+  const main = () => w.history[w.history.length - 1]!;
+  const io: Io = {
+    log: (line) => { w.log.push(line); },
+    summary: (line) => { w.log.push(line); },
+    pr: async (n) => structuredClone(w.pulls.get(n)!),
+    openPulls: async () => [...w.pulls.values()].filter((p) => p.state === 'open'),
+    required: async (sha) => w.required.get(sha) ?? '',
+    compare: async (sha) => ({
+      ahead_by: w.history.includes(sha) ? 0 : 1,
+      behind_by: (w.contains.get(sha) ?? []).includes(main()) ? 0 : 1,
+    }),
+    touchesWorkflows: async (n) => w.workflows.has(n),
+    mainSha: async () => main(),
+    fastForward: async (sha) => {
+      if (!(w.contains.get(sha) ?? []).includes(main())) {
+        return { ok: false, status: 422, message: 'Update is not a fast forward' };
+      }
+      w.history.push(sha);
+      w.contains.set(sha, [...w.history]);
+      w.landed.push(sha);
+      return { ok: true };
+    },
+    rebase: async (node, head) => {
+      const n = Number(node.slice(3));
+      if (w.conflicts.has(n)) return { ok: false, message: 'Pull request could not be rebased: merge conflict' };
+      w.rebased.push({ node, head });
+      return { ok: true };
+    },
+    commentOnce: async (n, mark, body) => {
+      if (w.comments.some((c) => c.n === n && c.body.includes(mark))) return false;
+      w.comments.push({ n, body });
+      return true;
+    },
+  };
+  const open = (n: number, sha: string, required = 'success') => {
+    w.pulls.set(n, pull(n, sha));
+    w.contains.set(sha, [...w.history]);
+    w.required.set(sha, required);
+  };
+  return { w, io, main, open };
+}
+
+describe('fast-forward landing when the repository is private (#1947)', () => {
+  const admission = readFileSync(join(REPO, '.github/workflows/auto-merge-queue.yml'), 'utf8');
+  const script = readFileSync(join(REPO, 'tools/fast-forward-landing.mjs'), 'utf8');
+  const job = (name: string) => {
+    const start = admission.indexOf(`\n  ${name}:\n`);
+    const next = admission.slice(start + 1).search(/\n {2}[a-z-]+:\n/);
+    return admission.slice(start, next < 0 ? undefined : start + 1 + next);
+  };
+
+  it('chooses the landing from the repository visibility, in one place', () => {
+    expect(admission).toContain(
+      "LANDING_MODE: ${{ github.event.repository.private && 'fast-forward' || 'native' }}");
+    const enqueue = job('enqueue');
+    expect(enqueue).toContain("if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'");
+    expect(enqueue).toContain("if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'fast-forward'");
+    expect(enqueue).toContain('run: node tools/fast-forward-landing.mjs land');
+    expect(job('reconcile-after-main')).toContain('!github.event.repository.private &&');
+    const sweepJob = job('sweep-after-main');
+    expect(sweepJob).toContain('github.event.repository.private &&');
+    expect(sweepJob).not.toContain('!github.event.repository.private');
+    expect(sweepJob).toContain("github.event.workflow_run.conclusion == 'success'");
+    expect(sweepJob).toContain('run: node tools/fast-forward-landing.mjs sweep');
+  });
+
+  it('says why the App token is missing instead of failing inside the token action', () => {
+    expect(job('enqueue')).toContain("name: Require the landing App's client ID");
+    expect(job('sweep-after-main')).toContain("name: Require the landing App's client ID");
+    expect(admission).toContain('add it as a REPOSITORY variable');
+  });
+
+  it('reads checks with the workflow token and writes with the App token', () => {
+    for (const name of ['enqueue', 'sweep-after-main']) {
+      const j = job(name);
+      expect(j).toContain('READ_TOKEN: ${{ github.token }}');
+      expect(j).toContain('WRITE_TOKEN: ${{ steps.ff-token.outputs.token || steps.ff-token-basic.outputs.token }}');
+      expect(j).toContain("CAN_WRITE_WORKFLOWS: ${{ steps.ff-token.outcome == 'success' }}");
+      expect(j).toContain('permission-workflows: write');
+    }
+  });
+
+  it('never forces main and rebases only against an expected head', () => {
+    expect(script).toContain('{ sha, force: false }');
+    expect(script).not.toMatch(/force:\s*true/);
+    expect(script).toContain('updateMethod:REBASE');
+    expect(script).toContain('expectedHeadOid:$expectedHeadOid');
+  });
+
+  it('judges a head by its newest finished CI required run (#493)', () => {
+    const run = (id: number, status: string, conclusion: string | null) =>
+      ({ id, name: 'CI required', status, conclusion });
+    expect(ff.newestRequired([run(2, 'completed', 'success'), run(1, 'completed', 'failure')])).toBe('success');
+    expect(ff.newestRequired([run(1, 'completed', 'success'), run(2, 'in_progress', null)])).toBe('pending');
+    expect(ff.newestRequired([{ id: 3, name: 'fast lane', status: 'completed', conclusion: 'success' }])).toBe('');
+  });
+
+  it('lands only a green head that already contains main', () => {
+    const base = {
+      pr: pull(7, 'a'.repeat(40)), repository: REPOSITORY, required: 'success',
+      comparison: { ahead_by: 1, behind_by: 0 }, workflows: false, canWriteWorkflows: false,
+    };
+    expect(ff.decide(base).action).toBe('fast-forward');
+    expect(ff.decide({ ...base, comparison: { ahead_by: 1, behind_by: 2 } }).action).toBe('rebase');
+    expect(ff.decide({ ...base, comparison: { ahead_by: 0, behind_by: 3 } }).action).toBe('skip');
+    expect(ff.decide({ ...base, comparison: null }).action).toBe('skip');
+    for (const required of ['pending', 'failure', '']) {
+      expect(ff.decide({ ...base, required }).action, `CI required ${required || 'absent'}`).toBe('skip');
+    }
+    expect(ff.decide({ ...base, expectedHead: 'b'.repeat(40) }).action).toBe('skip');
+    expect(ff.decide({ ...base, pr: pull(7, 'a'.repeat(40), { draft: true }) }).action).toBe('skip');
+    expect(ff.decide({ ...base, pr: pull(7, 'a'.repeat(40), { base: { ref: 'next' } }) }).action).toBe('skip');
+    const fork = pull(7, 'a'.repeat(40));
+    fork.head.repo.full_name = 'someone/fork';
+    expect(ff.decide({ ...base, pr: fork }).action).toBe('skip');
+    expect(ff.decide({ ...base, workflows: true }).action).toBe('needs-workflows');
+    expect(ff.decide({ ...base, workflows: true, canWriteWorkflows: true }).action).toBe('fast-forward');
+  });
+
+  it('sees a workflow file renamed away as well as one changed', () => {
+    expect(ff.touchesWorkflows([{ filename: 'docs/x.md' }])).toBe(false);
+    expect(ff.touchesWorkflows([{ filename: '.github/workflows/check.yml' }])).toBe(true);
+    expect(ff.touchesWorkflows([{ filename: 'old.yml', previous_filename: '.github/workflows/old.yml' }])).toBe(true);
+  });
+
+  it('moves main to exactly the tested head', async () => {
+    const { w, io, main, open } = remote();
+    open(1, 'h1');
+    const outcome = await ff.landOne(io, {
+      number: 1, expectedHead: 'h1', required: 'success', repository: REPOSITORY, canWriteWorkflows: true,
+    });
+    expect(outcome).toBe('landed');
+    expect(main()).toBe('h1');
+    expect(w.rebased).toEqual([]);
+  });
+
+  it('rebases instead when main moves between the decision and the update', async () => {
+    const { w, io, open } = remote();
+    open(1, 'h1');
+    const fastForward = io.fastForward;
+    io.fastForward = async (sha) => {
+      w.history.push('elsewhere');
+      io.fastForward = fastForward;
+      return fastForward(sha);
+    };
+    const outcome = await ff.landOne(io, {
+      number: 1, expectedHead: 'h1', required: 'success', repository: REPOSITORY, canWriteWorkflows: true,
+    });
+    expect(outcome).toBe('rebased');
+    expect(w.landed).toEqual([]);
+    expect(w.rebased).toEqual([{ node: 'PR_1', head: 'h1' }]);
+  });
+
+  it('fails loudly on a refusal it has no rule for, after one attempt', async () => {
+    const { io, open } = remote();
+    open(1, 'h1');
+    let attempts = 0;
+    io.fastForward = async () => {
+      attempts += 1;
+      return { ok: false, status: 403, message: 'Resource not accessible by integration' };
+    };
+    await expect(ff.landOne(io, {
+      number: 1, expectedHead: 'h1', required: 'success', repository: REPOSITORY, canWriteWorkflows: true,
+    })).rejects.toThrow(/refused h1 \(403\)/);
+    expect(attempts).toBe(1);
+  });
+
+  it('looks again once after a not-fast-forward answer, never forever', async () => {
+    // GitHub says "not a fast forward" while compare still says the head
+    // contains main: the two disagree, and a loop would never end.
+    const { io, open } = remote();
+    open(1, 'h1');
+    let attempts = 0;
+    io.fastForward = async () => {
+      attempts += 1;
+      return { ok: false, status: 422, message: 'Update is not a fast forward' };
+    };
+    await expect(ff.landOne(io, {
+      number: 1, expectedHead: 'h1', required: 'success', repository: REPOSITORY, canWriteWorkflows: true,
+    })).rejects.toThrow(/refused h1 \(422\)/);
+    expect(attempts).toBe(2);
+  });
+
+  it('says once, per head, why a landing paused', async () => {
+    const { w, io, open } = remote();
+    open(1, 'h1');
+    w.contains.set('h1', []);
+    w.conflicts.add(1);
+    open(2, 'h2');
+    w.workflows.add(2);
+    const args = { required: 'success', repository: REPOSITORY, canWriteWorkflows: false };
+    for (let i = 0; i < 2; i += 1) {
+      expect(await ff.landOne(io, { ...args, number: 1, expectedHead: 'h1' })).toBe('conflict');
+      expect(await ff.landOne(io, { ...args, number: 2, expectedHead: 'h2' })).toBe('needs-workflows');
+    }
+    expect(w.comments.map((c) => c.n)).toEqual([1, 2]);
+    expect(w.comments[0]!.body).toContain(ff.marker('rebase', 'h1'));
+    expect(w.comments[1]!.body).toContain(ff.marker('workflows', 'h2'));
+    expect(w.landed).toEqual([]);
+  });
+
+  it('sweeps oldest first: lands one, rebases the next, leaves red and draft alone', async () => {
+    const { w, io, main, open } = remote();
+    open(12, 'h12');
+    open(10, 'h10');
+    open(11, 'h11', 'failure');
+    w.pulls.set(13, pull(13, 'h13', { draft: true }));
+    const result = await ff.sweep(io, { expectedMain: 'm0', repository: REPOSITORY, canWriteWorkflows: true });
+    expect(result.failed).toBe(0);
+    expect(result.outcomes).toEqual({ 10: 'landed', 11: 'skipped', 12: 'rebased' });
+    expect(main()).toBe('h10');
+    expect(w.rebased).toEqual([{ node: 'PR_12', head: 'h12' }]);
+  });
+
+  it('leaves a sweep to the newer run once main has moved on', async () => {
+    const { w, io, open } = remote();
+    open(1, 'h1');
+    const result = await ff.sweep(io, { expectedMain: 'stale', repository: REPOSITORY, canWriteWorkflows: true });
+    expect(result.outcomes).toEqual({});
+    expect(w.landed).toEqual([]);
+  });
+});
+
+const verdictReader =(await import(pathToFileURL(join(REPO, 'tools/verdict.mjs')).href)) as {
   parseVerdict: (m: string) => { conclusion: string; sha: string; run: string; jobs: { name: string; result: string }[] } | null;
   stateOf: (v: unknown) => string;
   landingRecordMessage: (

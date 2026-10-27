@@ -287,7 +287,7 @@ function report(sha, verdict) {
       console.log(`  ${j.result === 'success' ? ' ' : '✗'} ${j.name}: ${j.result}`);
     }
     if (verdict.run) console.log(`  ${verdict.run}`);
-    console.log('\nFix it, preflight again, and enqueue `/land`; the queue re-runs the whole set after rebasing.');
+    console.log('\nFix it, preflight again and push; CI judges the new head, and the landing takes it from there.');
   } else if (state === 'pending') {
     console.log(`STILL RUNNING — ${sha.slice(0, 7)} has not been judged yet.`);
     if (verdict.run) console.log(`  ${verdict.run}`);

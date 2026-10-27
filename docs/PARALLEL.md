@@ -241,7 +241,7 @@ claim each, and they close themselves.
 |---|---|---|
 | Claim | `npm run agents -- take 93 --paths …`, once per issue | a ref push each. Every claim records the **branch** holding it, so `npm run agents` reads as an assignment table and one branch may appear on several rows |
 | Say so, for the humans | one comment on the issue naming the branch | optional, and never the lock — an agent's GitHub identity is yours, so a comment cannot arbitrate anything |
-| Land | `Closes #93, closes #94` in the commit message, then ready PR, automatically admitted after exact-head green CI | GitHub's native queue checks the rebased integration and closes them when that commit reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
+| Land | `Closes #93, closes #94` in the commit message, then ready PR, landed automatically after exact-head green CI | the landing lands only a commit whose own CI is green (native queue when public, fast-forward when private), and GitHub closes them when it reaches `main`; the PR is transport, while the commit keyword is the durable closing instruction |
 | Clean up | `.github/workflows/janitor.yml` → `tools/janitor.mjs` | deletes the merged branch, retires **every claim that branch was holding**, and closes anything the keyword missed |
 
 ### One branch, several issues
@@ -352,9 +352,10 @@ only one of them can be created on the first second of the session.
 ## Landing
 
 Sessions do not push or directly merge `main`. They preflight, open a ready
-same-repository PR, and let `.github/workflows/auto-merge-queue.yml` admit it
-automatically to GitHub's native merge queue after exact-head `CI required` passes
-([AGENTS.md](../AGENTS.md#working-style)).
+same-repository PR, and let `.github/workflows/auto-merge-queue.yml` land it
+automatically after exact-head `CI required` passes: through GitHub's native
+merge queue when the repository is public, by fast-forward when it is private
+([AGENTS.md](../AGENTS.md#working-style), [COMMANDS.md](COMMANDS.md#the-landing)).
 
 ```bash
 npm run land            # advisory session preflight: fetch · rebase · install ·
@@ -365,8 +366,9 @@ npm run land -- --dry-run      # the plan, and none of it performed
 npm run verdict                # ask about HEAD on its own
 ```
 
-The native queue is the serialization boundary. The ruleset requires a pull
-request, linear history, the stable `CI required` result, and the merge queue.
+When the repository is public, the native queue is the serialization boundary.
+The ruleset requires a pull request, linear history, the stable `CI required`
+result, and the merge queue.
 The queue uses REBASE, build concurrency 1 and a maximum merge group of 3.
 GitHub creates a synthetic `gh-readonly-queue/main/...` commit and emits
 `merge_group`; `check.yml` always runs the full tier on that exact integration
@@ -374,20 +376,29 @@ head. If it is green, GitHub itself advances `main`. The repository's
 `.github/workflows/auto-merge-queue.yml` is the queue-admission writer; it
 authenticates with the scoped GitHub App token and does not bypass merge-group CI.
 
+When the repository is private, GitHub offers no queue or ruleset on the Free
+plan (#1947), and `main` itself is the serialization boundary. The same workflow
+moves `main` to a PR's exact green head with `force: false`, only once that head
+already contains `main`; if `main` moved first, the update is refused. A green
+PR that is behind is rebased by GitHub and judged again by CI. So one landing at
+a time wins, and every other green PR is re-tested on top of it before it can
+follow.
+
 The repository-admin bypass is intentionally an emergency **pull-request-only**
 escape hatch. It is not an alternative fast path. A normal session never clicks
-Merge: it leaves an open, ready, same-repository PR for automatic admission and
-lets the required merge-group CI answer.
+Merge: it leaves an open, ready, same-repository PR for the automatic landing
+and lets the required CI answer.
 
 Put `Closes #93` in the PR/landing commit when the slice completes that issue.
-When GitHub's queue lands it on the default branch, GitHub closes the issue and
+When the landing reaches the default branch, GitHub closes the issue and
 the janitor retires the claim behind it. For staged work use `Refs #93` or
 `Part of #93` instead.
 
-**The check that matters is the native queue's one after its rebase.** A green
+**The check that matters is the one on the exact commit that lands.** A green
 PR-head run or local preflight against the base you forked from says nothing
 about a later integration after other PRs land. The required `merge_group`
-run is the exact state GitHub is about to merge.
+run is the exact state GitHub is about to merge when public; when private, the
+landed commit is the PR head itself, and it must already contain `main`.
 
 This used to be a table of what you could skip depending on what the rebase
 brought in: the full check for content or `core`, `test:fast` and a gate for
@@ -403,8 +414,9 @@ One thing is still yours to run, because it answers a question no gate asks:
   it was not a refactor — and because each phase draws its own RNG stream, a
   moved block names the system that moved it.
 
-**A landing is not finished until GitHub has merged the queue entry and CI has
-answered.** The native queue waits for its required merge-group result;
+**A landing is not finished until the PR has landed and CI has answered.** The
+native queue waits for its required merge-group result, and the fast-forward
+lands only an exact green head;
 `npm run verdict` can read the resulting commit verdict independently:
 
 | | | |

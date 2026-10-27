@@ -1,9 +1,11 @@
 # PR #1445 native merge-queue eviction and recovery (2026-10-12)
 
 This is a dated incident record, not an alternative landing procedure.
-**GitHub's native REBASE merge queue remains the sole normal way to land a
-ready pull request.** [AGENTS.md](../AGENTS.md) and
-[COMMANDS.md](COMMANDS.md#the-landing) govern current operations.
+**While the repository is public, GitHub's native REBASE merge queue is the
+sole normal way to land a ready pull request; while it is private, the
+fast-forward landing in the same workflow is (#1947, below).**
+[AGENTS.md](../AGENTS.md) and [COMMANDS.md](COMMANDS.md#the-landing) govern
+current operations.
 
 ## Symptom and evidence
 
@@ -64,3 +66,64 @@ commits as the earlier eviction cause.
 
 The source investigation, including the earlier failed admissions and
 ruleset details, is [issue #1499](https://github.com/EldritchDynasty/EldritchDynasty/issues/1499).
+
+## Later: the repository went private, and the queue went with it (2026-10-26)
+
+### Symptom and evidence
+
+- PR #1940 went green on its exact head `d646cc81` and did not land. Its
+  `check` re-run finished at 23:59 UTC; the `auto merge queue` handoff (run
+  40423404317) and two `edited` retries (40423540473, 40423776988) all failed
+  at **Mint merge-queue GitHub App token**: *"The 'client-id' input must be set
+  to a non-empty string."* The private key in the same step was present.
+- The last good admission was 23:13 UTC (run 40418245332). By 23:59 the
+  repository was private: `GET /repos/EldritchDynasty/EldritchDynasty` answers
+  `"private": true`, and `…/rulesets` and `…/branches/main/protection` both
+  answer `403 Upgrade to GitHub Pro or make this repository public to enable
+  this feature.`
+
+### Cause
+
+Two plan limits, and fixing the first would not have fixed the second. Both are
+GitHub's own documentation (the `github/docs` reusables named here):
+
+1. *Organization-level secrets and variables are not accessible by private
+   repositories for GitHub Free* (`actions/actions-secrets-variables-repository-access.md`).
+   `MERGE_QUEUE_APP_CLIENT_ID` was an organisation variable, so it arrived
+   empty. The private key arrived because it is a repository secret.
+   `prerelease-tag.yml` mints the same token and broke the same way.
+2. *Pull request merge queues are available in any public repository owned by
+   an organization, or in private repositories owned by organizations using
+   GitHub Enterprise Cloud* (`gated-features/merge-queue.md`). Rulesets,
+   protected branches and auto-merge need Pro, Team or Enterprise for a private
+   repository (`repo-rules.md`, `protected-branches.md`, `auto-merge.md`). So
+   `main` had no protection at all, and `enqueuePullRequest` had no queue.
+
+### What changed
+
+`auto-merge-queue.yml` now reads `repository.private` off the event and picks
+the landing. Public is the native queue, unchanged. Private is
+`tools/fast-forward-landing.mjs`: `main` moves only to an exact green head that
+already contains it, with `force: false`, and a green head that is behind is
+rebased by GitHub so CI judges it again. The commit that lands is the commit CI
+tested, which is the promise `merge_group` made. The workflow names the empty
+client ID itself instead of leaving the token action's message to explain it.
+
+### What only an owner can do
+
+- Add **`MERGE_QUEUE_APP_CLIENT_ID` as a repository variable** (Settings →
+  Secrets and variables → Actions → Variables). A repository variable takes
+  precedence over an organisation one of the same name, so it keeps working if
+  the repository goes public again.
+- Grant the merge-queue App **Workflows: read and write** for PRs that change
+  `.github/workflows/` to land automatically. Without it they get one comment
+  and wait for **Rebase and merge** by hand. #1947 itself changes the workflow
+  it fixes: `workflow_run` runs `main`'s old copy, which cannot land it, and a
+  PR-body edit runs the new copy, which can only with that permission.
+- Budget the Actions minutes. GitHub Free includes 2,000 minutes a month for
+  private repositories (`billing/actions-included-quotas.md`), and public
+  repositories pay none. The 2026-10-26 nightly regression alone ran about 85
+  Linux job-minutes and an 8-minute macOS job; macOS bills at about ten times
+  the Linux rate (`billing/actions-standard-runner-prices.md`). Without a
+  payment method, GitHub blocks Actions once the quota is spent, and then no
+  landing of either kind can run.
