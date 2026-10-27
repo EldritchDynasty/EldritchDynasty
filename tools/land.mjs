@@ -33,22 +33,24 @@
  *   npm run land -- --no-issue-check # preflight even though the branch names
  *                                    # an issue no commit closes
  *
- * This command has no main-pushing mode. GitHub's native merge queue owns the
- * authoritative integration check and the only normal update of `main`.
+ * This command has no main-pushing mode. `.github/workflows/auto-merge-queue.yml`
+ * owns the only normal update of `main`: GitHub's native merge queue when the
+ * repository is public, a fast-forward to the exact green PR head when it is
+ * private (#1947). Either way CI on the commit that lands is the authority.
  *
  * `DOCS_ONLY_STEPS` is also the session's default preflight set. That reuse is
  * about the commands, not the reason: CI still calls `tools/docs-only.mjs` to
  * decide when a markdown-only change may take its short tier, while a session
  * now takes the short tier for every diff and leaves the full judgment to
- * GitHub's native merge-group CI.
+ * CI on the commit that lands.
  *
  * A `--full-preflight` can still outlive a web-session turn. Start that mode
  * with the harness's tracked background run, never `nohup … &`; `--status`
  * reports whether it is still running or where it stopped.
  *
  * What this does NOT do is put the gates in the fix-and-rerun loop. The loop
- * is still `npm run test:fast`; GitHub's merge-group CI runs the full gate set
- * on the synthetic integration commit that can actually reach `main`.
+ * is still `npm run test:fast`; CI runs the full gate set on the commit that
+ * can actually reach `main` (the merge-group commit, or the PR head itself).
  *
  * ── A SESSION MAY ASK FOR THE QUEUE'S FULL SET BEFORE ENQUEUEING ───────────
  *
@@ -313,8 +315,9 @@ export function finishLanding({ target, branch }) {
     ok: true,
     state: 'preflight-green',
     message:
-      `green on ${target.slice(0, 7)} — enqueue it: open or keep a ready PR from \`${branch}\`, ` +
-      'then choose **Merge when ready** in GitHub. The native merge queue owns the integration check.',
+      `green on ${target.slice(0, 7)} — push and open or keep a ready PR from \`${branch}\`. ` +
+      'Do not merge it: auto-merge-queue.yml lands it once CI required is green on that exact head, ' +
+      'through the native merge queue when the repository is public and a fast-forward when it is private.',
   };
 }
 
@@ -418,7 +421,7 @@ const tryGit = (...args) => {
  * was missing is the one this prints.
  *
  * A pid file under `.git/` rather than a ref: this is a single-checkout
- * problem. Integration serialization is GitHub's native merge queue's job;
+ * problem. Integration serialization is the landing workflow's job;
  * this lock only prevents two local preflights from corrupting one checkout.
  */
 const GIT_DIR = git('rev-parse', '--git-dir');
@@ -614,7 +617,7 @@ function status() {
     if (last?.step === 'preflight-green') {
       say(`last landing state: preflight-green on ${String(last.target ?? '').slice(0, 7)}.`);
       if (last.branch) say(`  branch ${last.branch} was verified but was NOT pushed to main.`);
-      say("  enqueue it with a ready PR and GitHub's Merge when ready action.");
+      say('  leave it as a ready PR; auto-merge-queue.yml lands it after exact-head green CI.');
       return 0;
     }
     say('no landing is running, and none left a mark on this checkout.');

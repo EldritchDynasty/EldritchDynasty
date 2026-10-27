@@ -81,8 +81,8 @@ npm run land         # session preflight: fetch, rebase, install, then run
                      # at preflight-green; a session NEVER pushes main. Use
                      # --full-preflight for the complete local CI-derived set.
                      # Then open/keep a ready same-repository PR. Do not merge it:
-                     # auto-merge-queue.yml enqueues exact-head green CI into
-                     # GitHub's native queue; merge_group CI is authoritative.
+                     # auto-merge-queue.yml lands exact-head green CI: native
+                     # queue when public, fast-forward of main when private.
                      # Long preflights must use a harness-tracked background run;
                      # `nohup … &` dies with the container silently.
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
@@ -464,15 +464,18 @@ true even if nobody opens it.
 - **Run the harness before claiming a balance change works.** A full run is multi-hour; batch simulation is the only viable balance method. #133 supplies the measured 500-year playtime.
 - When a test fails, work out whether the test or the code is wrong. Several "failures" here were correct behaviour asserted incorrectly — rare upward font mutation is *designed*.
 - Prefer fixing the model over special-casing the symptom. Nearly every bug in this codebase has been structural: children in the wrong household, widows still married to dead men, cast slots never refilled, counters at module scope.
-- **Preflight with `npm run land`, then leave a ready PR for automatic native merge-queue admission.**
+- **Preflight with `npm run land`, then leave a ready PR for the automatic landing.**
   Standing authorization: run preflight and keep/open a ready same-repository PR
   without asking. Do not click Merge, directly merge `main`, or post `/land`
-  (`/land` is retired). `.github/workflows/auto-merge-queue.yml` admits only
+  (`/land` is retired). `.github/workflows/auto-merge-queue.yml` acts only on
   an open, ready `main` PR whose exact head has green `CI required`; early or
-  stale events no-op, and the successful `check` handoff revalidates the head
-  before enqueueing. If admission was missed, a factual PR-body edit may
-  retrigger it. GitHub then tests the synthetic `merge_group` head and merges
-  only when `CI required` is green. `npm run check` omits gates; use
+  stale events no-op, and the successful `check` handoff revalidates the head.
+  If it missed one, a factual PR-body edit may retrigger it. It lands by the
+  repository's visibility: **public** enqueues into GitHub's native queue,
+  which merges only a green `merge_group` head; **private** has no queue on
+  the Free plan, so `tools/fast-forward-landing.mjs` moves `main` to that exact
+  head once it contains `main`, and rebases a green head that is behind so CI
+  judges it again (#1947). `npm run check` omits gates; use
   `--full-preflight` when complete local CI-derived evidence is useful. The
   admin bypass is emergency-only.
   See [docs/COMMANDS.md](docs/COMMANDS.md#the-landing).
@@ -483,7 +486,7 @@ true even if nobody opens it.
   unmerged. `tools/orient.mjs` unshallows at session start; if you are unsure,
   `git rev-parse --is-shallow-repository` before any "has this landed" reasoning.
   See [docs/COMMANDS.md](docs/COMMANDS.md#how-a-session-starts).
-- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases for the session preflight; GitHub's merge queue rebases again and runs the authoritative required CI on the synthetic integration commit before merging. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
+- **With more than one agent running, the check that counts is the one after the rebase.** `main` moving is the normal case, and a branch green against the base it forked from says nothing about the base it lands on — two content branches can each pass every gate and their merge fail gate 4. `npm run land` rebases for the session preflight; the landing then requires green CI on the exact commit that reaches `main` — the `merge_group` commit when public, the PR head rebased onto `main` when private. Claiming, closing and the janitor are under "Branches, and the tracker" above; the lanes, and the one thing that does not parallelise, are in [docs/PARALLEL.md](docs/PARALLEL.md).
 
 ## Do not
 

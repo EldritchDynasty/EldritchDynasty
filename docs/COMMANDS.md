@@ -31,9 +31,9 @@ issues other sessions are holding. What that cost before it existed is in
 ## The landing
 
 `npm run land` is a **session preflight**, not a main-pushing command.
-[AGENTS.md](../AGENTS.md#working-style) authorizes running it and enqueueing the
-result without a confirmation prompt, but a session has no code path that may
-push or directly merge `main`.
+[AGENTS.md](../AGENTS.md#working-style) authorizes running it and leaving the
+result as a ready PR without a confirmation prompt, but a session has no code
+path that may push or directly merge `main`.
 
 The default preflight fetches, rebases onto `origin/main`, installs, then runs
 typecheck, validation and `test:fast` on that rebased head. Risky core, content
@@ -43,37 +43,55 @@ either mode records `preflight-green`. Keep or open a ready same-repository PR
 and leave it ready. **Do not click Merge, directly merge `main`, or post
 `/land`; `/land` is retired.**
 
-`.github/workflows/auto-merge-queue.yml` owns admission to GitHub's **native
-merge queue**. It runs on PR `opened`, `reopened`, `ready_for_review`,
-`synchronize` and `edited` events, and on completion of the `check`
-workflow. On an early PR event it may find `CI required` absent or pending;
-that is a normal successful no-op. When the `check` workflow later completes
-successfully, the workflow-run handoff re-reads the PR and accepts it only when
-the PR is still open and ready, still targets `main`, still belongs to this
-repository, and still has the exact head SHA that went green. It then mints the
-merge-queue GitHub App token and calls GitHub's native `enqueuePullRequest`
-GraphQL mutation. A completed check for an older head can never enqueue newer
-code.
+`.github/workflows/auto-merge-queue.yml` owns the landing. It runs on PR
+`opened`, `reopened`, `ready_for_review`, `synchronize` and `edited` events,
+and on completion of the `check` workflow. On an early PR event it may find
+`CI required` absent or pending; that is a normal successful no-op. When the
+`check` workflow later completes successfully, the workflow-run handoff
+re-reads the PR and accepts it only when the PR is still open and ready, still
+targets `main`, still belongs to this repository, and still has the exact head
+SHA that went green. A completed check for an older head can never land newer
+code. Both landings authenticate with the merge-queue GitHub App's token.
 
 Normally an agent does nothing after exact-head CI becomes green; the
-workflow-run handoff enqueues it. If admission was missed because the earlier
-event raced or was cancelled, a factual PR-body edit can retrigger the supported
+workflow-run handoff takes it. If that was missed because the earlier event
+raced or was cancelled, a factual PR-body edit can retrigger the supported
 `edited` path. That is recovery for the automatic path, not permission to
 merge directly.
 
-The repository ruleset makes the native merge queue the only normal landing
-path. The queue uses **REBASE**, builds one group at a time, and may merge up to
-three green PRs together. GitHub creates a
-`gh-readonly-queue/main/...` synthetic commit and raises the `merge_group`
-event. `.github/workflows/check.yml` always sends that event through the full
-CI tier and publishes the stable required result **`CI required`**. Only after
-that exact integration commit is green does GitHub update `main`.
+**Which landing runs depends on the repository's visibility**, read off the
+event in one place (`LANDING_MODE`). GitHub's native merge queue exists only
+in public organisation repositories or private ones on Enterprise Cloud, and a
+private repository on the Free plan has no rulesets, branch protection or
+auto-merge either (#1947). Making the repository public again switches back
+with no edit.
 
-That distinction is load-bearing. A green PR-head run says the branch is green
-against the base GitHub tested at that moment. The merge-group run says the
-actual rebased integration GitHub is about to merge is green. The queue proof
-for this cutover is #443: its successful `merge_group` commit became the exact
-new `main` commit.
+- **Public: the native merge queue.** The handoff calls GitHub's
+  `enqueuePullRequest` GraphQL mutation. The ruleset makes the queue the only
+  normal landing path. It uses **REBASE**, builds one group at a time, and may
+  merge up to three green PRs together. GitHub creates a
+  `gh-readonly-queue/main/...` synthetic commit and raises the `merge_group`
+  event; `check.yml` always sends that event through the full CI tier and
+  publishes the stable required result **`CI required`**. Only after that exact
+  integration commit is green does GitHub update `main`. The queue proof for
+  this cutover is #443: its successful `merge_group` commit became the exact
+  new `main` commit.
+- **Private: a fast-forward.** `tools/fast-forward-landing.mjs` lands a green
+  head only when it already contains `main`, by moving `main` to that exact
+  SHA with `force: false`. A `main` that moved meanwhile refuses rather than
+  receiving an untested combination. A green head that is behind `main` is
+  rebased by GitHub (`updatePullRequestBranch`, REBASE, with an expected head);
+  its CI runs again and that run's handoff lands it. After `main`'s own CI
+  passes, `sweep-after-main` does the same for every ready PR, oldest first.
+  A rebase GitHub refuses, or a PR changing `.github/workflows/` when the App
+  lacks the Workflows permission, gets one comment saying so. Nothing moves
+  `main` but the App, and nothing forces it; but with no ruleset GitHub does
+  not stop a person who pushes there, so the rule against it is this document.
+
+That distinction is load-bearing. A green PR-head run against an older base says
+the branch was green against that base. What may reach `main` is only a commit
+whose own CI is green: GitHub's merge-group commit when public, the PR head
+that already contains `main` when private.
 
 A local preflight does not create a CI verdict, close an issue, or turn
 "green here" into "landed". `npm run check` is also not a substitute because
@@ -92,8 +110,11 @@ keyword because GitHub still interprets the keyword.
 When every file in a pull request is `.md` **and** its base has a green verdict,
 the ordinary PR-head workflow may use the short tier: `typecheck`, `validate`
 and `test:fast`. The native merge queue does **not** inherit that shortcut:
-every `merge_group` runs the full tier before it can merge. `npm run land
--- --full-preflight` is the local way to request the complete set before enqueueing.
+every `merge_group` runs the full tier before it can merge. The private
+fast-forward landing has no second run, so a markdown-only PR lands on its
+short PR tier, the same tier `main`'s own push CI gives a markdown-only commit.
+`npm run land -- --full-preflight` is the local way to request the complete set
+before the landing.
 
 This is safe for a reason that can be checked, not assumed: the gates and the
 slow suites load only the simulation sources and the content YAML, and the
@@ -122,9 +143,9 @@ leave no useful completion signal.
 
 `npm run land -- --status` reports whether the preflight is running, dead, or
 last reached `preflight-green`. A dead session preflight has pushed nothing. Clear/restart the preflight as
-needed, then keep the same-repository PR ready; `auto-merge-queue.yml` admits
-it after exact-head CI is green, and GitHub's native queue performs its own
-fresh rebase and authoritative merge-group check.
+needed, then keep the same-repository PR ready; `auto-merge-queue.yml` lands
+it after exact-head CI is green, through the native queue's merge-group check
+when public or a fast-forward of that exact head when private.
 
 
 ## CI, and the janitor
@@ -254,8 +275,9 @@ different explanations, so retain that host evidence when rebaselining.
 The local preflight has two modes. Default runs typecheck, validation and the
 fast lane. `--full-preflight` derives the complete local script set from CI
 and overlaps independent expensive checks after the preliminary checks pass.
-Neither mode pushes `main`; GitHub's native merge-group check remains the
-integration authority. Merge CI runs the classified blocking slow suites and
+Neither mode pushes `main`; CI on the exact commit that lands remains the
+integration authority (the merge-group commit when public, the PR head when
+private). Merge CI runs the classified blocking slow suites and
 `batch` gates, while scheduled and release workflows own the broader sampled
 sets described above. It does not run every gate on every merge.
 
