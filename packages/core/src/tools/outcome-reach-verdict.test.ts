@@ -1,13 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, type Person } from '@ed/schema';
+import { EventTemplateS, indexContent, type Person } from '@ed/schema';
 import {
   declaredOutcomes, emptyReach, observeCheckedOutcome, observeGuardedOutcome, type DeclaredOutcome, type Reach,
 } from '../events/reach.js';
 import { bandChances, checkReading } from '../events/checks.js';
 import { candidatesFor } from '../events/slots.js';
 import { genomeOf, phenotypeOf } from '../people/factory.js';
-import { place, testWorld } from '../testing.js';
+import { marry, place, testWorld } from '../testing.js';
+import { dueArcSteps, startArc, type ArcStep } from '../events/arcs.js';
+import { commitOutcome, queueChoice, resolveChoice, type OutcomeObservation } from '../events/decisions.js';
+import { pickOutcome } from '../events/effects.js';
+import { makeRng } from '../rng.js';
+import { canonical, loadGame, saveGame } from '../save.js';
 import {
   judgeZeroReach,
   judgeOutcomeReachZero,
@@ -289,5 +294,146 @@ describe('the denominator a zero is judged on (#1917)', () => {
     const woke = 'the_dark_year_fast|keep_the_fast|woke';
     expect(into.guarded!.opportunities.get(woke)).toBe(0);
     expect(into.guarded!.poolExpected!.get(woke)).toBeCloseTo((1 / 3) * (52 / 100), 9);
+  });
+});
+
+describe('preset casts in guarded outcome reach (#1930)', () => {
+  const content = indexContent(loadContent());
+  const daughter = 'the_match_made||a_daughter_married';
+  const son = 'the_match_made||a_son_married';
+
+  function commitStep(ctx: ReturnType<typeof testWorld>, step: ArcStep, into: Reach) {
+    ctx.observeOutcome = observation => observeGuardedOutcome(ctx, observation, into);
+    const event = content.mustEvent(step.node.event);
+    if (event.interaction.kind !== 'narration') throw new Error('narration required');
+    const rng = makeRng(19301);
+    const outcome = pickOutcome(event.interaction.outcomes, rng, ctx, step.fill, event);
+    return commitOutcome(ctx, event, outcome, step.fill, undefined, rng, step);
+  }
+
+  it.each([
+    { sex: 'male', extras: 0 }, { sex: 'male', extras: 6 },
+    { sex: 'female', extras: 0 }, { sex: 'female', extras: 6 },
+  ] as const)('credits only the fixed $sex subject, with $extras unrelated relatives', ({ sex, extras }) => {
+    const ctx = testWorld(content, 1930, 1200);
+    const subject = place(ctx, { sex, age: 30, name: 'Bound subject' });
+    const spouse = place(ctx, { sex: sex === 'male' ? 'female' : 'male', age: 30, name: 'Bound spouse' });
+    marry(ctx, subject, spouse);
+    for (let i = 0; i < extras; i++) place(ctx, { sex: i % 2 ? 'male' : 'female', age: 25, name: `Unrelated ${i}` });
+    const instance = startArc(content.mustArc('arc_the_match_come_to_something'), ctx, makeRng(1930),
+      { SUBJECT: subject.id, SPOUSE: spouse.id })!;
+    const step = dueArcSteps(ctx, makeRng(1930)).find(candidate => candidate.instance === instance)!;
+    expect(step.fill).toMatchObject({ SUBJECT: subject.id, SPOUSE: spouse.id });
+    const into = emptyReach();
+    commitStep(ctx, step, into);
+    for (const [key, expected] of [[daughter, Number(sex === 'female')], [son, Number(sex === 'male')]] as const) {
+      expect(into.guarded!.expected.get(key)).toBe(expected);
+      expect(into.guarded!.poolExpected!.get(key)).toBe(expected);
+      expect(into.guarded!.opportunities.get(key)).toBe(expected);
+    }
+    into.firings.set('the_match_made|', 1);
+    const impossible = sex === 'male' ? daughter : son;
+    expect(judgeOutcomeReachZero(impossible, declaredOutcomes(content).get(impossible)!, into, 800))
+      .toEqual({ kind: 'dead', why: 'no eligible cast in any pool across 1 firings of its choice' });
+  });
+
+  it.each(['SUBJECT', 'SPOUSE'] as const)('distinguishes a preset %s from the other slot drawn at this firing', slot => {
+    const ctx = testWorld(content, 1930, 1200);
+    const fixed = place(ctx, { sex: 'male', age: 30, name: 'Fixed man' });
+    place(ctx, { sex: 'female', age: 30, name: 'Available woman' });
+    const event = content.mustEvent('the_match_made');
+    const instance = startArc(content.mustArc('arc_the_match_come_to_something'), ctx, makeRng(1930), { [slot]: fixed.id })!;
+    const step = dueArcSteps(ctx, makeRng(1930)).find(candidate => candidate.instance === instance)!;
+    // A static `bind: arc` check would incorrectly suppress this real draw.
+    const pool = candidatesFor(event.slots.SUBJECT!, ctx, { SPOUSE: step.fill.SPOUSE! });
+    const expected = slot === 'SUBJECT' ? 0 : pool.filter(person => person.sex === 'female').length / pool.length;
+    if (slot === 'SPOUSE') expect(expected > 0 && expected < 1).toBe(true);
+    let observed: OutcomeObservation | undefined;
+    const into = emptyReach();
+    ctx.observeAppliedOutcome = observation => { observed = observation; };
+    commitStep(ctx, step, into);
+    expect(observed!.preset).toEqual([slot]);
+    if (slot === 'SUBJECT') expect(into.guarded!.poolExpected!.get(daughter)).toBe(0);
+    else expect(into.guarded!.poolExpected!.get(daughter)).toBeCloseTo(expected, 9);
+    // advanceArc saves the newly drawn binding only AFTER observation.
+    expect(Object.keys(instance.bindings).sort()).toEqual(['SPOUSE', 'SUBJECT']);
+  });
+
+  it.each(['SUBJECT', 'SPOUSE'] as const)('derives the original preset %s when a saved arc docket is answered', slot => {
+    const original = content.mustEvent('the_match_made');
+    if (original.interaction.kind !== 'narration') throw new Error('narration required');
+    // The shipped callback has no question; keep its real cast and guards
+    // while exercising the same docket path an authored arc choice uses.
+    const event = EventTemplateS.parse({ ...original, interaction: { kind: 'choice', choices: [
+      { id: 'accept', label: 'Accept', outcomes: original.interaction.outcomes },
+      { id: 'wait', label: 'Wait', outcomes: original.interaction.outcomes },
+    ] } });
+    const bundle = loadContent().bundle;
+    const docketContent = indexContent({ ...bundle, events: bundle.events.map(candidate => candidate.id === event.id ? event : candidate) });
+    let ctx = testWorld(docketContent, 1930, 1200);
+    const fixed = place(ctx, { sex: 'male', age: 30, name: 'Docketed man' });
+    place(ctx, { sex: 'female', age: 30, name: 'Available woman' });
+    const instance = startArc(docketContent.mustArc('arc_the_match_come_to_something'), ctx, makeRng(1930), { [slot]: fixed.id })!;
+    const step = dueArcSteps(ctx, makeRng(1930)).find(candidate => candidate.instance === instance)!;
+    const pending = queueChoice(ctx, event, event.body, step.fill, [], step);
+    ctx = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), docketContent);
+    const into = emptyReach();
+    let preset: readonly string[] | undefined;
+    ctx.observeOutcome = observation => {
+      preset = observation.preset;
+      observeGuardedOutcome(ctx, observation, into);
+    };
+    expect(resolveChoice(ctx, pending.id, 'accept', makeRng(19301)).ok).toBe(true);
+    expect(preset).toEqual([slot]);
+    if (slot === 'SUBJECT') expect(into.guarded!.poolExpected!.get(daughter.replace('||', '|accept|'))).toBe(0);
+    else expect(into.guarded!.poolExpected!.get(daughter.replace('||', '|accept|'))).toBeGreaterThan(0);
+  });
+
+  it.each([
+    { arc: 'arc_the_term_paid_for', slot: 'PUPIL', sex: 'male', outcome: 'it_shows_in_her' },
+    { arc: 'arc_the_term_paid_for', slot: 'PUPIL', sex: 'female', outcome: 'it_shows_in_him' },
+    { arc: 'arc_the_waking_kept', slot: 'WOKEN', sex: 'male', outcome: 'what_her_waking_became' },
+    { arc: 'arc_the_waking_kept', slot: 'WOKEN', sex: 'female', outcome: 'what_his_waking_became' },
+  ] as const)('keeps the $sex $slot fixed across the $arc return and a save', ({ arc, slot, sex, outcome }) => {
+    let ctx = testWorld(content, 1930, 1200);
+    const subject = place(ctx, { sex, age: slot === 'PUPIL' ? 10 : 13, name: 'Kept child', awakened: true });
+    const instance = startArc(content.mustArc(arc), ctx, makeRng(1930), { [slot]: subject.id })!;
+    const opening = dueArcSteps(ctx, makeRng(1930)).find(step => step.instance === instance)!;
+    commitStep(ctx, opening, emptyReach());
+    ctx.world.year = instance.dueYear!;
+    ctx = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    place(ctx, { sex: sex === 'male' ? 'female' : 'male', age: 20, name: 'Unrelated child' });
+    const step = dueArcSteps(ctx, makeRng(1930)).find(candidate => candidate.instance.id === instance.id)!;
+    const into = emptyReach();
+    commitStep(ctx, step, into);
+    const key = `${step.node.event}||${outcome}`;
+    expect(into.guarded!.expected.get(key)).toBe(0);
+    expect(into.guarded!.poolExpected!.get(key)).toBe(0);
+  });
+
+  it('preserves the complete saved world and RNG stream with either outcome observer', () => {
+    const run = (observer: 'none' | 'before' | 'after') => {
+      const ctx = testWorld(content, 1930, 1200);
+      const spouse = place(ctx, { sex: 'female', age: 30, name: 'Fixed wife' });
+      const instance = startArc(content.mustArc('arc_the_match_come_to_something'), ctx, makeRng(1930), { SPOUSE: spouse.id })!;
+      const rng = makeRng(1930);
+      const step = dueArcSteps(ctx, rng).find(candidate => candidate.instance === instance)!;
+      const event = content.mustEvent(step.node.event);
+      if (event.interaction.kind !== 'narration') throw new Error('narration required');
+      const into = emptyReach();
+      let observation: OutcomeObservation | undefined;
+      const observe = (value: OutcomeObservation) => {
+        observation = value;
+        if (observer === 'before') observeGuardedOutcome(ctx, value, into);
+      };
+      if (observer === 'before') ctx.observeOutcome = observe;
+      if (observer === 'after') ctx.observeAppliedOutcome = observe;
+      const outcome = pickOutcome(event.interaction.outcomes, rng, ctx, step.fill, event);
+      commitOutcome(ctx, event, outcome, step.fill, undefined, rng, step);
+      if (observer !== 'none') expect(observation!.preset).toEqual(['SPOUSE']);
+      return { save: canonical(saveGame(ctx)), nextDraw: rng.int(1000000) };
+    };
+    expect(run('before')).toEqual(run('none'));
+    expect(run('after')).toEqual(run('none'));
   });
 });

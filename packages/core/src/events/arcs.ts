@@ -10,7 +10,7 @@ import { minimumArcYears } from './arc-reach.js';
 export { minimumArcYears } from './arc-reach.js';
 
 /** Only declared persistent slots survive a beat; each binding is one person. */
-function soleBindings(fill: SlotFill, slots: readonly string[]): Record<string, string> {
+export function soleBindings(fill: SlotFill, slots: readonly string[]): Record<string, string> {
   const out: Record<string, string> = {};
   for (const sid of slots) {
     const who = soleCast(fill, sid);

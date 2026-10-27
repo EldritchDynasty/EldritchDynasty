@@ -12,6 +12,7 @@ import { describeDecision, replay, ReplayMismatchError } from './replay.js';
 import { GameSession, newGame, resumeGame } from './session.js';
 import { beginCommitment } from './muster.js';
 import { place, testWorld } from './testing.js';
+import { emptyReach, observeCheckedOutcome, observeGuardedOutcome } from './events/reach.js';
 
 // Short spans and built state. Full campaigns remain in replay.slow.test.ts.
 const content = loadContent();
@@ -31,6 +32,24 @@ function opening(s: GameSession) {
 }
 
 describe('public session input replay (#1910)', () => {
+  it('preserves the complete public-session save and replay with reach observation (#1930)', () => {
+    const play = (observed: boolean) => {
+      const s = newGame(content, { seed: SEED, decider: 'chronicler' });
+      const into = emptyReach();
+      if (observed) s.ctx.observeOutcome = observation => {
+        observeGuardedOutcome(s.ctx, observation, into);
+        observeCheckedOutcome(s.ctx, observation, into);
+      };
+      const pupil = s.table().pupils[0]!;
+      expect(s.order({ kind: 'tutor', person: pupil.person, attr: 'mind' }).ok).toBe(true);
+      s.advance(9);
+      expect(canonical(saveGame(rebuild(s)))).toBe(snapshot(s));
+      if (observed) expect(into.guarded!.expected.size).toBeGreaterThan(0);
+      return snapshot(s);
+    };
+    expect(play(true)).toBe(play(false));
+  });
+
   it('reconstructs paid Table orders, policy and ambition through the same public verbs', () => {
     const s = newGame(content, { seed: SEED, decider: 'chronicler' });
     const pupil = s.table().pupils[0]!;
