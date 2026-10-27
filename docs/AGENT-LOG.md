@@ -207,3 +207,33 @@ typechecking, content validation and Linux/Windows fast lanes passed there.
 No simulation, authored YAML, dependency, workflow, gate threshold or generated
 file changed. Historical balance/coverage logs remain intact, and no new
 population study or human playtest is claimed.
+
+## 2026-10-27 — #1931: refresh the documentation PR on the repaired save path
+
+Recovered the unchanged documentation branch after its claim passed the
+six-hour stale threshold, and rebased it onto `main` at `524ea5fe`. The old
+PR passed all twelve game gates; its failed CI result was the runner-class
+duration guard repaired on this newer base. The existing PR remains the
+single landing unit for #1931.
+
+Removed the living guides' obsolete #1932 repetition caveat. `loadGame` now
+reconnects a pending choice to the world's authoritative arc instance, and
+the architecture map points to the new fast public-session replay/scenario
+coverage as well as the full-run suite. The earlier audit above remains as
+the record of what was reproduced before that fix landed.
+
+Executed the README's exact code block on Node v22.23.4: it stops in 1043,
+restores that year and the one pending choice, and produces identical complete
+canonical state after delegating the docket and advancing five more years.
+The additional immediate raw-snapshot comparison found a smaller, separate
+normalization defect: schema loading drops `pendingDecisions[0].arcStep.playerCast`
+(`[]` in this example). [#1952](https://github.com/EldritchDynasty/EldritchDynasty/issues/1952)
+records the reproduction and runtime reconstruction plan. This evidence does
+not establish gameplay divergence, and the README example promises the
+restored year and docket rather than raw snapshot identity at that boundary.
+
+All **97 relative links and heading targets** in the eight changed Markdown
+files resolve. `npm run gen:docs` leaves no vocabulary diff; the updated save
+and replay source/test references exist. Final rebased preflight results are
+recorded in the PR. This recovery changes documentation only and leaves the
+dated audits intact.
