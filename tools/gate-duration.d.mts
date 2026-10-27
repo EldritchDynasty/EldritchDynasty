@@ -9,29 +9,54 @@
 export interface GateDurationLane {
   seconds: number;
   evidence: string;
+  /** Measurements on other runner classes, keyed by logical CPU count (#1947). */
+  byCpus?: Record<string, { seconds: number; evidence: string }>;
 }
 
 export interface GateDurationConfig {
   note?: string;
   measured: string;
   maxFactor: number;
+  /** The runner class each lane's `seconds` was measured on. */
+  cpus?: number;
   lanes: Record<string, GateDurationLane>;
 }
 
-export interface GateDurationResult {
-  lane: string;
-  seconds: number;
-  baselineSeconds: number;
-  factor: number;
-  maxFactor: number;
-  limitSeconds: number;
-  ok: boolean;
-}
+/** `judged: false` means no baseline exists for this runner class. */
+export type GateDurationResult =
+  | {
+    lane: string;
+    seconds: number;
+    cpus: number;
+    judged: true;
+    baselineSeconds: number;
+    factor: number;
+    maxFactor: number;
+    limitSeconds: number;
+    ok: boolean;
+  }
+  | {
+    lane: string;
+    seconds: number;
+    cpus: number;
+    judged: false;
+    baselineSeconds: null;
+    factor: null;
+    maxFactor: number;
+    limitSeconds: null;
+    ok: true;
+  };
 
 export const GATE_DURATIONS_FILE: string;
 export function readGateDurations(): GateDurationConfig;
+export function baselineFor(
+  spec: GateDurationLane,
+  config: GateDurationConfig,
+  cpus: number,
+): number | undefined;
 export function checkGateDuration(
   lane: string,
   seconds: number,
   config?: GateDurationConfig,
+  cpus?: number,
 ): GateDurationResult;

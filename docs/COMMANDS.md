@@ -282,6 +282,16 @@ shape. Gate jobs retain structured timings with host CPU and Node metadata and
 apply the checked duration guard. A faster runner and a cheaper algorithm are
 different explanations, so retain that host evidence when rebaselining.
 
+**A baseline belongs to a runner class**, keyed by logical CPUs (#1947).
+GitHub's standard Linux runner has 4 CPUs for a public repository and 2 for a
+private one, and the gates fan out over workers, so going private made the same
+`batch` commit take 12.9m against its 9.0m 4-CPU baseline. Each lane's
+`seconds` is the class named by the file's `cpus`; `byCpus` holds measurements
+on other classes. A lane with no measurement for the host it ran on prints
+**NOT JUDGED** and a `::warning::` naming what to record, rather than being held
+to another class's number. Record the first real run on a new class under
+`byCpus`, with its run, job and host.
+
 The local preflight has two modes. Default runs typecheck, validation and the
 fast lane. `--full-preflight` derives the complete local script set from CI
 and overlaps independent expensive checks after the preliminary checks pass.

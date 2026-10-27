@@ -14905,3 +14905,24 @@ in and out of the batch by unrelated content. What the issue needed was the
 judgement: a guarded zero is now weighed on its whole pool and a checked zero
 on its actual readings, under the unchanged boundary, so the next re-roll of
 a thin branch reports "unproven" with its real chance instead of "dead".
+
+## 2026-10-27 — #1947: the `batch` gate baseline on a private repository's 2-CPU runner
+
+No sample, seed, assertion or gate changed. The repository went private on
+the organisation's Free plan, and a private repository's standard Linux runner
+has 2 CPUs where a public one has 4. The first PR run afterwards (#1948, check
+run 40431290331, job 121949410921, head `f04e4fe8`, no gate, content or
+simulation code changed from `main` at `8b09dbee`) passed 12/12 batch gates on
+`AMD EPYC 9V74 80-Core Processor × 2` / Node v22.23.3 in **12.9m (774s)**, and
+the duration guard refused it: `batch 12.9m; committed 9.0m; 1.44x (limit
+1.25x / 11.3m)`. The same lane on 4-CPU public runners just before: main push
+run 40406062800 at `8b09dbee`, 7.7m; PR #1940 run 40415452981, 9.6m. The
+growth is the halved worker count.
+
+`tools/gate-durations.json` now names the class its baselines were measured on
+(`cpus: 4`) and adds `lanes.batch.byCpus["2"]` = 780s (13.0m, guard 16.25m),
+one sample. `tools/gate-duration.mjs` judges a run against its own class and
+prints NOT JUDGED, with a warning naming what to record, for a class nobody has
+measured. `fire-rate`, `war`, `endings` and `blood` have no 2-CPU measurement
+yet: record each from the first private weekly run rather than scaling the
+4-CPU numbers.

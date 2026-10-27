@@ -128,3 +128,10 @@ client ID itself instead of leaving the token action's message to explain it.
   payment method, GitHub blocks Actions once the quota is spent, and then no
   landing of either kind can run. The nightly's jobs moved to the Sunday run
   for that reason (#1949).
+- Expect slower CI. A private repository's standard Linux and Windows runners
+  have 2 CPUs instead of 4 (`actions/supported-github-runners.md`). The
+  first private PR run took 12.9m for the `batch` gates against a 9.0m
+  4-CPU baseline, and the duration guard refused it. Gate baselines are now
+  keyed by runner class, with a measured 2-CPU `batch` baseline; the weekly
+  lanes have no 2-CPU measurement yet and report NOT JUDGED until their first
+  private run is recorded.

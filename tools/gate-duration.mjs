@@ -6,8 +6,20 @@
  * by 2.5-4x without anything failing. CI calls this after each gate lane with
  * the wall clock it just observed. A stale committed baseline therefore fails
  * the same run that proves it stale.
+ *
+ * A BASELINE BELONGS TO A RUNNER CLASS, KEYED BY LOGICAL CPUS (#1947).
+ * GitHub's standard Linux runner has 4 CPUs for a public repository and 2
+ * for a private one, and the gates fan out over workers, so the same commit
+ * runs longer on the smaller class. The day the repository went private,
+ * batch measured 12.9m against its 9.0m (4-CPU) baseline on code identical
+ * to main, and the guard would have refused every pull request for a cause
+ * no diff contained. `seconds` is the class named by the file's `cpus`;
+ * `byCpus` holds what was measured on any other class. A class with no
+ * measurement is reported as NOT JUDGED rather than judged against another
+ * class's number: a 4-CPU budget cannot say whether a 2-CPU run regressed.
  */
 import { readFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { join } from 'node:path';
 
 const REPO = join(import.meta.dirname, '..');
@@ -17,7 +29,17 @@ export function readGateDurations() {
   return JSON.parse(readFileSync(join(REPO, GATE_DURATIONS_FILE), 'utf8'));
 }
 
-export function checkGateDuration(lane, seconds, config = readGateDurations()) {
+/**
+ * The committed seconds for this lane on a host with `cpus` logical CPUs, or
+ * undefined when that runner class was never measured. A file with no `cpus`
+ * predates runner classes and has one baseline for every host.
+ */
+export function baselineFor(spec, config, cpus) {
+  if (config.cpus === undefined || cpus === config.cpus) return spec.seconds;
+  return spec.byCpus?.[String(cpus)]?.seconds;
+}
+
+export function checkGateDuration(lane, seconds, config = readGateDurations(), cpus = availableParallelism()) {
   const spec = config.lanes?.[lane];
   if (!spec) {
     throw new Error(`gate-duration: lane "${lane}" has no committed duration in ${GATE_DURATIONS_FILE}`);
@@ -26,12 +48,21 @@ export function checkGateDuration(lane, seconds, config = readGateDurations()) {
     throw new Error(`gate-duration: invalid elapsed seconds "${seconds}"`);
   }
 
-  const limit = spec.seconds * config.maxFactor;
+  const baseline = baselineFor(spec, config, cpus);
+  if (baseline === undefined) {
+    return {
+      lane, seconds, cpus, judged: false, ok: true,
+      baselineSeconds: null, factor: null, maxFactor: config.maxFactor, limitSeconds: null,
+    };
+  }
+  const limit = baseline * config.maxFactor;
   return {
     lane,
     seconds,
-    baselineSeconds: spec.seconds,
-    factor: seconds / spec.seconds,
+    cpus,
+    judged: true,
+    baselineSeconds: baseline,
+    factor: seconds / baseline,
     maxFactor: config.maxFactor,
     limitSeconds: limit,
     ok: seconds <= limit,
@@ -51,9 +82,21 @@ function main() {
   }
 
   const result = checkGateDuration(lane, Number(rawSeconds));
+  if (!result.judged) {
+    console.log(
+      `gate-duration: ${lane} ${human(result.seconds)} on a ${result.cpus}-CPU host — NOT JUDGED: ` +
+      `${GATE_DURATIONS_FILE} has no baseline for that runner class.`,
+    );
+    console.log(
+      `::warning::gate-duration: ${lane} has no ${result.cpus}-CPU baseline. Record this run's ` +
+      `${result.seconds.toFixed(0)}s, with its run, job and host, under lanes.${lane}.byCpus["${result.cpus}"].`,
+    );
+    return;
+  }
   console.log(
     `gate-duration: ${lane} ${human(result.seconds)}; committed ${human(result.baselineSeconds)}; ` +
-    `${result.factor.toFixed(2)}x (limit ${result.maxFactor.toFixed(2)}x / ${human(result.limitSeconds)})`,
+    `${result.factor.toFixed(2)}x (limit ${result.maxFactor.toFixed(2)}x / ${human(result.limitSeconds)}) ` +
+    `on a ${result.cpus}-CPU host`,
   );
 
   if (!result.ok) {
