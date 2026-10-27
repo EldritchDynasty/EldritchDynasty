@@ -281,7 +281,7 @@ jobs:
       - uses: actions/setup-node@v7
         if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'fast-forward'
         with:
-          node-version: 22
+          node-version-file: .nvmrc
 
       # An App push that changes .github/workflows needs the Workflows
       # permission. Ask for it; an installation without it refuses the token,
@@ -353,7 +353,7 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
 
       - name: Mint landing token with Workflows permission
         id: ff-token

@@ -39,7 +39,7 @@ store/steam/      Draft Steam page copy and its asset/publishing checklist.
 tests/e2e/        Playwright browser tests (npm run test:e2e).
 tools/            Agent workflow, CI evidence, claims, landing and measurements.
 .github/          CI, release, merge-queue and maintenance workflows.
-.devcontainer/    The CatDesk development container and setup guide.
+.devcontainer/    Dev containers: game/editor (Node per .nvmrc) and CatDesk, with a guide.
 .interface-design/system.md  The game and editor's interface design system.
 .claude/          Claude Code: skills, settings, and the canonical hook scripts.
 .agents/skills/     Codex launchers for those same skills (no duplicated manuals).
@@ -67,15 +67,25 @@ The original build order and commercial pass ([#277](https://github.com/Eldritch
 
 ## Run locally
 
-Use **Git, Node.js 22 and its bundled npm**; CI uses Node 22 on Windows and
-Linux. Run workspace commands from the repository root.
+Use **Git, Node.js 22 and its bundled npm**. The major is stated once, in
+`.nvmrc`; CI reads that file on Windows and Linux, and `engines` in
+`package.json` says the same. Run workspace commands from the repository root.
 
 ```bash
 git clone https://github.com/EldritchDynasty/EldritchDynasty.git
 cd EldritchDynasty
-npm ci
+npm run setup        # npm ci when fresh; reuses an install that still matches the lockfile
 npm run play
 ```
+
+`npm run setup` is the path the agent session hook takes too. A second run
+reuses valid dependencies; after a pull that changed `package-lock.json` it
+refreshes them with `npm install`, and it never rewrites the tracked lockfile.
+Add `-- --browser` for the Playwright browser tests. `npm run doctor` reports,
+without installing anything, whether Node, the dependencies, Chromium, the
+agent hooks and the last CI verdict are ready, with the command that fixes
+each one that is not. For a container instead, use
+[`.devcontainer/game/devcontainer.json`](.devcontainer/README.md).
 
 Open **http://localhost:5174** for the game. In a second terminal at the same
 repository root, run `npm run dev` and open **http://localhost:5173** for the

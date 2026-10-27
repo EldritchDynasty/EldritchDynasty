@@ -360,3 +360,70 @@ the largest measured families are arcs (288 lines, five rules), slots
 (195, four) and references (157, one). Their shared helpers need a separate
 dependency review before selecting another extraction. None is a prerequisite
 for this bounded rites slice.
+
+## 2026-10-27 — #1934: one setup path, a fingerprint, and a read-only doctor
+
+`.nvmrc` (`22`) is now the one statement of the Node major. All 25
+`actions/setup-node` steps across six workflows read it through
+`node-version-file` (the issue counted 23 at `8b09dbee`; since then the retired
+nightly's three moved into `weekly-statistical.yml` and `auto-merge-queue.yml`
+added two). `engines` admits only
+that major, and `toolchain.test.ts` fails on a hard-coded `node-version:`, a
+setup-node step without a root checkout before it, a game devcontainer on
+another major, or an `engines` range that admits the next one. The CatDesk
+container moved to `.devcontainer/catdesk/` unchanged, still on the Node
+feature's floating `lts`, and is named as the test's one exemption.
+
+`npm run setup` (`tools/setup.mjs`) replaces presence with a fingerprint:
+sha256 of `package-lock.json` (CRLF folded), Node major, platform and arch,
+written to `node_modules/.cache/ed-setup.json` only after an install succeeds.
+npm's hidden `node_modules/.package-lock.json` was the alternative and was not
+chosen: npm rewrites it on every reify, including a failed one, and it records
+neither the Node major nor the platform, so a Windows-host `node_modules`
+bind-mounted into a Linux container would match it. The SessionStart hook's
+gate and body both go through this module now.
+
+Measured in a Claude Code cloud container — Linux 6.18 x86_64, 4 cores,
+16 GB, Node v22.22.0, npm 10.9.4, npm cache already holding 93 MB, Chromium
+preinstalled — on a copy of this branch's tree. Wall-clock, single runs, so
+read them as orders of magnitude:
+
+| Case | What ran | Result | Time |
+|---|---|---|---|
+| cold, first | `npm ci` (544 added) | ready, stamped | 9.7 s |
+| cold, again | `npm ci` | ready, stamped | 6.7 s |
+| old cold path, for comparison | `npm install` into empty `node_modules` (532 added) | same tree: 429 manifests to depth 3, lockfile unchanged | 5.7 s |
+| warm, fingerprint matches | nothing | reused | 0.2 s |
+| warm, `--browser` | nothing, then a Chromium launch | ready, Chromium starts | 1.5 s |
+| stale (stamp from another lockfile) | `npm install` | ready, re-stamped | 1.5 s |
+| lockfile npm wants to rewrite (two trailing newlines) | `npm install`, then restore | exit 1, tracked lockfile left byte-identical, no stamp | 1.2 s |
+| this checkout, unstamped (installed by the old hook) | `npm install`, then `--browser` launch | ready | 4.2 s |
+| hook, unstamped copy | orient + `npm install` + validate | ready | 5.2 s |
+| hook, stamped copy | readiness gate only | exit 0 | 0.6 s |
+
+**No speed improvement is claimed for the cold path.** With a warm npm cache,
+`npm ci` was about a second slower than the old cold `npm install`, which built
+the same tree. `ci` is there for exactness — it refuses a lockfile that
+disagrees with `package.json` instead of rewriting it. What the change buys is
+the warm path: an install built from an older lockfile no longer passes for
+ready, and one that still matches costs a file read. The "added" counts differ
+(544 vs 532) in npm's reporting only; the installed manifests are identical.
+
+`npm install --package-lock-only` also reported `EBADENGINE` for
+`abbrev@5.0.0` and `nopt@10.0.1`, which ask for Node `^22.22.2`; this container
+runs 22.22.0. That predates this change and is advisory, like `engines` itself.
+
+`npm run doctor` (`tools/doctor.mjs`) took 2.5 s here, most of it the Chromium
+launch (`--no-launch` skips it). It reported `main` red on `8bef2b7`, agreeing
+with the session-start orientation. It asks git only `ls-remote`, `rev-parse`
+and `log`, with `GIT_NO_LAZY_FETCH` and `GIT_TERMINAL_PROMPT=0`, never shows
+git's stderr, and redacts URL credentials and GitHub tokens on the way out.
+
+Not done here: `npm run setup` and `npm run doctor` are documented in the
+README and COMMANDS.md but not yet in AGENTS.md's command block, because
+`settings.test.ts` requires every command there to be in
+`.claude/settings.json`'s allow list, and a session may not edit its own
+permissions. A person adds `Bash(npm run setup)`, `Bash(npm run setup:*)`,
+`Bash(npm run doctor)` and `Bash(npm run doctor:*)`, then the two lines.
+The Windows half of the new suites runs in the merge-blocking `windows` job,
+which runs all of `test:fast`; this entry has only Linux evidence.
