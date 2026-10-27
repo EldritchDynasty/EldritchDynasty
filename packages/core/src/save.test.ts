@@ -6,6 +6,7 @@ import { proseOriginalHash, readRunLibrary, SAVE_FORMAT, SavedGameS } from '@ed/
 import { createProseRuntime } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { CURRENT_SAVE_FIXTURE_GZIP_BASE64 } from './fixtures/current-save.fixture';
+import { pendingArc as buildPendingArc } from './fixtures/pending-arc.fixture.js';
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf, order, resolveChoice, resolveRecord, testRng,
@@ -413,18 +414,7 @@ describe('a run survives being written down', () => {
   });
 
   function pendingArc() {
-    const ctx = testWorld(content, 1932);
-    const bindings = {
-      TUTOR: place(ctx, { sex: 'male', age: 45, name: 'The tutor' }).id,
-      SON: place(ctx, { sex: 'male', age: 8, name: 'The son' }).id,
-      ELDER: place(ctx, { sex: 'female', age: 12, name: 'The elder' }).id,
-      YOUNGER: place(ctx, { sex: 'female', age: 6, name: 'The younger' }).id,
-    };
-    const instance = startArc(ctx.content.mustArc('arc_the_tutors_good_years'), ctx, testRng(), bindings)!;
-    const step = dueArcSteps(ctx, testRng()).find(s => s.instance.id === instance.id)!;
-    const event = ctx.content.mustEvent(step.node.event);
-    const pending = queueChoice(ctx, event, event.body, step.fill, step.playerCast, step);
-    return { ctx, instance, pending };
+    return buildPendingArc(content);
   }
 
   it.each([

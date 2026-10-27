@@ -26,6 +26,7 @@
     "test:fast": "vitest run --exclude \"packages/**/*.slow.test.ts\"",
     "test:slow": "vitest run .slow.test",
     "test:watch": "vitest",
+    "scenario": "node tools/scenario.mjs",
     "typecheck": "npm run typecheck:core && npm run typecheck:editor && npm run typecheck:client",
     "typecheck:core": "tsc --noEmit -p tsconfig.json",
     "//1": "vue-tsc reads TEMPLATES. Plain tsc cannot, and a template error is always silent — the click lands and nothing happens.",
