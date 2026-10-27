@@ -15006,3 +15006,48 @@ with neither/before/applied observers, saved docket continuation, and public
 session replay. Core typechecking and content validation passed (52 rules,
 zero errors, three existing warnings). Historical measurements above are
 unchanged; subsequent content or policy changes require fresh evidence.
+
+## 2026-10-27 — #1951: saved forcing orders retain fixed-cast provenance
+
+Measured source `151ff1295042c165e66fc7a972b120a7b7c39f9d`, based on
+`1753684b`; unchanged content tree
+`6c62ba184074a1b96e14d79dfe16a19ef9855867`, Node v22.23.4. The canonical
+**800 Long Lines × 500 years**, seeds **5000 + 7i**, `i = 0…799`, ran from
+07:42:29 to 08:02:25 UTC. `gateOutcomeReach(source)` and
+`gateFireRate(source)` shared the same cached canonical batch.
+
+Both gates **PASS**. Every recorded field of all **1,181 outcome rows**
+matches the #1930 measurement above: firings, resolving runs, actual and pool
+expectations, opportunities, checked expectations and zero verdicts. There
+are no firings with unknown provenance under this policy. The same six zeroes
+remain **unproven**, with the same denominators and required sample sizes.
+Fire rate still covers 516 non-frame events; Herald and Hall answer routes
+each occur in 0.625% of runs. This policy issues no Table orders, as the policy
+regression still enforces; it cannot supply evidence for manual forcing.
+
+The production forcing-order regressions supply that evidence. Each of the
+three callable rites presets CHILD, saves the pending choice, resumes it and
+answers with an unwoken mundane boy. An unrelated expressive boy must not
+lend that fixed subject exposure: actual and pool expectations for `woke`
+are **exactly zero**. Conversely, the fast queued from a real ambient slot
+draw retains its full eligible pool after save/resume, including the
+`(1 / 3) × (52 / 100)` share when the expressive boy was not drawn.
+
+New forcing choices save an optional `preset` array: the Table order records
+its fixed slot, while an ambient draw records `[]`. Unrelated choices keep
+their existing saved shape. This additive, telemetry-only field leaves
+`SAVE_FORMAT` at 41. A legacy forcing choice with no field still loads and
+plays, but its original draw-versus-preset distinction is **unknown**. The
+observer reports that absence explicitly; it never substitutes the current
+household as the original random pool. A zero with insufficient known
+evidence remains unproven. Actual casts or known pools can each independently
+meet the unchanged five-expected proof bar; their overlapping counts are
+never added together.
+
+Focused regressions cover legacy absence, explicit empty versus fixed
+provenance, all three callable rites, full public-session replay and complete
+canonical-save equality with neither/before/applied observers. Observers get
+private provenance arrays, and observing consumes no RNG. No casting rule,
+campaign policy, content, proof threshold or allowlist changed. The historical
+#1930 provenance boundary above describes the pre-fix state; this entry records
+its resolution.
