@@ -1,11 +1,18 @@
 {
-  "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green.",
+  "note": "Measured gate-lane wall clock on successful CI. Read by tools/gate-duration.mjs; CI fails when a lane exceeds the committed baseline by more than maxFactor. Re-measure before changing a baseline; do not hand-edit a number just to make CI green. Each lane's seconds are for the runner class named by cpus (GitHub's 4-CPU standard runner for public repositories); byCpus holds measurements on other classes, such as the 2-CPU runner a private repository gets (#1947). A class with no measurement is reported, not judged.",
   "measured": "2026-10-21",
   "maxFactor": 1.25,
+  "cpus": 4,
   "lanes": {
     "batch": {
       "seconds": 540,
-      "evidence": "2026-10-12 re-baseline for #1351, which widened gate 7 (clauses) from 12 serial runs to an 80-run mean fanned over the bounded gate workers. Hosted measurements of the exact change: PR check run 38188378911 (d57d4922, 12/12 batch gates) measured 8.4m in tools/gate-duration.mjs; native merge-group run 38190129301 (68d8e76f, 12/12 batch gates, otherwise green) measured 8.8m and was refused only by the 1.25x guard on the old 7.0m baseline. Batch jobs on the same lane immediately before the change took about 7.5m end to end (PR #1292 check run 38165659035; main merge-group run 38189632987), so the growth is attributable to gate 7, about +1.3m on hosted runners against +0.5m measured on a four-core container. Budget rounded to 9.0m (540s); maxFactor 1.25 = 11.25m guard. Previous baseline: 7.0m (420s) from 2026-10-08 runs 37732468827 and 37733144405 after #439. Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38188378911 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38190129301. Refs #1351, #334."
+      "evidence": "2026-10-12 re-baseline for #1351, which widened gate 7 (clauses) from 12 serial runs to an 80-run mean fanned over the bounded gate workers. Hosted measurements of the exact change: PR check run 38188378911 (d57d4922, 12/12 batch gates) measured 8.4m in tools/gate-duration.mjs; native merge-group run 38190129301 (68d8e76f, 12/12 batch gates, otherwise green) measured 8.8m and was refused only by the 1.25x guard on the old 7.0m baseline. Batch jobs on the same lane immediately before the change took about 7.5m end to end (PR #1292 check run 38165659035; main merge-group run 38189632987), so the growth is attributable to gate 7, about +1.3m on hosted runners against +0.5m measured on a four-core container. Budget rounded to 9.0m (540s); maxFactor 1.25 = 11.25m guard. Previous baseline: 7.0m (420s) from 2026-10-08 runs 37732468827 and 37733144405 after #439. Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38188378911 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/38190129301. Refs #1351, #334.",
+      "byCpus": {
+        "2": {
+          "seconds": 780,
+          "evidence": "2026-10-27 #1947: first measurement on GitHub's 2-CPU standard runner for private repositories, after the repository went private on the organisation's Free plan. PR #1948 check run 40431290331, job 121949410921, head f04e4fe8 (no gate, content or simulation code changed from main 8b09dbee), host 'AMD EPYC 9V74 80-Core Processor x 2', Node v22.23.3: 12/12 batch gates passed and the gates step measured 12.9m (774s), logged as 'batch 12.9m; committed 9.0m; 1.44x (limit 1.25x / 11.3m)'. The same lane on 4-CPU public runners just before: main push run 40406062800 at 8b09dbee, 7.7m; PR #1940 run 40415452981, 9.6m. The growth is the halved worker count, not code. Rounded to 13.0m (780s); maxFactor 1.25 = 16.25m guard. One sample: re-measure when more 2-CPU batch runs exist. Sources: https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/40431290331/job/121949410921 ; https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/40406062800."
+        }
+      }
     },
     "blood": {
       "seconds": 2280,
