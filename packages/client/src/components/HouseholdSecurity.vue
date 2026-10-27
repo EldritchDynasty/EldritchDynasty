@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { TableView } from '@ed/core';
+import { tableTargetAttrs } from '../lib/table-nav';
 import type { ProseMode, TableOrder } from '@ed/schema';
 
-const props = defineProps<{ security: TableView['security']; proseMode?: ProseMode; refusal?: string | null }>();
+const props = defineProps<{ security: TableView['security']; proseMode?: ProseMode; refusal?: string | null; showEmpty?: boolean }>();
 const emit = defineEmits<{ order: [TableOrder] }>();
 const selected = ref<Record<string, string>>({});
 const local = (original: string, plain: string) => props.proseMode === 'plainenglish' ? plain : original;
@@ -20,8 +21,9 @@ function commit(t: Warning) {
 </script>
 
 <template>
-  <section v-if="security.threats.length || security.history.length" class="panel security" data-testid="household-security">
+  <section v-bind="tableTargetAttrs('security')" v-if="showEmpty || security.threats.length || security.history.length" class="panel security" data-testid="household-security">
     <h3 class="label">{{ local('Warnings at the door', 'Household security') }}</h3>
+    <p v-if="!(security.threats.length || security.history.length)" class="small dim">{{ local('No warnings are outstanding.', 'There are no current security warnings.') }}</p>
     <div v-for="warning in security.threats" :key="warning.id" class="security-warning">
       <p class="small"><strong>{{ warning.name }}</strong>
         <span class="dim"> · {{ local('precautions through', 'protection window ends in') }} {{ warning.due }}</span>

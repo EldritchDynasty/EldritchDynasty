@@ -428,3 +428,48 @@ re-measured with `npm run cost -- --full --write` on this container: test:fast
 than the one behind `ef836a81` (~4 and ~29 min); the figures are this one's.
 The Windows half of the new suites runs in the merge-blocking `windows` job,
 which runs all of `test:fast`; this entry has only Linux evidence.
+
+## 2026-10-27 — #1941: Table navigation from player goals
+
+Added a client-only catalogue of all 19 Table destinations, with typed anchors,
+a compact index for preparing an heir, training a reader, protecting a relative
+and preparing a rite, and explicit routes for the four ambitions. Ambition
+cross-references sit beside the unchanged engine-authored next step. The ascent
+routes include the programme, library and teaching needed by Regency variants;
+no prose parsing or new eligibility rules are involved.
+
+App owns the opened-panel overrides and tokened reveal requests. A request
+switches panes, opens the destination, then scrolls and focuses its current
+heading button or first enabled control; a heading is the fallback when no
+control is enabled. Repeating the request focuses again. The return control
+restores the originating ambition link, or the ambition heading if that link
+has gone. Ordinary pane changes retain opened panels without replaying a
+consumed focus request. These choices reset with the run and are not saved.
+
+Public snapshot presence and the existing Table reveal policy govern links.
+An unrevealed Table gets an explanation without destinations; affordability
+never removes a route. Existing prices, refusal text and controls remain at
+the destination. Explicit show-everything and already-requested conditional
+panels keep truthful empty states after their offers disappear. Navigation
+carries section names only, never a person or order payload.
+
+**Automated correctness.** Extended the existing Table accessibility, reveal
+and browser suites. Assertions cover exact catalogue/anchor equality in both
+prose modes, all ambition mappings, fresh unrevealed snapshots, unchanged
+quotes and prices, stale offers, repeated focus, pane persistence and return
+focus. Full-App tests use a real store and re-save through the host pause seam:
+complete `canonical(save)` equality with `savedAt` blanked and an unchanged
+decision log hold after navigation. Chromium exercises all four ambitions and
+the four common tasks at desktop/390px, both registers and largest reader text,
+using keyboard activation and checking for uncaught errors. Client typecheck
+and production build pass; the normal rebased preflight is recorded on the PR.
+
+**Task walkthrough and design review (separate evidence).** Applied the existing
+`.interface-design/system.md` direction: flat ruled index, native disclosures,
+quiet cross-references, existing ink/vellum tokens and 44px controls. Inspected
+rendered screenshots at 1400px and 390px in both prose modes with 130% text.
+Walked from the Ledger ambition to the Great Work, from the reader task to its
+named sections, and back to the initiating link. The task index fits its column
+without horizontal clipping, and current order explanations remain together.
+This is an agent walkthrough and visual review, not a human usability study.
+No core, content, schema, save-format, price, rule or RNG changes.

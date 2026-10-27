@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type { TableView } from '@ed/core';
+import { tableTargetAttrs } from '../lib/table-nav';
 import type { ProseMode, TableOrder } from '@ed/schema';
 
-const props = defineProps<{ expeditions: TableView['expeditions']; proseMode?: ProseMode; refusal?: string | null }>();
+const props = defineProps<{ expeditions: TableView['expeditions']; proseMode?: ProseMode; refusal?: string | null; showEmpty?: boolean }>();
 const emit = defineEmits<{ order: [TableOrder] }>();
 const selection = ref('');
 const selected = computed(() => props.expeditions.offers.find(o => JSON.stringify(o.order) === selection.value));
@@ -15,9 +16,10 @@ function prepare() {
 </script>
 
 <template>
-  <section v-if="expeditions.offers.length || expeditions.current.length || expeditions.history.length || expeditions.cases.length"
+  <section v-bind="tableTargetAttrs('expeditions')" v-if="showEmpty || expeditions.offers.length || expeditions.current.length || expeditions.history.length || expeditions.cases.length"
     class="panel expeditions" data-testid="covert-expeditions">
     <h3 class="label">{{ local('Covert expeditions', 'Covert operations') }}</h3>
+    <p v-if="!(expeditions.offers.length || expeditions.current.length || expeditions.history.length || expeditions.cases.length)" class="small dim">{{ local('No expeditions are on the account.', 'There are no current or recorded covert operations.') }}</p>
     <p class="small dim">{{ expeditions.terms }}</p>
     <div v-if="expeditions.offers.length" class="expedition-choice">
       <label class="small">

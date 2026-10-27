@@ -2,10 +2,13 @@
 import HouseholdSecurity from './HouseholdSecurity.vue';
 import CovertExpeditions from './CovertExpeditions.vue';
 import OutsideServices from './OutsideServices.vue';
+import TableTaskLinks from './TableTaskLinks.vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
+import { modalFocusable as focusableWithin } from '../lib/modal';
+import { tableTargetAttrs, type OpenedTablePanels, type TableReveal, type TableTarget, type TableTask } from '../lib/table-nav';
 
 const props = defineProps<{
   // No `view`: this panel drew its tutoring subjects off `SessionView`'s list
@@ -21,6 +24,10 @@ const props = defineProps<{
   receipt: string | null;
   /** Reader-local text only; game actions and supplied prose stay unchanged. */
   proseMode?: ProseMode;
+  reveal?: TableReveal | null;
+  tasks?: readonly TableTask[];
+  showEverything?: boolean;
+  returnLabel?: string;
 }>();
 
 function studyYears(book: TableView['shelf'][number]): number {
@@ -33,7 +40,12 @@ function studyYears(book: TableView['shelf'][number]): number {
  * `Book.vue` already uses for the chronicle's own volume — so the click that
  * opens it has to start here, where the land panel already is.
  */
-const emit = defineEmits<{ 'open-plat': [] }>();
+const emit = defineEmits<{
+  'open-plat': [];
+  navigate: [target: TableTarget];
+  revealed: [token: number];
+  return: [];
+}>();
 
 /**
  * THE REASON GOES WITH THE CONTROL (issue #55).
@@ -301,10 +313,32 @@ function dutyRecord(duty: { service: TableView['mystic']['duties'][number]['serv
   return parts.join(' · ');
 }
 
-const shut = ref<Record<string, boolean>>({});
-function idle(panel: string, hasWork: boolean): boolean {
-  return !hasWork && !shut.value[panel];
+// App owns these reader choices, so leaving the pane does not discard them.
+const opened = defineModel<OpenedTablePanels>('opened', { default: () => ({}) });
+function togglePanel(panel: TableTarget): void {
+  opened.value = { ...opened.value, [panel]: !opened.value[panel] };
 }
+function idle(panel: TableTarget, hasWork: boolean): boolean {
+  return !hasWork && !opened.value[panel];
+}
+const root = ref<HTMLElement | null>(null);
+watch(() => props.reveal, async (request) => {
+  if (!request) return;
+  opened.value = { ...opened.value, [request.target]: true };
+  await nextTick();
+  if (props.reveal?.token !== request.token) return;
+  const panel = root.value?.querySelector<HTMLElement>(`[data-table-target="${request.target}"]`);
+  if (!panel) return;
+  panel.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+  const heading = panel.querySelector<HTMLElement>('h3');
+  const destination = heading?.querySelector<HTMLElement>('button:not(:disabled)')
+    ?? focusableWithin(panel)[0] ?? heading;
+  if (destination) {
+    if (destination === heading) destination.tabIndex = -1;
+    destination.focus({ preventScroll: true });
+  }
+  emit('revealed', request.token);
+}, { immediate: true, flush: 'post' });
 
 /** Can the house pay for a term, a place, a paper? Drawn, not only enforced. */
 const broke = computed(() => props.table.treasury <= 0);
@@ -324,8 +358,18 @@ const MARRIAGE_ORDERS = [
 </script>
 
 <template>
-<section class="table stack" :aria-label="plain ? 'Family orders and resources' : `The house's standing orders`">
-    <div class="panel">
+<section ref="root" class="table stack" :aria-label="plain ? 'Family orders and resources' : `The house's standing orders`">
+    <nav v-if="tasks?.length" class="table-tasks" :aria-label="local('Find an order', 'Find family orders')">
+      <div class="row">
+        <h3 class="label">{{ local('What the house needs', 'What do you want to do?') }}</h3>
+        <button v-if="returnLabel" type="button" class="quiet small return-goal" @click="emit('return')">{{ returnLabel }}</button>
+      </div>
+      <details v-for="task in tasks" :key="task.id">
+        <summary class="small">{{ task.title }}</summary>
+        <TableTaskLinks :task="task" :prose-mode="proseMode" @navigate="emit('navigate', $event)" />
+      </details>
+    </nav>
+    <div v-bind="tableTargetAttrs('purse')" class="panel">
       <h3 class="label">{{ local('The purse', 'Money and auctions') }}</h3>
       <p class="small">
         <template v-if="plain">
@@ -454,8 +498,9 @@ const MARRIAGE_ORDERS = [
       <p v-else-if="receipt" class="small spent">{{ receipt }}</p>
     </div>
 
-    <div v-if="table.delegation.length" class="panel">
+    <div v-bind="tableTargetAttrs('preferences')" v-if="table.delegation.length || opened.preferences || showEverything" class="panel">
       <h3 class="label">{{ local('Standing preferences', 'Saved decisions') }}</h3>
+      <p v-if="!table.delegation.length" class="small dim">{{ local('No standing answers have been kept.', 'No decisions have been saved yet.') }}</p>
       <p class="small dim">{{ local('Routine repeats may use these answers. Anything important still comes back to the table.', 'The house can reuse these answers for routine decisions. Important decisions will still be shown to you.') }}</p>
       <div v-for="policy in table.delegation" :key="policy.kind + ':' + policy.event" class="row policy">
         <span class="small"><strong>{{ policy.title }}</strong> · {{ policy.answer.replace(/_/g, ' ') }}</span>
@@ -470,7 +515,7 @@ const MARRIAGE_ORDERS = [
       </div>
     </div>
 
-    <div class="panel">
+    <div v-bind="tableTargetAttrs('greatWork')" class="panel">
       <h3 class="label">{{ local('The Great Work', 'Major rites') }}</h3>
       <p class="small dim">{{ local('The house can call a rite when its people can field it. Each call opens the authored choice and its cost.', 'You can begin a rite when enough eligible family members are available. You will see the choices and costs before proceeding.') }}</p>
       <div class="row">
@@ -530,9 +575,9 @@ const MARRIAGE_ORDERS = [
          have. On the same screen as the shelf and the tutor's fee, under the
          same treasury above — a land panel with its own budget would have
          failed the whole point of building this. -->
-    <div class="panel" :class="{ idle: idle('land', land.market.length > 0) }">
+    <div v-bind="tableTargetAttrs('land')" class="panel" :class="{ idle: idle('land', land.market.length > 0) }">
       <h3 class="label row">
-        <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="shut['land'] = !shut['land']">{{ local('The land', 'Land holdings') }}</button>
+        <button class="fold" :aria-expanded="!idle('land', land.market.length > 0)" @click="togglePanel('land')">{{ local('The land', 'Land holdings') }}</button>
         <button class="quiet small plat-link" @click="emit('open-plat')">{{ local('See the plat', 'View land map') }}</button>
       </h3>
       <p v-if="!land.market.length" class="small dim">{{ local('Nothing is on the market this year.', 'No land is available to buy this year.') }}</p>
@@ -594,16 +639,16 @@ const MARRIAGE_ORDERS = [
       <p v-if="refusedIn('improve')" class="small rubric">{{ refusedIn('improve') }}</p>
     </div>
 
-    <HouseholdSecurity :security="table.security" :prose-mode="proseMode"
+    <HouseholdSecurity :show-empty="showEverything || opened.security" :security="table.security" :prose-mode="proseMode"
       :refusal="refusedIn('covertDefend') || refusedIn('releaseIntruder')" @order="actions.order" />
-    <CovertExpeditions :expeditions="table.expeditions" :prose-mode="proseMode"
+    <CovertExpeditions :show-empty="showEverything || opened.expeditions" :expeditions="table.expeditions" :prose-mode="proseMode"
       :refusal="refusedIn('covertPrepare') || refusedIn('covertWithdraw')" @order="actions.order" />
 
     <!-- THE LIBRARY. Books are the ladder: Adept wants three, Hierophant
          eight. Nobody reads one unless somebody is put on it. -->
-    <div class="panel" :class="{ idle: idle('shelf', table.shelf.length > 0) }">
+    <div v-bind="tableTargetAttrs('shelf')" class="panel" :class="{ idle: idle('shelf', table.shelf.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('shelf', table.shelf.length > 0)" @click="shut['shelf'] = !shut['shelf']">{{ local('The shelf', 'Family library') }}</button>
+        <button class="fold" :aria-expanded="!idle('shelf', table.shelf.length > 0)" @click="togglePanel('shelf')">{{ local('The shelf', 'Family library') }}</button>
       </h3>
       <p v-if="!table.shelf.length" class="small dim">{{ local('The house holds no book anybody can read.', 'The house has no readable books.') }}</p>
       <div v-for="book in table.shelf" :key="book.book" class="line">
@@ -659,9 +704,9 @@ const MARRIAGE_ORDERS = [
     <!-- MYSTIC DUTIES (#1873). A finished book is a reader who can be set to
          keep something: one hall's sick, one parcel's banks. It is paid for
          every year and asked about never. -->
-    <div class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0) }">
+    <div v-bind="tableTargetAttrs('duties')" class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0)" @click="shut['duties'] = !shut['duties']">{{ local('Standing duties', 'Mystic duties') }}</button>
+        <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0)" @click="togglePanel('duties')">{{ local('Standing duties', 'Mystic duties') }}</button>
       </h3>
       <p v-if="!table.mystic.duties.length" class="small dim">{{ local('Nobody keeps a working for the house.', 'No one has a Mystic duty.') }}</p>
       <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
@@ -699,11 +744,11 @@ const MARRIAGE_ORDERS = [
       </details>
     </div>
 
-    <OutsideServices :services="table.outsideServices" :actions="actions" :refusal="refusal" :prose-mode="proseMode" />
+    <OutsideServices v-bind="tableTargetAttrs('outsideServices')" :services="table.outsideServices" :actions="actions" :refusal="refusal" :prose-mode="proseMode" />
 
-    <div class="panel captives" :class="{ idle: idle('captives', (table.captives?.length ?? 0) > 0) }">
+    <div v-bind="tableTargetAttrs('captives')" class="panel captives" :class="{ idle: idle('captives', (table.captives?.length ?? 0) > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('captives', (table.captives?.length ?? 0) > 0)" @click="shut['captives'] = !shut['captives']">{{ local('Held away', 'Captive family') }}</button>
+        <button class="fold" :aria-expanded="!idle('captives', (table.captives?.length ?? 0) > 0)" @click="togglePanel('captives')">{{ local('Held away', 'Captive family') }}</button>
       </h3>
       <p v-if="!table.captives?.length" class="small dim">{{ local('Nobody on the house’s account is held for ransom.', 'No family member or contracted reader is held for ransom.') }}</p>
       <div v-for="held in table.captives ?? []" :key="held.person" class="line">
@@ -716,7 +761,7 @@ const MARRIAGE_ORDERS = [
 
     <!-- §13's price table. The money is gone the day it is spent, and the
          auction is in eleven years. -->
-    <div class="panel">
+    <div v-bind="tableTargetAttrs('tutoring')" class="panel">
       <h3 class="label">{{ local('A term of tutoring', 'Tutoring') }}</h3>
       <div class="row">
         <select v-model="pupil" :aria-label="local('Child to tutor', 'Choose a child for tutoring')">
@@ -742,9 +787,9 @@ const MARRIAGE_ORDERS = [
     </div>
 
     <!-- Respect is bought with descendants. A commission is bought with money. -->
-    <div class="panel" :class="{ idle: idle('posts', table.posts.some((p) => p.eligible.length > 0)) }">
+    <div v-bind="tableTargetAttrs('posts')" class="panel" :class="{ idle: idle('posts', table.posts.some((p) => p.eligible.length > 0)) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('posts', table.posts.some((p) => p.eligible.length > 0))" @click="shut['posts'] = !shut['posts']">{{ local('Places', 'Career positions') }}</button>
+        <button class="fold" :aria-expanded="!idle('posts', table.posts.some((p) => p.eligible.length > 0))" @click="togglePanel('posts')">{{ local('Places', 'Career positions') }}</button>
       </h3>
       <p
         v-if="!table.posts.some((p) => p.eligible.length)"
@@ -783,7 +828,7 @@ const MARRIAGE_ORDERS = [
     <!-- ISSUE #41. The Match is one decision a generation; the house makes
          five hundred other marriages in a run, and this is the only thing the
          player can say about them. Neither answer is the safe one. -->
-    <div class="panel">
+    <div v-bind="tableTargetAttrs('marriages')" class="panel">
       <h3 class="label">{{ local('Who the house marries', 'Marriage preferences') }}</h3>
       <p class="small dim blurb">
         {{ local('When nobody asks you. The blood runs out of a family that marries outward and thins in one that will not.', 'This policy controls routine marriages that you do not choose yourself. Marrying outside the family loses the bloodline; marrying only within the family can weaken it.') }}
@@ -806,12 +851,12 @@ const MARRIAGE_ORDERS = [
     <!-- #201 / #61. The engine has always made this a deliberate household
          programme across generations. Draw the existing orders here rather
          than leaving the ascendant path available only to simulation policy. -->
-    <div class="panel" :class="{ idle: idle('programme', table.programmeCandidates.length > 0 || !!table.scion || !!table.scionHeir || !!table.scionVacant || !!table.scionHeirVacant) }">
+    <div v-bind="tableTargetAttrs('programme')" class="panel" :class="{ idle: idle('programme', table.programmeCandidates.length > 0 || !!table.scion || !!table.scionHeir || !!table.scionVacant || !!table.scionHeirVacant) }">
       <h3 class="label">
         <button
           class="fold"
           :aria-expanded="!idle('programme', table.programmeCandidates.length > 0 || !!table.scion || !!table.scionHeir || !!table.scionVacant || !!table.scionHeirVacant)"
-          @click="shut['programme'] = !shut['programme']"
+          @click="togglePanel('programme')"
         >{{ local('The programme', 'Family advancement plan') }}</button>
       </h3>
       <p class="small dim blurb">
@@ -877,9 +922,9 @@ const MARRIAGE_ORDERS = [
 
     <!-- §7: every daughter married outward is power leaving the blood forever,
          and there was no way to decline to spend her. -->
-    <div class="panel" :class="{ idle: idle('market', table.market.length > 0) }">
+    <div v-bind="tableTargetAttrs('market')" class="panel" :class="{ idle: idle('market', table.market.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('market', table.market.length > 0)" @click="shut['market'] = !shut['market']">{{ local('The market', 'Marriage market') }}</button>
+        <button class="fold" :aria-expanded="!idle('market', table.market.length > 0)" @click="togglePanel('market')">{{ local('The market', 'Marriage market') }}</button>
       </h3>
       <p v-if="!table.market.length" class="small dim">
         {{ local('Nobody of the house is of an age to be spent this year.', 'No family member is eligible for the marriage market this year.') }}
@@ -903,9 +948,9 @@ const MARRIAGE_ORDERS = [
          mundane and put them to use — freeing the succession, risking
          disaster." The panel never says whether the blood is in him; the house
          does not know, and that is the decision. -->
-    <div class="panel" :class="{ idle: idle('longWait', mundaneMatters) }">
+    <div v-bind="tableTargetAttrs('longWait')" class="panel" :class="{ idle: idle('longWait', mundaneMatters) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('longWait', mundaneMatters)" @click="shut['longWait'] = !shut['longWait']">{{ local('The long wait', 'Men who have not awakened') }}</button>
+        <button class="fold" :aria-expanded="!idle('longWait', mundaneMatters)" @click="togglePanel('longWait')">{{ local('The long wait', 'Men who have not awakened') }}</button>
       </h3>
       <p v-if="!table.longWait.length" class="small dim">
         {{ local('Nobody of the line is old enough to be given up on.', 'No adult man of the family is waiting to awaken.') }}
@@ -947,9 +992,9 @@ const MARRIAGE_ORDERS = [
          dangerous, sometimes lethal." Any boy of the line in the window may be
          put through one, once. The panel never says whether the blood is in
          him: the house finds out the way it always has, by trying. -->
-    <div v-if="forcingRites.length" class="panel" :class="{ idle: idle('forcing', forcingMatters) }">
+    <div v-bind="tableTargetAttrs('forcing')" v-if="forcingRites.length || opened.forcing || showEverything" class="panel" :class="{ idle: idle('forcing', forcingMatters) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('forcing', forcingMatters)" @click="shut['forcing'] = !shut['forcing']">{{ local('The forcing rites', 'Rites to force an awakening') }}</button>
+        <button class="fold" :aria-expanded="!idle('forcing', forcingMatters)" @click="togglePanel('forcing')">{{ local('The forcing rites', 'Rites to force an awakening') }}</button>
       </h3>
       <p class="small dim blurb">
         {{ local(
@@ -957,6 +1002,7 @@ const MARRIAGE_ORDERS = [
           'These rites try to force an unawakened boy of the family to awaken. They are dangerous and can kill him. Each boy can go through only one, once. There is no way to know beforehand whether it can work on him.',
         ) }}
       </p>
+      <p v-if="!forcingRites.length" class="small dim">{{ local('No forcing rites are offered at present.', 'No rites to force an awakening are currently offered.') }}</p>
       <div v-if="pendingForcing" class="line" role="group" :aria-label="local('Confirm the rite', 'Confirm starting this rite')">
         <p class="small">
           <strong>{{ pendingForcing.title }}</strong> — <strong>{{ pendingForcing.name }}</strong>
@@ -994,9 +1040,9 @@ const MARRIAGE_ORDERS = [
          documentation... Forging them is an industry." A house with a thin
          record learns it by being refused a card, and this is where it can do
          something about that before the refusal rather than after. -->
-    <div class="panel" :class="{ idle: idle('papers', table.papers.length > 0) }">
+    <div v-bind="tableTargetAttrs('papers')" class="panel" :class="{ idle: idle('papers', table.papers.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('papers', table.papers.length > 0)" @click="shut['papers'] = !shut['papers']">{{ local('The papers', 'Marriage papers') }}</button>
+        <button class="fold" :aria-expanded="!idle('papers', table.papers.length > 0)" @click="togglePanel('papers')">{{ local('The papers', 'Marriage papers') }}</button>
       </h3>
       <p v-if="!table.papers.length" class="small dim">{{ local('Nobody of the house has a match to make.', 'No family member needs marriage papers right now.') }}</p>
       <p class="small dim blurb">
@@ -1031,9 +1077,9 @@ const MARRIAGE_ORDERS = [
     <!-- WORLD §12. "Nobody in this world is a slave and there is no serfdom in
          Aubren. People are held by debt, custom, contract and having nowhere
          else to go, which is sufficient." Both halves of that are decisions. -->
-    <div class="panel" :class="{ idle: idle('servants', table.servants.length > 0) }">
+    <div v-bind="tableTargetAttrs('servants')" class="panel" :class="{ idle: idle('servants', table.servants.length > 0) }">
       <h3 class="label">
-        <button class="fold" :aria-expanded="!idle('servants', table.servants.length > 0)" @click="shut['servants'] = !shut['servants']">{{ local("The house's people", 'Servants and debt contracts') }}</button>
+        <button class="fold" :aria-expanded="!idle('servants', table.servants.length > 0)" @click="togglePanel('servants')">{{ local("The house's people", 'Servants and debt contracts') }}</button>
       </h3>
       <p v-if="!table.servants.length" class="small dim">{{ local("Nobody is in the house's service.", 'The house has no servants.') }}</p>
       <div v-for="s in table.servants" :key="s.person" class="line">
@@ -1087,6 +1133,11 @@ const MARRIAGE_ORDERS = [
 </template>
 
 <style scoped>
+.table-tasks { border-bottom: 1px solid var(--rule); padding-bottom: 12px; min-width: 0; }
+.table-tasks h3 { margin: 0; }
+.table-tasks details { border-top: 1px solid var(--rule); }
+.table-tasks summary { min-height: 44px; align-content: center; cursor: pointer; overflow-wrap: anywhere; }
+.return-goal { min-height: 44px; }
 /* Ink, not rubric. A spend the house chose is not an error. */
 .spent { color: var(--ink); }
 .line { padding: 6px 0; border-top: 1px solid var(--rule); }
