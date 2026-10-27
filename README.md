@@ -62,6 +62,7 @@ The original build order and commercial pass ([#277](https://github.com/Eldritch
 | [issuesneedingowneraction](issuesneedingowneraction) | Deferred signing, account, store and device requirements, with existing release proof. |
 | [docs/](docs/) | Operating guides, generated vocabulary, playtest/modding guides and dated measurement logs. |
 | `package.json`, `package-lock.json` | Workspace commands, dependencies and their locked versions. |
+| `.nvmrc` | The Node major, stated once; CI, the game devcontainer and `engines` are tested against it. |
 | `tsconfig.json`, `tsconfig.base.json`, `vitest.config.ts`, `playwright.config.ts` | TypeScript and test configuration for contributors. |
 | `.gitattributes`, `.gitignore` | Git text handling and generated/local file exclusions. |
 
