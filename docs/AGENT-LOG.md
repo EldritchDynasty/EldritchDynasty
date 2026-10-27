@@ -530,3 +530,41 @@ and scroll margins keep focus above the wrapped pane bar. The empty attribute
 note now specifically names attributes/traits, so it does not deny a recorded
 deed beside it. This is an agent walkthrough, not evidence of human recognition
 or recall. No game rule, price, event pool, save format or RNG behavior changed.
+
+## 2026-10-27 — #1957: session view contracts, without runtime changes
+
+**Boundary recorded first.** Against `229e18b9` (#1944's verified public
+fields), moved the nine existing view contracts plus its new
+`RecordedMilestone`: `PowerEvidenceRoute`, `StandingDelta`, private `Standing`,
+`SessionDecisionView`, `SessionView`, `CirculatingTale`, `HallView`, `MemberView`
+and `InterventionView`. Their fields, optionality, unions and comments are
+unchanged. The older THE SESSION introduction stays with the runtime file.
+`SessionOptions`, `AdvanceResult`, `FoundingBootstrap`, command logging, replay,
+`GameSession` and runtime view construction remain in `session.ts`.
+
+**Type-only ownership.** `session-view-types.ts` owns the contracts; the same
+public names are re-exported from the session, without caller rewrites.
+`Standing` is available to its owning session module and is not added to the
+public session/core exports. All nine sibling import edges are explicitly
+type-only. Its emitted JavaScript is only `export {};`. Updated the canonical
+architecture row and surface description, including existing public API,
+save/replay and client-view guards.
+
+**Evidence.** Compared all ten declaration bodies and their comments, the
+23 session and 917 core export names, and TypeScript's emitted runtime with
+comments omitted. Session JavaScript is byte-identical (SHA-256
+`55e3f03d821d1502b62a10f3121532c7f0e5a37d94ddfda49c74239b14ff2bf3`).
+Before/after `npm run digest -- 8 400` matches every seed (1000 + 7i), with
+the same whole-save hash and size. All package and Vue-template typechecks
+pass. Existing session, view, save and replay checks pass (359 tests across
+seven suites, including the existing slow public-API/replay suites); the
+architecture/planner guard passes its 92 tests. Its first pre-staging run
+correctly rejected a new file absent from the tracked inventory; staging the
+file resolved it without changing parser, assertions or verification policy.
+Normal rebased preflight and exact-head CI are recorded on the PR.
+
+**Size is a boundary measurement.** With the inspection script's final-empty-
+line convention, session goes from 1,885 lines / 86,843 bytes to 1,379 /
+65,842; the sibling is 505 / 21,806. This isolates a coherent type boundary;
+it does not establish fewer conflicts or faster execution. No schema, save,
+content, rule, runtime dependency or RNG changes.
