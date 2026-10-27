@@ -4,6 +4,10 @@
     "allow": [
       "Bash(npm install)",
       "Bash(npm ci)",
+      "Bash(npm run setup:*)",
+      "Bash(npm run setup)",
+      "Bash(npm run doctor:*)",
+      "Bash(npm run doctor)",
       "Bash(npm run check:*)",
       "Bash(npm run check)",
       "Bash(npm run land:*)",
