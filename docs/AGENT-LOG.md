@@ -419,11 +419,12 @@ with the session-start orientation. It asks git only `ls-remote`, `rev-parse`
 and `log`, with `GIT_NO_LAZY_FETCH` and `GIT_TERMINAL_PROMPT=0`, never shows
 git's stderr, and redacts URL credentials and GitHub tokens on the way out.
 
-Not done here: `npm run setup` and `npm run doctor` are documented in the
-README and COMMANDS.md but not yet in AGENTS.md's command block, because
-`settings.test.ts` requires every command there to be in
-`.claude/settings.json`'s allow list, and a session may not edit its own
-permissions. A person adds `Bash(npm run setup)`, `Bash(npm run setup:*)`,
-`Bash(npm run doctor)` and `Bash(npm run doctor:*)`, then the two lines.
+`npm run setup` and `npm run doctor` are in AGENTS.md's command block and in
+`.claude/settings.json`'s allow list; the session asked the owner first, because
+a session may not widen its own permissions. The three new suites took the
+unmeasured-file count to 11 of `lanes.test.ts`'s 8, so the per-file table was
+re-measured with `npm run cost -- --full --write` on this container: test:fast
+~7 min, the full suite ~53 min, four shards at ~40 min. This container is slower
+than the one behind `ef836a81` (~4 and ~29 min); the figures are this one's.
 The Windows half of the new suites runs in the merge-blocking `windows` job,
 which runs all of `test:fast`; this entry has only Linux evidence.
