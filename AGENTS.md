@@ -76,6 +76,12 @@ is in **[docs/COMMANDS.md](docs/COMMANDS.md)**.
 
 ```bash
 npm install
+npm run setup        # what the SessionStart hook runs: `npm ci` when node_modules
+                     # is absent, nothing when it still matches the lockfile,
+                     # `npm install` otherwise; never rewrites the tracked lockfile.
+                     # `-- --browser` adds Playwright's Chromium, launched to prove it.
+npm run doctor       # read-only: Node vs .nvmrc, dependency freshness, Chromium,
+                     # hook wiring, main's CI verdict, each with its fix. `-- --json`
 
 # Measured on a four-core container, and perishable. Re-measure before quoting.
 npm run check        # typecheck (vue-tsc too) + validate + test;
@@ -92,7 +98,7 @@ npm run land         # session preflight: fetch, rebase, install, then run
 npm run land -- --status   # is a preflight running, dead, or preflight-green?
                      # A session preflight never pushes or merges.
 npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
-npm run test:fast    # ~4 min, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+npm run test:fast    # ~7 min, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
                      # lanes.test.ts fails the build if one turns up in this
                      # lane, or if a suite drives a batch through a tools
                      # module without declaring it.
