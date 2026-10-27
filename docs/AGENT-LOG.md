@@ -285,3 +285,14 @@ source package. Manual `land --dry-run` prints both its unchanged preflight
 policy and the advisory plan. No required check, threshold, proof-reuse rule,
 merge-queue rule or workflow changed. Final rebased preflight and CI results
 belong to the PR head.
+
+### #1936 preflight follow-up — keep map verification together
+
+The first full fast preflight passed 6,109 tests and failed the duration
+inventory check: a ninth unmeasured file exceeded its existing allowance of
+eight. The new planner cases now live in the existing codemap suite, alongside
+the source map they exercise. All 219 focused assertions remain, passing in
+three suites. No duration figure was invented, and the measurement budget and
+shard-balance limits are unchanged. The earlier four-suite focused result
+records the original layout; this is its final ownership layout. The rebased
+preflight is rerun with the same substantive cases.
