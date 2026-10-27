@@ -237,3 +237,20 @@ files resolve. `npm run gen:docs` leaves no vocabulary diff; the updated save
 and replay source/test references exist. Final rebased preflight results are
 recorded in the PR. This recovery changes documentation only and leaves the
 dated audits intact.
+
+## 2026-10-27 — #1931: revalidate after the two runtime fixes landed
+
+Rebased the same documentation branch onto `main` at `1753684b`, which includes
+the landed #1930 telemetry correction and #1952 pending-cast reconstruction.
+The exact README example now has identical complete canonical snapshots both
+immediately after loading and after answering the docket and continuing five
+years. The normalization finding in the preceding entry is therefore repaired
+on this base; that historical observation is retained.
+
+The previous documentation head's browser CI job never reached the tests:
+system-package downloads took 4 minutes 55 seconds, and the five-minute
+Chromium-provisioning step timed out during the browser download. Its other
+checks passed. This is provisioning evidence, not an application-test failure.
+The rebased head goes through the normal checks again, without changing CI
+deadlines, assertions or workflows. Final preflight/CI results belong to the
+current PR head.
