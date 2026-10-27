@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import type { ChronicleEntry } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
+import { isWritten } from '../lib/book';
 
 /**
  * ONE LINE OF THE BOOK, wherever the book is being read (issue #48).
@@ -44,6 +45,7 @@ const emit = defineEmits<{
 
 /** Presentation-only wording; saved Chronicle entries stay unchanged. */
 const plain = computed(() => props.proseMode === 'plainenglish');
+const blank = computed(() => !isWritten(props.entry));
 
 const cause = computed(() => (props.links?.cause ? causeLink(props.links.cause, props.proseMode) : null));
 const answered = computed(() => answeredLabel(props.links?.answered ?? [], props.proseMode));
@@ -68,7 +70,7 @@ function assertNever(claim: never): never {
  * it is quoted rather than reworded, for the reason `passage.ts` quotes
  * `causeOfDeath`.
  */
-const claims = computed(() => (props.entry.claims ?? []).map((c) => {
+const claims = computed(() => (blank.value ? [] : props.entry.claims ?? []).map((c) => {
   const plain = props.proseMode === 'plainenglish';
   switch (c.kind) {
     // The deed is authored Chronicle evidence, not UI framing; never rewrite it.
@@ -109,15 +111,15 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
     :tabindex="marked ? -1 : undefined"
     :class="[entry.weight, {
       greyed: entry.greyed,
-      omitted: entry.text === null,
+      omitted: blank,
       embellished: entry.record === 'embellish',
       read,
       marked,
     }]"
   >
     <span class="year dim small">{{ entry.year }}</span>
-    <h4 v-if="entry.title && entry.text !== null">{{ entry.title }}</h4>
-    <p v-if="entry.text !== null">{{ entry.text }}</p>
+    <h4 v-if="entry.title && !blank">{{ entry.title }}</h4>
+    <p v-if="!blank">{{ entry.text }}</p>
     <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
          became a tooltip. Neither is a touch-safe explanation. The sentence is
          said; the page still shows the gap, and the visible mark below carries
@@ -130,7 +132,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          cast ids when the page was made. Even when someone has left the
          living halls, the page still names them without offering a dead-end
          navigation control. -->
-    <div v-if="entry.text !== null && people?.length && !read" class="people small">
+    <div v-if="!blank && people?.length && !read" class="people small">
       <span class="dim">{{ plain ? 'People involved:' : 'with' }}</span>
       <template v-for="person in people" :key="person.id">
         <button
@@ -150,7 +152,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          possible thing for the most interesting artefact the game produces.
          The blank is not tidied away; it is initialled, the way the house
          initials a line it improved. -->
-    <span v-if="entry.text === null && !read" class="dim small mark">{{ plain ? 'deliberately left blank' : 'left blank, on purpose' }}</span>
+    <span v-if="blank && !read" class="dim small mark">{{ plain ? 'deliberately left blank' : 'left blank, on purpose' }}</span>
     <span v-if="entry.record === 'embellish' && !read" class="dim small mark">{{ plain ? "the family's version of events" : 'as the house tells it' }}</span>
         <template v-if="!read">
       <span
@@ -204,7 +206,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
 }
 .entry .link + .mark, .entry .mark + .mark { margin-left: 8px; }
 .entry .people { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
-.entry .people .link { font-style: normal; }
+.entry .people .link { font-style: normal; min-height: 44px; min-width: 44px; padding: 8px 0; }
 /* The artefact. A ruled empty line where a year should have been. */
 .entry.omitted .blank { border-bottom: 1px solid var(--rule); }
 .entry .mark { font-style: italic; }

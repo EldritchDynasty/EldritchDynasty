@@ -121,7 +121,7 @@ describe('family-card disclosure relationships (#1751)', () => {
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(face().attributes('aria-controls')).toBe('detail-p1');
-      expect(wrapper.get('#detail-p1').text()).toContain('The book has not described this person.');
+      expect(wrapper.get('#detail-p1').text()).toContain('No attributes or traits are recorded.');
 
       await wrapper.setProps({ open: false, proseMode: 'original' });
       expect(face().attributes('aria-expanded')).toBe('false');

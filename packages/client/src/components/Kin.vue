@@ -4,6 +4,7 @@ import Member from './Member.vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { children, drawnBeside, type MemberView } from '../lib/kin';
+import type { GameStore } from '../lib/game';
 
 const props = defineProps<{
   member: MemberView;
@@ -14,6 +15,7 @@ const props = defineProps<{
   proseMode?: ProseMode;
   showRelevance?: boolean;
   mentions?: (person: string) => { id: string; year: number }[];
+  milestones?: GameStore['milestones'];
   relationshipAnchor?: { id: string; name: string };
 }>();
 defineEmits<{
@@ -41,11 +43,11 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
          the player's most consequential recurring decision is who marries
          whom — none of which was in the picture of the family. -->
     <div class="pair">
-      <Member :member="member" :names="names" :trait-names="traitNames" :prose-mode="proseMode" :open="selected === member.id" :show-relevance="showRelevance" :mentions="mentions" :relationship-anchor="relationshipAnchor" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" @relationship="$emit('relationship', $event)" />
+      <Member :member="member" :names="names" :trait-names="traitNames" :prose-mode="proseMode" :open="selected === member.id" :show-relevance="showRelevance" :mentions="mentions" :milestones="milestones" :relationship-anchor="relationshipAnchor" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" @relationship="$emit('relationship', $event)" />
       <template v-if="beside">
         <span class="knot" aria-hidden="true">⚭</span>
         <span class="said-not-shown">married to</span>
-        <Member :member="beside" :names="names" :trait-names="traitNames" :prose-mode="proseMode" :open="selected === beside.id" :show-relevance="showRelevance" :mentions="mentions" :relationship-anchor="relationshipAnchor" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" @relationship="$emit('relationship', $event)" />
+        <Member :member="beside" :names="names" :trait-names="traitNames" :prose-mode="proseMode" :open="selected === beside.id" :show-relevance="showRelevance" :mentions="mentions" :milestones="milestones" :relationship-anchor="relationshipAnchor" @select="$emit('select', $event)" @line="$emit('line')" @book="$emit('book', $event)" @relationship="$emit('relationship', $event)" />
       </template>
       <!-- A WAY IN, NOT A SMALLER INDENT (issue #106). The tree does not run
            off the side of a phone — the deepest chain measured across five
@@ -74,6 +76,7 @@ const beside = computed(() => drawnBeside(props.member, props.hall));
         :prose-mode="proseMode"
         :show-relevance="showRelevance"
         :mentions="mentions"
+        :milestones="milestones"
         :relationship-anchor="relationshipAnchor"
         @select="$emit('select', $event)"
         @line="$emit('line')"

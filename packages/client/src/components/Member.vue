@@ -4,6 +4,8 @@ import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { MARKS, type Mark, madnessMark, markSays } from '../lib/marks';
 import { ageLabel } from '../lib/age';
+import type { GameStore } from '../lib/game';
+import RecordedLife from './RecordedLife.vue';
 
 type MemberView = SessionView['halls'][number]['members'][number];
 
@@ -16,6 +18,7 @@ const props = withDefaults(defineProps<{
   open: boolean;
   showRelevance?: boolean;
   mentions?: (person: string) => { id: string; year: number }[];
+  milestones?: GameStore['milestones'];
   relationshipAnchor?: { id: string; name: string };
 }>(), { proseMode: 'original' });
 
@@ -38,7 +41,7 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   attribute: 'Attribute',
   record: 'Recorded',
   actual: 'Actual',
-  unknown: 'The book has not described this person.',
+  unknown: 'No attributes or traits are recorded.',
 } : {
   successionHeir: 'next to hold the seal',
   successionPossible: 'may hold the seal',
@@ -57,7 +60,7 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
   attribute: 'attribute',
   record: 'the book',
   actual: 'the person',
-  unknown: 'The book has never said a word about what they were like.',
+  unknown: 'The book gives no account of their attributes or traits.',
 });
 defineEmits<{
   (e: 'select', id: string): void;
@@ -139,7 +142,7 @@ const succession = computed(() => {
   return undefined;
 });
 const mentionPages = computed(() =>
-  props.open && props.mentions ? props.mentions(props.member.id) : []);
+  props.open && !props.milestones && props.mentions ? props.mentions(props.member.id) : []);
 </script>
 
 <template>
@@ -212,7 +215,8 @@ const mentionPages = computed(() =>
         <template v-else-if="relationshipAnchor.id === member.id">{{ copy.traceStop }}</template>
         <template v-else>{{ copy.traceTo(relationshipAnchor.name, member.name) }}</template>
       </button>
-      <div v-if="mentionPages.length" class="small mentions">
+      <RecordedLife v-if="milestones" :person="member.id" :read="milestones" :prose-mode="proseMode" @book="$emit('book', $event)" />
+      <div v-else-if="mentionPages.length" class="small mentions">
         <span class="dim">{{ copy.mentions }}</span>
         <button
           v-for="page in mentionPages"

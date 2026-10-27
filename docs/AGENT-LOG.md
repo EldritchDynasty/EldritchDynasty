@@ -473,3 +473,60 @@ named sections, and back to the initiating link. The task index fits its column
 without horizontal clipping, and current order explanations remain together.
 This is an agent walkthrough and visual review, not a human usability study.
 No core, content, schema, save-format, price, rule or RNG changes.
+
+## 2026-10-27 — #1944: recorded lives with source pages
+
+**Coverage before labels.** On the played Long Line (`playedRun(loadBundle(),
+1000, 500, 1042, 'long')`, through 1542), 8 of 575 stored people (1.3913%) had
+at least one non-omitted deed-labelled page; the median was zero, or one among
+those eight. Of the 129 people explicitly named by Chronicle cast metadata,
+8 (6.2016%) had a deed; the median was again zero. There were 709 pages and six
+omissions. The measurement was repeated after implementation with identical
+counts. This single run establishes sparse coverage in that sample, not a
+population rate. Labels therefore use the issue's already-authorized kept-page
+title fallback; no new biography or label source was authored.
+
+**One reading.** `GameSession.milestones` derives detached values through
+`chronicleReading`: prefer deeds, then titled mentions, then unlabelled/blank
+pages; select at most five by default, show chronologically, and break ties by
+Chronicle order. The first deed for this person labels a page; every other
+claim remains at its source. An unlimited reading keeps all pages reachable.
+Omissions yield only reading identity, year and `source: 'blank'`. Embellished
+deeds keep their committed words and the existing discrepancy state. No prose
+is parsed, no account is reconciled, and no derived history is saved.
+
+**Client and source privacy.** One `RecordedLife` component serves expanded
+member cards, Book person links, succession-history disclosures and at-risk
+rite candidates. The existing remembered-person sentence remains alongside
+its sources. Kept-page names include ancestors outside the recent Chronicle
+window, without indexing omitted-only identities or exporting person records.
+The store remains the only session caller. The Book opens above the spine and
+returns focus to the originating link; internal source links have a return to
+the same history. Hidden/removed origins fall back to the current history.
+
+The browser fixture exposed an existing omission leak: `Entry` rendered retained
+deed claims below a dated blank. Shared written-page handling now excludes
+omitted claims, titles and retained prose from display, search and image/quote
+export. The old title-search assertion for a blank is deliberately replaced by
+an assertion that its hidden title cannot match. These are presentation/privacy
+changes; the saved account is not rewritten.
+
+**Evidence.** Built-state core cases cover chronology, limits, multiple deeds,
+legacy identities, all discrepancy states, blank/retained omission metadata,
+empty history, archive/death, guardian, married-in spouse, pending-name rename,
+both founding configurations and both prose modes. Canonical saves (only
+`savedAt` blanked), decision logs and resumed readings remain equal. Interaction
+tests cover source links, filtering, full history, nested modal focus and rite
+review without an order. Chromium walks card/blank/ancestor/spine routes at
+1400px and 390px, both prose modes and largest reader text, comparing complete
+host saves and command logs after navigation. Production client compilation
+passes; normal rebased preflight and exact-head CI are recorded on the PR.
+
+**Separate task walkthrough.** Applied the existing interface-design ledger
+direction and inspected the actual client in both modes and widths. Dated
+quotations carry primary ink; disputes are quiet rubric words. New source
+targets are 44px, text wraps without horizontal overflow, and mobile clearance
+and scroll margins keep focus above the wrapped pane bar. The empty attribute
+note now specifically names attributes/traits, so it does not deny a recorded
+deed beside it. This is an agent walkthrough, not evidence of human recognition
+or recall. No game rule, price, event pool, save format or RNG behavior changed.

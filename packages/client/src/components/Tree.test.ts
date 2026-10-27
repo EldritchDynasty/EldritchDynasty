@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils';
-import type { GenerationChanges, SessionView } from '@ed/core';
+import type { GenerationChanges, RecordedMilestone, SessionView } from '@ed/core';
 import Tree from './Tree.vue';
 import TreeChanges from './TreeChanges.vue';
 import Kin from './Kin.vue';
@@ -123,6 +123,34 @@ function allMembers(view: SessionView): { hall: HallView; member: MemberView }[]
 }
 
 describe('the family tree as a planning board (#268)', () => {
+  it.each(['original', 'plainenglish'] as const)('shows recorded labels and all source pages only inside the expanded member (%s, #1944)', async (proseMode) => {
+    const pages: RecordedMilestone[] = [
+      { entryId: 'deed', year: 1100, source: 'deed', label: 'was tutored by Osric', disputed: 'open' },
+      { entryId: 'blank', year: 1101, source: 'blank', label: 'PRIVATE omitted title' },
+      ...Array.from({ length: 5 }, (_, i): RecordedMilestone => ({ entryId: `page-${i}`, year: 1102 + i, source: 'title', label: `The kept title ${i}` })),
+    ];
+    const milestones = vi.fn((_person: string, opts?: { limit?: number }) => opts?.limit === Infinity ? pages : pages.slice(0, 5));
+    const wrapper = mount(Tree, { props: { view: largeView(), selected: null, proseMode, milestones } });
+    try {
+      expect(milestones).not.toHaveBeenCalled();
+      await wrapper.setProps({ selected: 'p000' });
+      expect(new Set(milestones.mock.calls.map(([id]) => id))).toEqual(new Set(['p000']));
+      const life = wrapper.get('#member-p000 .recorded-life');
+      expect(life.findAll('[data-milestone]')).toHaveLength(5);
+      expect(life.get('[data-milestone="deed"]').attributes('aria-label')).toContain('1100: was tutored by Osric');
+      expect(life.text()).not.toContain('PRIVATE');
+      expect(life.get('[data-milestone="blank"]').text()).toContain(proseMode === 'plainenglish' ? 'deliberately left blank' : 'left blank, on purpose');
+      expect(life.get('summary').text()).toContain('All 7');
+      (life.get('details').element as HTMLDetailsElement).open = true;
+      await life.get('[data-history-page="page-4"]').trigger('click');
+      expect(wrapper.emitted('book')).toEqual([['page-4']]);
+      expect(wrapper.find('[data-relationship]').exists()).toBe(true);
+      await wrapper.setProps({ milestones: () => [] });
+      expect(wrapper.get('.recorded-life .empty').text()).toBe(proseMode === 'plainenglish'
+        ? 'No Chronicle pages name this person.' : 'The book has no pages naming them.');
+    } finally { wrapper.unmount(); }
+  });
+
   it('finds accented names from ASCII and decomposed queries without changing the recorded names (#1759)', async () => {
     const current = largeView();
     current.halls[0]!.members[1]!.name = 'Élodie';
@@ -984,8 +1012,8 @@ describe('Plain English family member cards (#410)', () => {
     try {
       for (const proseMode of ['original', 'plainenglish'] as const) {
         const unknown = proseMode === 'original'
-          ? 'The book has never said a word about what they were like.'
-          : 'The book has not described this person.';
+          ? 'The book gives no account of their attributes or traits.'
+          : 'No attributes or traits are recorded.';
         await wrapper.setProps({ proseMode, selected: 'trait-only' });
         const traitCard = wrapper.get('#member-trait-only .detail');
         expect(traitCard.text()).toContain(proseMode === 'original'

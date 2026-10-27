@@ -37,6 +37,31 @@ function fixture(boughtBack = false): TableView {
 describe('Table destinations and read-only navigation (#1941)', () => {
   const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
 
+  it.each(['original', 'plainenglish'] as const)('opens the same recorded source beside a rite candidate without confirming an order (%s, #1944)', async (proseMode) => {
+    const table = fixture();
+    table.vesselRite = { ready: true, assembly: {
+      rite: 'vessel', title: 'The Vessel rite', actors: [], preparations: [], irreversible: ['A named relative will be spent.'],
+      atRisk: [{ slot: 'VESSEL', candidates: [{ person: 'relative', name: 'Alys', remembered: 'Alys, child of Osric. The book last named her in 1100.' }] }],
+    } };
+    const order = vi.fn();
+    const w = mount(GameTable, { props: {
+      table, land, proseMode, actions: { order } as unknown as GameActions, refusal: null, receipt: null,
+      milestones: () => [{ entryId: 'life-source', year: 1100, source: 'deed', label: 'returned from service' }],
+    } });
+    try {
+      const review = w.findAll('button').find((button) => button.text() === (proseMode === 'plainenglish' ? 'Begin the Vessel rite' : 'Call the Vessel'));
+      expect(review).toBeDefined();
+      await review!.trigger('click');
+      const history = w.get('.candidate-life');
+      (history.element as HTMLDetailsElement).open = true;
+      expect(history.text()).toContain('returned from service');
+      await history.get('[data-milestone="life-source"]').trigger('click');
+      expect(w.emitted('book')).toEqual([['life-source']]);
+      expect(w.get('.rite-assembly').text()).toContain('A named relative will be spent.');
+      expect(order).not.toHaveBeenCalled();
+    } finally { w.unmount(); }
+  });
+
   it.each(['original', 'plainenglish'] as const)('explains an unrevealed Table without exposing destinations in %s', (proseMode) => {
     const task = tableTasksFor({} as SessionView, fixture(), { revealed: new Set(), proseMode })[0]!;
     const w = mount(TableTaskLinks, { props: { task, proseMode } });

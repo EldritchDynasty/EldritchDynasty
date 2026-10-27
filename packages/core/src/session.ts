@@ -1,6 +1,6 @@
 import type {
   CampaignId, Content, ContentBundle, EndingId, FrameEntry, LibraryRun, Person, PersonStatus, Register, ResolvedClaim, RespectTier,
-  SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung, SessionCommand,
+  SavedGame, PrimordialRecord, TaleForm, HouseAmbitionId, ProseMode, ProseVariant, RunLibrary, Rung, SessionCommand, DiscrepancyState,
 } from '@ed/schema';
 import { FounderIdentityError, MAIN_BRANCH, RUNG_ORDER, assertNever, resolveFounder, SessionCommandS, TableOrderS, MusterOrderS } from '@ed/schema';
 import type { SimCtx, ChronicleEntry } from './world.js';
@@ -96,6 +96,15 @@ import {
  * for previews, and a sealed façade would only get bypassed. But nothing in a
  * client should need it, and if something does, that is a missing verb here.
  */
+
+/** A source-linked reading of what the family wrote, never a reconstructed life. */
+export interface RecordedMilestone {
+  entryId: string;
+  year: number;
+  label?: string;
+  source: 'deed' | 'title' | 'blank';
+  disputed?: DiscrepancyState;
+}
 
 export interface PowerEvidenceRoute {
   title: string;
@@ -862,6 +871,39 @@ export class GameSession {
   }
 
   /**
+   * Recorded deeds first, then titled mentions, then unlabelled/blank pages.
+   * Select the earliest pages in each group up to five by default, then show
+   * the selection chronologically, breaking year ties by Chronicle order.
+   * One item per page: the first deed for this person labels it; the source
+   * retains any other claims. Infinity reads every page for the full list.
+   * Omission is checked before claims/title/dispute metadata: only its stable
+   * reading identity and date survive. No people/genome/RNG is read or changed.
+   */
+  milestones(person: string, opts: { limit?: number } = {}): RecordedMilestone[] {
+    const w = this.ctx.world;
+    const requested = opts.limit ?? 5;
+    const limit = Number.isNaN(requested) ? 5 : Math.max(0, Math.floor(requested));
+    return chronicleReading(w.chronicle).flatMap((entry, index) => {
+      const blank = entry.text === null || entry.record === 'omit';
+      const deed = blank ? undefined : entry.claims?.find((claim) => claim.kind === 'deed' && claim.person === person);
+      if (!entry.people?.includes(person) && !deed) return [];
+      const row: RecordedMilestone = { entryId: entry.id!, year: entry.year, source: 'blank' };
+      if (!blank) {
+        row.source = deed ? 'deed' : 'title';
+        const label = deed?.kind === 'deed' ? deed.text : entry.title;
+        if (label) row.label = label;
+        const dispute = entry.record === 'embellish' && entry.discrepancyId
+          ? w.discrepancies.get(entry.discrepancyId)?.state : undefined;
+        if (dispute) row.disputed = dispute;
+      }
+      return [{ row, index, rank: row.source === 'deed' ? 0 : row.label ? 1 : 2 }];
+    }).sort((a, b) => a.rank - b.rank || a.row.year - b.row.year || a.index - b.index)
+      .slice(0, limit)
+      .sort((a, b) => a.row.year - b.row.year || a.index - b.index)
+      .map(({ row }) => row);
+  }
+
+  /**
    * THE SPINE (issue #56). Who has held the seal since the signing, oldest
    * first, with what the book says became of each of them.
    *
@@ -1082,7 +1124,7 @@ export interface SessionView {
   halls: HallView[];
   chronicle: ChronicleEntry[];
   interventions?: InterventionView[];
-  /** Names for people named by the windowed Chronicle, including those no longer in a living hall.
+  /** Names on kept Chronicle pages, including ancestors outside the window and living halls.
    * This is a read-model index, not a new saved-world record. */
   chroniclePeople: { id: string; name: string }[];
   /** The frame (concept §2, issue #13) — separate from `chronicle` on purpose. See `world.frame`. */
@@ -1587,12 +1629,14 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   }
 
   // Provenance survives a person's death, but the hall view deliberately
-  // contains living members only. Resolve the displayed pages' references
+  // contains living members only. Resolve the kept book's references
   // here, without sending the whole person store (or hidden facts) to Vue.
   // Chronicle views must not expose writable references into the saved book.
   // Deep copies matter: a page's people, claims and cause are nested values.
   const chronicle = chronicleReading(w.chronicle).slice(-chronicleLines).map((entry) => structuredClone(entry));
-  const chroniclePeople = [...new Set(chronicle.flatMap((entry) => entry.people ?? []))]
+  const chroniclePeople = [...new Set(w.chronicle.filter((entry) => entry.text !== null && entry.record !== 'omit')
+    .flatMap((entry) => [...(entry.people ?? []), ...(entry.claims ?? [])
+      .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]
     .flatMap((id) => {
       const person = w.people.get(id);
       return person ? [{ id: String(id), name: person.name }] : [];

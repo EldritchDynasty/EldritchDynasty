@@ -2,13 +2,14 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { ChronicleEntry, SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
-import { useModal } from '../lib/modal';
+import { modalFocusable, useModal } from '../lib/modal';
 import { findEntry, linksFor } from '../lib/causes';
-import type { GameActions } from '../lib/game';
+import type { GameActions, GameStore } from '../lib/game';
 import Entry from './Entry.vue';
+import RecordedLife from './RecordedLife.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
+  LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, isWritten, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
   type Lens, type Measure,
 } from '../lib/book';
 
@@ -32,6 +33,10 @@ const props = defineProps<{
   actions: Pick<GameActions, 'causeOf' | 'answeredBy'>;
   /** Open at this page, because the panel followed a link past its window. */
   focus?: string;
+  /** Public names from kept pages, including ancestors outside the living halls. */
+  people?: SessionView['chroniclePeople'];
+  milestones?: GameStore['milestones'];
+  person?: string;
 }>();
 
 /**
@@ -41,11 +46,43 @@ const props = defineProps<{
  * lines of it. The only character who ever read the finished thing was the
  * creditor, on the last night, in the epilogue.
  *
- * It draws entries and nothing else. It does not annotate, reconcile or
- * explain, because there is no narrator who knows the truth — there is only
- * Daveed, and he is not neutral.
+ * Pages and life notes quote the family's account and link to its sources.
+ * They never reconcile or explain it: there is no narrator who knows the
+ * truth — there is only Daveed, and he is not neutral.
  */
 const plain = computed(() => props.proseMode === 'plainenglish');
+const historyPerson = ref<string | undefined>(props.person);
+watch(() => props.person, (id) => { if (id) void readLife(id); else historyPerson.value = undefined; });
+const historyName = computed(() => props.people?.find((person) => person.id === historyPerson.value)?.name);
+const names = computed(() => new Map(props.people?.map((person) => [person.id, person.name]) ?? []));
+const history = ref<HTMLElement | null>(null);
+let historyOrigin: HTMLElement | null = null;
+const historyDestination = ref<string | null>(null);
+function peopleFor(entry: ChronicleEntry): { id: string; name: string }[] {
+  if (!props.milestones || !isWritten(entry)) return [];
+  const ids = new Set([...(entry.people ?? []), ...(entry.claims ?? []).flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]);
+  return [...ids].flatMap((id) => {
+    const name = names.value.get(id);
+    return name ? [{ id, name }] : [];
+  });
+}
+async function readLife(id: string): Promise<void> {
+  historyPerson.value = id;
+  historyDestination.value = null;
+  await nextTick();
+  history.value?.scrollIntoView({ block: 'start' });
+  history.value?.focus();
+}
+function followLife(id: string): void {
+  historyOrigin = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  historyDestination.value = id;
+  void follow(id);
+}
+function returnToLife(): void {
+  const target = historyOrigin && modalFocusable(history.value).includes(historyOrigin) ? historyOrigin : history.value;
+  target?.scrollIntoView({ block: 'center' });
+  target?.focus();
+}
 /** The lenses select the same entries in either reading mode. Only their labels change. */
 
 const card = ref<HTMLElement | null>(null);
@@ -169,7 +206,10 @@ async function follow(id: string): Promise<void> {
 // page. Honour subsequent focus requests using the same last-request-wins
 // navigation path as a cause link; undefined does not move the reader.
 watch(() => props.focus, (id) => { if (id) void follow(id); });
-onMounted(() => { if (props.focus) void follow(props.focus); });
+onMounted(() => {
+  if (props.focus) void follow(props.focus);
+  else if (props.person) void readLife(props.person);
+});
 
 /**
  * Boundary positions are indexed into the actually drawn page, not calendar
@@ -296,7 +336,7 @@ const centuries = computed(() => {
 
 const counts = computed(() => ({
   all: props.book.length,
-  blank: props.book.filter((e) => e.text === null).length,
+  blank: props.book.filter((e) => !isWritten(e)).length,
   improved: props.book.filter((e) => e.record === 'embellish').length,
   illuminated: props.book.filter((e) => e.weight === 'illuminated').length,
 }));
@@ -375,6 +415,10 @@ const counts = computed(() => ({
            the panel's. The panel answers "what just happened"; this is the
            volume. -->
       <div ref="pages" class="pages" @scroll.passive="onScroll">
+        <section v-if="historyName && historyPerson && milestones" ref="history" tabindex="-1" class="person-history" :aria-label="plain ? `${historyName}'s recorded history` : `The recorded life of ${historyName}`">
+          <h4>{{ historyName }}</h4>
+          <RecordedLife :person="historyPerson" :read="milestones" :prose-mode="proseMode" @book="followLife" />
+        </section>
         <template v-for="(entry, i) in page" :key="entry.id ?? entry.year + ':' + i">
           <!-- Several Ages may have begun between these two surviving pages.
                Use the real began year, even if no page from that year survives. -->
@@ -388,8 +432,11 @@ const counts = computed(() => ({
             :prose-mode="proseMode"
             :links="entry.id ? links.get(entry.id) : undefined"
             :marked="!!entry.id && marked === entry.id"
+            :people="peopleFor(entry)"
             @follow="follow"
+            @person="readLife"
           />
+          <button v-if="historyDestination === entry.id && historyName" type="button" class="quiet small return-life" @click="returnToLife()">{{ plain ? `Return to ${historyName}'s recorded history` : `Back to the recorded life of ${historyName}` }}</button>
         </template>
         <p v-if="!shown.length" class="dim small">
           {{ plain ? 'No Chronicle entries match.' : 'Nothing in the book answers to that.' }}
@@ -405,6 +452,9 @@ const counts = computed(() => ({
 </template>
 
 <style scoped>
+.person-history { border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 16px; }
+.person-history h4 { margin: 0; font-size: var(--t-card); font-weight: 400; }
+.return-life { min-height: 44px; margin-bottom: 8px; text-align: left; }
 .scrim {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
