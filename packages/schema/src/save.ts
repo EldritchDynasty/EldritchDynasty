@@ -638,6 +638,9 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     fill: SlotFillS,
     choices: z.array(DecisionChoiceS),
     cast: z.array(CastRequestS),
+    // Optional additive metadata, not a new format. Missing legacy data must
+    // remain unknown; [] is an explicitly recorded draw with no preset slots.
+    preset: z.array(z.string()).optional(),
     /**
      * #1380: a pending decision must retain who actually takes its branch.
      * Legacy current-format saves lack these properties; the union transform

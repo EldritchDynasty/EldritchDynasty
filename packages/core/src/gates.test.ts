@@ -39,9 +39,10 @@ const content = loadContent();
 
 describe('live guarded reach in the canonical batch (#1817)', () => {
   it('keeps Table orders out of gate-batch play and the steward (#1930)', () => {
-    // Forcing orders fix CHILD, whereas ambient rites draw him. Until the
-    // docket saves that provenance, the canonical policy must stay on the
-    // ambient path. Guard the policy entry points as well as the steward.
+    // Forcing orders fix CHILD, whereas ambient rites draw him. Their saved
+    // provenance is covered separately (#1951); introducing orders here would
+    // change the declared canonical policy and its exposure denominators.
+    // Guard the policy entry points as well as the steward.
     for (const path of ['tools/gate-batch.ts', 'sim.ts', 'year/phases.ts']) {
       const source = readFileSync(join(import.meta.dirname, path), 'utf8');
       expect(source, path).not.toMatch(/\bforcingRite\b|\bforcing-policy\b|\border\s*\(/);

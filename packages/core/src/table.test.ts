@@ -12,11 +12,15 @@ import {
   MAX_BOND, type SimCtx, type TableOrder,
   bootstrap, foremostOf, heirApparent, knownSuccession, MUNDANE_AGE, genomeOf, phenotypeOf, rollAwakening,
   pickOutcome, resolveChoice, outcomeAdmits,
+  canonical, GameSession, queueChoice,
 } from '@ed/core';
 import type { Person } from '@ed/schema';
 import { coreMessageAddress } from './messages.js';
 import { plainEnglishWorklist } from './tools/string-audit.js';
 import * as library from './people/library.js';
+import { declaredOutcomes, emptyReach, observeGuardedOutcome, readRun } from './events/reach.js';
+import type { OutcomeObservation } from './events/decisions.js';
+import { judgeOutcomeReachZero } from './tools/outcome-reach-verdict.js';
 
 const bundle = loadContent();
 
@@ -2066,6 +2070,125 @@ function boyWho(ctx: SimCtx, expresses: boolean, age: number, stem: string): Per
 }
 
 const forcingRow = (ctx: SimCtx) => tableView(ctx).forcing.find((r) => r.rite === FORCING.id)!;
+
+describe('forcing-order cast provenance (#1951)', () => {
+  const rites = [
+    { id: 'the_drowning', choice: 'full_count' },
+    { id: 'the_seven_lamp_vigil', choice: 'keep_the_lamps' },
+    { id: 'the_dark_year_fast', choice: 'keep_the_fast' },
+  ];
+
+  function family() {
+    const ctx = forcingHouse(1951);
+    const plain = boyWho(ctx, false, 12, 'Chosen ordinary boy');
+    const blooded = boyWho(ctx, true, 12, 'Unrelated expressive boy');
+    const other = boyWho(ctx, false, 12, 'Other ordinary boy');
+    return { ctx, plain, blooded, other };
+  }
+
+  it.each(rites)('$id retains the ordered CHILD across JSON save/load', rite => {
+    const { ctx, plain } = family();
+    const game = new GameSession(ctx);
+    expect(game.order({ kind: 'forcingRite', rite: rite.id, person: plain.id }).ok).toBe(true);
+    const saved = JSON.parse(JSON.stringify(game.save()));
+    expect(saved.pendingDecisions[0].preset).toEqual(['CHILD']);
+    const input = structuredClone(saved);
+    const resumed = resumeGame(saved, forcingBundle);
+    expect(canonical(resumed.save())).toBe(canonical(game.save()));
+    const pending = resumed.pending[0]!;
+    if (pending.kind !== 'choice') throw new Error('forcing choice required');
+    const into = emptyReach();
+    let observed: OutcomeObservation | undefined;
+    resumed.ctx.observeOutcome = observation => {
+      observed = observation;
+      observeGuardedOutcome(resumed.ctx, observation, into);
+    };
+    expect(resumed.choose(pending.id, rite.choice).ok).toBe(true);
+    const key = `${rite.id}|${rite.choice}|woke`;
+    expect(observed!.preset).toEqual(['CHILD']);
+    expect(observed!.fill.CHILD).toBe(plain.id);
+    expect(into.guarded!.expected.get(key)).toBe(0);
+    expect(into.guarded!.poolExpected!.get(key)).toBe(0);
+    expect(into.guarded!.poolUnknown?.get(key) ?? 0).toBe(0);
+    readRun(resumed.ctx, into);
+    expect(judgeOutcomeReachZero(key, declaredOutcomes(resumed.ctx.content).get(key)!, into, 1).why)
+      .toContain('no eligible cast in any pool');
+    expect(saved).toEqual(input);
+  });
+
+  it('retains the real uniform pool when the same rite is docketed ambiently', () => {
+    const { ctx, plain, blooded, other } = family();
+    const event = ctx.content.mustEvent('the_dark_year_fast');
+    expect(candidatesFor(event.slots.CHILD!, ctx, {}).map(person => person.id).sort())
+      .toEqual([plain.id, blooded.id, other.id].sort());
+    // A mechanism witness: use the real uniform resolver on a draw that
+    // misses the expressive boy, without changing its casting algorithm.
+    let slots: ReturnType<typeof resolveSlots> | undefined;
+    for (let seed = 0; seed < 30; seed++) {
+      const candidate = resolveSlots(event, ctx, testRng('ambient-preset', seed));
+      if (candidate.fill.CHILD === plain.id) { slots = candidate; break; }
+    }
+    expect(slots?.ok).toBe(true);
+    const pending = queueChoice(ctx, event, event.body, slots!.fill, slots!.playerCast);
+    const resumed = resumeGame(JSON.parse(JSON.stringify(saveGame(ctx))), forcingBundle);
+    const into = emptyReach();
+    resumed.ctx.observeOutcome = observation => observeGuardedOutcome(resumed.ctx, observation, into);
+    expect(resumed.choose(pending.id, 'keep_the_fast').ok).toBe(true);
+    const key = 'the_dark_year_fast|keep_the_fast|woke';
+    expect(into.guarded!.expected.get(key)).toBe(0);
+    expect(into.guarded!.poolExpected!.get(key)).toBeCloseTo((1 / 3) * (52 / 100), 9);
+    expect(into.guarded!.poolUnknown?.get(key) ?? 0).toBe(0);
+  });
+
+  it('does not invent the missing provenance of a legacy forcing docket', () => {
+    const { ctx, plain } = family();
+    const game = new GameSession(ctx);
+    expect(game.order({ kind: 'forcingRite', rite: 'the_dark_year_fast', person: plain.id }).ok).toBe(true);
+    const saved = JSON.parse(JSON.stringify(game.save()));
+    delete saved.pendingDecisions[0].preset;
+    const resumed = resumeGame(saved, forcingBundle);
+    const pending = resumed.pending[0]!;
+    if (pending.kind !== 'choice') throw new Error('forcing choice required');
+    expect(pending.preset).toBeUndefined();
+    const into = emptyReach();
+    let observed: OutcomeObservation | undefined;
+    resumed.ctx.observeOutcome = observation => {
+      observed = observation;
+      observeGuardedOutcome(resumed.ctx, observation, into);
+    };
+    expect(resumed.choose(pending.id, 'keep_the_fast').ok).toBe(true);
+    const key = 'the_dark_year_fast|keep_the_fast|woke';
+    expect(observed!.presetKnown).toBe(false);
+    expect(into.guarded!.expected.get(key)).toBe(0);
+    expect(into.guarded!.poolExpected!.has(key)).toBe(false);
+    expect(into.guarded!.poolUnknown!.get(key)).toBe(1);
+    readRun(resumed.ctx, into);
+    const verdict = judgeOutcomeReachZero(key, declaredOutcomes(resumed.ctx.content).get(key)!, into, 1);
+    expect(verdict.kind).toBe('unproven');
+    expect(verdict.why).toContain('provenance unavailable');
+  });
+
+  it('keeps complete saves identical with no, before, or applied observers', () => {
+    const play = (observe: 'none' | 'before' | 'after') => {
+      const { ctx, plain } = family();
+      const game = new GameSession(ctx);
+      expect(game.order({ kind: 'forcingRite', rite: 'the_dark_year_fast', person: plain.id }).ok).toBe(true);
+      const resumed = resumeGame(JSON.parse(JSON.stringify(game.save())), forcingBundle);
+      const pending = resumed.pending[0]!;
+      const listen = (observation: OutcomeObservation) => {
+        expect(observation.preset).toEqual(['CHILD']);
+        // An observer owns its copy, not the docket's saved provenance.
+        (observation.preset as string[]).push('observer-only');
+      };
+      if (observe === 'before') resumed.ctx.observeOutcome = listen;
+      if (observe === 'after') resumed.ctx.observeAppliedOutcome = listen;
+      expect(resumed.choose(pending.id, 'keep_the_fast').ok).toBe(true);
+      return canonical(resumed.save());
+    };
+    expect(play('before')).toBe(play('none'));
+    expect(play('after')).toBe(play('none'));
+  });
+});
 
 describe('authored forcing odds and paid failures (#1817)', () => {
   const rites = [

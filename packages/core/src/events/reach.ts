@@ -716,6 +716,8 @@ export interface Reach {
      * reads that as nothing whenever the pick went the other way.
      */
     poolExpected?: Map<string, number>;
+    /** Firings whose original cast provenance was not recorded. Pool sums omit them. */
+    poolUnknown?: Map<string, number>;
   };
   /** Sum over firings of each checked outcome's chance under the actual cast's reading. */
   checked?: { expected: Map<string, number> };
@@ -754,16 +756,20 @@ export function observeGuardedOutcome(ctx: SimCtx, observation: OutcomeObservati
     ? event.interaction.outcomes
     : event.interaction.choices.find((choice) => choice.id === choiceId)?.outcomes;
   if (!group?.some((outcome) => outcome.onlyIf)) return;
-  const guarded = into.guarded ??= { opportunities: new Map(), expected: new Map(), poolExpected: new Map() };
+  const guarded: NonNullable<Reach['guarded']> = into.guarded ??= { opportunities: new Map(), expected: new Map(), poolExpected: new Map() };
   const poolExpected = guarded.poolExpected ??= new Map<string, number>();
   const shares = guardedShares(ctx, event, group, fill);
-  const pool = poolShares(ctx, event, group, fill, observation.preset);
+  const pool = poolShares(ctx, event, group, fill, observation.preset, observation.presetKnown);
   for (const outcome of group) {
     const key = outcomeKey(String(event.id), choiceId, outcome.id);
     const share = shares.get(outcome) ?? 0;
     guarded.opportunities.set(key, (guarded.opportunities.get(key) ?? 0) + Number(share > 0));
     guarded.expected.set(key, (guarded.expected.get(key) ?? 0) + share);
-    poolExpected.set(key, (poolExpected.get(key) ?? 0) + (pool.get(outcome) ?? 0));
+    if (pool) poolExpected.set(key, (poolExpected.get(key) ?? 0) + (pool.get(outcome) ?? 0));
+    else {
+      const unknown = guarded.poolUnknown ??= new Map<string, number>();
+      unknown.set(key, (unknown.get(key) ?? 0) + 1);
+    }
   }
 }
 
@@ -781,10 +787,12 @@ function guardedShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcom
  * unless it has a `select` or was supplied as a runtime preset. Those slots
  * are already fixed to the actual cast. Reads the world and draws nothing.
  */
-function poolShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill, preset?: readonly string[]): Map<Outcome, number> {
+function poolShares(ctx: SimCtx, event: EventTemplate, group: readonly Outcome[], fill: SlotFill,
+  preset?: readonly string[], presetKnown = true): Map<Outcome, number> | undefined {
   const slot = group.find((outcome) => outcome.onlyIf)!.onlyIf!.slot;
   const spec = event.slots[slot];
   if (!spec || spec.select || preset?.includes(slot)) return guardedShares(ctx, event, group, fill);
+  if (!presetKnown) return undefined;
   const others: SlotFill = { ...fill };
   delete others[slot];
   const candidates = candidatesFor(spec, ctx, others);

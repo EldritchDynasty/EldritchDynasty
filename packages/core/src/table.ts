@@ -735,7 +735,8 @@ function carryOut(ctx: SimCtx, o: TableOrder): OrderResult {
       if (!prepared.ok || !prepared.event || !prepared.slots) {
         return { ok: false, reason: prepared.reason ?? msg(ctx, 'table.forcing.order_fallback', 'the rite cannot be tried on him') };
       }
-      queueChoice(ctx, prepared.event, prepared.event.body, prepared.slots.fill, prepared.slots.playerCast);
+      queueChoice(ctx, prepared.event, prepared.event.body, prepared.slots.fill, prepared.slots.playerCast,
+        undefined, [prepared.event.forcing!.slot]);
       return { ok: true };
     }
 
