@@ -195,8 +195,10 @@ function semantics(rows: readonly LoggedDecision[]) {
   });
 }
 
-/** Drive the existing public verbs, verifying each newly generated chunk once. */
-function replayInputs(ctx: SimCtx, log: readonly LoggedDecision[], startYear: number, years: number,
+/** Drive the existing public verbs, verifying each newly generated chunk once.
+ * Internal export for constructed-state scenarios; not part of the package barrel.
+ */
+export function replayInputs(ctx: SimCtx, log: readonly LoggedDecision[], startYear: number, years: number,
   proseVariants: readonly ProseVariant[]): void {
   if (!Number.isFinite(years) || years < 0) throw new ReplayInputFailure({ kind: 'bad_horizon' });
   const until = startYear + Math.ceil(years);

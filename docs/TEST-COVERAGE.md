@@ -502,3 +502,40 @@ rather than merely unseen. The probe had passed `autoResolve: true` to
 ignored, the default parked the run on the first decision, and `advance(1000)`
 turned about four years. A measurement harness is code, and a startling number
 is a reason to check the harness before the game.
+
+## Public-session scenarios — 27 October 2026 (#1937)
+
+For a short executable session example, use the maintained catalogue:
+
+```bash
+npm run scenario -- --list
+npm run scenario -- succession-regency
+npm run scenario -- docket-blocks-clock
+npm run scenario -- mystic-paid-practice
+npm run scenario -- pending-arc-resume
+```
+
+The [scenario definitions](../packages/core/src/fixtures/scenarios.ts) construct exact
+states with `testing.ts`, enter through `saveGame` → `resumeGame`, then drive
+public `GameSession` commands. They cover minority and Regency, an unanswered
+choice stopping the clock, a learned reader's paid provision savings, and a
+pending story delivering its consequence once. Each takes one to four years;
+none waits for an arbitrary seed to produce its premise.
+
+At every checkpoint, uninterrupted play, JSON save/resume and the production
+command-replay driver must agree on the complete canonical save and `digestOf`.
+Failures name the first divergent path. An additional live-world walk checks
+shared id-bearing objects before and after loading, excluding derived phenotype
+caches. Equal JSON alone cannot detect an orphaned arc instance.
+
+The same catalogue runs in [replay.test.ts](../packages/core/src/replay.test.ts)
+in both prose modes, alongside the founder-charter and diagnostic regressions.
+It stays in that existing fast suite because adding a file would exceed the
+current unmeasured-suite budget; no timing data or lane thresholds are changed.
+Full seed-bootstrap replay remains covered by the surrounding replay tests.
+
+The pending-story checks were also run against `8b09dbee`, before #1940: the
+identity check rejected `arcs["arc_2"] ↔ pendingDecisions[0].arcStep.instance`,
+and a separate continuation probe rejected the answer for failing to advance
+the authoritative instance. On the corrected head the scenario passes. These
+are mechanism checks, not campaign-reach measurements or human playtests.

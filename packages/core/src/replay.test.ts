@@ -1,3 +1,8 @@
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { pendingArc } from './fixtures/pending-arc.fixture.js';
+import { isRegent } from './world.js';
+import { assertSameWorld, assertSharedIdentity, firstDifference, runScenario, SCENARIOS } from './fixtures/scenarios.js';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId, LoggedDecisionS, SessionCommandS } from '@ed/schema';
@@ -289,5 +294,92 @@ describe('public session input replay (#1910)', () => {
     expect(SessionCommandS.safeParse(command).success).toBe(true);
     expect(SessionCommandS.safeParse({ kind: 'order', order: { kind: 'absent' } }).success).toBe(false);
     expect(describeDecision({ kind: 'command', year: 1042, command })).toBe('1042  input order');
+  });
+});
+
+describe('named public-session scenarios (#1937)', () => {
+  it('keeps the constructed-state runner outside the public barrel', async () => {
+    const core = await import('@ed/core');
+    expect(core).not.toHaveProperty('replayInputs');
+    expect(core).not.toHaveProperty('SCENARIOS');
+    expect(core).not.toHaveProperty('runScenario');
+  });
+
+  for (const scenario of SCENARIOS) {
+    it.each(['original', 'plainenglish'] as const)(`${scenario.name} continues through JSON resume and command replay in %s`, mode => {
+      const result = runScenario(scenario, content, mode);
+      expect(result.years).toBeGreaterThan(0);
+      expect(result.transcript).toHaveLength(scenario.steps.length);
+      if (scenario.name === 'pending-arc-resume') expect(result.aliases).toBeGreaterThan(0);
+    });
+  }
+
+  it('keeps the founder charter distinct from a later female successor', () => {
+    const s = newGame(content, { seed: 1937 });
+    expect(s.found({ houseName: 'The House of Wren', heirloom: 'portion_of_agelessness', grudge: 'house_marrow', friends: [],
+      founder: { name: 'Wren', gender: 'woman', configuration: 'blood_mother' } }).ok).toBe(true);
+    const founder = s.ctx.world.people.mustGet(s.ctx.world.narrator!);
+    expect(founder.sex).toBe('female');
+    expect(founder.castSlots).toContain('head');
+    expect(isRegent(s.ctx.world, founder)).toBe(false);
+    expect(s.view().halls.flatMap(h => h.members).find(p => p.head)?.name).toBe('Wren');
+  });
+
+  it('detects an orphaned arc even when every saved value is equal', () => {
+    const { ctx } = pendingArc(content);
+    const restored = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    expect(assertSharedIdentity(ctx.world, restored.world)).toBeGreaterThan(0);
+    const before = canonical(saveGame(restored));
+    const pending = restored.world.pendingDecisions[0]!;
+    if (pending.kind !== 'choice') throw new Error('expected the fixture choice');
+    pending.arcStep!.instance = structuredClone(pending.arcStep!.instance);
+    expect(canonical(saveGame(restored))).toBe(before);
+    expect(() => assertSharedIdentity(ctx.world, restored.world))
+      .toThrow(/shared identity lost:.*arcs.*pendingDecisions\[0\].arcStep.instance/);
+  });
+
+  it('finds arbitrary id-bearing aliases through nested objects, arrays and Maps', () => {
+    const shared = { id: 'next-shared-object', count: 1 };
+    const original = { index: new Map([['one', shared]]), queue: [{ nested: shared }] };
+    const restored = structuredClone(original);
+    expect(assertSharedIdentity(original, restored)).toBe(1);
+    restored.queue[0]!.nested = { ...shared };
+    expect(() => assertSharedIdentity(original, restored)).toThrow(/index\["one"\].*queue\[0\].nested/);
+  });
+
+  it('reports the first meaningful path in a full canonical save', () => {
+    const { ctx } = pendingArc(content);
+    const restored = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    restored.world.arcs.values().next().value!.node = 'another_node';
+    expect(() => assertSameWorld(ctx, restored, 'continuation')).toThrow(/first divergence at arcs\[0\]\[1\].node/);
+    expect(firstDifference({ a: [] }, { a: {} })?.path).toBe('a');
+    expect(firstDifference({ a: undefined }, {})?.path).toBe('a');
+    expect(firstDifference({ a: [1, 2] }, { a: [1, 3] })).toEqual({ path: 'a[1]', expected: 2, actual: 3 });
+  });
+
+  it('replay checks regenerated output rather than copying the recorded log', () => {
+    const fixture = SCENARIOS.find(s => s.name === 'docket-blocks-clock')!;
+    let builds = 0;
+    expect(() => runScenario({ ...fixture, build(source) {
+      const ctx = fixture.build(source);
+      // The second build is the replay leg; resume uses the original save.
+      // Change its world; a copied log alone could still match.
+      if (++builds === 2) ctx.world.treasury += 1;
+      return ctx;
+    } }, content)).toThrow(/replay.*first divergence at treasury/);
+  });
+
+  it('lists and executes the same catalogue through the portable launcher', () => {
+    const root = fileURLToPath(new URL('../../../', import.meta.url));
+    const cli = fileURLToPath(new URL('../../../tools/scenario.mjs', import.meta.url));
+    const listed = spawnSync(process.execPath, [cli, '--list'], { cwd: root, encoding: 'utf8' });
+    expect(listed.status, listed.stderr).toBe(0);
+    for (const scenario of SCENARIOS) expect(listed.stdout).toContain(`${scenario.name}:`);
+    const executed = spawnSync(process.execPath, [cli, 'pending-arc-resume'], { cwd: root, encoding: 'utf8' });
+    expect(executed.status, executed.stderr).toBe(0);
+    expect(executed.stdout).toContain('pending-arc-resume: PASS');
+    const invalid = spawnSync(process.execPath, [cli, 'missing-scenario'], { cwd: root, encoding: 'utf8' });
+    expect(invalid.status).toBe(1);
+    expect(invalid.stderr).toContain('Usage: npm run scenario');
   });
 });
