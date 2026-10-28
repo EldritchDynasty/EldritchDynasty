@@ -93,3 +93,28 @@ export function routesForPaths(map, paths) {
   return map.entries.filter((entry) => entry.paths.some((mapped) => paths.some((path) =>
     mapped.endsWith('/') ? normalize(path).startsWith(mapped) : normalize(path) === mapped)));
 }
+
+/** Preserve the canonical reading routes verbatim; never copy their sections. */
+export function parseTaskRoutes(markdown, { source = 'AGENTS.md' } = {}) {
+  const entries = [];
+  const problems = [];
+  let inside = false;
+  for (const [offset, line] of markdown.split(/\r?\n/).entries()) {
+    if (/^## Task routes\s*$/.test(line)) { inside = true; continue; }
+    if (!inside) continue;
+    if (/^## /.test(line)) break;
+    if (!line.startsWith('|') || /^\|\s*(?:Task\s*\||[-:])/i.test(line)) continue;
+    const cells = line.slice(1, -1).split('|').map((cell) => cell.trim());
+    if (!line.endsWith('|') || cells.length !== 2 || !cells[0] || !cells[1]) {
+      problems.push({ line: offset + 1, reason: 'Malformed task reading-route row' });
+      continue;
+    }
+    const [task, reading] = cells;
+    const links = [...reading.matchAll(/\[([^\]]+)\]\(([^)]+)\)/g)]
+      .map((m) => ({ label: m[1], path: m[2] }));
+    entries.push({ task, reading, links, source, line: offset + 1,
+      guides: links.map((link) => link.path.split('#')[0]).filter((path) => /^packages\/[^/]+\/AGENTS\.md$/.test(path)) });
+  }
+  if (!entries.length) problems.push({ reason: 'Task routes are missing or empty' });
+  return { source, entries, problems };
+}

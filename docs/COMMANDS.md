@@ -14,6 +14,7 @@ npm run setup        # what the SessionStart hook runs: `npm ci` when node_modul
                      # `-- --browser` adds Playwright's Chromium, launched to prove it.
 npm run doctor       # read-only: Node vs .nvmrc, dependency freshness, Chromium,
                      # hook wiring, main's CI verdict, each with its fix. `-- --json`
+npm run brief -- --issue 1938 --issue-file <snapshot.json>  # read-only task brief
 
 # Measured on a four-core container, and perishable. Re-measure before quoting.
 npm run check        # typecheck (vue-tsc too) + validate + test;
@@ -146,6 +147,53 @@ The [landing contract below](#the-landing) explains the automatic queue and
 the distinction between a local preflight, PR CI and integration CI. The
 janitor retires claims after landing; a surviving branch alone does not mean
 work is still in flight.
+
+### Prepare an issue brief
+
+`npm run brief -- --issue N --issue-file <snapshot.json>` assembles a starting
+brief from the issue, tracked paths, the architecture owner map, package guides,
+the root Task routes, cached claims and the existing verification planner.
+It reads local data only: it does not fetch, claim, edit, run checks, pick a
+branch, post a comment or change the tracker. A brief does not authorize work
+or replace the instructions it links.
+
+For Claude, Codex and sessions whose GitHub access is through the connector:
+read the issue through that connector and save its JSON in the execution
+workspace. The command accepts the issue object, an `issue` wrapper, or the
+whole connector response with `structuredContent.issue`. Both `number` and
+the connector's `issue_number` are supported. There is no live-fetch fallback
+and no GitHub credential is required.
+
+```bash
+npm run brief -- --issue 1938 --issue-file /path/to/snapshot.json
+npm --silent run brief -- --issue 1938 --issue-file /path/to/snapshot.json --json > brief.json
+```
+
+Markdown and JSON render one data object. Markdown keeps the acceptance section
+verbatim and bounds the rest of the view; it names omitted entries and points
+to `--json`. If acceptance alone exceeds the Markdown budget, use JSON to keep
+it intact. Resolved, ambiguous, missing and unsafe paths carry their original
+issue lines. A line citation outside today's file, or a named function absent
+from its cited span, is a gap to review, not a guessed correction.
+
+Issue/dependency state from a file is stale. An optional outer `fetchedAt` ISO
+timestamp is preserved when supplied; otherwise it is unknown, and `loadedAt`
+is explicitly a different clock. File modification time is not used as a fetch
+time. HEAD names the committed revision; routing and citation checks read the
+current tracked working-tree files, which may include local edits.
+
+Claims are read from cached refs without refreshing them, even if the cache
+looks recent. Refresh with `npm run agents` before claiming/editing, obtain
+current blocker states from the tracker, then run `npm run agents -- check`
+before a long check. Verification advice comes from `planFor` and separates
+local checks, required integration CI and scheduled evidence; it is based on
+referenced/proposed paths rather than an actual implementation diff.
+
+A session with no executor cannot run this Node command. It can save the
+connector snapshot and hand it to an executor-equipped session, requesting the
+result with its source, revision and freshness fields. Until then, read the
+linked guides and follow the [connector claim transport](PARALLEL.md); do not
+represent a manually assembled summary as generated output.
 
 ## The landing
 

@@ -738,3 +738,51 @@ package guide" line still matters for Claude as well as Codex. The tooling
 route needs no shim: `tools/` and `docs/` are reached from the always-loaded
 root Task routes. Scratch probes were removed; no tracked file but this log
 changed.
+
+## 28 October 2026 — read-only issue briefs (#1938)
+
+Baseline: `48ebeaadeb98d6d4c7ad067e8b9adc1b81fba463`, after #1935's live
+Claude loading verification. `npm run brief -- --issue N --issue-file <json>`
+now assembles task preparation from a saved tracker response and local data.
+It has no live-fetch fallback and requires no GitHub credential. Whole connector
+responses, issue wrappers and plain issue objects are supported, including the
+connector's `issue_number` field.
+
+One brief object drives complete JSON and bounded Markdown. Acceptance headings
+and text are preserved verbatim; the real save issue's heading is “Expected
+behavior and acceptance.” Markdown names abbreviated entries and refers to JSON;
+acceptance too large for that view produces an actionable JSON recommendation
+instead of truncation. References retain source lines, ambiguous suffixes retain
+all candidates, and missing/new paths remain missing. Citation checks flag
+out-of-range lines and named functions absent from their cited span; ordinary
+quoted event metadata is not treated as a function declaration.
+
+The existing architecture parser and `planFor` are reused. The shared map module
+also parses the root Task routes without copying their design sections. The
+claim CLI now calls an exported pure NUL-record parser and a reusable cached-ref
+reader; importing it no longer runs the CLI. Existing canonical/legacy path
+formats, tombstones and malformed-claim handling remain covered by the original
+42 agent tests, unchanged. The brief reads local claim objects without fetching,
+optional index locks or partial-clone lazy fetches; it does not claim work,
+choose a branch, edit files, run verification or write to the tracker.
+
+Freshness is explicit: issue snapshots and cached claims are stale, referenced
+issue/PR state is unverified, absent labels are unknown rather than an invented
+empty list, and missing fetch timestamps are not replaced with file mtime.
+`loadedAt` is a separate clock. HEAD identifies the committed revision; routes
+and citations read tracked working-tree files, including local edits. A brief
+does not authorize implementation. Agents still refresh the tracker and
+`npm run agents` before editing and use `npm run agents -- check` before a
+long run. The commands/parallel guides document those boundaries and handoff
+from a session without an executor; this is not another mandatory manual.
+
+Evidence: real issue JSON fixtures cover content (#1946), save continuation
+(#1932) and tooling (#1936). They are dated source snapshots, not current tracker
+authority. Tests exercise both views, en-dash citations, globs, ambiguous/missing
+paths, malformed input, claim ages, stale data and unchanged worktree/index/ref/
+branch state with an unreachable origin and no GitHub token. The 287 focused
+tests across codemap, claims, permissions, landing and portability passed; core
+typecheck and a final 224-test focused rerun also passed under Node 22.23.4 on
+Linux. The PR records the required committed-head preflight and integration CI;
+Windows execution remains with its existing CI job. No simulation/content,
+test-lane threshold, generated timing table or landing policy changed.

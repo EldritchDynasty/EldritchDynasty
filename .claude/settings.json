@@ -48,6 +48,8 @@
       "Bash(npm run scoreboard:*)",
       "Bash(npm run agents:*)",
       "Bash(npm run agents)",
+      "Bash(npm run brief:*)",
+      "Bash(npm run brief)",
       "Bash(git status:*)",
       "Bash(git log:*)",
       "Bash(git diff:*)",
