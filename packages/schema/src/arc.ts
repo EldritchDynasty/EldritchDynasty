@@ -130,6 +130,8 @@ export interface ArcInstance {
   localFlags: Record<string, string | number | boolean>;
   startedYear: number;
   dueYear?: number;
+  /** Exact page that launched an inline continuation. Absent in older saves. */
+  cause?: { year: number; page?: string };
   /** `choice` is which branch was taken; absent for a node that was narration. */
   history: { node: string; outcome: string; choice?: string; year: number }[];
   status: 'active' | 'ended' | 'cancelled' | 'expired';

@@ -221,7 +221,10 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
     case 'chronicle': w.chronicle.push({
       year: w.year, weight: 'line', text: renderBody(renderProse(ctx, scope.proseAddress, eff.text), fill, ctx), named: false,
     }); break;
-    case 'schedule': w.scheduled.push({ event: eff.event, year: w.year + eff.inYears }); break;
+    case 'schedule':
+      w.scheduled.push({ event: eff.event, year: w.year + eff.inYears,
+        ...(scope.page ? { cause: { year: w.year, page: scope.page } } : {}) });
+      break;
     case 'relationship': {
       // This case used to say "handled by its own subsystem" and break. There
       // was no subsystem: four authored outcomes, including the seal feud's

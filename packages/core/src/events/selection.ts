@@ -1,6 +1,6 @@
 import type { Condition, EventTemplate, Frequency, Modifier } from '@ed/schema';
 import { FREQUENCY_PROFILES, assertNever, canTemplateFire, eventInCampaign, frequencyWeight, templateRationAllows } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import type { ChronicleEntry, SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import type { Rng } from '../rng.js';
@@ -11,6 +11,8 @@ export interface Candidate {
   fill: SlotFill;
   playerCast: string[];
   source: 'forced' | 'pressure' | 'ambient';
+  /** The exact act that scheduled this candidate; absent for legacy promises. */
+  cause?: ChronicleEntry['cause'];
 }
 
 export type SelectionObservation = { readonly year: number } & (
@@ -340,7 +342,8 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
     if (evalCondition(e.conditions, ctx)) {
       const res = resolveSlots(e, ctx, rng);
       if (res.ok) {
-        out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced' });
+        out.push({ event: e, fill: res.fill, playerCast: res.playerCast, source: 'forced',
+          ...(s.cause ? { cause: { ...s.cause } } : {}) });
         continue;
       }
       ctx.observeSelection?.({ kind: 'cast_failure', year: w.year, event: String(e.id), source: 'forced', missing: res.missing });
@@ -348,7 +351,7 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
     // Reconsider in five years, with the original due year as the patience
     // anchor so an unreachable event cannot be postponed indefinitely.
     const first = s.first ?? s.year;
-    if (w.year - first < SCHEDULE_PATIENCE) w.scheduled.push({ event: s.event, year: w.year + 5, first });
+    if (w.year - first < SCHEDULE_PATIENCE) w.scheduled.push({ ...s, year: w.year + 5, first });
   }
 
   return out;

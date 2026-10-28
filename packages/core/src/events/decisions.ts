@@ -76,6 +76,8 @@ export interface PendingChoice {
   cast: CastRequest[];
   /** Presets for forcing/explicit casts; missing legacy forcing provenance stays unknown. */
   preset?: string[];
+  /** The page/year of the act that scheduled this still-unanswered scene. */
+  cause?: ChronicleEntry['cause'];
   /**
    * Who takes the branch (`schema/src/decider.ts`). A client reads this to know
    * WHAT it is being asked for: `player` means pick a branch, `party` means name
@@ -180,6 +182,7 @@ export function queueChoice(
   playerCast: string[],
   arcStep?: ArcStep,
   preset?: readonly string[],
+  cause?: ChronicleEntry['cause'],
 ): PendingChoice {
   const choices = e.interaction.kind === 'narration' ? [] : e.interaction.choices;
   const decidedBy: Decider = e.interaction.kind === 'narration' ? 'chance' : e.interaction.decidedBy;
@@ -195,6 +198,7 @@ export function queueChoice(
     // Forcing can arrive either from a fixed Table order or an ambient draw.
     // Record [] for the latter; leave unrelated dockets' saved shape alone.
     ...(preset || e.forcing ? { preset: [...(preset ?? [])] } : {}),
+    ...(cause ? { cause: { ...cause } } : {}),
     choices: choices.map((c) => ({
       ...choiceAvailability(c, ctx, fill, e),
       // Tokens render here as they do in the body: a label that names {KIN}
@@ -362,6 +366,7 @@ export function commitOutcome(
   origin: 'ambient' | 'incident' = 'ambient',
   /** null means the original preset/draw distinction is unavailable. */
   preset?: readonly string[] | null,
+  cause?: ChronicleEntry['cause'],
 ): ResolvedEvent {
   const selectedOutcome = outcome;
   const intervention = resolvePrimordial(ctx, e, selectedOutcome, fill,
@@ -391,6 +396,10 @@ export function commitOutcome(
   const resolved = applyOutcome(e, outcome, ctx, fill, { arc: arcStep?.instance }, choiceId);
   if (intervention.record) resolved.primordial = { ...intervention.record, page: resolved.entryId };
   if (arcStep) citeEarlierBeat(ctx, arcStep, resolved.entryId);
+  else if (cause) {
+    const page = latestPage(ctx.world.chronicle, entry => entry.id === resolved.entryId);
+    if (page && !page.cause) page.cause = { ...cause };
+  }
   if (observation) ctx.observeAppliedOutcome?.(observation);
 
   // A boy goes through one forcing rite (§11, #1817), whatever came of it and
@@ -427,7 +436,13 @@ export function commitOutcome(
   ];
   for (const id of arcOps) {
     const arc = ctx.content.arc(id);
-    if (arc) startArc(arc, ctx, rng, fill);
+    if (arc) {
+      const instance = startArc(arc, ctx, rng, fill);
+      // The first inline node IS the follow-up, so there is no earlier node
+      // in its history. Keep the exact launching page rather than searching
+      // by event/year later, when another firing may share both (#1946).
+      if (instance && arc.inline) instance.cause = { year: ctx.world.year, page: resolved.entryId };
+    }
   }
 
   if (arcStep) advanceArc(arcStep, outcome, choiceId, ctx, rng);
@@ -451,9 +466,12 @@ export function commitOutcome(
 function citeEarlierBeat(ctx: SimCtx, step: ArcStep, entryId: string): void {
   const w = ctx.world;
   const previous = step.instance.history.at(-1);
-  if (!previous) return;
   const page = latestPage(w.chronicle, (c) => c.id === entryId);
   if (!page || page.cause) return;
+  if (!previous) {
+    if (step.instance.cause) page.cause = { ...step.instance.cause };
+    return;
+  }
   const event = ctx.content.arc(step.instance.arc)?.nodes.find((n) => n.id === previous.node)?.event;
   const earlier = event === undefined
     ? undefined
@@ -558,7 +576,7 @@ export function resolveChoice(
   drop(ctx, decision);
   const outcome = resolveChoiceOutcome(ctx, e, choice, fill, rng);
   const resolved = commitOutcome(ctx, e, outcome, fill, choice.id, rng, pending.arcStep, undefined,
-    pending.preset ?? (e.forcing ? null : undefined));
+    pending.preset ?? (e.forcing ? null : undefined), pending.cause);
   queueRecord(ctx, resolved.event, resolved.entryId, resolved.fill, choice.id, resolved.outcome.id);
   return { ok: true, resolved };
 }

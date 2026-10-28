@@ -147,6 +147,8 @@ const BATCH_SEED = /\b(bootstrap|bootstrapRun|runYears|newGame|TEST_FAMILIES)\b/
  * exactly the right size to mean something about the gate.
  */
 const DRIVES_A_BATCH: Record<string, string> = {
+  'packages/core/src/tools/story-route-report.test.ts':
+    'route observers and production promises in built worlds; no years or campaign batch',
   'packages/core/src/campaign.test.ts':
     'funnel stage and observer helpers over hand-built worlds only; never calls its campaign batch entry point',
   'packages/core/src/events/reach.test.ts':
