@@ -191,6 +191,20 @@ These are single files that every second feature wants to touch. Declare them in
 
 ## The protocol, end to end
 
+`npm run brief -- --issue N --issue-file <snapshot.json>` is optional read-only
+preparation before this protocol. Save the issue or whole GitHub connector
+response as JSON; no API credential is needed. The brief reuses the architecture,
+root reading routes, claim parser and verification planner. It never takes a
+claim, chooses a branch or resolves a game-design decision. See
+[COMMANDS.md](COMMANDS.md#prepare-an-issue-brief) for the input shapes, bounded
+Markdown/complete JSON output and executor-free handoff.
+
+The snapshot's remote state and the local claim cache are explicitly stale.
+Refresh tracker blockers and `npm run agents` before editing; a brief showing
+no overlapping cached claims does not establish that the paths are free.
+`npm run agents -- check` remains required before the long run. Unknown paths,
+ambiguous suffixes and outdated citations stay gaps until someone resolves them.
+
 1. **Claim before reading code.** Shell: `npm run agents -- take <issue> --paths
    <what you will write>`. Connector-only: create the working branch, then
    comment `/claim <issue> --agent <branch> --paths <what you will write>` —

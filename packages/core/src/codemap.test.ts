@@ -9,6 +9,223 @@ import { SAVE_FORMAT } from '@ed/schema';
 
 const REPO = join(import.meta.dirname, '../../..');
 
+{
+  interface BriefPath {
+    ref: string; status: string; paths: string[]; candidates: string[]; issueLine: number;
+    sourceText: string; range: { start: number; end: number } | null;
+  }
+  interface Brief {
+    issue: { number: number; title: string; body: string; state: string | null; labels: string[] | null };
+    source: { label: string; fetchedAt: string | null; loadedAt: string; stale: boolean };
+    repository: { headSha: string | null };
+    acceptance: { line: number; text: string } | null;
+    paths: BriefPath[];
+    guides: { path: string; certainty: string }[];
+    taskRoutes: { task: string; reading: string }[];
+    authorities: { path: string }[];
+    references: { number: number; kind: string; relation: string; state: string }[];
+    claims: { stale: boolean; refresh: string; active: { slug: string; ageHours: number; overlappingPaths: string[] }[] };
+    gaps: { kind: string; message: string }[];
+    verification: { scope: string; uncertain: boolean; recommendedLocal: { command: string }[]; scheduledEvidence: { command: string }[] };
+  }
+  const tool = await import(pathToFileURL(join(REPO, 'tools/brief.mjs')).href) as {
+    normalizeIssue: (raw: unknown, expected?: number) => { issue: Brief['issue']; gaps: Brief['gaps'] };
+    acceptanceOf: (body: string) => Brief['acceptance'];
+    referencedPaths: (body: string, files: string[]) => BriefPath[];
+    resolveIssuePath: (ref: string, files: string[]) => { status: string; paths: string[]; candidates: string[] };
+    referencedIssues: (body: string, url: string) => Brief['references'];
+    buildBrief: (input: object) => Brief;
+    gatherBrief: (input: { cwd: string; issueNumber: number; issueFile: string; now: number }) => Promise<Brief>;
+    formatBrief: (brief: Brief) => string;
+  };
+  const claimTool = await import(pathToFileURL(join(REPO, 'tools/agents.mjs')).href) as {
+    parseClaims: (text: string, options?: { now: number }) => {
+      slug: string; paths: string[]; released: boolean; malformed: boolean; ageHours: number | null;
+    }[];
+    readCachedClaims: (options: { cwd: string; now: number; strict: boolean }) => object[];
+  };
+  const readingMap = await import(pathToFileURL(join(REPO, 'tools/codemap.mjs')).href) as {
+    parseCodemap: (markdown: string, options: { files: string[] }) => object;
+    parseTaskRoutes: (markdown: string) => { entries: { task: string; reading: string; line: number }[]; problems: object[] };
+  };
+  const NOW = Date.parse('2026-10-28T10:00:00Z');
+  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: REPO, encoding: 'utf8' }).split('\0').filter(Boolean);
+  const agentText = readFileSync(join(REPO, 'AGENTS.md'), 'utf8');
+  const routes = readingMap.parseTaskRoutes(agentText);
+  const map = readingMap.parseCodemap(readFileSync(join(REPO, 'ARCHITECTURE.md'), 'utf8'), { files: tracked });
+  const evidence = JSON.parse(readFileSync(join(REPO, 'tools/ci-evidence.json'), 'utf8'));
+  const snapshot = (body: string) => ({ number: 7, title: 'Fixture issue', body, state: 'open', labels: [], url: 'https://github.com/example/repo/issues/7' });
+  const make = (body: string, extra = {}) => tool.buildBrief({ snapshot: snapshot(body), source: 'file:fixture.json',
+    headSha: 'revision-fixture', files: tracked, map, routes, evidence, agentText, now: NOW, ...extra });
+  const temps: string[] = [];
+  afterAll(() => { for (const path of temps) rmSync(path, { recursive: true, force: true }); });
+
+  describe('read-only issue preparation', () => {
+    it('preserves acceptance text exactly, including CRLF, nested headings and trailing whitespace', () => {
+      const text = '## Expected behavior and acceptance\r\n\r\n- Keep this.  \r\n### Detail\r\nLiteral.\r\n\r\n';
+      expect(tool.acceptanceOf('Before\r\n' + text + '## Next\r\nOther')).toEqual({ line: 2, text });
+      expect(tool.acceptanceOf('No explicit criteria')).toBeNull();
+    });
+
+    it('resolves suffixes, en-dash ranges and globs and exposes every ambiguous or missing candidate', () => {
+      const files = ['packages/core/src/save.ts', 'packages/schema/src/save.ts', 'packages/core/src/events/arcs.ts',
+        'packages/core/AGENTS.md', 'packages/content/AGENTS.md'];
+      const refs = tool.referencedPaths('Change `events/arcs.ts:12–17`, `save.ts`, `new-file.ts` and `packages/*/AGENTS.md`.', files);
+      expect(refs).toHaveLength(4);
+      expect(refs[0]).toMatchObject({ status: 'resolved', range: { start: 12, end: 17 }, issueLine: 1,
+        paths: ['packages/core/src/events/arcs.ts'] });
+      expect(refs[1]).toMatchObject({ status: 'ambiguous', paths: [], candidates: ['packages/core/src/save.ts', 'packages/schema/src/save.ts'] });
+      expect(refs[2]).toMatchObject({ status: 'missing', paths: [], candidates: [] });
+      expect(refs[3]).toMatchObject({ status: 'resolved', paths: ['packages/core/AGENTS.md', 'packages/content/AGENTS.md'] });
+      expect(refs.every((ref) => ref.sourceText.startsWith('Change '))).toBe(true);
+      expect(tool.resolveIssuePath('packages\\core\\src\\save.ts', files).paths).toEqual(['packages/core/src/save.ts']);
+      expect(tool.resolveIssuePath('../save.ts', files).status).toBe('unsafe');
+      expect(tool.resolveIssuePath('C:\\outside\\save.ts', files).status).toBe('unsafe');
+    });
+
+    it('does not turn a mentioned issue into a known remote state or a declared blocker', () => {
+      const refs = tool.referencedIssues('Blocked by #11; mentions PR #12.\nDepends on [#13](https://github.com/example/repo/pull/13).\nSee https://github.com/example/repo/issues/14.', 'https://github.com/example/repo/issues/7');
+      expect(refs.map((ref) => [ref.number, ref.kind, ref.relation])).toEqual([
+        [11, 'issue', 'declared-blocker'], [12, 'pr', 'mentioned'], [13, 'pr', 'declared-blocker'], [14, 'issue', 'mentioned'],
+      ]);
+      expect(refs.every((ref) => ref.state === 'unverified')).toBe(true);
+    });
+
+    it('reuses the claim parser for canonical paths, legacy paths, release receipts and malformed refs', () => {
+      const record = (slug: string, message: string) => `refs/remotes/origin/claim/${slug}\0sha-${slug}\0${message}\0${NOW / 1000 - 7200}\0\n`;
+      const raw = record('11', 'claim 11\n\nagent: alpha\nlane: code\npath: packages/core/src/save.ts\npath: path with spaces\n')
+        + record('12', 'claim 12\nagent: beta\npaths: tools/brief.mjs, docs/COMMANDS.md\n')
+        + record('13', 'claim 13\nreleased: beta\n') + record('14', 'not a claim\nagent: rogue\n');
+      const parsed = claimTool.parseClaims(raw, { now: NOW });
+      expect(parsed[0]).toMatchObject({ slug: '11', paths: ['packages/core/src/save.ts', 'path with spaces'], ageHours: 2, malformed: false });
+      expect(parsed[1]?.paths).toEqual(['tools/brief.mjs', 'docs/COMMANDS.md']);
+      expect(parsed[2]?.released).toBe(true);
+      expect(parsed[3]?.malformed).toBe(true);
+      expect(claimTool.parseClaims(raw)[0]?.ageHours).toBeNull();
+      expect(() => claimTool.parseClaims('incomplete\0record')).toThrow('Incomplete cached claim');
+      const result = make('## Acceptance\nKeep it.\n## Paths\n`packages/core/src/save.ts`', { claims: parsed });
+      expect(result.claims.active).toEqual([expect.objectContaining({ slug: '11', ageHours: 2 })]);
+      expect(result.claims.stale).toBe(true);
+      expect(result.claims.refresh).toContain('npm run agents -- check');
+      expect(result.gaps.some((item) => item.kind === 'malformed-claim')).toBe(true);
+    });
+
+    it('reports obsolete citations, missing acceptance and uncertain ownership without guessing', () => {
+      const body = 'The function `loadGame` is at `core/src/save.ts:2–3`.\nAlso inspect `save.ts:99999` and `new.ts`.';
+      const result = make(body, { sourceContents: { 'packages/core/src/save.ts': 'one\ntwo\nthree\nfunction loadGame() {}\n' } });
+      expect(result.acceptance).toBeNull();
+      expect(result.gaps.map((item) => item.kind)).toEqual(expect.arrayContaining(['acceptance', 'citation-symbol', 'path-ambiguous', 'path-missing']));
+      expect(result.verification.uncertain).toBe(true);
+      expect(result.guides.some((guide) => guide.certainty === 'possible')).toBe(true);
+      expect(make('`core/src/save.ts:99999`', { sourceContents: { 'packages/core/src/save.ts': 'one' } }).gaps)
+        .toEqual(expect.arrayContaining([expect.objectContaining({ kind: 'citation-range' })]));
+      const content = make('`the_scene` (`events/papers.yaml:1`; `head`, `uncommon`, `weight`).', {
+        sourceContents: { 'packages/content/events/papers.yaml': 'id: the_scene\ntier: head\nfrequency: uncommon\nweight: 1\n' },
+      });
+      expect(content.gaps.some((item) => item.kind === 'citation-symbol')).toBe(false);
+    });
+
+    it('takes task-specific reading verbatim from the root table and verification from planFor', () => {
+      expect(routes.problems).toEqual([]);
+      const result = make('## Acceptance\nKeep it.\n## Paths\n`tools/agents.mjs`');
+      expect(result.taskRoutes.map((route) => route.reading)).toEqual([routes.entries.find((route) => /Tooling/.test(route.task))!.reading]);
+      expect(result.authorities).toEqual([]);
+      expect(result.verification.recommendedLocal).toEqual([expect.objectContaining({ command: 'npm run land -- --full-preflight' })]);
+    });
+
+    it('accepts connector wrappers and issue_number while rejecting malformed or mismatched snapshots', () => {
+      const { number, ...rest } = snapshot('Body');
+      expect(tool.normalizeIssue({ structuredContent: { issue: { ...rest, issue_number: number } } }, 7).issue.number).toBe(7);
+      expect(() => tool.normalizeIssue(snapshot('Body'), 99)).toThrow('requested #99');
+      expect(() => tool.normalizeIssue({ title: 'No number' })).toThrow('number');
+      expect(() => tool.normalizeIssue({ number: 7, title: '' })).toThrow('title');
+      const partial = tool.normalizeIssue({ number: 7, title: 'Partial', body: 123 });
+      expect(partial.issue.body).toBe('');
+      expect(partial.gaps.map((item) => item.kind)).toContain('issue-body');
+      const dated = make('## Acceptance\nKeep it.', { snapshot: { ...snapshot('## Acceptance\nKeep it.'), fetchedAt: '2026-10-26T01:02:03Z' } });
+      expect(dated.source.fetchedAt).toBe('2026-10-26T01:02:03Z');
+      expect(dated.source.loadedAt).toBe(new Date(NOW).toISOString());
+      expect(dated.source.stale).toBe(true);
+    });
+
+    it('bounds Markdown and explicitly defers oversized verbatim acceptance to JSON', () => {
+      const result = make('## Acceptance\nKeep it.\n## Paths\n' + Array.from({ length: 300 }, (_, index) => `\`missing-${index}.ts\``).join('\n'));
+      expect(tool.formatBrief(result).split('\n').length).toBeLessThanOrEqual(150);
+      expect(tool.formatBrief(result)).toContain('further entries; use --json');
+      expect(result.paths).toHaveLength(300);
+      expect(() => tool.formatBrief(make('## Acceptance\n' + 'verbatim\n'.repeat(200)))).toThrow('use --json');
+    });
+
+    it.each([
+      { name: 'content', number: 1946, guide: 'packages/content/AGENTS.md' },
+      { name: 'save', number: 1932, guide: 'packages/core/AGENTS.md' },
+      { name: 'tooling', number: 1936, guide: 'AGENTS.md' },
+    ])('prepares the real $name issue through both output views', async ({ name, number, guide }) => {
+      const result = await tool.gatherBrief({ cwd: REPO, issueNumber: number, now: NOW,
+        issueFile: `packages/core/src/tools/fixtures/brief/${name}-${number}.json` });
+      const markdown = tool.formatBrief(result);
+      const json = JSON.parse(JSON.stringify(result)) as Brief;
+      expect(json.issue.number).toBe(number);
+      expect(json.repository.headSha).toBe(execFileSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).trim());
+      expect(json.source.stale).toBe(true);
+      expect(json.source.fetchedAt).toBeNull();
+      expect(json.acceptance?.text).toBeTruthy();
+      expect(markdown).toContain(json.acceptance!.text);
+      expect(json.guides.some((item) => item.path === guide)).toBe(true);
+      expect(json.taskRoutes.length).toBeGreaterThan(0);
+      expect(json.verification.recommendedLocal.length).toBeGreaterThan(0);
+      expect(markdown).toContain(guide);
+      expect(markdown).toContain(json.repository.headSha!);
+      expect(markdown).toContain('Required integration CI');
+      expect(markdown).toContain('Scheduled evidence');
+      expect(markdown.split('\n').length).toBeLessThanOrEqual(150);
+    });
+
+    it('runs the CLI offline without modifying the worktree, index, branch or refs', () => {
+      const cwd = mkdtempSync(join(tmpdir(), 'ed-brief-'));
+      temps.push(cwd);
+      const git = (...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: 'pipe' }).trim();
+      git('init', '-q');
+      git('config', 'user.name', 'Brief fixture');
+      git('config', 'user.email', 'fixture@example.invalid');
+      writeFileSync(join(cwd, 'AGENTS.md'), agentText);
+      writeFileSync(join(cwd, 'ARCHITECTURE.md'), '## Where a thing lives\n| If you are changing | Go to | Guarded by |\n|---|---|---|\n| Fixture | `fixture.ts` | `fixture.test.ts` |\n---\n');
+      writeFileSync(join(cwd, 'fixture.ts'), 'export const n = 1;\n');
+      writeFileSync(join(cwd, 'fixture.test.ts'), '// fixture\n');
+      git('add', '.');
+      git('commit', '-qm', 'Fixture');
+      git('remote', 'add', 'origin', 'http://127.0.0.1:1/no-network');
+      const claimSha = execFileSync('git', ['commit-tree', 'HEAD^{tree}'], { cwd, input: 'claim 8\n\nagent: other\nlane: code\npath: fixture.ts\n', encoding: 'utf8' }).trim();
+      git('update-ref', 'refs/remotes/origin/claim/8', claimSha);
+      const inputDir = mkdtempSync(join(tmpdir(), 'ed-brief-input-'));
+      temps.push(inputDir);
+      const issueFile = join(inputDir, 'issue with spaces.json');
+      writeFileSync(issueFile, JSON.stringify(snapshot('## Acceptance\nPreserve me.\n## Files\n`fixture.ts`')));
+      const before = { status: git('status', '--porcelain'), refs: git('show-ref'), head: git('rev-parse', 'HEAD'),
+        files: readdirSync(cwd).sort(), index: createHash('sha256').update(readFileSync(join(cwd, '.git/index'))).digest('hex') };
+      const run = (...args: string[]) => spawnSync(process.execPath, [join(REPO, 'tools/brief.mjs'), ...args], { cwd, encoding: 'utf8',
+        env: { ...process.env, GITHUB_TOKEN: '', GH_TOKEN: '', GIT_TERMINAL_PROMPT: '0' }, timeout: 15000 });
+      const result = run('--issue', '7', '--issue-file', issueFile, '--json');
+      expect(result.status, result.stderr).toBe(0);
+      const data = JSON.parse(result.stdout) as Brief;
+      expect(data.source.label).toBe(`file:${issueFile}`);
+      expect(data.claims.active[0]?.slug).toBe('8');
+      expect(data.source.fetchedAt).toBeNull();
+      expect(data.repository.headSha).toBe(before.head);
+      const human = run('--issue', '7', '--issue-file', issueFile);
+      expect(human.status, human.stderr).toBe(0);
+      expect(human.stdout).toContain(data.acceptance!.text);
+      expect(human.stdout).toContain('claim/8');
+      expect({ status: git('status', '--porcelain'), refs: git('show-ref'), head: git('rev-parse', 'HEAD'),
+        files: readdirSync(cwd).sort(), index: createHash('sha256').update(readFileSync(join(cwd, '.git/index'))).digest('hex') }).toEqual(before);
+      expect(run('--issue', '99', '--issue-file', issueFile).stderr).toContain('requested #99');
+      expect(run('--issue', '7').stderr).toContain('--issue-file');
+      writeFileSync(issueFile, '{bad json');
+      expect(run('--issue', '7', '--issue-file', issueFile).stderr).toContain('Cannot read issue JSON');
+    });
+  });
+}
+
 const mapParser = await import(pathToFileURL(join(REPO, 'tools/codemap.mjs')).href) as {
   parseCodemap: (text: string, options: { files: string[] }) => {
     entries: { paths: string[]; suites: string[] }[]; problems: object[];

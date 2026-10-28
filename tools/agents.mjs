@@ -34,6 +34,8 @@
  *   npm run agents -- steal 93           # only once a claim has gone stale
  */
 import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const NS = 'claim';
 /** A claim older than this is presumed abandoned — a session dies without releasing. */
@@ -115,31 +117,33 @@ function fetchClaims() {
   }
 }
 
-function readRefs() {
-  fetchClaims();
-  const refs = tryGit(['for-each-ref', '--format=%(refname)%09%(objectname)', `refs/remotes/origin/${NS}/`]);
-  if (!refs.ok || !refs.out) return [];
-  return refs.out.split('\n').map((line) => {
-    const [ref, sha] = line.split('\t');
+/** Pure parser for four NUL-delimited fields per cached ref. */
+export function parseClaims(refsText, { now = null } = {}) {
+  const fields = refsText.split('\0');
+  while (fields.length && !fields.at(-1).trim()) fields.pop();
+  if (fields.length % 4) throw new Error('Incomplete cached claim record: expected ref, SHA, message and timestamp.');
+  const records = [];
+  for (let i = 0; i < fields.length; i += 4) {
+    const [ref, sha, message, ts] = [fields[i].trim(), fields[i + 1].trim(), fields[i + 2], fields[i + 3].trim()];
     const slug = ref.slice(`refs/remotes/origin/${NS}/`.length);
-    const body = tryGit(['log', '-1', '--format=%B%x00%ct', sha]).out;
-    const [message = '', ts = '0'] = body.split('\0');
     const field = (k) => (message.match(new RegExp(`^${k}:\\s*(.*)$`, 'm'))?.[1] ?? '').trim();
-    const fields = (k) => [...message.matchAll(new RegExp(`^${k}:\\s*(.*)$`, 'gm'))]
+    const repeated = (k) => [...message.matchAll(new RegExp(`^${k}:\\s*(.*)$`, 'gm'))]
       .map((m) => m[1].trim())
       .filter(Boolean);
     const released = field('released') !== '';
     const claimSlug = message.match(/^claim\s+(\S+)\s*(?:\n|$)/)?.[1] ?? '';
     const agent = field('agent');
-    const canonicalPaths = fields('path');
+    const canonicalPaths = repeated('path');
     // Backward compatibility for every claim written before #250, including
     // claims that accidentally used whitespace instead of commas.
     const legacyPaths = canonicalPaths.length
       ? []
       : field('paths').split(/[,\s]+/).map((p) => p.trim()).filter(Boolean);
-    const malformed = !released && (claimSlug !== slug || !agent);
     const seconds = Number(ts);
-    return {
+    const validTime = ts !== '' && Number.isFinite(seconds) && Number.isFinite(new Date(seconds * 1000).getTime());
+    const malformed = !ref.startsWith(`refs/remotes/origin/${NS}/`)
+      || !validTime || (!released && (claimSlug !== slug || !agent));
+    records.push({
       slug,
       sha,
       malformed,
@@ -153,17 +157,37 @@ function readRefs() {
       lane: field('lane') || 'unspecified',
       paths: canonicalPaths.length ? canonicalPaths : legacyPaths,
       note: field('note'),
-      takenAt: new Date(seconds * 1000).toISOString(),
-      ageHours: (Date.now() / 1000 - seconds) / 3600,
-    };
-  }).sort((a, b) => a.slug.localeCompare(b.slug, undefined, { numeric: true }));
+      takenAt: validTime ? new Date(seconds * 1000).toISOString() : null,
+      ageHours: validTime && Number.isFinite(now) ? (now / 1000 - seconds) / 3600 : null,
+    });
+  }
+  return records.sort((a, b) => a.slug.localeCompare(b.slug, undefined, { numeric: true }));
+}
+
+/** Local objects only: no fetch, optional index lock or partial-clone fetch. */
+export function readCachedClaims({ cwd, now = Date.now(), strict = false } = {}) {
+  const refs = tryGit(['for-each-ref',
+    '--format=%(refname)%00%(objectname)%00%(contents)%00%(committerdate:unix)%00',
+    `refs/remotes/origin/${NS}/`], {
+    cwd, env: { ...process.env, GIT_OPTIONAL_LOCKS: '0', GIT_NO_LAZY_FETCH: '1' },
+  });
+  if (!refs.ok) {
+    if (strict) throw new Error('Cached claim refs could not be read; refresh with npm run agents.');
+    return [];
+  }
+  return parseClaims(refs.out, { now });
+}
+
+function readRefs() {
+  fetchClaims();
+  return readCachedClaims();
 }
 
 /** What is HELD. A tombstoned ref is a free issue with a receipt attached. */
 const readClaims = () => readRefs().filter((c) => !c.released && !c.malformed);
 
 /** Prefix overlap, with a trailing wildcard or slash meaning "and everything under it". */
-const overlaps = (a, b) => {
+export const overlaps = (a, b) => {
   const norm = (p) => p.replace(/\/?\*+$/, '').replace(/\/$/, '');
   const [x, y] = [norm(a), norm(b)];
   return x === y || x.startsWith(`${y}/`) || y.startsWith(`${x}/`);
@@ -180,7 +204,7 @@ const landingLine = (claims) => {
   return issues.length ? issues.map((n, i) => `${i === 0 ? 'Closes' : 'closes'} #${n}`).join(', ') : '';
 };
 
-const age = (h) => (h < 1 ? `${Math.round(h * 60)}m` : h < 48 ? `${h.toFixed(1)}h` : `${(h / 24).toFixed(1)}d`);
+const age = (h) => (!Number.isFinite(h) ? 'unknown' : h < 1 ? `${Math.round(h * 60)}m` : h < 48 ? `${h.toFixed(1)}h` : `${(h / 24).toFixed(1)}d`);
 
 // ---------------------------------------------------------------------------
 
@@ -490,5 +514,7 @@ function check() {
   process.exit(clashes > 0 ? 1 : 0);
 }
 
-const cmd = positional[0] ?? 'list';
-({ list, take, release, steal, check }[cmd] ?? (() => die(`unknown command: ${cmd}`)))();
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  const cmd = positional[0] ?? 'list';
+  ({ list, take, release, steal, check }[cmd] ?? (() => die(`unknown command: ${cmd}`)))();
+}

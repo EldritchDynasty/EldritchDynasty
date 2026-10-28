@@ -42,6 +42,7 @@
     "//2a": "Local landing preflight: fetch, rebase, install and check the branch, then leave a ready PR for auto-merge-queue.yml to land (native merge queue when public, fast-forward when private). The session never pushes main.",
     "land": "node tools/land.mjs",
     "verify": "node tools/verify-plan.mjs",
+    "brief": "node tools/brief.mjs",
     "//2b": "Did CI actually answer? FOUR states — green, red, pending, and absent. Seven landings on main got no verdict at all and looked exactly like passes.",
     "verdict": "node tools/verdict.mjs",
     "//2c": "What the agent loop costs, measured the way the game is. Reads the verdict refs, so it needs no API credential a session does not have.",

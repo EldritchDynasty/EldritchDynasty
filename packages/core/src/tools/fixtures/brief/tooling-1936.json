@@ -1,0 +1,39 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "issue": {
+      "url": "https://github.com/EldritchDynasty/EldritchDynasty/issues/1936",
+      "title": "Recommend focused verification from the diff and existing CI evidence",
+      "issue_number": 1936,
+      "body": "## Problem\n\nThe repository distinguishes `check`, default `land`, full preflight, individual gates, merge-blocking suites and scheduled statistical evidence. That distinction is valuable, but agents must still discover which local checks answer the question their change raises.\n\nThis issue adds an advisory plan for the current change, not another independent definition of CI.\n\nBaseline: `8b09dbeeac3589cde25a6ade9299686325d538c0`.\n\n## What exists at the baseline (verified)\n\n- `tools/land.mjs` `verificationPlan({ fullPreflight })` (line 100) picks between two **fixed** step lists: `SESSION_PREFLIGHT_STEPS` (= `DOCS_ONLY_STEPS`) and `STEPS`. `ciScripts(workflow)` (line 219) derives the scripts CI runs from `check.yml`. Neither looks at the diff.\n- `tools/docs-only.mjs` `classify(files, baseState)` / `landingPlan(base, head)` (lines 65, 103) is the only diff-aware logic, and it splits Markdown from everything else.\n- `tools/ci-evidence.json` (v2) has `jobs`, `gateLanes`, `gates`, `telemetryGates`, `slowSuites`, `gateAssertions`, each with `currentTier` and `proposedTier`. It maps evidence to tiers, **not paths to evidence**.\n- **No path → test mapping exists in code.** The closest thing is `ARCHITECTURE.md` § \"Where a thing lives\": a three-column table, *If you are changing… | Go to | Guarded by*, from source paths to the suites that guard them. It is human-maintained and already the canonical map. Make it the planner's source (shared with #1938) rather than adding a JSON map beside it. If it needs structure, generate the table from data the way `gen:docs` does, so there is still one source.\n- **Import-graph selection is weaker here than it looks.** 133 of 254 test files import the `@ed/core` barrel and 173 import `@ed/content`, so `vitest related` (Vitest 4.1.11 is installed) will relate almost any core change to most of the suite. YAML edits are not in the import graph at all. It is a useful extra signal for leaf modules (`tools/`, client components), not the primary planner. Measure its fan-out on a few real diffs before relying on it.\n\n## Implementation plan\n\n1. **Pure planner, thin CLI.** `tools/verify-plan.mjs` exports `planFor({ files, renames, deletions, baseSha, headSha, shallow, evidence, map })` and returns data. A gate is a function, not a script, so tests can hand it diffs it must judge broadly. The CLI (`npm run verify -- --plan [--base origin/main] [--json]`) only gathers git facts and prints. Extract shared pieces from `land.mjs`/`docs-only.mjs` without changing their behaviour or authority.\n2. **Base resolution.** Resolve base and head to SHAs (`git merge-base <base> HEAD`). If `git rev-parse --is-shallow-repository` is true, or the base is missing, mark the plan **uncertain** and recommend `npm run land -- --full-preflight`. This repo has already been burned by a shallow clone answering ancestry questions wrongly (`tools/orient.mjs`). Never fetch, rebase, install or run.\n3. **Rules, in order, each emitting a reason and its source:**\n   - all changed files Markdown → reuse `docs-only` classification;\n   - path matches a `Go to` cell in ARCHITECTURE.md → its `Guarded by` suites;\n   - colocated `X.test.ts` / `X.slow.test.ts` for each changed `X.ts`;\n   - `schema/src/save.ts` or `core/src/save.ts` → save/replay suites, plus a note to check `SAVE_FORMAT`;\n   - `packages/content/**/*.yaml` → `npm run validate`, the content-loading suites, and the fire-rate/outcome-reach evidence (marked *scheduled*, per AGENTS.md's \"measure fire rates when you touch arcs, slots or selection\");\n   - shared simulation spine (`core/src/rng.ts`, `world.ts`, `year/phases.ts`, `testing.ts`, any `index.ts` barrel) → **broad**: full preflight;\n   - anything unmatched → **broad**. A filename heuristic never certifies a change as safe.\n4. **Tiers come from enforcement, never intent.** Annotate each recommendation from `ci-evidence.json` `currentTier`, never `proposedTier`, and from the existing workflow-derived helpers. Output three groups: *recommended local*, *required integration CI*, *scheduled evidence*.\n5. **Optional execution:** `--run` executes only the selected commands through `tools/portable.mjs` `runNpm` and reports each real exit status. No new runner.\n6. **Integrate, don't fork:** `land --dry-run` prints the plan; `docs/COMMANDS.md` documents it next to the landing's verdicts.\n\n## Relevant files\n\n`tools/land.mjs`, `tools/docs-only.mjs`, `tools/verify-plan.mjs` (new), `tools/ci-evidence.json`, `tools/portable.mjs`, `package.json`, `ARCHITECTURE.md` (the map), `docs/COMMANDS.md`, `.github/workflows/check.yml`, and the existing land/CI-evidence/lane/codemap tests.\n\n## Acceptance and validation\n\n- Representative client, core, schema, content and documentation diffs produce a reproducible plan with explicit reasons and base/head SHAs. Use real recent commits from `main` as fixtures (e.g. a `reach.ts` fix, a YAML-only content change, a docs-only change).\n- Unknown or broad dependencies recommend broader verification; a filename-only heuristic cannot certify a change as safe.\n- Shallow clone, missing base, rename, deletion and cross-package cases are exercised and come back uncertain or broad where they should.\n- A test asserts every `Go to` path and `Guarded by` suite in ARCHITECTURE.md's map exists, so the planner's source cannot rot silently.\n- Planning is read-only and works without a GitHub API credential.\n- JSON and human output agree, and distinguish local recommendations from merge-blocking and scheduled checks.\n- No required CI check, statistical threshold, proof-reuse boundary or merge-queue rule is removed or weakened.\n\n## Scope and sequencing\n\nThis issue improves discovery and local iteration. The native merge-group check remains authoritative. #1938 consumes `planFor` and the same ARCHITECTURE map parser; agree on that module's interface (e.g. `tools/codemap.mjs`) early so both import one parser. ARCHITECTURE.md is currently claimed by #1931 / PR #1933; edits to it wait for that to land.\n",
+      "state": "closed",
+      "user": {
+        "login": "JamesFlames",
+        "name": "JamesFlames",
+        "email": null,
+        "avatar_url": "https://avatars.githubusercontent.com/u/19442554?v=4",
+        "id": 19442554
+      },
+      "assignees": null,
+      "labels": null,
+      "milestone": null,
+      "state_reason": "completed",
+      "comments": 1,
+      "created_at": "2026-10-26T22:46:50Z",
+      "updated_at": "2026-10-27T09:54:28Z",
+      "closed_at": "2026-10-27T09:54:28Z",
+      "display_url": "https://github.com/EldritchDynasty/EldritchDynasty/issues/1936",
+      "display_title": "Recommend focused verification from the diff and existing CI evidence"
+    },
+    "url": "https://github.com/EldritchDynasty/EldritchDynasty/issues/1936",
+    "title": "Recommend focused verification from the diff and existing CI evidence",
+    "display_url": "https://github.com/EldritchDynasty/EldritchDynasty/issues/1936",
+    "display_title": "Recommend focused verification from the diff and existing CI evidence"
+  },
+  "isError": false
+}
