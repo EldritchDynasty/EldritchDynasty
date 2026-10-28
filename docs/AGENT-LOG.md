@@ -703,3 +703,12 @@ calibration are shipped; evidence and unresolved limits are in
 `docs/BALANCE-LOG.md` (#1878, parent #1866). Use the current
 [architecture owner map](../ARCHITECTURE.md#where-a-thing-lives) for duties,
 outside service, field support and covert operations.
+
+### 28 October 2026 — migration review correction
+
+The abbreviated invariant-11 enforcement pointer was corrected from
+`gateVocabulary` to the production export `gateVocabularyReach`. The root is
+now 12,193 bytes; root plus the largest guide is 26,238 bytes. The earlier byte
+table describes migration commit `89ba744b`; its preservation evidence is
+unchanged. The superseded preflight was stopped and restarted on the corrected
+commit so the final preflight result names the published head.

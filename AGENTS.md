@@ -129,7 +129,7 @@ rule (`gen-loci.mjs`, `attributes.yaml`; [content details](packages/content/AGEN
 ### 11. A declared field that nothing reads is a bug, not a stub
 
 Grep fields before assuming they work; prove production handling and execution
-(`assertNever`, `gateVocabulary`).
+(`assertNever`, `gateVocabularyReach`).
 
 ### 12. Nothing takes the seal out of the main house
 
