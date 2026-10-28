@@ -1,6 +1,6 @@
 import {
   EventTemplateS, OutcomeS, currentMembership, assertNever, CovertPreparationS,
-  type CovertOperation, type CovertPreparation, type CovertPurpose, type Effect, type Person,
+  type CovertOperation, type CovertPreparation, type CovertPurpose, type Effect, type Person, type Relationship,
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { OrderResult } from './table.js';
@@ -35,27 +35,49 @@ function available(ctx: SimCtx, p: Person): boolean {
     && (!p.career || ctx.content.career(p.career.career)?.resident === 'home');
 }
 
-/** One actual directed grievance and presently reachable person, never a shadow house head. */
-export function covertOpportunities(ctx: SimCtx) {
+/** The live severity at which a grudge the family holds can send someone out. */
+export const COVERT_OPERATION_SEVERITY = 40;
+
+/** Why an outsider cannot be the object of an expedition, first rule first. */
+export type OperationTargetExclusion = 'unknown' | 'unavailable' | 'family' | 'absent';
+/** Where a family-held relationship stops on its way to an opportunity (#1943's funnel). */
+export type OperationStage = 'no_sponsor' | 'below_threshold' | 'no_target' | 'used' | 'opportunity';
+
+export function operationExclusion(ctx: SimCtx, p: Person): OperationTargetExclusion | undefined {
+  const w = ctx.world;
+  if (!known(ctx, p)) return 'unknown';
+  if (!available(ctx, p)) return 'unavailable';
+  if (isCurrentFamily(ctx, p) || currentMembership(p, w.year)?.house === w.playerHouse) return 'family';
+  if (!resolvePresence(ctx, { kind: 'person', person: p.id }, {}).people.includes(p.id)) return 'absent';
+  return undefined;
+}
+
+/** One actual directed grievance and presently reachable person, never a shadow house head.
+ * `tally` only watches: it sees each family-held relationship's first failing rule. */
+export function covertOpportunities(ctx: SimCtx, tally?: (r: Relationship, stage: OperationStage) => void) {
   const w = ctx.world;
   const used = new Set(w.covert.operations.map(o => o.opportunity));
-  const targets = w.people.living().filter(p => known(ctx, p) && available(ctx, p) && !isCurrentFamily(ctx, p)
-    && currentMembership(p, w.year)?.house !== w.playerHouse
-    && resolvePresence(ctx, { kind: 'person', person: p.id }, {}).people.includes(p.id));
+  const targets = w.people.living().filter(p => !operationExclusion(ctx, p));
   const out: { id: string; target: Person; sponsor: Person; grudge: string; purposes: CovertPurpose[] }[] = [];
   for (const r of w.relationships.values()) {
     const holder = w.people.get(r.from);
     if (r.from !== w.playerHouse && (!holder || !isCurrentFamily(ctx, holder) || holder.status !== 'alive' || w.year - holder.born < 16)) continue;
     const sponsor = holder ?? w.people.household(w.playerHouse, w.year).find(p => available(ctx, p));
-    if (!sponsor) continue;
-    for (const g of r.grudges.filter(g => g.severity >= 40 && g.originYear <= w.year)) for (const target of targets) {
+    if (!sponsor) { tally?.(r, 'no_sponsor'); continue; }
+    const live = r.grudges.filter(g => g.severity >= COVERT_OPERATION_SEVERITY && g.originYear <= w.year);
+    if (!live.length) { tally?.(r, 'below_threshold'); continue; }
+    let reached = false, fresh = false;
+    for (const g of live) for (const target of targets) {
       const membership = currentMembership(target, w.year)!;
       if (r.to !== target.id && r.to !== membership.house) continue;
+      reached = true;
       const id = `${g.id}:${target.id}:${membership.from}`;
       if (used.has(id) || out.some(o => o.id === id)) continue;
+      fresh = true;
       const attacked = w.covert.threats.some(t => t.observation?.identifiedOperative === target.id);
       out.push({ id, target, sponsor, grudge: g.id, purposes: attacked ? ['answer_attack', 'settle_grudge'] : ['settle_grudge'] });
     }
+    tally?.(r, fresh ? 'opportunity' : reached ? 'used' : 'no_target');
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));
 }

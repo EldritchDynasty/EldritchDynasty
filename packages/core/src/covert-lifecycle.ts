@@ -1,10 +1,10 @@
 import {
   EventTemplateS, OutcomeS, currentMembership,
-  type CovertAttempt, type CovertDefence, type CovertResponse, type HouseholdThreat, type Person,
+  type CovertAttempt, type CovertDefence, type CovertResponse, type HouseholdThreat, type Person, type Relationship,
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import type { OrderResult } from './table.js';
-import { covertDefenceQuote, covertGuardGap, observeCovertApproach, resolveCovertAttempt } from './covert.js';
+import { covertDefenceQuote, covertGuardGap, observeCovertApproach, resolveCovertAttempt, seatReaches } from './covert.js';
 import { dutyFunds, householdProtection, noteHouseholdProtection, spendForeign } from './mystic.js';
 import { attendsHall, deployedPeople, isCurrentFamily, resolvePresence } from './presence.js';
 import { branchOf } from './people/branches.js';
@@ -17,7 +17,7 @@ import { msg } from './messages.js';
 
 /** A rare hostile choice, never a response to owning a ward. One active plot,
  * at least twelve years between preparations, two years' notice, finite coin.
- * Small houses and the sitting Head are outside this first defensive scope. */
+ * Small houses, the sitting Head and the founder are never the target. */
 export const HOUSEHOLD_THREAT_COOLDOWN = 12;
 
 const open = (t: HouseholdThreat) => t.stage === 'preparing' || t.stage === 'approach';
@@ -31,26 +31,49 @@ function freeAdult(ctx: SimCtx, p: Person): boolean {
     && (p.acquired.health ?? 0) > -20 && (p.fieldRecoveryUntil ?? 0) <= ctx.world.year;
 }
 
-/** Read actors, grievance, population, access and money, never protective strength or books. */
-export function householdThreatCandidates(ctx: SimCtx) {
+/** The live severity at which an outsider's grudge can buy an attack on the household,
+ * and the smallest current family that is worth one. */
+export const HOUSEHOLD_THREAT_SEVERITY = 60;
+export const HOUSEHOLD_THREAT_FAMILY = 4;
+
+/** Why a family member cannot be the target of a household attack, first rule first. */
+export type ThreatTargetExclusion = 'guardian' | 'head' | 'not_free' | 'absent';
+/** Where a relationship stops on its way to becoming a candidate (#1943's funnel). */
+export type ThreatStage = 'below_threshold' | 'no_sponsor' | 'no_funds' | 'no_target' | 'candidate';
+
+export function threatExclusion(ctx: SimCtx, p: Person): ThreatTargetExclusion | undefined {
+  const w = ctx.world;
+  if (p.becomesGuardian) return 'guardian';
+  if (p.castSlots.includes('head')) return 'head';
+  if (!freeAdult(ctx, p)) return 'not_free';
+  if (!attendsHall(ctx, branchOf(w, p, w.year), p)) return 'absent';
+  return undefined;
+}
+
+/** Read actors, grievance, population, access and money, never protective strength or books.
+ * `tally` only watches: it sees each relationship's first failing rule and changes nothing. */
+export function householdThreatCandidates(ctx: SimCtx, tally?: (r: Relationship, stage: ThreatStage) => void) {
   const w = ctx.world;
   const family = w.people.household(w.playerHouse, w.year).filter(p => isCurrentFamily(ctx, p));
-  if (family.length < 4) return [];
-  const targets = family.filter(p => !p.becomesGuardian && !p.castSlots.includes('head') && freeAdult(ctx, p)
-    && attendsHall(ctx, branchOf(w, p, w.year), p));
+  if (family.length < HOUSEHOLD_THREAT_FAMILY) return [];
+  const targets = family.filter(p => !threatExclusion(ctx, p));
   const outsiders = w.people.living().filter(p => !isCurrentFamily(ctx, p) && freeAdult(ctx, p)
     && currentMembership(p, w.year)?.house !== w.playerHouse);
   const out: { sponsor: Person; target: Person; grudge: string; house: string }[] = [];
   for (const r of [...w.relationships.values()].sort((a, b) => `${a.from}:${a.to}`.localeCompare(`${b.from}:${b.to}`))) {
-    const grudge = [...r.grudges].filter(g => g.severity >= 60 && g.originYear <= w.year).sort((a, b) => a.id.localeCompare(b.id))[0];
-    if (!grudge) continue;
+    const grudge = [...r.grudges].filter(g => g.severity >= HOUSEHOLD_THREAT_SEVERITY && g.originYear <= w.year).sort((a, b) => a.id.localeCompare(b.id))[0];
+    if (!grudge) { tally?.(r, 'below_threshold'); continue; }
     const sponsor = outsiders.filter(p => r.from === p.id || r.from === currentMembership(p, w.year)?.house)
       .sort((a, b) => a.id.localeCompare(b.id))[0];
     const house = sponsor && currentMembership(sponsor, w.year)?.house;
-    if (!sponsor || !house || dutyFunds(ctx, house) < 20) continue;
+    if (!sponsor || !house) { tally?.(r, 'no_sponsor'); continue; }
+    if (dutyFunds(ctx, house) < 20) { tally?.(r, 'no_funds'); continue; }
+    const before = out.length;
     for (const target of targets) {
-      if (r.to === target.id || r.to === currentMembership(target, w.year)?.house) out.push({ sponsor, target, grudge: grudge.id, house });
+      if (r.to === target.id || r.to === currentMembership(target, w.year)?.house
+        || seatReaches(ctx, r.to, target)) out.push({ sponsor, target, grudge: grudge.id, house });
     }
+    tally?.(r, out.length > before ? 'candidate' : 'no_target');
   }
   return out;
 }

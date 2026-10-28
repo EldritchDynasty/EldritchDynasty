@@ -1,11 +1,12 @@
 import {
-  assertNever, CovertAttemptS, CovertDefenceS, CovertDrawsS, CovertGuardCountS, currentMembership,
+  assertNever, CovertAttemptS, CovertDefenceS, CovertDrawsS, CovertGuardCountS, currentMembership, MAIN_BRANCH,
   type CovertAttempt, type CovertDefence, type CovertDraws, type CovertObservation,
   type CovertPreparation, type CovertRefusal, type CovertResponse, type CovertWarning,
   type Effect, type Person, type StoredSlotFill,
 } from '@ed/schema';
 import type { SimCtx } from './world.js';
-import { resolvePresence } from './presence.js';
+import { isCurrentFamily, resolvePresence } from './presence.js';
+import { branchOf } from './people/branches.js';
 import { streamFor } from './rng.js';
 import { householdProtection, covertSupport } from './mystic.js';
 
@@ -56,13 +57,45 @@ function mobileAdult(ctx: SimCtx, person: Person | undefined): person is Person 
   return freeAdult(ctx, person) && (person.acquired.health ?? 0) > -20;
 }
 
-/** Read the actual CURRENT directed edge; neither the reverse feud nor birth house suffices. */
+/**
+ * THE CHAIR IS PROTECTED, SO THE HALL IS NOT (#1943). A grudge against the
+ * seat (whoever sits in it, and the founder who sat in it first) lands on the
+ * people of the main hall. The Head and the founder themselves are still never
+ * the target, because nobody arrests a Head casually (world §8). That is why a
+ * quarrel with the chair is pursued through the people around it.
+ *
+ * Before this, the founding grudge pointed at the founder for five hundred
+ * years and could never reach anybody. The brief says it echoes that long.
+ * Measured on the #1878 samples it was the only incoming grudge to stay above
+ * 60 for more than a year or two, and every year it did, it stopped at the
+ * founder, first in the chair and then as the guardian. A grudge against an
+ * ordinary member of the family does not spread to their siblings, and none of
+ * this reaches a cadet hall.
+ */
+function isSeat(ctx: SimCtx, id: string): boolean {
+  const p = ctx.world.people.get(id);
+  if (!p) return false;
+  // Only the founder ever becomes the guardian (`PersonStore.kill`).
+  if (p.status === 'guardian') return true;
+  return p.status === 'alive' && isCurrentFamily(ctx, p) && (p.becomesGuardian || p.castSlots.includes('head'));
+}
+
+/** Whether an edge pointing at `to` is a motive against `target`, by way of the seat.
+ * The candidate filter and `hasMotive` both read this, so a plan prepared on it
+ * is still a plan with a motive in the year it is attempted. */
+export function seatReaches(ctx: SimCtx, to: string, target: Person): boolean {
+  return to !== target.id && isSeat(ctx, to) && isCurrentFamily(ctx, target)
+    && branchOf(ctx.world, target, ctx.world.year) === MAIN_BRANCH;
+}
+
+/** Read the actual CURRENT directed edge; neither the reverse feud nor birth house suffices.
+ * A grudge against this house's seat is one against its main hall (`seatReaches`). */
 function hasMotive(ctx: SimCtx, a: CovertAttempt, sponsor: Person, target: Person): boolean {
   const fromHouse = currentMembership(sponsor, ctx.world.year)?.house;
   const toHouse = currentMembership(target, ctx.world.year)?.house;
   return [...ctx.world.relationships.values()].some(r =>
     (r.from === sponsor.id || (fromHouse !== undefined && r.from === fromHouse))
-    && (r.to === target.id || (toHouse !== undefined && r.to === toHouse))
+    && (r.to === target.id || (toHouse !== undefined && r.to === toHouse) || seatReaches(ctx, r.to, target))
     && r.from !== r.to
     && r.grudges.some(g => g.id === a.motive.grudge && g.originYear <= a.preparedAt && g.severity >= 40));
 }
