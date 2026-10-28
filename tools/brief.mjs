@@ -152,6 +152,9 @@ export function buildBrief({ snapshot, issueNumber, source, headSha, files, map,
   if (!headSha) gaps.push(gap('revision', 'Repository HEAD could not be resolved.'));
   const acceptance = acceptanceOf(issue.body);
   if (!acceptance) gaps.push(gap('acceptance', 'No explicit Acceptance section was found; no criteria were inferred.'));
+  else if (!acceptance.text.replace(/^#{1,6}[^\r\n]*(?:\r?\n|$)/, '').trim()) {
+    gaps.push(gap('acceptance', 'The Acceptance heading has no criteria text; no requirements were inferred.'));
+  }
   const paths = referencedPaths(issue.body, files);
   if (!paths.length) gaps.push(gap('paths', 'The issue names no recognizable paths; ownership and verification need review.'));
   for (const path of paths) {

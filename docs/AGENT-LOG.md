@@ -786,3 +786,11 @@ typecheck and a final 224-test focused rerun also passed under Node 22.23.4 on
 Linux. The PR records the required committed-head preflight and integration CI;
 Windows execution remains with its existing CI job. No simulation/content,
 test-lane threshold, generated timing table or landing policy changed.
+
+### 28 October 2026 — empty acceptance section validation
+
+Final malformed-input review added a gap for an Acceptance heading with no
+criteria text. Its raw section remains preserved; the brief does not infer any
+requirements. This is covered alongside absent acceptance in the existing
+brief tests. The superseded preflight was stopped so final validation can run
+on the corrected commit.
