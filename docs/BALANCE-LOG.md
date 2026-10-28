@@ -15150,3 +15150,182 @@ price, preparedness/presence/learning rule, frequency, seed or threshold changes
 The view field is a current command quote, not saved state. Commit that source
 before measuring, verify view-read neutrality, JSON continuation and command
 replay, and retain full-save observer controls for every candidate scenario.
+
+## #1942 — completed Mystic policy and assignment-quote comparison (28 October 2026)
+
+**Adoption.** Adopt `quoted_demand` as the new report's default bounded practice policy. The Table now supplies a current accepted reader/place quote and shows useful years, last useful year and paused study beside reachable assignment/release controls. Historical `train`/`practise` bodies and all game rules remain unchanged. The paired primary improvement passes at both terms; the separate two-domain product goal still **misses the two-SE margin at both terms**. The candidate spends more on duty upkeep and displaces substantially more study; its attributed coin ledger remains negative. No price, working, seed, cutoff, scope normalization or gate was changed.
+
+**Protocol and provenance.** The declaration above was committed in `7fe06c59`; the quote intervention was declared in `a997e90a` before changing `mysticView`. All quoted campaigns use committed source `1341d7c5`, Node 22.23.4, current content `123bc8c0…` (the full content/provenance explanation is above), and the same 24 independent seeds `187700–187723` at Short 300 / Long 500. Historical ordinary 144 and chartered-pressure 48 were launched with the original unchanged `c0c6a115…` tool. The six pre-quote variants comprise 288 scenarios; quoted demand adds 48. Early endings and zero-use cases remain. Means ± one SE are over independent houses; differences are paired by seed. Original trained 25-year buckets, including the final partial bucket, are retained. No reader-generation denominator was substituted.
+
+**All primary comparisons.** The historical broad means are Short **1.464877 ± 0.100811**, Long **1.330352 ± 0.104727**. The strict-budget column isolates the old refusal-retry behavior; the four individual changes are compared with it as well as the unchanged historical comparator.
+
+| Term | Policy | Useful domains / trained generation | Paired Δ vs historical broad | Two-SE improvement | Paired Δ vs strict budget |
+| --- | --- | --- | --- | --- | --- |
+| short | budgeted_broad | 0.614 ± 0.071 | -0.851 ± 0.096 | MISS | +0.000 ± 0.000 |
+| short | uncapped | 0.682 ± 0.077 | -0.783 ± 0.097 | MISS | +0.068 ± 0.042 |
+| short | release_idle | 0.569 ± 0.063 | -0.896 ± 0.089 | MISS | -0.045 ± 0.048 |
+| short | observed_rank | 1.533 ± 0.082 | +0.068 ± 0.110 | MISS | +0.920 ± 0.105 |
+| short | projects_yearly | 0.603 ± 0.073 | -0.861 ± 0.097 | MISS | -0.010 ± 0.011 |
+| short | demand_aware | 1.672 ± 0.091 | +0.207 ± 0.123 | MISS | +1.059 ± 0.105 |
+| short | quoted_demand | 2.216 ± 0.143 | +0.751 ± 0.138 | PASS | +1.603 ± 0.163 |
+| long | budgeted_broad | 0.637 ± 0.067 | -0.693 ± 0.090 | MISS | +0.000 ± 0.000 |
+| long | uncapped | 0.576 ± 0.059 | -0.755 ± 0.080 | MISS | -0.061 ± 0.057 |
+| long | release_idle | 0.537 ± 0.048 | -0.794 ± 0.092 | MISS | -0.100 ± 0.066 |
+| long | observed_rank | 1.524 ± 0.065 | +0.194 ± 0.085 | PASS | +0.887 ± 0.084 |
+| long | projects_yearly | 0.627 ± 0.065 | -0.703 ± 0.089 | MISS | -0.010 ± 0.006 |
+| long | demand_aware | 1.633 ± 0.064 | +0.302 ± 0.085 | PASS | +0.996 ± 0.056 |
+| long | quoted_demand | 2.058 ± 0.123 | +0.728 ± 0.104 | PASS | +1.421 ± 0.127 |
+
+Observed-use ranking is the only individual ablation with a positive gain over the strict control exceeding two SE at both terms: +0.919663 ± 0.105095 Short and +0.886973 ± 0.084260 Long. Removing the cap, five-paid-year zero-use release, and yearly project consideration do not independently meet that bar. The combined pre-quote gain against historical broad is only 1.7 SE Short, although Long clears it. Thus the initial four changes do not establish adoption by the declared both-term rule. The quote candidate clears the historical comparison by **5.43 SE Short / 6.97 SE Long**; its absolute means exceed two by only **1.51 SE / 0.47 SE**, so the product goal remains unsupported. These policies are a bounded comparison, not an optimum or proof that each component helps.
+
+**Named quote stage and budget.** The old historical loop may retry refusals within a year, while still allowing at most one accepted order in each training/practice phase. Every experimental column instead attempts at most one order per phase/year. Refusals roll back the persisted command entry, so command-log length alone cannot measure attempts. The report counts actual attempted and accepted orders separately. No experimental run exceeds the strict yearly attempt budget.
+
+| Term / policy | Practice attempts | Accepted practice | Refused orders | Training attempts / accepted |
+| --- | --- | --- | --- | --- |
+| short / demand_aware | 172.71 ± 19.68 | 43.83 ± 3.44 | 128.88 ± 18.97 | 101.67 ± 13.25 / 101.67 ± 13.25 |
+| short / quoted_demand | 116.46 ± 14.59 | 116.46 ± 14.59 | 0.00 ± 0.00 | 91.92 ± 11.05 / 91.92 ± 11.05 |
+| long / demand_aware | 268.04 ± 30.10 | 89.62 ± 8.46 | 178.42 ± 26.08 | 154.25 ± 18.45 / 154.25 ± 18.45 |
+| long / quoted_demand | 186.38 ± 26.60 | 186.38 ± 26.60 | 0.00 ± 0.00 | 141.88 ± 19.61 / 141.88 ± 19.61 |
+
+The frozen first-seed diagnostic reproduces the old complete save and attributes all 160 refused assignment attempts to an already-covered duty at the chosen place. The old offer lists readers and targets independently. `assignable` asks the existing real `quoteDuty` for their combination, preferring a non-studying reader and the main hall in deterministic order, then the remaining public choices. It exposes no future use and commits nothing. The candidate has **zero refused orders in every one of its 48 houses**. The controlled distinction is the advertised current combination, not a retry loop or relaxed eligibility.
+
+Against the same four-change pre-quote candidate, quoted demand has paired gains of **+0.544035 ± 0.133255 useful domains** Short and **+0.425535 ± 0.125316** Long. Accepted practice orders increase by **+72.625 ± 14.205** / **+96.750 ± 24.092** per house; refused orders fall by **128.875 ± 18.970** / **178.417 ± 26.077**. These are the named selection-stage diagnostics; the adoption bar remains the separate historical-broad primary comparison.
+
+**Baseline supply, per affinity.** These are the corrected extra-funnel copies of all 48 ordinary historical-broad campaigns. Every full-save hash and order/refusal count matches its original run. `Any-book` is the old ledger's eligible affinity reader-years; `Working-ready` requires all books for at least one actual working. An affinity can have a reader without the primer/prerequisite set for a working. Owned-set years are shelf stocks, not acquisitions; study starts/completions are observed annual book transitions. Arrivals or knowledge first seen without an observed preceding study are separate. Initial known-book counts and every working's full stages are retained in the JSON. Do not add affinity reader-years across affinities or read these stocks as a conserved cohort.
+
+| Term / affinity | Owned-set years | Observed study starts / completions | Other new knowledge | Any-book reader-years | Working-ready reader-years |
+| --- | --- | --- | --- | --- | --- |
+| short / fluid | 203.38 ± 16.51 | 14.17 ± 2.83 / 13.83 ± 2.75 | 1.00 ± 0.26 | 605.83 ± 113.58 | 597.29 ± 111.08 |
+| short / thermal | 172.46 ± 16.52 | 12.25 ± 2.44 / 11.54 ± 2.33 | 0.33 ± 0.14 | 433.71 ± 92.01 | 424.21 ± 90.63 |
+| short / aero | 156.12 ± 16.50 | 10.71 ± 2.36 / 10.17 ± 2.29 | 0.33 ± 0.16 | 394.83 ± 87.89 | 389.58 ± 85.98 |
+| short / terra | 17.38 ± 11.90 | 1.12 ± 0.81 / 1.00 ± 0.72 | 0.25 ± 0.14 | 44.08 ± 33.91 | 41.58 ± 33.99 |
+| short / life | 244.67 ± 19.35 | 31.83 ± 5.83 / 30.71 ± 5.64 | 0.67 ± 0.29 | 1435.29 ± 271.83 | 1431.75 ± 272.18 |
+| short / death | 0.46 ± 0.46 | 0.42 ± 0.24 / 0.33 ± 0.22 | 0.75 ± 0.24 | 27.75 ± 10.95 | 14.42 ± 5.21 |
+| short / light | 246.12 ± 19.25 | 32.04 ± 6.02 / 30.92 ± 5.86 | 0.33 ± 0.16 | 1423.67 ± 275.43 | 1423.67 ± 275.43 |
+| short / darkness | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 | 0.50 ± 0.22 | 4.75 ± 2.42 | 4.75 ± 2.42 |
+| long / fluid | 326.88 ± 34.68 | 23.08 ± 4.37 / 22.67 ± 4.32 | 0.92 ± 0.21 | 979.00 ± 191.76 | 964.67 ± 189.10 |
+| long / thermal | 299.62 ± 34.14 | 19.12 ± 3.85 / 18.33 ± 3.73 | 0.54 ± 0.23 | 759.96 ± 161.92 | 756.21 ± 161.46 |
+| long / aero | 279.96 ± 33.24 | 19.29 ± 4.09 / 18.42 ± 3.98 | 0.75 ± 0.21 | 717.25 ± 158.45 | 701.83 ± 155.70 |
+| long / terra | 15.50 ± 9.36 | 0.83 ± 0.35 / 0.54 ± 0.26 | 0.42 ± 0.17 | 25.96 ± 10.63 | 10.50 ± 4.79 |
+| long / life | 336.54 ± 39.04 | 45.29 ± 9.23 / 44.00 ± 8.94 | 0.58 ± 0.22 | 2073.79 ± 423.87 | 2064.71 ± 423.88 |
+| long / death | 20.08 ± 14.04 | 7.12 ± 3.83 / 6.71 ± 3.59 | 0.92 ± 0.29 | 254.67 ± 126.27 | 198.62 ± 127.34 |
+| long / light | 373.75 ± 38.43 | 50.46 ± 9.23 / 48.92 ± 9.13 | 0.58 ± 0.23 | 2283.79 ± 431.82 | 2283.79 ± 431.82 |
+| long / darkness | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 | 0.58 ± 0.19 | 7.38 ± 2.81 | 7.38 ± 2.81 |
+
+**Allocation and effects, per affinity.** Reader stages refer to household readers. Occupied and unavailable are distinct from free readers lacking a current target, and a current target is distinct from an accepted affordable assignment quote. Service-account endpoints include ended duties and are split into **uncontracted** and **contract-linked** work; the latter includes outside professionals and outbound commissions, so it must not be interpreted as downstream family reader supply. Raw annual live-duty census counts remain separate in the report.
+
+| Term / affinity | Free | Occupied / unavailable | Free with target / accepted quote | Uncontracted paid / useful years | Contract-linked paid / useful years |
+| --- | --- | --- | --- | --- | --- |
+| short / fluid | 243.75 ± 59.87 | 163.25 ± 23.86 / 190.29 ± 34.49 | 243.75 ± 59.87 / 241.92 ± 59.76 | 50.17 ± 12.46 / 4.25 ± 1.70 | 17.96 ± 3.71 / 2.12 ± 0.52 |
+| short / thermal | 167.58 ± 45.94 | 116.00 ± 21.41 / 140.62 ± 28.74 | 167.58 ± 45.94 / 167.21 ± 45.86 | 7.42 ± 4.08 / 7.08 ± 3.98 | 12.88 ± 4.03 / 1.17 ± 0.65 |
+| short / aero | 158.71 ± 45.20 | 107.12 ± 20.30 / 123.75 ± 26.08 | 158.71 ± 45.20 / 158.33 ± 45.10 | 99.46 ± 19.38 / 52.67 ± 10.18 | 13.75 ± 3.89 / 0.67 ± 0.33 |
+| short / terra | 12.58 ± 10.18 | 11.88 ± 8.72 / 17.12 ± 15.28 | 12.58 ± 10.18 / 12.50 ± 10.10 | 1.12 ± 0.64 / 0.00 ± 0.00 | 2.25 ± 0.97 / 1.42 ± 0.58 |
+| short / life | 884.54 ± 207.39 | 279.17 ± 32.40 / 268.04 ± 49.72 | 884.54 ± 207.39 / 878.17 ± 207.71 | 80.62 ± 10.19 / 0.46 ± 0.16 | 12.58 ± 3.52 / 1.75 ± 0.66 |
+| short / death | 4.38 ± 2.33 | 10.00 ± 3.59 / 0.04 ± 0.04 | 4.38 ± 2.33 / 4.38 ± 2.33 | 9.71 ± 3.44 / 9.42 ± 3.35 | 2.29 ± 0.89 / 1.50 ± 0.53 |
+| short / light | 905.12 ± 216.58 | 257.38 ± 29.04 / 261.17 ± 49.81 | 905.12 ± 216.58 / 898.21 ± 216.91 | 85.17 ± 10.43 / 73.54 ± 9.39 | 1.58 ± 0.67 / 0.96 ± 0.38 |
+| short / darkness | 2.83 ± 1.64 | 1.92 ± 1.66 / 0.00 ± 0.00 | 2.83 ± 1.64 / 2.83 ± 1.64 | 1.50 ± 1.46 / 1.42 ± 1.42 | 12.71 ± 3.58 / 0.08 ± 0.08 |
+| long / fluid | 398.00 ± 96.10 | 259.42 ± 43.63 / 307.25 ± 58.28 | 398.00 ± 96.10 / 394.00 ± 96.23 | 51.04 ± 10.43 / 2.04 ± 0.65 | 29.92 ± 5.28 / 3.04 ± 0.84 |
+| long / thermal | 307.38 ± 78.03 | 199.00 ± 39.35 / 249.83 ± 51.25 | 307.38 ± 78.03 / 304.46 ± 78.05 | 22.42 ± 6.70 / 21.38 ± 6.35 | 22.54 ± 4.93 / 1.33 ± 0.58 |
+| long / aero | 271.88 ± 75.38 | 200.21 ± 38.65 / 229.75 ± 48.24 | 271.88 ± 75.38 / 271.25 ± 75.30 | 185.54 ± 37.38 / 92.50 ± 19.41 | 20.54 ± 4.79 / 0.88 ± 0.44 |
+| long / terra | 5.67 ± 2.52 | 2.17 ± 1.33 / 2.67 ± 2.67 | 5.67 ± 2.52 / 5.54 ± 2.45 | 1.54 ± 1.30 / 0.00 ± 0.00 | 4.50 ± 1.30 / 2.67 ± 0.73 |
+| long / life | 1342.83 ± 320.46 | 382.00 ± 50.51 / 339.88 ± 63.31 | 1342.83 ± 320.46 / 1330.50 ± 320.86 | 99.83 ± 13.89 / 0.92 ± 0.31 | 24.17 ± 4.60 / 2.12 ± 0.67 |
+| long / death | 132.12 ± 88.63 | 36.12 ± 19.31 / 30.38 ± 21.05 | 132.12 ± 88.63 / 131.54 ± 88.27 | 12.67 ± 4.74 / 10.33 ± 3.71 | 3.33 ± 1.32 / 1.83 ± 0.71 |
+| long / light | 1525.79 ± 327.95 | 396.25 ± 51.66 / 361.75 ± 62.58 | 1525.79 ± 327.95 / 1513.54 ± 328.54 | 110.00 ± 13.84 / 66.42 ± 9.35 | 3.62 ± 1.26 / 2.08 ± 0.69 |
+| long / darkness | 1.54 ± 1.03 | 5.83 ± 2.66 / 0.00 ± 0.00 | 1.54 ± 1.03 / 1.42 ± 0.91 | 5.58 ± 2.62 / 1.46 ± 1.42 | 22.38 ± 4.21 / 0.25 ± 0.11 |
+
+**Principal ordinary-play bottlenecks.** Life and Fluid have many free, quoted readers but very few useful paid years: opportunity and selection dominate. Light and Aero deliver substantial useful service when selected; allocation and foregone study remain choices. Thermal has working-ready supply and repeated useful service, with many readers occupied/unavailable; it is not an aggregate book shortage. Terra has few owned prerequisite sets and completed working-ready readers, followed by poor project selection. Darkness has no owned complete working prerequisite set in these annual observations, sparse arrived/otherwise observed knowledge, and substantial contract-linked paid work: family supply first, then usefulness. Death is supply-limited but most uncontracted paid years are useful; unselected civilian bindings still need an opportunity. These diagnoses concern these fixed ordinary policies, not every possible household or a pressure-event rate.
+
+| Selected Long working | Ready reader-years | Free / free with target / quote | Missing collaborator | Assigned annual census | Uncontracted paid / useful accounts |
+| --- | --- | --- | --- | --- | --- |
+| sickroom_watch | 2064.71 ± 423.88 | 1342.83 ± 320.46 / 1342.83 ± 320.46 / 1320.46 ± 321.89 | 0.00 ± 0.00 | 22.08 ± 4.24 | 0.00 ± 0.00 / 0.00 ± 0.00 |
+| the_mending_watch | 32.62 ± 11.24 | 15.29 ± 7.21 / 5.33 ± 3.08 / 5.25 ± 3.04 | 0.00 ± 0.00 | 4.58 ± 2.72 | 0.58 ± 0.28 / 0.58 ± 0.28 |
+| the_clear_well | 964.67 ± 189.10 | 398.00 ± 96.10 / 398.00 ± 96.10 / 393.71 ± 96.29 | 0.00 ± 0.00 | 83.04 ± 12.52 | 49.83 ± 9.89 / 1.54 ± 0.38 |
+| the_open_drain | 964.67 ± 189.10 | 398.00 ± 96.10 / 398.00 ± 96.10 / 394.00 ± 96.23 | 0.00 ± 0.00 | 5.00 ± 3.75 | 1.21 ± 1.01 / 0.50 ± 0.39 |
+| the_copyists_light | 2283.79 ± 431.82 | 1525.79 ± 327.95 / 1517.54 ± 329.40 / 1508.50 ± 329.46 | 0.00 ± 0.00 | 111.04 ± 14.28 | 107.92 ± 13.97 / 66.42 ± 9.35 |
+| the_still_binding | 198.62 ± 127.34 | 132.12 ± 88.63 / 132.12 ± 88.63 / 131.54 ± 88.27 | 0.00 ± 0.00 | 2.00 ± 2.00 | 2.00 ± 2.00 / 0.00 ± 0.00 |
+| the_shaded_volume | 7.38 ± 2.81 | 1.54 ± 1.03 / 1.54 ± 1.03 / 1.42 ± 0.91 | 0.00 ± 0.00 | 1.58 ± 1.58 | 1.46 ± 1.46 / 1.42 ± 1.42 |
+| the_foundation_line | 10.50 ± 4.79 | 5.67 ± 2.52 / 5.67 ± 2.52 / 5.54 ± 2.45 | 0.00 ± 0.00 | 1.62 ± 1.35 | 1.54 ± 1.30 / 0.00 ± 0.00 |
+| setting_the_culverts | 6.33 ± 2.81 | 5.46 ± 2.53 / 5.46 ± 2.53 / 5.33 ± 2.46 | 5.38 ± 2.49 | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 |
+| firing_the_liners | 37.33 ± 16.63 | 14.50 ± 7.31 / 14.50 ± 7.31 / 14.50 ± 7.31 | 14.42 ± 7.32 | 0.00 ± 0.00 | 0.00 ± 0.00 / 0.00 ± 0.00 |
+
+The complete 46-working report keeps book access, observed study, readers, targets, collaborator gaps, quotes, assignment, paid and useful stages for both terms. The culvert/liner examples distinguish a missing second body from a lack of a usable target; annual stocks can overlap across workings. Neither source scarcity nor the selection-policy repair establishes that a new book or global price cut is needed. This issue makes the measured assignment drop-off actionable without changing supply rules.
+
+**Costs and consequences in their own units.** Costs include early endings; none are divided by survival time. Yield uses the historical contemporaneous respect-tier estimate. The attributed ledger is not a campaign return-on-investment counterfactual; learning, lives, standing and ascent have no invented coin conversion.
+
+| Quantity | short / historical broad | short / quoted demand | long / historical broad | long / quoted demand |
+| --- | --- | --- | --- | --- |
+| Library acquisition / restoration crowns | 2869.80 ± 301.98 | 2864.06 ± 340.15 | 4181.10 ± 417.85 | 4079.44 ± 423.90 |
+| Duty preparation / upkeep crowns | 345.31 ± 36.24 | 1412.92 ± 254.68 | 578.93 ± 63.07 | 1765.42 ± 291.55 |
+| Outside / broker crowns | 246.96 ± 22.17 | 180.00 ± 21.45 | 413.96 ± 42.28 | 319.62 ± 36.97 |
+| Direct saved crowns | 113.07 ± 21.65 | 205.91 ± 42.73 | 204.95 ± 38.02 | 341.25 ± 80.32 |
+| Preserved yield, estimated crowns | 0.25 ± 0.21 | 21.77 ± 6.14 | 0.08 ± 0.08 | 30.38 ± 6.08 |
+| Funded commission crowns | 28.00 ± 4.54 | 14.33 ± 3.40 | 33.00 ± 5.03 | 18.00 ± 3.89 |
+| Attributed net crowns after Library | -3320.75 ± 323.21 | -4214.95 ± 426.13 | -4935.96 ± 479.78 | -5774.85 ± 565.99 |
+| Unintervened same-check avoided crowns | 3.12 ± 2.29 | 2.08 ± 1.44 | 5.21 ± 2.60 | 7.29 ± 2.81 |
+| Sampled studying person-years | 268.58 ± 59.79 | 146.04 ± 26.64 | 475.54 ± 105.36 | 249.88 ± 59.44 |
+| Paused study-years | 26.12 ± 7.25 | 285.17 ± 59.63 | 72.00 ± 15.34 | 399.54 ± 89.61 |
+| Teaching study-years kept | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Life-saving incidents | 5.04 ± 0.69 | 13.00 ± 3.34 | 7.00 ± 1.05 | 17.00 ± 3.01 |
+| Levy men kept | 0.00 ± 0.00 | 0.04 ± 0.04 | 0.00 ± 0.00 | 0.00 ± 0.00 |
+| Field duty-years | 0.29 ± 0.29 | 5.67 ± 5.50 | 1.58 ± 0.82 | 3.00 ± 1.71 |
+| Active outside-contract years | 78.29 ± 7.49 | 56.67 ± 7.04 | 134.50 ± 14.25 | 102.92 ± 12.19 |
+| Years away with no home coverage | 2.29 ± 0.93 | 2.04 ± 0.86 | 3.92 ± 1.25 | 2.96 ± 1.24 |
+| Return promises honoured / broken | 4.46 ± 0.93 / 2.46 ± 0.45 | 1.83 ± 0.59 / 1.12 ± 0.26 | 7.12 ± 1.25 / 3.58 ± 0.61 | 3.33 ± 0.91 / 2.12 ± 0.49 |
+| Terminal treasury crowns | 1634.14 ± 224.38 | 1745.27 ± 252.37 | 1992.24 ± 247.83 | 1543.91 ± 204.80 |
+| Terminal living blood | 32.00 ± 4.28 | 36.00 ± 3.75 | 35.62 ± 5.02 | 37.29 ± 4.58 |
+| Terminal population | 50.42 ± 4.92 | 56.71 ± 4.49 | 55.67 ± 5.58 | 57.46 ± 5.22 |
+
+| Term / policy | Observed-use duties / total | Censored before 10 / no use after 10 | Conditional first-use house mean (paid years) |
+| --- | --- | --- | --- |
+| short / historical broad | 373 / 976 | 531 / 72 | 2.733 ± 0.343 (n=23) |
+| short / quoted demand | 665 / 1888 | 1223 / 0 | 1.394 ± 0.034 (n=24) |
+| long / historical broad | 527 / 1614 | 958 / 129 | 3.121 ± 0.320 (n=23) |
+| long / quoted demand | 920 / 2992 | 2072 / 0 | 1.466 ± 0.042 (n=24) |
+
+First-use averages condition on observed use and give each house one mean. The experimental reducer initially treated duties as independent; it was corrected after the campaigns without changing raw records, policy, primary metric or any other result. All non-timing fields of the original 12 ablation summary rows compare identically before/after correction. Zero-use duties released at five paid years are **censored before ten**, not successes and not evidence of eventual usefulness. The larger censored count is a consequence of the adopted release rule; these conditional waiting times do not establish a survival-adjusted improvement.
+
+| Term / policy | Ending counts (missing ending = campaign horizon) | Ascension counts |
+| --- | --- | --- |
+| short / historical broad | broken_line: 6, horizon: 18 | adept: 13, hierophant: 8, none: 2, vessel: 1 |
+| short / quoted demand | broken_line: 4, horizon: 20 | adept: 12, hierophant: 11, none: 1 |
+| long / historical broad | broken_line: 7, horizon: 17 | adept: 13, hierophant: 8, none: 1, vessel: 2 |
+| long / quoted demand | broken_line: 5, horizon: 19 | adept: 12, hierophant: 10, none: 1, vessel: 1 |
+
+| Term / quoted minus historical broad | Paired terminal treasury crowns | Paired living blood |
+| --- | --- | --- |
+| short | +111.13 ± 324.48 | +4.00 ± 3.47 |
+| long | -448.33 ± 306.80 | +1.67 ± 4.57 |
+
+Terminal treasury and blood differences are descriptive and do not establish broad-play superiority. More useful domains do not guarantee positive priced coin, fewer deaths or a higher ladder ending. Chartered-pressure 48 is reproduced and controlled separately; the founding grudge and rare conflict exposure are unchanged, and no ordinary-play conclusion here claims a pressure or attack rate.
+
+**Mechanisms and neutrality.** Tests exercise the real quote and assignment path: remove knowledge, availability or funding; prefer another uncovered book; retain learning/presence/capacity/preparation/upkeep and paused study; give equally learned women and men the same Threshold offer. Missing collaborator and one person knowing both books remain distinct from two available learned bodies. Public Table read/quote construction leaves complete canonical state unchanged. The original 55 Mystic gameplay function bodies, original offer initializer, original train/practise, six original accounting functions and primary metric body compare unchanged. Before/after eight 400-year default-play full-save digests match in every hash and size.
+
+All original ordinary 144 plus pressure 48 observer-off controls match the original observed full saves **192/192 after the view addition**. Corrected baseline funnel 48 matches historical broad 48. Quoted demand 48 also matches observer-off 48; first seed at each term passes JSON midpoint continuation and complete canonical command-log replay. The browser walkthrough covers Original and Plain English, 1400px and 390px, largest text, keyboard assignment/release, actual paused study/use receipts, no clipped horizontal content or page errors, and controls at least 44px. These are automated checks, not a human comprehension or enjoyment study. Existing blood/war/land/endings/reach thresholds, lanes and allowlists are unchanged; normal preflight and required exact-head CI are recorded on the PR.
+
+**Reproduction and retained artifacts.** Use Node 22 and the unchanged historical commands above to produce `ordinary.json`/`pressure.json`; the new CLI retains all original policy columns. Run the four single-factor variants against the strict control before the combined columns:
+
+```bash
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 capacity.json ordinary budgeted_broad,uncapped ordinary.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 selection.json ordinary release_idle,observed_rank ordinary.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 projects.json ordinary projects_yearly,demand_aware ordinary.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 quoted.json ordinary quoted_demand ordinary.json --funnel
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 funnel.json ordinary broad ordinary.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 24 187700 controls.json ordinary observer_controls ordinary.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts 8 187800 pressure-controls.json hostile observer_controls pressure.json
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/mystic-practice-report.ts --summarise ordinary.json summary.json capacity.json selection.json projects.json quoted.json
+```
+
+Long runs use the harness-tracked background lane, not the fast test loop. A checkpoint resumes completed houses without reselection and retains per-row source hashes; protocol, seed denominator, content and policy/base/Node provenance are checked. The reducer rejects incomplete or duplicate columns. Workspace artifacts under `/workspace/scratch/1942-*` retain the historical ordinary/pressure runs, three completed `*-resumed.json` ablation files and their frozen checkpoints, `quoted.json`, `funnel-ordinary.json`, `final-summary.json`, ordinary/pressure observer controls, source verification, UI walkthrough/screenshots and provenance proof. The final summary re-reduces all raw records with the corrected house-level timing statistic; the original quoted JSON keeps its initial embedded timing summary for audit.
+
+| Retained file | SHA256 |
+| --- | --- |
+| 1942-historical-ordinary.json | 783282180bb3e969275a155e49e66174b1db745c897ea5c8757484a28ee3d721 |
+| 1942-historical-pressure.json | d752ce97ea272d91dc6150112a1f466006171f04615bd3182845352525452b8f |
+| 1942-capacity-resumed.json | 6b95c65fba2e1aeda36d4fe0cd0e88a5fd18833ad49f88dbe3c083adbbbadc43 |
+| 1942-selection-resumed.json | 9255c2cca496c78e3c1a04abe9d3060c22c566d29dfd9beed6280d2f86f48f76 |
+| 1942-projects-resumed.json | c501a5e892cd98f367f6a07bad61ef5b3263f04bfb315f786af4132ebba02913 |
+| 1942-quoted.json | 8d9b62a6476d7e3118882128278170c6a7d9cca152e2bc95d4323b387aeb10a4 |
+| 1942-funnel-ordinary.json | 5f2a680456ca7d74a47478afabf807ddd3ec67be3eff925534b310be17ad2683 |
+| 1942-final-summary.json | 08815c77f862b59e7de19c3d1a13411846c4df9c40b1c935adb084fb2d9d7a9a |
+| 1942-ordinary-observer-controls.json | bb678922579f528f7fd513b95d52db5dd7fb0cfe60d7bee121a73a86c2b0e994 |
+| 1942-pressure-observer-after-quotes.json | 410009e9f0963af4c8972af5905a5b1335d08cadff5764e4b418c5c42272a007 |

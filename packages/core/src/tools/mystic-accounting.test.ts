@@ -11,13 +11,23 @@ import { resolveDueLots } from '../auction.js';
 import { saveGame } from '../save.js';
 import { place, testWorld } from '../testing.js';
 import { observeFamilyChallenge } from './challenge-observation.js';
-import { attachMysticLedger, emptyMysticLedger, mysticPayback, noteMysticOrder, noteMysticOutcome, sampleMysticYear, usefulDomainsPerGeneration } from './mystic-accounting.js';
-import { rateEvidence } from './mystic-baseline.js';
+import { attachMysticLedger, emptyMysticLedger, firstUseHouseMeans, mysticPayback, noteMysticOrder, noteMysticOutcome, sampleMysticYear, usefulDomainsPerGeneration } from './mystic-accounting.js';
+import { meanEvidence, rateEvidence } from './mystic-baseline.js';
 
 const content = loadContent();
 const snapshot = (ctx: ReturnType<typeof testWorld>) => ({ ...saveGame(ctx), savedAt: '' });
 
 describe('public Mystic practice experiments (#1942)', () => {
+  it('weights observed first-use time by house instead of by its number of duties, keeping censored houses out of the conditional mean', () => {
+    const runs = [
+      { metrics: { records: { one: { service: { firstUsefulAt: 1 } } } } },
+      { metrics: { records: Object.fromEntries(Array.from({ length: 9 }, (_, i) => [String(i), { service: { firstUsefulAt: 9 } }])) } },
+      { metrics: { records: { censored: { service: {} } } } },
+    ];
+    const values = firstUseHouseMeans(runs);
+    expect(values).toEqual([1, 9]);
+    expect(meanEvidence(values)).toMatchObject({ n: 2, mean: 5, standardError: 4 });
+  });
   it('keeps idle trained generations in the primary denominator and treats estate scope as one domain', () => {
     const metrics = { trainedGenerations: [0, 1, 2], usefulDomains: { 0: ['estate:small', 'estate:large', 'library_care'], 2: ['conflict'] } };
     const before = JSON.stringify(metrics);

@@ -5,6 +5,7 @@
  * `observer_controls` repeats every original scenario without observers; requires historical.json.
  * --summarise historical.json output.json columns.json [...] reduces completed matched columns.
  * Optional eighth argument for experimental columns: checkpoint.json (use - for no historical input).
+ * Defaults to the adopted quoted_demand policy; explicit historical/ablation columns remain available.
  * Experimental columns collect the existing service/working metrics; --funnel adds the full annual supply funnel.
  */
 import { createHash } from 'node:crypto';
@@ -16,7 +17,7 @@ import { canonical, saveGame } from '../save.js';
 import { replay } from '../replay.js';
 import { expectMean } from '../testing.js';
 import { meanEvidence } from './mystic-baseline.js';
-import { usefulDomainsPerGeneration } from './mystic-accounting.js';
+import { firstUseHouseMeans, usefulDomainsPerGeneration } from './mystic-accounting.js';
 import { createPracticePolicy, PRACTICE_VARIANTS, type PracticeVariant } from './mystic-practice-policy.js';
 import { playRepertoireCampaign, REPERTOIRE_POLICIES } from './mystic-repertoire-report.js';
 
@@ -50,7 +51,7 @@ export function comparePractice(runs: readonly PracticeRun[], historical: readon
       firstUse: { duties: records.length, observed: records.filter(d => d.service.firstUsefulAt !== undefined).length,
         censoredBefore10: records.filter(d => d.service.firstUsefulAt === undefined && d.service.servedYears < 10).length,
         noUseAfter10: records.filter(d => d.service.firstUsefulAt === undefined && d.service.servedYears >= 10).length,
-        observedPaidYears: meanEvidence(records.flatMap(d => d.service.firstUsefulAt === undefined ? [] : [d.service.firstUsefulAt])) },
+        observedHouseMeanPaidYears: meanEvidence(firstUseHouseMeans(rows)) },
       paidDutyYears: estimate(r => r.metrics.paidDutyYears), pausedStudyYears: estimate(r => r.metrics.pausedStudyYears),
       studyPersonYears: estimate(r => r.ledger.studyingPersonYears), directSavings: estimate(r => r.coin.directSavings),
       yieldCoinEstimate: estimate(r => r.coin.yieldEstimate), serviceSpent: estimate(r => r.coin.serviceSpent),
@@ -107,7 +108,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-practice-report.ts') 
 } else if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-practice-report.ts')) {
   const args = process.argv.filter(arg => arg !== '--funnel');
   const n = Number(args[2] ?? 24), seedBase = Number(args[3] ?? 187700);
-  const output = args[4], scenario = args[5] ?? 'ordinary', requested = args[6] ?? 'demand_aware';
+  const output = args[4], scenario = args[5] ?? 'ordinary', requested = args[6] ?? 'quoted_demand';
   if (!Number.isSafeInteger(n) || n < 1 || !Number.isSafeInteger(seedBase) || !output) throw Error('Expected runs, integer seed and output path');
   if (scenario !== 'ordinary' && scenario !== 'hostile') throw Error('Expected ordinary or hostile');
   const historical: Run[] = args[7] && args[7] !== '-' ? JSON.parse(readFileSync(args[7], 'utf8')).samples : [];
