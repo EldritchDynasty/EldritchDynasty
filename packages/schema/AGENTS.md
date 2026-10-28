@@ -61,3 +61,21 @@ save; warnings do not, and that is deliberate.
 
 After changing any vocabulary: `npm run gen:docs`. `docs.test.ts` fails if the
 generated reference is stale.
+
+## Invariant details
+
+### 5. The verbs are enumerated, never scripted
+
+`Effect`, `Condition`, `Filter`, `Target`, `Decider` and `SlotRole` are closed unions. Adding a variant is a deliberate act with a compiler error at every site that has to keep up — the correct amount of friction.
+
+That only holds because each of those sites now ends in `assertNever`. It did not before: a `switch` with no default and an `if ('x' in c)` chain ending in `return true` both accept a new variant in silence — the effect applies nothing, the condition **passes**, and every event carrying it fires unconditionally for a thousand years. Never end one of those functions with a permissive default.
+
+### 16. Every post is a man's
+
+`canHoldPost` (`packages/schema/src/career.ts`) is the only placement gate. All three doors that write `Person.career` ask it: the player's `career` order at the table, the steward's `placePosts`, and the authored `career` effect.
+
+- **§18's careers are institutions, not menu items** — a commission in the Warden's levy, ordination at the Bramme chapter house, a place in the King's household, a Braccish partnership, a bench at Cawdry, a berth out of Sarrow, a bed at the Colleges. Every one of them is closed to a woman.
+- **No `sex` field on `CareerDef`.** A per-career flag is one the ninth career forgets to set.
+- The three doors asked only for an age. So the steward bought commissions for daughters out of a treasury with six seats to spend, the table offered them, and the clergy's Madness cover and breeding-pool exclusion landed on women — while the prose those events carry says *"ordination is not a post a man leaves"*, *"Two sons, and one place"*, *"He is very good at it"*.
+- **`careers/gate`** is the content half. The engine gate turns a mis-cast placement into a placement that does NOTHING — the outcome fires, pays its Respect, writes its chronicle line, and nobody is placed. The rule refuses any bundle whose `career` effect casts from a slot that is not already gated to men, the same way `madness/gate` does.
+- This is **not** the Mystic restriction and shares no code with it. A woman is barred from the posts and from nothing else: the tutor's term, the shelf, the Threshold four, the Match and the Record are all hers.

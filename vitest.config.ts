@@ -21,7 +21,7 @@ export const DOM_SUITES = 'packages/client/src/components/**/*.test.ts';
  * Everything else asserts a mechanism against a world built by
  * `core/src/testing.ts` and finishes in seconds. That is the loop you want
  * while fixing a bug: `npm run test:fast`. What it costs is stated once, in
- * AGENTS.md's command block, and measured by `npm run cost` — see below. Run
+ * docs/COMMANDS.md's command block, and measured by `npm run cost` — see below. Run
  * the whole suite before you claim anything works; `npm run check` does.
  *
  * ── AND THE NUMBERS ARE NOT IN THIS COMMENT ANY MORE ──────────────────────
@@ -160,7 +160,7 @@ export default defineConfig({
      *
      * MEASURED, on a four-core container, `npm run test:fast`:
      *   isolate: true    82.77s   (collect 64.50s)
-     *   isolate: false   see AGENTS.md's command block
+     *   isolate: false   see docs/COMMANDS.md's command block
      *
      * If a suite ever needs a fresh registry, it says so per-file with
      * `// @vitest-environment` or its own describe-level setup, rather than by

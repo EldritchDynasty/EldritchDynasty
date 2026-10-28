@@ -355,7 +355,7 @@ genuinely need one.
 ## Commands
 
 **The command list, with what each one costs, is in
-[AGENTS.md](AGENTS.md#commands)** — one copy, because there were five and three
+[COMMANDS.md](docs/COMMANDS.md#commands)** — one copy, because there were five and three
 of them quoted a timing that had been wrong for months.
 
 One command is worth explaining here rather than there. `npm run gate:drag`

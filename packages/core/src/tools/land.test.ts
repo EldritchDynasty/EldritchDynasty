@@ -1050,7 +1050,7 @@ describe('a markdown-only change runs the short set, and only then', () => {
     'packages/core/src/tools/gen-docs.ts': 'writes docs/VOCABULARY.md; its one CI reader is docs.test.ts, a fast test',
     'tools/agents.mjs': 'message text only',
     'tools/codemap.mjs': 'pure architecture parser; all map validity checks run in fast tests',
-    'tools/cost.mjs': 'rewrites AGENTS.md figures by hand; CI never runs it',
+    'tools/cost.mjs': 'rewrites docs/COMMANDS.md figures; CI never runs it',
     'tools/land.mjs': 'message text only',
     'tools/orient.mjs': 'message text only',
     'tools/verify-plan.mjs': 'advisory CLI only; CI does not run it and land only prints it in dry-run mode',

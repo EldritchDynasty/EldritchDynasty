@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -211,33 +211,28 @@ describe('the session-start hook is not gated on a Claude-only variable', () => 
 });
 
 /**
- * THE DOC BUDGET — THE ONE THAT COST THE MOST AND SHOWED THE LEAST.
+ * BOTH GUIDES FIT WITHOUT AN OVERRIDE.
  *
  * Codex concatenates the AGENTS.md files from the repository root down to the
  * working directory and stops once the total reaches `project_doc_max_bytes`.
  * The default is 32 KiB and the truncation is SILENT — no warning in the TUI,
  * nothing in the log (openai/codex#7138).
  *
- * The root file is over 51 KiB. At the default, Codex read about 63% of it and
- * stopped mid-section, which put "Working style" (the standing authorisation
- * for `npm run land`), the whole of "Do not", and "Known gaps" past the cut —
- * and because the root file alone overran the budget, every per-package
- * AGENTS.md reached Codex at ZERO bytes.
- *
- * `.codex/config.toml` raises the budget. This asserts the file still fits in
- * what it raised it to, because the file grows and the failure says nothing.
+ * Previously the root alone overran that budget, hiding the landing rules,
+ * prohibitions and every package guide. Task-specific detail now lives beside
+ * its package. Enforce the actual default, even when config is not loaded.
  */
-describe('AGENTS.md fits in the budget Codex is configured with', () => {
-  const toml = readFileSync(join(REPO, '.codex/config.toml'), 'utf8');
-  const budget = Number(/^\s*project_doc_max_bytes\s*=\s*(\d+)/m.exec(toml)?.[1] ?? 0);
+describe('AGENTS.md fits in the default Codex budget', () => {
+  const budget = 32 * 1024;
 
   const sizeOf = (p: string) => statSync(join(REPO, p)).size;
-  const packages = ['content', 'core', 'schema', 'editor', 'client', 'mobile', 'shell']
-    .map((p) => `packages/${p}/AGENTS.md`)
-    .filter((p) => existsSync(join(REPO, p)));
+  const packages = readdirSync(join(REPO, 'packages'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => `packages/${entry.name}/AGENTS.md`);
 
-  it('sets a budget at all, so this cannot pass by finding nothing', () => {
-    expect(budget).toBeGreaterThan(32 * 1024);
+  it('uses the default without a repository override', () => {
+    const toml = readFileSync(join(REPO, '.codex/config.toml'), 'utf8');
+    expect(toml).not.toMatch(/^\s*project_doc_max_bytes\s*=/m);
   });
 
   it('leaves room for the root file and the package file read with it', () => {
@@ -247,9 +242,9 @@ describe('AGENTS.md fits in the budget Codex is configured with', () => {
     expect(
       total,
       `AGENTS.md (${root}B) plus the largest package AGENTS.md (${worst}B) is ${total}B against a ` +
-      `project_doc_max_bytes of ${budget}B. Codex will truncate, silently, from the END — so the ` +
+      `default budget of ${budget}B. Codex will truncate, silently, from the END — so the ` +
       `LAST sections of AGENTS.md are the ones that stop reaching it, and the package file may not ` +
-      `reach it at all. Either cut the root file or raise the budget in .codex/config.toml.`,
+      `reach it at all. Move task-specific detail out of the root or package guide.`,
     ).toBeLessThanOrEqual(budget);
   });
 

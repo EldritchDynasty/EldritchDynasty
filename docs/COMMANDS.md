@@ -1,14 +1,85 @@
 # COMMANDS
 
-The command block itself lives in [AGENTS.md](../AGENTS.md#commands) and is the
-only copy — a number kept in two files is wrong in one of them within a few
-commits, and `npm run test:fast` was once documented at four different figures
-at once while actually taking a hundred seconds. `packages/core/src/codemap.test.ts`
-fails the build if a second copy grows back, so **quote no timing here**.
+The command block below is the sole list of command costs, written by
+`npm run cost` and checked by `packages/core/src/codemap.test.ts`. Keep costs
+here only; measured figures are perishable and must be remeasured before quoting.
 
-This file is the part that is prose rather than a line: how a session starts,
-what the landing actually does, what CI is shaped like, and which of those
-commands answer a question nothing else can.
+## Commands
+
+```bash
+npm install
+npm run setup        # what the SessionStart hook runs: `npm ci` when node_modules
+                     # is absent, nothing when it still matches the lockfile,
+                     # `npm install` otherwise; never rewrites the tracked lockfile.
+                     # `-- --browser` adds Playwright's Chromium, launched to prove it.
+npm run doctor       # read-only: Node vs .nvmrc, dependency freshness, Chromium,
+                     # hook wiring, main's CI verdict, each with its fix. `-- --json`
+
+# Measured on a four-core container, and perishable. Re-measure before quoting.
+npm run check        # typecheck (vue-tsc too) + validate + test;
+                     # NOT the gates: landing on it broke main 4 times.
+npm run land         # session preflight: fetch, rebase, install, then run
+                     # typecheck + validate + test:fast ON THAT head. It stops
+                     # at preflight-green; a session NEVER pushes main. Use
+                     # --full-preflight for the complete local CI-derived set.
+                     # Then open/keep a ready same-repository PR. Do not merge it:
+                     # auto-merge-queue.yml lands exact-head green CI: native
+                     # queue when public, fast-forward of main when private.
+                     # Long preflights must use a harness-tracked background run;
+                     # `nohup … &` dies with the container silently.
+npm run land -- --status   # is a preflight running, dead, or preflight-green?
+                     # A session preflight never pushes or merges.
+npm run verdict      # did CI answer? green / red / pending / ABSENT (not a pass)
+npm run test:fast    # ~7 min, the fix-and-rerun loop. Skips the *.slow.test.ts suites;
+                     # lanes.test.ts fails the build if one turns up in this
+                     # lane, or if a suite drives a batch through a tools
+                     # module without declaring it.
+npm test             # everything: fast and slow suites. For fresh counts and
+                     # full-suite timing: npm run cost -- --full --write
+npm run typecheck    # tsc over packages, then vue-tsc over the editor's and the
+                     # client's templates.
+npm run validate     # every content rule; exits non-zero on any error. An error
+                     # names the file it is in: `events/rites.yaml → event:the_drowning`
+
+npm run dev          # authoring tool at localhost:5173
+npm run play         # the game at localhost:5174. Both run at once, on purpose
+npm run shell        # the GAME inside the Electron shell — the editor keeps its own target
+npm run shell:preview                 # build the client, then run the shell against dist
+npm run smoke --workspace @ed/shell   # boot the shell, assert the renderer mounted, exit
+npm run build:shell                   # Windows only (#67): client, then an NSIS installer
+
+npm run harness -- 16 500             # 16 headless Long Lines, with balance numbers
+npm run digest  -- 8 400              # fingerprint 8 runs; diff the block across commits
+npm run gate                          # every gate — what CI will say, in one command
+npm run gates   -- fire-rate          # one of them on its own, when you know which
+npm run gates   -- --lane batch       # merge-blocking gate lane; sampled gates are scheduled
+                                      # `batch`, `blood`, `fire-rate`, `war`, `endings`, `outcome-reach`.
+npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
+npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
+                                      # question is its `//` note in package.json
+npm run gate:density -- --seeds=901,902 500 300   # what the player is asked, per
+                                      # generation and per Age, and how often the same
+                                      # thing twice. Both campaign terms. #88's instrument
+npm run gate:land -- 12 500           # acreage trend, loss routes, reader, treasury
+npm run corpus                        # warm the run corpus. CI caches it
+npm run mutate -- assize --limit 20   # break code on purpose; list what no test noticed
+npm run lint:prose                    # advice, never a gate
+npm run gen:loci                      # regenerate loci.yaml
+npm run gen:docs                      # regenerate docs/VOCABULARY.md from the schemas
+
+npm run scoreboard                    # red rate on MAIN — a branch verdict and a
+                                      # cancelled run get their own columns
+npm run cost                          # re-measure the figures above; --write applies them
+                                      # (--full --write: also the per-file table CI packs by)
+npm run agents                        # who holds which issue, across every running session
+npm run agents -- take 93 --paths packages/core/src/economy
+npm run agents -- check               # anyone else writing my paths? Run before the long check
+npm run agents -- release 93          # when it lands. See docs/PARALLEL.md
+```
+
+`loci.yaml`, `docs/VOCABULARY.md` and `tools/test-durations.json` are
+**generated**. Never hand-edit one; the last packs CI's shards, and a stale one
+fails `lanes.test.ts`.
 
 ---
 
@@ -434,7 +505,7 @@ not try it, and do not read a surviving branch as work in flight.
   `attention.slow.test.ts` can be re-derived from that file's own pool; a band
   measured on other seeds is one nobody can reproduce when it goes red. Like
   the four above, it prints and does not judge.
-- **`npm run cost`** re-measures the figures in AGENTS.md's block; `--write`
+- **`npm run cost`** re-measures the figures in this file's command block; `--write`
   applies them. They are measured on a four-core container and are perishable.
 - **`npm run scoreboard`** gives the red rate on `main` and which job went red. It
   distinguishes exact **judged heads** from commits **covered** by a durable
@@ -448,3 +519,18 @@ not try it, and do not read a surviving branch as work in flight.
 `packages/content/loci.yaml` and `docs/VOCABULARY.md` are **generated**
 (`npm run gen:loci`, `npm run gen:docs`). Never hand-edit either;
 `.claude/hooks/guard-edit.mjs` denies the attempt.
+
+## Interpreting reach evidence
+
+- **Reach is a measured funnel.** An event's premise, cast, eligibility,
+  selection and resolved outcome are separate questions. Use the gate runner
+  (`npm run gates -- fire-rate`) and outcome-reach
+  evidence for the current bundle; do not acquit a red result by remembering
+  a rare tail from an older batch. Frame events use record-reading cadence,
+  while ambient events share frequency rations.
+- **Historical measurements stay dated.** `BALANCE-LOG.md` and
+  `REGENCY-PACING.md` identify their code/content, campaigns, seeds and
+  policies. They do not establish today's rate after another content change.
+- **Human response is unverified.** `PLAYTEST.md` records the waived,
+  unrun studies. Automated reach, deterministic replay and mechanism tests
+  cannot establish attachment, comprehension or enjoyment.

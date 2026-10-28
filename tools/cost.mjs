@@ -25,7 +25,7 @@
  *
  * So: measure, and write the measurement down.
  *
- *   npm run cost              # measure test:fast, print what AGENTS.md should say
+ *   npm run cost              # measure test:fast, print what docs/COMMANDS.md should say
  *   npm run cost -- --write   # and rewrite the command block to match
  *
  * `check` and `test` are NOT measured by default: they take half an hour, and
@@ -47,7 +47,7 @@
  * this repository's own argument against specifications, applied to its own
  * timing comments.
  *
- *   npm run cost                          # test:fast, print what AGENTS.md should say
+ *   npm run cost                          # test:fast, print what docs/COMMANDS.md should say
  *   npm run cost -- --write               # and rewrite the command block to match
  *   npm run cost -- --full --write        # the whole suite, and the per-file table
  *   npm run cost -- --report <file>       # read a vitest JSON report already on disk
@@ -72,7 +72,7 @@ import { join, relative, sep } from 'node:path';
 import { DURATIONS_FILE, packShards, shardCosts } from './shards.mjs';
 
 const REPO = join(import.meta.dirname, '..');
-const AGENTS_MD = join(REPO, 'AGENTS.md');
+const COMMANDS_MD = join(REPO, 'docs/COMMANDS.md');
 const WRITE = process.argv.includes('--write');
 const FULL = process.argv.includes('--full');
 /** A vitest JSON report already on disk, so a half-hour run is spent once. */
@@ -218,7 +218,7 @@ function measureFull() {
     // The COUNTS come from the reporter, not from a regex over the default
     // reporter's summary — see that file's `onTestRunEnd`. The regex version
     // stopped matching the moment a second reporter was attached, and left a
-    // stale line in AGENTS.md without failing anything.
+    // stale line in docs/COMMANDS.md without failing anything.
     if (raw.summary) {
       result.files = raw.summary.files;
       result.tests = raw.summary.tests;
@@ -270,7 +270,7 @@ function reportShards(files) {
   for (const [f, ms] of worst) console.log(`    ${human(ms / 1000).padStart(8)}  ${f}`);
   if (longest > total / n) {
     console.log('\n  THE LONGEST FILE IS OVER A SHARD\'S FAIR SHARE. Vitest parallelises per');
-    console.log('  FILE, so no packing and no shard count can get below it. AGENTS.md has the');
+    console.log('  FILE, so no packing and no shard count can get below it. docs/TEST-COVERAGE.md has the');
     console.log('  fix and its one prohibition: split it BY TEST, never by seed range.');
   }
 }
@@ -313,23 +313,23 @@ function main() {
   if (shown && Object.keys(shown).length) reportShards(shown);
 
   if (!WRITE) {
-    console.log('\n`--write` to put these into AGENTS.md\'s command block'
+    console.log('\n`--write` to put these into docs/COMMANDS.md\'s command block'
       + (table ? ` and ${DURATIONS_FILE}.` : '.'));
     if (results.some((r) => !r.ok)) process.exitCode = 1;
     return;
   }
 
-  const original = readFileSync(AGENTS_MD, 'utf8');
+  const original = readFileSync(COMMANDS_MD, 'utf8');
   let text = rewriteCommandCosts(original, results);
   const before = original.length;
-  if (text.length === before && text === readFileSync(AGENTS_MD, 'utf8')) {
+  if (text.length === before && text === readFileSync(COMMANDS_MD, 'utf8')) {
     // `--report` measures no wall clock, so it has nothing to say about the
     // command block and must not claim it rewrote one. A tool that reports
     // work it did not do is the same lie as a figure that is out of date.
-    console.log('\nAGENTS.md unchanged — this run measured no wall clock to put in it.');
+    console.log('\ndocs/COMMANDS.md unchanged — this run measured no wall clock to put in it.');
   } else {
-    writeFileSync(AGENTS_MD, text);
-    console.log(`\nAGENTS.md rewritten (${before} → ${text.length} bytes).`);
+    writeFileSync(COMMANDS_MD, text);
+    console.log(`\ndocs/COMMANDS.md rewritten (${before} → ${text.length} bytes).`);
   }
 
   if (table) {

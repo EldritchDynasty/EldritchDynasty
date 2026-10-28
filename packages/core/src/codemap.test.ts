@@ -54,6 +54,10 @@ describe('the architecture map consumed by verification and task briefs', () => 
  * the only thing standing between a helpful map and a confident wrong one.
  */
 
+const PACKAGE_GUIDES = readdirSync(join(REPO, 'packages'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => `packages/${entry.name}/AGENTS.md`);
+
 const DOCS = [
   'AGENTS.md',
   'ARCHITECTURE.md',
@@ -61,11 +65,7 @@ const DOCS = [
   'docs/COMMANDS.md',
   'docs/FAILURES.md',
   'docs/TEST-COVERAGE.md',
-  'packages/core/AGENTS.md',
-  'packages/schema/AGENTS.md',
-  'packages/content/AGENTS.md',
-  'packages/editor/AGENTS.md',
-  'packages/client/AGENTS.md',
+  ...PACKAGE_GUIDES,
 ];
 
 /** `path/like/this.ts` inside backticks. Bare prose is not checked. */
@@ -85,6 +85,8 @@ const SEARCH_ROOTS = [
   'packages/core/src/year', 'packages/core/src/genetics', 'packages/core/src/ages',
   'packages/core/src/tools', 'packages/content/tools', 'packages/editor/src/components',
   'packages/editor/src/lib', 'packages/content/events',
+  'packages/shell', 'packages/shell/src', 'packages/shell/scripts',
+  'packages/mobile', 'packages/mobile/src', '.github/workflows',
 ];
 
 function resolves(link: string, docDir: string): boolean {
@@ -108,10 +110,10 @@ function resolves(link: string, docDir: string): boolean {
  * said ~2s and `README.md` still claimed 699 tests, both found later by accident.
  *
  * A number that appears in five documents is wrong in four of them eventually.
- * So the command block lives in `AGENTS.md` and every other document links to
+ * So the command block lives in `docs/COMMANDS.md` and every other document links to
  * it, and this fails the build if a second copy grows back.
  */
-const COST_HOME = 'AGENTS.md';
+const COST_HOME = 'docs/COMMANDS.md';
 
 /**
  * Where a stray cost is looked for — WIDER than DOCS, and deliberately so.
@@ -174,20 +176,17 @@ describe('what the suite costs is stated once', () => {
  * `AGENTS.md` is read in full at the start of every session, before the task is
  * known — its size is a tax on every piece of work done in this repo. It is
  * also now the one canonical instruction file for Claude Code, Codex and other
- * agents. The old 22KB ceiling applied to CLAUDE.md's abbreviated copy; moving
- * its command block and hard prohibitions into the existing full rulebook
- * deliberately makes this file larger while deleting the second instruction
- * source.
+ * agents. Task-specific detail belongs in routed guides; the command-cost
+ * block lives in docs/COMMANDS.md. Universal constraints stay here.
  *
  * Nothing about that was visible, which is the usual story here. A document
  * does not fail; it just quietly costs more every session, and the cost is
  * paid by whoever reads it next.
  *
- * The ceiling keeps about 9% of headroom over the consolidated file. It is
- * not a style rule — if a section is worth the tax, raise the number
- * deliberately and say why here. What it forbids is drifting back by accident.
+ * The root target is 12 KiB. codex.test.ts independently checks root plus
+ * every package guide against Codex's default 32 KiB concatenation budget.
  */
-const BUDGET = 55_000;
+const BUDGET = 12 * 1024;
 
 /**
  * THE FIGURE IS TRUE, NOT MERELY UNIQUE.
@@ -203,7 +202,7 @@ const BUDGET = 55_000;
  * which is what `test:fast` was. Ordinary drift is not a build failure; it is
  * what `npm run cost` is for.
  */
-describe('the cost in the always-loaded file is close to the truth', () => {
+describe('the canonical command cost is close to the truth', () => {
   // The cost generator writes seconds for short runs and rounded minutes for
   // longer runs. CI's fast lane may be slower than a four-core developer box.
   function documentedFastSeconds(text: string): number | null {
@@ -211,7 +210,7 @@ describe('the cost in the always-loaded file is close to the truth', () => {
     return m ? Number(m[1]) * (m[2] === 'min' ? 60 : 1) : null;
   }
 
-  const stated = () => documentedFastSeconds(readFileSync(join(REPO, 'AGENTS.md'), 'utf8'));
+  const stated = () => documentedFastSeconds(readFileSync(join(REPO, COST_HOME), 'utf8'));
 
   it('understands both generated timing units', () => {
     expect(documentedFastSeconds('npm run test:fast    # ~118s, the fix-and-rerun loop')).toBe(118);
@@ -222,7 +221,7 @@ describe('the cost in the always-loaded file is close to the truth', () => {
   it('states a figure for the fix-and-rerun loop at all', () => {
     expect(
       stated(),
-      'AGENTS.md no longer says what `npm run test:fast` costs. It is the one number ' +
+      `${COST_HOME} no longer says what \`npm run test:fast\` costs. It is the one number ` +
       'an agent uses to decide whether it can afford to re-run, and the one place it lives.',
     ).not.toBeNull();
   });
@@ -235,10 +234,10 @@ describe('the cost in the always-loaded file is close to the truth', () => {
    */
   it('states a figure that could plausibly be a fast lane', () => {
     const s = stated()!;
-    expect(s, `AGENTS.md says test:fast takes ${s}s`).toBeGreaterThan(5);
+    expect(s, `${COST_HOME} says test:fast takes ${s}s`).toBeGreaterThan(5);
     expect(
       s,
-      `AGENTS.md says test:fast takes ${s}s. Over ten minutes is not a ` +
+      `${COST_HOME} says test:fast takes ${s}s. Over ten minutes is not a ` +
       `fix-and-rerun loop — either a slow suite has landed in the fast lane ` +
       `(lanes.test.ts) or the figure is stale. \`npm run cost -- --write\`.`,
     ).toBeLessThan(600);
@@ -247,13 +246,13 @@ describe('the cost in the always-loaded file is close to the truth', () => {
 
 describe('the file that loads every session', () => {
   it(`stays under ${BUDGET / 1000}KB`, () => {
-    const bytes = readFileSync(join(REPO, 'AGENTS.md'), 'utf8').length;
+    const bytes = statSync(join(REPO, 'AGENTS.md')).size;
     expect(
       bytes,
       `AGENTS.md is ${bytes} bytes, over its ${BUDGET} budget. Move what only ` +
       `some tasks need into a document the routing table points at, the way ` +
-      `docs/BALANCE-LOG.md was split out — or raise the budget on purpose.`,
-    ).toBeLessThan(BUDGET);
+      `docs/BALANCE-LOG.md was split out.`,
+    ).toBeLessThanOrEqual(BUDGET);
   });
 
   it('keeps CLAUDE.md as an import shim rather than a second instruction set', () => {
@@ -263,6 +262,13 @@ describe('the file that loads every session', () => {
       shim.length,
       'CLAUDE.md has grown into a second copy of the shared instructions',
     ).toBeLessThan(500);
+  });
+
+  it('keeps every Claude package shim pointed at its scoped guide', () => {
+    for (const guide of PACKAGE_GUIDES) {
+      const shim = join(REPO, dirname(guide), 'CLAUDE.md');
+      expect(readFileSync(shim, 'utf8'), `${guide} has no thin Claude import`).toBe('@AGENTS.md\n');
+    }
   });
 });
 
@@ -418,8 +424,6 @@ describe('the codemap', () => {
       .filter((e) => e.isDirectory())
       .map((e) => e.name);
     for (const pkg of packages) {
-      // `shell` owns no rules — it is a window and a disk — so it is exempt.
-      if (pkg === 'shell') continue;
       expect(
         existsSync(join(REPO, 'packages', pkg, 'AGENTS.md')),
         `packages/${pkg} has no AGENTS.md, so an agent working there gets the root file or nothing`,

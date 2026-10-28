@@ -616,3 +616,90 @@ No new fast-suite file or campaign batch test, gate, threshold, lane allowlist,
 schema or content change. Normal rebased preflight and exact-head hosted CI
 are recorded on the PR; detailed results, commands, caveats and artifact hashes
 are appended to `docs/BALANCE-LOG.md`.
+
+## 28 October 2026 — bounded shared instructions (#1935)
+
+Baseline: `fcdf1c9f748260d52c3f7fd251de30c7d571d08d`, after #1931/#1933.
+The root guide had grown to 43,389 bytes and depended on a trusted-project
+64 KiB override. Universal authority, priority, claims, branch/PR boundaries,
+landing authorization, generated-file restrictions and all sixteen numbered
+invariants remain in root. The Do-not list is unchanged verbatim.
+
+| Instruction file | Before (bytes) | After (bytes) |
+|---|---:|---:|
+| `AGENTS.md` | 43,389 | 12,188 |
+| `packages/client/AGENTS.md` | 5,941 | 5,941 |
+| `packages/content/AGENTS.md` | 12,491 | 14,045 |
+| `packages/core/AGENTS.md` | 3,621 | 13,803 |
+| `packages/editor/AGENTS.md` | 5,536 | 5,536 |
+| `packages/mobile/AGENTS.md` | 5,452 | 5,469 |
+| `packages/schema/AGENTS.md` | 3,505 | 5,778 |
+| `packages/shell/AGENTS.md` | 5,539 | 5,539 |
+
+Root plus the largest guide is 26,233 bytes
+against the default 32,768; the root target is 12,288 bytes. Both tests use byte
+sizes, not JavaScript character counts. Package discovery includes all seven
+packages and no missing guide is silently filtered out. The override was removed
+after the default-budget checks passed.
+
+The command-cost block moved intact to `COMMANDS.md#commands`; `tools/cost.mjs`,
+`codemap.test.ts`, the command-permission reader in `settings.test.ts` and living
+links follow it. Full invariant explanations 1–4, 6–10 and 12–15 moved intact to
+the core guide; 5 and 16 to schema; 10 also to content's Attributes section.
+Invariant 11's four subsystem incidents and slot-order incident were retained in
+`FAILURES.md`. Detailed test guidance is in `TEST-COVERAGE.md`; portable operating
+requirements in `PORTABILITY.md`; reach/evidence guidance in `COMMANDS.md`.
+Newborn naming details moved to core. Historical context removed from the root
+is retained below, with links adjusted for this directory. Existing historical
+log entries were not rewritten. No simulation, authored YAML, game thresholds
+or landing policy changed.
+
+### Reading-route walkthrough
+
+| Task | Root-cwd Codex route | Claude route |
+|---|---|---|
+| Content event | Root Task routes → content guide + vocabulary; concept §§6/16/18–20/25/29; world §§1–2/25–27 and scene setting | Root shim imports shared rules; touching content has a one-line local shim importing the same guide |
+| Simulation rule | Root Task routes → core guide + concept §5 and owning-system sections; architecture gives files/tests | Root and core shims point to those same canonical instructions |
+| Save-format change | Root Task routes → schema guide + architecture field recipe; core/save tests; simulation route if rules change | Root and schema shims point to those same canonical instructions |
+| Tooling fix | Root Task routes → commands, portability, parallel protocol, test guidance and any touched package guide | Root plus the touched package shim reaches the same material |
+
+Codex only automatically concatenates ancestor guides on the path to its cwd;
+a root session must explicitly read each touched package guide, as the first
+paragraph now requires. Every package has a ten-byte `CLAUDE.md` containing only
+`@AGENTS.md`; the root shim and shared skill/hook registrations remain unchanged.
+The walkthrough checks available routes and file contents, not model compliance.
+
+Validation: 259 focused tests passed across codemap, Codex budget/launcher parity,
+command permissions, portability/cost rewriting, generated-reference freshness
+and the landing contract. A separate preservation check compared all sixteen
+original explanation blocks against their destinations and compared the Do-not
+list byte-for-byte. The ready PR carries the required preflight/integration
+results and the section-by-section requirement inventory.
+
+**Limitation:** Claude Code is not installed or authenticated in this cloud
+image. Live nested-memory loading and four-task walkthroughs inside Claude
+remain unverified; static shim/import checks do not establish live loading.
+Keep #1935 open (`Refs #1935`) until that explicit acceptance item is verified.
+Windows execution is left to the existing Windows CI job; local checks used
+Linux with Node 22. No actual-reader evidence is implied.
+
+### Retained context from the prior root guide
+
+The following described the state at the baseline above; it is preserved as
+history rather than always-loaded operating guidance.
+
+The unbuilt brief, its implementation plan, and the fertility do-to were folded into those issues and deleted — the same reason the data-model and event-editor briefs before them are gone. A specification that duplicates working code drifts, and every one of these drifted: the data-model brief was still claiming twelve heritable attributes and a `House` with a `roster`; the unbuilt brief was still saying `ModifierS` had seven kinds when it has eight. **For anything that exists, the code is the spec.** All three are recoverable in full from git history.
+
+**What is next.** The original build order — Phases 0–9 ([#7](https://github.com/EldritchDynasty/EldritchDynasty/issues/7)–[#24](https://github.com/EldritchDynasty/EldritchDynasty/issues/24)) and fertility ([#28](https://github.com/EldritchDynasty/EldritchDynasty/issues/28)) — and the commercial pass ([#277](https://github.com/EldritchDynasty/EldritchDynasty/issues/277)) are shipped and closed. Choose actionable tracker work by the priority rule below. Issue numbers describing implemented systems are history, not open work.
+
+
+Documentation baseline reviewed against `main` at `098bfe02` on 22 October 2026;
+onboarding, system ownership and player/modding guides refreshed at `8b09dbee`
+on 26 October 2026 (#1931).
+Living guides describe shipped code; dated surveys, narrative drafts and
+append-only logs retain their original evidence. See the audit entry in
+[AGENT-LOG.md](AGENT-LOG.md). Recurring Mystic practice and its
+calibration are shipped; evidence and unresolved limits are in
+`docs/BALANCE-LOG.md` (#1878, parent #1866). Use the current
+[architecture owner map](../ARCHITECTURE.md#where-a-thing-lives) for duties,
+outside service, field support and covert operations.
