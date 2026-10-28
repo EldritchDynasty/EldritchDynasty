@@ -1041,10 +1041,12 @@ export interface MysticOfferView {
   books: string[];
   collaborator?: string;
   fieldTerms?: string;
-  /** Learned, available, and keeping no other duty — the people the order would accept. */
+  /** Learned, available, and keeping no other duty; the reader/place combination still needs a quote. */
   practitioners: { person: string; name: string; studying?: { book: string; remainingYears: number } }[];
   /** Places this working can actually reach today. */
   targets: MysticTarget[];
+  /** One reader/place combination the current quote accepts; not a prediction of useful service. */
+  assignable?: { person: string; target: number };
 }
 
 export interface MysticView {
@@ -1123,6 +1125,19 @@ export function mysticTargets(ctx: SimCtx, working: MysticWorkingDef): MysticTar
   }
 }
 
+/** A current command quote. Keep the existing lists intact, including unavailable combinations. */
+function firstAssignable(ctx: SimCtx, offer: MysticOfferView): MysticOfferView['assignable'] {
+  const readers = [...offer.practitioners].sort((a, b) => Number(Boolean(a.studying)) - Number(Boolean(b.studying)) || a.person.localeCompare(b.person));
+  const targets = offer.targets.map((target, index) => ({ target, index })).sort((a, b) =>
+    Number(b.target.target.kind === 'hall' && b.target.target.hall === 'main')
+    - Number(a.target.target.kind === 'hall' && a.target.target.hall === 'main') || a.index - b.index);
+  for (const reader of readers) for (const { target, index } of targets) {
+    if (quoteDuty(ctx, { person: reader.person, working: offer.working, target: target.target, bindings: target.bindings }).ok)
+      return { person: reader.person, target: index };
+  }
+  return undefined;
+}
+
 export function mysticView(ctx: SimCtx): MysticView {
   const w = ctx.world;
   const household = w.people.household(w.playerHouse, w.year);
@@ -1186,6 +1201,10 @@ export function mysticView(ctx: SimCtx): MysticView {
       }),
     targets: mysticTargets(ctx, working),
   }));
+  for (const offer of offers) {
+    const pair = firstAssignable(ctx, offer);
+    if (pair) offer.assignable = pair;
+  }
   return { duties, offers, history: w.mystic.services.filter(a => !a.house || a.house === w.playerHouse).slice(-6).reverse()
     .map(a => ({ id: a.id, account: a.account, service: structuredClone(a.service) })) };
 }

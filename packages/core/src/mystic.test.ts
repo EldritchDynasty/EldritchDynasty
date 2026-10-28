@@ -478,6 +478,54 @@ function serveCare(ctx: SimCtx, carer: Person, working = 'sickroom_watch') {
   return duty;
 }
 
+describe('public assignable reader/place quotes (#1942)', () => {
+  it.each(['male', 'female'] as const)('finds an uncovered book for a learned %s reader without changing the save', sex => {
+    const { ctx } = world();
+    for (const p of ctx.world.people.all()) p.spellsKnown = [];
+    ctx.world.library.clear();
+    for (const book of ['lesser_workings_of_life', 'lesser_workings_of_death'])
+      ctx.world.library.set(book, { id: book, condition: 80, acquiredYear: ctx.world.year });
+    const keeper = reader(ctx, 'female', ['lesser_workings_of_light'], 'The first keeper');
+    const spare = reader(ctx, sex, ['lesser_workings_of_light'], 'The available keeper');
+    expect(order(ctx, { kind: 'mysticAssign', person: keeper.id, working: 'the_copyists_light',
+      target: { kind: 'book', book: 'lesser_workings_of_life' } }).ok).toBe(true);
+    const before = canonical(saveGame(ctx));
+    const offer = mysticView(ctx).offers.find(o => o.working === 'the_copyists_light')!;
+    expect(canonical(saveGame(ctx))).toBe(before);
+    expect(offer.assignable).toEqual({ person: spare.id, target: 1 });
+    const target = offer.targets[offer.assignable!.target]!;
+    expect(target.target).toEqual({ kind: 'book', book: 'lesser_workings_of_death' });
+    const action = { kind: 'mysticAssign' as const, person: spare.id, working: offer.working, target: target.target, bindings: target.bindings };
+    expect(quoteDuty(ctx, action).ok).toBe(true);
+    ctx.world.treasury = DEBT_FLOOR - 1;
+    expect(mysticView(ctx).offers.find(o => o.working === offer.working)!.assignable).toBeUndefined();
+    ctx.world.treasury = 400;
+    spare.spellsKnown = [];
+    expect(mysticView(ctx).offers.find(o => o.working === offer.working)!.assignable).toBeUndefined();
+    spare.spellsKnown = [asId('lesser_workings_of_light')];
+    spare.acquired.health = -25;
+    expect(mysticView(ctx).offers.find(o => o.working === offer.working)!.assignable).toBeUndefined();
+    spare.acquired.health = 0;
+    expect(order(ctx, action).ok).toBe(true);
+    expect(ctx.world.mystic.assignments).toHaveLength(2);
+  });
+
+  it('offers a free reader before pausing an unfinished book, and exposes the pause when needed', () => {
+    const { ctx } = world();
+    for (const p of ctx.world.people.all()) p.spellsKnown = [];
+    ctx.world.library.clear();
+    ctx.world.library.set('lesser_workings_of_death', { id: 'lesser_workings_of_death', condition: 80, acquiredYear: ctx.world.year });
+    const studying = reader(ctx, 'female', ['lesser_workings_of_light'], 'The student');
+    const spare = reader(ctx, 'female', ['lesser_workings_of_light'], 'The spare reader');
+    ctx.world.studies.push({ person: studying.id, book: 'lesser_workings_of_death', completes: ctx.world.year + 3 });
+    const offer = () => mysticView(ctx).offers.find(o => o.working === 'the_copyists_light')!;
+    expect(offer().assignable?.person).toBe(spare.id);
+    spare.spellsKnown = [];
+    expect(offer().assignable?.person).toBe(studying.id);
+    expect(offer().practitioners.find(p => p.person === studying.id)!.studying).toMatchObject({ remainingYears: 3 });
+  });
+});
+
 describe('Life care changes a real death roll (#1873)', () => {
   it('a roll the infant would have died on is survived only while the assigned carer is there', () => {
     const { ctx, infant } = world();

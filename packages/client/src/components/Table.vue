@@ -270,13 +270,25 @@ function confirmForcing(): void {
  */
 /**
  * MYSTIC DUTIES (#1873). One reader and one place per order; both selects are
- * drawn from what the engine says it would accept, and cleared when a choice
- * stops being on offer rather than left pointing at somebody who left.
+ * supplied by the engine, with one jointly quoted combination named separately.
+ * Drafts clear when a choice stops being on offer instead of retaining someone who left.
  */
 const dutyWho = ref<Record<string, string>>({});
 const dutyWhere = ref<Record<string, string>>({});
 const showUnlearned = ref(false);
 const visibleDuties = computed(() => props.table.mystic.offers.filter(offer => showUnlearned.value || offer.known));
+type DutyOffer = TableView['mystic']['offers'][number];
+const readyDuties = computed(() => {
+  const ready = new Map<string, { reader: DutyOffer['practitioners'][number]; target: DutyOffer['targets'][number] }>();
+  for (const offer of props.table.mystic.offers) {
+    const assignment = offer.assignable;
+    if (!assignment) continue;
+    const reader = offer.practitioners.find(person => person.person === assignment.person);
+    const target = offer.targets[assignment.target];
+    if (reader && target) ready.set(offer.working, { reader, target });
+  }
+  return ready;
+});
 watch(() => props.table.mystic.offers, (offers) => {
   for (const offer of offers) {
     const who = dutyWho.value[offer.working] ?? '';
@@ -302,6 +314,8 @@ function dutyStatus(duty: TableView['mystic']['duties'][number]): string {
 function dutyRecord(duty: { service: TableView['mystic']['duties'][number]['service'] }): string {
   const s = duty.service;
   const parts = [local(`${s.servedYears} years kept`, `${s.servedYears} years active`)];
+  parts.push(`${s.usefulYears} useful ${s.usefulYears === 1 ? 'year' : 'years'}`);
+  parts.push(s.lastUseful === undefined ? 'no useful year recorded' : `last useful in ${s.lastUseful}`);
   if (s.livesKept) parts.push(local(`${s.livesKept} ${s.livesKept === 1 ? 'life' : 'lives'} kept`, `${s.livesKept} ${s.livesKept === 1 ? 'person' : 'people'} saved`));
   if (s.yieldKept) parts.push(local(`${s.yieldKept.toFixed(1)} of yield held`, `${s.yieldKept.toFixed(1)} yield saved`));
   if (s.menKept) parts.push(local(`${s.menKept} levy men kept`, `${s.menKept} levy men saved`));
@@ -713,7 +727,7 @@ const MARRIAGE_ORDERS = [
     <!-- MYSTIC DUTIES (#1873). A finished book is a reader who can be set to
          keep something: one hall's sick, one parcel's banks. It is paid for
          every year and asked about never. -->
-    <div v-bind="tableTargetAttrs('duties')" class="panel" :class="{ idle: idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0) }">
+    <div v-bind="tableTargetAttrs('duties')" class="panel duties" :class="{ idle: idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0) }">
       <h3 class="label">
         <button class="fold" :aria-expanded="!idle('duties', table.mystic.duties.length > 0 || visibleDuties.length > 0)" @click="togglePanel('duties')">{{ local('Standing duties', 'Mystic duties') }}</button>
       </h3>
@@ -734,6 +748,13 @@ const MARRIAGE_ORDERS = [
         <p class="small dim">{{ local('Books read:', 'Required completed books:') }} {{ offer.books.join(', ') }}</p>
         <p v-if="offer.collaborator" class="small dim">{{ local('Works only beside a different paid reader keeping', 'Requires a different available, paid reader doing') }} {{ offer.collaborator }} {{ local('at the same place.', 'at the same location.') }}</p>
         <p v-if="offer.fieldTerms" class="small dim">{{ offer.fieldTerms }}</p>
+        <p v-if="readyDuties.has(offer.working)" class="small dim available-duty">
+          {{ readyDuties.get(offer.working)?.reader.name }} {{ local('can be set to it for', 'can take this assignment for') }} {{ readyDuties.get(offer.working)?.target.name }}.
+          <span v-if="readyDuties.get(offer.working)?.reader.studying">
+            {{ local('Reading would wait:', 'Study would pause:') }} {{ readyDuties.get(offer.working)?.reader.studying?.remainingYears }}
+            {{ readyDuties.get(offer.working)?.reader.studying?.remainingYears === 1 ? 'year' : 'years' }} {{ local('left.', 'remaining.') }}
+          </span>
+        </p>
         <div class="row">
           <select v-model="dutyWho[offer.working]" :disabled="!offer.practitioners.length" :aria-label="local('Choose who keeps', 'Choose who does') + ' ' + offer.name">
             <option value="">{{ offer.practitioners.length ? local('— whom —', '— choose reader —') : offer.known ? local('— the reader is occupied or absent —', '— trained readers are unavailable —') : local('— nobody has read for it —', '— no trained reader —') }}</option>
@@ -1148,6 +1169,8 @@ const MARRIAGE_ORDERS = [
 .table-tasks details { border-top: 1px solid var(--rule); }
 .table-tasks summary { min-height: 44px; align-content: center; cursor: pointer; overflow-wrap: anywhere; }
 .return-goal { min-height: 44px; }
+.duties button, .duties select, .duties summary { min-height: 44px; }
+.duties summary { align-content: center; }
 /* Ink, not rubric. A spend the house chose is not an error. */
 .spent { color: var(--ink); }
 .line { padding: 6px 0; border-top: 1px solid var(--rule); }

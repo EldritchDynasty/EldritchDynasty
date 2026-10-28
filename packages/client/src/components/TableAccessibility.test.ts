@@ -37,6 +37,60 @@ function fixture(boughtBack = false): TableView {
 describe('Table destinations and read-only navigation (#1941)', () => {
   const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
 
+  it.each(['original', 'plainenglish'] as const)('shows a quoted reader/place and forgone study beside the existing assignment controls in %s (#1942)', async (proseMode) => {
+    const table = fixture();
+    const target = { target: { kind: 'book' as const, book: 'second' }, bindings: {}, name: 'The second book' };
+    const offer: TableView['mystic']['offers'][number] = { working: 'book-care', name: 'Book care', description: 'Keep a physical book.', affinity: 'light',
+      benefit: 'library_care', preparation: 3, preparationYears: 1, upkeep: 0.2, known: true, books: ['The completed primer'],
+      practitioners: [{ person: 'free', name: 'Alys', studying: { book: 'unfinished', remainingYears: 3 } }],
+      targets: [{ ...target, name: 'The covered book', target: { kind: 'book', book: 'first' } }, target], assignable: { person: 'free', target: 1 } };
+    table.mystic.offers = [offer];
+    const order = vi.fn();
+    const w = mount(GameTable, { props: { table, land, proseMode, actions: { order } as unknown as GameActions, refusal: null, receipt: null } });
+    try {
+      const quoted = w.get('.available-duty');
+      expect(quoted.text()).toContain('Alys'); expect(quoted.text()).toContain('The second book');
+      expect(quoted.text()).toContain('3 years');
+      expect(w.get('#table-duties').text()).toContain(proseMode === 'original' ? '3 crowns to make ready' : '3 crowns to prepare');
+      expect(order).not.toHaveBeenCalled();
+      const selects = w.get('#table-duties').findAll('select');
+      await selects[0]!.setValue('free'); await selects[1]!.setValue('1');
+      const assign = w.get('#table-duties').findAll('button').find(b => b.text() === (proseMode === 'original' ? 'Set them to it' : 'Assign'))!;
+      await assign.trigger('click');
+      expect(order).toHaveBeenCalledExactlyOnceWith({ kind: 'mysticAssign', person: 'free', working: 'book-care', target: target.target, bindings: {} });
+      await w.setProps({ table: { ...table, mystic: { ...table.mystic, offers: [{ ...offer, assignable: undefined }] } } });
+      expect(w.find('.available-duty').exists()).toBe(false);
+    } finally { w.unmount(); }
+  });
+
+  it.each(['original', 'plainenglish'] as const)('shows useful years, last use, cost and paused study beside a reachable release in %s (#1942)', async (proseMode) => {
+    const table = fixture();
+    const duty = { id: 'duty-1', person: 'reader', name: 'Alys', working: 'sickroom_watch', workingName: 'The Sickroom Watch',
+      place: 'The main hall', status: 'serving' as const, ready: 1100, upkeep: 4,
+      paused: { book: 'next-book', name: 'The next book', remainingYears: 3 },
+      service: { servedYears: 5, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 32 } };
+    table.mystic.duties = [duty];
+    const order = vi.fn();
+    const w = mount(GameTable, { props: { table, land, proseMode, actions: { order } as unknown as GameActions, refusal: null, receipt: null } });
+    try {
+      const panel = w.get('#table-duties');
+      expect(panel.text()).toContain('0 useful years');
+      expect(panel.text()).toContain('no useful year recorded');
+      expect(panel.text()).toContain('4 crowns');
+      expect(panel.text()).toContain('32 crowns');
+      expect(panel.text()).toContain('The next book, 3 years');
+      const release = panel.get(`button[aria-label="${proseMode === 'plainenglish' ? 'End duty' : 'Release'} Alys"]`);
+      expect(release.attributes('disabled')).toBeUndefined();
+      await release.trigger('click');
+      expect(order).toHaveBeenCalledExactlyOnceWith({ kind: 'mysticRelease', assignment: 'duty-1' });
+      await w.setProps({ table: { ...table, mystic: { ...table.mystic, duties: [{ ...duty,
+        service: { ...duty.service, usefulYears: 2, lastUseful: 1107 } }] } } });
+      expect(panel.text()).toContain('2 useful years');
+      expect(panel.text()).toContain('last useful in 1107');
+      expect(panel.text()).not.toContain('no useful year recorded');
+    } finally { w.unmount(); }
+  });
+
   it.each(['original', 'plainenglish'] as const)('opens the same recorded source beside a rite candidate without confirming an order (%s, #1944)', async (proseMode) => {
     const table = fixture();
     table.vesselRite = { ready: true, assembly: {
