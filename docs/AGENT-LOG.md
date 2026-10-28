@@ -568,3 +568,51 @@ line convention, session goes from 1,885 lines / 86,843 bytes to 1,379 /
 65,842; the sibling is 505 / 21,806. This isolates a coherent type boundary;
 it does not establish fewer conflicts or faster execution. No schema, save,
 content, rule, runtime dependency or RNG changes.
+
+## 28 October 2026 — #1942: public Mystic allocation and measured policy
+
+**Problem and behavior.** Independent reader and target lists could produce a
+refused combination even when another current combination was accepted. The
+Table now names one real accepted reader/place quote, preferring an available
+non-studying reader, beside the existing manual controls. Duty accounts show
+useful years, last useful year (or none), paid service, cost and paused study;
+release remains reachable. No new order, automatic assignment, save field,
+eligibility rule, price or working was added.
+
+**Measurement before adoption.** The protocol and quote intervention were
+committed before tuning/measurement. Reproduced the original ordinary 144 and
+chartered-pressure 48 campaigns; archived content explains the known SHA
+difference from the 26 October calibration. Added public-history policy
+ablations, a strict one-attempt training/practice budget, per-affinity/working
+supply and allocation funnels, checkpoint provenance and completed-column
+reduction. All four single-factor misses and the strict-budget effect stay in
+the append-only balance log. The adopted `quoted_demand` comparison clears the
+existing paired two-SE improvement bar against historical broad at both terms
+(5.43 / 6.97 SE); the separate absolute two-domain goal still misses its margin.
+Duty upkeep and paused study increase and attributed coin remains negative.
+These are bounded-policy results, not guaranteed return or human playtesting.
+
+**Verification.** All original 192 observer-off full-save controls match after
+the view change; the corrected historical-broad funnel matches all 48 originals;
+all 48 quoted scenarios match observer-off copies. First seed at each term
+passes JSON midpoint continuation and full canonical command-log replay.
+Historical training/practice, six accounting functions, the primary metric,
+all 55 existing Mystic gameplay function bodies and the old offer initializer
+compare unchanged. Eight 400-year before/after default-play save digests match.
+Mechanism tests remove real knowledge, availability, funds and distinct
+collaborators and preserve equally learned women's Threshold practice. Focused
+core/accounting/client checks, package and Vue typechecks and the production
+client build pass. A supporting first-use reducer error was corrected to give
+one mean per independent house; raw campaigns and every non-timing comparison
+are unchanged, with a regression for unequal duty counts and censored houses.
+
+**Player walkthrough.** Following the existing interface-design direction,
+kept the ruled vellum layout and existing selectors. Actual Chromium at 1400px
+and 390px in Original and Plain English, largest text, passes keyboard
+assignment/release, visible zero/positive use and paused-study accounts, no
+horizontal clipping or page errors, and 44px minimum duty controls. These four
+automated walkthroughs do not establish human comprehension or enjoyment.
+No new fast-suite file or campaign batch test, gate, threshold, lane allowlist,
+schema or content change. Normal rebased preflight and exact-head hosted CI
+are recorded on the PR; detailed results, commands, caveats and artifact hashes
+are appended to `docs/BALANCE-LOG.md`.

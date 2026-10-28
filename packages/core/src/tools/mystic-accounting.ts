@@ -29,6 +29,16 @@ export function usefulDomainsPerGeneration(run: { metrics: { trainedGenerations:
     .map(d => d.startsWith('estate:') ? 'estate_protection' : d)).size, 0) / generations.length;
 }
 
+/** One observed-use average per independent house; duties within a house are not independent trials. */
+export function firstUseHouseMeans(runs: readonly { metrics: { records: Readonly<Record<string,
+  { service: { firstUsefulAt?: number } }>> } }[]): number[] {
+  return runs.flatMap(run => {
+    const values = Object.values(run.metrics.records).flatMap(record =>
+      record.service.firstUsefulAt === undefined ? [] : [record.service.firstUsefulAt]);
+    return values.length ? [values.reduce((total, years) => total + years, 0) / values.length] : [];
+  });
+}
+
 const treasury = (effects: OutcomeObservation['outcome']['effects']) => effects.reduce((total, effect) =>
   total + (effect.kind === 'treasury' ? effect.delta : 0), 0);
 
