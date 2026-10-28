@@ -385,6 +385,8 @@ export const ArcInstanceS = z.object({
   localFlags: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
   startedYear: z.number(),
   dueYear: z.number().optional(),
+  // Optional provenance: old active arcs keep their unknown launcher unknown.
+  cause: z.object({ year: z.number(), page: z.string().optional() }).optional(),
   history: z.array(z.object({ node: z.string(), outcome: z.string(), choice: z.string().optional(), year: z.number() })),
   status: z.enum(['active', 'ended', 'cancelled', 'expired']),
 });
@@ -641,6 +643,7 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
     // Optional additive metadata, not a new format. Missing legacy data must
     // remain unknown; [] is an explicitly recorded draw with no preset slots.
     preset: z.array(z.string()).optional(),
+    cause: z.object({ year: z.number(), page: z.string().optional() }).optional(),
     /**
      * #1380: a pending decision must retain who actually takes its branch.
      * Legacy current-format saves lack these properties; the union transform
@@ -1023,7 +1026,8 @@ export const SavedGameS = z.object({
   tales: z.array(z.tuple([z.string(), TaleCirculationStateS])),
   /** Previous houses imported at bootstrap (issue #70). Narrative only, and saved whole. */
   libraryMemories: z.array(LibraryMemoryS).default([]),
-  scheduled: z.array(z.object({ event: z.string(), year: z.number(), first: z.number().optional() })),
+  scheduled: z.array(z.object({ event: z.string(), year: z.number(), first: z.number().optional(),
+    cause: z.object({ year: z.number(), page: z.string().optional() }).optional() })),
   /**
    * Books being read. Defaulted rather than required so a save written before
    * `spellbook.op: study` existed still loads — it simply had nobody reading.

@@ -87,6 +87,7 @@
     "gate:campaigns": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/campaign-gate.ts",
     "gate:achievements": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/achievement-report.ts",
     "gate:funnel": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/funnel.ts",
+    "report:story-routes": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/story-route-report.ts",
     "//16": "Issue #272: paired Short-Line run-two freshness and inherited-Library visibility. Shape overlap plugs into #271's canonical shapeOf.",
     "gate:replay": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/replay-divergence.ts",
     "lint:prose": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/prose-lint.ts",

@@ -167,7 +167,7 @@ export interface WorldState {
    */
   libraryMemories: LibraryMemory[];
   /** `first` is the year it was originally due, so retries cannot loop forever. */
-  scheduled: { event: string; year: Year; first?: Year }[];
+  scheduled: { event: string; year: Year; first?: Year; cause?: ChronicleEntry['cause'] }[];
   /**
    * Books being read right now. A `spellbook` effect with `op: 'study'` puts
    * one here and the `library` phase takes it off when the year comes.

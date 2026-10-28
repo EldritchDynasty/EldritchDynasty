@@ -32,6 +32,18 @@ function opening(s: GameSession) {
 }
 
 describe('public session input replay (#1910)', () => {
+  it('replays the exact page retained by a scheduled opening consequence (#1946)', () => {
+    const s = newGame(content, { seed: SEED, decider: 'chronicler' });
+    s.advance(8);
+    const scheduled = s.ctx.world.scheduled.find(promise => promise.event === 'the_line_carried_forward');
+    expect(scheduled?.cause?.page).toBeDefined();
+    const parent = s.ctx.world.chronicle.find(page => page.id === scheduled!.cause!.page);
+    expect(parent?.year).toBe(scheduled!.cause!.year);
+    const resumed = resumeGame(JSON.parse(JSON.stringify(s.save())), content);
+    expect(resumed.ctx.world.scheduled).toEqual(s.ctx.world.scheduled);
+    expect(digestOf(rebuild(resumed))).toBe(digestOf(s.ctx));
+  });
+
   it('replays a forcing order answered after saving its preset cast (#1951)', () => {
     let s = newGame(content, { seed: SEED });
     const rite = s.table().forcing.find(row => row.ready && row.boys.length)!;

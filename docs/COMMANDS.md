@@ -579,6 +579,17 @@ not try it, and do not read a surviving branch as work in flight.
 - **Historical measurements stay dated.** `BALANCE-LOG.md` and
   `REGENCY-PACING.md` identify their code/content, campaigns, seeds and
   policies. They do not establish today's rate after another content change.
+- **A rare invitation and a lost promise need separate counts.**
+  `npm run report:story-routes -- --runs=800 --output=routes.json` records
+  actual offers, chosen branches, scheduled/inline delivery, missing kept
+  people and by-Age/tier/frequency selection sources. `--funnel` adds the
+  existing upstream/downstream stages; `--policy=short-descent` takes the
+  herald's short answer through the player docket. That policy uses different
+  streams from canonical automatic play. `--without-glimpses` is a diagnostic
+  premise ablation, including downstream effects, never a shipped ration
+  change. Reports retain partial batches, exact seeds, source hashes, complete
+  saved-state observer controls and house-level 95% Wilson intervals. They
+  report evidence without changing any gate's threshold.
 - **Human response is unverified.** `PLAYTEST.md` records the waived,
   unrun studies. Automated reach, deterministic replay and mechanism tests
   cannot establish attachment, comprehension or enjoyment.

@@ -4,6 +4,8 @@ import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from 
 import { evalCondition } from '@ed/core';
 import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, genomeOf, place, startArc, testRng, testWorld } from '@ed/core';
 import { executeOutcomeWitness } from './events/reach.js';
+import { applyRecord, queueChoice, resolveChoice } from './events/decisions.js';
+import { canonical, loadGame, saveGame } from './save.js';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
 // hands an already-indexed `Content` straight back — so spreading one would give
@@ -198,6 +200,96 @@ function running(arc: ArcDef, events: EventTemplate[]) {
   const instance = startArc(ctx.content.mustArc(arc.id), ctx, testRng())!;
   return { ctx, instance };
 }
+
+describe('the launching page of an inline story (#1946)', () => {
+  function inline() {
+    const herald = base.events.find(event => event.id === 'the_heralds_visitation')!;
+    const first = node('test_inline_first');
+    if (first.interaction.kind === 'choice') first.interaction.choices[1]!.outcomes[0]!.next = {
+      event: 'test_inline_second', after: { minYears: 2, maxYears: 2 }, keep: [],
+    };
+    const parent = {
+      ...node('test_inline_parent'), frequency: 'common', slots: structuredClone(herald.slots),
+      record: structuredClone(herald.record),
+      interaction: { kind: 'narration', outcomes: [{ ...outcome('sent'),
+        next: { event: first.id, after: { minYears: 3, maxYears: 3 }, keep: [] } }] },
+    } as EventTemplate;
+    return testWorld({ ...base, events: [...base.events, parent, first, node('test_inline_second')] });
+  }
+  function launch(ctx: ReturnType<typeof inline>) {
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('test_inline_parent'), {
+      expectedOutcomeId: 'sent', rng: testRng('launch'),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    return ctx.world.chronicle.at(-1)!;
+  }
+  function next(ctx: ReturnType<typeof inline>, instance: ArcInstance) {
+    ctx.world.year = instance.dueYear!;
+    return dueArcSteps(ctx, testRng('next')).find(step => step.instance.id === instance.id)!;
+  }
+  function answer(ctx: ReturnType<typeof inline>, instance: ArcInstance) {
+    const step = next(ctx, instance);
+    expect(step).toBeDefined();
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent(step.node.event), {
+      choiceId: 'refuse', expectedOutcomeId: 'refused', arcStep: step, rng: testRng('refuse'),
+    });
+    expect(result.ok, result.reason).toBe(true);
+    return ctx.world.chronicle.at(-1)!;
+  }
+
+  it.each([1, 2])('keeps exact same-year page identities with %s concurrent instance(s)', (maximum) => {
+    const ctx = inline();
+    const origin = launch(ctx);
+    const first = [...ctx.world.arcs.values()][0]!;
+    ctx.content.mustArc(first.arc).maxConcurrentInstances = maximum;
+    const other = launch(ctx);
+    const instances = [...ctx.world.arcs.values()];
+    expect(instances).toHaveLength(maximum);
+    expect(first.cause).toEqual({ year: origin.year, page: origin.id });
+    expect(answer(ctx, first).cause).toEqual(first.cause);
+    if (maximum === 2) expect(answer(ctx, instances[1]!).cause).toEqual({ year: other.year, page: other.id });
+  });
+
+  it('cites an omitted launching page after saving a pending continuation', () => {
+    const ctx = inline();
+    const origin = launch(ctx);
+    applyRecord(ctx, ctx.content.mustEvent('test_inline_parent'), origin.id!, 'omit');
+    expect(origin.text).toBeNull();
+    const instance = [...ctx.world.arcs.values()][0]!;
+    const step = next(ctx, instance);
+    const event = ctx.content.mustEvent(step.node.event);
+    const pending = queueChoice(ctx, event, event.body, step.fill, step.playerCast, step);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), ctx.content);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(ctx)));
+    const decision = resumed.world.pendingDecisions[0]!;
+    if (decision.kind !== 'choice') throw new Error('inline continuation must be a choice');
+    expect(decision.arcStep?.instance).toBe(resumed.world.arcs.get(instance.id));
+    expect(resolveChoice(resumed, pending.id, 'refuse', testRng('saved')).ok).toBe(true);
+    expect(resumed.world.chronicle.at(-1)?.cause).toEqual({ year: origin.year, page: origin.id });
+  });
+
+  it('uses the immediate preceding node for later beats', () => {
+    const ctx = inline();
+    const origin = launch(ctx);
+    const instance = [...ctx.world.arcs.values()][0]!;
+    const first = answer(ctx, instance);
+    expect(first.cause?.page).toBe(origin.id);
+    const second = answer(ctx, instance);
+    expect(second.cause).toEqual({ year: first.year, page: first.id });
+    expect(instance.status).toBe('ended');
+  });
+
+  it('does not invent a launcher for a legacy active arc', () => {
+    const ctx = inline();
+    launch(ctx);
+    const saved = saveGame(ctx);
+    delete saved.arcs[0]![1].cause;
+    const resumed = loadGame(JSON.parse(JSON.stringify(saved)), ctx.content);
+    const instance = [...resumed.world.arcs.values()][0]!;
+    expect(instance.cause).toBeUndefined();
+    expect(answer(resumed, instance).cause).toBeUndefined();
+  });
+});
 
 describe('arc-local memory', () => {
   it('an arc_flag effect writes onto the instance in scope, and only that one', () => {

@@ -3,7 +3,7 @@ import { tickCovertOperations } from '../covert-operations.js';
 import type { Choice, EventTemplate, Person } from '@ed/schema';
 import { MAIN_BRANCH, renderForm } from '@ed/schema';
 import { grammarOf } from '../people/grammar.js';
-import type { SimCtx } from '../world.js';
+import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { streamFor } from '../rng.js';
 import type { YearReport } from './report.js';
@@ -614,7 +614,7 @@ export const YEAR_PHASES: readonly Phase[] = [
       // 1207 whenever the dice said so.
       const budget = rng.next() < EVENT_BUDGET_PER_YEAR ? 1 : 0;
       for (const cand of selectEvents(ctx, rng, budget)) {
-        present(ctx, cand.event, cand.fill, cand.playerCast, rng, report, autoResolve);
+        present(ctx, cand.event, cand.fill, cand.playerCast, rng, report, autoResolve, undefined, cand.cause);
       }
     },
   },
@@ -716,11 +716,12 @@ export function present(
   report: YearReport,
   autoResolve: boolean,
   arcStep?: ArcStep,
+  cause?: ChronicleEntry['cause'],
 ): void {
   if (e.interaction.kind === 'narration') {
     const outcome = pickOutcome(e.interaction.outcomes, rng, ctx, fill, e);
     const cast = autoCast(e, ctx, fill, playerCast, rng);
-    const resolved = commitOutcome(ctx, e, outcome, cast, undefined, rng, arcStep);
+    const resolved = commitOutcome(ctx, e, outcome, cast, undefined, rng, arcStep, undefined, undefined, cause);
     report.resolved.push(resolved);
     afterRecord(ctx, resolved.event, resolved.entryId, resolved.fill, rng, report, autoResolve, undefined, resolved.outcome.id);
     return;
@@ -734,14 +735,14 @@ export function present(
   const decided = decideBranch(ctx, e, fill, rng, { scope });
 
   if (decided.asks && !autoResolve) {
-    report.pending.push(queueChoice(ctx, e, e.body, fill, playerCast, arcStep));
+    report.pending.push(queueChoice(ctx, e, e.body, fill, playerCast, arcStep, undefined, cause));
     return;
   }
 
   const cast = autoCast(e, ctx, fill, playerCast, rng);
   const choice = decided.choice ?? chroniclerBranch(ctx, e, e.interaction.choices, cast, rng, scope);
   const outcome = resolveChoiceOutcome(ctx, e, choice, cast, rng);
-  const resolved = commitOutcome(ctx, e, outcome, cast, choice.id, rng, arcStep);
+  const resolved = commitOutcome(ctx, e, outcome, cast, choice.id, rng, arcStep, undefined, undefined, cause);
   report.resolved.push(resolved);
   afterRecord(ctx, resolved.event, resolved.entryId, resolved.fill, rng, report, autoResolve, choice.id, resolved.outcome.id);
 }
