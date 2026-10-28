@@ -19,7 +19,7 @@ import {
 
 import { assignDuty, householdProtection, quoteDuty, releaseDuty, tickMystic } from './mystic.js';
 import { defendHousehold, householdSecurityView, householdThreatCandidates, quoteThreatResponse,
-  releaseThreatPrisoner, tickHouseholdThreats } from './covert-lifecycle.js';
+  releaseThreatPrisoner, tickHouseholdThreats, HOUSEHOLD_THREAT_SEVERITY } from './covert-lifecycle.js';
 import { DEBT_FLOOR, tickEconomy } from './economy.js';
 import { genomeOf, phenotypeOf } from './people/factory.js';
 import { ELDRITCH_GIFT } from './genetics/expression.js';
@@ -791,10 +791,12 @@ describe('household lifecycle fixtures', () => {
 
     it('does not target the founder, sitting Head or a small house', () => {
       const { ctx, victim } = scene();
+      const targets = () => householdThreatCandidates(ctx).map(c => c.target.id);
+      // The grudge now reaches the main hall around the chair (#1943), never the chair.
       victim.castSlots.push('head');
-      expect(householdThreatCandidates(ctx)).toEqual([]);
+      expect(targets()).not.toContain(victim.id);
       victim.castSlots = []; victim.becomesGuardian = true;
-      expect(householdThreatCandidates(ctx)).toEqual([]);
+      expect(targets()).not.toContain(victim.id);
       victim.becomesGuardian = false;
       for (const p of ctx.world.people.living()) if (p.id !== victim.id) p.membership = [];
       expect(householdThreatCandidates(ctx)).toEqual([]);
@@ -1030,6 +1032,98 @@ describe('household lifecycle fixtures', () => {
       expect(page?.text).not.toContain(enemy.name);
     });
   });
+
+  describe('a grudge against the seat reaches the main hall (#1943)', () => {
+    function seat(severity = 70) {
+      const ctx = testWorld(content, fatalSeed);
+      for (const p of ctx.world.people.all()) p.awakening.awakened = false;
+      ctx.world.relationships.clear(); ctx.world.treasury = 1000;
+      const founder = ctx.world.people.living().find(p => p.becomesGuardian)!;
+      const nella = place(ctx, { name: 'Nella', sex: 'female', age: 25 });
+      const wystan = place(ctx, { name: 'Wystan', sex: 'male', age: 22 });
+      const cadet = place(ctx, { name: 'Aldo of the ford', sex: 'male', age: 30, branch: 'the_ford_hall' });
+      const enemy = place(ctx, { name: 'Hostile neighbour', sex: 'male', age: 40, house: 'house_marrow' });
+      const grudge = addGrudge(ctx, enemy.id, founder.id, { severity, inheritance: 'house_wide' });
+      return { ctx, founder, nella, wystan, cadet, enemy, grudge };
+    }
+    const targets = (ctx: ReturnType<typeof seat>['ctx']) => householdThreatCandidates(ctx).map(c => c.target.id);
+
+    it('reaches the free adults of the main hall, never the chair, the founder or a cadet hall', () => {
+      const { ctx, founder, nella, wystan, cadet, enemy } = seat();
+      expect(targets(ctx)).toEqual(expect.arrayContaining([nella.id, wystan.id]));
+      expect(targets(ctx)).not.toContain(founder.id);
+      expect(targets(ctx)).not.toContain(cadet.id);
+      expect(householdThreatCandidates(ctx).every(c => c.sponsor.id === enemy.id)).toBe(true);
+      // The cadet is otherwise an eligible target: a grudge against the HOUSE reaches him.
+      ctx.world.relationships.clear();
+      addGrudge(ctx, enemy.id, ctx.world.playerHouse, { severity: 70, inheritance: 'house_wide' });
+      expect(targets(ctx)).toContain(cadet.id);
+    });
+
+    it('follows the chair to the next Head and keeps reaching the hall from the guardian', () => {
+      const { ctx, founder, nella, wystan, enemy } = seat();
+      expect(ctx.world.people.kill(founder.id, ctx.world.year, 'age')).toBe(false);
+      expect(founder.status).toBe('guardian');
+      wystan.castSlots.push('head');
+      expect(targets(ctx)).toContain(nella.id);
+      expect(targets(ctx)).not.toContain(wystan.id);
+      expect(targets(ctx)).not.toContain(founder.id);
+      ctx.world.relationships.clear();
+      addGrudge(ctx, enemy.id, wystan.id, { severity: 70, inheritance: 'house_wide' });
+      expect(targets(ctx)).toContain(nella.id);
+      expect(targets(ctx)).not.toContain(wystan.id);
+    });
+
+    it('a grudge against an ordinary member does not spread to their siblings', () => {
+      const { ctx, nella, enemy } = seat();
+      ctx.world.relationships.clear();
+      addGrudge(ctx, enemy.id, nella.id, { severity: 70, inheritance: 'house_wide' });
+      expect([...new Set(targets(ctx))]).toEqual([nella.id]);
+    });
+
+    it('keeps every other gate: a small house, a decayed grudge, an unfunded sponsor', () => {
+      const small = seat();
+      for (const p of small.ctx.world.people.living())
+        if (![small.founder.id, small.nella.id, small.wystan.id, small.enemy.id].includes(p.id)) p.membership = [];
+      expect(householdThreatCandidates(small.ctx)).toEqual([]);
+
+      const fading = seat(60);
+      expect(targets(fading.ctx)).toContain(fading.nella.id);
+      tickRelationships(fading.ctx);
+      expect(fading.grudge.severity).toBeLessThan(HOUSEHOLD_THREAT_SEVERITY);
+      expect(householdThreatCandidates(fading.ctx)).toEqual([]);
+
+      const poor = seat();
+      poor.ctx.world.mystic.foreignSpent = { house_marrow: (poor.ctx.world.houses.get('house_marrow')?.wealth ?? 0) - 19 };
+      expect(householdThreatCandidates(poor.ctx)).toEqual([]);
+    });
+
+    it('a plan prepared on the seat is still a motive in the year it is attempted', () => {
+      const { ctx, founder, cadet, grudge } = seat();
+      tickHouseholdThreats(ctx);
+      const threat = ctx.world.covert.threats[0]!;
+      expect(threat.plan.motive).toEqual({ kind: 'grudge', grudge: grudge.id });
+      expect([founder.id, cadet.id]).not.toContain(threat.plan.target);
+      const control = loadGame(saveGame(ctx), content);
+      turn(ctx); turn(ctx);
+      const resolved = ctx.world.covert.threats[0]!;
+      // Not cancelled: before #1943 the resolver's own motive check refused this plan.
+      expect(resolved.stage).toBe('resolved');
+      expect(resolved.observation?.result).toBeDefined();
+      expect(resolved.receipt ?? '').not.toContain('expired');
+      turn(control); turn(control);
+      expect(canonical(saveGame(control))).toBe(canonical(saveGame(ctx)));
+    });
+
+    it('the motive does not follow its target into a cadet hall', () => {
+      const { ctx } = seat();
+      tickHouseholdThreats(ctx);
+      ctx.world.people.mustGet(ctx.world.covert.threats[0]!.plan.target).membership.at(-1)!.branch = 'the_ford_hall';
+      turn(ctx); turn(ctx);
+      expect(ctx.world.covert.threats[0]).toMatchObject({ stage: 'cancelled' });
+      expect(ctx.world.covert.threats[0]!.observation).toBeUndefined();
+    });
+  });
 });
 
 // Keep the incident mechanism and its short public-session witness in one suite.
@@ -1038,6 +1132,9 @@ describe('public-session fixtures', () => {
   const house = bundle.prologue[0]!.grudges[0]!.house;
   // An ordinary event supplies completed learning and a directed grievance.
   // No live world is edited, no threat is inserted, and no dice are replaced.
+  // The house is founded on a grudge below the threshold, so the incident is
+  // this fixture's own; the founding grudge's incident is its own suite (#1943).
+  const quiet = bundle.prologue[0]!.grudges.find(g => g.severity < HOUSEHOLD_THREAT_SEVERITY)!.house;
   const introduction = EventTemplateS.parse({
     id: 'security_reader_fixture', title: 'A Reader Is Ready', tier: 'family', frequency: 'common',
     weight: 1e9, repeatable: false,
@@ -1064,7 +1161,7 @@ describe('public-session fixtures', () => {
     it.each<ProseMode>(['original', 'plainenglish'])('replays and resumes the paid response and actual incident in %s', mode => {
       const game = newGame(source, { seed: 3, decider: 'chronicler', proseMode: mode });
       const prologue = game.prologue()!;
-      expect(game.found({ houseName: 'The Guarded House', heirloom: prologue.heirlooms[0]!.heirloom, grudge: house }).ok).toBe(true);
+      expect(game.found({ houseName: 'The Guarded House', heirloom: prologue.heirlooms[0]!.heirloom, grudge: quiet }).ok).toBe(true);
       let checkpoint: SavedGame | undefined;
       let assigned = false;
       let responded = false;

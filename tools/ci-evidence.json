@@ -500,6 +500,17 @@
       "fasterEvidence": "Fast save tests cover ordinary serialization, but this suite uniquely proves the run-corpus path returns the played world byte-for-structure, keys on simulation sources/campaign shape, honors ED_RUN_CORPUS=off, and never leaks tools/ imports into simulation."
     },
     {
+      "path": "packages/core/src/covert.slow.test.ts",
+      "claim": "Played public-session witness (#1943): a house founded on the Marrow grudge is approached through that grudge in an ordinary chronicler session, and the record replays and resumes from a mid-plan JSON checkpoint to the identical save.",
+      "evidenceType": "deterministic public-session witness with replay and resume equality",
+      "currentTier": "weekly",
+      "proposedTier": "weekly",
+      "coveredBy": [
+        "packages/core/src/covert.test.ts#a plan prepared on the seat is still a motive in the year it is attempted",
+        "packages/core/src/covert.test.ts#reaches the free adults of the main hall, never the chair, the founder or a cadet hall"
+      ]
+    },
+    {
       "path": "packages/core/src/decisions.slow.test.ts",
       "claim": "Played/full-run regression assertions: parks choice events instead of answering them; does not turn the year while a decision stands; applies the choice the player actually made; refuses a choice that is not on the card; …",
       "evidenceType": "played-run decision/delegation regression with deterministic merge-blocking docket witnesses",
