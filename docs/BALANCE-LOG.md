@@ -15089,3 +15089,64 @@ Observers must preserve the full canonical save with only `savedAt` blanked.
 Policy memory may retain earlier public Table snapshots, never future outcomes
 or private simulation state. Additional independent seeds, if needed, must be
 declared before their results are read and must not replace the original sample.
+
+**Reproduction provenance.** The unchanged historical tool matches its published
+SHA256 exactly. Current content is
+`123bc8c0899090b546ed5f0fd2703433300f83eeb65af06175e6435eb0cc9191`, rather than
+the 26 October calibration's `3e6ace54…`. This difference is accounted for:
+loading the archived content at F's `1f10ce4f` through the current loader
+reproduces the full published `3e6ace5464e46d27353e28b4d804b8e72489ab2017753f8d2893279f247b72e4`.
+Between that content and the issue's reviewed baseline, #1897 added three
+glimpses and their opening schedule (`a7378364`) and changed the Crusade rows
+(`c62ed505`). No content changed between reviewed `8b09dbee` and this experiment's
+starting head. There are 547 current events versus 544 at F. Consequently the
+new unchanged-command runs reproduce the policy and seed protocol on current
+content; they do not claim that the old numerical tables are today's baseline.
+
+**Budget control.** Reading the old loop also exposed retries after refused
+orders. The experiment therefore retains the unchanged historical broad column
+and adds `budgeted_broad`, which attempts at most one training and one practice
+order per year. All four ablations and the combined candidate use that same
+strict budget; their differences from this control isolate the declared factors.
+The primary paired comparison against historical broad remains visible alongside
+the separate strict-budget effect. Ransom/ordinary protection in the pressure
+comparator and the common 20-year nonmagical project order remain common inputs.
+
+**Assignment-quote candidate, declared before the view change.** The completed
+Short300 columns on the fixed 24 seeds give historical broad's fresh observer
+copy 1.46488 useful domains per trained generation. The strict-budget control is
+0.61361; observed-use ranking alone is 1.53328; the four-change candidate is
+1.67218. Its paired gain over historical broad is **0.20730 ± 0.12254 SE**,
+only **1.7 SE**, and therefore **misses** the unchanged primary bar. The Long
+columns and original-command full-save cross-check are still pending at this
+declaration. These numbers do not establish adoption.
+
+The four-change Short candidate averages 172.708 practice attempts and 43.833
+accepted practice orders: 128.875 refusals. Its 101.667 training attempts are
+all accepted. The Table currently lists free readers and targets independently;
+that is not a quote for their combination. `quoteDuty` additionally refuses,
+for example, a duty already covered at that place. A fixed first-seed diagnostic
+(`187700`, Short, unchanged candidate) records the actual refusal reasons and
+checks its complete save against the existing campaign before any view change.
+That witness reproduces the previous full-save hash exactly and records 160
+`mysticAssign` refusals, all saying “somebody already keeps that duty there”.
+It identifies the first seed's cause; the 24-house burden above is kept separate.
+
+The next bounded candidate, **`quoted_demand`**, keeps all four declared choices,
+the five-paid-year cutoff, and the strict one-attempt training/practice budget.
+Its only new selection input will be one current assignable reader/target pair
+supplied by `mysticView` using the real `quoteDuty`, never a copied eligibility
+rule or a forecast of future usefulness. Search unoccupied readers who are not
+studying first, then stable person id; prefer the main hall, then existing target
+order. Expose the same named pair beside the player's existing controls. Keep
+all original offer fields and the historical policy bodies unchanged.
+
+Measure this candidate on **the same 24 seeds at both terms**. The primary
+comparison and existing two-SE bar remain against historical broad; compare
+the refusal burden, accepted orders and domain change against the four-change
+candidate as diagnostics. The two-domain product goal is still separate. All
+earlier misses and the strict-budget cost remain in the report. No new working,
+price, preparedness/presence/learning rule, frequency, seed or threshold changes.
+The view field is a current command quote, not saved state. Commit that source
+before measuring, verify view-read neutrality, JSON continuation and command
+replay, and retain full-save observer controls for every candidate scenario.
