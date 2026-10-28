@@ -15329,3 +15329,144 @@ Long runs use the harness-tracked background lane, not the fast test loop. A che
 | 1942-final-summary.json | 08815c77f862b59e7de19c3d1a13411846c4df9c40b1c935adb084fb2d9d7a9a |
 | 1942-ordinary-observer-controls.json | bb678922579f528f7fd513b95d52db5dd7fb0cfe60d7bee121a73a86c2b0e994 |
 | 1942-pressure-observer-after-quotes.json | 410009e9f0963af4c8972af5905a5b1335d08cadff5764e4b418c5c42272a007 |
+
+## 2026-10-28 — #1943: the founding grudge reaches the hall, and the covert deadlock breaks
+
+**Question.** #1878 measured zero prepared household attacks and zero covert operations in
+both its ordinary and chartered-pressure samples. Was that a policy result, or could nothing
+in ordinary play reach either covert predicate?
+
+**Instrument.** `packages/core/src/covert-exposure.ts` counts each relationship's first
+failing rule. It does not keep its own copy of the rules: `householdThreatCandidates` and
+`covertOpportunities` gained a read-only `tally` callback, so the funnel uses the
+production predicates themselves. `packages/core/src/tools/covert-exposure-report.ts` plays the #1878
+report's `no_extra` column order for order (chronicler, land improvement every 20 years, the
+hostile scenario's public founding on `grudges[0]`, its ransoms, security responses and one
+known hasty expedition every 25 years). Every batch replays one seed unobserved, and the
+complete canonical save (`savedAt` blanked) must equal the observed run's. **All six final
+batches below pass that control.** Counts are relationship-years or grudge-years, sampled
+after each year has run.
+
+**Provenance.** Base `fcdf1c9f`; change `e9d0af5e` and its follow-up on branch
+`ccr-de4d8016-0nnljc`; Node 22.22.0. The baseline runs the same instrument in a worktree of
+`fcdf1c9f` with only `seatReaches` removed from the candidate filter, and with `covert.ts`
+left as `fcdf1c9f` has it. Seeds are as #1878 declared them: ordinary `187700–187723`,
+hostile `187800–187807`. The independent hostile sample `187900–187923` and every bound
+below were declared on the issue before the change was measured
+(issue comment `6462752303`).
+
+### Diagnosis (baseline)
+
+| | ordinary Short / Long | hostile 8 Short / Long |
+|---|---|---|
+| incoming `below_threshold` | 1506 / 3535 | 836 / 1068 |
+| incoming `no_sponsor` | 1 / 2 | 85 / 84 |
+| incoming `no_target` | 0 / 0 | **385 / 402, all `seat:unreached`** |
+| outgoing `below_threshold` | 6297 / 13473 | 1286 / 2626 |
+| outgoing `no_target` | 608 / 1454 | 657 / 461 |
+| attacks, operations | 0, 0 | 0, 0 |
+
+The issue's static table needed four corrections:
+
+1. **Authored `relationship` grudges run the other way.** `effects.ts` gives the grudge to
+   `to` ("`from` wronged `to`, and `to` remembers"). DEBTOR, TENANT, HUNTER, KIN and
+   CHALLENGER hold theirs **against the Head**. The RIVAL-slot effects (12–30) are the
+   **player's** outgoing grudges, and they peak at 22–30. So no player-held grudge ever
+   *originates* at ≥ 40 outside retaliation, and reading the originating severity
+   (option b) could not have broken outgoing.
+2. Three writers were missing: the assize `quarrel` (22/30/45 against the Head), hall
+   quarrels (family against the Head) and the broken marriage pledge (50 against the house).
+   None reaches 60.
+3. **The ordinary samples never sign the prologue**, so they have no founding grudge. Every
+   incoming grudge they hold stays below 60; the assize peaks at 45.
+4. Only the **founding Marrow grudge** (70) clears 60 for long. It did so for 238 Head-years
+   and 254 guardian-years across the 8 hostile Long Lines. Every year it reached the target
+   stage, it stopped at the founder.
+
+### Change
+
+A grudge held by an outsider against **the seat** (the sitting Head, or the founder,
+living or guardian) reaches the free adults attending **the main hall**. The Head and the
+founder are still never targets. Nothing reaches a cadet hall, and a grudge against any
+other member of the family stays theirs alone. `seatReaches` is one predicate, read by
+the candidate filter **and** by the resolver's `hasMotive`. A built-state test was seen to
+fail without the second read: the plan was paid for, announced, and then cancelled as
+`no_motive`. Thresholds, family size, sponsor funds, the cooldown and the roll are
+unchanged. Authority: brief §3 (the first grudge "echoes for five hundred years"),
+world §8 ("Nobody arrests a Head casually") and the prologue's Calder line.
+
+### Result (matched seeds, before → after)
+
+| sample | attacks per house | houses attacked | expeditions per house | decisions / 25 y | `broken_line` |
+|---|---|---|---|---|---|
+| ordinary 24, Short | 0 → 0 | 0 → 0 | 0 → 0 | 1.42 → 1.42 | 4 → 4 |
+| ordinary 24, Long | 0 → 0 | 0 → 0 | 0 → 0 | 1.33 → 1.33 | 5 → 5 |
+| hostile 8, Short | 0 → 1.25 | 0 → 7 | 0 → 0.25 | 1.40 → 1.70 | 5 → 4 |
+| hostile 8, Long | 0 → 1.25 | 0 → 7 | 0 → 0.25 | 1.51 → 1.54 | 6 → 4 |
+| hostile 24 independent, Short | 0 → 1.58 | 0 → 21 | 0 → 0.29 | 1.43 → 1.41 | 8 → 7 |
+| hostile 24 independent, Long | 0 → 1.54 | 0 → 21 | 0 → 0.29 | 1.36 → 1.28 | 8 → 9 |
+
+The ordinary samples are **unchanged in every count** (stages, decisions, endings). No
+ordinary incoming grudge reaches 60, so the rule has nothing to act on there.
+
+**Predeclared bounds (independent hostile Long, `expectMean`):** mean > 0.25 passes with a
+6.79 SE margin; mean < 4 passes with 12.93 SE; the maximum is 4 attacks against a bound of
+8. Ordinary mean < 0.5 holds, because every run is 0. On the 8-seed sample the margins are
+4 and 11, with a maximum of 2. Decision load rose by at most 0.30 per 25 years (Short, 8
+seeds), inside the 0.5 bound.
+
+**What the incidents were (independent Long, 37 attacks):** 19 prevented, 8 missed,
+4 wounded, **2 named deaths** (Aveline, seed 187905; Eilwen, seed 187911), and 4 that
+expired because their target had left (stale access, with a receipt). Of the 33 attempted, 28
+were warned in time, and 28 operatives were identified. Defence cost the houses 1,112
+crowns across 24 Long Lines. Every first attack fell in 1043–1073; the ≥ 60 window of
+Marrow's 70 lasts about 67 years.
+
+**The loop closes through existing paths:** identified operatives → player grudges
+(`answer_attack`, up to 70) → 138 opportunity-years → 0.29 expeditions per house →
+exposures → house grudges up to 75, which are incoming again for 108 live years.
+
+**Funnel after (independent Long):** incoming 738 `candidate`, 821 `no_sponsor`,
+8165 `below_threshold`. Of 735 candidate-years, 177 waited on an open plot or the cooldown,
+and 558 drew the roll for 37 preparations: 6.6% against 8%, 1.2 SE low. A separate exact
+check (hostile seeds `187800–187807`, 120 years, no Table orders) re-derived each year's
+`covert_preparation` draw. Every draw under 8% in its 266 roll-years became a preparation,
+and none fell outside them, so the funnel's last stage is the roll and nothing else.
+
+**Endings, reported rather than acquitted.** In the independent Long sample, `broken_line`
+went 8 → 9 over matched seeds. 187903, 187907 and 187916 now break; 187904 and 187909 now
+survive. None of the five had an attack death; the two deaths were in houses whose ending
+did not change. These are re-rolled histories, not kills, but the net +1 is real and is
+recorded here.
+
+### Found, not fixed
+
+- **The founding grudge is mostly held from inside the house.** `successorTo`'s house
+  step takes the eldest *born* to Marrow, which can be a Marrow-born wife married into
+  this house. On the independent sample the founding grudge spent 3,793 grudge-years
+  held from inside the house, against 4,733 incoming. Those years never enter the incoming
+  funnel at all, because a holder in this house is not an outsider, so the loss shows in
+  no stage count.
+- **The assize quarrel has the same root:** it picks its holder by `houseOfOrigin`, so a
+  rival-born wife can hold "rival" grudges against her own Head (`assize:internal:*`).
+- The scheduled signing gate founds every run on `grudges[0]`, so its paired measurement
+  now sees attacks and should be expected to move.
+- Short and Long agree to within a few incidents because every attack happens early. The
+  Long Line's last four centuries hold no new conflict unless retaliation renews it.
+
+Reruns of the two hostile "after" batches with the final funnel reproduced every complete
+save and every threat exactly. The ordinary before and after reports are byte-identical.
+
+| Retained file (scratch, per batch) | SHA256 prefix |
+| --- | --- |
+| base-ordinary.json = after-ordinary.json | f7d8e43b7ecda6a4 |
+| base-hostile.json / after-hostile.json | 9cc76ed1f6d68ff0 / f2742e61d55ae572 |
+| base-indep.json / after-indep.json | 92d9544fd9af5985 / 00a9e54f5f0cc7ac |
+
+**Reproduce:**
+
+```bash
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-report.ts 24 187700 ordinary.json ordinary
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-report.ts 8 187800 hostile.json hostile
+npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-report.ts 24 187900 independent.json hostile
+```
