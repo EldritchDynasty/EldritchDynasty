@@ -7181,19 +7181,26 @@ describe('the Bramme manuscript follow-up (#952)', () => {
   it('schedules the corrected page through the production outcome path', () => {
     const ctx = sendToBramme('came_back');
     const due = ctx.world.year + 20;
+    const parent = ctx.world.chronicle.find((entry) => entry.eventId === fairCopy!.id)!;
+    expect(parent.id).toBeDefined();
+    const cause = { year: parent.year, page: parent.id };
     expect(ctx.world.flags.get('bramme_copied_a_book')).toBe(true);
-    expect(ctx.world.scheduled).toContainEqual({ event: margin!.id, year: due });
+    expect(ctx.world.scheduled).toContainEqual({ event: margin!.id, year: due, cause });
 
     ctx.world.year = due;
     ctx.world.generation = 4;
     const picked = selectEvents(ctx, makeRng(29), 1);
     expect(picked[0]?.event.id).toBe(margin!.id);
     expect(picked[0]?.source).toBe('forced');
+    expect(picked[0]?.cause).toEqual(cause);
   });
 
   it('defers the due callback until the authored fourth-generation gate holds', () => {
     const ctx = sendToBramme('came_back');
     const due = ctx.world.year + 20;
+    const parent = ctx.world.chronicle.find((entry) => entry.eventId === fairCopy!.id)!;
+    expect(parent.id).toBeDefined();
+    const cause = { year: parent.year, page: parent.id };
 
     // Twenty years is not necessarily a full generation. A forced callback
     // must not override its own generation requirement when the due year comes.
@@ -7202,7 +7209,7 @@ describe('the Bramme manuscript follow-up (#952)', () => {
     const early = selectEvents(ctx, makeRng(37), 0);
     expect(early.some((candidate) => candidate.event.id === margin!.id)).toBe(false);
     expect(ctx.world.scheduled).toContainEqual({
-      event: margin!.id, year: due + 5, first: due,
+      event: margin!.id, year: due + 5, first: due, cause,
     });
 
     ctx.world.year = due + 5;
@@ -7210,6 +7217,7 @@ describe('the Bramme manuscript follow-up (#952)', () => {
     const eligible = selectEvents(ctx, makeRng(38), 0);
     expect(eligible.map((candidate) => candidate.event.id)).toEqual([margin!.id]);
     expect(eligible[0]?.source).toBe('forced');
+    expect(eligible[0]?.cause).toEqual(cause);
     expect(ctx.world.scheduled.some((s) => s.event === margin!.id)).toBe(false);
   });
 

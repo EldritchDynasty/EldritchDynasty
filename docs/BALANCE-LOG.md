@@ -15490,7 +15490,9 @@ v22.23.4. Its core/schema/content trees are respectively
 `65e8760eccb6b5ca167f11d4ee2f8a777ab8f685`, and
 `4e2b31549712c24e315e0a0c177874a10f9dae70`. The content tree is unchanged.
 The final published tree can be compared with these measured trees even if
-commit metadata changes during publication. No weight, ration, eligibility,
+commit metadata changes during publication. Subsequent Bramme witness changes
+only assert the new schedule/candidate provenance; runtime sources remain the
+frozen version. No weight, ration, eligibility,
 binding policy, schedule, random draw, proof bar or allowlist changed.
 
 **Canonical paired evidence.** 800 Long Lines ×500 years, seeds
