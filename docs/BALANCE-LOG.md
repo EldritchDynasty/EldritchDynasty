@@ -15470,3 +15470,176 @@ npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-re
 npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-report.ts 8 187800 hostile.json hostile
 npx tsx --tsconfig tsconfig.base.json packages/core/src/tools/covert-exposure-report.ts 24 187900 independent.json hostile
 ```
+
+## 2026-10-28 — #1969: continuation citations; #1946 audit remains open
+
+**A concrete repair, with no balance change.** The first continuation of an
+inline story had no earlier node in its history, so it could not cite the
+page that launched it. Ordinary scheduled continuations also lost that page.
+New inline instances now retain the exact launching page/year; schedules carry
+it through retries, forced selection and saved player choices. The first inline
+node cites its launcher, and later nodes keep their immediate-predecessor
+citation. An omitted parent remains a valid link to a blank. Legacy arcs,
+schedules and dockets without this optional provenance keep it unknown;
+`SAVE_FORMAT` remains 41.
+
+**Sources.** Before: `a74934eb81771450f71aba89891c3c9824f84cb5`.
+Frozen implementation: `21a28c4fed58122c09c039fec95c2ec224bf2042`, Node
+v22.23.4. Its core/schema/content trees are respectively
+`ba7cc977c2a525fde144f68cf1f362df2a48e7eb`,
+`65e8760eccb6b5ca167f11d4ee2f8a777ab8f685`, and
+`4e2b31549712c24e315e0a0c177874a10f9dae70`. The content tree is unchanged.
+The final published tree can be compared with these measured trees even if
+commit metadata changes during publication. No weight, ration, eligibility,
+binding policy, schedule, random draw, proof bar or allowlist changed.
+
+**Canonical paired evidence.** 800 Long Lines ×500 years, seeds
+`5000 + 7*i`, `i=0..799`. Every recorded field in all 800 paired rows is
+identical after removing only the intended promise-citation fields and the
+causal-page count: every template's firing count, offers, chosen answers,
+promise timing/status/cast, by-Age/tier/frequency/source selection counts,
+choice/repetition counts, answer silence and already-observed ending fields.
+Eight complete-save observer on/off controls pass in each column. The new
+report does not close a surviving Ledger at its endpoint; finalized endings
+are measured separately below.
+
+| Route | Houses, before → after /800 | Canonical promise outcomes | Delivered pages lacking their launcher, before → after |
+|---|---:|---|---:|
+| Herald's old question | 5 → 5 | 5 delivered | 5 → 0 |
+| Hall answered | 5 → 5 | 5 delivered; 11 cancelled for a missing kept person; 1 due after collection | 5 → 0 |
+| Hall stops writing | 9 → 9 | 9 delivered; 12 cancelled for a missing kept person; 1 start refused near collection | 9 → 0 |
+| Cellar shelf found | 26 → 26 | 26 delivered | 26 → 0 |
+
+All **45** audited delivered continuations now cite their launcher. None
+changes a kept binding. Across the whole sample, causal Chronicle pages rise
+from **50.9975 to 60.9125 per house** (7,932 additional citations); ordinary
+choice counts remain **127.9075 per house** and repeated choices remain
+**21.6006%** of committed choices. These are citation and execution results,
+not evidence of improved reader comprehension or enjoyment.
+
+The actual default baseline gates both **PASS**: fire rate covers **516**
+non-frame events and outcome reach covers **1,181** authored outcomes. Six
+zeroes remain too rare for the corrected proof rule to judge; passing does not
+mean they resolved. The report's 800-run batch reuses the default gate's exact
+campaign/seeds but is a separate played sample with read-only observers.
+
+**Invitation, answer and delivery are different denominators.** The canonical
+herald visitation offers both answers **27** times: the chronicler gives the
+full descent **22** times and the short descent **5** times. All five short
+answers deliver the next-year continuation. In the completed first-200 generic
+funnel, the visitation is eligible in 200 houses but fires in five, all taking
+the full descent. The hall letter is eligible in nine houses and fires in
+eight (three warnings, five roof replies); neither warning continuation
+delivers in that subset. The Crusade shelf scene is eligible in 148 houses
+and commits 24 times in 23 houses; two hidden shelves both return.
+
+The explicit player-docket policy takes the short descent whenever available:
+**13 answers in 12 houses**, **12 fresh deliveries**, and one later duplicate
+retired by the existing once-only rule. This is 200 houses on the same seed
+list, with eight complete-save controls. Its docket/chronicler streams differ
+from canonical automatic presentation, so 12/200 versus 0/200 is not a paired
+estimate of the effect of changing that answer alone.
+
+**Independent, predeclared sample.** The candidate was frozen before reading
+800 further Long Lines, seeds `1946000 + 29*i`, `i=0..799`. Eight complete-save
+controls pass. Rates below use independent houses; repeat promises are not
+extra campaigns. Intervals are 95% Wilson intervals.
+
+| Route | Houses /800 | Rate (95% interval) |
+|---|---:|---:|
+| Herald's old question | 29 | 3.625% (2.536–5.158%) |
+| Hall answered | 5 | 0.625% (0.267–1.455%) |
+| Hall stops writing | 10 | 1.250% (0.680–2.286%) |
+| Cellar shelf found | 42 | 5.250% (3.907–7.020%) |
+
+The independent herald has 55 offers, 31 short answers in 30 houses, 29
+deliveries, one later duplicate and one question asked in the collection year.
+The cellar has 42 deliveries, one later duplicate and one line that ends
+before the due year. Neither duplicate is a lost fresh delivery. Of the 24
+independent Hall-answer promises, five deliver and 19 cancel for kept-person
+death. The canonical 11 such losses are six COUSIN-only, four HEAD-only and
+one losing both; independent losses are six COUSIN-only, six HEAD-only and
+seven losing both. A canonical letter in 1526 draws 1543 as its due year;
+an independent roof reply in 1536 draws 1545. The minimum-duration start
+guard does not guarantee that a longer random delay fits before collection.
+These survival/window questions remain in **#1946**. The Hall rate remains
+thin in both samples; its interval still crosses the unchanged 0.5% floor.
+No robustness or improved-incidence claim follows from the citation repair.
+
+**Today's rarest ten, with intent separated from frequency.** The 800-house
+inventory is current evidence, not a restatement of the #1929 counts.
+
+| Event | Houses /800 | Reason for rarity / obligation |
+|---|---:|---|
+| `the_hall_is_answered` | 5 | Promised personal negotiation after an optional stagnation warning; mortal kept cast and a long delay. |
+| `the_herald_opens_the_old_question` | 5 | Promised return after an optional institutional visit and a player answer; not independently common just because its metadata says common. |
+| `the_hall_stops_writing` | 9 | Promised roof-letter consequence, with the same kept-cast/window losses. Whether the hall's collective grievance should outlive its writer remains a design question. |
+| `the_unmaking` | 9 | Deliberately exceptional ladder culmination: Hierophant, eminent Respect, both prior rites and an expressive adult descendant. Its zero outcomes remain underpowered, not proven broken. |
+| `the_house_has_one_name_left` | 10 | Common but conditional emergency: at most two living blood and an unwed sole heir. No promised upstream continuation. |
+| `waking_early` | 11 | Optional Age-scoped encounter requiring an unwoken nine-year-old; a narrow cast opportunity, not a legendary frequency label. |
+| `a_different_office_asks` | 12 | Promised continuation of a specific answer/flag in the quiet-name story. |
+| `an_early_waking_daughter` | 13 | Optional encounter requiring an already-awakened girl aged at most fourteen and a female retainer. |
+| `archive_read_back_at_the_assize` | 13 | Later node of the released/pensioned archivist's story; preserves the absent archivist rather than replacing her. |
+| `eight_days_and_then_it_did` | 13 | Final node behind the box's authored multi-beat story; inherited delay and prior answers, not an ambient final-scene weight. |
+
+The completed 200-house generic trace covers the seven historical upstream
+and downstream nodes. Additional full-tail traces were stopped at 2/200 and
+51/200 houses because their speculative cast probes were expensive; those
+incomplete artifacts establish no tail rates. Wider full-tail calibration
+remains open rather than being inferred from this inventory.
+
+**Glimpse displacement is measurable, but not isolated to a weighted draw.**
+The diagnostic bundle disables only the three glimpse premises. It retains
+their identities, references and the production rations, and plays the same
+first 200 seeds with eight complete-save controls. Removing the glimpses also
+removes their downstream flags, Records and discrepancies. This is a joint
+content/state counterfactual, not a pure test of weight competition.
+
+| Rationed frequency | Selected with glimpses | Selected without | Share with → without |
+|---|---:|---:|---:|
+| common | 22,108 | 22,070 | 77.43% → 78.07% |
+| uncommon | 5,018 | 4,752 | 17.57% → 16.81% |
+| rare | 1,376 | 1,394 | 4.82% → 4.93% |
+| mythic | 52 | 55 | 0.18% → 0.19% |
+
+The 527 glimpse firings add 266 net uncommon selections and displace 261
+non-glimpse uncommon selections: **1.305 fewer per house**, paired SE
+**0.372**, with the glimpses present. Uncommon family selections are
+2,023→1,621 on removal (subtracting the 527 glimpses leaves 125 additional
+other family scenes without them); uncommon head selections are 2,889→3,020.
+Forced uncommon selections are 670→158. The return scenes in the Hall's
+inline arcs do not spend that ration, but their upstream letter does.
+
+Uncommon shares by active Age, with→without, are Long Peace
+**18.35→17.11%**, Wars **18.57→17.50%**, Withering **16.87→16.89%**,
+Crusade **16.72→17.54%**, Quickening **17.69→16.51%**, Insurrection
+**18.75→18.12%**, and Plague **18.56→16.99%**. Ages can overlap; these
+are shares within each active context, not exclusive campaign shares.
+Herald/Hall-answer/roof/cellar reach changes from **0/0/2/2** to
+**10/3/5/9 houses**. The herald's visits/short answers change from **5/0**
+to **13/10**, so downstream reach alone cannot distinguish upstream pool
+displacement, changed state and the chronicler's changed answers. No glimpse
+is moved out of its ration and no compensating weight is raised here.
+
+**Pacing and endings.** Fresh `gate:long` measurements on the original
+revision and candidate use 24 Long Lines, seeds `20000 + 37*i`, 500 years,
+the established chronicler docket policy. All 24 complete `LongRun` records
+are exactly equal. Mean longest answer silence remains **53.8333 years**,
+maximum **62**; mean prompts per generation remains **11.0386**. Finalized
+endings are unchanged: **1 unmade, 6 broken_line, 10 forgotten, 7 devoured**.
+These are equality observations, not newly powered ending-band assertions.
+Separate first-choice `gate:density` runs were stopped before completion;
+their checkpointed pacing records are retained and no independent density
+verdict is claimed. The completed canonical choice/repeat counts above are
+the repetition evidence for this citation-only change.
+
+Mechanism witnesses cover unavailable cast, kept-person death, expired and
+late starts, condition retries, once-only duplicates, exact same-year parent
+identity, omitted parents, legacy provenance, later-node precedence, saved
+schedules/choices and public-session replay. The PR records normal preflight
+and required exact-head CI. Workspace artifacts live under
+`/workspace/scratch/1946-*`, with a SHA-256 manifest. Reproduce route traces
+with `npm run report:story-routes -- --runs=800 --output=routes.json`;
+`--policy=short-descent`, `--without-glimpses`, `--seed-start` and `--seed-step`
+name the declared comparison columns. **#1969 closes the citation slice;
+#1946 remains open for balance and delivery-design work.**
