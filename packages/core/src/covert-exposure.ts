@@ -121,7 +121,11 @@ function outgoingMiss(ctx: SimCtx, r: Relationship): string {
   return operationExclusion(ctx, p) ?? 'unmatched';
 }
 
-/** One year's look. Reads only; the observer-neutrality test holds it to that. */
+/** One year's look, taken after the year has run. Reads only; the observer-neutrality
+ * test holds it to that. The plot and cooldown are judged for the year about to be
+ * drawn (`w.year + 1`), which is the roll this state decides. Judged for the year just
+ * ended, they miscounted the year each cooldown runs out. Keyed this way, every draw
+ * under 8% in 266 roll-years became a preparation, and no preparation fell outside them. */
 export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
   const w = ctx.world;
   f.years++;
@@ -152,7 +156,7 @@ export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
     f.incoming.candidateYears++;
     const open = w.covert.threats.some(t => t.stage === 'preparing' || t.stage === 'approach');
     const last = w.covert.threats.at(-1)?.plan.preparedAt ?? -Infinity;
-    if (open || w.year - last < HOUSEHOLD_THREAT_COOLDOWN) f.incoming.blockedYears++;
+    if (open || w.year + 1 - last < HOUSEHOLD_THREAT_COOLDOWN) f.incoming.blockedYears++;
     else f.incoming.rollYears++;
   }
 
@@ -165,6 +169,6 @@ export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
     f.outgoing.opportunityYears++;
     const open = w.covert.operations.some(o => o.stage !== 'closed');
     const last = w.covert.operations.at(-1)?.plan.preparedAt ?? -Infinity;
-    if (open || w.year - last < COVERT_OPERATION_COOLDOWN) f.outgoing.blockedYears++;
+    if (open || w.year + 1 - last < COVERT_OPERATION_COOLDOWN) f.outgoing.blockedYears++;
   }
 }
