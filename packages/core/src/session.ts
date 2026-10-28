@@ -42,14 +42,15 @@ import { activeMatchPriorities, activeRecordPriorities, strategicPressures, } fr
 import { resolveDelegated } from './delegation.js';
 import { recordStakes } from './record-stakes.js';
 import { answeredBy as answeredByPage, causeOf as causeOfPage, type ChronicleCause } from './cause.js';
+import { answerPages } from './events/answers.js';
 import { knownSuccession } from './people/succession.js';
 import { relevantPeople } from './people/relevance.js';
 import {
   createProseRuntime, proseForContentField, proseForTale, setProseMode as setRuntimeProseMode, setProseVariants,
   type ProseRuntime,
 } from './prose.js';
-import type { RecordedMilestone, PowerEvidenceRoute, StandingDelta, Standing, SessionDecisionView, SessionView, CirculatingTale, HallView, MemberView, InterventionView } from './session-view-types.js';
-export type { RecordedMilestone, PowerEvidenceRoute, StandingDelta, SessionDecisionView, SessionView, CirculatingTale, HallView, MemberView, InterventionView } from './session-view-types.js';
+import type { RecordedMilestone, PowerEvidenceRoute, StandingDelta, Standing, SessionDecisionView, SessionView, CirculatingTale, HallView, MemberView, InterventionView, ChronicleView } from './session-view-types.js';
+export type { ChronicleView, RecordedMilestone, PowerEvidenceRoute, StandingDelta, SessionDecisionView, SessionView, CirculatingTale, HallView, MemberView, InterventionView } from './session-view-types.js';
 
 /**
  * THE SESSION: everything a client is supposed to need, and nothing else.
@@ -770,11 +771,12 @@ export class GameSession {
    * the order they were written, which is the order a book is read in and the
    * reverse of the order the panel shows.
    */
-  book(opts: { from?: number; to?: number } = {}): ChronicleEntry[] {
+  book(opts: { from?: number; to?: number } = {}): ChronicleView[] {
     const { from, to } = opts;
-    return chronicleReading(this.ctx.world.chronicle).filter(
+    const entries = chronicleReading(this.ctx.world.chronicle).filter(
       (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
-    ).map((entry) => structuredClone(entry));
+    );
+    return asRead(this.ctx, entries);
   }
 
   /** Recorded family changes during one Head's tenure, current by default. */
@@ -947,6 +949,22 @@ export function resumeGame(
 }
 
 // ── The read model ────────────────────────────────────────────────────────
+
+/**
+ * Chronicle pages as a client receives them: deep copies, because a page's
+ * people, claims and cause are nested values and the saved book must not be
+ * writable from Vue, each marked with the kind of answer it is (#1945).
+ */
+function asRead(ctx: SimCtx, entries: ChronicleEntry[]): ChronicleView[] {
+  if (!entries.length) return [];
+  const kinds = answerPages(ctx, entries.reduce((min, e) => Math.min(min, e.year), Infinity) - 1);
+  return entries.map((entry) => {
+    const copy: ChronicleView = structuredClone(entry);
+    const answer = kinds.get(entry.id!);
+    if (answer) copy.answer = answer;
+    return copy;
+  });
+}
 
 /** How much of the chronicle a view carries. The whole book is a separate read. */
 export const VIEW_CHRONICLE_LINES = 60;
@@ -1127,7 +1145,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   // here, without sending the whole person store (or hidden facts) to Vue.
   // Chronicle views must not expose writable references into the saved book.
   // Deep copies matter: a page's people, claims and cause are nested values.
-  const chronicle = chronicleReading(w.chronicle).slice(-chronicleLines).map((entry) => structuredClone(entry));
+  const chronicle = asRead(ctx, chronicleReading(w.chronicle).slice(-chronicleLines));
   const chroniclePeople = [...new Set(w.chronicle.filter((entry) => entry.text !== null && entry.record !== 'omit')
     .flatMap((entry) => [...(entry.people ?? []), ...(entry.claims ?? [])
       .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]

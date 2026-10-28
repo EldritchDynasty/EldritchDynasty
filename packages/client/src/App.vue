@@ -31,9 +31,20 @@ import { shortcutHelp, isControl, isField, shortcutFor } from './lib/keys';
 import { LEGEND, markSays } from './lib/marks';
 import {
   applyAccessibility,
+  hasSeenProse,
   loadAccessibility,
   saveAccessibility,
+  seenProseKey,
 } from './lib/accessibility';
+import {
+  READING_LOG_NOTICE,
+  ReadingLog,
+  attachReadingLog,
+  readingLogFilename,
+  readingLogRequested,
+  recordActions,
+} from './lib/reading-log';
+import { downloadBlob } from './lib/download';
 import {
   loadRevealed,
   revealNotice,
@@ -56,8 +67,24 @@ import { tableTasksFor, type OpenedTablePanels, type TableReveal, type TableTarg
 const game = createGame(loadBundle());
 const {
   view, table, land, prologue, openingSeen, epilogue, achievements, docket, passages, jump, interlude, chapter, frame, ended,
-  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, milestones, actions,
+  refused, refusal, receipt, musterRefusal, outcome, refusedCard, resumable, saveStatus, library, libraryReady, libraryReadError, milestones,
 } = game;
+
+/**
+ * THE READING LOG (#1945): research-only, and off unless the address asks for
+ * it. When on, it only watches — every verb below passes through unchanged.
+ */
+const readingLog = typeof window !== 'undefined' && readingLogRequested(window.location.search)
+  ? new ReadingLog(
+    () => performance.now(),
+    typeof __ED_BUILD__ === 'object' ? { ...__ED_BUILD__ } : { sha: 'unknown', platform: 'unrecorded' },
+    new Date().toISOString(),
+    { visible: document.visibilityState === 'visible', focused: document.hasFocus() },
+  )
+  : null;
+const readingLogOn = ref(readingLog !== null);
+const readingBreak = ref(false);
+const actions = readingLog ? recordActions(game.actions, readingLog) : game.actions;
 
 /**
  * Which of the three the middle column is showing. The docket, the clock and
@@ -433,6 +460,53 @@ function onKey(e: KeyboardEvent): void {
 onMounted(() => window.addEventListener('keydown', onKey));
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
+if (readingLog) {
+  let detach = () => {};
+  onMounted(() => { detach = attachReadingLog(readingLog, document, window); });
+  onBeforeUnmount(() => detach());
+
+  // Pre-flush watchers, so a decision is checked against reader history
+  // before `Docket.vue` renders it and remembers it.
+  watch(() => view.value && { campaign: view.value.campaign.id, seed: view.value.seed }, (run) => {
+    if (run) readingLog.note({ kind: 'run', ...run });
+  }, { immediate: true });
+  watch(() => accessibility.value.proseMode, (mode) => readingLog.note({ kind: 'prose', mode }), { immediate: true });
+  watch(pane, (next) => readingLog.note({ kind: 'pane', pane: next }), { immediate: true });
+  watch(readingBreak, (on) => readingLog.note({ kind: 'break', on }));
+  watch(() => view.value?.year, (year) => {
+    if (year !== undefined) readingLog.note({ kind: 'year', year });
+  }, { immediate: true });
+  watch(() => view.value?.chronicle, (pages, before) => {
+    const old = new Set((before ?? []).map((entry) => entry.id));
+    for (const entry of pages ?? []) if (!old.has(entry.id)) readingLog.page(entry.year, entry);
+  }, { immediate: true });
+  watch(interlude, (shown) => {
+    if (shown) readingLog.interlude(shown.year, shown.eventId);
+  }, { immediate: true });
+  watch(() => docket.value[0], (decision) => {
+    if (!decision || !view.value) return;
+    const event = decision.kind === 'match' ? 'match' : String(decision.event.id);
+    const seen = decision.kind === 'choice'
+      && hasSeenProse(readingStorage(), seenProseKey('scene', `${event}\u0000${decision.event.body}`));
+    readingLog.note({ kind: 'decision', year: view.value.year, decision: decision.id, event, seen });
+  }, { immediate: true });
+  watch(ended, (done) => { if (done) readingLog.note({ kind: 'ended' }); }, { immediate: true });
+}
+
+/** Export ends the log: a gap still open at the export is censored there. */
+function exportReadingLog(): void {
+  if (!readingLog) return;
+  readingLog.end('exported');
+  const artifact = readingLog.artifact();
+  downloadBlob(new Blob([JSON.stringify(artifact, null, 2)], { type: 'application/json' }), readingLogFilename(readingLog));
+  readingLogOn.value = false;
+}
+
+function stopReadingLog(): void {
+  readingLog?.end('stopped');
+  readingLogOn.value = false;
+}
+
 /** The clock only turns when nothing is waiting for an answer. */
 const waiting = computed(() => docket.value.length > 0 || (view.value?.namesWanted.length ?? 0) > 0);
 
@@ -461,6 +535,18 @@ const yearAndBirths = computed(() => {
 </script>
 
 <template>
+  <aside v-if="readingLog" class="panel small reading-log" role="region" aria-label="Reading log">
+    <p v-if="readingLogOn">{{ READING_LOG_NOTICE }}</p>
+    <p v-else>Reading log stopped. Nothing more is being recorded{{ readingLog.ended === 'exported' ? '; the export is the only copy' : '' }}.</p>
+    <p class="reading-log-actions">
+      <button v-if="readingLogOn" class="quiet small" :aria-pressed="readingBreak" @click="readingBreak = !readingBreak">
+        {{ readingBreak ? 'End break' : 'Take a break' }}
+      </button>
+      <button v-if="readingLogOn || readingLog.ended === 'stopped'" class="quiet small" @click="exportReadingLog">Export reading log</button>
+      <button v-if="readingLogOn" class="quiet small" @click="stopReadingLog">Turn off</button>
+    </p>
+  </aside>
+
   <Start
     v-if="!view"
     :actions="actions"
@@ -804,6 +890,17 @@ const yearAndBirths = computed(() => {
 </template>
 
 <style scoped>
+.reading-log {
+  margin: 0.5rem auto;
+  max-width: 60rem;
+  padding: 0.5rem 1rem;
+}
+.reading-log-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .board {
   display: grid; grid-template-columns: minmax(0, 24rem) minmax(0, 1fr) minmax(0, 24rem);
   gap: 26px; padding: 22px 26px 70px; align-items: start;
