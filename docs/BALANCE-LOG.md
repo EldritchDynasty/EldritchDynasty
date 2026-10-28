@@ -15051,3 +15051,41 @@ private provenance arrays, and observing consumes no RNG. No casting rule,
 campaign policy, content, proof threshold or allowlist changed. The historical
 #1930 provenance boundary above describes the pre-fix state; this entry records
 its resolution.
+
+## #1942 — Mystic practice follow-up: declared protocol (28 October 2026)
+
+Before changing the practice policy or game, reproduce the unchanged historical
+24-seed ordinary sample (`187700–187723`) and eight-seed chartered-pressure
+sample (`187800–187807`), all three historical policies, Short300 and Long500.
+The starting head is `39f9576a39bae908c064227e0d754c6ce013c6a6`; the historical
+report SHA256 is `c0c6a1157501928682d7b9dc8b1eb50f78169d4a0fa99ac206b1828320260c12`.
+Keep these original policies as comparators, including their two-duty limit,
+benefit-kind ranking and project window. Preserve the 26 October entry above.
+
+**Primary comparison, declared before tuning.** Useful non-ladder domains per
+trained 25-year generation, using the original report's definition and retaining
+early endings. Compare the adopted demand-aware policy with historical broad,
+paired by seed, separately at both terms. Support for improvement requires the
+paired mean difference to clear zero by `expectMean`'s existing two-standard-error
+bar in each term. The proposed two-domain product goal remains a separate test;
+an improvement does not turn a miss on that goal into a pass.
+
+Four single-factor ablations precede adoption: release a duty after five paid
+years with zero useful years; remove the policy's two-duty household cap;
+rank by previously observed public service usefulness rather than benefit kind;
+consider project teams every year. The combined candidate applies these four
+choices. Each retains the same training, ordinary projects, chronicler and
+public quotes, with one training and one practice order per year. Record refused
+attempts separately and audit this budget, including the historical comparator.
+No new working, price change, hidden-state policy or global frequency change is
+part of this experiment. Do not retune the five-year cutoff or seeds after seeing
+the result.
+
+Report the book/study/reader/target/quote/assignment/paid/useful funnel per working
+and affinity. Keep occupied readers, unavailable readers, missing collaborators
+and absent targets distinct. Report censored first use, actual spending/savings,
+paused study, outside obligations and household outcomes in their existing units.
+Observers must preserve the full canonical save with only `savedAt` blanked.
+Policy memory may retain earlier public Table snapshots, never future outcomes
+or private simulation state. Additional independent seeds, if needed, must be
+declared before their results are read and must not replace the original sample.
