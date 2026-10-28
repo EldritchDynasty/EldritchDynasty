@@ -383,3 +383,59 @@ When the cohort is complete, append or link one report containing:
 Preserve the raw notes until the issues are closed. A summary without the first
 answers makes it too easy to remember the interpretation and lose the evidence
 that produced it.
+
+## Mystery pacing in reading time (#1945)
+
+`gate:long` measures the longest silence between answers in game years — 53.8
+on average across 24 chronicler Long Lines, at most 62, reproduced on
+`fcdf1c9f` through `answers()` (`packages/core/src/events/answers.ts`). Game
+years are not attention. This protocol asks whether a reader still holds a
+question across those gaps. It is **not run yet**: participant sessions are the
+blocker, and a bot run cannot stand in for one.
+
+### The instrument
+
+Open the game with `?reading-log=1` on the address (for the browser build:
+`npm run play`, then `http://localhost:5174/?reading-log=1`). A notice at the
+top of every screen says what is recorded; read it to the participant before
+starting. Nothing is recorded without the switch, nothing is sent anywhere, and
+the saved game is byte-identical with the log on or off
+(`packages/client/src/lib/reading-log.test.ts`).
+
+The log records the build SHA and the platform the build declared (set
+`ED_BUILD_PLATFORM` when building; otherwise it reads `unrecorded`, and the
+session record above must carry it); campaign, seed and prose mode;
+every chronicle page shown, with its answer kind (`interlude`, `clause`,
+`glimpse`) where it is one; every decision shown, marked `seen` when this
+device had shown its authored scene before; pane changes; advances, answers
+and dismissals; and when the window was visible and focused. **Take a break**
+in the notice marks a declared break, which is excluded from foreground time.
+**Export reading log** ends the log and downloads it as JSON; a reload ends it
+too, and anything after is lost — record that as censoring, not as a quiet
+stretch.
+
+Read its numbers as the artifact's own `caveats` say: foreground is an
+exposure proxy, not reading; game years are pacing; the last gap of every log
+is censored, a lower bound.
+
+### The session
+
+- A product-equivalent Long Line from the signing, in one sitting or with
+  declared breaks. No debug jump to midgame counts as a continuous first run.
+- Break three times: early (around the first Age's close), middle (around
+  1300) and late (after 1450). At each break ask, and record verbatim:
+  1. "What question are you pursuing right now?"
+  2. "What did the last thing you learned about the bargain change?"
+- Note confusion and the moment interest visibly drops, with the in-game year.
+  Do not explain the mystery, and do not answer a participant's question about
+  it.
+- Record where and why the session stopped. A stop is censoring.
+
+### Analysis
+
+Per segment (early, middle, late): foreground gaps between answers, game-year
+gaps, decisions per foreground hour (an estimate), revisits, and the verbatim
+answers. Publish the sample size, the incomplete runs and the uncertainty with
+it. **Choose any target interval or intervention after this baseline and before
+tuning, and write it on #1945.** Game years alone do not decide it, and a
+supported finding of no stall is a valid result.

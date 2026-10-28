@@ -1,5 +1,8 @@
 /// <reference types="vite/client" />
 
+/** The commit and declared platform of this build (`vite.config.ts`); absent outside a Vite build. */
+declare const __ED_BUILD__: { sha: string; platform: string } | undefined;
+
 declare module '*.vue' {
   import type { DefineComponent } from 'vue';
   const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;

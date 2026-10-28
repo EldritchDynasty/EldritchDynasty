@@ -6,7 +6,9 @@ import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
   frameDue, frameOverdue, framePool, lastAnswerYear,
 } from './events/frame.js';
-import { GLIMPSE_TAG, answerYears, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
+import { GLIMPSE_TAG, answerPages, answerYears, answers, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
+import { GameSession, viewOf } from './session.js';
+import { canonical, saveGame } from './save.js';
 import { proseForClause } from './prose.js';
 import { makeRng } from './rng.js';
 import { evalCondition } from './events/conditions.js';
@@ -250,6 +252,83 @@ describe('an authored glimpse answers the player', () => {
     expect(shown.length, 'the opening reached its follow-up').toBeGreaterThan(0);
     expect(glimpseYears(ctx)).toEqual(shown.map((d) => d.year));
     expect(lastAnswerYear(ctx)).toBeGreaterThanOrEqual(shown.at(-1)!.year);
+  });
+});
+
+/**
+ * WHICH PAGE AN ANSWER IS ON (#1945).
+ *
+ * `answerYears` said when; a reading-time measurement needs to know which page
+ * the player was looking at when the run answered them. `answers()` is the one
+ * definition and the years are only its dates, so the frame's ceiling and
+ * `gate:long` cannot drift from what a client is told.
+ */
+describe('an answer names its page', () => {
+  /** A page as `applyOutcome` writes one, and the decision `commitOutcome` logs after it. */
+  function fire(ctx: ReturnType<typeof bootstrap>, year: number, event: string, outcomeId: string, id: string) {
+    ctx.world.chronicle.push({ id, year, weight: 'paragraph', text: `${event} ${outcomeId}`, eventId: event, named: false });
+    logOutcome(ctx, year, event, outcomeId);
+  }
+
+  it('classifies all three kinds, and the years are only its dates', () => {
+    const ctx = glimpseWorld(glimpsing, 1400);
+    const clause = bundle.clauses.find((c) => !c.known)!;
+    const prose = proseForClause(ctx, clause);
+    ctx.world.clausesRecovered.add(clause.id);
+    ctx.world.chronicle.push({ year: 1180, weight: 'illuminated', title: prose.name, text: prose.text, named: true });
+    fire(ctx, 1250, 'the_books_about_dying', 'the_carpenters_mother', 'chr_glimpse');
+    ctx.world.frame.entries.push({ year: 1120, eventId: 'frame_x', outcomeId: 'o', text: 'An interlude.' });
+
+    const clausePage = `legacy-chronicle:${ctx.world.chronicle.findIndex((e) => e.year === 1180)}`;
+    expect(answers(ctx)).toEqual([
+      { year: 1120, kind: 'interlude', event: 'frame_x' },
+      { year: 1180, kind: 'clause', page: clausePage },
+      { year: 1250, kind: 'glimpse', event: 'the_books_about_dying', page: 'chr_glimpse' },
+    ]);
+    expect(answerYears(ctx)).toEqual(answers(ctx).map((a) => a.year));
+    expect(answers(ctx, 1180).map((a) => a.kind), 'only what is newer').toEqual(['glimpse']);
+    expect([...answerPages(ctx)]).toEqual([[clausePage, 'clause'], ['chr_glimpse', 'glimpse']]);
+  });
+
+  // One template firing twice in a year writes two pages under one event id;
+  // the decision log keeps no page. The k-th outcome is the k-th page.
+  it('pairs the k-th outcome of an event in a year with its k-th page', () => {
+    const ctx = glimpseWorld(glimpsing, 1300);
+    const untagged = outcomesOf(ctx.content.event('the_heir_reads_the_tally')!, true).find((o) => !o.tags.includes(GLIMPSE_TAG));
+    fire(ctx, 1200, 'the_heir_reads_the_tally', untagged?.id ?? 'no_such_outcome', 'chr_first');
+    fire(ctx, 1200, 'the_heir_reads_the_tally', 'the_three_sacks', 'chr_second');
+    expect(answers(ctx).map((a) => a.page)).toEqual(['chr_second']);
+  });
+
+  it('gives a glimpse with no page of its own no page, rather than a neighbour\'s', () => {
+    const ctx = glimpseWorld(glimpsing, 1300);
+    logOutcome(ctx, 1200, 'the_heir_reads_the_tally', 'the_three_sacks');
+    ctx.world.chronicle.push({ id: 'chr_other', year: 1200, weight: 'line', text: 'Elsewhere.', eventId: 'something_else', named: false });
+    expect(answers(ctx)).toEqual([{ year: 1200, kind: 'glimpse', event: 'the_heir_reads_the_tally' }]);
+  });
+
+  // The real commit path, and the real seam: the page a client is handed
+  // says it is an answer, and reading it changes nothing that is saved.
+  it('marks the page the client reads, and saves nothing', () => {
+    const ctx = bootstrap(glimpsing, 4106, SIGNING);
+    while (ctx.world.year < SIGNING + 8) stepYear(ctx);
+    const shown = answers(ctx).filter((a) => a.kind === 'glimpse');
+    expect(shown.length, 'the opening reached its follow-up').toBeGreaterThan(0);
+    for (const a of shown) {
+      expect(ctx.world.chronicle.find((e) => e.id === a.page)?.eventId, 'the page is the glimpse\'s own').toBe(a.event);
+    }
+
+    const saved = () => canonical({ ...saveGame(ctx), savedAt: '' });
+    const before = saved();
+    const session = new GameSession(ctx);
+    const marked = (entries: { id?: string; answer?: string }[]) =>
+      entries.filter((e) => e.answer).map((e) => [e.id, e.answer]);
+    const expected = shown.map((a) => [a.page, 'glimpse']);
+    expect(marked(session.book())).toEqual(expected);
+    expect(marked(viewOf(ctx).chronicle)).toEqual(expected);
+    expect(marked(session.book({ from: shown[0]!.year, to: shown[0]!.year }))).toEqual([expected[0]]);
+    expect(ctx.world.chronicle.some((e) => 'answer' in e), 'the saved book is not decorated').toBe(false);
+    expect(saved(), 'reading is not writing').toBe(before);
   });
 });
 

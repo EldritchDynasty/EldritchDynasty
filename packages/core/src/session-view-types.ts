@@ -10,6 +10,15 @@ import type { ChronicleEntry } from './world.js';
 import type { PositionOption } from './muster.js';
 import type { FrozenLadder, AscensionBlockerKind } from './ascension.js';
 import type { CastMember } from './cast.js';
+import type { AnswerKind } from './events/answers.js';
+
+/**
+ * A chronicle page as a client reads it. `answer` says the page tells the
+ * player something new about the bargain (#1945) — `events/answers.ts` is the
+ * one definition. Derived on every read and never saved: the saved book is
+ * `ChronicleEntry`, and an interlude is the frame's page, so it is not here.
+ */
+export type ChronicleView = ChronicleEntry & { answer?: Exclude<AnswerKind, 'interlude'> };
 
 /** A source-linked reading of what the family wrote, never a reconstructed life. */
 export interface RecordedMilestone {
@@ -171,7 +180,7 @@ export interface SessionView {
   /** Which recurring Chronicle choice these years make easiest to rationalise. */
   ageRecordPriorities: AgeRecordPriority[];
   halls: HallView[];
-  chronicle: ChronicleEntry[];
+  chronicle: ChronicleView[];
   interventions?: InterventionView[];
   /** Names on kept Chronicle pages, including ancestors outside the window and living halls.
    * This is a read-model index, not a new saved-world record. */

@@ -1,6 +1,7 @@
-import { outcomesOf } from '@ed/schema';
+import { outcomesOf, type LoggedDecision } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { proseForClause } from '../prose.js';
+import { chronicleReading } from '../people/generation-changes.js';
 
 /**
  * WHAT COUNTS AS AN ANSWER (#1897).
@@ -31,49 +32,139 @@ export function isGlimpse(ctx: SimCtx, event: string, outcomeId: string): boolea
   return outcomesOf(e, true).some((o) => o.id === outcomeId && o.tags.includes(GLIMPSE_TAG));
 }
 
+type OutcomeDecision = Extract<LoggedDecision, { kind: 'outcome' }>;
+
 /**
- * The years a glimpse was shown, newest last, keeping only those after
- * `after`. The decision log is chronological, so this walks back from the end
- * and stops at the first entry not newer than `after`.
+ * The glimpses shown after `after`, oldest first. The decision log is
+ * chronological, so this walks back from the end and stops at the first entry
+ * not newer than `after` — the frame asks this every year, so it must not
+ * read the whole log to learn about the last decade.
  */
-export function glimpseYears(ctx: SimCtx, after = -Infinity): number[] {
+function glimpseDecisions(ctx: SimCtx, after: number): OutcomeDecision[] {
   const log = ctx.world.decisionLog;
-  const years: number[] = [];
+  const shown: OutcomeDecision[] = [];
   for (let i = log.length - 1; i >= 0; i--) {
     const d = log[i]!;
     if (d.year <= after) break;
-    if (d.kind === 'outcome' && isGlimpse(ctx, d.event, d.outcomeId)) years.push(d.year);
+    if (d.kind === 'outcome' && isGlimpse(ctx, d.event, d.outcomeId)) shown.push(d);
   }
-  return years.reverse();
+  return shown.reverse();
+}
+
+/** The years a glimpse was shown, newest last, keeping only those after `after`. */
+export function glimpseYears(ctx: SimCtx, after = -Infinity): number[] {
+  return glimpseDecisions(ctx, after).map((d) => d.year);
 }
 
 /**
- * The years a recovered clause's own page was written, keeping only those
- * after `after`. The opening clause the house always had writes no page, so
- * it is not here; nor is any other illuminated page that happens to share a
- * clause's title.
+ * Where in the chronicle each recovered clause's own page sits, keeping only
+ * those after `after`. The opening clause the house always had writes no page,
+ * so it is not here; nor is any other illuminated page that happens to share
+ * a clause's title.
  */
-export function clauseYears(ctx: SimCtx, after = -Infinity): number[] {
+function clausePages(ctx: SimCtx, after: number): { year: number; index: number }[] {
   const w = ctx.world;
   let pages: Map<string, string> | undefined;
-  const years: number[] = [];
-  for (const entry of w.chronicle) {
+  const found: { year: number; index: number }[] = [];
+  for (const [index, entry] of w.chronicle.entries()) {
     if (entry.year <= after || entry.weight !== 'illuminated' || entry.title === undefined) continue;
     pages ??= new Map(ctx.content.clauses
       .filter((c) => w.clausesRecovered.has(c.id))
       .map((c) => { const prose = proseForClause(ctx, c); return [prose.name, prose.text]; }));
-    if (pages.get(entry.title) === entry.text) years.push(entry.year);
+    if (pages.get(entry.title) === entry.text) found.push({ year: entry.year, index });
   }
-  return years;
+  return found;
+}
+
+/** The years a recovered clause's own page was written, keeping only those after `after`. */
+export function clauseYears(ctx: SimCtx, after = -Infinity): number[] {
+  return clausePages(ctx, after).map((p) => p.year);
+}
+
+export type AnswerKind = 'interlude' | 'clause' | 'glimpse';
+
+/**
+ * One answer, and where the player read it (#1945). `page` is the chronicle
+ * page that carries it, under the id `chronicleReading` gives it — the id a
+ * client sees on `book()` and the view. An interlude is the frame's page, not
+ * the chronicle's, so it has none; it and a glimpse name their `event`.
+ */
+export interface Answer {
+  year: number;
+  kind: AnswerKind;
+  event?: string;
+  page?: string;
+}
+
+/**
+ * The page each glimpse was written on. The decision log does not keep the
+ * page, and must not start to: this is derived on read, never stored.
+ *
+ * `applyOutcome` writes exactly one page per outcome, under a fresh id, with
+ * the event's id and the year on it, immediately before `commitOutcome` logs
+ * the decision. So the k-th outcome of an event in a year is the k-th
+ * distinct page of that event in that year. A Record block that rewrites the
+ * page keeps its id, so it is not a second page.
+ */
+function glimpsePage(
+  ctx: SimCtx, reading: readonly { id?: string; year: number; eventId?: string }[], after: number,
+): (d: OutcomeDecision) => string | undefined {
+  const pages = new Map<string, string[]>();
+  for (const entry of reading) {
+    if (entry.year <= after || entry.eventId === undefined) continue;
+    const key = `${entry.year}:${entry.eventId}`;
+    const ids = pages.get(key) ?? [];
+    if (!ids.includes(entry.id!)) ids.push(entry.id!);
+    pages.set(key, ids);
+  }
+  const ordinals = new Map<string, number>();
+  const ordinalOf = new Map<OutcomeDecision, number>();
+  for (const d of ctx.world.decisionLog) {
+    if (d.year <= after || d.kind !== 'outcome') continue;
+    const key = `${d.year}:${d.event}`;
+    const nth = ordinals.get(key) ?? 0;
+    ordinals.set(key, nth + 1);
+    ordinalOf.set(d, nth);
+  }
+  return (d) => pages.get(`${d.year}:${d.event}`)?.[ordinalOf.get(d) ?? -1];
+}
+
+/**
+ * Every answer the run has given after `after`, of all three kinds, in year
+ * order. This is the definition; `answerYears` is only its dates.
+ */
+export function answers(ctx: SimCtx, after = -Infinity): Answer[] {
+  const w = ctx.world;
+  const reading = chronicleReading(w.chronicle);
+  const pageOf = glimpsePage(ctx, reading, after);
+  const all: Answer[] = [
+    ...w.frame.entries
+      .filter((e) => e.year > after)
+      .map((e): Answer => ({ year: e.year, kind: 'interlude', event: e.eventId })),
+    ...clausePages(ctx, after)
+      .map((p): Answer => ({ year: p.year, kind: 'clause', page: reading[p.index]!.id! })),
+    ...glimpseDecisions(ctx, after).map((d): Answer => {
+      const page = pageOf(d);
+      return { year: d.year, kind: 'glimpse', event: d.event, ...(page !== undefined ? { page } : {}) };
+    }),
+  ];
+  return all.sort((a, b) => a.year - b.year);
 }
 
 /** Every answer the run has given, of all three kinds, in year order. */
 export function answerYears(ctx: SimCtx): number[] {
-  return [
-    ...ctx.world.frame.entries.map((e) => e.year),
-    ...clauseYears(ctx),
-    ...glimpseYears(ctx),
-  ].sort((a, b) => a - b);
+  return answers(ctx).map((a) => a.year);
+}
+
+/**
+ * Which chronicle pages after `after` are answers, by page id. What a client
+ * is told about a page it is shown: `book()` and the view decorate the entries
+ * they return with it rather than the saved book carrying it.
+ */
+export function answerPages(ctx: SimCtx, after = -Infinity): Map<string, Exclude<AnswerKind, 'interlude'>> {
+  const kinds = new Map<string, Exclude<AnswerKind, 'interlude'>>();
+  for (const a of answers(ctx, after)) if (a.page !== undefined && a.kind !== 'interlude') kinds.set(a.page, a.kind);
+  return kinds;
 }
 
 /**
