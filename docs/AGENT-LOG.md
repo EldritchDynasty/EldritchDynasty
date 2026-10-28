@@ -712,3 +712,29 @@ now 12,193 bytes; root plus the largest guide is 26,238 bytes. The earlier byte
 table describes migration commit `89ba744b`; its preservation evidence is
 unchanged. The superseded preflight was stopped and restarted on the corrected
 commit so the final preflight result names the published head.
+
+### 28 October 2026 — live Claude Code loading verified
+
+Verified in a live Claude Code 2.1.312 cloud session (Linux, `main` at
+`c1b515b1`), closing the limitation above. At startup the root `CLAUDE.md`
+loaded with its `@AGENTS.md` import expanded. Nested guides load on demand,
+the first time the session touches a file under the package:
+
+| Probe | Result |
+|---|---|
+| `Read` `packages/core/src/people/store.ts` | core shim and full `packages/core/AGENTS.md` injected |
+| `Read` `packages/content/attributes.yaml` | content shim and guide injected, Attributes §10 included |
+| `Read` `packages/schema/src/age.ts` | schema shim and guide injected, invariants 5 and 16 included |
+| `Write` a new scratch file in `packages/mobile` | mobile shim and guide injected; no prior `Read` needed |
+| `Grep` under `packages/client`, `Glob` under `packages/shell`, Bash `head` in `packages/editor` | nothing injected |
+| Scratch directory with `AGENTS.md` alone, then `Read` a file in it | nothing injected |
+| Scratch directory with `AGENTS.md` + `@AGENTS.md` shim | both injected |
+
+So Claude Code reads nested `CLAUDE.md`, not `AGENTS.md`; the per-package
+shims are necessary, and they work. Loading follows the Read/Write/Edit file
+tools only. A session that inspects a package through Bash, `Grep` or `Glob`
+alone does not receive its guide, which is why the root's "read every touched
+package guide" line still matters for Claude as well as Codex. The tooling
+route needs no shim: `tools/` and `docs/` are reached from the always-loaded
+root Task routes. Scratch probes were removed; no tracked file but this log
+changed.
