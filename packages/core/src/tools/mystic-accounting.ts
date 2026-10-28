@@ -20,6 +20,15 @@ export function emptyMysticLedger() {
 }
 export type MysticLedger = ReturnType<typeof emptyMysticLedger>;
 
+/** The historical domain definition: an upgrade of estate scope is one use, and idle generations still count. */
+export function usefulDomainsPerGeneration(run: { metrics: { trainedGenerations: readonly number[];
+  usefulDomains: Readonly<Record<string, readonly string[]>> } }): number {
+  const generations = run.metrics.trainedGenerations;
+  if (!generations.length) return 0;
+  return generations.reduce((n, generation) => n + new Set((run.metrics.usefulDomains[generation] ?? [])
+    .map(d => d.startsWith('estate:') ? 'estate_protection' : d)).size, 0) / generations.length;
+}
+
 const treasury = (effects: OutcomeObservation['outcome']['effects']) => effects.reduce((total, effect) =>
   total + (effect.kind === 'treasury' ? effect.delta : 0), 0);
 

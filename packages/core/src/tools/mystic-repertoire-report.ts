@@ -12,11 +12,13 @@ import { landCrownsPerYield } from '../land.js';
 import { civilianApplication } from '../mystic-civilian.js';
 import { hasLearned, liveDuties, mysticTargets, practitionerGap, quoteDuty } from '../mystic.js';
 import { outsideServicesView } from '../mystic-contracts.js';
-import { GameSession, newGame } from '../session.js';
+import { GameSession, newGame, resumeGame } from '../session.js';
 import { canonical } from '../save.js';
 import { expectMean, expectRate } from '../testing.js';
 import { attachMysticLedger, emptyMysticLedger, noteMysticOrder, sampleMysticYear } from './mystic-accounting.js';
 import { meanEvidence, rateEvidence } from './mystic-baseline.js';
+import { createPracticeFunnel, practiceFunnelReport, samplePracticeFunnel } from './mystic-practice-funnel.js';
+import type { Practice } from './mystic-practice-policy.js';
 
 export const REPERTOIRE_POLICIES = ['no_extra', 'narrow', 'broad'] as const;
 type Policy = typeof REPERTOIRE_POLICIES[number];
@@ -91,14 +93,19 @@ function practise(s: GameSession, content: Content, focus: readonly AffinityName
 type RecordRow = { working: string; practitioner: string; started: number; ended?: number; contract?: string; service: MysticService };
 const hashSave = (s: GameSession) => createHash('sha256').update(canonical({...s.save(),savedAt:''})).digest('hex');
 
-export function playRepertoireCampaign(content: Content, seed: number, campaign: 'short'|'long', policy: Policy, observed = true, scenario: Scenario = 'ordinary') {
+export function playRepertoireCampaign(content: Content, seed: number, campaign: 'short'|'long', policy: Policy, observed = true, scenario: Scenario = 'ordinary',
+  options: { practice?: Practice; funnel?: boolean; strictBudget?: boolean; retainSave?: boolean; verifyContinuation?: boolean } = {}) {
   const s = newGame(content,{seed,campaign,decider:'chronicler'}); const ledger=emptyMysticLedger();
   if (scenario === 'hostile') {
     const prologue = s.prologue()!;
     const founded = s.found({ houseName: 'The Eldritch House', heirloom: prologue.heirlooms[0]!.heirloom, grudge: prologue.grudges[0]!.house });
     if (!founded.ok) throw Error(`Public founding refused: ${founded.reason}`);
   }
-  const metrics = { orders:0, refused:0, orderSpending:{} as Record<string,number>, decisionAnswers:0,
+  const funnel = options.funnel && observed ? createPracticeFunnel(s.ctx) : undefined;
+  let continuation: { year: number; equal: boolean } | undefined;
+  const budget = { trainingAttempts:0, practiceAttempts:0, trainingSuccesses:0, practiceSuccesses:0,
+    excessTrainingYears:0, excessPracticeYears:0 };
+  const metrics = { orders:0, refused:0, refusalReasons:{} as Partial<Record<TableOrder['kind'], Record<string, number>>>, orderSpending:{} as Record<string,number>, decisionAnswers:0,
     availablePersonYears:0, trainedUnassignedPersonYears:0, dutyYears:0, paidDutyYears:0, pausedStudyYears:0,
     homeCoverageLostYears:0, fieldYears:0, outsideYears:0, enemyPaidDutyYears:0, yieldCoinEstimate:0,
     byWorking:{} as Record<string,{availableYears:number;selectedYears:number;paidYears:number}>, records:{} as Record<string,RecordRow>,
@@ -109,13 +116,17 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
   };}
   const send=(o:TableOrder)=>{
     const before=s.ctx.world.treasury;const result=s.order(o);
-    if(observed){metrics.orders++;if(!result.ok)metrics.refused++;else metrics.orderSpending[o.kind]=(metrics.orderSpending[o.kind]??0)+before-s.ctx.world.treasury;
+    if(observed){metrics.orders++;if(!result.ok){metrics.refused++;
+      const reasons = metrics.refusalReasons[o.kind] ??= {};
+      const reason = result.reason ?? '(no reason supplied)'; reasons[reason] = (reasons[reason] ?? 0) + 1;
+    }else metrics.orderSpending[o.kind]=(metrics.orderSpending[o.kind]??0)+before-s.ctx.world.treasury;
       noteMysticOrder(ledger,o,result,before-s.ctx.world.treasury);}
     return result.ok;
   };
   const previousYield = new Map<string,number>();
   const sample=()=>{
     const ctx=s.ctx,w=ctx.world;sampleMysticYear(ctx,ledger);
+    if (funnel) samplePracticeFunnel(ctx, funnel);
     for (const term of w.studies) metrics.studyingByPerson[term.person]=(metrics.studyingByPerson[term.person]??0)+1;
     const family=w.people.household(w.playerHouse,w.year);const available=new Set<string>();
     const assigned=new Set(w.mystic.assignments.filter(a=>!a.house).map(a=>a.practitioner));
@@ -170,10 +181,35 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
         if(offer)send(offer.order);
       }
     }
-    if(policy!=='no_extra'){practise(s,content,focusOf(policy),elapsed,send);train(s,content,focusOf(policy),elapsed,send);}
+    if(policy!=='no_extra'){
+      for (const phase of ['practice', 'training'] as const) {
+        let attempts = 0;
+        const boundedSend = (order: TableOrder) => {
+          if (options.strictBudget && attempts > 0) return false;
+          attempts++;
+          const accepted = send(order);
+          budget[phase === 'practice' ? 'practiceAttempts' : 'trainingAttempts']++;
+          if (accepted) budget[phase === 'practice' ? 'practiceSuccesses' : 'trainingSuccesses']++;
+          return accepted;
+        };
+        if (phase === 'practice') (options.practice ?? practise)(s,content,focusOf(policy),elapsed,boundedSend);
+        else train(s,content,focusOf(policy),elapsed,boundedSend);
+        if (attempts > 1) budget[phase === 'practice' ? 'excessPracticeYears' : 'excessTrainingYears']++;
+      }
+    }
     // Identical nonmagical project policy in every column; a real quote pays for every project.
     if(elapsed%20===0){const parcel=s.land().held.find(p=>p.canImprove&&p.improveCost+40<=s.table().treasury);if(parcel)send({kind:'improve',parcel:parcel.parcel});}
-    s.keepSuggestedNames();s.advance();if(observed)sample();
+    s.keepSuggestedNames();
+    const resumed = options.verifyContinuation && elapsed === Math.floor(CAMPAIGNS[campaign].years / 2)
+      ? resumeGame(JSON.parse(JSON.stringify(s.save())), content, { decider: s.decider }) : undefined;
+    if (resumed && hashSave(resumed) !== hashSave(s)) throw Error('JSON resume changed the full save');
+    s.advance();
+    if (resumed) {
+      resumed.advance();
+      continuation = { year: s.year, equal: hashSave(resumed) === hashSave(s) };
+      if (!continuation.equal) throw Error(`JSON continuation changed the full save in ${s.year}`);
+    }
+    if(observed)sample();
   }
   const w=s.ctx.world,contracts=w.mystic.contracts;
   const records:RecordRow[]=[...w.mystic.services,...w.mystic.assignments].filter(a=>!a.house).map(a=>({
@@ -197,6 +233,7 @@ export function playRepertoireCampaign(content: Content, seed: number, campaign:
   const politicalWork=contracts.filter(c=>c.result==='fulfilled'&&content.mysticWorking(c.working)?.benefit.kind==='commission'
     && records.some(r=>r.contract===c.id&&r.service.usefulYears>0));
   return {seed,campaign,policy,scenario,years:s.year-CAMPAIGNS[campaign].startYear,fullSaveHash:hashSave(s),metrics,ledger,
+    budget, continuation, funnel: funnel ? practiceFunnelReport(funnel) : undefined, saved: options.retainSave ? s.save() : undefined,
     decisionLoad:{contentChoices,recordChoices,matchChoices,total:contentChoices+recordChoices+matchChoices,
       tableOrders:w.decisionLog.filter(row=>row.kind==='command'&&row.command.kind==='order').length,
       namingRecords:w.decisionLog.filter(row=>row.kind==='name').length},

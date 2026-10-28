@@ -49,6 +49,11 @@ construction or serve in a levy or expedition. An intensive duty pauses the
 reader's unfinished study; an absent, injured, captured or unpaid practitioner
 cannot supply the promised coverage. Releasing the duty lets an available
 reader resume their remaining study if the book is still on the shelf.
+The duty's account shows useful years and the last useful year alongside its
+paid years, cost and paused book. Use that history to review whether to keep
+the reader there or release them to another task.
+An available reader and place are named beside the duty's selectors. Review
+that combination and its paused-reading note before assigning the reader.
 
 Warranted outside practitioners can be sought and hired. Sending a qualified
 reader on a commission occupies that person through preparation, service and

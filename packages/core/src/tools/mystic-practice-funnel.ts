@@ -5,7 +5,7 @@ import { outsideServicesView } from '../mystic-contracts.js';
 import type { SimCtx } from '../world.js';
 
 const counters = () => ({
-  bookAccessYears: 0, initialKnownBooks: 0, studyStarts: 0, studyCompletions: 0,
+  bookAccessYears: 0, initialKnownBooks: 0, studyStarts: 0, studyCompletions: 0, newlyKnownWithoutObservedStudy: 0,
   readerYears: 0, occupiedReaderYears: 0, unavailableReaderYears: 0, freeReaderYears: 0,
   targetYears: 0, freeWithTargetYears: 0, affordableReaderYears: 0, missingCollaboratorYears: 0,
   assignedYears: 0, paidYears: 0, usefulYears: 0,
@@ -42,7 +42,7 @@ export function samplePracticeFunnel(ctx: SimCtx, funnel: PracticeFunnel): void 
   }])) as Record<AffinityName, Record<Stage, Set<string>>>;
   const access = new Set<AffinityName>(), targetPresent = new Set<AffinityName>();
   const studies = new Set<string>();
-  const noteBook = (bookId: string, stage: 'studyStarts' | 'studyCompletions') => {
+  const noteBook = (bookId: string, stage: 'studyStarts' | 'studyCompletions' | 'newlyKnownWithoutObservedStudy') => {
     const book = ctx.content.spellbook(bookId);
     if (book) funnel.byAffinity[book.affinity][stage]++;
     for (const working of ctx.content.mysticWorkings) if (working.books.includes(bookId)) funnel.byWorking[working.id]![stage]++;
@@ -51,11 +51,14 @@ export function samplePracticeFunnel(ctx: SimCtx, funnel: PracticeFunnel): void 
     const key = pair(study.person, study.book); studies.add(key);
     if (!funnel.previousStudies.has(key)) noteBook(study.book, 'studyStarts');
   }
-  funnel.previousStudies = studies;
   for (const p of family) for (const book of p.spellsKnown) {
     const key = pair(p.id, book);
-    if (!funnel.previousKnown.has(key)) { noteBook(book, 'studyCompletions'); funnel.previousKnown.add(key); }
+    if (!funnel.previousKnown.has(key)) {
+      noteBook(book, funnel.previousStudies.has(key) ? 'studyCompletions' : 'newlyKnownWithoutObservedStudy');
+      funnel.previousKnown.add(key);
+    }
   }
+  funnel.previousStudies = studies;
   for (const working of ctx.content.mysticWorkings) {
     const row = funnel.byWorking[working.id]!;
     if (working.books.every(id => w.library.has(id))) { row.bookAccessYears++; access.add(working.affinity); }

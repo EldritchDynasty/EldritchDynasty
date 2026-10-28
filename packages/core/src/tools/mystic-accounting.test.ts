@@ -1,15 +1,210 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, type AuctionLot } from '@ed/schema';
+import { ALL_AFFINITIES, asId, type AuctionLot, type TableOrder } from '@ed/schema';
+import { GameSession } from '../session.js';
+import { order } from '../table.js';
+import { grantParcel } from '../land.js';
+import { completeStudies } from '../people/library.js';
+import { createPracticePolicy, practiceChanges, PRACTICE_VARIANTS } from './mystic-practice-policy.js';
+import { createPracticeFunnel, samplePracticeFunnel } from './mystic-practice-funnel.js';
 import { resolveDueLots } from '../auction.js';
 import { saveGame } from '../save.js';
 import { place, testWorld } from '../testing.js';
 import { observeFamilyChallenge } from './challenge-observation.js';
-import { attachMysticLedger, emptyMysticLedger, mysticPayback, noteMysticOrder, noteMysticOutcome, sampleMysticYear } from './mystic-accounting.js';
+import { attachMysticLedger, emptyMysticLedger, mysticPayback, noteMysticOrder, noteMysticOutcome, sampleMysticYear, usefulDomainsPerGeneration } from './mystic-accounting.js';
 import { rateEvidence } from './mystic-baseline.js';
 
 const content = loadContent();
 const snapshot = (ctx: ReturnType<typeof testWorld>) => ({ ...saveGame(ctx), savedAt: '' });
+
+describe('public Mystic practice experiments (#1942)', () => {
+  it('keeps idle trained generations in the primary denominator and treats estate scope as one domain', () => {
+    const metrics = { trainedGenerations: [0, 1, 2], usefulDomains: { 0: ['estate:small', 'estate:large', 'library_care'], 2: ['conflict'] } };
+    const before = JSON.stringify(metrics);
+    expect(usefulDomainsPerGeneration({ metrics })).toBe(1);
+    expect(JSON.stringify(metrics)).toBe(before);
+    expect(usefulDomainsPerGeneration({ metrics: { trainedGenerations: [], usefulDomains: {} } })).toBe(0);
+  });
+  const make = () => {
+    const ctx = testWorld(content);
+    ctx.world.treasury = 10_000;
+    for (const p of ctx.world.people.all()) { p.spellsKnown = []; p.acquired.health = 0; }
+    return { ctx, session: new GameSession(ctx) };
+  };
+  const learned = (ctx: ReturnType<typeof testWorld>, books: readonly string[]) => {
+    const person = place(ctx, { sex: 'male', age: 30, awakened: true });
+    person.spellsKnown = books.map(book => asId<typeof person.spellsKnown[number]>(book));
+    for (const id of books) ctx.world.library.set(id, { id, condition: 100, acquiredYear: ctx.world.year });
+    return person;
+  };
+  const orders = (session: GameSession, variant: typeof PRACTICE_VARIANTS[number], elapsed = 1) => {
+    const sent: TableOrder[] = [];
+    createPracticePolicy(variant)(session, content, ALL_AFFINITIES, elapsed, o => { sent.push(o); return true; });
+    return sent;
+  };
+
+  it('keeps the four single-factor changes separate from the strict-budget control', () => {
+    const base = practiceChanges('budgeted_broad');
+    expect(Object.values(base).filter(Boolean)).toHaveLength(0);
+    for (const variant of PRACTICE_VARIANTS.filter(v => v !== 'budgeted_broad' && v !== 'demand_aware' && v !== 'quoted_demand')) {
+      const changed = Object.entries(practiceChanges(variant)).filter(([key, value]) => value !== base[key as keyof typeof base]);
+      expect(changed, variant).toHaveLength(1);
+    }
+    expect(Object.values(practiceChanges('demand_aware')).every(Boolean)).toBe(true);
+    expect(practiceChanges('quoted_demand')).toEqual(practiceChanges('demand_aware'));
+  });
+
+  it('releases only a five-paid-year duty with no use, without erasing its account', () => {
+    const { ctx, session } = make();
+    const person = learned(ctx, ['lesser_workings_of_life']);
+    expect(order(ctx, { kind: 'mysticAssign', person: person.id, working: 'sickroom_watch', target: { kind: 'hall', hall: 'main' } }).ok).toBe(true);
+    const duty = ctx.world.mystic.assignments[0]!;
+    ctx.world.treasury = 0;
+    duty.service.servedYears = 4;
+    expect(orders(session, 'release_idle')).toEqual([]);
+    duty.service.servedYears = 5;
+    expect(orders(session, 'budgeted_broad')).toEqual([]);
+    const release = orders(session, 'release_idle');
+    expect(release).toEqual([{ kind: 'mysticRelease', assignment: duty.id }]);
+    duty.service.usefulYears = 1;
+    expect(orders(session, 'release_idle')).toEqual([]);
+    duty.service.usefulYears = 0;
+    expect(session.order(release[0]!).ok).toBe(true);
+    expect(ctx.world.mystic.services[0]!.service.servedYears).toBe(5);
+  });
+
+  it('lets an independently trained third reader take a real third duty', () => {
+    const { ctx, session } = make();
+    grantParcel(ctx, 'hallowfield');
+    const carer = learned(ctx, ['lesser_workings_of_life']);
+    const warden = learned(ctx, ['lesser_workings_of_terra']);
+    learned(ctx, ['lesser_workings_of_light']);
+    expect(order(ctx, { kind: 'mysticAssign', person: carer.id, working: 'sickroom_watch', target: { kind: 'hall', hall: 'main' } }).ok).toBe(true);
+    expect(order(ctx, { kind: 'mysticAssign', person: warden.id, working: 'shoring_the_banks', target: { kind: 'parcel', parcel: 'hallowfield', slots: ['WARDEN'] } }).ok).toBe(true);
+    expect(orders(session, 'budgeted_broad')).toEqual([]);
+    const sent = orders(session, 'uncapped');
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.kind).toBe('mysticAssign');
+    expect(session.order(sent[0]!).ok).toBe(true);
+    expect(session.table().mystic.duties).toHaveLength(3);
+  });
+
+  it('uses the public accepted pairing rather than spending its one attempt on a covered book', () => {
+    const { ctx, session } = make();
+    const year = session.year;
+    ctx.world.library.clear();
+    const keeper = learned(ctx, ['lesser_workings_of_light']);
+    const spare = learned(ctx, ['lesser_workings_of_light']);
+    ctx.world.library.set('lesser_workings_of_life', { id: 'lesser_workings_of_life', condition: 80, acquiredYear: ctx.world.year });
+    expect(session.order({ kind: 'mysticAssign', person: keeper.id, working: 'the_copyists_light',
+      target: { kind: 'book', book: 'lesser_workings_of_light' } }).ok).toBe(true);
+    const photograph = session.table();
+    photograph.mystic.offers = photograph.mystic.offers.filter(o => o.working === 'the_copyists_light');
+    const facade = { table: () => photograph, view: () => ({ ages: [] }) } as unknown as GameSession;
+    const original = orders(facade, 'demand_aware');
+    expect(original).toHaveLength(1);
+    expect(session.order(original[0]!).ok).toBe(false);
+    const quoted = orders(facade, 'quoted_demand');
+    expect(quoted).toHaveLength(1);
+    expect(quoted[0]).toMatchObject({ kind: 'mysticAssign', person: spare.id, target: { kind: 'book', book: 'lesser_workings_of_life' } });
+    expect(session.order(quoted[0]!).ok).toBe(true);
+    expect(session.year).toBe(year);
+  });
+
+  it('considers an already learned construction working outside the old four-year window', () => {
+    const { ctx, session } = make();
+    grantParcel(ctx, 'hallowfield');
+    const working = content.mysticWorking('the_foundation_line')!;
+    learned(ctx, working.books);
+    // Isolate this public offer so the difference is the project window alone.
+    const photograph = session.table();
+    photograph.mystic.offers = photograph.mystic.offers.filter(o => o.working === working.id);
+    const facade = { table: () => photograph, view: () => ({ ages: [] }) } as unknown as GameSession;
+    expect(orders(facade, 'budgeted_broad', 1)).toEqual([]);
+    const sent = orders(facade, 'projects_yearly', 1);
+    expect(sent).toHaveLength(1);
+    expect(session.order(sent[0]!).ok).toBe(true);
+  });
+
+  it('ranks from previously seen public use after an account leaves the six-row history', () => {
+    const { ctx, session } = make();
+    learned(ctx, ['lesser_workings_of_life', 'greater_workings_of_life', 'lesser_workings_of_light']);
+    const patient = place(ctx, { sex: 'female', age: 30, awakened: true });
+    patient.acquired.health = -8;
+    const table = session.table();
+    table.mystic.offers = table.mystic.offers.filter(o => ['the_mending_watch', 'the_copyists_light'].includes(o.working));
+    expect(table.mystic.offers.every(o => o.practitioners.length && o.targets.length)).toBe(true);
+    const facade = { table: () => table, view: () => ({ ages: [] }), get ctx(): never { throw Error('policy read private state'); } } as unknown as GameSession;
+    const policy = createPracticePolicy('observed_rank');
+    const observed = { id: 'old', person: 'old-reader', name: 'Former reader', place: 'The hall', status: 'serving' as const,
+      ready: 1042, upkeep: 1, working: 'the_mending_watch', workingName: 'The Mending Watch',
+      service: { servedYears: 15, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 20 } };
+    table.treasury = 0;
+    table.mystic.duties = [observed];
+    policy(facade, content, ALL_AFFINITIES, 1, () => true);
+    table.mystic.duties = [{ ...observed, id: 'other', working: 'the_copyists_light', workingName: 'The Copyist’s Light',
+      service: { ...observed.service, usefulYears: 15 } }];
+    policy(facade, content, ALL_AFFINITIES, 2, () => true);
+    table.mystic.duties = []; table.mystic.history = []; table.treasury = 1000;
+    const sent: TableOrder[] = [];
+    policy(facade, content, ALL_AFFINITIES, 3, o => { sent.push(o); return true; });
+    expect(sent[0]).toMatchObject({ kind: 'mysticAssign', working: 'the_copyists_light' });
+    expect(orders(facade, 'budgeted_broad', 3)[0]).toMatchObject({ kind: 'mysticAssign', working: 'the_mending_watch' });
+  });
+
+  it('counts observed starts and completed study separately from pre-existing knowledge', () => {
+    const { ctx } = make();
+    const reader = learned(ctx, []), book = content.spellbook('lesser_workings_of_life')!;
+    ctx.world.library.set(book.id, { id: book.id, condition: 100, acquiredYear: ctx.world.year });
+    const funnel = createPracticeFunnel(ctx);
+    ctx.world.studies.push({ person: reader.id, book: book.id, completes: ctx.world.year + 1 });
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byAffinity.life).toMatchObject({ initialKnownBooks: 0, studyStarts: 1, studyCompletions: 0 });
+    ctx.world.year++;
+    completeStudies(ctx);
+    expect(reader.spellsKnown).toContain(book.id);
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byAffinity.life).toMatchObject({ studyStarts: 1, studyCompletions: 1 });
+    expect(funnel.byWorking.sickroom_watch).toMatchObject({ studyStarts: 1, studyCompletions: 1, readerYears: 1 });
+    const arrival = learned(ctx, ['lesser_workings_of_life']);
+    expect(arrival.spellsKnown).toContain(book.id);
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byAffinity.life).toMatchObject({ studyCompletions: 1, newlyKnownWithoutObservedStudy: 1 });
+  });
+
+  it('distinguishes an absent collaborator from a second book known by the same occupied body', () => {
+    const { ctx } = make();
+    grantParcel(ctx, 'hallowfield');
+    const working = content.mysticWorking('setting_the_culverts')!;
+    const partner = content.mysticWorking(working.collaborator!)!;
+    learned(ctx, [...new Set([...working.books, ...partner.books])]);
+    const funnel = createPracticeFunnel(ctx);
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byWorking[working.id]).toMatchObject({ freeReaderYears: 1, missingCollaboratorYears: 1, targetYears: 1 });
+    const colleague = learned(ctx, partner.books);
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byWorking[working.id]!.missingCollaboratorYears).toBe(1);
+    colleague.acquired.health = -25;
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byWorking[working.id]!.missingCollaboratorYears).toBe(2);
+  });
+
+  it('keeps free readers, absent targets, occupied readers and affordability separate without changing a save', () => {
+    const { ctx } = make();
+    const reader = learned(ctx, ['lesser_workings_of_life', 'greater_workings_of_life']);
+    const occupied = learned(ctx, ['lesser_workings_of_life', 'greater_workings_of_life']);
+    expect(order(ctx, { kind: 'mysticAssign', person: occupied.id, working: 'sickroom_watch', target: { kind: 'hall', hall: 'main' } }).ok).toBe(true);
+    const funnel = createPracticeFunnel(ctx), before = snapshot(ctx);
+    samplePracticeFunnel(ctx, funnel);
+    expect(snapshot(ctx)).toEqual(before);
+    const recovery = content.mysticWorkings.find(w => w.benefit.kind === 'convalescence' && w.books.every(b => reader.spellsKnown.includes(asId(b))))!;
+    expect(funnel.byWorking[recovery.id]).toMatchObject({ bookAccessYears: 1, occupiedReaderYears: 1, freeReaderYears: 1, targetYears: 0, affordableReaderYears: 0 });
+    expect(funnel.byWorking.sickroom_watch).toMatchObject({ freeWithTargetYears: 1, affordableReaderYears: 0, assignedYears: 1 });
+    reader.acquired.health = -25;
+    samplePracticeFunnel(ctx, funnel);
+    expect(funnel.byWorking[recovery.id]!.unavailableReaderYears).toBe(1);
+  });
+});
 
 describe('Mystic baseline accounting (#1872)', () => {
   it('does not report certainty when a sample sees zero or all exposed houses', () => {
