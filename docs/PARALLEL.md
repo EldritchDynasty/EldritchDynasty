@@ -206,7 +206,7 @@ These are single files that every second feature wants to touch. Declare them in
 2. **Branch per agent**, as the session harness already does:
    `claude/<topic>-<suffix>`. One issue, one branch, one session.
 3. **Work.** `npm run test:fast` is the loop — see
-   [AGENTS.md](../AGENTS.md#commands) for what it costs.
+   [COMMANDS.md](COMMANDS.md#commands) for what it costs.
 4. **Re-check the claim before the long run.** Shell: `npm run agents -- check`.
    Connector-only: comment `/claim check --agent <branch>`. Both read the
    canonical claim refs and report path/lane overlap before you spend the long
@@ -463,7 +463,7 @@ Three or four concurrent, of which **at most one in content**.
 The ceiling is not thinking time, it is the serialized landing queue: every
 entry rebases and runs the complete set CI runs, so five agents finishing
 together wait for five authoritative checks. What it costs is stated once, in
-[AGENTS.md](../AGENTS.md#commands) — and this paragraph used to say "about nine
+[COMMANDS.md](COMMANDS.md#commands) — and this paragraph used to say "about nine
 minutes" against a measured thirty, which made the crowding sound three times
 cheaper than it is. Give each agent
 a different package where you can — client, editor, engine, content — and the

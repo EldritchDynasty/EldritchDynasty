@@ -1,29 +1,4 @@
 # Repository-scoped Codex settings. Loaded when the project is trusted.
-#
-# WHY THIS FILE EXISTS: AGENTS.md DOES NOT FIT IN CODEX'S DEFAULT BUDGET.
-#
-# Codex concatenates the AGENTS.md files from the repository root down to the
-# working directory and stops once the total reaches `project_doc_max_bytes`,
-# which defaults to 32 KiB. It does this SILENTLY — no warning in the TUI, no
-# line in the log (openai/codex#7138).
-#
-# Before the documentation refresh, the root AGENTS.md exceeded the default.
-# Codex read only a prefix and stopped in "Branches, and the tracker",
-# which put three whole sections past the cut:
-#
-#   ## Working style   — the standing authorisation for `npm run land`, the
-#                        rule against `nohup … &`, and the rule against asking
-#                        a shallow clone what has been merged.
-#   ## Do not          — the entire prohibition list. Every invariant's
-#                        operational form, including the two that the
-#                        PreToolUse guard exists to enforce.
-#   ## Known gaps
-#
-# Because the root file alone overran the budget, every per-package
-# AGENTS.md — content, core, schema, editor, client, mobile — reached Codex at
-# zero bytes. A Codex session authoring YAML got none of the content rules.
-#
-# 64 KiB covers the root file plus the largest package file with room to spare.
-# `codex.test.ts` fails the build if that stops being true, because the failure
-# mode here is silence and the file will keep growing.
-project_doc_max_bytes = 65536
+# Root + every package AGENTS.md fits the default 32 KiB instruction budget.
+# codex.test.ts enforces that limit without a project_doc_max_bytes override.
+# Task-specific reading routes live in AGENTS.md; migration history: #1935.

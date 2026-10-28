@@ -541,3 +541,20 @@ on anything a browser API decides.
 **Now guarded by:** `tests/e2e/editor.spec.ts`, run by `check.yml`'s
 merge-blocking `editor` job; `store.test.ts` — "hands core no Vue proxy
 anywhere in the indexed content"; `watch-edits.test.ts`.
+
+## Invariant 11 migration — 28 October 2026
+
+Retained from the shared agent guide during #1935; the incidents predate this migration.
+
+### 11. A declared field that nothing reads is a bug, not a stub
+
+The four subsystems below were all "already there" — in the schema, in authored content, or named in the brief — and all of them did nothing. None threw. Each looked exactly like a working feature that had not come up yet.
+
+- **Effects apply, or they are not effects.** `kind: relationship` was in the switch with a comment saying another subsystem handled it. There was no other subsystem, and four authored outcomes — including the seal feud's inherited grudge — discarded themselves. If you add an `Effect` kind, the switch case does the work or the case does not exist.
+- **Contracts bind to a PERSON.** Binding a retainer to the house made `onEmployerDeath` unreachable, and `term` with it. Every field that decides how service ends was dead.
+- **Every Age reveals a clause** (§18) — the design's own answer to promise debt, and it was not built. `ActiveAge.paid.clause` was written by nothing and `clauseBearing` was read by nothing, so runs reached 2042 with two clauses of nine and the God rung, which needs seven, could not be reached in any run.
+- **Respect decays** (§17). It only ever moved when an authored effect moved it, so the endgame squeeze — Madness to ascend, Respect to be allowed to, Madness destroys Respect — had one of its three jaws missing.
+
+- **A filter has to be able to see what it compares against.** `evalFilter` passes a `relation` filter whose counterpart slot is not cast yet, because a comparison with nobody is not one it can judge. `resolveSlots` filled slots alphabetically, so four authored constraints — `CHALLENGER` not `HEAD`, `PUPIL` not `TUTOR`, `HEAD` not `SON`, `NAMED_ANCESTOR` not `SUITOR` — read as constraints and narrowed nothing. `fillOrder` fills in dependency order now; `slots/references` fails the build on a cycle, which is the one case no order can satisfy.
+
+Grep for a schema field before assuming it works. `onEmployerDeath: 0 refs in core` is the whole bug report.

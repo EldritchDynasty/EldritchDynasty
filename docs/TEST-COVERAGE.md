@@ -6,7 +6,7 @@
 `jsdom` and `@vue/test-utils` are now installed and Vue/host tests exist; use
 the current test files and `tools/ci-evidence.json` for the enforced contracts.
 No new coverage run was made for this documentation audit. Current command
-measurements belong in [AGENTS.md](../AGENTS.md#commands).
+measurements belong in [COMMANDS.md](COMMANDS.md#commands).
 
 Measured 2026-08-20 with `@vitest/coverage-v8` over the full suite, plus two
 probes for the things a coverage tool cannot express: which authored *outcomes*
@@ -539,3 +539,65 @@ identity check rejected `arcs["arc_2"] ↔ pendingDecisions[0].arcStep.instance`
 and a separate continuation probe rejected the answer for failing to advance
 the authoritative instance. On the corrected head the scenario passes. These
 are mechanism checks, not campaign-reach measurements or human playtests.
+
+## Writing and measuring tests
+
+Moved from the shared agent guide on 28 October 2026 (#1935).
+
+Grouped by the kind of failure they catch rather than by module. How many there
+are, and what a run of them costs, is in [COMMANDS.md](COMMANDS.md#commands).
+
+- **`*.slow.test.ts` plays whole games.** `test:fast` skips them;
+  `lanes.test.ts` keeps millennium batches out of that loop. `npm run check`
+  runs all tests locally. Hosted CI reads `tools/ci-evidence.json`: checked
+  `merge-blocking` suites run on full PR/merge-group CI; `weekly` suites
+  run in the complete Sunday slow suite (the nightly retired, #1949).
+  `npm run land` defaults to typecheck, validate and `test:fast`;
+  `--full-preflight` runs the complete local set. `CI required` on the exact
+  commit that lands remains authoritative.
+- **A suite can play whole games with no `advance` in it.** `gates.test.ts` was
+  41% of the fast lane; the runs happen inside the gates it calls. Driving a
+  batch through `tools/` is declared in `lanes.test.ts` for exactly that reason.
+- **The slow lane's floor is its longest FILE**, because vitest parallelises per
+  file. `record` was 451 seconds of it, playing 240 runs of 458 years to make
+  two assertions. Split such a file BY TEST. Never by seed range: these are
+  batch statistics, and taking seeds out of a batch changes what it claims.
+- **`expectHealthyWorld(ctx)`** (`testing.ts`) asserts a world is internally
+  coherent, and is free at the tail of a run that already happened. Sample
+  THROUGH a run rather than only at the end — the first bug it found is
+  invisible at 2042.
+- **`playedRun(bundle, seed, years)`** (`corpus.ts`) reads a played run back
+  instead of replaying it, an order of magnitude cheaper. It is a cache of a
+  pure function, keyed on content AND code — never a golden file.
+- **A batch claim goes through `expectRate` or `expectMean`** (`testing.ts`),
+  never a bare `toBeGreaterThan` on a rate or an average. They assert the claim
+  AND that the batch can carry it — at least two standard errors of margin —
+  and fail with the batch size that would. Five tests have broken on commits
+  that changed nothing they measured, because adding ANY template re-rolls
+  which scene wins every draw for a thousand years. A thin margin is invisible
+  until it is spent; this makes it a build failure with a prescription
+  attached instead of a mystery.
+- **A gate is a function over a bundle, not a script.** Every gate in
+  `tools/gates.ts` returns its verdict rather than printing it, so
+  `gates.test.ts` can hand it content it must reject. A gate nobody has seen
+  fail is indistinguishable from a gate that cannot fail; four of them were in
+  that state for their whole lives.
+- **Build the state you mean.** `core/src/testing.ts` gives you `testWorld`,
+  `place`, `marry`, `beget` and `phase`. Simulating four hundred years to reach
+  a widow is not a test, it is a wait.
+- **Do not pin a test to one seed reaching one state.** Two did, and both failed
+  the day the RNG streams were split, on a codebase where the behaviour they
+  described was demonstrably intact. Assert the mechanism: "standing falls as
+  well as rises", not "six seeds end on six tiers".
+- **Measure fire rates when you touch arcs, slots or selection.** An event that
+  never fires is not in the game, and nothing will tell you.
+
+**The failure mode this codebase actually has is silence.** Nothing here throws.
+A house that goes extinct by 1150, a chronicle that stops updating, an editor
+loading a different bundle — all of them look like a working simulation from the
+outside. Write tests that assert the shape of a healthy run, not that functions
+return. [FAILURES.md](FAILURES.md) is the catalogue.
+
+[the dated survey above](#test-coverage) is the dated coverage survey and what
+it found — three live bugs, one mechanic that had never run, and why line
+coverage reads high on a dispatch chain nobody has ever taken a branch of.

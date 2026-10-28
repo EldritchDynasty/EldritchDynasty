@@ -6,7 +6,8 @@ you touch a hook, a command or a test fixture.
 Reviewed against `main` at `098bfe02` on 22 October 2026. The dated failures
 below explain the current portable `.mjs` tools and shared hook registrations;
 old file sizes, deleted scripts and runtime costs in that history are not
-current measurements. Use AGENTS.md for the live command block and byte budget.
+current measurements. Use [COMMANDS.md](COMMANDS.md#commands) for the live
+command block; root plus each package guide fits the default 32 KiB budget.
 
 ## What it was
 
@@ -94,7 +95,7 @@ two guards compare against, on the platform no test could reach.
 - Keep AGENTS.md inside **both** budgets: `codemap.test.ts` caps the root file
   so a session does not load what only some tasks need, and `codex.test.ts`
   caps the root file plus the largest package file against
-  `project_doc_max_bytes` in `.codex/config.toml`.
+  Codex's default 32 KiB, without a repository override.
 - **Never put a file's CONTENTS in argv.** Windows caps a whole command line at
   32,767 characters and answers `spawnSync … ENAMETOOLONG` past it; Linux's
   limit is megabytes, so this passes everywhere anybody runs it and fails on
@@ -109,6 +110,20 @@ two guards compare against, on the platform no test could reach.
   which some later commit will make big for reasons that have nothing to do
   with the test. A temp file has no limit worth knowing about, and the
   spawn-a-real-process property these tests exist for is unaffected.
+
+## Shared operating requirements
+
+The root `AGENTS.md` stays authoritative and agent-neutral. Launchers adapt,
+never diverge; Claude's package `CLAUDE.md` files contain only `@AGENTS.md`.
+From a root-cwd Codex session, explicitly read every touched package guide.
+Codex only concatenates guides along the working-directory ancestry.
+
+No `.sh` belongs under `.claude/`, `.codex/` or `tools/`; `.devcontainer/` is
+the Linux-image exception. Hooks use `hookPaths` for both tool payloads, not
+one agent's `file_path`. Assume no POSIX separators, `/bin/bash`, `/dev/null`
+or `/tmp`: use `process.execPath`, `pathToFileURL` and portable temp paths in
+tests. When commands, hooks or infrastructure change, verify this platform and
+deliberately preserve the other with guarded, tested platform-specific behavior.
 
 ## What enforces it
 
