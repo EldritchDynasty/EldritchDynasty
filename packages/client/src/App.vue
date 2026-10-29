@@ -462,7 +462,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
 if (readingLog) {
   let detach = () => {};
-  onMounted(() => { detach = attachReadingLog(readingLog, document, window); });
+  onMounted(() => { detach = attachReadingLog(readingLog, document, window, () => { readingLogOn.value = false; }); });
   onBeforeUnmount(() => detach());
 
   // Pre-flush watchers, so a decision is checked against reader history
@@ -476,10 +476,7 @@ if (readingLog) {
   watch(() => view.value?.year, (year) => {
     if (year !== undefined) readingLog.note({ kind: 'year', year });
   }, { immediate: true });
-  watch(() => view.value?.chronicle, (pages, before) => {
-    const old = new Set((before ?? []).map((entry) => entry.id));
-    for (const entry of pages ?? []) if (!old.has(entry.id)) readingLog.page(entry.year, entry);
-  }, { immediate: true });
+  watch(() => view.value?.chronicle, (pages) => readingLog.chronicle(pages), { immediate: true });
   watch(interlude, (shown) => {
     if (shown) readingLog.interlude(shown.year, shown.eventId);
   }, { immediate: true });
@@ -542,7 +539,7 @@ const yearAndBirths = computed(() => {
       <button v-if="readingLogOn" class="quiet small" :aria-pressed="readingBreak" @click="readingBreak = !readingBreak">
         {{ readingBreak ? 'End break' : 'Take a break' }}
       </button>
-      <button v-if="readingLogOn || readingLog.ended === 'stopped'" class="quiet small" @click="exportReadingLog">Export reading log</button>
+      <button v-if="readingLog.ended !== 'exported'" class="quiet small" @click="exportReadingLog">Export reading log</button>
       <button v-if="readingLogOn" class="quiet small" @click="stopReadingLog">Turn off</button>
     </p>
   </aside>

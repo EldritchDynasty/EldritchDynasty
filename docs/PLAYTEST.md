@@ -412,7 +412,14 @@ and dismissals; and when the window was visible and focused. **Take a break**
 in the notice marks a declared break, which is excluded from foreground time.
 **Export reading log** ends the log and downloads it as JSON; a reload ends it
 too, and anything after is lost — record that as censoring, not as a quiet
-stretch.
+stretch. Export before closing the tab.
+
+A Long Line that spans evenings is one log per sitting. Each starts with
+`?reading-log=1` and a resume from the front door; the pages already in the
+chronicle when the save is picked up are logged as `carried` and count as no
+answer, because the participant read (or skipped) them in an earlier sitting.
+Join the sittings' logs by seed and in-game year; the first gap of each starts
+at the resume, not at an answer.
 
 Read its numbers as the artifact's own `caveats` say: foreground is an
 exposure proxy, not reading; game years are pacing; the last gap of every log
