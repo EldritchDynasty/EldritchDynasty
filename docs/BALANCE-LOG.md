@@ -15645,3 +15645,110 @@ with `npm run report:story-routes -- --runs=800 --output=routes.json`;
 `--policy=short-descent`, `--without-glimpses`, `--seed-start` and `--seed-step`
 name the declared comparison columns. **#1969 closes the citation slice;
 #1946 remains open for balance and delivery-design work.**
+
+### 29 October 2026 — inline delay draws at collection (#1971, Refs #1946)
+
+**Policy and scope.** Baseline `92d3c2aeca65c2f08456be66adf42674a001737f`;
+frozen runtime `843ed31ba62a0e5dda01b0857a9a3f23c7e29de3`, Node 22.23.4.
+An inline opening passed the shortest-path start check but could draw a
+longer delay beyond collection. Inline openings and subsequent nodes now draw
+once inside the overlap between their authored delay and the remaining
+campaign. Rounded calendar ranges that already fit retain their original
+draw. Authored minimums, fixed/impossible delays, non-inline arcs, kept people,
+conditions and five-year retries retain their existing rules. Existing saved
+due dates are not redrawn. Content, frequency rations, weights, proof rules,
+floors, ending bars and save format are unchanged. A later missing cast,
+unmet premise or longer branch can still leave a story unfinished.
+
+**Declared samples.** Canonical before/after: 800 Long Lines ×500 years each,
+seeds `5000 + 7*i`, i=0..799. Independent frozen-candidate sample: 800 Long
+Lines ×500 years, `1971000 + 31*i`, declared on #1971 before running it.
+Every route column passes eight complete-save observer controls. Content hash:
+`123bc8c0899090b546ed5f0fd2703433300f83eeb65af06175e6435eb0cc9191`.
+The baseline collector's dirty marker is the dependency symlink in its
+detached worktree; its simulation/schema/content diff is empty. The earlier
+`d8a8a15a` artifacts stopped at 31 canonical and 27 independent houses
+during fractional-calendar review. They are retained as incomplete evidence;
+the completed columns restart the same declared seeds on the final freeze.
+
+**The lost Hall page now arrives.** Canonical seed **8843** launches the
+letter in **1526**, keeping HEAD `p_ff` and COUSIN `p_dz`. Baseline due
+year **1543** strands it beyond collection; candidate due year **1541**
+delivers it in 1541 with both bindings intact and cause
+`{ year: 1526, page: 'chr_8l' }`. Its 17 canonical promises become six
+deliveries and 11 kept-person cancellations; the baseline had five deliveries,
+the same 11 cancellations and one pending promise.
+
+| Route | Canonical before /800 | Canonical after /800 | Independent /800 |
+|---|---:|---:|---:|
+| Herald's old question | 5 | 5 | 18 |
+| Hall answered | 5 | 6 | 7 |
+| Hall stops writing | 9 | 9 | 12 |
+| Cellar shelf found | 26 | 26 | 36 |
+
+The Hall-answer house rate is now **0.750%**, Wilson 95% interval
+**0.344–1.627%**; independent **0.875%**, interval **0.424–1.795%**.
+Both still cross the unchanged 0.5% floor. This is a demonstrated timing
+repair, not a powered incidence improvement or a robust floor margin.
+Canonical Herald offers/answers stay **27 visits, 22 full, five short,
+five deliveries**. Independent Herald offers **37 visits, 19 full, 18 short,
+18 deliveries**. These are chronicler choice shares, not an intervention on
+the player's answer. No explicit short-descent policy was rerun for this slice.
+
+The roof's canonical 22 promises still give nine deliveries, 12 kept-person
+cancellations and one refused late start. Independently, Hall-answer promises
+give seven deliveries, 16 kept-person cancellations and two late-start
+refusals; roof promises give 12 deliveries and 17 kept-person cancellations.
+No Hall promise in either completed candidate column has an initial due year
+past collection. All 46 canonical and 73 independent audited deliveries have
+source-page citations and unchanged declared kept bindings. The independent
+cellar has one additional ordinary scheduled promise made in 1542 for 1543;
+ordinary `schedule` effects are outside this inline-delay policy.
+
+**Displacement and pacing.** **749/800** canonical route records match exactly;
+51 change. Selected common arc nodes increase **50,618→50,623**, uncommon
+arc nodes **7,889→7,922**. Common ambient selections move
+**74,062→74,061**, uncommon ambient **9,073→9,074**, common forced
+**1,940→1,938**; all other frequency/source totals match. Full Age/tier/source
+contexts and deltas are retained in the comparison artifact. Choices move
+**102,326→102,356**, repeated choices **22,103→22,110**. Canonical longest
+answer silence remains mean **54.0825y**, max **92**. That automatic collector
+records 189 broken lines and does not finalize the other 611 endings.
+
+The separate `gate:long` policy uses 24 houses, `20000 + 37*i`, 500 years,
+chronicler. Mean longest answer silence stays **53.8333y**, max **62**, with
+finalized endings **10 forgotten, seven devoured, six broken_line, one unmade**.
+One serialized record changes: seed 20481's alehouse franchise follow-up
+(`70–95y`) moves from 1526 to 1525 after its 1452 launch. A reproduced trace
+matches both measured event-count maps and treasuries; a subsequent brewing
+answer changes, and final treasury moves **82.0084→87.5405**. Other measured
+pacing/end-state fields match. These are paired observations, not a powered
+ending-distribution claim or a reading-time result.
+
+Default first-choice density: 12 houses per term, `4100 + i`, Long 500 and
+Short 300 years, before/after. Long seeds 4102 and 4107 each gain one choice;
+Short seed 4100 gains one. Mean choices/generation move
+**7.37917→7.38750** (Long) and **7.42917→7.43611** (Short).
+Mean repeated-choice share moves **0.238053→0.237719** and
+**0.175694→0.176333**, respectively.
+
+**Checks and limits.** Standard fire-rate/vocabulary and corrected outcome-reach
+complete on both canonical columns: 516 non-frame events, all 30 effect kinds
+reached and 1,181 declared outcomes. Six outcome zeroes remain explicitly
+underpowered, as before; passing does not establish their execution. Mechanism
+checks cover all campaign lengths, calendar rounding, exact/impossible
+boundaries, later nodes, unchanged draws/RNG consumption, real Hall cast and
+citations, saved continuations and pending choices, death cancellation and
+condition retries. Twelve fitting-delay complete-save/RNG probes match the
+baseline byte for byte (SHA-256
+`74ec2334bdbe2bcf110b19ff947a37020e7e755bbe77a2a8abd6e7c5007391cf`).
+All 148 focused tests and core typecheck pass. Normal isolated preflight on
+the frozen runtime passes all type checks, content validation and **6,348**
+fast tests; subsequent changes record this evidence only. PR #1972 carries
+the final exact-head CI/queue verdict.
+
+Raw completed and explicitly incomplete artifacts, replayable measurement
+scripts, comparison data and `1971-SHA256SUMS.txt` live under
+`/workspace/scratch/1971-*`. #1971 closes this delay-draw slice. #1946
+retains wider tail calibration and the personal-versus-branch obligation
+decision; #1945 still requires actual-reader observations.
