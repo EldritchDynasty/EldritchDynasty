@@ -15815,3 +15815,78 @@ choice; neither is evidence that a promise retired. Both constructed legacy
 save cases pass alongside the other route regressions (27 tests). These
 additional diagnostic branches do not change the paired runtime rows above;
 the PR records preflight and integration results for the final head.
+
+## 2026-10-29 — #1993 step 1: when lines break in first runs
+
+**Read-only baseline. No rule, constant or content changed.** Instrument:
+`npm run gate:line-breaks` (`tools/line-break-report.ts`), run on `main`
+`f71a9664` content and simulation; the instrument commit `b7138825` adds only
+`tools/` files. The protocol was posted to #1993 before the first batch.
+
+**Cohorts.** Authored founder, no Table orders, default Library inputs
+(`bidCeiling` 0, starting shelf, no Scion). Seeds `199300 + i`; Short Line
+(1042–1342) 400 runs per policy, Long Line (1042–1542) 200 per policy, both
+policies on the same seeds. `chronicler` is `playToTheEnd`'s loop exactly (a
+fast test pins the template-fire map). `heir_match` answers the sitting
+Head's and the heir apparent's Match with the open card whose face reads best
+for continuity; the chronicler already takes an open card in every hand that
+has one, so the column differs in which card, not whether. It answered
+749 Short and 597 Long hands itself. Elapsed years are `year − 1042`; #132's
+"median 76 years after founding" is elapsed too. An interlude counts only when
+`world.frame.entries` holds it; no year is substituted for a missing one.
+Survivors are right-censored at the term. Intervals are Wilson 95%.
+
+| Campaign / policy | Broke (all runs) | Broke before first interlude (all runs) | Broke before elapsed 100 (all runs) | Before interlude, given break | Before elapsed 100, given break |
+| --- | --- | --- | --- | --- | --- |
+| short / chronicler | 91/400 = 22.8% [18.9%, 27.1%] | 20/400 = 5.0% [3.3%, 7.6%] | 51/400 = 12.8% [9.8%, 16.4%] | 20/91 = 22.0% [14.7%, 31.5%] | 51/91 = 56.0% [45.8%, 65.8%] |
+| short / heir_match | 80/400 = 20.0% [16.4%, 24.2%] | 15/400 = 3.8% [2.3%, 6.1%] | 47/400 = 11.8% [9.0%, 15.3%] | 15/80 = 18.8% [11.7%, 28.7%] | 47/80 = 58.8% [47.8%, 68.9%] |
+| long / chronicler | 45/200 = 22.5% [17.3%, 28.8%] | 8/200 = 4.0% [2.0%, 7.7%] | 25/200 = 12.5% [8.6%, 17.8%] | 8/45 = 17.8% [9.3%, 31.3%] | 25/45 = 55.6% [41.2%, 69.1%] |
+| long / heir_match | 54/200 = 27.0% [21.3%, 33.5%] | 8/200 = 4.0% [2.0%, 7.7%] | 25/200 = 12.5% [8.6%, 17.8%] | 8/54 = 14.8% [7.7%, 26.6%] | 25/54 = 46.3% [33.7%, 59.4%] |
+
+| Campaign / policy | Break elapsed n · min / q25 / median / q75 / max | Median ~95% CI | Censored survivors | Runs with no interlude | First interlude elapsed n · median / q75 / max |
+| --- | --- | --- | --- | --- | --- |
+| short / chronicler | 91 · 28 / 74.5 / 89 / 124 / 252 | 82–108 | 309 | 20 | 380 · 60 / 77 / 149 |
+| short / heir_match | 80 · 28 / 72.8 / 89.5 / 118 / 290 | 83–104 | 320 | 15 | 385 · 60 / 76 / 124 |
+| long / chronicler | 45 · 30 / 76 / 92 / 122 / 486 | 80–113 | 155 | 8 | 192 · 60 / 75.3 / 109 |
+| long / heir_match | 54 · 28 / 76.3 / 107.5 / 142.5 / 469 | 86–134 | 146 | 8 | 192 · 60 / 76.3 / 133 |
+
+Breaks by elapsed year (0–25, 25–50, 50–100, 100–150, 150–200, 200–300,
+300–500): Short chronicler **0, 5, 46, 32, 5, 3, 0**; Short heir_match
+0, 6, 41, 25, 6, 2, 0; Long chronicler 0, 2, 23, 11, 4, 1, 4; Long heir_match
+0, 3, 22, 16, 2, 2, 9. Every run that never delivered an interlude is a broken
+line; Short chronicler's twenty broke at elapsed 28–131.
+
+**What this says.** On the Short Line under the chronicler, about one first
+run in twenty ends before the player has seen any interlude, and about one in
+eight before elapsed year 100. Breaks concentrate in elapsed 50–150, just after
+the first interlude's median of 60; none occurs in the first 25 years. Most
+broken lines pass through a long thin window first: **84/91** Short and
+**41/45** Long chronicler breaks spent at least one year with a single living
+blood, and the median run spent 14 years at one or two before the break.
+
+**`the_last_of_the_line` does not reach a dying line.** It declares no
+`bloodCount` condition (none since `1f4627df`), so it fires as a rare Head
+scene at any family size. Chronicler offers: Short **24**, at living blood
+14–73 (median 40), **none at one**, before the break in **0/91** broken runs;
+Long **30**, blood 3–59 (median 38), none at one, before the break in 2/45.
+The scene the issue names as the existing one-survivor decision is, in
+practice, never offered at one survivor.
+
+**The two policies do not separate.** Paired seeds, discordant breaks:
+Short 38 chronicler-only vs 27 heir_match-only (McNemar χ² ≈ 1.9); Long 11 vs
+20 (χ² ≈ 2.6). Neither is significant at these sizes. Choosing the
+continuity-read card for the Head and heir does not measurably protect the
+line, and on the Long Line it moves some breaks later rather than removing
+them (300–500: 4 → 9).
+
+**Against history.** The 29 October canonical collector's 189/800 (23.6%)
+Long breaks used another policy and seed set; this Long chronicler rate,
+22.5% [17.3%, 28.8%], is consistent with it. #132's median of 76 elapsed
+years predates its recalibration; today's conditional medians are 89 (Short)
+and 92 (Long).
+
+**Limits.** Bot policies answer every other choice uniformly; human rates may
+differ in either direction. This is one predeclared sample; a generalised rate
+claim after a rule change needs an independent predeclared sample (#1993
+step 5). The owner's threshold and choice (step 3) are not recorded yet, so
+nothing was tuned.
