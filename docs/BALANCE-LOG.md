@@ -15807,3 +15807,11 @@ Reproduce the paired columns with
 The raw before/after reports, comparison script/result and SHA-256 manifest
 are retained under `/workspace/scratch/1974-*`. The after-report SHA-256 is
 `0736c4868ab39cab70569bf70c4e46bd99d7a91c506b44ed2c95a2ebe89847ea`.
+
+**Legacy-save review.** The first normal preflight passes all type checks,
+content validation and 6,362 fast tests on `2c935c14`. A subsequent review
+adds explicit unknown states for an uncited calendar entry or saved unanswered
+choice; neither is evidence that a promise retired. Both constructed legacy
+save cases pass alongside the other route regressions (27 tests). These
+additional diagnostic branches do not change the paired runtime rows above;
+the PR records preflight and integration results for the final head.
