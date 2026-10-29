@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, Outcome } from '@ed/schema';
+import { asId } from '@ed/schema';
 import { evalCondition } from '@ed/core';
-import { advanceArc, applyEffect, chooseSuccessor, dueArcSteps, genomeOf, place, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, applyEffect, CAMPAIGNS, chooseSuccessor, dueArcSteps, genomeOf, place, startArc, testRng, testWorld } from '@ed/core';
 import { executeOutcomeWitness } from './events/reach.js';
 import { applyRecord, queueChoice, resolveChoice } from './events/decisions.js';
 import { canonical, loadGame, saveGame } from './save.js';
@@ -124,6 +125,75 @@ describe('inline follow-up entry delays (#1278)', () => {
     const { ctx, instance } = running(arc, [node('first'), node('second')]);
     expect(instance.dueYear).toBe(ctx.world.year);
     expect(dueArcSteps(ctx, testRng())[0]?.node.id).toBe('first');
+  });
+});
+
+describe('the Hall letter before collection (#1971)', () => {
+  function letter(campaign: 'short' | 'long' = 'long', gated = false) {
+    const source = { ...base, events: base.events.map(event => gated && event.id === 'the_hall_is_answered'
+      ? { ...event, conditions: { flag: 'hall_ready' } } as EventTemplate : event) };
+    const end = CAMPAIGNS[campaign].endYear;
+    const ctx = testWorld(source, 1971, end - 16);
+    ctx.world.campaign = campaign;
+    ctx.world.discontent = 40;
+    const branch = asId('term_test_hall');
+    const cousin = place(ctx, { sex: 'male', age: 30, name: 'The letter writer', branch });
+    cousin.membership.find(entry => entry.to === undefined)!.kind = 'cadet';
+    ctx.world.branches.set(branch, {
+      id: branch, name: 'The third hall', house: asId(ctx.world.playerHouse), founder: cousin.id,
+      splitFrom: 'main', foundedYear: ctx.world.year - 10, speaker: cousin.id, grievance: 0,
+    });
+    const rng = testRng('late-letter');
+    vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.99 * (max - min));
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('the_hall_that_waited'), {
+      expectedOutcomeId: 'somebody_reads_it_properly', targetWeightedOutcome: true, rng,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find(entry => entry.arc === 'inline_the_hall_that_waited__somebody_reads_it_properly');
+    if (!instance) throw new Error('the letter did not start its promised continuation');
+    expect(instance.dueYear).toBe(end);
+    expect(instance.bindings.COUSIN).toBe(cousin.id);
+    const page = ctx.world.chronicle.find(entry => entry.eventId === 'the_hall_that_waited')!;
+    expect(instance.cause).toEqual({ year: page.year, page: page.id });
+    return { ctx, instance, cousin, page };
+  }
+
+  it.each(['short', 'long'] as const)('keeps the people and launching page through a saved %s continuation and choice', (campaign) => {
+    const { ctx, instance, page } = letter(campaign);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), ctx.content);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(ctx)));
+    resumed.world.year = instance.dueYear!;
+    const step = dueArcSteps(resumed, testRng()).find(entry => entry.instance.id === instance.id)!;
+    expect(step.fill).toEqual(instance.bindings);
+    const event = resumed.content.mustEvent(step.node.event);
+    const pending = queueChoice(resumed, event, event.body, step.fill, step.playerCast, step);
+    const answered = loadGame(JSON.parse(JSON.stringify(saveGame(resumed))), resumed.content);
+    expect(canonical(saveGame(answered))).toBe(canonical(saveGame(resumed)));
+    expect(resolveChoice(answered, pending.id, 'give_them_something_real', testRng()).ok).toBe(true);
+    const continuation = answered.world.chronicle.find(entry => entry.eventId === 'the_hall_is_answered')!;
+    expect(continuation.year).toBe(CAMPAIGNS[campaign].endYear);
+    expect(continuation.cause).toEqual({ year: page.year, page: page.id });
+    expect(answered.world.arcs.get(instance.id)?.status).toBe('ended');
+    expect(dueArcSteps(answered, testRng())).toHaveLength(0);
+  });
+
+  it('still cancels when the kept writer dies instead of substituting another cousin', () => {
+    const { ctx, instance, cousin } = letter();
+    ctx.world.people.kill(cousin.id, ctx.world.year, 'before the promised return');
+    place(ctx, { sex: 'male', age: 30, name: 'Another cousin', branch: 'term_test_hall' })
+      .membership.find(entry => entry.to === undefined)!.kind = 'cadet';
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
+    expect(instance.status).toBe('cancelled');
+    expect(instance.bindings.COUSIN).toBe(cousin.id);
+  });
+
+  it('still retries unmet conditions past collection instead of overriding the premise', () => {
+    const { ctx, instance } = letter('long', true);
+    ctx.world.year = instance.dueYear!;
+    expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
+    expect(instance.status).toBe('active');
+    expect(instance.dueYear).toBe(CAMPAIGNS.long.endYear + 5);
   });
 });
 

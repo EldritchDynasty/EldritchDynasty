@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { ArcDef, ArcNode } from '@ed/schema';
-import { CAMPAIGNS, END_YEAR, minimumArcYears, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, CAMPAIGNS, END_YEAR, minimumArcYears, scheduleNext, startArc, testRng, testWorld } from '@ed/core';
 import { loadContent } from '@ed/content';
 
 const content = loadContent();
@@ -106,5 +106,114 @@ describe('arc start windows (#133)', () => {
     ]);
     expect(minimumArcYears(closedLoop)).toBe(Number.POSITIVE_INFINITY);
     expect(startArc(closedLoop, testWorld(content, 2, 1200), testRng())).toBeUndefined();
+  });
+});
+
+describe('promised follow-ups near collection (#1971)', () => {
+  it.each(['short', 'long', 'demo'] as const)('draws the inline entry inside the remaining %s campaign', (campaign) => {
+    const a = arc([node('entry', { minYears: 6, maxYears: 18 }, ['end'])]);
+    a.inline = true;
+    const end = CAMPAIGNS[campaign].endYear;
+    const ctx = testWorld(content, 1, end - 16);
+    ctx.world.campaign = campaign;
+    const rng = testRng();
+    // Exercise the upper end of whichever legal interval production passes.
+    const draw = vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.99 * (max - min));
+    const instance = startArc(a, ctx, rng);
+    expect(instance?.dueYear).toBeGreaterThanOrEqual(ctx.world.year + 6);
+    expect(instance?.dueYear).toBeLessThanOrEqual(end);
+    expect(draw).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { schedule: { minYears: 6, maxYears: 18 }, remaining: 6 },
+    { schedule: { minYears: 6.4, maxYears: 18 }, remaining: 6 },
+    { schedule: 'next_generation' as const, remaining: 20 },
+    { schedule: 'next_generation' as const, remaining: 24 },
+    { schedule: 'immediate' as const, remaining: 0 },
+  ])('respects the last legal year for $schedule with $remaining years left', ({ schedule, remaining }) => {
+    const a = arc([node('entry', schedule, ['end'])]);
+    a.inline = true;
+    const ctx = testWorld(content, 1, END_YEAR - remaining);
+    const rng = testRng();
+    vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.99 * (max - min));
+    vi.spyOn(rng, 'int').mockImplementation((max) => max - 1);
+    expect(startArc(a, ctx, rng)?.dueYear).toBe(END_YEAR);
+  });
+
+  it.each([
+    { minYears: 6, maxYears: 6 },
+    { minYears: 6.5, maxYears: 18 },
+    'next_generation' as const,
+  ])('refuses an impossible inline start without drawing or consuming an id: %s', (schedule) => {
+    const a = arc([node('entry', schedule, ['end'])]);
+    a.inline = true;
+    const ctx = testWorld(content, 1, END_YEAR - 5);
+    const before = ctx.world.counters.arc;
+    const rng = testRng();
+    const draw = vi.spyOn(rng, 'range');
+    const generation = vi.spyOn(rng, 'int');
+    expect(startArc(a, ctx, rng)).toBeUndefined();
+    expect(ctx.world.counters.arc).toBe(before);
+    expect(ctx.world.arcs.size).toBe(0);
+    expect(draw).not.toHaveBeenCalled();
+    expect(generation).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('bounds later nodes only for inline arcs (%s)', (inline) => {
+    const a = arc([
+      node('entry', 'immediate', ['last']),
+      node('last', { minYears: 6, maxYears: 18 }, ['end']),
+    ]);
+    a.inline = inline;
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, END_YEAR - 16);
+    const instance = startArc(a, ctx, testRng())!;
+    const rng = testRng();
+    vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.99 * (max - min));
+    advanceArc({ instance, node: a.nodes[0]!, fill: {}, playerCast: [], absent: false }, {
+      id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
+    }, undefined, ctx, rng);
+    expect(instance.node).toBe('last');
+    expect(instance.dueYear).toBe(inline ? END_YEAR : END_YEAR + 2);
+  });
+
+  it.each([
+    'immediate' as const,
+    'next_generation' as const,
+    { minYears: 6, maxYears: 18 },
+    { minYears: 6, maxYears: 6 },
+  ])('preserves the due year and RNG stream when the whole interval fits: %s', (schedule) => {
+    const ctx = testWorld(content, 1, END_YEAR - 50);
+    const bounded = testRng('fitting');
+    const original = testRng('fitting');
+    const next = node('entry', schedule);
+    expect(scheduleNext(next, ctx, bounded, true)).toBe(scheduleNext(next, ctx, original));
+    expect(bounded.next()).toBe(original.next());
+  });
+
+  it.each([
+    'next_generation' as const,
+    { minYears: 6, maxYears: 18 },
+    { minYears: 6, maxYears: 6 },
+  ])('does not shorten an impossible later delay or add a random draw: %s', (schedule) => {
+    const ctx = testWorld(content, 1, END_YEAR - 5);
+    const bounded = testRng('impossible');
+    const original = testRng('impossible');
+    const next = node('entry', schedule);
+    const due = scheduleNext(next, ctx, bounded, true);
+    expect(due).toBeGreaterThan(END_YEAR);
+    expect(due).toBe(scheduleNext(next, ctx, original));
+    expect(bounded.next()).toBe(original.next());
+  });
+
+  it.each(['next_generation' as const, { minYears: 6, maxYears: 18 }])('consumes the same single draw in a narrowed interval: %s', (schedule) => {
+    const ctx = testWorld(content, 1, END_YEAR - (schedule === 'next_generation' ? 24 : 10));
+    const bounded = testRng('narrowed');
+    const original = testRng('narrowed');
+    const next = node('entry', schedule);
+    const due = scheduleNext(next, ctx, bounded, true);
+    expect(due).toBeLessThanOrEqual(END_YEAR);
+    scheduleNext(next, ctx, original);
+    expect(bounded.next()).toBe(original.next());
   });
 });
