@@ -15901,13 +15901,13 @@ work: those need the client recorder (#1992 step 2) and observed sessions
 (step 4), which remain blocked or unbuilt.
 
 **Rubric.** `packages/core/src/table-load.ts` classifies all 36 Table order
-kinds and 3 Muster ops, typed by the schema's unions, each with its argument:
+kinds and 3 Muster ops, typed by the schema's unions, each with its argument as a comment:
 Table 9 maintenance / 16 consequential / 11 ambiguous; Muster 1 / 1 / 1.
 Consequential means one of concept §4's three verbs (who marries whom, who is
 spent, what gets written down) or a bet the house cannot take back.
 `classifyCommand` covers every `SessionCommand` and ends in `assertNever`;
 advancing the clock carries no load. The rubric is a judgment. Change a row and
-its `why` together.
+its comment together. (Draft rows held the argument as a string field; `string-audit.test.ts` correctly counted those as untranslated player prose, so they became comments.)
 
 **Instrument.** `packages/core/src/tools/table-load-report.ts`, run as
 `tsx --tsconfig tsconfig.base.json packages/core/src/tools/table-load-report.ts 24 199200 <out.json>`.

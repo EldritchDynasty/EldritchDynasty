@@ -20,7 +20,7 @@
  *
  * The verb's name is not the classification: `bond` and `withhold` are one
  * line each and decide what kind of house this is, while `mysticAssign` is a
- * whole subsystem and is, mostly, keeping a sickroom staffed. The `why` on
+ * whole subsystem and is, mostly, keeping a sickroom staffed. The comment on
  * each row is the argument; change the row and the argument together.
  *
  * The rows are typed by the schema's own unions, so a new order fails to
@@ -46,55 +46,55 @@ export type TableSystem =
   | 'careers' | 'auction' | 'ledger' | 'rites' | 'marriage' | 'programme' | 'papers' | 'bonds'
   | 'land' | 'wardship' | 'succession' | 'muster';
 
+/** Each row's argument sits beside it as a comment: it is a note for whoever changes the row, not text a player reads. */
 export interface LoadRow {
   system: TableSystem;
   load: CommandLoad;
-  why: string;
 }
 
 export const TABLE_ORDER_LOAD: { readonly [K in TableOrder['kind']]: LoadRow } = {
-  mysticSearch: { system: 'outside_practice', load: 'ambiguous', why: 'asking after a practitioner is a purchase only if one is hired' },
-  mysticHire: { system: 'outside_practice', load: 'ambiguous', why: 'a one-off service bought for one place; routine when renewed' },
-  mysticCommission: { system: 'outside_practice', load: 'ambiguous', why: 'lends a reader to a patron for coin and standing' },
-  mysticReturn: { system: 'outside_practice', load: 'maintenance', why: 'honours a service promise already made' },
-  covertPrepare: { system: 'covert', load: 'consequential', why: 'sends a named operative where they can be caught' },
-  covertWithdraw: { system: 'covert', load: 'ambiguous', why: 'calls off an operation, keeping the operative and losing the outlay' },
-  covertDefend: { system: 'security', load: 'consequential', why: 'names guards against a threat to a named person' },
-  releaseIntruder: { system: 'security', load: 'consequential', why: 'lets a captured enemy go rather than keep the grievance' },
-  ransom: { system: 'captivity', load: 'consequential', why: 'brings a named relative home for a fixed price' },
-  study: { system: 'library', load: 'maintenance', why: 'puts a reader on a book; the steward does the same for the idle' },
-  restore: { system: 'library', load: 'maintenance', why: 'pays to keep a physical copy readable' },
-  tutor: { system: 'tutoring', load: 'maintenance', why: 'a term per child, the education-focus chore CK3 dropped' },
-  career: { system: 'careers', load: 'ambiguous', why: 'the steward fills posts too; which son holds one can still matter' },
-  bid: { system: 'auction', load: 'maintenance', why: 'a standing ceiling for the next sale' },
-  lotBid: { system: 'auction', load: 'ambiguous', why: 'one named lot: routine for a primer, a decision for a page or an heirloom' },
-  seekBook: { system: 'library', load: 'maintenance', why: 'asks a broker to bring a missing common book to a sale' },
-  seekClause: { system: 'ledger', load: 'consequential', why: 'a late search for one unrecovered clause of the contract' },
-  unmaking: { system: 'rites', load: 'consequential', why: 'spends the elder who made the pair possible' },
-  vesselRite: { system: 'rites', load: 'consequential', why: 'who is spent' },
-  greatRite: { system: 'rites', load: 'consequential', why: 'who is spent' },
-  forcingRite: { system: 'rites', load: 'consequential', why: 'risks a named boy to wake the blood' },
-  withhold: { system: 'marriage', load: 'consequential', why: 'who marries whom' },
-  mysticAssign: { system: 'mystic', load: 'maintenance', why: 'staffs a standing duty that serves until released' },
-  mysticRelease: { system: 'mystic', load: 'maintenance', why: 'ends a duty; the book resumes' },
-  marriages: { system: 'marriage', load: 'consequential', why: 'who marries whom, for every hand the player is not asked' },
-  scion: { system: 'programme', load: 'consequential', why: 'names the man the ladder is built on' },
-  scionHeir: { system: 'programme', load: 'consequential', why: 'names the second man beside him' },
-  pedigree: { system: 'papers', load: 'consequential', why: 'buys a forged grandmother; what gets written down' },
-  bond: { system: 'bonds', load: 'consequential', why: 'world §12: a decision about what kind of house this is' },
-  buy: { system: 'land', load: 'ambiguous', why: 'a lot on the market; routine growth or a bet on the treasury' },
-  sell: { system: 'land', load: 'ambiguous', why: 'gives up held ground at a discount' },
-  rents: { system: 'land', load: 'ambiguous', why: 'a standing policy with an inherited grudge attached' },
-  improve: { system: 'land', load: 'maintenance', why: 'drainage: a term against a parcel\'s yield' },
-  endow: { system: 'land', load: 'ambiguous', why: 'gives a cadet hall ground, or takes it back' },
-  buyBackWardship: { system: 'wardship', load: 'ambiguous', why: 'customary, and the price of the land income' },
-  declareMundane: { system: 'succession', load: 'consequential', why: 'permanent, and can move the seal' },
+  mysticSearch: { system: 'outside_practice', load: 'ambiguous' }, // asking after a practitioner is a purchase only if one is hired
+  mysticHire: { system: 'outside_practice', load: 'ambiguous' }, // a one-off service bought for one place; routine when renewed
+  mysticCommission: { system: 'outside_practice', load: 'ambiguous' }, // lends a reader to a patron for coin and standing
+  mysticReturn: { system: 'outside_practice', load: 'maintenance' }, // honours a service promise already made
+  covertPrepare: { system: 'covert', load: 'consequential' }, // sends a named operative where they can be caught
+  covertWithdraw: { system: 'covert', load: 'ambiguous' }, // calls off an operation, keeping the operative and losing the outlay
+  covertDefend: { system: 'security', load: 'consequential' }, // names guards against a threat to a named person
+  releaseIntruder: { system: 'security', load: 'consequential' }, // lets a captured enemy go rather than keep the grievance
+  ransom: { system: 'captivity', load: 'consequential' }, // brings a named relative home for a fixed price
+  study: { system: 'library', load: 'maintenance' }, // puts a reader on a book; the steward does the same for the idle
+  restore: { system: 'library', load: 'maintenance' }, // pays to keep a physical copy readable
+  tutor: { system: 'tutoring', load: 'maintenance' }, // a term per child, the education-focus chore CK3 dropped
+  career: { system: 'careers', load: 'ambiguous' }, // the steward fills posts too; which son holds one can still matter
+  bid: { system: 'auction', load: 'maintenance' }, // a standing ceiling for the next sale
+  lotBid: { system: 'auction', load: 'ambiguous' }, // one named lot: routine for a primer, a decision for a page or an heirloom
+  seekBook: { system: 'library', load: 'maintenance' }, // asks a broker to bring a missing common book to a sale
+  seekClause: { system: 'ledger', load: 'consequential' }, // a late search for one unrecovered clause of the contract
+  unmaking: { system: 'rites', load: 'consequential' }, // spends the elder who made the pair possible
+  vesselRite: { system: 'rites', load: 'consequential' }, // who is spent
+  greatRite: { system: 'rites', load: 'consequential' }, // who is spent
+  forcingRite: { system: 'rites', load: 'consequential' }, // risks a named boy to wake the blood
+  withhold: { system: 'marriage', load: 'consequential' }, // who marries whom
+  mysticAssign: { system: 'mystic', load: 'maintenance' }, // staffs a standing duty that serves until released
+  mysticRelease: { system: 'mystic', load: 'maintenance' }, // ends a duty; the book resumes
+  marriages: { system: 'marriage', load: 'consequential' }, // who marries whom, for every hand the player is not asked
+  scion: { system: 'programme', load: 'consequential' }, // names the man the ladder is built on
+  scionHeir: { system: 'programme', load: 'consequential' }, // names the second man beside him
+  pedigree: { system: 'papers', load: 'consequential' }, // buys a forged grandmother; what gets written down
+  bond: { system: 'bonds', load: 'consequential' }, // world §12: a decision about what kind of house this is
+  buy: { system: 'land', load: 'ambiguous' }, // a lot on the market; routine growth or a bet on the treasury
+  sell: { system: 'land', load: 'ambiguous' }, // gives up held ground at a discount
+  rents: { system: 'land', load: 'ambiguous' }, // a standing policy with an inherited grudge attached
+  improve: { system: 'land', load: 'maintenance' }, // drainage: a term against a parcel's yield
+  endow: { system: 'land', load: 'ambiguous' }, // gives a cadet hall ground, or takes it back
+  buyBackWardship: { system: 'wardship', load: 'ambiguous' }, // customary, and the price of the land income
+  declareMundane: { system: 'succession', load: 'consequential' }, // permanent, and can move the seal
 };
 
 export const MUSTER_ORDER_LOAD: { readonly [K in MusterOrder['op']]: LoadRow } = {
-  reinforce: { system: 'muster', load: 'maintenance', why: 'tops up a commitment the story already raised' },
-  buy: { system: 'muster', load: 'ambiguous', why: 'a commission for a named position' },
-  withdraw: { system: 'muster', load: 'consequential', why: 'abandons a commitment and what it promised' },
+  reinforce: { system: 'muster', load: 'maintenance' }, // tops up a commitment the story already raised
+  buy: { system: 'muster', load: 'ambiguous' }, // a commission for a named position
+  withdraw: { system: 'muster', load: 'consequential' }, // abandons a commitment and what it promised
 };
 
 export interface CommandClass {

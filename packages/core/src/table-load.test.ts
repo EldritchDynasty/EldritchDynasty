@@ -18,10 +18,9 @@ describe("the Table's load rubric (#1992)", () => {
     expect(Object.keys(MUSTER_ORDER_LOAD).sort()).toEqual([...musterOps].sort());
   });
 
-  it('gives every row a load and an argument', () => {
+  it('gives every row a load', () => {
     for (const row of [...Object.values(TABLE_ORDER_LOAD), ...Object.values(MUSTER_ORDER_LOAD)]) {
       expect(COMMAND_LOADS).toContain(row.load);
-      expect(row.why.length).toBeGreaterThan(10);
     }
   });
 
