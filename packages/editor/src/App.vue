@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
 import { validateBundle } from '@ed/schema';
 import { rawContent, store } from './lib/store';
 import { eventIssueId } from './lib/event-issues';
-import { Sound } from './lib/sound';
+import { Sound } from '../../client/src/lib/sound';
 import { SOUND } from './lib/audio-key';
 import type { MarkName } from './lib/marks';
 import Mark from './components/Mark.vue';

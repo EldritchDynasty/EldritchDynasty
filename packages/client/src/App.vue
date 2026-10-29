@@ -45,6 +45,9 @@ import {
   recordActions,
 } from './lib/reading-log';
 import { downloadBlob } from './lib/download';
+import { Sound } from './lib/sound';
+import { SoundBed, droneFor, runningRegisters, soundActions } from './lib/sound-bed';
+import { currentPlatform } from './platform';
 import {
   loadRevealed,
   revealNotice,
@@ -84,7 +87,18 @@ const readingLog = typeof window !== 'undefined' && readingLogRequested(window.l
   : null;
 const readingLogOn = ref(readingLog !== null);
 const readingBreak = ref(false);
-const actions = readingLog ? recordActions(game.actions, readingLog) : game.actions;
+/**
+ * THE SOUND BED (#1986): §24's page, seal and bell, the outcome's boon, blow
+ * or plain, and the drone that shifts by Age. Cues follow verbs that took
+ * (`soundActions`); the drone follows the screen, below. It reads the store,
+ * writes nothing, and stays silent until the player's first touch.
+ */
+const sound = new SoundBed(new Sound());
+const actions = soundActions(
+  readingLog ? recordActions(game.actions, readingLog) : game.actions,
+  sound,
+  { year: () => view.value?.year, docket: () => docket.value.length, outcome: () => outcome.value },
+);
 
 /**
  * Which of the three the middle column is showing. The docket, the clock and
@@ -125,6 +139,18 @@ watch(accessibility, (preferences) => {
   applyAccessibility(document.documentElement, preferences);
   saveAccessibility(readingStorage(), preferences);
 }, { deep: true, immediate: true });
+
+watch(() => [accessibility.value.sound, accessibility.value.soundVolume] as const,
+  ([on, volume]) => sound.prefer({ on, volume }), { immediate: true });
+// Only the board has a house to hum for; the interlude and the last night
+// are the frame, which §24 says "kills the drone entirely".
+watch(() => droneFor({
+  board: view.value !== null && !(prologue.value && !openingSeen.value),
+  frame: interlude.value !== null || ended.value,
+  registers: runningRegisters(view.value?.ages ?? []),
+}), (scene) => sound.scene(scene), { immediate: true });
+onMounted(() => { sound.attach(document, window, (listener) => currentPlatform().onPause(listener), navigator); });
+onBeforeUnmount(() => sound.dispose());
 
 
 /**
@@ -742,8 +768,11 @@ const yearAndBirths = computed(() => {
             v-model:skip-seen-prose="accessibility.skipSeenProse"
             v-model:reduce-motion="accessibility.reduceMotion"
             v-model:show-everything-from-start="showEverythingFromStart"
+            v-model:sound="accessibility.sound"
+            v-model:sound-volume="accessibility.soundVolume"
             @update:prose-mode="void selectProseMode($event)"
             :show-progressive-reveal-option="true"
+            :show-sound-option="true"
           />
           <h3 class="label">{{ shellCopy.helpMarks }}</h3>
           <dl class="legend-list">

@@ -1,4 +1,4 @@
-import { assertNever, type Effect } from '@ed/schema';
+import type { Effect } from '@ed/schema';
 
 /**
  * WHICH WAY DID THAT GO?
@@ -20,6 +20,14 @@ import { assertNever, type Effect } from '@ed/schema';
  * fallback: it has its own cue, because an outcome that lands and moves
  * nothing is a thing the player should still hear.
  */
+
+/**
+ * Exhaustiveness without a value import: only the store may import the
+ * simulation for anything but a type (`verbs.test.ts`).
+ */
+function assertNever(value: never, what: string): never {
+  throw new Error(`unhandled ${what}: ${JSON.stringify(value)}`);
+}
 
 /** Success, failure, and neither. `Cue` in `sound.ts` carries the same names. */
 export type Valence = 'boon' | 'blow' | 'plain';

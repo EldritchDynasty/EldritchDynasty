@@ -7,7 +7,7 @@ import PrimordialEditor from './PrimordialEditor.vue';
 import SceneSiteEditor from './SceneSiteEditor.vue';
 import OutcomeGuardEditor from './OutcomeGuardEditor.vue';
 import Mark from './Mark.vue';
-import { valenceOf, type Valence } from '../lib/valence';
+import { valenceOf, type Valence } from '../../../client/src/lib/valence';
 
 /**
  * THE CHOICE & OUTCOME TREE — editable (was issue #21's read-only SVG).
@@ -168,7 +168,7 @@ function scheduleKind(o: Outcome): string {
 /**
  * Which way an outcome goes for the house — derived from its own effects, so
  * it cannot disagree with what the outcome does and it moves the moment an
- * effect below it is edited (`lib/valence.ts`).
+ * effect below it is edited (`client/src/lib/valence.ts`).
  */
 function tone(o: Outcome): Valence {
   return valenceOf(o.effects);

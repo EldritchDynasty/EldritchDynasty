@@ -395,6 +395,36 @@ describe('reader-local ReadingSettings copy (#1454)', () => {
       wrapper.unmount();
     }
   });
+
+  it('shows the sound switch and level only when requested, in both modes (#1986)', async () => {
+    const wrapper = mount(ReadingSettings, { props: preferences });
+    try {
+      expect(wrapper.find('input[type="range"]').exists()).toBe(false);
+      expect(wrapper.findAll('input[type="checkbox"]')).toHaveLength(2);
+      await wrapper.setProps({ showSoundOption: true, sound: true, soundVolume: 0.6 });
+      expect(wrapper.text()).toContain('Volume');
+      expect(wrapper.text()).toContain('none is needed to play');
+      const checks = wrapper.findAll('input[type="checkbox"]');
+      expect(checks).toHaveLength(3);
+      const level = wrapper.get('input[type="range"]');
+      expect((level.element as HTMLInputElement).value).toBe('60');
+      expect(level.attributes('aria-valuetext')).toBe('60%');
+
+      await checks[2]!.setValue(false);
+      expect(wrapper.emitted('update:sound')).toEqual([[false]]);
+      await level.setValue('30');
+      expect(wrapper.emitted('update:soundVolume')).toEqual([[0.3]]);
+      await wrapper.setProps({ sound: false });
+      expect(level.attributes('disabled'), 'a level for sound that is off').toBeDefined();
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.text()).toContain('Play sounds');
+      expect(wrapper.text()).toContain('How loud');
+      expect(wrapper.text()).toContain('You never need them to play.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
 });
 
 /** A first house plan starts outside the Change editor, but a refusal must

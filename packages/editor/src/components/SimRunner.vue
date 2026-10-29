@@ -14,7 +14,7 @@ import Sigil from './Sigil.vue';
 import Mark from './Mark.vue';
 import Seal from './Seal.vue';
 import { SOUND } from '../lib/audio-key';
-import { valenceOf } from '../lib/valence';
+import { valenceOf } from '../../../client/src/lib/valence';
 import { submitsOnEnter } from '../lib/keys';
 import type { MarkName } from '../lib/marks';
 
@@ -47,9 +47,10 @@ const castDrafts = ref<Record<string, string>>({});
 const version = ref(0);
 
 /**
- * The sound (`lib/sound.ts`), if `App.vue` is above us. Null in a test or in
- * anything else that renders this view without a provider, and every call site
- * below is written to shrug at that rather than guard for it.
+ * The sound (`client/src/lib/sound.ts`, the game's own score), if `App.vue`
+ * is above us. Null in a test or in anything else that renders this view
+ * without a provider, and every call site below is written to shrug at that
+ * rather than guard for it.
  */
 const sound = inject(SOUND, null);
 
@@ -178,7 +179,7 @@ function answer(choiceId: string) {
   const res = resolveChoice(c, d.id, choiceId, makeRng(c.world.seed + c.world.year), { ...castDrafts.value });
   castDrafts.value = {};
   // Which way it went, read off the effects the outcome actually applied —
-  // not off anything an author had to remember to declare (`lib/valence.ts`).
+  // not off anything an author had to remember to declare (`client/src/lib/valence.ts`).
   if (res.ok && res.resolved) sound?.cue(valenceOf(res.resolved.outcome.effects));
   bump();
 }

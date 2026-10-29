@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { EffectS, type Effect } from '@ed/schema';
-import { valenceOf, valenceScore } from './valence';
+import { valenceOf, valenceScore } from '../../../client/src/lib/valence';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { submitsOnEnter } from './keys';
@@ -13,6 +13,12 @@ import { submitsOnEnter } from './keys';
  *
  * So: assert that the thing MOVES, in both directions, for the reasons it is
  * supposed to move for.
+ *
+ * `valence.ts` moved to the client with the score (#1986), because the game's
+ * outcome receipt now chimes by it too. This file stayed here, measured, for
+ * the reason the Enter witness at the bottom gives: `lanes.test.ts` caps how
+ * many test files may go unmeasured. Move both the next time the table is
+ * regenerated.
  */
 
 const eff = (e: Effect) => [e];
