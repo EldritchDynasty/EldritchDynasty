@@ -1,4 +1,4 @@
-import { assertNever, type Register } from '@ed/schema';
+import type { Register } from '@ed/schema';
 
 /**
  * THE SOUND, WHICH IS SPARSE ON PURPOSE.
@@ -13,12 +13,18 @@ import { assertNever, type Register } from '@ed/schema';
  * are under a second. If you are here to add an eighth, the question to answer
  * first is which of these you are willing to take out.
  *
+ * ── Who owns it ───────────────────────────────────────────────────────────
+ * The game does (#1986). It was written for the editor and every player build
+ * was silent for it; the editor now imports this file from here, and
+ * `sound-bed.ts` is what wires it to the game's own moments.
+ *
  * ── Why it is synthesised and not sampled ────────────────────────────────
  * Two reasons, and the second is the real one.
  *
- * The built page ships under a Content Security Policy with `default-src
- * 'self'` (see `vite.config.ts`), so a `data:` audio URI does not load and a
- * CDN does not either. Nothing to sample from.
+ * The built editor ships under a Content Security Policy with `default-src
+ * 'self'` (see `packages/editor/vite.config.ts`), so a `data:` audio URI does
+ * not load there and a CDN does not either. The game declares no policy, but
+ * a described score also gives each of its four hosts nothing to package.
  *
  * And the sigils are procedural for a reason — one artist, infinite
  * characters. The sound is the same bargain: nobody has to record a bell, the
@@ -29,8 +35,17 @@ import { assertNever, type Register } from '@ed/schema';
  * ── The shape ────────────────────────────────────────────────────────────
  * Everything above `Sound` is pure data. `cueScore` and `droneScore` describe
  * what should be heard; `Sound` is the only thing that touches `AudioContext`,
- * and it is thin enough to read in one sitting. The tests never construct one.
+ * and it is thin enough to read in one sitting. The score tests never
+ * construct one; the player's own tests hand it a fake engine.
  */
+
+/**
+ * Exhaustiveness without a value import: only the store may import the
+ * simulation for anything but a type (`verbs.test.ts`).
+ */
+function assertNever(value: never, what: string): never {
+  throw new Error(`unhandled ${what}: ${JSON.stringify(value)}`);
+}
 
 /** What the family can hear. A closed union — `cueScore` ends in `assertNever`. */
 export type Cue =
@@ -291,9 +306,14 @@ function detectEngine(): Ctor | null {
  *  - **Muting stops the drone.** A mute that only gags the cues leaves a hum
  *    running for the rest of the session, which is the single most annoying
  *    thing this file could possibly do.
+ *
+ * And one rule over all of it: **nothing here throws, and nothing here
+ * rejects unheard.** A cue rides on a player's answer, and an audio device
+ * that has gone away must not take the answer with it. A failed engine stops
+ * being `available` and the run goes on in silence.
  */
 export class Sound {
-  private ctx: AudioContext | null = null;
+  private context: AudioContext | null = null;
   private out: GainNode | null = null;
   private drone: { nodes: AudioScheduledSourceNode[]; gain: GainNode } | null = null;
   private lastDrone: DroneInput | null = null;
@@ -302,6 +322,9 @@ export class Sound {
   private readonly ctor: Ctor | null;
 
   #muted = true;
+  #volume = 1;
+  /** The engine refused to start or to play. Silence from here on, not a retry per cue. */
+  #failed = false;
 
   /**
    * Omit `ctor` to find the browser's engine; pass `null` to say there is not
@@ -322,76 +345,134 @@ export class Sound {
     else if (this.lastDrone) this.setDrone(this.lastDrone);
   }
 
-  /** True where there is an audio engine at all — false in node, and in tests. */
-  get available() { return this.ctor !== null; }
+  /**
+   * The level of the whole bed, 0..1. The scores keep their own `PEAK`; this
+   * only ever turns them down. A voice (#1994) would get its own bus beside
+   * `out` rather than sharing this one.
+   */
+  get volume() { return this.#volume; }
 
-  private engine(): { ctx: AudioContext; out: GainNode } | null {
-    if (!this.ctor) return null;
-    if (!this.ctx || !this.out) {
+  set volume(value: number) {
+    this.#volume = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 1;
+    if (this.out) this.out.gain.value = this.#volume;
+  }
+
+  /**
+   * True where there is an audio engine that works — false in node, in tests,
+   * and once a real one has refused to start or to play.
+   */
+  get available() { return this.ctor !== null && !this.#failed; }
+
+  private engine(): { context: AudioContext; out: GainNode } | null {
+    if (!this.ctor || this.#failed) return null;
+    if (!this.context || !this.out) {
       const ctx = new this.ctor();
       const out = ctx.createGain();
-      out.gain.value = 1;
+      out.gain.value = this.#volume;
       out.connect(ctx.destination);
-      this.ctx = ctx;
+      this.context = ctx;
       this.out = out;
     }
     // Suspended until a gesture. Harmless to call when it is already running.
-    void this.ctx.resume?.();
-    return { ctx: this.ctx, out: this.out };
+    quietly(this.context.resume?.());
+    return { context: this.context, out: this.out };
   }
 
   cue(name: Cue) {
     if (this.#muted) return;
-    const e = this.engine();
-    if (!e) return;
-    this.play(e.ctx, e.out, cueScore(name), e.ctx.currentTime);
+    this.attempt(() => {
+      const e = this.engine();
+      if (e) this.play(e.context, e.out, cueScore(name), e.context.currentTime);
+    });
   }
 
   /**
    * Put the drone where the world is. Cheap to call every time the year moves:
    * an unchanged drone is left alone, because restarting it would retrigger a
-   * three-second swell every single year.
+   * three-second swell every single year. `null` is no drone at all — no
+   * house to hum for, which is not the frame's silence but sounds the same.
    */
-  setDrone(input: DroneInput) {
+  setDrone(input: DroneInput | null) {
     this.lastDrone = input;
     if (this.#muted) return;
-    const e = this.engine();
-    if (!e) return;
+    if (!input) return this.stopDrone();
+    this.attempt(() => {
+      const wanted = droneScore(input);
+      if (!wanted) return this.stopDrone();
 
-    const wanted = droneScore(input);
-    if (!wanted) return this.stopDrone();
+      const key = JSON.stringify(wanted);
+      if (this.drone && key === this.droneKey) return;
+      const e = this.engine();
+      if (!e) return;
+      this.stopDrone();
+      this.droneKey = key;
 
-    const key = JSON.stringify(wanted);
-    if (this.drone && key === this.droneKey) return;
-    this.stopDrone();
-    this.droneKey = key;
-
-    const gain = e.ctx.createGain();
-    gain.gain.value = 1;
-    gain.connect(e.out);
-    const nodes = this.play(e.ctx, gain, wanted, e.ctx.currentTime);
-    this.drone = { nodes, gain };
+      const gain = e.context.createGain();
+      gain.gain.value = 1;
+      gain.connect(e.out);
+      const nodes = this.play(e.context, gain, wanted, e.context.currentTime);
+      this.drone = { nodes, gain };
+    });
   }
 
   stopDrone() {
     const d = this.drone;
-    if (!d || !this.ctx) return;
-    const now = this.ctx.currentTime;
-    // Faded, not cut. A drone that stops instantly is a click.
-    d.gain.gain.setValueAtTime(d.gain.gain.value, now);
-    d.gain.gain.linearRampToValueAtTime(0, now + 1.4);
-    // Every node here is a source this class started, so stopping is safe.
-    for (const n of d.nodes) n.stop(now + 1.5);
+    if (!d || !this.context) return;
     this.drone = null;
     this.droneKey = '';
+    const ctx = this.context;
+    this.attempt(() => {
+      const now = ctx.currentTime;
+      // Faded, not cut. A drone that stops instantly is a click.
+      d.gain.gain.setValueAtTime(d.gain.gain.value, now);
+      d.gain.gain.linearRampToValueAtTime(0, now + 1.4);
+      // Every node here is a source this class started, so stopping is safe.
+      for (const n of d.nodes) n.stop(now + 1.5);
+    });
+  }
+
+  /**
+   * Hidden or backgrounded: stop the drone and let go of the device, while
+   * remembering what was playing. Unmuting brings back exactly that.
+   */
+  suspend() {
+    this.stopDrone();
+    quietly(this.context?.suspend?.());
+  }
+
+  /**
+   * Ask a suspended engine to run again. Called from inside a gesture, where
+   * the strictest engines insist it happen — a drone restored on return from
+   * the background can otherwise sit scheduled on a context nobody resumed.
+   */
+  wake() {
+    if (!this.#muted) quietly(this.context?.resume?.());
   }
 
   /** Let go of the audio thread entirely. */
   close() {
     this.stopDrone();
-    void this.ctx?.close?.();
-    this.ctx = null;
+    quietly(this.context?.close?.());
+    this.context = null;
     this.out = null;
+  }
+
+  /**
+   * Run one piece of engine work, and turn a throw into silence. The context
+   * goes too, so a half-built graph is never played into again.
+   */
+  private attempt(work: () => void) {
+    if (this.#failed) return;
+    try {
+      work();
+    } catch {
+      this.#failed = true;
+      this.drone = null;
+      this.droneKey = '';
+      try { quietly(this.context?.close?.()); } catch { /* already gone */ }
+      this.context = null;
+      this.out = null;
+    }
   }
 
   private play(ctx: AudioContext, dest: AudioNode, score: Score, at: number): AudioScheduledSourceNode[] {
@@ -449,6 +530,15 @@ export class Sound {
     }
     return made;
   }
+}
+
+/**
+ * `resume`, `suspend` and `close` all return promises an engine may reject —
+ * a device unplugged, a policy refusal, a context already closed. `void` only
+ * silences the linter; the rejection still arrives, unhandled.
+ */
+function quietly(pending: Promise<unknown> | undefined): void {
+  pending?.catch(() => undefined);
 }
 
 function tone(ctx: AudioContext, v: Voice, t0: number): OscillatorNode {

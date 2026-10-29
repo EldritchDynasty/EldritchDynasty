@@ -14,6 +14,7 @@ import {
   type TableOrder, type TableView,
 } from '@ed/core';
 import { foldStanding } from './jump.js';
+import { valenceOf, type Valence } from './valence.js';
 import {
   BROWSER_IMPORT_CANCELLED,
   currentPlatform,
@@ -290,6 +291,13 @@ export interface Outcome {
   text: string | null;
   /** A Record answer is the one whose result is a line in the book. */
   kind: 'choice' | 'match' | 'record';
+  /**
+   * Which way a choice went for the house, read off the effects its outcome
+   * actually applied (`valence.ts`) — the boon, blow or plain note the sound
+   * bed plays (#1986). The text already says it; this only lets the ear hear
+   * it first. A Match and a Record are seals, so they carry none.
+   */
+  valence?: Valence;
 }
 
 /**
@@ -846,14 +854,14 @@ export function createGame(
 
     choose(decision, choiceId, cast = {}, said = '') {
       const result = session.value?.choose(decision, choiceId, cast);
-      hold(result?.ok ? { said, text: result.resolved?.text ?? null, kind: 'choice' } : null);
+      hold(result?.ok ? { said, text: result.resolved?.text ?? null, kind: 'choice', valence: valenceOf(result.resolved?.outcome.effects ?? []) } : null);
       refresh();
       return result?.ok ?? false;
     },
 
     send(decision, cast = {}, said = '') {
       const result = session.value?.send(decision, cast);
-      hold(result?.ok ? { said, text: result.resolved?.text ?? null, kind: 'choice' } : null);
+      hold(result?.ok ? { said, text: result.resolved?.text ?? null, kind: 'choice', valence: valenceOf(result.resolved?.outcome.effects ?? []) } : null);
       refresh();
     },
 

@@ -12,10 +12,18 @@ const props = withDefaults(defineProps<{
   showEverythingFromStart?: boolean;
   /** The progressive-reveal option belongs to the in-run "Reading, marks and keys" panel. */
   showProgressiveRevealOption?: boolean;
+  /** The §24 sound bed (#1986): on/off, and a level over cues and drone together. */
+  sound?: boolean;
+  soundVolume?: number;
+  /** Sound belongs to the in-run panel, where the house is there to be heard. */
+  showSoundOption?: boolean;
 }>(), {
   proseMode: 'original',
   showEverythingFromStart: false,
   showProgressiveRevealOption: false,
+  sound: true,
+  soundVolume: 1,
+  showSoundOption: false,
 });
 
 const emit = defineEmits<{
@@ -25,6 +33,8 @@ const emit = defineEmits<{
   'update:skipSeenProse': [value: boolean];
   'update:reduceMotion': [value: boolean];
   'update:showEverythingFromStart': [value: boolean];
+  'update:sound': [value: boolean];
+  'update:soundVolume': [value: number];
 }>();
 
 const textScaleModel = computed<TextScale>({
@@ -58,6 +68,19 @@ const showEverythingModel = computed<boolean>({
   get: () => props.showEverythingFromStart,
   set: (value) => emit('update:showEverythingFromStart', value),
 });
+
+const soundModel = computed<boolean>({
+  get: () => props.sound,
+  set: (value) => emit('update:sound', value),
+});
+
+/** Whole percentages on the slider; the preference keeps 0..1. */
+const volumePercent = computed(() => Math.round(props.soundVolume * 100));
+const volumeText = computed(() => `${volumePercent.value}%`);
+function setVolume(event: Event) {
+  const value = Number((event.target as HTMLInputElement).value);
+  if (Number.isFinite(value)) emit('update:soundVolume', Math.min(100, Math.max(0, value)) / 100);
+}
 </script>
 
 <template>
@@ -101,6 +124,26 @@ const showEverythingModel = computed<boolean>({
       {{ plainEnglish ? 'Show all options right away' : 'Show everything from the start' }}
       <input v-model="showEverythingModel" type="checkbox" />
     </label>
+
+    <template v-if="showSoundOption">
+      <label class="small">
+        {{ plainEnglish ? 'Play sounds' : 'Sound' }}
+        <input v-model="soundModel" type="checkbox" />
+      </label>
+      <label class="small">
+        {{ plainEnglish ? 'How loud' : 'Volume' }}
+        <input
+          type="range" min="0" max="100" step="10"
+          :value="volumePercent" :disabled="!sound" :aria-valuetext="volumeText"
+          @input="setVolume"
+        />
+      </label>
+      <p class="dim small">
+        {{ plainEnglish
+          ? 'Sounds only repeat what the screen already says. You never need them to play.'
+          : 'Every sound repeats something the page already says; none is needed to play.' }}
+      </p>
+    </template>
 
     <p v-if="plainEnglish" class="dim small">
       Your reading choices do not change the game rules. Choosing Plain English changes new writing,

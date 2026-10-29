@@ -107,6 +107,25 @@ house, heirloom, grudge and optional friends. `GameSession.found()` validates
 and rebuilds that start atomically. The founder is still the authored male
 signer; the gender/configuration work in #1867 is not shipped.
 
+## Sound
+
+§24's sound bed lives here and the editor imports it: `lib/sound.ts` is the
+score and the only code that touches `AudioContext`, `lib/valence.ts` says
+which way an outcome went, and `lib/sound-bed.ts` decides when either may be
+heard (#1986). Do not add a cue; `sound.ts` states the budget.
+
+- Cues follow verbs that took, through `soundActions` — never a watcher on the
+  view, which would chime on a resumed save or a reopened Book. The drone
+  follows the screen: the board only, silenced by an interlude or the last
+  night, stacked by the running Ages' authored registers.
+- Nothing plays before the first gesture, hidden or backgrounded pages go
+  quiet, and a failing engine turns into silence. `Sound` never throws into a
+  verb.
+- On/off and the level are reading preferences (`accessibility.ts`), default
+  on, never in `WorldState`, the save or the command log. `sound.test.ts`
+  proves a loud and a silent session save the same bytes.
+- Sound never carries anything alone: every cue repeats something on screen.
+
 ## Saves and hosts
 
 The client owns the save UI and talks only to the generic `Platform` seam in

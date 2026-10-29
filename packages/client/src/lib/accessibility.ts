@@ -18,6 +18,17 @@ export interface AccessibilityPreferences {
    * already contains a completed house, progressive for a first-time reader.
    */
   showEverythingFromStart: boolean | null;
+  /**
+   * Presentation only: the §24 sound bed (#1986). Never in SavedGame, the
+   * command log or the world. On by default — see `DEFAULT_ACCESSIBILITY`.
+   */
+  sound: boolean;
+  /**
+   * 0..1 over cues and drone together. A spoken frame (#1994) would add its
+   * own level beside this one; a missing field reads as its default, so
+   * neither needs a migration.
+   */
+  soundVolume: number;
 }
 
 export const ACCESSIBILITY_STORAGE_KEY = 'eldritch-dynasty:reading';
@@ -30,6 +41,17 @@ export const DEFAULT_ACCESSIBILITY: AccessibilityPreferences = {
   skipSeenProse: false,
   reduceMotion: false,
   showEverythingFromStart: null,
+  /**
+   * ON, AND WHY (#1986). §24 makes the sound part of the presentation, and a
+   * default of off is a default nobody hears — which is the state every player
+   * build was in. On costs little: nothing plays before the player's first
+   * touch, the loudest cue peaks at `PEAK` in `sound.ts`, the engine is asked
+   * to obey a phone's silent switch, and the switch is in Reading settings.
+   * (The editor starts muted instead; a tool that hums while you work is a
+   * different bargain.)
+   */
+  sound: true,
+  soundVolume: 1,
 };
 
 function isTextScale(value: unknown): value is TextScale {
@@ -44,6 +66,10 @@ function isProseMode(value: unknown): value is ProseMode {
   return value === 'original' || value === 'plainenglish';
 }
 
+function isVolume(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1;
+}
+
 /** A bad or older preference must never stop the title screen from opening. */
 export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): AccessibilityPreferences {
   if (!storage) return { ...DEFAULT_ACCESSIBILITY };
@@ -55,6 +81,8 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
       skipSeenProse?: unknown;
       reduceMotion?: unknown;
       showEverythingFromStart?: unknown;
+      sound?: unknown;
+      soundVolume?: unknown;
     } | null;
     return {
       textScale: isTextScale(parsed?.textScale) ? parsed.textScale : DEFAULT_ACCESSIBILITY.textScale,
@@ -65,6 +93,8 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
       showEverythingFromStart: typeof parsed?.showEverythingFromStart === 'boolean'
         ? parsed.showEverythingFromStart
         : null,
+      sound: typeof parsed?.sound === 'boolean' ? parsed.sound : DEFAULT_ACCESSIBILITY.sound,
+      soundVolume: isVolume(parsed?.soundVolume) ? parsed.soundVolume : DEFAULT_ACCESSIBILITY.soundVolume,
     };
   } catch {
     return { ...DEFAULT_ACCESSIBILITY };

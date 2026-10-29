@@ -1,5 +1,5 @@
 import type { InjectionKey } from 'vue';
-import type { Sound } from './sound';
+import type { Sound } from '../../../client/src/lib/sound';
 
 /**
  * One `Sound` for the whole app, handed down rather than imported.

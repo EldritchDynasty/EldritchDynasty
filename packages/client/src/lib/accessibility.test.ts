@@ -44,6 +44,8 @@ describe('reading preferences', () => {
       skipSeenProse: true,
       reduceMotion: true,
       showEverythingFromStart: false,
+      sound: false,
+      soundVolume: 0.4,
     };
 
     saveAccessibility(storage, wanted);
@@ -65,6 +67,8 @@ describe('reading preferences', () => {
       skipSeenProse: false,
       reduceMotion: false,
       showEverythingFromStart: null,
+      sound: true,
+      soundVolume: 1,
     });
     expect(loadAccessibility({ getItem: () => JSON.stringify({ textScale: 'huge' }) })).toEqual({
       textScale: 'standard',
@@ -73,7 +77,29 @@ describe('reading preferences', () => {
       skipSeenProse: false,
       reduceMotion: false,
       showEverythingFromStart: null,
+      sound: true,
+      soundVolume: 1,
     });
+  });
+});
+
+describe('the sound preference (#1986)', () => {
+  const read = (stored: unknown) => loadAccessibility({ getItem: () => JSON.stringify(stored) });
+
+  it('reads a preference saved before sound existed as on, at full level', () => {
+    const old = read({ textScale: 'large', proseMode: 'plainenglish' });
+    expect(old).toMatchObject({ textScale: 'large', proseMode: 'plainenglish', sound: true, soundVolume: 1 });
+  });
+
+  it('keeps an explicit off, and any level from silent to full', () => {
+    expect(read({ sound: false, soundVolume: 0 })).toMatchObject({ sound: false, soundVolume: 0 });
+    expect(read({ sound: true, soundVolume: 0.25 })).toMatchObject({ sound: true, soundVolume: 0.25 });
+  });
+
+  it('falls back on anything that is not a switch or a level', () => {
+    for (const bad of [{ sound: 'off' }, { sound: 0 }, { soundVolume: 2 }, { soundVolume: -0.1 }, { soundVolume: '0.5' }, { soundVolume: null }]) {
+      expect(read(bad), JSON.stringify(bad)).toMatchObject({ sound: true, soundVolume: 1 });
+    }
   });
 });
 
