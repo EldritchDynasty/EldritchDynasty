@@ -15752,3 +15752,58 @@ scripts, comparison data and `1971-SHA256SUMS.txt` live under
 `/workspace/scratch/1971-*`. #1971 closes this delay-draw slice. #1946
 retains wider tail calibration and the personal-versus-branch obligation
 decision; #1945 still requires actual-reader observations.
+
+### 29 October 2026 — per-promise delivery attribution (#1974, Refs #1946)
+
+**Fault and correction.** Baseline
+`95dabf60bf29ce0130e62244c7cf1e54a452eeaa`; runtime candidate
+`8e6ee4d50ffc95fe2d1e711fe5fec555eddbed3f`, Node 22.23.4. A constructed
+production witness launches two short-descent promises in the same year.
+Production delivers one nonrepeatable Herald page and retires the duplicate,
+but the baseline observer reports **two delivered promises**. It searches by
+target/year rather than by the particular act that scheduled the scene. Its
+separate event/year page lookup can also attach the wrong citation when a
+repeatable target fires twice in one year.
+
+The existing post-effect observation now also supplies the exact committed
+entry id, preserving the pre/post observation object's identity. The route
+observer records `launchPage` and `deliveryPage`; schedules, pending choices,
+inline instances and completed pages must match that launch's saved cause.
+It reports a retired duplicate separately, keeps an unanswered scheduled
+choice `awaiting_decision`, and does not attach an existing same-year arc to
+a refused concurrent start. Actual instance provenance takes precedence over
+a pre-effect refusal prediction when an outcome cancels and restarts a story.
+Missing provenance remains unknown. Several schedules for one target from
+the same page remain explicitly ambiguous: the saved cause identifies the
+page, not the individual effect. No historical parent or delivery is invented.
+
+**Paired check.** Before and candidate each run 24 Long Lines ×500 years,
+seeds `5000 + 7*i`, i=0..23, with eight complete-save observer on/off controls
+per column. Every control passes. All 24 report rows are exactly equal after
+excluding only the new `launchPage`/`deliveryPage` fields; summaries match too.
+This includes template counts, actual offers/answers, selection shares,
+choices/repetition, longest answer silence, endings and existing citations.
+This small sample contains only two audited promises, both roof continuations:
+one delivered, one cancelled for a missing kept person. It establishes no
+rarity margin or incidence improvement. The baseline's dirty marker is solely
+the new failing regression test, before runtime edits; the candidate collector
+runs on its committed head.
+
+**Mechanisms and limits.** Constructed witnesses cover duplicate schedules,
+repeatable same-year deliveries resolved in reverse order, pending-choice
+save/resume, condition retry followed by another promise's delivery,
+concurrent inline instances, refused starts, cancel/restart and missing or
+shared provenance. A complete-save/RNG-cursor comparison checks observer
+neutrality; existing pre/post listeners remain chained and are restored.
+The related observer, inline-memory, scheduling, forcing, outcome-reach and
+intervention probes pass (147 tests). The ready PR records the final normal
+preflight and exact-head integration verdict. This slice changes measurement,
+with no authored content, cast policy, schedule, draw, ration, floor or proof
+rule change. #1946 retains its balance and narrative decisions; #1945 still
+requires actual readers.
+
+Reproduce the paired columns with
+`npm run report:story-routes -- --runs=24 --controls=8 --output=routes.json`.
+The raw before/after reports, comparison script/result and SHA-256 manifest
+are retained under `/workspace/scratch/1974-*`. The after-report SHA-256 is
+`0736c4868ab39cab70569bf70c4e46bd99d7a91c506b44ed2c95a2ebe89847ea`.
