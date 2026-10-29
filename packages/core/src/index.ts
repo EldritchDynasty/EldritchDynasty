@@ -51,6 +51,7 @@ export * from './advisers.js';
 export * from './ascension.js';
 export * from './cast.js';
 export * from './table.js';
+export * from './table-load.js';
 export * from './auction.js';
 export * from './record.js';
 export * from './run-library.js';
