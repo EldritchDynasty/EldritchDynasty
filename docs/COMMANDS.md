@@ -56,7 +56,7 @@ npm run gates   -- fire-rate          # one of them on its own, when you know wh
 npm run gates   -- --lane batch       # merge-blocking gate lane; sampled gates are scheduled
                                       # `batch`, `blood`, `fire-rate`, `war`, `endings`, `outcome-reach`.
 npm run gate:drag / :blood / :ladder / :bearing / :endings / :war / :bottleneck
-npm run gate:long / :short / :campaigns / :replay # measured sessions; each one's
+npm run gate:long / :short / :campaigns / :replay / :line-breaks # measured sessions; each one's
                                       # question is its `//` note in package.json
 npm run gate:density -- --seeds=901,902 500 300   # what the player is asked, per
                                       # generation and per Age, and how often the same
