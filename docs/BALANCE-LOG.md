@@ -15890,3 +15890,111 @@ differ in either direction. This is one predeclared sample; a generalised rate
 claim after a rule change needs an independent predeclared sample (#1993
 step 5). The owner's threshold and choice (step 3) are not recorded yet, so
 nothing was tuned.
+
+## 2026-10-29 — #1992: the Table's order load under a bot policy (steps 1 and 3)
+
+**Question.** How many Table orders does a house that tends its recurring
+systems give, of what kind, and how much of that would the steward have done
+anyway? This is #1992's bot proxy. It measures activity under one declared
+policy. It does not measure attention, effort or whether the work felt like
+work: those need the client recorder (#1992 step 2) and observed sessions
+(step 4), which remain blocked or unbuilt.
+
+**Rubric.** `packages/core/src/table-load.ts` classifies all 36 Table order
+kinds and 3 Muster ops, typed by the schema's unions, each with its argument:
+Table 9 maintenance / 16 consequential / 11 ambiguous; Muster 1 / 1 / 1.
+Consequential means one of concept §4's three verbs (who marries whom, who is
+spent, what gets written down) or a bet the house cannot take back.
+`classifyCommand` covers every `SessionCommand` and ends in `assertNever`;
+advancing the clock carries no load. The rubric is a judgment. Change a row and
+its `why` together.
+
+**Instrument.** `packages/core/src/tools/table-load-report.ts`, run as
+`tsx --tsconfig tsconfig.base.json packages/core/src/tools/table-load-report.ts 24 199200 <out.json>`.
+Both columns play the same seeds through `GameSession`, and the chronicler
+answers the docket.
+
+- `steward` gives no Table order.
+- `tending` composes policies already measured elsewhere: marry in (#41); the
+  #1874 report's `home` column (a sickroom duty, plus ransom when it is
+  affordable); that report's `train` Library policy; and #1943's security
+  response and twenty-year improvement cadence. It invents no new decision
+  rule.
+
+An observer wraps `order`/`muster` and counts attempts, acceptances and
+refusals. The report fails unless the observer's acceptances equal the save's
+own `decisionLog`. Automatic work is read after each year: `stewardYear.opened`
+(readers set to a book), `stewardYear.placed` (posts filled), and tutoring
+terms that appear during `advance`, when no order can be given. Those terms
+come from the steward's diligence pass or an authored effect. A completed
+tenure is a change of main-hall Head. The sitting Head at the end is partial.
+
+**Provenance.** Base `f71a9664`; instrument as first committed at `d26107c3` (before rebase) on
+`ccr-f25f21c8-6fomua`; Node 22.22.0; seeds `199200–199223`, declared before
+the run; 24 per column, Short and Long. Unobserved replays of seed 199200 in all
+four columns match the observed complete canonical saves (`savedAt` blanked).
+Artifact sha256 `c1a254dfd868be510176ce9e0909e54faa3294954659b55b12d4cbe421de1a06`.
+
+### Result (mean ± SE per run, n = 24)
+
+| | Short steward | Short tending | Long steward | Long tending |
+|---|---|---|---|---|
+| exposure-years (sum) | 6448 | 6646 | 10836 | 10110 |
+| ended early (`broken_line`) | 4 | 3 | 3 | 5 |
+| completed Head tenures | 7.2 ± 0.4 | 7.5 ± 0.3 | 12.2 ± 0.7 | 11.5 ± 0.8 |
+| accepted orders | 0 | 137.3 ± 14.2 | 0 | 213.3 ± 26.2 |
+| — maintenance | 0 | 119.6 ± 13.8 | 0 | 182.6 ± 24.4 |
+| — ambiguous | 0 | 16.7 ± 1.4 | 0 | 29.7 ± 2.9 |
+| — consequential | 0 | 1.0 ± 0.0 | 0 | 1.0 ± 0.0 |
+| refused orders | 0 | 0 | 0 | 0 |
+| accepted per century | — | 48.8 ± 4.2 | — | 48.5 ± 4.1 |
+| accepted per completed tenure | — | 18.6 ± 1.9 | — | 18.0 ± 1.8 |
+| steward: readers set to a book | 74.8 ± 10.3 | 26.1 ± 5.6 | 129.8 ± 21.5 | 48.0 ± 11.7 |
+| steward: posts filled | 38.6 ± 2.6 | 37.9 ± 2.3 | 67.3 ± 4.2 | 60.7 ± 5.0 |
+| terms begun without an order | 95.5 ± 8.4 | 104.9 ± 8.6 | 182.7 ± 14.1 | 167.2 ± 16.5 |
+| docket answers (chronicler) | 15.9 ± 1.3 | 17.8 ± 1.4 | 25.7 ± 2.0 | 25.5 ± 2.7 |
+
+Tending orders by category, per run (Short / Long): `study` 81.8 / 121.0,
+`lotBid` 16.7 / 29.7, `seekBook` 14.2 / 25.3, `improve` 12.9 / 20.2,
+`mysticAssign` 10.7 / 16.1, `marriages` 1 / 1.
+
+### What this shows
+
+1. **The tending column gives about one order every two years at both terms**
+   (48.5–48.8 per century, 18–19 per completed tenure), and **87% of them are
+   maintenance.** The only consequential order is the opening marriage policy.
+   All the ambiguous ones are lot bids.
+2. **The Library is most of it.** Library and auction orders are 82% of the
+   accepted orders at both terms. `study` alone is 60% Short and 57% Long.
+3. **Most manual study orders displace the steward rather than add reading.**
+   On paired seeds, tending minus steward is +81.8 ± 12.3 study orders against
+   −48.7 ± 12.2 automatic placements (Short), and +121.0 ± 19.8 against
+   −81.9 ± 25.8 (Long). Reading starts, manual plus automatic, rise from
+   74.8 to 107.8 (Short) and from 129.8 to 169.0 (Long), so about 60–68% of the
+   policy's study orders take a slot the steward would have filled. The books
+   differ: the steward reaches for the shortest, `train` for chosen
+   affinities. That difference is what the order buys. These results do not
+   say whether it is worth asking for.
+4. **The house already runs a lot of itself.** With no orders, the steward
+   fills 39 / 67 posts and sets 75 / 130 readers per run. Another 96 / 183
+   tutoring terms begin without an order.
+5. **Refusals are uninformative here.** The composite policy sends only orders
+   the Table quotes as affordable, so zero refusals describes the policy, not
+   the interface. Refusals are a client-recorder measurement.
+6. **Several listed systems were never exercised.** These are security,
+   covert operations, captivity, outside practitioners, Muster deployment,
+   careers, tutoring orders, bonds and wardship. Ordinary foundings sign no
+   grudge (as #1943 found), so threats and captives did not arise. The policy
+   also never hires, deploys, buys a post or tutors. **Their load is unmeasured,
+   not zero.**
+7. Paired outcome differences (treasury, line length, living blood) are within
+   2 SE at both terms. That is not evidence the orders are useless. This policy
+   was not built to win.
+
+### Not decided here
+
+This report does not choose between #1992 step 5's options (a)–(d). That
+decision is the owner's, and the issue asks for player observations first. A
+reader who wants a heavier column can compose the hostile founding, field
+deployment and post purchases from the cited reports. The rubric and observer
+do not need to change.
