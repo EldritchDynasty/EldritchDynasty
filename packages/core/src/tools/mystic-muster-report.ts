@@ -19,7 +19,7 @@ interface DutyRecord {
 }
 
 /** Study and purchase only what the Table offers; the same policy serves all paired columns. */
-function train(s: GameSession, content: Content, elapsed: number): void {
+export function train(s: GameSession, content: Content, elapsed: number): void {
   const table = s.table();
   const affinities = [...new Set(content.mysticWorkings.filter(isFieldWorking).map(w => w.affinity))].sort();
   const offset = elapsed % affinities.length;

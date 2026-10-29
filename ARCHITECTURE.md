@@ -76,6 +76,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | **The Match** — three cards, one marriage | `core/src/people/match.ts` | `match.test.ts` |
 | What a card lets you reason from | `core/src/people/panel.ts` | `panel.test.ts`, `gate:blood`'s `blind`/`panel` columns |
 | How much the player is asked, and how often the same thing twice | `core/src/tools/density-gate.ts` | `attention.slow.test.ts`'s per-generation band |
+| What each Table order **costs the player** — maintenance, consequential or ambiguous | `core/src/table-load.ts` → `TABLE_ORDER_LOAD`, `classifyCommand`; bot proxy `core/src/tools/table-load-report.ts` | `table-load.test.ts`; dated evidence in `docs/BALANCE-LOG.md` (#1992) |
 | Regency/unwoken pacing, maintenance repetition and gaps in progress | `core/src/tools/density-observer.ts`, `density-report.ts` | `tools/stall.test.ts`; dated evidence in `docs/REGENCY-PACING.md` |
 | Genetics — loci, meiosis, expression | `core/src/genetics/` | `sim.slow.test.ts`, `attributes.slow.test.ts` |
 | **How the blood is handed on** — the font's meiotic drive | `core/src/genetics/meiosis.ts` → `driveToward`, and `drive` in `loci.yaml` | `blood.test.ts`, `blood.slow.test.ts` |
