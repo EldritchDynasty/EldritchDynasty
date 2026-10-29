@@ -24,7 +24,8 @@ import type { GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-export const READING_LOG_FORMAT = 'ed-reading-log/1';
+/** 2: pages already on screen when a saved run is picked up are `carried`, not answers. */
+export const READING_LOG_FORMAT = 'ed-reading-log/2';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -42,7 +43,9 @@ export const READING_LOG_CAVEATS = [
   'foregroundMs counts time the page was visible and focused outside declared breaks: an exposure proxy, not reading time.',
   'Game years are simulation pacing, not elapsed time.',
   'A censored gap ended without a next answer (export, stop, unload or the event cap); it is a lower bound.',
-  'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log.',
+  'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
+  'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
+    + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
 
 export function readingLogRequested(search: string): boolean {
@@ -54,6 +57,10 @@ export type ReadingAnswerKind = 'interlude' | NonNullable<ChronicleView['answer'
 
 /** The verbs worth a line. Reads (`book`, `advice`, …) are not actions. */
 const RECORDED_VERBS = {
+  begin: 'start',
+  resume: 'start',
+  load: 'start',
+  importSave: 'start',
   advance: 'advance',
   letHimDecide: 'answer',
   choose: 'answer',
@@ -64,9 +71,12 @@ const RECORDED_VERBS = {
   dismissOutcome: 'dismiss',
   dismissInterlude: 'dismiss',
   dismissChapter: 'dismiss',
-} as const satisfies Partial<Record<keyof GameActions, 'advance' | 'answer' | 'dismiss'>>;
+} as const satisfies Partial<Record<keyof GameActions, 'start' | 'advance' | 'answer' | 'dismiss'>>;
 
 export type RecordedVerb = keyof typeof RECORDED_VERBS;
+
+/** The verbs that pick up a saved run, whose chronicle the reader saw in some other session. */
+const PICKUPS: ReadonlySet<RecordedVerb> = new Set(['resume', 'load', 'importSave']);
 
 export type EndReason = 'exported' | 'stopped' | 'unloaded';
 
@@ -79,7 +89,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'prose'; mode: string }
   | { at: number; kind: 'run'; campaign: string; seed: number }
   | { at: number; kind: 'year'; year: number }
-  | { at: number; kind: 'page'; year: number; page: string; event?: string; answer?: ReadingAnswerKind; revisit?: true }
+  | { at: number; kind: 'page'; year: number; page: string; event?: string; answer?: ReadingAnswerKind; revisit?: true; carried?: true }
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
   | { at: number; kind: 'decision'; year: number; decision: string; event: string; seen: boolean }
   | { at: number; kind: 'action'; verb: RecordedVerb; act: (typeof RECORDED_VERBS)[RecordedVerb]; years?: number }
@@ -141,6 +151,10 @@ export class ReadingLog {
   readonly #origin: number;
   readonly #shown = new Set<string>();
   readonly #last = new Map<string, string>();
+  /** The chronicle window last seen, so the next one can say what is new in it. */
+  #window = new Set<string>();
+  /** A saved run is being picked up: its first window is history, not news. */
+  #pickingUp = false;
 
   constructor(
     private readonly now: () => number,
@@ -162,6 +176,7 @@ export class ReadingLog {
    */
   note(event: Untimed<ReadingLogEvent>): void {
     if (this.#ended || this.truncated) return;
+    if (event.kind === 'action' && event.act === 'start') this.#pickingUp = PICKUPS.has(event.verb);
     const state = stateKey(event);
     if (state) {
       if (this.#last.get(state[0]) === state[1]) return;
@@ -174,8 +189,30 @@ export class ReadingLog {
     this.events.push({ ...event, at: this.now() - this.#origin } as ReadingLogEvent);
   }
 
+  /**
+   * The view's chronicle window, each time it changes. A page that was not in
+   * the last window has just come on screen. The first window after a saved
+   * run is picked up is that run's history — read, or skipped, in a session
+   * this log never saw — so every page in it is `carried` and answers nothing.
+   */
+  chronicle(entries: readonly Pick<ChronicleView, 'id' | 'year' | 'eventId' | 'answer'>[] | undefined): void {
+    if (!entries) return;
+    const carried = this.#pickingUp;
+    this.#pickingUp = false;
+    for (const entry of entries) if (entry.id && !this.#window.has(entry.id)) this.page(entry.year, entry, carried);
+    this.#window = new Set(entries.flatMap((entry) => (entry.id ? [entry.id] : [])));
+  }
+
+  /**
+   * A pick-up that came back without a run — a cancelled picker, an unreadable
+   * save — leaves the run on screen as it was, and its next page is news.
+   */
+  pickUpFailed(): void {
+    this.#pickingUp = false;
+  }
+
   /** A chronicle page came on screen. The second time it is a revisit. */
-  page(year: number, entry: Pick<ChronicleView, 'id' | 'eventId' | 'answer'>): void {
+  page(year: number, entry: Pick<ChronicleView, 'id' | 'eventId' | 'answer'>, carried = false): void {
     if (!entry.id) return;
     const revisit = this.#seen(`page:${entry.id}`);
     this.note({
@@ -183,6 +220,7 @@ export class ReadingLog {
       ...(entry.eventId ? { event: entry.eventId } : {}),
       ...(entry.answer ? { answer: entry.answer } : {}),
       ...(revisit ? { revisit } : {}),
+      ...(carried ? { carried: true as const } : {}),
     });
   }
 
@@ -288,7 +326,7 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'year': year = e.year; break;
       case 'decision': decisions++; open.decisions++; break;
       case 'page': case 'interlude': {
-        if (!e.answer || e.revisit) break;
+        if (!e.answer || e.revisit || ('carried' in e && e.carried)) break;
         answers++;
         close(e.at, e.year, e.answer, false);
         open = { at: e.at, year: e.year, kind: e.answer, foreground, decisions: 0 };
@@ -318,7 +356,8 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
 /**
  * The store's verbs, each noted and then passed through untouched — same
  * arguments, same `this`, same return. A wrapper that changed anything would
- * make the observed run a different run.
+ * make the observed run a different run. It only listens to a pick-up's
+ * promise, to hear when it came back without a run.
  */
 export function recordActions<A extends GameActions>(actions: A, log: ReadingLog): A {
   const wrapped = { ...actions };
@@ -329,7 +368,11 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         kind: 'action', verb, act: RECORDED_VERBS[verb],
         ...(verb === 'advance' && typeof args[0] === 'number' ? { years: args[0] } : {}),
       });
-      return original.apply(actions, args);
+      const result = original.apply(actions, args);
+      if (PICKUPS.has(verb) && result instanceof Promise) {
+        result.then((ok) => { if (ok !== true) log.pickUpFailed(); }, () => log.pickUpFailed());
+      }
+      return result;
     };
   }
   return wrapped;
@@ -350,11 +393,13 @@ export function attachReadingLog(
   log: ReadingLog,
   doc: Listened & { readonly visibilityState: DocumentVisibilityState },
   win: Listened,
+  /** Told when the page going away ended the log, so a page restored from the back/forward cache stops saying it is on. */
+  onUnloaded: () => void = () => {},
 ): () => void {
   const onVisibility = () => log.note({ kind: 'visible', visible: doc.visibilityState === 'visible' });
   const onFocus = () => log.note({ kind: 'focus', focused: true });
   const onBlur = () => log.note({ kind: 'focus', focused: false });
-  const onHide = () => log.end('unloaded');
+  const onHide = () => { log.end('unloaded'); onUnloaded(); };
   doc.addEventListener('visibilitychange', onVisibility);
   win.addEventListener('focus', onFocus);
   win.addEventListener('blur', onBlur);
