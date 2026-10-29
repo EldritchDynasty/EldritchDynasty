@@ -81,6 +81,8 @@
     "gate:stall": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/ladder-stall.ts",
     "//14": "Issue #133 Stage 5A-E: one 500-year batch for Ledger, decisions, frame, land/Muster and system reach. Measurement, not a CI threshold.",
     "gate:long": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/long-line-gate.ts",
+    "//1993": "Issue #1993: when lines break in first runs, against the first interlude and elapsed year 100. Read-only measurement, not a CI threshold.",
+    "gate:line-breaks": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/line-break-report.ts",
     "//15": "Issue #66: Short-Line ending distribution and Ledger-recovery measurement. Use 100 runs to judge the 40% ceiling.",
     "gate:short": "tsx --tsconfig tsconfig.base.json packages/core/src/tools/short-line-gate.ts",
     "//17": "Issue #274: static Short/Long product inventory — endings, Ledger capacity, ladder vocabulary and campaign-exclusive content.",
