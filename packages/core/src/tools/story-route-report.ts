@@ -227,7 +227,12 @@ export class StoryRouteObserver {
             && decision.event.id === promise.target && causedByLaunch(decision.cause));
           if (schedule) { promise.queued = true; promise.status = 'active'; }
           else if (pending) { promise.queued = true; promise.status = 'awaiting_decision'; }
-          else if (w.year >= promise.dueYear!) {
+          else if (w.scheduled.some(schedule => schedule.event === promise.target && !schedule.cause?.page)) {
+            promise.status = 'schedule_provenance_unknown';
+          } else if (w.pendingDecisions.some(decision => decision.kind === 'choice'
+            && decision.event.id === promise.target && decision.year >= promise.year && !decision.cause?.page)) {
+            promise.status = 'decision_provenance_unknown';
+          } else if (w.year >= promise.dueYear!) {
             promise.status = w.chronicle.some(page => page.eventId === promise.target && page.year >= promise.year && !page.cause?.page)
               ? 'delivery_provenance_unknown' : 'retired_without_delivery';
           }

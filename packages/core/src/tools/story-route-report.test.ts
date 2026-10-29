@@ -413,6 +413,26 @@ describe('story-route promises (#1946)', () => {
     expect(promise!.cause).toBeUndefined();
   });
 
+  it.each(['schedule', 'decision'] as const)('keeps an uncited saved %s uncertain rather than declaring it retired', (stage) => {
+    const ctx = testWorld(content, 197405);
+    const observer = new StoryRouteObserver(ctx);
+    herald(ctx);
+    if (stage === 'schedule') delete ctx.world.scheduled[0]!.cause;
+    else {
+      ctx.world.year++;
+      runPhase('ambient', ctx, emptyReport(ctx.world.year), false);
+      const pending = ctx.world.pendingDecisions.find(decision => decision.kind === 'choice'
+        && decision.event.id === 'the_herald_opens_the_old_question')!;
+      if (pending.kind !== 'choice') throw new Error('scheduled scene has no choice');
+      delete pending.cause;
+    }
+    ctx.world = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content).world;
+    const [promise] = observer.finish();
+    expect(promise!.status).toBe(`${stage}_provenance_unknown`);
+    expect(promise!.deliveryPage).toBeUndefined();
+    expect(promise!.deliveredYear).toBeUndefined();
+  });
+
   it('marks multiple schedules from one source page as ambiguous', () => {
     const bundle = structuredClone(content.bundle);
     const visit = bundle.events.find(event => event.id === 'the_heralds_visitation')!;
