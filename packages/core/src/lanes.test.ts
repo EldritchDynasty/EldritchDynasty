@@ -174,6 +174,9 @@ const DRIVES_A_BATCH: Record<string, string> = {
     'the war verdict over hand-built runs; plays nothing — 0.0s',
   'packages/core/src/tools/replay-divergence.test.ts':
     'the run-two comparator and report rows over hand-built decision streams; plays nothing — 0.0s',
+  'packages/core/src/tools/line-break-report.test.ts':
+    'the #1993 reducer over hand-built rows, plus two 40-year Short runs pairing the chronicler '
+    + 'loop with playToTheEnd; no campaign batch',
   'packages/core/src/tools/stall.test.ts':
     'one 3-year density run proving table-order failure wiring; the rest, gate:stall\'s readings '
     + 'included, is hand-built — 0.2s',
