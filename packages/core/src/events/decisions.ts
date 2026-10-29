@@ -400,7 +400,7 @@ export function commitOutcome(
     const page = latestPage(ctx.world.chronicle, entry => entry.id === resolved.entryId);
     if (page && !page.cause) page.cause = { ...cause };
   }
-  if (observation) ctx.observeAppliedOutcome?.(observation);
+  if (observation) ctx.observeAppliedOutcome?.(observation, resolved.entryId);
 
   // A boy goes through one forcing rite (§11, #1817), whatever came of it and
   // whichever door it came through — the Table's order and the ambient draw

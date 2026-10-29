@@ -4,7 +4,7 @@ import { asId, indexContent, type Content } from '@ed/schema';
 import { dueArcSteps } from '../events/arcs.js';
 import { executeOutcomeWitness } from '../events/reach.js';
 import { selectEvents } from '../events/selection.js';
-import { queueChoice, resolveChoice, resolveRecord } from '../events/decisions.js';
+import { queueChoice, resolveChoice, resolveRecord, type OutcomeObservation } from '../events/decisions.js';
 import { resolveSlots } from '../events/slots.js';
 import { evalCondition } from '../events/conditions.js';
 import { canonical, loadGame, saveGame } from '../save.js';
@@ -41,6 +41,19 @@ function letter(ctx: ReturnType<typeof testWorld>) {
     expectedOutcomeId: 'somebody_reads_it_properly', targetWeightedOutcome: true, rng: testRng('letter'),
   });
   expect(result.ok, result.reason).toBe(true);
+}
+
+function herald(ctx: ReturnType<typeof testWorld>) {
+  const event = ctx.content.mustEvent('the_heralds_visitation');
+  const slots = resolveSlots(event, ctx, testRng('visit-cast'));
+  if (!slots.ok) throw new Error('herald witness cannot cast');
+  const pending = queueChoice(ctx, event, event.body, slots.fill, []);
+  const result = resolveChoice(ctx, pending.id, 'the_short_descent', testRng('visit'));
+  expect(result.ok, result.reason).toBe(true);
+  const page = result.resolved!.entryId;
+  const record = ctx.world.pendingDecisions.find(decision => decision.kind === 'record' && decision.entryId === page)!;
+  expect(resolveRecord(ctx, record.id, 'record').ok).toBe(true);
+  return page;
 }
 
 describe('story-route promises (#1946)', () => {
@@ -135,7 +148,16 @@ describe('story-route promises (#1946)', () => {
     const control = loadGame(saveGame(ctx), content);
     let previousCalls = 0;
     const previous = () => previousCalls++;
-    ctx.observeOutcome = previous;
+    let beforeObservation: OutcomeObservation | undefined;
+    ctx.observeOutcome = observation => { previous(); beforeObservation = observation; };
+    const previousOutcome = ctx.observeOutcome;
+    const applied: string[] = [];
+    const previousApplied = (observation: OutcomeObservation, entryId: string) => {
+      expect(observation).toBe(beforeObservation);
+      expect(ctx.world.chronicle.some(page => page.id === entryId && page.eventId === observation.event.id)).toBe(true);
+      applied.push(entryId);
+    };
+    ctx.observeAppliedOutcome = previousApplied;
     const observer = new StoryRouteObserver(ctx);
     letter(ctx);
     letter(control);
@@ -143,6 +165,7 @@ describe('story-route promises (#1946)', () => {
     const before = canonical(saveGame(control));
     expect(canonical(saveGame(ctx))).toBe(before);
     expect(previousCalls).toBe(1);
+    expect(applied).toEqual([ctx.world.chronicle.at(-1)!.id]);
     const resumed = loadGame(saveGame(ctx), content);
     const due = [...resumed.world.arcs.values()][0]!.dueYear!;
     resumed.world.year = due;
@@ -153,7 +176,8 @@ describe('story-route promises (#1946)', () => {
     expect(resumedStep.instance.bindings).toEqual(originalStep.instance.bindings);
     expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(control)));
     observer.finish();
-    expect(ctx.observeOutcome).toBe(previous);
+    expect(ctx.observeOutcome).toBe(previousOutcome);
+    expect(ctx.observeAppliedOutcome).toBe(previousApplied);
   });
 
   it.each([false, true])('preserves a herald promise through retries, save/resume and automatic=%s delivery', (automatic) => {
@@ -208,6 +232,7 @@ describe('story-route promises (#1946)', () => {
 
   it('cites the first of two same-year herald promises and retires its duplicate', () => {
     const ctx = testWorld(content, 194604);
+    const observer = new StoryRouteObserver(ctx);
     const event = content.mustEvent('the_heralds_visitation');
     const pages: string[] = [];
     for (let i = 0; i < 2; i++) {
@@ -225,6 +250,182 @@ describe('story-route promises (#1946)', () => {
     expect(delivered).toHaveLength(1);
     expect(delivered[0]!.cause?.page).toBe(pages[0]);
     expect(ctx.world.scheduled).toEqual([]);
+    const promises = observer.finish();
+    expect(promises.map(promise => promise.status)).toEqual(['delivered', 'retired_without_delivery']);
+    expect(promises.map(promise => promise.launchPage)).toEqual(pages);
+    expect(promises[0]!.deliveryPage).toBe(delivered[0]!.id);
+    expect(promises[1]!.deliveredYear).toBeUndefined();
+    expect(promises[1]!.cause).toBeUndefined();
+  });
+
+  it.each([false, true])('attributes repeatable same-year deliveries separately, automatic=%s', (automatic) => {
+    const source = indexContent(structuredClone(content.bundle));
+    source.mustEvent('the_herald_opens_the_old_question').repeatable = true;
+    const ctx = testWorld(source, 197400);
+    const observer = new StoryRouteObserver(ctx);
+    const pages = [herald(ctx), herald(ctx)];
+    ctx.world.year++;
+    runPhase('ambient', ctx, emptyReport(ctx.world.year), automatic);
+    if (!automatic) {
+      observer.afterYear();
+      const pending = ctx.world.pendingDecisions.filter(decision => decision.kind === 'choice'
+        && decision.event.id === 'the_herald_opens_the_old_question');
+      expect(pending).toHaveLength(2);
+      expect(ctx.world.scheduled).toEqual([]);
+      const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), source);
+      for (const decision of [...pending].reverse()) {
+        expect(resolveChoice(ctx, decision.id, 'answer_the_account', testRng('same-year-answers')).ok).toBe(true);
+        expect(resolveChoice(resumed, decision.id, 'answer_the_account', testRng('same-year-answers')).ok).toBe(true);
+      }
+      expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(ctx)));
+    }
+    const promises = observer.finish();
+    const delivered = ctx.world.chronicle.filter(page => page.eventId === 'the_herald_opens_the_old_question');
+    expect(delivered).toHaveLength(2);
+    expect(promises.map(promise => promise.status)).toEqual(['delivered', 'delivered']);
+    expect(promises.map(promise => promise.launchPage)).toEqual(pages);
+    for (const promise of promises) {
+      expect(promise.cause?.page).toBe(promise.launchPage);
+      expect(promise.deliveryPage).toBe(delivered.find(page => page.cause?.page === promise.launchPage)!.id);
+    }
+    expect(new Set(promises.map(promise => promise.deliveryPage)).size).toBe(2);
+  });
+
+  it('keeps a saved unanswered scheduled choice pending after it leaves the calendar', () => {
+    const ctx = testWorld(content, 197404);
+    const observer = new StoryRouteObserver(ctx);
+    const page = herald(ctx);
+    ctx.world.year++;
+    runPhase('ambient', ctx, emptyReport(ctx.world.year), false);
+    expect(ctx.world.scheduled).toEqual([]);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    const pending = resumed.world.pendingDecisions.find(decision => decision.kind === 'choice'
+      && decision.event.id === 'the_herald_opens_the_old_question');
+    expect(pending).toMatchObject({ cause: { page } });
+    const [promise] = observer.finish();
+    expect(promise).toMatchObject({ launchPage: page, status: 'awaiting_decision', queued: true });
+    expect(promise!.deliveredYear).toBeUndefined();
+  });
+
+  it('does not credit a newer promise\'s delivery to an older one still retrying', () => {
+    const ctx = testWorld(content, 197401);
+    const observer = new StoryRouteObserver(ctx);
+    const first = herald(ctx);
+    ctx.world.year++;
+    ctx.world.flags.set('the_elder_descent_not_produced', false);
+    expect(selectEvents(ctx, testRng('retry'), 0)).toEqual([]);
+    const second = herald(ctx);
+    ctx.world.year++;
+    runPhase('ambient', ctx, emptyReport(ctx.world.year));
+    observer.afterYear();
+    expect(ctx.world.scheduled.map(schedule => schedule.cause?.page)).toEqual([first]);
+    ctx.world.year += 4;
+    expect(selectEvents(ctx, testRng('retire'), 0)).toEqual([]);
+    const promises = observer.finish();
+    expect(promises.map(promise => promise.status)).toEqual(['retired_without_delivery', 'delivered']);
+    expect(promises[1]!.cause?.page).toBe(second);
+    expect(promises[0]!.deliveryPage).toBeUndefined();
+  });
+
+  it('never attaches an existing same-year arc to a refused concurrent launch', () => {
+    const { ctx } = hall();
+    letter(ctx);
+    const existing = [...ctx.world.arcs.values()][0]!;
+    const observer = new StoryRouteObserver(ctx);
+    letter(ctx);
+    const [promise] = observer.finish();
+    expect(promise).toMatchObject({ status: 'start_refused_concurrency', queued: false });
+    expect(promise!.instance).toBeUndefined();
+    expect(promise!.launchPage).not.toBe(existing.cause!.page);
+  });
+
+  it('keeps concurrent same-year inline deliveries attached to their own launch pages', () => {
+    const source = indexContent(structuredClone(content.bundle));
+    const mechanism = routeLaunchers(source, ['the_hall_is_answered'])[0]!.mechanism;
+    if (!('arc' in mechanism)) throw new Error('Hall continuation is not an arc');
+    source.mustArc(mechanism.arc).maxConcurrentInstances = 2;
+    const { ctx } = hall(source);
+    const observer = new StoryRouteObserver(ctx);
+    letter(ctx);
+    letter(ctx);
+    const instances = [...ctx.world.arcs.values()];
+    expect(instances).toHaveLength(2);
+    ctx.world.year = Math.max(...instances.map(instance => instance.dueYear!));
+    const steps = dueArcSteps(ctx, testRng('two-hall-steps'));
+    for (const step of [...steps].reverse()) {
+      const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('the_hall_is_answered'), {
+        choiceId: 'give_them_something_real', expectedOutcomeId: 'given', arcStep: step, rng: testRng('two-hall-answers'),
+      });
+      expect(result.ok, result.reason).toBe(true);
+    }
+    const promises = observer.finish();
+    expect(promises.map(promise => promise.status)).toEqual(['delivered', 'delivered']);
+    expect(new Set(promises.map(promise => promise.deliveryPage)).size).toBe(2);
+    for (const promise of promises) {
+      expect(ctx.world.arcs.get(promise.instance!)!.cause?.page).toBe(promise.launchPage);
+      expect(ctx.world.chronicle.find(page => page.id === promise.deliveryPage)?.cause?.page).toBe(promise.launchPage);
+    }
+  });
+
+  it('reports an actual restart when the launching effects cancel the previous instance', () => {
+    const source = indexContent(structuredClone(content.bundle));
+    const { ctx } = hall(source);
+    letter(ctx);
+    const existing = [...ctx.world.arcs.values()][0]!;
+    const launch = source.mustEvent('the_hall_that_waited');
+    if (launch.interaction.kind !== 'narration') throw new Error('letter is not narration');
+    launch.interaction.outcomes.find(outcome => outcome.id === 'somebody_reads_it_properly')!.effects.push({
+      kind: 'arc', arc: existing.arc, op: 'cancel',
+    });
+    const observer = new StoryRouteObserver(ctx);
+    letter(ctx);
+    const [promise] = observer.finish();
+    expect(existing.status).toBe('cancelled');
+    expect(promise).toMatchObject({ status: 'pending_at_observation_end', queued: true });
+    expect(promise!.instance).not.toBe(existing.id);
+    expect(ctx.world.arcs.get(promise!.instance!)!.cause?.page).toBe(promise!.launchPage);
+  });
+
+  it('does not infer an inline instance from event/year when its provenance is absent', () => {
+    const { ctx } = hall();
+    const observer = new StoryRouteObserver(ctx);
+    letter(ctx);
+    delete [...ctx.world.arcs.values()][0]!.cause;
+    const [promise] = observer.finish();
+    expect(promise!.status).toBe('not_started_or_provenance_unknown');
+    expect(promise!.instance).toBeUndefined();
+  });
+
+  it('reports an uncited delivery as unknown rather than crediting it to a new promise', () => {
+    const ctx = testWorld(content, 197402);
+    const observer = new StoryRouteObserver(ctx);
+    herald(ctx);
+    delete ctx.world.scheduled[0]!.cause; // Legacy schedule, no launching identity.
+    ctx.world.year++;
+    runPhase('ambient', ctx, emptyReport(ctx.world.year));
+    expect(ctx.world.chronicle.filter(page => page.eventId === 'the_herald_opens_the_old_question')).toHaveLength(1);
+    const [promise] = observer.finish();
+    expect(promise!.status).toBe('delivery_provenance_unknown');
+    expect(promise!.deliveryPage).toBeUndefined();
+    expect(promise!.deliveredYear).toBeUndefined();
+    expect(promise!.cause).toBeUndefined();
+  });
+
+  it('marks multiple schedules from one source page as ambiguous', () => {
+    const bundle = structuredClone(content.bundle);
+    const visit = bundle.events.find(event => event.id === 'the_heralds_visitation')!;
+    if (visit.interaction.kind !== 'choice') throw new Error('visitation is not a choice');
+    const outcome = visit.interaction.choices.find(choice => choice.id === 'the_short_descent')!.outcomes[0]!;
+    outcome.effects.push(structuredClone(outcome.effects.find(effect => effect.kind === 'schedule')!));
+    const ctx = testWorld(indexContent(bundle), 197403);
+    const observer = new StoryRouteObserver(ctx);
+    const page = herald(ctx);
+    ctx.world.year++;
+    runPhase('ambient', ctx, emptyReport(ctx.world.year));
+    const promises = observer.finish();
+    expect(promises.map(promise => promise.launchPage)).toEqual([page, page]);
+    expect(promises.map(promise => promise.status)).toEqual(['ambiguous_launch_provenance', 'ambiguous_launch_provenance']);
+    expect(promises.every(promise => promise.deliveredYear === undefined)).toBe(true);
   });
 
   it('also carries a saved scheduled narration through the real ambient phase', () => {

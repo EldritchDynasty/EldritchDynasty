@@ -802,8 +802,8 @@ export interface SimCtx {
   /** Measurement-only listener before an authored outcome applies. Never saved or called by previews. */
   observePrimordial?: (observation: PrimordialObservation) => void;
   observeOutcome?: (observation: OutcomeObservation) => void;
-  /** Measurement-only listener immediately after those authored effects. Never saved. */
-  observeAppliedOutcome?: (observation: OutcomeObservation) => void;
+  /** Measurement-only listener after authored effects, with their exact page. Never saved. */
+  observeAppliedOutcome?: (observation: OutcomeObservation, entryId: string) => void;
   /** Measurement-only docket listener; choice/Record inputs precede effects. Never saved. */
   observeDecision?: (observation: DecisionObservation) => void;
   /** Measurement-only selection listener before effects. Never saved. */

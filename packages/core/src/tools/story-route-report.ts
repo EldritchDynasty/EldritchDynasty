@@ -64,6 +64,8 @@ export interface RoutePromise {
   target: string;
   launcher: string;
   year: number;
+  /** The exact committed launch; event/year alone cannot identify a promise. */
+  launchPage?: string;
   dueYear?: number;
   originalCast: Record<string, string | string[]>;
   keptCast?: Record<string, string>;
@@ -74,6 +76,7 @@ export interface RoutePromise {
   waits: { year: number; reason: string }[];
   missing: { slot: string; person: string; status: string; policy: unknown }[];
   deliveredYear?: number;
+  deliveryPage?: string;
   cause?: { year: number; page?: string };
 }
 
@@ -87,14 +90,25 @@ export class StoryRouteObserver {
   readonly shares: SelectionShare[] = [];
   private promises: WatchedPromise[] = [];
   private seenInstances = new Set<string>();
-  private previous: Pick<SimCtx, 'observeOutcome' | 'observeSelection'>;
+  private pendingLaunches = new WeakMap<OutcomeObservation, RoutePromise[]>();
+  private previous: Pick<SimCtx, 'observeOutcome' | 'observeAppliedOutcome' | 'observeSelection'>;
 
   constructor(private ctx: SimCtx, targets: readonly string[] = STORY_ROUTE_IDS) {
     this.launchers = routeLaunchers(ctx.content, targets);
-    this.previous = { observeOutcome: ctx.observeOutcome, observeSelection: ctx.observeSelection };
+    this.previous = { observeOutcome: ctx.observeOutcome, observeAppliedOutcome: ctx.observeAppliedOutcome,
+      observeSelection: ctx.observeSelection };
     ctx.observeOutcome = observation => {
       this.onOutcome(observation);
       this.previous.observeOutcome?.(observation);
+    };
+    ctx.observeAppliedOutcome = (observation, entryId) => {
+      for (const promise of this.pendingLaunches.get(observation) ?? []) {
+        promise.launchPage = entryId;
+        promise.queued = ctx.world.scheduled.some(schedule => schedule.event === promise.target
+          && schedule.cause?.page === entryId && schedule.cause.year === promise.year);
+      }
+      this.pendingLaunches.delete(observation);
+      this.previous.observeAppliedOutcome?.(observation, entryId);
     };
     ctx.observeSelection = observation => {
       if (observation.kind === 'choice_offered' && this.launchers.some(launcher => launcher.event === observation.event)) {
@@ -128,11 +142,15 @@ export class StoryRouteObserver {
         if (w.year + minimumArcYears(arc) > campaignDef(w.campaign).endYear) refusal = 'start_refused_term_window';
         else if ([...w.arcs.values()].filter(instance => instance.arc === arc.id && instance.status === 'active').length >= arc.maxConcurrentInstances) refusal = 'start_refused_concurrency';
       }
-      this.promises.push({ launcher, refusal, promise: {
+      const promise: RoutePromise = {
         target: launcher.target, launcher: key, year: w.year, originalCast: structuredClone(observation.fill),
         ...('schedule' in launcher.mechanism ? { dueYear: w.year + launcher.mechanism.schedule } : {}),
         queued: false, status: 'not_yet_observed', waits: [], missing: [],
-      } });
+      };
+      this.promises.push({ launcher, refusal, promise });
+      const launches = this.pendingLaunches.get(observation) ?? [];
+      launches.push(promise);
+      this.pendingLaunches.set(observation, launches);
     }
   }
 
@@ -166,11 +184,15 @@ export class StoryRouteObserver {
     const w = this.ctx.world;
     for (const watched of this.promises) {
       const { promise, launcher } = watched;
+      if (!promise.launchPage) { promise.status = 'launch_provenance_unknown'; continue; }
+      const causedByLaunch = (cause: { year: number; page?: string } | undefined) =>
+        cause !== undefined && cause.page === promise.launchPage && cause.year === promise.year;
+      const page = w.chronicle.find(page => page.eventId === promise.target && causedByLaunch(page.cause));
       if ('arc' in launcher.mechanism) {
         if (!promise.instance) {
           const id = launcher.mechanism.arc;
           const instance = [...w.arcs.values()].find(instance => instance.arc === id
-            && instance.startedYear === promise.year && !this.seenInstances.has(instance.id));
+            && causedByLaunch(instance.cause) && !this.seenInstances.has(instance.id));
           if (instance) {
             this.seenInstances.add(instance.id);
             promise.instance = instance.id;
@@ -180,26 +202,40 @@ export class StoryRouteObserver {
           }
         }
         const instance = promise.instance && w.arcs.get(promise.instance);
-        if (!instance) { promise.status = watched.refusal ?? 'not_started_unknown'; continue; }
+        if (!instance) { promise.status = watched.refusal ?? 'not_started_or_provenance_unknown'; continue; }
         const arc = this.ctx.content.mustArc(instance.arc);
         promise.finalBindings = { ...instance.bindings };
         const delivery = instance.history.find(visit => arc.nodes.find(node => node.id === visit.node)?.event === promise.target);
-        if (delivery) { promise.status = 'delivered'; promise.deliveredYear = delivery.year; }
+        if (delivery) {
+          promise.status = page ? 'delivered' : 'delivered_without_page_provenance';
+          promise.deliveredYear = delivery.year;
+        }
         else if (instance.status === 'cancelled') promise.status = promise.missing.some(slot => slot.policy === 'cancel_arc')
           ? 'cancelled_missing_kept_person' : 'cancelled_other_or_unknown';
         else promise.status = instance.status;
       } else {
-        const delivery = w.decisionLog.find(entry => entry.kind === 'outcome' && entry.event === promise.target && entry.year >= promise.year);
-        if (delivery) { promise.status = delivery.year < promise.dueYear! ? 'already_delivered_before_due' : 'delivered'; promise.deliveredYear = delivery.year; }
+        // A launch can author several schedules for one target. Their saved
+        // cause identifies the page, not the effect, so do not claim to know
+        // which one delivered in that genuinely ambiguous case.
+        const sameSource = this.promises.filter(other => other.promise.target === promise.target
+          && other.promise.launchPage === promise.launchPage && 'schedule' in other.launcher.mechanism);
+        if (sameSource.length > 1) { promise.status = 'ambiguous_launch_provenance'; continue; }
+        if (page) { promise.status = 'delivered'; promise.deliveredYear = page.year; promise.queued = true; }
         else {
-          const schedule = w.scheduled.find(schedule => schedule.event === promise.target);
+          const schedule = w.scheduled.find(schedule => schedule.event === promise.target && causedByLaunch(schedule.cause));
+          const pending = w.pendingDecisions.some(decision => decision.kind === 'choice'
+            && decision.event.id === promise.target && causedByLaunch(decision.cause));
           if (schedule) { promise.queued = true; promise.status = 'active'; }
-          else if (w.year >= promise.dueYear!) promise.status = 'retired_without_delivery';
+          else if (pending) { promise.queued = true; promise.status = 'awaiting_decision'; }
+          else if (w.year >= promise.dueYear!) {
+            promise.status = w.chronicle.some(page => page.eventId === promise.target && page.year >= promise.year && !page.cause?.page)
+              ? 'delivery_provenance_unknown' : 'retired_without_delivery';
+          }
         }
       }
-      if (promise.deliveredYear !== undefined) {
-        const page = w.chronicle.find(page => page.eventId === promise.target && page.year === promise.deliveredYear);
-        if (page?.cause) promise.cause = structuredClone(page.cause);
+      if (promise.deliveredYear !== undefined && page) {
+        promise.deliveryPage = page.id;
+        if (page.cause) promise.cause = structuredClone(page.cause);
       }
     }
   }
@@ -210,6 +246,7 @@ export class StoryRouteObserver {
       promise.status = this.ctx.world.ending ? `pending_at_${this.ctx.world.ending.id}` : 'pending_at_observation_end';
     }
     this.ctx.observeOutcome = this.previous.observeOutcome;
+    this.ctx.observeAppliedOutcome = this.previous.observeAppliedOutcome;
     this.ctx.observeSelection = this.previous.observeSelection;
     return this.promises.map(({ promise }) => promise);
   }
@@ -307,7 +344,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     sourceDiffHash: hash(git('diff', 'HEAD', '--', 'packages/core', 'packages/schema', 'packages/content')),
     contentHash: hash(canonical(source.bundle)), policyHash: hash(readFileSync(fileURLToPath(import.meta.url), 'utf8')),
     node: process.version, runs, start, step, controls, options, withoutGlimpses: args.includes('--without-glimpses'),
-    method: 'Canonical uses stepYear auto-resolution, identical to the fire-rate batch. Short-descent uses the player docket and always takes that available answer; all other docket answers use autoResolveDecision. These policies have different streams. Glimpse ablation disables only those three premises and is not a shipped rules change. Wilson 95% intervals use independent houses, not repeated promises.',
+    method: 'Canonical uses stepYear auto-resolution, identical to the fire-rate batch. Short-descent uses the player docket and always takes that available answer; all other docket answers use autoResolveDecision. These policies have different streams. Glimpse ablation disables only those three premises and is not a shipped rules change. Promise delivery requires the exact launching page; missing or shared provenance remains unknown or ambiguous. Wilson 95% intervals use independent houses, not repeated promises.',
     rows: [] as ReturnType<typeof playStoryRouteRun>['row'][] };
   console.log(JSON.stringify({ ...report, rows: undefined }));
   for (let i = 0; i < runs; i++) {

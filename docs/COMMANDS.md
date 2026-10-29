@@ -590,6 +590,13 @@ not try it, and do not read a surviving branch as work in flight.
   change. Reports retain partial batches, exact seeds, source hashes, complete
   saved-state observer controls and house-level 95% Wilson intervals. They
   report evidence without changing any gate's threshold.
+- **A delivery belongs to a specific promise.** Story-route rows report
+  `launchPage` and `deliveryPage`, matching the saved cause of the schedule,
+  unanswered choice or inline instance. A second promise is not fulfilled by
+  the first one's page, even in the same year. Missing provenance remains
+  unknown; several schedules for the same target from one page are explicitly
+  ambiguous because saved causes do not distinguish those effects. An
+  unanswered scheduled choice is `awaiting_decision`, not a retired promise.
 - **Human response is unverified.** `PLAYTEST.md` records the waived,
   unrun studies. Automated reach, deterministic replay and mechanism tests
   cannot establish attachment, comprehension or enjoyment.
