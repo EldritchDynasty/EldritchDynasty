@@ -46,7 +46,7 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
     bindings: soleBindings(seedBindings, arc.bindings),
     localFlags: {},
     startedYear: ctx.world.year,
-    dueYear: arc.inline && entry ? scheduleNext(entry, ctx, rng) : ctx.world.year,
+    dueYear: arc.inline && entry ? scheduleNext(entry, ctx, rng, true) : ctx.world.year,
     history: [],
     status: 'active',
   };
@@ -139,11 +139,24 @@ export function chooseSuccessor(
   return (rng.weighted(viable, (s) => s.weight) ?? viable[0]!).to;
 }
 
-export function scheduleNext(node: ArcNode, ctx: SimCtx, rng: Rng): number {
+export function scheduleNext(node: ArcNode, ctx: SimCtx, rng: Rng, boundToCampaign = false): number {
   const s = node.schedule;
   if (s === 'immediate') return ctx.world.year;
-  if (s === 'next_generation') return ctx.world.year + 20 + rng.int(12);
-  return ctx.world.year + Math.round(rng.range(s.minYears, s.maxYears));
+  // A promised inline beat may choose an earlier legal delay when its range
+  // straddles collection (#1971). Draw once in that overlap, preserving both
+  // the authored minimum and the old draw when the entire range still fits.
+  // An already impossible delay is not permission to bring the beat forward;
+  // startArc refuses impossible openings, and later conditions/cast can still
+  // leave a running story unfinished.
+  const remaining = boundToCampaign ? campaignDef(ctx.world.campaign).endYear - ctx.world.year : Infinity;
+  if (s === 'next_generation') {
+    const span = remaining >= 20 ? Math.min(12, remaining - 20 + 1) : 12;
+    return ctx.world.year + 20 + rng.int(span);
+  }
+  const maxYears = Math.round(s.minYears) <= remaining
+    ? Math.max(s.minYears, Math.min(s.maxYears, remaining))
+    : s.maxYears;
+  return ctx.world.year + Math.round(rng.range(s.minYears, maxYears));
 }
 
 export interface ArcStep {
@@ -335,5 +348,5 @@ export function advanceArc(
   if (!nextNode) { instance.status = 'ended'; return; }
 
   instance.node = next;
-  instance.dueYear = scheduleNext(nextNode, ctx, rng);
+  instance.dueYear = scheduleNext(nextNode, ctx, rng, arc.inline);
 }
