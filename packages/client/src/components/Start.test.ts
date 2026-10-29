@@ -5,9 +5,10 @@ import { nextTick } from 'vue';
 import Start from './Start.vue';
 import Chapter from './Chapter.vue';
 import Naming from './Naming.vue';
-import type { SessionView } from '@ed/core';
-import { CAMPAIGN_CHOICES, type GameActions, type ChapterBeat } from '../lib/game';
-import type { SaveSummary } from '../platform';
+import { canonical, type SessionView } from '@ed/core';
+import { loadContent } from '@ed/content';
+import { CAMPAIGN_CHOICES, createGame, type GameActions, type ChapterBeat } from '../lib/game';
+import type { Platform, SaveSummary } from '../platform';
 import type { RunLibrary } from '@ed/schema';
 import { hasSeenProse, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 
@@ -2147,3 +2148,123 @@ describe('named exports announce their saved-game slot (#1732)', () => {
     }
   });
 });
+
+/**
+ * ── SAME FOUNDING, DIFFERENT HOUSE (#1995) ────────────────────────────────
+ *
+ * The code is shown on the last night and read on the front door. These run
+ * the real store at both ends: a code one player's run writes begins the same
+ * founding for another, the names it left out are asked for, and a refusal
+ * leaves the recipient's own autosave exactly where it was.
+ */
+
+function sharePlatform(): Platform & { saves: Map<string, unknown> } {
+  const saves = new Map<string, unknown>();
+  let library: unknown | null = null;
+  return {
+    saves,
+    listSaves: async () => [...saves].map(([slot]) => ({ slot })),
+    readSave: async (slot) => saves.get(slot) ?? null,
+    writeSave: async (slot, save) => { saves.set(slot, save); },
+    deleteSave: async (slot) => { saves.delete(slot); },
+    readLibrary: async () => library,
+    writeLibrary: async (next) => { library = next; },
+    unlockAchievement: async () => undefined,
+    readUserContent: async () => ({}),
+    exportSave: async () => undefined, importSave: async () => null,
+    onPause: () => () => undefined, onBack: () => () => undefined,
+  };
+}
+
+const content = loadContent();
+
+const SIGNED = {
+  houseName: 'The House of Salt',
+  heirloom: 'portion_of_fertility',
+  grudge: 'house_calder',
+  founder: { name: 'Maud Gearithy', gender: 'woman' as const, configuration: 'blood_mother' as const },
+  friends: [{ name: 'Iona Vale', sex: 'female' as const }, { name: 'Corven Pike', sex: 'male' as const }],
+};
+
+async function senderCode(names = false): Promise<{ code: string; saved: unknown }> {
+  const host = sharePlatform();
+  const sender = createGame(content, host);
+  sender.actions.begin(199510, 'short');
+  expect(sender.actions.found(SIGNED).ok).toBe(true);
+  await flush();
+  const made = sender.actions.shareCode(names);
+  if (!made.ok) throw new Error(made.unavailable);
+  return { code: made.code, saved: host.saves.get('autosave') };
+}
+
+async function openAdvanced(w: ReturnType<typeof mount>): Promise<void> {
+  await flush();
+  const toggle = w.findAll('button').find((b) => b.text() === 'Advanced');
+  await toggle!.trigger('click');
+}
+
+describe('the front door begins from a share code', () => {
+  it('asks for the names the code left out, refuses without them, and keeps the old autosave', async () => {
+    const { code, saved } = await senderCode();
+    const host = sharePlatform();
+    const earlier = { format: 0, marker: 'the earlier sitting' };
+    host.saves.set('autosave', earlier);
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: true } });
+    await openAdvanced(w);
+
+    await w.get('#share-code-in').setValue(code);
+    expect(w.text()).toContain('A Short Line');
+    expect(w.text()).toContain('seed #199510');
+    expect(w.find('#share-founder').exists()).toBe(true);
+    expect(w.find('#share-house').exists()).toBe(true);
+    expect(w.findAll('[id^="share-friend-"]')).toHaveLength(2);
+    expect(w.text()).toContain('A friend, a woman');
+
+    const begin = () => w.findAll('button').find((b) => b.text() === 'Sign from this code')!.trigger('click');
+    await begin();
+    await flush();
+    expect(w.get('#share-code-error').text()).toContain("the house's");
+    expect(recipient.view.value).toBeNull();
+    expect(host.saves.get('autosave')).toBe(earlier);
+
+    await w.get('#share-founder').setValue('Maud Gearithy');
+    await w.get('#share-house').setValue('The House of Salt');
+    await w.get('#share-friend-0').setValue('Iona Vale');
+    await w.get('#share-friend-1').setValue('Corven Pike');
+    await begin();
+    await flush();
+
+    expect(w.find('#share-code-error').exists()).toBe(false);
+    // The same names, the same edition, no Library: the same founding, byte for byte.
+    expect(canonical(host.saves.get('autosave'))).toBe(canonical(saved));
+    // Founded, but the recipient still reads the signing's last line.
+    expect(recipient.prologue.value?.founded).toBeDefined();
+    expect(recipient.openingSeen.value).toBe(false);
+  });
+
+  it('needs no names for a code that carries them', async () => {
+    const { code, saved } = await senderCode(true);
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false } });
+    await openAdvanced(w);
+    await w.get('#share-code-in').setValue(code);
+    expect(w.find('#share-house').exists()).toBe(false);
+    await w.findAll('button').find((b) => b.text() === 'Sign from this code')!.trigger('click');
+    await flush();
+    expect(canonical(host.saves.get('autosave'))).toBe(canonical(saved));
+  });
+
+  it('says why a damaged code is refused, in the reader\'s mode, and offers nothing to begin', async () => {
+    const { code } = await senderCode();
+    const recipient = createGame(content, sharePlatform());
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false, proseMode: 'plainenglish' } });
+    await flush();
+    await w.findAll('button').find((b) => b.text() === 'Advanced options')!.trigger('click');
+    await w.get('#share-code-in').setValue(code.slice(0, -10));
+    expect(w.get('#share-code-error').text()).toBe('Part of this code is missing or wrong. Copy the whole code again.');
+    expect(w.findAll('button').some((b) => b.text() === 'Start from this code')).toBe(false);
+  });
+});
+

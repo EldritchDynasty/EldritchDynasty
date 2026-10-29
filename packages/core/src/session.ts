@@ -28,6 +28,7 @@ import { diagnoseHouseAscension, frozenLadder, visibleAscensionRanking, rungTitl
 import { castOf } from './cast.js';
 import { examinationAnswerFallback, foundHouse, prologueView, type FoundingChoice, type FoundingResult, type PrologueView } from './prologue.js';
 import { msg } from './messages.js';
+import { shareCodeOf, type ShareCodeOptions, type ShareCodeResult } from './share-code.js';
 import { matchFuture, type MatchCard, type MatchFutureKind, type MatchFutureReading } from './people/match.js';
 import { visibleWakings, type PanelWaking } from './people/panel.js';
 import { eligibleToMarry } from './people/demography.js';
@@ -75,6 +76,7 @@ export type { ChronicleView, RecordedMilestone, PowerEvidenceRoute, StandingDelt
  *   table        what the house can be told to do, and what it would cost
  *   name         name a newborn of the house
  *   found        answer the prologue: the house's name, and its two choices
+ *   shareCode    the founding as a code a friend can begin from, and nothing after it
  *   prologue     the signing, as plain values
  *   epilogue     the last night, once there has been one
  *   view         a plain, serialisable picture of the run right now
@@ -689,6 +691,15 @@ export class GameSession {
       this.#keepReplayOrigin();
     }
     return result;
+  }
+
+  /**
+   * THE FOUNDING, AS A CODE (#1995). Read from this run's own logged signing
+   * and founding, so it says what was answered and nothing that happened
+   * after. Names are left out unless asked for; `share-code.ts` says why.
+   */
+  shareCode(opts: ShareCodeOptions = {}): ShareCodeResult {
+    return this.#read(() => shareCodeOf(this.ctx, opts));
   }
 
   #found(choice: FoundingChoice): FoundingResult {

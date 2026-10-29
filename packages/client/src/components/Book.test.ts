@@ -798,7 +798,7 @@ describe('house afterimage export failure (#1141)', () => {
             rungsWithheld: 0,
           },
         } as never,
-        actions: { restart: vi.fn() } as unknown as GameActions,
+        actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions,
       },
     });
   }
@@ -874,7 +874,7 @@ describe('house afterimage filename snapshot (#1508)', () => {
             rungsWithheld: 0,
           },
         } as never,
-        actions: { restart: vi.fn() } as unknown as GameActions,
+        actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions,
       },
     });
     try {
@@ -1045,7 +1045,7 @@ describe('reader-local Chronicle annotations (#1434)', () => {
     const wrapper = mount(Ending, {
       props: {
         view: { houseName: 'House Salt', seed: 123, campaign: { name: 'A Long Line', startYear: 1042 } } as SessionView,
-        epilogue, actions: { restart } as unknown as GameActions,
+        epilogue, actions: { restart, shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions,
       },
     });
     try {
