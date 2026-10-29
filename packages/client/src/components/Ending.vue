@@ -34,6 +34,17 @@ const reckoning = computed(() => props.epilogue.reckoning);
 /** Reader-local framing follows the mode; recorded epilogue and quotes keep their words. */
 const plain = computed(() => props.proseMode === 'plainenglish');
 
+/**
+ * THE SAME BEGINNING (#1995). The founding as a code, names left out unless
+ * the reader asks. Read through the store each time the box is ticked; the
+ * code never changes with anything the house did after the signing.
+ */
+const shareNames = ref(false);
+const share = computed(() => props.actions.shareCode(shareNames.value));
+function selectAll(event: Event): void {
+  if (event.target instanceof HTMLTextAreaElement) event.target.select();
+}
+
 const afterimage = computed(() => afterimageModel({
   houseName: props.view.houseName,
   campaignName: props.view.campaign.name,
@@ -257,6 +268,20 @@ async function saveAfterimage(): Promise<void> {
 
     <p class="closing">{{ epilogue.closing }}</p>
 
+    <section v-if="share.ok" class="share" aria-labelledby="share-title">
+      <h3 id="share-title" class="label">{{ plain ? 'Share this starting point' : 'The same beginning' }}</h3>
+      <p class="small">
+        <template v-if="plain">Give this code to a friend. They start from the same founding: the same seed and the same choices at the signing. Nothing that happened after the signing is in it. Their own completed games still apply, and different names can lead to a different family.</template>
+        <template v-else>Hand this to someone and they sign the same night: the same seed, the same answers, the same gift and the same grudge. Nothing the house did afterwards is in it. Their own Library still stands behind them, and other names may make another house.</template>
+      </p>
+      <label class="small share-names">
+        <input v-model="shareNames" type="checkbox" />
+        {{ plain ? 'Include the names you typed (founder, family and friends)' : 'Put the names in it too: the founder\'s, the house\'s and the friends\'' }}
+      </label>
+      <label class="dim small" for="share-code">{{ plain ? 'Share code' : 'The code' }}</label>
+      <textarea id="share-code" class="share-code" readonly rows="3" spellcheck="false" :value="share.code" @focus="selectAll" />
+    </section>
+
     <div class="row ending-actions">
       <button class="quiet" :disabled="savingAfterimage" @click="saveAfterimage()">
         {{ savingAfterimage ? (plain ? 'Saving image…' : 'Setting the afterimage…') : (plain ? 'Save ending image' : 'Save the house afterimage') }}
@@ -301,6 +326,10 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
 .read { margin-bottom: 34px; }
 .beginning { margin-bottom: 34px; }
 .beginning-ambition { margin-top: 10px; }
+.share { margin-top: 28px; }
+.share-names { display: flex; gap: 8px; align-items: baseline; margin: 10px 0; }
+.share-names input { width: auto; }
+.share-code { display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--t-fine); word-break: break-all; resize: vertical; }
 .beginning .rubric { color: var(--rubric); }
 .read .top { justify-content: space-between; align-items: baseline; gap: 10px; }
 .tally dl { margin: 0; display: grid; gap: 5px; }

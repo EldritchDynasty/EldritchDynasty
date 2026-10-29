@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import type { AchievementView, EpilogueView, SessionView } from '@ed/core';
+import type { AchievementView, EpilogueView, SessionView, ShareCodeProblem } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
+import { shareCodeProblem } from '../lib/share-code';
 import { downloadBlob } from '../lib/download';
 
 vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
@@ -40,7 +41,7 @@ describe('ending reckoning uses reader-local Plain English (#1669)', () => {
         view,
         epilogue,
         achievements,
-        actions: { restart: vi.fn() } as unknown as GameActions,
+        actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions,
         proseMode: 'original',
       },
     });
@@ -122,7 +123,7 @@ describe('ending image uses the selected reader mode (#1717)', () => {
       },
     } as unknown as EpilogueView;
     const before = structuredClone(epilogue);
-    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn() } as unknown as GameActions } });
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions } });
     try {
       const dimensions: number[][] = [];
       for (const [index, mode] of (['original', 'plainenglish', 'original'] as const).entries()) {
@@ -177,7 +178,7 @@ describe('ending image export failures', () => {
     const epilogue = { year: 1342, title: 'An ending', summary: '', opening: '', closing: '', ring: [], read: [],
       reckoning: { pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
         clauses: 0, clausesTotal: 3, attested: 'none', livingBlood: 0, rungsWithheld: 0 } } as unknown as EpilogueView;
-    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn() } as unknown as GameActions } });
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions } });
     try {
       await w.get('.ending-actions button').trigger('click');
       await flushPromises();
@@ -204,7 +205,7 @@ describe('the ending returns to where the run began (#1867 §6)', () => {
     ...(beginning ? { beginning } : {}),
   }) as unknown as EpilogueView;
   const mountWith = (e: EpilogueView, proseMode: 'original' | 'plainenglish' = 'original') => mount(Ending, {
-    props: { view, epilogue: e, actions: { restart: vi.fn() } as unknown as GameActions, proseMode },
+    props: { view, epilogue: e, actions: { restart: vi.fn(), shareCode: () => ({ ok: false, unavailable: 'not_founded' }) } as unknown as GameActions, proseMode },
   });
 
   it('names the founder, quotes the opening pages, blanks included, and the ambition kept in view', async () => {
@@ -234,5 +235,50 @@ describe('the ending returns to where the run began (#1867 §6)', () => {
     const quiet = mountWith(epilogue({ founder: 'Ana Vell', pages: [] }));
     expect(quiet.get('.beginning').text()).toContain('Ana Vell signed in 1042.');
     expect(quiet.find('.beginning-ambition').exists()).toBe(false);
+  });
+});
+
+describe('the last night shows the code', () => {
+  const view = { houseName: 'Salt', campaign: { name: 'A Short Line', startYear: 1042 }, seed: 1, halls: [] } as unknown as SessionView;
+  const epilogue = {
+    year: 1342, title: 'T', summary: 'S', frame: '', closing: 'C', ring: [], read: [], afterimage: [],
+    reckoning: {
+      pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0, clauses: 0, clausesTotal: 3,
+      attested: 'none', attestedTitle: '', substantiated: 'none', substantiatedTitle: '', rungsWithheld: 0, livingBlood: 1,
+    },
+  } as unknown as EpilogueView;
+
+  it('leaves the names out until the reader asks for them', async () => {
+    const shareCode = vi.fn((names: boolean) => ({ ok: true as const, code: names ? 'ED1.named.x' : 'ED1.plain.x' }));
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode } as unknown as GameActions } });
+    expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1.plain.x');
+    expect(shareCode).toHaveBeenLastCalledWith(false);
+    await w.get('.share-names input').setValue(true);
+    expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1.named.x');
+  });
+
+  it('draws no code for a run that has none to give', () => {
+    const shareCode = () => ({ ok: false as const, unavailable: 'demonstration' as const });
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode } as unknown as GameActions } });
+    expect(w.find('#share-code').exists()).toBe(false);
+  });
+});
+
+describe('every refusal is worded in both modes', () => {
+  const problems: ShareCodeProblem[] = [
+    { kind: 'empty' }, { kind: 'too_long', max: 2400 }, { kind: 'not_a_code' },
+    { kind: 'unsupported_version', version: '2' }, { kind: 'damaged' },
+    { kind: 'other_edition', differs: ['content', 'build'] }, { kind: 'demonstration' },
+    { kind: 'names_needed', missing: ['house', 'friends'] },
+  ];
+  it.each(problems)('$kind', (problem) => {
+    const original = shareCodeProblem(problem, 'original');
+    const plain = shareCodeProblem(problem, 'plainenglish');
+    expect(original).not.toBe('');
+    expect(plain).not.toBe(original);
+  });
+
+  it('passes the signing\'s own refusal through untouched', () => {
+    expect(shareCodeProblem({ kind: 'refused', reason: 'that name is taken' }, 'plainenglish')).toBe('that name is taken');
   });
 });

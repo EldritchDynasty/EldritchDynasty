@@ -4,6 +4,7 @@ import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { LibraryRun, ProseMode, RunLibrary } from '@ed/schema';
 import ReadingSettings from './ReadingSettings.vue';
+import { shareCodeProblem } from '../lib/share-code';
 import type { ReadingFont, TextScale } from '../lib/accessibility';
 
 const props = withDefaults(defineProps<{
@@ -143,6 +144,47 @@ function begin(): void {
   } finally {
     // Keep the latch until the old button has been repainted/removed. A
     // deliberate later attempt is still possible if the screen remains open.
+    void nextTick().then(() => { beginning = false; });
+  }
+}
+
+/**
+ * BEGIN FROM A SHARE CODE (#1995). The code is read as it is typed or pasted,
+ * so the reader sees what it would found — and which names it left to them —
+ * before anything changes. Beginning goes through the same store verb as a
+ * signing; a refusal leaves the current run and its autosave alone.
+ */
+const shareInput = ref('');
+const shareNames = ref<{ founder: string; house: string; friends: string[] }>({ founder: '', house: '', friends: [] });
+const shareBeginError = ref<string | null>(null);
+const shareRead = computed(() => shareInput.value.trim() ? props.actions.readShareCode(shareInput.value) : null);
+const sharedFounding = computed(() => shareRead.value?.ok ? shareRead.value.founding : null);
+const shareCampaignName = computed(() => {
+  const founding = sharedFounding.value;
+  return founding ? CAMPAIGN_CHOICES.find((c) => c.id === founding.campaign)?.name ?? founding.campaign : '';
+});
+const shareProblem = computed(() => shareBeginError.value
+  ?? (shareRead.value && !shareRead.value.ok ? shareCodeProblem(shareRead.value.problem, props.proseMode) : null));
+const mayBeginShared = computed(() => sharedFounding.value !== null && libraryIsReady.value
+  && !selectingRun.value && !libraryBusy.value);
+
+function onShareInput(): void {
+  shareBeginError.value = null;
+}
+
+function beginShared(): void {
+  const founding = sharedFounding.value;
+  if (!founding || !mayBeginShared.value || beginning) return;
+  beginning = true;
+  try {
+    const names = shareNames.value;
+    const problem = props.actions.beginFromShareCode(shareInput.value, {
+      founder: names.founder,
+      house: names.house,
+      friends: founding.friends.map((_, i) => names.friends[i] ?? ''),
+    });
+    shareBeginError.value = problem ? shareCodeProblem(problem, props.proseMode) : null;
+  } finally {
     void nextTick().then(() => { beginning = false; });
   }
 }
@@ -479,6 +521,46 @@ onMounted(() => { void refreshSaves(); });
           {{ plain ? 'Enter a whole number between 0 and 4294967295.' : 'Use a whole number from 0 to 4294967295.' }}
         </p>
       </div>
+      <div v-if="showAdvanced" class="row share-start">
+        <label class="dim small" for="share-code-in">{{ plain ? 'Start from a share code' : 'Begin from a share code' }}</label>
+        <textarea
+          id="share-code-in"
+          v-model="shareInput"
+          rows="3"
+          spellcheck="false"
+          autocomplete="off"
+          :aria-invalid="shareProblem !== null"
+          :aria-describedby="shareProblem ? 'share-code-error' : undefined"
+          @input="onShareInput()"
+        />
+        <template v-if="sharedFounding">
+          <p class="small">
+            <template v-if="plain">{{ shareCampaignName }}, game seed {{ sharedFounding.seed }}, starting in {{ sharedFounding.startYear }}. Your own completed games still apply.</template>
+            <template v-else>{{ shareCampaignName }}, seed #{{ sharedFounding.seed }}, signed in {{ sharedFounding.startYear }}. Your own Library still stands behind it.</template>
+          </p>
+          <p v-if="sharedFounding.missing.length" class="small dim">
+            {{ plain ? 'The code does not include these names. Enter your own. Different names can lead to a different family.' : 'The code kept its names to itself. Give your own; other names may make another house.' }}
+          </p>
+          <div v-if="sharedFounding.missing.includes('founder')" class="share-name">
+            <label class="dim small" for="share-founder">{{ plain ? 'Founder name (optional)' : 'Who signs (blank keeps the name in the book)' }}</label>
+            <input id="share-founder" v-model="shareNames.founder" type="text" />
+          </div>
+          <div v-if="sharedFounding.missing.includes('house')" class="share-name">
+            <label class="dim small" for="share-house">{{ plain ? 'Family name' : 'The house' }}</label>
+            <input id="share-house" v-model="shareNames.house" type="text" />
+          </div>
+          <template v-if="sharedFounding.missing.includes('friends')">
+            <div v-for="(friend, i) in sharedFounding.friends" :key="i" class="share-name">
+              <label class="dim small" :for="'share-friend-' + i">
+                {{ plain ? `Friend ${i + 1} (${friend.sex === 'female' ? 'woman' : 'man'})` : `A friend, ${friend.sex === 'female' ? 'a woman' : 'a man'}` }}
+              </label>
+              <input :id="'share-friend-' + i" v-model="shareNames.friends[i]" type="text" />
+            </div>
+          </template>
+          <button class="quiet small" :disabled="!mayBeginShared" @click="beginShared()">{{ plain ? 'Start from this code' : 'Sign from this code' }}</button>
+        </template>
+        <p v-if="shareProblem" id="share-code-error" class="rubric small" role="alert">{{ shareProblem }}</p>
+      </div>
     </div>
 
   </main>
@@ -497,6 +579,9 @@ h1 { font-size: var(--t-display); font-weight: 400; margin: 0 0 26px; letter-spa
 .campaign strong, .campaign span { display: block; }
 .primary-row { display: flex; gap: 12px; flex-wrap: wrap; }
 input { width: 9ch; }
+.share-start textarea { display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--t-fine); word-break: break-all; }
+.share-name { margin-top: 8px; }
+.share-name input { width: 100%; max-width: 32ch; }
 .saved { margin-top: 26px; }
 .reading { margin-top: 26px; }
 .reading h2 {

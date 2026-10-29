@@ -826,3 +826,35 @@ are not attention measurements.
 before, because a #1986 claim had been taken and released first. That issue had
 already shipped on `main` at `f71a9664`, with only packaged-host smokes
 remaining. Check `git log` for an issue's number before claiming it.
+
+## 29 October 2026 — #1995: share codes, first slice
+
+**Scope.** Core codec, `GameSession.shareCode`, `newGameFromShareCode`, the code
+on the last night and "Begin from a share code" under Start → Advanced. The
+Chronicle PNG/SVG plates, the Afterimage image and a platform clipboard action
+are not in this slice. Host smokes on Windows and mobile are not run.
+
+**Choices made, and why.**
+
+- *A tuple, not an object.* The first cut encoded named JSON fields and was 592
+  characters with no names, which is too long for an exported plate. The edition
+  pins the content, so the heirloom, the grudge and each Examination answer
+  travel as their index in the authored prologue. Closed vocabularies travel as
+  one letter, through `assertNever` switches. The result is 120 characters with
+  no names, 234 with five named friends, and at most 2400 (`SHARE_CODE_MAX`,
+  tested with every name at full length in a three-byte script).
+- *Refusals are data.* A new `msg()` key needs a Plain English row in
+  `packages/content/messages.yaml`. `lane-content` was held by #1977, so core
+  returns a closed `ShareCodeProblem` union and the client words it in both
+  modes. Founding refusals from `found()` pass through already worded.
+- *The edition includes the build.* Two builds can share content and a save
+  format but not the same simulation, and no runtime marker of simulation code
+  exists. So a code works only on the build that wrote it, and says so.
+
+**Process note.** `lanes.test.ts` caps unmeasured test files at 8, and `main`
+already had 7. A second new test file made it 9. Re-measuring writes
+`tools/test-durations.json`, which is CI shard input, and `lane-gates` was held
+by #1977. The client tests went into the already-measured `Start.test.ts` and
+`EndingAccessibility.test.ts` instead of a new file. The next re-measure should
+clear the backlog.
+

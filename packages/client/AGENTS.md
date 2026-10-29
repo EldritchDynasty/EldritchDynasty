@@ -126,6 +126,21 @@ heard (#1986). Do not add a cue; `sound.ts` states the budget.
   proves a loud and a silent session save the same bytes.
 - Sound never carries anything alone: every cue repeats something on screen.
 
+## Share codes
+
+The last night shows the founding as a code, and Start → Advanced begins from
+one (#1995). `core/src/share-code.ts` owns the codec and the contract; the
+client only shows the code, collects the names it left out and words its
+refusals (`lib/share-code.ts`, both modes, ending in `assertNever`).
+
+- Names are out unless the reader ticks the box. A code without them still
+  carries the friends' number and sexes, and the recipient types the names.
+- A code from another build, content or save format is refused, never begun
+  as a lookalike. `game.ts` passes `__ED_BUILD__`'s SHA as the build.
+- Beginning goes through `beginFromShareCode`, which is `newGame` + `found`. A
+  refusal leaves the current run and its autosave alone. A founded import still
+  opens on the signing's thesis screen.
+
 ## Saves and hosts
 
 The client owns the save UI and talks only to the generic `Platform` seam in

@@ -4,13 +4,14 @@ import type {
 } from '@ed/schema';
 import { appendLibraryRun, configurationFor, emptyRunLibrary, LIBRARY_FORMAT, PERSON_NAME_MAX, readRunLibrary } from '@ed/schema';
 import {
-  CAMPAIGNS, earnedAchievements, matchFuture, newGame, resumeGame, standingMoved,
+  CAMPAIGNS, earnedAchievements, matchFuture, newGame, newGameFromShareCode, readShareCode, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type AdviserAdvice, type HelpSurface, type HelpTier,
   type AchievementId, type AchievementView, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
   type LandView, type MatchCard, type MatchFutureReading, type MatchResolution, type MusterOrder, type MusterOrderResult,
   type OrderResult, type Passage, type PendingDecision,
-  type PrologueView, type RecordOption, type SessionView, type SlotFill, type StandingDelta,
+  type PrologueView, type ReadShareCodeResult, type RecordOption, type SessionView, type ShareCodeProblem,
+  type ShareCodeResult, type SharedNames, type SlotFill, type StandingDelta,
   type TableOrder, type TableView,
 } from '@ed/core';
 import { foldStanding } from './jump.js';
@@ -64,6 +65,12 @@ export const founderConfigurationFor = configurationFor;
 export function futureOf(card: MatchCard, priorities: SessionView['ageMatchPriorities'] = []): MatchFutureReading {
   return matchFuture(card, priorities);
 }
+
+/**
+ * What this build calls itself, for share codes (#1995): a code from another
+ * build is refused rather than begun as a house that only looks the same.
+ */
+const BUILD = typeof __ED_BUILD__ === 'object' ? __ED_BUILD__.sha : 'unknown';
 
 /** The rolling slot every full campaign keeps without asking. */
 const AUTOSAVE = 'autosave';
@@ -315,6 +322,15 @@ export interface GameActions {
   begin(seed: number, campaign?: CampaignId): void;
   /** Answer the prologue: the house's name, and its two choices. */
   found(choice: FoundingChoice): FoundingResult;
+  /** This run's founding as a code a friend can begin from (#1995); names only if asked. */
+  shareCode(names: boolean): ShareCodeResult;
+  /** Read a code someone handed over, without touching any run. */
+  readShareCode(code: string): ReadShareCodeResult;
+  /**
+   * Begin a new run from a code, with whatever names it left to the reader.
+   * A refusal changes nothing: the current run and its autosave stay as they were.
+   */
+  beginFromShareCode(code: string, names: SharedNames): ShareCodeProblem | null;
   /** Leave the prologue. The thesis has been read; the years start now. */
   enter(): void;
   /** Presentation only: select wording for material rendered from this point onward. */
@@ -650,6 +666,29 @@ export function createGame(
       // through the same store seam as every other public session method.
       begun.ambitionOptions();
       start(begun);
+    },
+
+    shareCode(names) {
+      return session.value?.shareCode({ names, build: BUILD }) ?? { ok: false, unavailable: 'not_founded' };
+    },
+
+    readShareCode(code) {
+      return readShareCode(code, source, { build: BUILD });
+    },
+
+    beginFromShareCode(code, names) {
+      const begun = newGameFromShareCode(code, source, {
+        build: BUILD,
+        names,
+        libraryRuns: library.value.runs,
+        proseMode: proseMode.value,
+        proseVariants: activeProseVariants,
+      });
+      if (!begun.ok) return begun.problem;
+      start(begun.session);
+      // Founded already, but nobody here has read the signing's last line.
+      openingSeen.value = false;
+      return null;
     },
 
     enter() {

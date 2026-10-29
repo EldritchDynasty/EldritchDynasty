@@ -71,6 +71,7 @@ export * from './campaign.js';
 export * from './ending.js';
 export * from './chapter.js';
 export * from './session.js';
+export * from './share-code.js';
 export * from './ambition.js';
 export * from './record-stakes.js';
 export * from './achievements.js';
