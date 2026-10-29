@@ -136,11 +136,11 @@ describe('the Hall letter before collection (#1971)', () => {
     const ctx = testWorld(source, 1971, end - 16);
     ctx.world.campaign = campaign;
     ctx.world.discontent = 40;
-    const branch = asId('term_test_hall');
+    const branch = 'term_test_hall';
     const cousin = place(ctx, { sex: 'male', age: 30, name: 'The letter writer', branch });
     cousin.membership.find(entry => entry.to === undefined)!.kind = 'cadet';
     ctx.world.branches.set(branch, {
-      id: branch, name: 'The third hall', house: asId(ctx.world.playerHouse), founder: cousin.id,
+      id: asId(branch), name: 'The third hall', house: asId(ctx.world.playerHouse), founder: cousin.id,
       splitFrom: 'main', foundedYear: ctx.world.year - 10, speaker: cousin.id, grievance: 0,
     });
     const rng = testRng('late-letter');

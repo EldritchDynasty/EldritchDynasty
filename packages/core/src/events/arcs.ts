@@ -153,8 +153,8 @@ export function scheduleNext(node: ArcNode, ctx: SimCtx, rng: Rng, boundToCampai
     const span = remaining >= 20 ? Math.min(12, remaining - 20 + 1) : 12;
     return ctx.world.year + 20 + rng.int(span);
   }
-  const maxYears = Math.round(s.minYears) <= remaining
-    ? Math.max(s.minYears, Math.min(s.maxYears, remaining))
+  const maxYears = Math.round(s.maxYears) > remaining && Math.round(s.minYears) <= remaining
+    ? Math.max(s.minYears, remaining)
     : s.maxYears;
   return ctx.world.year + Math.round(rng.range(s.minYears, maxYears));
 }

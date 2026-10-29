@@ -191,6 +191,17 @@ describe('promised follow-ups near collection (#1971)', () => {
     expect(bounded.next()).toBe(original.next());
   });
 
+  it('preserves a fractional interval whose rounded calendar years already fit', () => {
+    const ctx = testWorld(content, 1, END_YEAR - 18);
+    const bounded = testRng('rounded');
+    const original = testRng('rounded');
+    for (const rng of [bounded, original]) {
+      vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.93 * (max - min));
+    }
+    const next = node('entry', { minYears: 6.4, maxYears: 18.4 });
+    expect(scheduleNext(next, ctx, bounded, true)).toBe(scheduleNext(next, ctx, original));
+  });
+
   it.each([
     'next_generation' as const,
     { minYears: 6, maxYears: 18 },
