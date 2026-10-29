@@ -36,9 +36,9 @@ function hall(source: Content = content, year = 1280) {
   return { ctx, cousin };
 }
 
-function letter(ctx: ReturnType<typeof testWorld>) {
+function letter(ctx: ReturnType<typeof testWorld>, rng = testRng('letter')) {
   const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('the_hall_that_waited'), {
-    expectedOutcomeId: 'somebody_reads_it_properly', targetWeightedOutcome: true, rng: testRng('letter'),
+    expectedOutcomeId: 'somebody_reads_it_properly', targetWeightedOutcome: true, rng,
   });
   expect(result.ok, result.reason).toBe(true);
 }
@@ -159,8 +159,10 @@ describe('story-route promises (#1946)', () => {
     };
     ctx.observeAppliedOutcome = previousApplied;
     const observer = new StoryRouteObserver(ctx);
-    letter(ctx);
-    letter(control);
+    const observedRng = testRng('neutral-letter'), controlRng = testRng('neutral-letter');
+    letter(ctx, observedRng);
+    letter(control, controlRng);
+    expect([observedRng.next(), observedRng.next()]).toEqual([controlRng.next(), controlRng.next()]);
     observer.afterYear();
     const before = canonical(saveGame(control));
     expect(canonical(saveGame(ctx))).toBe(before);
