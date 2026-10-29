@@ -794,3 +794,35 @@ criteria text. Its raw section remains preserved; the brief does not infer any
 requirements. This is covered alongside absent acceptance in the existing
 brief tests. The superseded preflight was stopped so final validation can run
 on the corrected commit.
+
+## 29 October 2026 — #1992: Table load rubric and bot proxy
+
+**Scope.** Steps 1 and 3 of #1992 only: core and tools, no client, content,
+gate or save change. Step 2 (the `?reading-log=1` recorder extension) touches
+`packages/client/src`, which #1979 holds, so it is left for a later slice. Step 4
+is blocked on participants. Step 5 is the owner's decision.
+
+**What shipped.** `packages/core/src/table-load.ts` is a rubric typed by the
+schema's own `TableOrder`/`MusterOrder` unions, so a new order fails to compile
+until someone classifies it. `classifyCommand` ends in `assertNever` over
+`SessionCommand`. It also provides a tally of attempted, accepted and refused
+commands, `acceptedCommands` over a save's decision log, and `observeOrders`. The
+client can import the same rubric when the recorder is extended.
+`tools/table-load-report.ts` is a read-only paired-seed report. Its tending
+column only composes existing exported policy rules, and one existing function,
+`train`, was exported for that.
+
+**Verification.** `table-load.test.ts` (8 tests) derives order, muster and
+command kinds from the Zod schemas and checks exact forwarding, refusal counting,
+malformed payloads, throws, and that a refusal leaves no decision-log row. The
+first draft imported the tool into the fast test, and `lanes.test.ts`
+correctly refused it as an undeclared batch. The observer moved into the
+pure module. A 24-seed batch per column passed all four observer-off full-save
+controls, and the observer matched the save's log on every run. Results, provenance and
+caveats are in `docs/BALANCE-LOG.md`. No player was observed, and these numbers
+are not attention measurements.
+
+**Process note.** The claim on #1992 was taken after the first edit rather than
+before, because a #1986 claim had been taken and released first. That issue had
+already shipped on `main` at `f71a9664`, with only packaged-host smokes
+remaining. Check `git log` for an issue's number before claiming it.
