@@ -37,7 +37,7 @@ export const READING_LOG_MAX_EVENTS = 20_000;
 /** What the notice says, word for word — the switch is not informed consent without it. */
 export const READING_LOG_NOTICE =
   'Reading log is on. On this device only, it records which pages and decisions are shown, the in-game year, '
-  + 'when this window is in front, which panel is open, which buttons you press, Record/Omit/Embellish modes and results, and Table/Muster/delegation categories and results. It records no text you type, '
+  + 'when this window is in front, which panel is open, which buttons you press, Record/Omit/Embellish modes, generated decision ids and results, and Table/Muster/delegation categories and results. It records no text you type, '
   + 'is not part of your saved game, and leaves this device only if you export it.';
 
 export const READING_LOG_CAVEATS = [
@@ -47,7 +47,7 @@ export const READING_LOG_CAVEATS = [
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
-  'Record actions carry the chosen mode and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
+  'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
@@ -102,7 +102,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
   | { at: number; kind: 'decision'; year: number; decision: string; event: string; seen: boolean }
   | { at: number; kind: 'action'; verb: LegacyVerb; act: (typeof RECORDED_VERBS)[LegacyVerb]; years?: number }
-  | { at: number; kind: 'action'; verb: 'record'; act: 'answer'; mode: RecordOption | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'record'; act: 'answer'; mode: RecordOption | 'unknown'; decision?: string; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'delegateChoice' | 'delegateRecord'; act: 'delegate'; category: 'choice' | 'record'; change: 'set' | 'clear'; status: 'attempted' | 'returned' | 'threw' }
@@ -412,9 +412,15 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // cannot smuggle arbitrary prose into an exported artifact.
       if (verb === 'record') {
         const choice = RecordOptionS.safeParse(args[1]);
+        // Production decision ids are dec_<base36 counter>. Do not mistake a
+        // caller-provided name or prose for an internal identifier.
+        const id = args[0];
+        const decision = typeof id === 'string' && id.length <= 40 && /^dec_[0-9a-z]+$/.test(id)
+          ? id : undefined;
         const event = {
           kind: 'action' as const, verb, act: 'answer' as const,
           mode: choice.success ? choice.data : 'unknown' as const,
+          ...(decision ? { decision } : {}),
         };
         log.note({ ...event, status: 'attempted' });
         try {
