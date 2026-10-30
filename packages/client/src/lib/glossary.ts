@@ -21,22 +21,34 @@ const WORD_CHARACTER = /[\p{L}\p{M}\p{N}_]/u;
  * one term, preserving every input character in its original order.
  */
 export function splitFirstStanding(text: string, mode?: ProseMode): GlossarySegment[] {
-  const alias = mode === 'plainenglish' ? 'Reputation' : 'Standing';
-  let position = 0;
-  for (;;) {
-    const index = text.indexOf(alias, position);
-    if (index < 0) return [{ text }];
-    const preceding = index > 0 ? text[index - 1]! : '';
-    const following = text[index + alias.length] ?? '';
-    if ((!preceding || !WORD_CHARACTER.test(preceding))
-      && (!following || !WORD_CHARACTER.test(following))) {
-      return [
-        ...(index ? [{ text: text.slice(0, index) }] : []),
-        { text: text.slice(index, index + alias.length), term: 'standing' },
-        ...(index + alias.length < text.length
-          ? [{ text: text.slice(index + alias.length) }] : []),
-      ];
+  // Chronicle prose is a fixed historical artefact: changing the reader's
+  // prose mode changes the explanation, not the word already saved on a page.
+  // Recognize both authored labels in both modes; earliest eligible wins.
+  const aliases = mode === 'plainenglish'
+    ? ['Reputation', 'Standing']
+    : ['Standing', 'Reputation'];
+  let match: { index: number; alias: string } | null = null;
+  for (const alias of aliases) {
+    let position = 0;
+    for (;;) {
+      const index = text.indexOf(alias, position);
+      if (index < 0) break;
+      const preceding = index > 0 ? text[index - 1]! : '';
+      const following = text[index + alias.length] ?? '';
+      if ((!preceding || !WORD_CHARACTER.test(preceding))
+        && (!following || !WORD_CHARACTER.test(following))) {
+        if (!match || index < match.index) match = { index, alias };
+        break;
+      }
+      position = index + alias.length;
     }
-    position = index + alias.length;
   }
+  if (!match) return [{ text }];
+  const { index, alias } = match;
+  return [
+    ...(index ? [{ text: text.slice(0, index) }] : []),
+    { text: alias, term: 'standing' },
+    ...(index + alias.length < text.length
+      ? [{ text: text.slice(index + alias.length) }] : []),
+  ];
 }
