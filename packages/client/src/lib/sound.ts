@@ -374,7 +374,7 @@ export class Sound {
       this.out = out;
     }
     // Suspended until a gesture. Harmless to call when it is already running.
-    quietly(this.context.resume?.());
+    this.watch(this.context.resume?.(), this.context);
     return { context: this.context, out: this.out };
   }
 
@@ -437,7 +437,10 @@ export class Sound {
    */
   suspend() {
     this.stopDrone();
-    quietly(this.context?.suspend?.());
+    this.attempt(() => {
+      const ctx = this.context;
+      if (ctx) this.watch(ctx.suspend?.(), ctx);
+    });
   }
 
   /**
@@ -446,7 +449,11 @@ export class Sound {
    * the background can otherwise sit scheduled on a context nobody resumed.
    */
   wake() {
-    if (!this.#muted) quietly(this.context?.resume?.());
+    if (this.#muted) return;
+    this.attempt(() => {
+      const ctx = this.context;
+      if (ctx) this.watch(ctx.resume?.(), ctx);
+    });
   }
 
   /** Let go of the audio thread entirely. */
@@ -461,17 +468,30 @@ export class Sound {
    * Run one piece of engine work, and turn a throw into silence. The context
    * goes too, so a half-built graph is never played into again.
    */
+  /** A rejected browser/host audio operation is a failed device, not a cue to retry forever. */
+  private watch(pending: Promise<unknown> | undefined, context: AudioContext): void {
+    pending?.catch(() => {
+      // A stale promise from a disposed context must not disable a later one.
+      if (this.context === context && !this.#failed) this.fail();
+    });
+  }
+
+  private fail(): void {
+    this.#failed = true;
+    this.drone = null;
+    this.droneKey = '';
+    const context = this.context;
+    this.context = null;
+    this.out = null;
+    try { quietly(context?.close?.()); } catch { /* already gone */ }
+  }
+
   private attempt(work: () => void) {
     if (this.#failed) return;
     try {
       work();
     } catch {
-      this.#failed = true;
-      this.drone = null;
-      this.droneKey = '';
-      try { quietly(this.context?.close?.()); } catch { /* already gone */ }
-      this.context = null;
-      this.out = null;
+      this.fail();
     }
   }
 
