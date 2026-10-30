@@ -231,6 +231,55 @@ describe('answers and the gaps between them', () => {
     expect(summary.gaps.filter((g) => g.from.kind === 'start')[1]?.years).toBeNull();
   });
 
+  it('only an accepted share-code start resets per-house evidence and censors the previous gap', () => {
+    const c = clock();
+    const l = log(c);
+    const page = [{ id: 'chr_1', year: 1044, answer: 'glimpse' as const }];
+    l.note({ kind: 'run', campaign: 'short', seed: 17 });
+    l.chronicle(page);
+    c.tick(1_000);
+
+    const actions = recordActions({
+      beginFromShareCode: (code: string) => {
+        if (code === 'refused') return { kind: 'damaged' as const };
+        if (code === 'throws') throw new Error('host unavailable');
+        return null;
+      },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+
+    // A failed import must not introduce a fictitious new run.
+    expect(actions.beginFromShareCode('refused', { house: 'Private House' }))
+      .toEqual({ kind: 'damaged' });
+    expect(() => actions.beginFromShareCode('throws', { house: 'Private House' }))
+      .toThrow('host unavailable');
+    l.chronicle([]);
+    l.chronicle(page);
+    expect(l.events.filter((e) => e.kind === 'action' && e.act === 'start')).toHaveLength(0);
+    expect(l.events.filter((e) => e.kind === 'page').map((e) => 'revisit' in e && e.revisit === true))
+      .toEqual([false, true]);
+
+    c.tick(1_000);
+    // The new run may reuse the same seed and canonical page ids. It is still
+    // another house, and its first page must be news rather than a revisit.
+    expect(actions.beginFromShareCode('ED1.SECRET', { house: 'Private House' })).toBeNull();
+    l.note({ kind: 'run', campaign: 'short', seed: 17 });
+    l.chronicle(page);
+    l.chronicle([]);
+    l.chronicle(page);
+    expect(l.events.filter((e) => e.kind === 'action' && e.act === 'start'))
+      .toMatchObject([{ verb: 'beginFromShareCode', act: 'start', at: 2_000 }]);
+    expect(l.events.filter((e) => e.kind === 'run')).toHaveLength(2);
+    expect(l.events.filter((e) => e.kind === 'page').map((e) => 'revisit' in e && e.revisit === true))
+      .toEqual([false, true, false, true]);
+    const artifact = l.artifact();
+    expect(artifact.summary.answers).toBe(2);
+    expect(artifact.summary.gaps.filter((g) => g.to.kind === 'new-run'))
+      .toMatchObject([{ censored: true, wallMs: 2_000 }]);
+    expect(artifact.summary.gaps.filter((g) => g.from.kind === 'start')).toHaveLength(2);
+    expect(JSON.stringify(artifact)).not.toContain('ED1.SECRET');
+    expect(JSON.stringify(artifact)).not.toContain('Private House');
+  });
+
   it('a begun run is news from its first page; a failed pick-up leaves the run on screen as news', async () => {
     const l = log();
     l.note({ kind: 'action', verb: 'resume', act: 'start' });
@@ -275,7 +324,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/6', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/7', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
