@@ -108,9 +108,10 @@ export class SoundBed {
 
   constructor(private readonly engine: SoundEngine) {}
 
-  /** True when a cue would actually be heard. */
+  /** True only when a cue could be heard; zero volume must not open the audio device. */
   get audible(): boolean {
-    return this.#preference.on && this.#unlocked && !this.#away && this.engine.available;
+    return this.#preference.on && this.#preference.volume > 0
+      && this.#unlocked && !this.#away && this.engine.available;
   }
 
   prefer(preference: SoundPreference): void {
