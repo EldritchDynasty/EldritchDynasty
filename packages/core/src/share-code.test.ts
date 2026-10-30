@@ -222,6 +222,18 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(readShareCode(original, content, { build: BUILD }).ok).toBe(true);
   });
 
+  it('refuses a re-sealed JSON formatting alias for the same founding', () => {
+    // The checksum is not an authentication tag, but a code must have the
+    // unique wire representation emitted by this encoder. A pretty-printed
+    // JSON tuple otherwise names the same founding under a different code.
+    const pretty = JSON.stringify(JSON.parse(payloadOf(code)), null, 2);
+    const body = btoa(pretty).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    expect(body).not.toBe(code.split('.')[1]);
+    expect(problemOf(`ED1.${body}.${hashSeed('ED1', body).toString(36)}`))
+      .toEqual({ kind: 'damaged' });
+    expect(readShareCode(code, content, { build: BUILD }).ok).toBe(true);
+  });
+
   it('refuses a well-formed code whose places are not in this prologue', () => {
     expect(problemOf(forge(code, (p) => { p[7] = 99; }))).toEqual({ kind: 'damaged' });
     expect(problemOf(forge(code, (p) => { p[6] = [0, 0]; }))).toEqual({ kind: 'damaged' });
