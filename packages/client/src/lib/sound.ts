@@ -355,7 +355,11 @@ export class Sound {
 
   set volume(value: number) {
     this.#volume = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 1;
-    if (this.out) this.out.gain.value = this.#volume;
+    // A host may invalidate its output after the context was opened. Changing
+    // Reading settings must fail into silence, never throw into the UI.
+    this.attempt(() => {
+      if (this.out) this.out.gain.value = this.#volume;
+    });
   }
 
   /**
