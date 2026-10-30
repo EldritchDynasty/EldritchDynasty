@@ -12,7 +12,12 @@ const controlId = useId();
 const opener = ref<HTMLButtonElement | null>(null);
 const definition = computed(() => standingGlossaryDefinition(props.proseMode));
 
-function toggle(): void {
+function toggle(event: MouseEvent): void {
+  // Vue collects template refs inside v-for into an array, even for one
+  // matching term. Capture the actual activated button for Escape focus.
+  opener.value = event.currentTarget instanceof HTMLButtonElement
+    ? event.currentTarget
+    : null;
   open.value = !open.value;
 }
 
@@ -30,12 +35,11 @@ function onKeydown(event: KeyboardEvent): void {
     <template v-for="(segment, index) in segments" :key="index">
       <button
         v-if="segment.term === 'standing'"
-        ref="opener"
         type="button"
         class="glossary-term"
         :aria-expanded="expanded"
         :aria-controls="expanded ? controlId : undefined"
-        @click="toggle"
+        @click="toggle($event)"
       >{{ segment.text }}</button><template v-else>{{ segment.text }}</template>
     </template>
     <span v-if="expanded" :id="controlId" class="glossary-definition" role="note" tabindex="-1">{{ definition }}</span>
