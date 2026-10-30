@@ -379,7 +379,7 @@ onMounted(() => { void refreshSaves(); });
           <span class="dim small">
             {{ choice.years }} years
             <template v-if="choice.id === 'short'">{{ plain ? ' — the default. Resolve three Ledger clauses, with four possible endings over 300 years.' : ' — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.' }}</template>
-            <template v-else>{{ plain ? ' — resolve all nine Ledger clauses, reach every ascension level including Apotheosis, and encounter more stories.' : ' — the full nine-clause Ledger, the complete ladder including Apotheosis, and broader story reach.' }}</template>
+            <template v-else>{{ plain ? ' — resolve all nine Ledger clauses, work toward the difficult goal of Apotheosis, and encounter more stories. Reaching every level is not guaranteed.' : ' — nine Ledger clauses to settle, a difficult road toward Apotheosis, and broader story reach. The summit is not promised.' }}</template>
           </span>
         </span>
       </label>
