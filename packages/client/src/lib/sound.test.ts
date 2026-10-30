@@ -333,6 +333,24 @@ describe('the player, over a fake engine', () => {
     expect(s.available).toBe(false);
   });
 
+  it('stops scheduling audio after an asynchronous resume refusal', async () => {
+    const e = fakeEngine({ reject: true });
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('seal');
+    const ctx = e.made[0]!;
+    expect(s.available).toBe(true); // The browser's refusal has not settled yet.
+
+    await settle();
+    expect(s.available).toBe(false);
+    const sources = ctx.sources.length;
+    s.cue('page');
+    s.setDrone(WARM);
+    s.wake();
+    expect(ctx.sources).toHaveLength(sources);
+    expect(e.made).toHaveLength(1);
+  });
+
   it('never leaves a refused promise unheard', async () => {
     const unheard: unknown[] = [];
     const note = (reason: unknown) => unheard.push(reason);
