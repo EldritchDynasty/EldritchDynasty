@@ -366,6 +366,10 @@ export function readShareCode(
   } catch {
     return { ok: false, problem: { kind: 'damaged' } };
   }
+  // A checksum checks copying errors, not authorship. Still require the one
+  // serialized form this encoder actually emits: re-sealed JSON with extra
+  // whitespace or alternate escaping must not create aliases for one founding.
+  if (encode(payload) !== text) return { ok: false, problem: { kind: 'damaged' } };
   const content = indexContent(source);
   const here = editionOf(content, opts.build);
   const differs = (['format', 'content', 'build'] as const).filter((_, i) => payload[i] !== here[i]);
