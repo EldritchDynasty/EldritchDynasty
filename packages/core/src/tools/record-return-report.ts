@@ -16,7 +16,7 @@
  *
  * A return must identify the exact altered entry through state the player can
  * see. Mentioning lies, moving standing, or sharing the source's template or
- * year is not enough. Four kinds qualify:
+ * year is not enough. Five kinds qualify:
  *
  * - `followup`: a later Chronicle page that the shipped `causeOf` resolves to
  *   the altered page, which is the backlink the Chronicle draws (#269). These
@@ -482,11 +482,18 @@ export interface RecordReturnSummary {
   /** Over altered houses. */
   returned: Interval;
   alterationReturned: Interval;
-  within: { years: number; share: Interval }[];
+  /**
+   * `share` is over every altered house, so a house censored early counts as
+   * no return: a lower bound. `observed` drops the houses whose run ended
+   * fewer than `years` after the choice without a return.
+   */
+  within: { years: number; share: Interval; observed: Interval }[];
   /** First returns only, conditional on a return. */
   afterYears: Spread;
   afterReigns: Spread;
   afterPrompts: Spread;
+  /** Docket prompts from the signing to the return, the choice's own included. */
+  fromSigning: Spread;
   afterBuckets: { from: number; to: number; count: number }[];
   firstKinds: Record<string, number>;
   /** Houses with each kind at any point, not only first. */
@@ -497,8 +504,16 @@ export interface RecordReturnSummary {
   /** Interlude delivered after the choice, of any kind. */
   interludeAfter: number;
   source: { elapsed: Spread; promptsBefore: Spread; truthfulBefore: Spread };
+  /** The commonest first altered templates, most first. */
+  sources: [string, number][];
   firstOfferElapsed: Spread;
+  /** Over the whole column, altered or not. */
+  noInterlude: number;
+  firstInterludeElapsed: Spread;
 }
+
+/** How many of the commonest first altered templates the report names. */
+export const TOP_SOURCES = 3;
 
 const tally = (keys: readonly string[]) => {
   const out: Record<string, number> = {};
@@ -527,13 +542,15 @@ export function summariseRecordReturns(rows: readonly RecordReturnRun[]): Record
         altered: houses.length,
         returned: binomialInterval(returned.length, houses.length),
         alterationReturned: binomialInterval(alteration.length, houses.length),
-        within: WITHIN_YEARS.map((years) => ({
-          years,
-          share: binomialInterval(returned.filter((r) => r.first!.afterYears <= years).length, houses.length),
-        })),
+        within: WITHIN_YEARS.map((years) => {
+          const hits = returned.filter((r) => r.first!.afterYears <= years).length;
+          const observed = houses.filter((r) => r.first || r.playedElapsed - r.source!.elapsed >= years).length;
+          return { years, share: binomialInterval(hits, houses.length), observed: binomialInterval(hits, observed) };
+        }),
         afterYears: spread(returned.map((r) => r.first!.afterYears)),
         afterReigns: spread(returned.map((r) => r.first!.afterReigns)),
         afterPrompts: spread(returned.map((r) => r.first!.afterPrompts)),
+        fromSigning: spread(returned.map((r) => r.source!.promptsBefore + 1 + r.first!.afterPrompts)),
         afterBuckets: AFTER_BUCKETS.map(([from, to]) => ({
           from, to, count: returned.filter((r) => r.first!.afterYears >= from && r.first!.afterYears < to).length,
         })),
@@ -557,7 +574,11 @@ export function summariseRecordReturns(rows: readonly RecordReturnRun[]): Record
           promptsBefore: spread(houses.map((r) => r.source!.promptsBefore)),
           truthfulBefore: spread(houses.map((r) => r.source!.truthfulBefore)),
         },
+        sources: Object.entries(tally(houses.map((r) => r.source!.event)))
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, TOP_SOURCES),
         firstOfferElapsed: spread(col.filter((r) => r.firstOfferElapsed !== undefined).map((r) => r.firstOfferElapsed!)),
+        noInterlude: col.filter((r) => r.interludes === 0).length,
+        firstInterludeElapsed: spread(col.filter((r) => r.firstInterludeElapsed !== undefined).map((r) => r.firstInterludeElapsed!)),
       }];
     });
   });
@@ -582,11 +603,16 @@ export function recordReturnReport(summaries: readonly RecordReturnSummary[]): s
       + s.within.map((w) => share(w.share)).join(' | ') + ' |');
   }
   lines.push('');
-  lines.push('| Campaign / policy / first mode | Years after, n · q25 / median / q75 / max | Median ~95% CI | Reigns after | Prompts after | First kind | Any kind |');
-  lines.push('| --- | --- | --- | --- | --- | --- | --- |');
+  lines.push('| Campaign / policy / first mode | '
+    + WITHIN_YEARS.map((y) => `Within ${y} years, of houses observed ${y} years`).join(' | ') + ' |');
+  lines.push('| --- | ' + WITHIN_YEARS.map(() => '---').join(' | ') + ' |');
+  for (const s of summaries) lines.push(`| ${label(s)} | ` + s.within.map((w) => share(w.observed)).join(' | ') + ' |');
+  lines.push('');
+  lines.push('| Campaign / policy / first mode | Years after, n · q25 / median / q75 / max | Median ~95% CI | Reigns after | Prompts after | Prompts from the signing | First kind | Any kind |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- | --- |');
   for (const s of summaries) {
     const ci = s.afterYears.medianCi ? `${s.afterYears.medianCi.lower}–${s.afterYears.medianCi.upper}` : '—';
-    lines.push(`| ${label(s)} | ${quartiles(s.afterYears)} | ${ci} | ${quartiles(s.afterReigns)} | ${quartiles(s.afterPrompts)} | ${counts(s.firstKinds)} | ${counts(s.anyKind)} |`);
+    lines.push(`| ${label(s)} | ${quartiles(s.afterYears)} | ${ci} | ${quartiles(s.afterReigns)} | ${quartiles(s.afterPrompts)} | ${quartiles(s.fromSigning)} | ${counts(s.firstKinds)} | ${counts(s.anyKind)} |`);
   }
   lines.push('');
   lines.push(`| Campaign / policy / first mode | First returns by years after (${AFTER_BUCKETS.map(bucket).join(', ')}) | Censored: broken · term · unfinished | Years at risk, censored | Themed callback · median years after · reads | Unlinked Omit settlement | Any interlude after |`);
@@ -595,11 +621,13 @@ export function recordReturnReport(summaries: readonly RecordReturnSummary[]): s
     lines.push(`| ${label(s)} | ${s.afterBuckets.map((b) => b.count).join(', ')} | ${s.censored.broken} · ${s.censored.term} · ${s.censored.unfinished} | ${quartiles(s.censored.yearsAtRisk)} | ${s.themed.count} · ${num(s.themed.afterYears.median)} · ${counts(s.themed.reads)} | ${s.unlinked} | ${s.interludeAfter} |`);
   }
   lines.push('');
-  lines.push('| Campaign / policy / first mode | First altered page, elapsed q25 / median / q75 | Prompts before it | Truthful Records before it | First Record offer, elapsed median |');
-  lines.push('| --- | --- | --- | --- | --- |');
+  lines.push('| Campaign / policy / first mode | First altered page, elapsed q25 / median / q75 | Prompts before it | Truthful Records before it | First Record offer, elapsed median | Commonest first altered templates | Column: runs with no interlude · first interlude elapsed q25 / median / q75 |');
+  lines.push('| --- | --- | --- | --- | --- | --- | --- |');
   for (const s of summaries) {
     const e = s.source.elapsed;
-    lines.push(`| ${label(s)} | ${num(e.q25)} / ${num(e.median)} / ${num(e.q75)} | ${num(s.source.promptsBefore.median)} | ${num(s.source.truthfulBefore.median)} | ${num(s.firstOfferElapsed.median)} |`);
+    const f = s.firstInterludeElapsed;
+    const top = s.sources.map(([id, n]) => `${id}: ${n}`).join(', ') || '—';
+    lines.push(`| ${label(s)} | ${num(e.q25)} / ${num(e.median)} / ${num(e.q75)} | ${num(s.source.promptsBefore.median)} | ${num(s.source.truthfulBefore.median)} | ${num(s.firstOfferElapsed.median)} | ${top} | ${s.noInterlude} · ${num(f.q25)} / ${num(f.median)} / ${num(f.q75)} |`);
   }
   return lines;
 }

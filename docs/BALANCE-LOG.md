@@ -15998,3 +15998,158 @@ decision is the owner's, and the issue asks for player observations first. A
 reader who wants a heavier column can compose the hostile founding, field
 deployment and post purchases from the cited reports. The rubric and observer
 do not need to change.
+
+## 2026-10-30 — #1987 step 1: when the first altered page comes back
+
+**Read-only baseline. No rule, constant or content changed.** Instrument:
+`npm run gate:record-returns` (`tools/record-return-report.ts`), run on `main`
+`de8cd363` content and simulation; the instrument commit `3e64c25e` adds only
+`tools/` files, a lanes entry and the script. The protocol was posted to #1987
+before the first batch.
+
+**Cohorts.** Authored founder, no Table orders, default Library inputs. Seeds
+`198700 + i`; Short Line (1042–1342) 400 runs per policy, Long Line
+(1042–1542) 200 per policy, all three policies on the same seeds.
+`chronicler` is `playToTheEnd`'s loop exactly (a fast test pins the
+template-fire map), so its Record answers are the shipped 55 / 25 / 20 draw.
+`embellish` and `omit` answer every Record block that way and everything else
+as the chronicler does, on the chronicler's own streams; a fast test pins each
+as the chronicler's twin until the first answer that differs. The source is
+each house's **first** Record block answered Omit or Embellish.
+
+**What counts as a return.** A later scene or page must identify that exact
+entry through state the player can see:
+
+- `followup` — a later page the shipped `causeOf` resolves to it (the #269
+  backlink): the act's scheduled follow-ups and arc continuations. It would
+  cite the page under any Record option.
+- `echo` — a bearing echo line whose `cause.page` is the page.
+- `discrepancy_page` — a page carrying the source's Discrepancy that `causeOf`
+  resolves to it once settled.
+- `dispute` — the page's own Discrepancy proven or buried (Recorded Life shows
+  that state on that page). Embellish only.
+- `interlude` — an interlude whose `reads` name a Discrepancy the choice
+  opened.
+
+The last four are "returns the alteration made". Two things are reported
+beside them and never counted as returns. A **themed callback** is an
+interlude whose reads concern the book without naming this page's lie. An
+**unlinked settlement** is an Omit's Discrepancy proven or buried with nothing
+on the blank to say so. Game years and docket prompts are not reading time.
+Intervals are Wilson 95%.
+
+The instrument's rows come from `3e64c25e`. The "observed" share, prompts
+from the signing, the template list and the interlude column were added to
+the reducer afterwards and re-read from the same rows with `--summarise`.
+
+### Results
+
+All houses, then each column split by the mode of the house's first altered
+page. "Alteration" excludes `followup`.
+
+| Campaign / policy / first mode | Houses · offered · altered | Any return | Return the alteration made | Within 25 years (all altered) | Within 25 years, of houses observed 25 | Within 100 years, of houses observed 100 |
+| --- | --- | --- | --- | --- | --- | --- |
+| short / chronicler / any | 400 · 395 · 373 | 242/373 = 64.9% [59.9%, 69.5%] | 173/373 = 46.4% [41.4%, 51.5%] | 182/373 = 48.8% [43.8%, 53.9%] | 182/360 = 50.6% [45.4%, 55.7%] | 242/330 = 73.3% [68.3%, 77.8%] |
+| short / chronicler / omit | · · 192 | 69/192 = 35.9% [29.5%, 42.9%] | **0/192 = 0.0% [0.0%, 2.0%]** | 9/192 = 4.7% [2.5%, 8.7%] | 9/187 = 4.8% [2.6%, 8.9%] | 69/157 = 43.9% [36.4%, 51.8%] |
+| short / chronicler / embellish | · · 181 | 173/181 = 95.6% [91.5%, 97.7%] | 173/181 = 95.6% [91.5%, 97.7%] | 173/181 = 95.6% [91.5%, 97.7%] | 173/173 = 100.0% [97.8%, 100.0%] | 173/173 = 100.0% [97.8%, 100.0%] |
+| short / embellish | 400 · 395 · 395 | 383/395 = 97.0% [94.8%, 98.3%] | 383/395 = 97.0% [94.8%, 98.3%] | 383/395 = 97.0% [94.8%, 98.3%] | 383/383 = 100.0% [99.0%, 100.0%] | 383/383 = 100.0% [99.0%, 100.0%] |
+| short / omit | 400 · 395 · 395 | 193/395 = 48.9% [44.0%, 53.8%] | **0/395 = 0.0% [0.0%, 1.0%]** | 4/395 = 1.0% [0.4%, 2.6%] | 4/382 = 1.0% [0.4%, 2.7%] | 193/325 = 59.4% [54.0%, 64.6%] |
+| long / chronicler / any | 200 · 196 · 187 | 120/187 = 64.2% [57.1%, 70.7%] | 87/187 = 46.5% [39.5%, 53.7%] | 92/187 = 49.2% [42.1%, 56.3%] | 92/181 = 50.8% [43.6%, 58.0%] | 120/162 = 74.1% [66.8%, 80.2%] |
+| long / chronicler / omit | · · 96 | 33/96 = 34.4% [25.6%, 44.3%] | **0/96 = 0.0% [0.0%, 3.8%]** | 5/96 = 5.2% [2.2%, 11.6%] | 5/94 = 5.3% [2.3%, 11.9%] | 33/75 = 44.0% [33.3%, 55.3%] |
+| long / chronicler / embellish | · · 91 | 87/91 = 95.6% [89.2%, 98.3%] | 87/91 = 95.6% [89.2%, 98.3%] | 87/91 = 95.6% [89.2%, 98.3%] | 87/87 = 100.0% [95.8%, 100.0%] | 87/87 = 100.0% [95.8%, 100.0%] |
+| long / embellish | 200 · 196 · 196 | 190/196 = 96.9% [93.5%, 98.6%] | 190/196 = 96.9% [93.5%, 98.6%] | 190/196 = 96.9% [93.5%, 98.6%] | 190/190 = 100.0% [98.0%, 100.0%] | 190/190 = 100.0% [98.0%, 100.0%] |
+| long / omit | 200 · 196 · 196 | 97/196 = 49.5% [42.6%, 56.4%] | **0/196 = 0.0% [0.0%, 1.9%]** | 1/196 = 0.5% [0.1%, 2.8%] | 1/190 = 0.5% [0.1%, 2.9%] | 95/156 = 60.9% [53.1%, 68.2%] |
+
+First returns, conditional on a return (n · q25 / median / q75 / max):
+
+| Campaign / policy / first mode | Years after | Reigns after | Prompts after | Prompts from the signing | First kind |
+| --- | --- | --- | --- | --- | --- |
+| short / chronicler / omit | 69 · 75 / 75 / 75 / 95 | 69 · 1 / 2 / 2 / 5 | 69 · 23 / 27 / 32 / 41 | 69 · 45 / 49 / 53 / 62 | followup 69 |
+| short / chronicler / embellish | 173 · 25 / 25 / 25 / 25 | 173 · 0 / 0 / 1 / 3 | 173 · 6 / 8 / 11 / 15 | 173 · 27 / 33 / 43 / 106 | echo 130, dispute 39, followup 4 |
+| short / embellish | 383 · 25 / 25 / 25 / 25 | 383 · 0 / 0 / 1 / 4 | 383 · 7 / 8 / 10 / 17 | 383 · 21 / 27 / 31 / 45 | echo 317, dispute 62, followup 4 |
+| short / omit | 193 · 75 / 75 / 75 / 100 | 193 · 1 / 2 / 3 / 6 | 193 · 25 / 29 / 32 / 50 | 193 · 46 / 49 / 53 / 75 | followup 193 |
+| long / embellish | 190 · 25 / 25 / 25 / 25 | 190 · 0 / 1 / 1 / 3 | 190 · 7 / 9 / 10 / 16 | 190 · 22 / 28 / 31 / 45 | echo 159, dispute 30, followup 1 |
+| long / omit | 97 · 75 / 75 / 75 / 110 | 97 · 1 / 2 / 3 / 6 | 97 · 26 / 30 / 34 / 55 | 97 · 47 / 50 / 54 / 75 | followup 97 |
+
+Censoring: Short `omit` 202 houses with no return (80 broken, 122 reached
+the term; years at risk median 255). Short `embellish` 12, all broken lines
+within 1–23 years of the choice. Long `omit` 99 (46 broken, 53 term), Long
+`embellish` 6, all broken within 1–23 years. No run was unfinished.
+
+**One template dominates the source.** The first Record block most houses
+meet is `the_letters_to_the_weighers`, the glimpse scheduled into 1075–1140
+(median elapsed 50, after a median 18 forced or 23 chronicler prompts). It is
+the first altered page in 238/395 Short forced houses and 138/373 chronicler
+houses; `a_second_hand_that_agrees` and `the_notarised_pedigree` follow. Its
+outcome schedules `the_branch_hall_book` at +75 (waiting on a cadet hall), and
+that follow-up is nearly every `followup` return in every column. Its
+Embellish opens `the_debt_called_settled`; its Omit is a bare blank.
+
+### What this says
+
+1. **Embellish comes back, quickly.** 97% of houses whose first altered page
+   is embellished get a return, and every house still playing 25 years later
+   has one. The first return is the `wrote_it_larger` bearing echo at exactly
+   `ECHO_AFTER` = 25 years (317/383 Short), or the lie proven or buried before
+   that (62/383). That is a median 8 prompts after the choice and 27 from the
+   signing, usually inside the same reign.
+2. **Omit never comes back as an omission.** 0/395 Short and 0/196 Long
+   forced Omit houses, and 0/192 Short chronicler houses whose first altered
+   page was an Omit, met a return the omission made. The upper bounds are
+   1.0%, 1.9% and 2.0%. This is the content audit, confirmed: an Omit writes
+   no bearing act, so it has no echo, and the blank carries no `discrepancyId`.
+   About half of Omit houses do see the page again through the act's own
+   follow-up, which would cite it under any Record option. That arrives at a
+   median 75 years, two reigns and 29 prompts after the choice, 49 from the
+   signing. Within 25 years: 1.0% [0.4%, 2.6%] Short.
+3. **The frame does gesture at the blank, without naming it.**
+   `frame_the_page_he_does_not_turn` (`omitted: { atLeast: 1 }`) is the first
+   book-themed interlude after the choice for 372/395 Short and 188/196 Long
+   Omit houses (94.2% [91.4%, 96.1%]), a median 16 years after it. Its text
+   names no page, year or person, so it is a themed callback by the declared
+   rule, not a return. It is the nearest existing scene to the issue's "let
+   the first interlude read the first entry the player altered".
+4. **Under the shipped chronicler the split is about even.** About half of
+   first altered pages are Omits (192 Omit, 181 Embellish of 373 Short).
+   Across all its altered houses, 50.6% [45.4%, 55.7%] of those observed for
+   25 years got a return within 25 years. Almost all of those were
+   Embellishes.
+5. **Interludes that name the lie are rare.** An interlude whose reads name
+   the page's own Discrepancy reached 15/395 Short and 8/196 Long forced
+   Embellish houses at any point (3.8% [2.3%, 6.2%]; 4.1% [2.1%, 7.8%]). Unlinked
+   Omit settlements (an Omit's Discrepancy proven or buried) were 6/192 Short
+   and 1/96 Long chronicler Omit houses, and none under the forced policy.
+
+### Observed, not predeclared: always-Embellish starves the frame
+
+The protocol did not ask this. The interlude column showed it. A house that
+embellishes every Record block meets far fewer interludes:
+
+| Campaign / policy | Runs with no interlude | First interlude, elapsed q25 / median / q75 |
+| --- | --- | --- |
+| short / chronicler | 17/400 = 4.3% [2.7%, 6.7%] | 53 / 61 / 74.5 |
+| short / embellish | **133/400 = 33.3% [28.8%, 38.0%]** | **108 / 169 / 227.5** |
+| short / omit | 15/400 = 3.8% [2.3%, 6.1%] | 52 / 59 / 68 |
+| long / chronicler | 10/200 = 5.0% [2.7%, 9.0%] | 53.3 / 62.5 / 79 |
+| long / embellish | **48/200 = 24.0% [18.6%, 30.4%]** | **124 / 187.5 / 297** |
+| long / omit | 10/200 = 5.0% [2.7%, 9.0%] | 53 / 59 / 71 |
+
+The mechanism is in the content. All 28 non-arc frame templates declare a
+read. The five repeatable baselines read `recorded: { atLeast: N }` (four) or
+`omitted: { atLeast: 1 }` (one), and **no interlude reads `anyDiscrepancy`**.
+A house that only embellishes satisfies no baseline. It gets an interlude only
+when one of the 13 lie-specific or 10 template-specific reads happens to hold.
+The forced policy is an extreme player, but the gap opens at the first Record
+block, the median elapsed 50, which is before the chronicler's median first
+interlude.
+
+### Limits
+
+Bot policies answer every other choice by the chronicler's draw. Game years
+and docket prompts are not reading time or comprehension. The
+`?reading-log=1` join for observed sessions (#1987 step 2) is not built in
+this slice. `followup` counts a page that cites the altered entry whether or
+not its text reacts to the alteration. This is one predeclared sample, so a
+rate claim after any change needs an independent one (step 6).
+
+**No target or intervention is recorded yet** (step 4). Nothing was tuned.
