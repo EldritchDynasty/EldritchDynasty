@@ -461,9 +461,12 @@ export class Sound {
   /** Let go of the audio thread entirely. */
   close() {
     this.stopDrone();
-    quietly(this.context?.close?.());
+    const context = this.context;
     this.context = null;
     this.out = null;
+    // Some hosts throw synchronously rather than rejecting close(). Disposal
+    // must still succeed, and a later gesture may open a fresh context.
+    try { quietly(context?.close?.()); } catch { /* already gone */ }
   }
 
   /**
