@@ -624,7 +624,10 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     && RUNG_ORDER.indexOf(foremost.standing.rung) >= RUNG_ORDER.indexOf('hierophant')
     ? w.people.get(foremost.person)
     : undefined;
-  const readyElder = elder?.rites.includes('vessel') && elder.rites.includes('great_rite')
+  // A foremost household member married in from elsewhere is not an elder
+  // of this bloodline: performUnmaking also requires blood membership.
+  const readyElder = elder?.houseOfOrigin === w.playerHouse
+    && elder.rites.includes('vessel') && elder.rites.includes('great_rite')
     ? elder : undefined;
   return {
     ...shown,
