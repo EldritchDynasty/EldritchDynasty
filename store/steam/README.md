@@ -24,7 +24,7 @@ Eldritch Dynasty
 Plain text; no release date or other time-sensitive wording.
 
 ```text
-A text-based generational strategy game about blood, marriage, and the family record you falsify across five centuries.
+Shape a bloodline through marriages and inheritance, then decide what its Chronicle remembers—or falsifies. A text-based generational strategy game across centuries.
 ```
 
 ## About This Game
@@ -160,6 +160,8 @@ Before publishing the Coming Soon page:
       capability that is still unreachable in the shipped horizon.
 - [ ] The live Steamworks short-description field accepts the copy above
       without truncation.
+- [ ] The short description does not imply every run lasts five centuries:
+      the default Short Line spans three and the Long Line spans five.
 - [ ] All four required store capsules use Valve's current templates.
 - [ ] No base capsule contains the thesis tagline or other marketing copy.
 - [ ] At least five genuine 16:9 gameplay screenshots are uploaded.
