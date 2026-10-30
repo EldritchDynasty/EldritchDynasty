@@ -135,6 +135,34 @@ describe('Standing legibility (#356)', () => {
     } finally { wrapper.unmount(); }
   });
 
+  it.each(['original', 'plainenglish'] as const)('names simultaneous ladder blockers as a group (%s)', (mode) => {
+    const current = view();
+    current.ascension.diagnosis = {
+      target: 'hierophant',
+      targetTitle: 'Hierophant',
+      blockers: [
+        { kind: 'power', text: 'The power is short.', hint: 'Look to the family.' },
+        { kind: 'books', text: 'The reading is short.', hint: 'Read more books.' },
+      ],
+    };
+    const before = structuredClone(current);
+    const wrapper = mount(Standing, {
+      props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode },
+    });
+    try {
+      expect(wrapper.get('.preparation-note').text()).toBe(mode === 'plainenglish'
+        ? 'These obstacles currently block the next level. Meeting one may leave the others, or reveal more.'
+        : 'Several bars stand before this rung; lifting one may leave the others, or reveal another.');
+      const blockers = wrapper.findAll('.ladder-blocker');
+      expect(blockers).toHaveLength(2);
+      expect(blockers[0]!.text()).toContain('The power is short.');
+      expect(blockers[0]!.text()).toContain('Look to the family.');
+      expect(blockers[1]!.text()).toContain('The reading is short.');
+      expect(blockers[1]!.text()).toContain('Read more books.');
+      expect(current).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+
   it('gives each household reading its own labelled row', () => {
     const wrapper = mount(Standing, {
       props: { view: view(), jump: null, saveStatus: 'idle' },

@@ -88,9 +88,13 @@ function stateText(step: PathStep): string {
             </span>
           </div>
           <p v-if="ascension.diagnosis.blockers.length" class="preparation-note small soft">
-            {{ plain
-              ? 'This is the first obstacle shown for the next level. Meeting it may reveal another requirement.'
-              : 'The first bar to this rung is named here; another may stand behind it.'
+            {{ ascension.diagnosis.blockers.length === 1
+              ? (plain
+                ? 'This is the first obstacle shown for the next level. Meeting it may reveal another requirement.'
+                : 'The first bar to this rung is named here; another may stand behind it.')
+              : (plain
+                ? 'These obstacles currently block the next level. Meeting one may leave the others, or reveal more.'
+                : 'Several bars stand before this rung; lifting one may leave the others, or reveal another.')
             }}
           </p>
           <div
