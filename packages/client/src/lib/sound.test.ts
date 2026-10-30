@@ -316,6 +316,9 @@ describe('the player, over a fake engine', () => {
     expect(s.volume).toBe(0.35);
     expect(s.available).toBe(false);
     expect(ctx.calls).toContain('close');
+    // A failed device must not stop subsequent settings changes either.
+    expect(() => { s.volume = 0.5; }).not.toThrow();
+    expect(s.volume).toBe(0.5);
     expect(() => s.cue('seal')).not.toThrow();
     expect(e.made).toHaveLength(1);
   });
