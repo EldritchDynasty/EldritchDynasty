@@ -1,5 +1,5 @@
 import type { ChronicleView, MusterOrder, RecordOption, TableOrder } from '@ed/core';
-import { MusterOrderS, TableOrderS } from '@ed/schema';
+import { readingLogMusterCategory, readingLogTableCategory } from './content.js';
 import { parseRecordOption, type GameActions } from './game.js';
 
 /**
@@ -52,15 +52,6 @@ export const READING_LOG_CAVEATS = [
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
-
-// The schema owns the closed command vocabulary. The recorder only keeps
-// those category literals, never an arbitrary value from an invalid caller.
-const TABLE_ORDER_KINDS: ReadonlySet<string> = new Set(TableOrderS.options.map((o) => o.shape.kind.value));
-const MUSTER_ORDER_OPS: ReadonlySet<string> = new Set(MusterOrderS.options.map((o) => o.shape.op.value));
-
-function safeCategory<T extends string>(value: unknown, known: ReadonlySet<string>): T | 'unknown' {
-  return typeof value === 'string' && known.has(value) ? value as T : 'unknown';
-}
 
 export function readingLogRequested(search: string): boolean {
   const value = new URLSearchParams(search).get(READING_LOG_QUERY);
@@ -445,8 +436,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // Table and Muster return explicit success/refusal. Keep the attempt
       // even if the call throws, and do not log its free-text refusal reason.
       if (verb === 'order') {
-        const category = safeCategory<TableOrder['kind']>(
-          (args[0] as { kind?: unknown } | null | undefined)?.kind, TABLE_ORDER_KINDS);
+        const category = readingLogTableCategory((args[0] as { kind?: unknown } | null | undefined)?.kind);
         const event = { kind: 'action' as const, verb, act: 'table' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
@@ -459,8 +449,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         }
       }
       if (verb === 'muster') {
-        const category = safeCategory<MusterOrder['op']>(
-          (args[0] as { op?: unknown } | null | undefined)?.op, MUSTER_ORDER_OPS);
+        const category = readingLogMusterCategory((args[0] as { op?: unknown } | null | undefined)?.op);
         const event = { kind: 'action' as const, verb, act: 'muster' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
