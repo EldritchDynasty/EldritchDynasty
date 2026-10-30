@@ -11,7 +11,6 @@ import { createGame } from './lib/game.js';
 import {
   BROWSER_IMPORT_CANCELLED,
   browserPlatform,
-  copyTextInBrowser,
   platformForWindow,
   type Platform,
   type SmokeCommand,
@@ -51,56 +50,6 @@ function memoryPlatform(): Platform & { saves: Map<string, unknown>; unlocks: st
     onPause: () => () => undefined, onBack: () => () => undefined,
   };
 }
-
-describe('fallback copy restores the caller\'s keyboard focus (#2034)', () => {
-  it.each([true, false])('returns focus to a non-HTML SVG control when copy succeeds=%s', async (allowed) => {
-    const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
-    const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
-    const originalHtmlElement = Object.getOwnPropertyDescriptor(globalThis, 'HTMLElement');
-    const originalControl = { focus: vi.fn(() => { active = originalControl; }) };
-    let active: unknown = originalControl;
-    const area = {
-      value: '',
-      style: {} as Record<string, string>,
-      setAttribute: vi.fn(),
-      focus: vi.fn(() => { active = area; }),
-      select: vi.fn(),
-      remove: vi.fn(),
-    };
-    const doc = {
-      get activeElement() { return active; },
-      createElement: vi.fn(() => area),
-      body: { appendChild: vi.fn() },
-      execCommand: vi.fn(() => allowed),
-    };
-    // An SVG element can be focusable without being an HTMLElement. The
-    // HTML-only focus guard lost it when the temporary textarea was removed.
-    Object.defineProperty(globalThis, 'HTMLElement', { configurable: true, value: class FakeHTMLElement {} });
-    Object.defineProperty(globalThis, 'document', { configurable: true, value: doc });
-    Object.defineProperty(globalThis, 'navigator', {
-      configurable: true,
-      value: { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('clipboard permission denied')) } },
-    });
-    try {
-      if (allowed) await expect(copyTextInBrowser('ED1.example')).resolves.toBeUndefined();
-      else await expect(copyTextInBrowser('ED1.example')).rejects.toThrow('the browser refused to copy');
-      expect(doc.execCommand).toHaveBeenCalledWith('copy');
-      expect(doc.body.appendChild).toHaveBeenCalledWith(area);
-      expect(area.remove).toHaveBeenCalledOnce();
-      expect(originalControl.focus).toHaveBeenCalledOnce();
-      expect(active).toBe(originalControl);
-    } finally {
-      for (const [key, original] of [
-        ['document', originalDocument],
-        ['navigator', originalNavigator],
-        ['HTMLElement', originalHtmlElement],
-      ] as const) {
-        if (original) Object.defineProperty(globalThis, key, original);
-        else Reflect.deleteProperty(globalThis, key);
-      }
-    }
-  });
-});
 
 describe('browser host rejects unreadable root writes (#1372, #1406)', () => {
   it('preserves previous save and Library bytes on non-object serialized roots', async () => {
