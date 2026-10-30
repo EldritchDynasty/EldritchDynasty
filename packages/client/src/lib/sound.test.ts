@@ -351,6 +351,33 @@ describe('the player, over a fake engine', () => {
     expect(e.made).toHaveLength(1);
   });
 
+  it('fails closed if the host refuses to suspend a running audio context', async () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page');
+    const ctx = e.made[0]!;
+    ctx.suspend = () => Promise.reject(new Error('host suspended audio incorrectly'));
+
+    s.suspend();
+    await settle();
+    expect(s.available).toBe(false);
+    expect(() => s.cue('bell')).not.toThrow();
+    expect(e.made).toHaveLength(1);
+  });
+
+  it('ignores late refusals from a context already disposed', async () => {
+    const e = fakeEngine({ reject: true });
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('seal');
+    s.close(); // The old context's pending resume can still reject later.
+    await settle();
+    expect(s.available).toBe(true);
+    s.cue('page');
+    expect(e.made).toHaveLength(2);
+  });
+
   it('never leaves a refused promise unheard', async () => {
     const unheard: unknown[] = [];
     const note = (reason: unknown) => unheard.push(reason);
