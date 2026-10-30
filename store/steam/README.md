@@ -30,9 +30,11 @@ A text-based generational strategy game about blood, marriage, and the family re
 ## About This Game
 
 ```text
+The family record you falsify is what your descendants will inherit. When the Record opens, write what happened, omit it, or embellish it for standing now — and leave a discrepancy the creditor may read back.
+
 In 1042, your ancestor signed something. In 1542, the other party comes to collect.
 
-Eldritch Dynasty is a text-based generational strategy game about one family, one debt, and five centuries of consequences.
+Eldritch Dynasty is a text-based generational strategy game about one family, one debt, and generations of consequences.
 
 You do not play a hero. You play the will of a bloodline. Across generations you choose who marries whom, who inherits, who is spent, what the family records, and what it leaves conveniently blank.
 
@@ -42,7 +44,7 @@ The chronicle is not a log. It is evidence you are allowed to edit. Record the t
 
 Every generation leaves a family tree and a book behind it. Cadet branches split away. Ages begin and end. Houses remember insults differently. The Church keeps its own version. The final reckoning reads the record the family chose to make, not a neutral transcript of what really happened.
 
-A Short Line is the default campaign. A Long Line is the complete five-century campaign, with the full nine-clause Ledger, the complete Ascension Ladder, and the broadest story reach.
+A Short Line is the default three-century campaign with three Ledger clauses. A Long Line spans five centuries and nine clauses, with a difficult path toward Apotheosis. Its summit is rare, not an ending promised to every house.
 ```
 
 ### Feature bullets for the lower page
