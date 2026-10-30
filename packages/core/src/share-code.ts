@@ -345,6 +345,10 @@ export function readShareCode(
   source: ContentBundle | Content,
   opts: { build?: string } = {},
 ): ReadShareCodeResult {
+  // Permit ordinary line wrapping, but bound the raw input before stripping
+  // whitespace. Otherwise a megabyte of spaces plus a valid small code
+  // bypasses SHARE_CODE_MAX and needlessly reaches normalization.
+  if (code.length > SHARE_CODE_MAX * 2) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const text = code.replace(/\s+/g, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
