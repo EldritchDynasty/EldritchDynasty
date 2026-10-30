@@ -123,6 +123,19 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(begun.ok && saved(begun.session)).toBe(saved(original));
   });
 
+  it('does not let an unrequested founder name replace the authored founder', () => {
+    const original = founded({ houseName: 'Hearth', heirloom: 'portion_of_agelessness', grudge: 'house_marrow' });
+    // A stale name field can survive a previous pasted code in the client.
+    // It is not part of either encoded founding, so it must not create a
+    // new founder when the code used the authored founder.
+    for (const names of [false, true]) {
+      const imported = newGameFromShareCode(codeOf(original, { names }), content, {
+        build: BUILD, names: { founder: 'Stale Previous Founder', house: 'Hearth' },
+      });
+      expect(imported.ok && saved(imported.session)).toBe(saved(original));
+    }
+  });
+
   it('says the same thing at year one and year forty: no later decision is in it', () => {
     const s = founded(SIGNED, 199501, 'long');
     const atSigning = codeOf(s, { names: true });
