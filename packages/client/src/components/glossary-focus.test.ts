@@ -2,6 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import GlossaryText from './GlossaryText.vue';
+import Entry from './Entry.vue';
+import type { ChronicleEntry } from '@ed/core';
 
 const mounted: Array<{ wrapper: VueWrapper; host: HTMLElement }> = [];
 function render(text: string, proseMode: 'original' | 'plainenglish' = 'original'): VueWrapper {
@@ -46,4 +48,28 @@ describe('in-place Standing disclosure', () => {
     expect(plain.find('button').exists()).toBe(false);
     expect(plain.text()).toBe('An unrelated chronicle line.');
   });
+  it('marks only ordinary Chronicle entries, not the creditor reading or omitted pages', () => {
+    const entry = {
+      id: 'page-test',
+      year: 1045,
+      text: 'Standing was questioned.',
+      title: 'A ledger line',
+      record: 'record',
+      weight: 'line',
+      claims: [],
+    } as unknown as ChronicleEntry;
+    const chronicle = mount(Entry, { props: { entry, proseMode: 'original' } });
+    expect(chronicle.findAll('p button')).toHaveLength(1);
+    chronicle.unmount();
+    const creditor = mount(Entry, { props: { entry, proseMode: 'original', read: true } });
+    expect(creditor.findAll('p button')).toHaveLength(0);
+    expect(creditor.text()).toContain(entry.text);
+    creditor.unmount();
+    const omitted = mount(Entry, {
+      props: { entry: { ...entry, record: 'omit', text: null }, proseMode: 'original' },
+    });
+    expect(omitted.findAll('p button')).toHaveLength(0);
+    omitted.unmount();
+  });
+
 });
