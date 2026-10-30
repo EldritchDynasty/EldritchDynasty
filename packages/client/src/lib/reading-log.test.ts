@@ -275,7 +275,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/5', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/6', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -364,7 +364,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/5');
+    expect(l.artifact().format).toBe('ed-reading-log/6');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -389,6 +389,41 @@ describe('Record mode research (#1987)', () => {
 });
 
 describe('Table action research (#1992)', () => {
+  it('redacts malformed action categories without changing argument forwarding or the result', () => {
+    const l = log();
+    const refusal = { ok: false, reason: 'private refusal details' };
+    const seen: unknown[] = [];
+    const bare = {
+      order(payload: unknown) { seen.push(payload); return refusal; },
+      muster(payload: unknown) { seen.push(payload); return refusal; },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const privateOrder = { kind: 'not_a_real_kind_private_order', person: 'do not log me' };
+    const privateMuster = { op: 'not_a_real_op_private_muster', detail: 'do not log me' };
+    expect(actions.order(privateOrder as Parameters<typeof actions.order>[0])).toBe(refusal);
+    expect(actions.muster(privateMuster as Parameters<typeof actions.muster>[0])).toBe(refusal);
+    expect(actions.order(null as unknown as Parameters<typeof actions.order>[0])).toBe(refusal);
+    expect(actions.muster(undefined as unknown as Parameters<typeof actions.muster>[0])).toBe(refusal);
+    expect(seen).toEqual([privateOrder, privateMuster, null, undefined]);
+
+    expect(l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...e }) => e)).toEqual([
+      { kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'refused' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'unknown', status: 'attempted' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'unknown', status: 'refused' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'refused' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'unknown', status: 'attempted' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'unknown', status: 'refused' },
+    ]);
+    const exported = JSON.stringify(l.artifact());
+    expect(exported).not.toContain('private_order');
+    expect(exported).not.toContain('private_muster');
+    expect(exported).not.toContain('do not log me');
+    expect(exported).not.toContain('private refusal details');
+    expect(l.artifact().format).toBe('ed-reading-log/6');
+  });
+
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
     const l = log();
     const accepted = { ok: true, spent: 2, left: 8 };
