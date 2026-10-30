@@ -68,7 +68,7 @@ describe('ladder preparation reads the existing diagnosis (#1978)', () => {
       delete withoutDiagnosis.diagnosis;
       await wrapper.setProps({ ascension: withoutDiagnosis });
       expect(wrapper.find('.preparation-guide').exists()).toBe(false);
-      expect(wrapper.get('[data-rung="hierophant"] .next-rung').text()).toContain('Hierophant');
+      expect(wrapper.get('[data-rung="hierophant"] .next-rung').text()).toBe('Next level · hierophant');
     } finally { wrapper.unmount(); }
   });
 
