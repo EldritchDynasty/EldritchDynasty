@@ -201,7 +201,7 @@ class FakeSource {
  * Just enough `AudioContext` for `Sound` to build into. `refuse` is a device
  * that will not open; `reject` is one whose resume/suspend/close all refuse.
  */
-function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: boolean } = {}) {
+function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: boolean; throwClose?: boolean } = {}) {
   const made: FakeContext[] = [];
   class FakeContext {
     state = 'suspended';
@@ -230,7 +230,13 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     createBiquadFilter() { return { type: '', frequency: param(), Q: param(), connect: <T>(to: T) => to }; }
     resume() { return this.settle('resume', 'running'); }
     suspend() { return this.settle('suspend', 'suspended'); }
-    close() { return this.settle('close', 'closed'); }
+    close() {
+      if (options.throwClose) {
+        this.calls.push('close');
+        throw new Error('InvalidStateError: context already closed');
+      }
+      return this.settle('close', 'closed');
+    }
     private source() {
       const s = new FakeSource();
       this.sources.push(s);
@@ -347,6 +353,18 @@ describe('the player, over a fake engine', () => {
     // The failed context is not reused or repeatedly opened by later cues.
     s.cue('bell');
     expect(e.made).toHaveLength(1);
+  });
+
+  it('disposes and can restart after a host throws synchronously on close', () => {
+    const e = fakeEngine({ throwClose: true });
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('plain');
+    expect(() => s.close()).not.toThrow();
+    expect(e.made[0]!.calls).toContain('close');
+    expect(s.available).toBe(true);
+    s.cue('page');
+    expect(e.made).toHaveLength(2);
   });
 
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
