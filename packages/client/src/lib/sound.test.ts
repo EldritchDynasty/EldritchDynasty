@@ -635,6 +635,24 @@ describe('the bed decides when the house may be heard', () => {
     expect(chosen.audioSession.type).toBe('playback');
   });
 
+  it('keeps the game usable when optional Audio Session policy cannot be read or set', () => {
+    const forbidden = [
+      { audioSession: {
+        get type() { return 'auto'; },
+        set type(_mode: string) { throw new TypeError('ambient is read-only on this host'); },
+      } },
+      { get audioSession(): never { throw new Error('audio policy API unavailable'); } },
+    ];
+    for (const nav of forbidden) {
+      const page = fakePage();
+      const bed = new SoundBed(new Sound(null));
+      expect(() => bed.attach(page.doc, page.win, undefined, nav)).not.toThrow();
+      expect(page.count(), 'audio-policy refusal prevented game listeners').toBeGreaterThan(0);
+      bed.dispose();
+      expect(page.count(), 'audio-policy refusal leaked listeners').toBe(0);
+    }
+  });
+
   it('treats no engine at all as silence', () => {
     const bed = new SoundBed(new Sound(null));
     expect(() => {
