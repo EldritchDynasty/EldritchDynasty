@@ -13,7 +13,7 @@ export function standingGlossaryDefinition(mode?: ProseMode): string {
 
 export type GlossarySegment = { text: string; term?: 'standing' };
 
-const WORD_CHARACTER = /[\p{L}\p{N}_]/u;
+const WORD_CHARACTER = /[\p{L}\p{M}\p{N}_]/u;
 
 /**
  * Only the capitalized vocabulary label, not "standing preference" in a
