@@ -19,7 +19,7 @@ describe('first Standing glossary term in saved Chronicle text', () => {
   });
 
   it('never marks an embedded or semantically unrelated lowercase word', () => {
-    expect(splitFirstStanding('outStanding Standingé Standing2 Standing_name standing preference', 'original'))
+    expect(splitFirstStanding('outStanding Standingé Standing2 Standing_name Standing\u0301 standing preference', 'original'))
       .toEqual([{ text: 'outStanding Standingé Standing2 Standing_name standing preference' }]);
     expect(splitFirstStanding('Reputational reputation', 'plainenglish'))
       .toEqual([{ text: 'Reputational reputation' }]);
