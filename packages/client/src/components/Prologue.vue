@@ -387,6 +387,18 @@ function signOnEnter(event: KeyboardEvent): void {
         </button>
       </section>
 
+      <section class="choice">
+        <h3 class="label">{{ plain ? 'Family name' : 'The house' }}</h3>
+        <p class="prompt">{{ prologue.housePrompt }}</p>
+        <input
+          v-model="houseName"
+          maxlength="48"
+          :placeholder="plain ? 'Enter the family name' : 'what the family will be called'"
+          :aria-label="plain ? 'Enter the family name' : 'Name the house'"
+          @keydown.enter="signOnEnter($event)"
+        />
+      </section>
+
       <!-- THE LAST QUESTION, and the only one not about the house. It is the
            one place the game reaches outside itself, so it is asked in the
            frame's own voice and never explained. -->
@@ -423,18 +435,6 @@ function signOnEnter(event: KeyboardEvent): void {
             </div>
           </div>
         </details>
-      </section>
-
-      <section class="choice">
-        <h3 class="label">{{ plain ? 'Family name' : 'The house' }}</h3>
-        <p class="prompt">{{ prologue.housePrompt }}</p>
-        <input
-          v-model="houseName"
-          maxlength="48"
-          :placeholder="plain ? 'Enter the family name' : 'what the family will be called'"
-          :aria-label="plain ? 'Enter the family name' : 'Name the house'"
-          @keydown.enter="signOnEnter($event)"
-        />
       </section>
 
       <p v-if="refused" class="rubric small">{{ refused }}</p>
