@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import type { ChronicleCause, ChronicleEntry, EpilogueView, RecordedMilestone, SessionView } from '@ed/core';
+import type { ChronicleCause, ChronicleEntry, EpilogueView, RecordedMilestone, SessionView, ShareCodeResult } from '@ed/core';
 import { ref } from 'vue';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -52,6 +52,7 @@ function readsOver(book: ChronicleEntry[]) {
     },
     answeredBy: (id: string) => book.filter((e) => e.cause?.page === id).map((e) => e.year),
     advice: () => [],
+    shareCode: (): ShareCodeResult => ({ ok: false, unavailable: 'not_founded' }),
   };
 }
 
@@ -839,6 +840,96 @@ describe('house afterimage export failure (#1141)', () => {
     } finally {
       wrapper.unmount();
       canvas.mockRestore();
+    }
+  });
+});
+
+/** The founding goes out on the pictures, never with its names (#1995). */
+describe('share codes painted on exported images', () => {
+  function paintingContext() {
+    const painted: { text: string; font: string }[] = [];
+    const context = {
+      font: '',
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {},
+      fillText(text: string) { painted.push({ text, font: this.font }); },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    };
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((done) => done(new Blob(['png'], { type: 'image/png' })));
+    return painted;
+  }
+  const codeOf = (painted: { text: string; font: string }[]) =>
+    painted.filter((p) => p.font.includes('monospace')).map((p) => p.text).join('');
+  const shareCode = vi.fn((names: boolean) => ({ ok: true as const, code: names ? 'ED1.named.x' : 'ED1.plain.x' }));
+
+  it('puts the nameless code on the Afterimage even when the reader ticked names for the box above', async () => {
+    const painted = paintingContext();
+    shareCode.mockClear();
+    const w = mount(Ending, {
+      props: {
+        view: { houseName: 'House Salt', seed: 123, campaign: { name: 'A Long Line', startYear: 1042 } } as never,
+        epilogue: {
+          year: 1542, title: 'The last account', summary: 'S', opening: 'O', read: [], ring: [], closing: 'C',
+          reckoning: {
+            pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+            clauses: 0, clausesTotal: 9, attested: 'none', livingBlood: 0, rungsWithheld: 0,
+          },
+        } as never,
+        actions: { restart: vi.fn(), shareCode } as unknown as GameActions,
+      },
+    });
+    try {
+      await w.get('.share-names input').setValue(true);
+      expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1.named.x');
+      await w.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(codeOf(painted)).toBe('ED1.plain.x');
+      expect(painted.some((p) => p.text.includes('named'))).toBe(false);
+      expect(painted.map((p) => p.text)).toContain('THE SAME BEGINNING · NAMES WITHHELD');
+    } finally {
+      w.unmount();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('puts the nameless code in the Chronicle plate\'s foot, under the game\'s name', async () => {
+    const painted = paintingContext();
+    shareCode.mockClear();
+    const w = mount(Book, {
+      props: {
+        book: BOOK, ages: [], houseName: 'Gearithy', close: () => {}, proseMode: 'plainenglish',
+        actions: { ...readsOver(BOOK), shareCode },
+      },
+    });
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save an image')!.trigger('click');
+      await flushPromises();
+      expect(shareCode).toHaveBeenCalledWith(false);
+      expect(shareCode).not.toHaveBeenCalledWith(true);
+      expect(codeOf(painted)).toBe('ED1.plain.x');
+      const label = painted.findIndex((p) => p.text === 'Eldritch Dynasty · Share code for this starting point (names not included)');
+      expect(label).toBeGreaterThan(-1);
+      expect(painted[label + 1]!.text).toBe('ED1.plain.x');
+    } finally {
+      w.unmount();
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('keeps the plain foot for a run with no code', async () => {
+    const painted = paintingContext();
+    const w = mount(Book, {
+      props: { book: BOOK, ages: [], houseName: 'Gearithy', close: () => {}, actions: readsOver(BOOK) },
+    });
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      expect(painted.at(-1)!.text).toBe('Eldritch Dynasty');
+      expect(codeOf(painted)).toBe('');
+    } finally {
+      w.unmount();
+      vi.restoreAllMocks();
     }
   });
 });

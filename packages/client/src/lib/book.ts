@@ -114,6 +114,8 @@ export interface PlateRow {
   italic?: boolean;
   /** A dated blank line: a rule across the page and no text. */
   rule?: boolean;
+  /** Drawn in `PLATE.mono`: a share code, where l, I and 1 must not blur. */
+  mono?: boolean;
   gap: number;
 }
 
@@ -129,7 +131,13 @@ export const PLATE = {
   rule: '#cdbfa4',
   ground: '#f4ecd8',
   serif: 'Georgia, "Iowan Old Style", "Palatino Linotype", serif',
+  mono: 'ui-monospace, Menlo, Consolas, "Courier New", monospace',
 } as const;
+
+/** The font a plate row is drawn in. PNG, SVG and the Afterimage all ask here. */
+export function rowFont(row: Pick<PlateRow, 'size' | 'italic' | 'mono'>): string {
+  return `${row.italic ? 'italic ' : ''}${row.size}px ${row.mono ? PLATE.mono : PLATE.serif}`;
+}
 
 const SIZE: Record<string, number> = { line: 15, paragraph: 17, page: 19, illuminated: 22 };
 
@@ -232,9 +240,52 @@ export function plateRows(entries: readonly ChronicleEntry[], measure: Measure):
   return rows;
 }
 
-/** How tall the plate has to be to hold those rows. */
-export function plateHeight(rows: readonly PlateRow[]): number {
-  return Math.ceil(PLATE.head + rows.reduce((h, r) => h + r.size * 1.5 + r.gap, 0) + PLATE.foot);
+/**
+ * THE PLATE'S FOOT (#1995): the game's name and, when the run has one, the
+ * founding as a share code, so somebody holding the picture can begin the
+ * same house. The code is always the one without names: an image travels
+ * further than its maker means it to, and nobody ticked a box here.
+ *
+ * A code has no spaces, so `wrap` breaks it by grapheme at the column; the
+ * reader rejoins it, and `readShareCode` ignores the whitespace in between.
+ */
+export interface PlateFoot {
+  label: string;
+  code: string[];
+  height: number;
+}
+
+const FOOT_LINE = 18;
+const FOOT_CODE = { size: 12, mono: true } as const;
+
+export function plateFoot(code: string | null | undefined, measure: Measure, mode: ProseMode = 'original'): PlateFoot {
+  if (!code) return { label: 'Eldritch Dynasty', code: [], height: PLATE.foot };
+  const lines = wrap(code, rowFont(FOOT_CODE), PLATE.width - PLATE.pad * 2, measure);
+  return {
+    label: mode === 'plainenglish'
+      ? 'Eldritch Dynasty · Share code for this starting point (names not included)'
+      : 'Eldritch Dynasty · The same beginning, names withheld',
+    code: lines,
+    height: PLATE.foot + lines.length * FOOT_LINE,
+  };
+}
+
+/**
+ * Where each line of the foot is drawn, on a plate `height` tall. One answer
+ * for PNG and SVG; with no code it is the single line at `height - 28` the
+ * plate has always had.
+ */
+export function plateFootLines(foot: PlateFoot, height: number): { text: string; y: number; mono: boolean }[] {
+  const top = height - 28 - foot.code.length * FOOT_LINE;
+  return [
+    { text: foot.label, y: top, mono: false },
+    ...foot.code.map((text, i) => ({ text, y: top + (i + 1) * FOOT_LINE, mono: true })),
+  ];
+}
+
+/** How tall the plate has to be to hold those rows, and its foot. */
+export function plateHeight(rows: readonly PlateRow[], foot?: PlateFoot): number {
+  return Math.ceil(PLATE.head + rows.reduce((h, r) => h + r.size * 1.5 + r.gap, 0) + (foot?.height ?? PLATE.foot));
 }
 
 /**
@@ -264,8 +315,8 @@ function plateXml(text: string): string {
  * same rows, measurements, coordinates and gaps as the PNG drawing in Book.vue
  * so the long form keeps every page, including the dated ruled omissions.
  */
-export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: string): string {
-  const height = plateHeight(rows);
+export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: string, foot?: PlateFoot): string {
+  const height = plateHeight(rows, foot);
   const font = plateXml(PLATE.serif);
   const parts = [
     '<svg xmlns="http://www.w3.org/2000/svg"'
@@ -294,11 +345,11 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
     }
     y += row.size * 0.3 + row.gap;
   }
-  parts.push(
-    '<text x="' + PLATE.pad + '" y="' + (height - 28) + '" fill="' + PLATE.faint
-    + '" font-family="' + font + '" font-size="12">Eldritch Dynasty</text>',
-    '</svg>',
-  );
+  for (const line of plateFootLines(foot ?? plateFoot(null, () => 0), height)) {
+    parts.push('<text x="' + PLATE.pad + '" y="' + line.y + '" fill="' + PLATE.faint
+      + '" font-family="' + (line.mono ? plateXml(PLATE.mono) : font) + '" font-size="12">' + plateXml(line.text) + '</text>');
+  }
+  parts.push('</svg>');
   return parts.join('\n');
 }
 
@@ -361,6 +412,8 @@ export interface AfterimageInput {
     livingBlood: number;
   };
   read: readonly ChronicleEntry[];
+  /** The founding's share code, names left out (#1995). Absent when the run has none. */
+  shareCode?: string;
 }
 
 export interface AfterimageModel {
@@ -377,6 +430,7 @@ export interface AfterimageModel {
   quoteHeading: string;
   footer: string;
   quote?: { year: number; title?: string; text: string };
+  share?: { heading: string; code: string };
 }
 
 /**
@@ -467,6 +521,12 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
     quoteHeading: plain ? 'CHRONICLE EXCERPT' : 'FROM THE CHRONICLE',
     footer: plain ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage',
     ...(quote ? { quote } : {}),
+    ...(input.shareCode ? {
+      share: {
+        heading: plain ? 'SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)' : 'THE SAME BEGINNING · NAMES WITHHELD',
+        code: input.shareCode,
+      },
+    } : {}),
   };
 }
 
@@ -483,9 +543,9 @@ export interface AfterimageLayout {
 export function afterimageLayout(model: AfterimageModel, measure: Measure): AfterimageLayout {
   const inner = PLATE.width - PLATE.pad * 2;
   const rows: PlateRow[] = [];
-  const add = (text: string, size: number, colour: string, gap = 8, italic = false): void => {
-    const lines = wrap(text, `${italic ? 'italic ' : ''}${size}px ${PLATE.serif}`, inner, measure);
-    lines.forEach((text, i) => rows.push({ text, size, colour, italic, gap: i === lines.length - 1 ? gap : 2 }));
+  const add = (text: string, size: number, colour: string, gap = 8, italic = false, mono = false): void => {
+    const lines = wrap(text, rowFont({ size, italic, mono }), inner, measure);
+    lines.forEach((text, i) => rows.push({ text, size, colour, italic, ...(mono ? { mono } : {}), gap: i === lines.length - 1 ? gap : 2 }));
   };
   add(model.houseName, 34, PLATE.ink);
   add(model.strap, 13, PLATE.faint, 24);
@@ -511,6 +571,10 @@ export function afterimageLayout(model: AfterimageModel, measure: Measure): Afte
   if (model.quote) {
     add(`${model.quoteHeading} · ${model.quote.year}${model.quote.title ? ` · ${model.quote.title}` : ''}`, 12, PLATE.faint);
     add(model.quote.text, 19, PLATE.ink, 20, true);
+  }
+  if (model.share) {
+    add(model.share.heading, 12, PLATE.faint, 4);
+    add(model.share.code, 14, PLATE.ink, 20, false, true);
   }
   const height = Math.max(760, Math.ceil(90 + rows.reduce((sum, row) => sum + row.size * 1.5 + row.gap, 0)));
 

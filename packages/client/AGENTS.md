@@ -140,6 +140,14 @@ refusals (`lib/share-code.ts`, both modes, ending in `assertNever`).
 - Beginning goes through `beginFromShareCode`, which is `newGame` + `found`. A
   refusal leaves the current run and its autosave alone. A founded import still
   opens on the signing's thesis screen.
+- The Chronicle plate's foot (PNG and SVG) and the Afterimage's last rows carry
+  the code **without names, always**: the box on the ending screen governs only
+  the text beside it. `lib/book.ts` lays the code out in `PLATE.mono`, wrapped
+  by grapheme at the column; `readShareCode` ignores the line breaks a reader
+  types back. `tests/e2e/share-image.spec.ts` measures that in real Chromium.
+- Copying goes through the optional `Platform.copyText`; a host without one gets
+  `copyTextInBrowser` (Clipboard API, then a selected textarea). A copy that did
+  not take says so, and the code stays selectable by hand.
 
 ## Saves and hosts
 
