@@ -391,6 +391,28 @@ describe('the player, over a fake engine', () => {
     expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
   });
 
+  it('stops the current drone before suspending the audio clock, even without muting first', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const playing = [...ctx.sources];
+
+    // Suspending freezes currentTime. A normal 1.4-second exit would remain
+    // scheduled and could be heard again on resume alongside the next Age.
+    s.suspend();
+    expect(ctx.calls).toContain('suspend');
+    expect(playing.every((source) => source.stopped !== undefined
+      && source.stopped <= ctx.currentTime + 0.05),
+    'a suspended clock retained a long fade to replay when the host wakes').toBe(true);
+
+    s.wake();
+    s.setDrone(COLD);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
+    expect(ctx.sources).toHaveLength(playing.length + droneScore(COLD)!.voices.length);
+  });
+
   it('turns a device that will not open into silence, not an exception', () => {
     const e = fakeEngine({ refuse: true });
     const s = new Sound(e.ctor);
