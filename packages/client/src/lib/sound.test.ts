@@ -298,6 +298,28 @@ describe('the player, over a fake engine', () => {
     expect(out.gain.value).toBe(1);
   });
 
+  it('treats an invalidated host gain during a volume change as silence, not a settings error', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page');
+    const ctx = e.made[0]!;
+
+    // Some devices invalidate their audio output while a page is still open.
+    // Their AudioParam setter can throw synchronously on the next preference.
+    Object.defineProperty(ctx.gains[0]!.gain, 'value', {
+      get: () => 1,
+      set: () => { throw new Error('NotSupportedError: output device disappeared'); },
+    });
+
+    expect(() => { s.volume = 0.35; }).not.toThrow();
+    expect(s.volume).toBe(0.35);
+    expect(s.available).toBe(false);
+    expect(ctx.calls).toContain('close');
+    expect(() => s.cue('seal')).not.toThrow();
+    expect(e.made).toHaveLength(1);
+  });
+
   it('leaves an unchanged drone alone, and stops for the frame and for no house at all', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
