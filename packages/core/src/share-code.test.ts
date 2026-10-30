@@ -289,6 +289,15 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(!begun.ok && 'session' in begun).toBe(false);
   });
 
+  it('refuses to export seeds the decoder cannot represent', () => {
+    // The player UI restricts seeds to uint32, but programmatic games can
+    // be founded with other numbers. No exporter may promise an unreadable code.
+    for (const seed of [-1, 1.5, 0x100000000]) {
+      const s = founded(SIGNED, seed);
+      expect(s.shareCode({ build: BUILD })).toEqual({ ok: false, unavailable: 'unrepresentable' });
+    }
+  });
+
   it('has nothing to say before the house is founded', () => {
     const s = newGame(content, { seed: 1, startYear: CAMPAIGNS.short.startYear, campaign: 'short' });
     expect(s.shareCode()).toEqual({ ok: false, unavailable: 'not_founded' });
