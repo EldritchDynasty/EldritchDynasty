@@ -4,6 +4,7 @@ import type { ChronicleEntry } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 import { isWritten } from '../lib/book';
+import GlossaryText from './GlossaryText.vue';
 
 /**
  * ONE LINE OF THE BOOK, wherever the book is being read (issue #48).
@@ -119,7 +120,12 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
   >
     <span class="year dim small">{{ entry.year }}</span>
     <h4 v-if="entry.title && !blank">{{ entry.title }}</h4>
-    <p v-if="!blank">{{ entry.text }}</p>
+    <!-- Only Chronicle reading receives term controls. The creditor's spoken
+         reading stays uninterleaved and all saved/exported prose is untouched. -->
+    <p v-if="!blank">
+      <GlossaryText v-if="!read" :text="entry.text" :prose-mode="proseMode" />
+      <template v-else>{{ entry.text }}</template>
+    </p>
     <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
          became a tooltip. Neither is a touch-safe explanation. The sentence is
          said; the page still shows the gap, and the visible mark below carries
