@@ -40,7 +40,7 @@ You do not play a hero. You play the will of a bloodline. Across generations you
 
 The people in the house inherit genomes rather than rolled stat blocks. Desired traits can concentrate. Recessives can surface. Marrying outward can thin the blood, while marrying inward can preserve exactly the thing that ruins the descendants you were trying to strengthen.
 
-The chronicle is not a log. It is evidence you are allowed to edit. Record the truth and descendants inherit useful knowledge at a social cost. Omit it and they may repeat the mistake. Embellish it and the house gains standing now while leaving a discrepancy that somebody may prove centuries later.
+The chronicle is not a log. It is evidence you are allowed to edit. Record the truth and descendants inherit useful knowledge at a social cost. Omit it and they may repeat the mistake, while the missing account can leave a discrepancy for later readers. Embellish it and the house gains standing now while leaving a discrepancy that somebody may prove centuries later.
 
 Every generation leaves a family tree and a book behind it. Cadet branches split away. Ages begin and end. Houses remember insults differently. The Church keeps its own version. The final reckoning reads the record the family chose to make, not a neutral transcript of what really happened.
 
