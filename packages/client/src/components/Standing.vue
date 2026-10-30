@@ -5,6 +5,7 @@ import type { StandingDelta } from '@ed/core';
 import type { ProseMode, RespectTier } from '@ed/schema';
 import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
+import { standingGlossaryDefinition } from '../lib/glossary';
 import LadderPath from './LadderPath.vue';
 
 const props = withDefaults(defineProps<{
@@ -29,9 +30,7 @@ const emit = defineEmits<{
 
 const plain = computed(() => props.proseMode === 'plainenglish');
 /** First in-place glossary term (#1991), sharing the existing house-key copy. */
-const standingDefinition = computed(() => plain.value
-  ? 'How the wider world regards this family.'
-  : 'the regard the wider world gives the house.');
+const standingDefinition = computed(() => standingGlossaryDefinition(props.proseMode));
 const standingOpen = ref(false);
 const PLAIN_RESPECT: Record<RespectTier, string> = {
   unknown: 'Not known',
