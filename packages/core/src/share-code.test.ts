@@ -177,11 +177,17 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(readShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
     // Frequent line breaks still fit the bounded raw input envelope.
     expect(readShareCode(code.split('').join('\n '), content, { build: BUILD }).ok).toBe(true);
+    // A scan may put an indented break between every character. The former
+    // raw-input guard rejected this still-bounded valid code before decoding.
+    const denselyWrapped = code.split('').join('\n  ');
+    const withinRawLimit = denselyWrapped.padStart(SHARE_CODE_MAX * 2 + 1, ' ');
+    expect(withinRawLimit.length).toBeLessThanOrEqual(SHARE_CODE_MAX * 4);
+    expect(readShareCode(withinRawLimit, content, { build: BUILD }).ok).toBe(true);
   });
 
   it('bounds padded input before normalizing away whitespace', () => {
     const code = codeOf(founded());
-    const padded = `${' \n'.repeat(SHARE_CODE_MAX + 1)}${code}`;
+    const padded = `${' \n'.repeat(SHARE_CODE_MAX * 2 + 1)}${code}`;
     expect(problemOf(padded)).toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
     // The actual decoded payload limit remains the declared SHARE_CODE_MAX.
     expect(problemOf(`ED1.${'A'.repeat(SHARE_CODE_MAX)}.0`))
