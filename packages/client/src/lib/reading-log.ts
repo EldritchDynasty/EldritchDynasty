@@ -1,5 +1,4 @@
 import type { ChronicleView, MusterOrder, RecordOption, TableOrder } from '@ed/core';
-import { RecordOptionS } from '@ed/schema';
 import type { GameActions } from './game.js';
 
 /**
@@ -55,6 +54,16 @@ export const READING_LOG_CAVEATS = [
 export function readingLogRequested(search: string): boolean {
   const value = new URLSearchParams(search).get(READING_LOG_QUERY);
   return value !== null && ['', '1', 'on', 'true', 'yes'].includes(value.toLowerCase());
+}
+
+/** Only the store imports runtime schema/core values. This observer validates a
+ * bounded string locally, with the type-only union requiring every new mode
+ * to be added explicitly before the client can compile. */
+const RECORD_MODES: Readonly<Record<RecordOption, true>> = {
+  record: true, omit: true, embellish: true,
+};
+function isRecordMode(value: unknown): value is RecordOption {
+  return typeof value === 'string' && Object.prototype.hasOwnProperty.call(RECORD_MODES, value);
 }
 
 export type ReadingAnswerKind = 'interlude' | NonNullable<ChronicleView['answer']>;
@@ -411,7 +420,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // Validate against the schema-owned union so even a malformed caller
       // cannot smuggle arbitrary prose into an exported artifact.
       if (verb === 'record') {
-        const choice = RecordOptionS.safeParse(args[1]);
+        const choice = args[1];
         // Production decision ids are dec_<base36 counter>. Do not mistake a
         // caller-provided name or prose for an internal identifier.
         const id = args[0];
@@ -419,7 +428,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
           ? id : undefined;
         const event = {
           kind: 'action' as const, verb, act: 'answer' as const,
-          mode: choice.success ? choice.data : 'unknown' as const,
+          mode: isRecordMode(choice) ? choice : 'unknown' as const,
           ...(decision ? { decision } : {}),
         };
         log.note({ ...event, status: 'attempted' });
