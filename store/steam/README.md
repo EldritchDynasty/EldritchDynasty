@@ -30,7 +30,7 @@ Shape a bloodline through marriages and inheritance, then decide what its Chroni
 ## About This Game
 
 ```text
-The family record you falsify is what your descendants will inherit. When the Record opens, write what happened, omit it, or embellish it for standing now — and leave a discrepancy the creditor may read back.
+Your family's Chronicle is evidence you can falsify, and your descendants inherit whichever account you leave behind. When the Record opens, record what happened, omit it, or embellish it for standing now. An omission or embellishment can leave a discrepancy that the creditor may later read back.
 
 In 1042, your ancestor signed something. In 1542, the other party comes to collect.
 
