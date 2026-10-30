@@ -354,7 +354,10 @@ export function readShareCode(
   const parts = text.split('.');
   if (parts.length !== 3 || check(parts[1]!) !== parts[2]) return { ok: false, problem: { kind: 'damaged' } };
   const bytes = fromBase64Url(parts[1]!);
-  if (!bytes) return { ok: false, problem: { kind: 'damaged' } };
+  // Base64url has unused trailing bits for 1- or 2-byte final groups.
+  // Reject a re-sealed alias with nonzero padding bits: only codes emitted
+  // by this encoder may name a founding, not several spellings of one.
+  if (!bytes || toBase64Url(bytes) !== parts[1]) return { ok: false, problem: { kind: 'damaged' } };
   let payload: Payload;
   try {
     const result = PayloadS.safeParse(JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)));
