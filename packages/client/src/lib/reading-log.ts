@@ -1,4 +1,4 @@
-import type { ChronicleView } from '@ed/core';
+import type { ChronicleView, MusterOrder, TableOrder } from '@ed/core';
 import type { GameActions } from './game.js';
 
 /**
@@ -24,8 +24,8 @@ import type { GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 2: pages already on screen when a saved run is picked up are `carried`, not answers. */
-export const READING_LOG_FORMAT = 'ed-reading-log/2';
+/** 3: Table/Muster/delegation attempts have bounded category and terminal outcome events. */
+export const READING_LOG_FORMAT = 'ed-reading-log/3';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -36,7 +36,7 @@ export const READING_LOG_MAX_EVENTS = 20_000;
 /** What the notice says, word for word — the switch is not informed consent without it. */
 export const READING_LOG_NOTICE =
   'Reading log is on. On this device only, it records which pages and decisions are shown, the in-game year, '
-  + 'when this window is in front, which panel is open and which buttons you press. It records no text you type, '
+  + 'when this window is in front, which panel is open, which buttons you press and Table/Muster/delegation categories and results. It records no text you type, '
   + 'is not part of your saved game, and leaves this device only if you export it.';
 
 export const READING_LOG_CAVEATS = [
@@ -44,6 +44,7 @@ export const READING_LOG_CAVEATS = [
   'Game years are simulation pacing, not elapsed time.',
   'A censored gap ended without a next answer (export, stop, unload or the event cap); it is a lower bound.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
+  'For Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
@@ -71,9 +72,14 @@ const RECORDED_VERBS = {
   dismissOutcome: 'dismiss',
   dismissInterlude: 'dismiss',
   dismissChapter: 'dismiss',
-} as const satisfies Partial<Record<keyof GameActions, 'start' | 'advance' | 'answer' | 'dismiss'>>;
+  order: 'table',
+  muster: 'muster',
+  delegateChoice: 'delegate',
+  delegateRecord: 'delegate',
+} as const satisfies Partial<Record<keyof GameActions, 'start' | 'advance' | 'answer' | 'dismiss' | 'table' | 'muster' | 'delegate'>>;
 
 export type RecordedVerb = keyof typeof RECORDED_VERBS;
+type LegacyVerb = Exclude<RecordedVerb, 'order' | 'muster' | 'delegateChoice' | 'delegateRecord'>;
 
 /** The verbs that pick up a saved run, whose chronicle the reader saw in some other session. */
 const PICKUPS: ReadonlySet<RecordedVerb> = new Set(['resume', 'load', 'importSave']);
@@ -92,7 +98,10 @@ export type ReadingLogEvent =
   | { at: number; kind: 'page'; year: number; page: string; event?: string; answer?: ReadingAnswerKind; revisit?: true; carried?: true }
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
   | { at: number; kind: 'decision'; year: number; decision: string; event: string; seen: boolean }
-  | { at: number; kind: 'action'; verb: RecordedVerb; act: (typeof RECORDED_VERBS)[RecordedVerb]; years?: number }
+  | { at: number; kind: 'action'; verb: LegacyVerb; act: (typeof RECORDED_VERBS)[LegacyVerb]; years?: number }
+  | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'delegateChoice' | 'delegateRecord'; act: 'delegate'; category: 'choice' | 'record'; change: 'set' | 'clear'; status: 'attempted' | 'returned' | 'threw' }
   | { at: number; kind: 'ended' }
   | { at: number; kind: 'end'; reason: EndReason };
 
@@ -364,6 +373,52 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
   for (const verb of Object.keys(RECORDED_VERBS) as RecordedVerb[]) {
     const original = actions[verb] as (...args: unknown[]) => unknown;
     (wrapped as Record<RecordedVerb, unknown>)[verb] = (...args: unknown[]) => {
+      // Table and Muster return explicit success/refusal. Keep the attempt
+      // even if the call throws, and do not log its free-text refusal reason.
+      if (verb === 'order') {
+        const category = (args[0] as TableOrder).kind;
+        const event = { kind: 'action' as const, verb, act: 'table' as const, category };
+        log.note({ ...event, status: 'attempted' });
+        try {
+          const result = original.apply(actions, args) as ReturnType<GameActions['order']>;
+          log.note({ ...event, status: result.ok ? 'accepted' : 'refused' });
+          return result;
+        } catch (error) {
+          log.note({ ...event, status: 'threw' });
+          throw error;
+        }
+      }
+      if (verb === 'muster') {
+        const category = (args[0] as MusterOrder).op;
+        const event = { kind: 'action' as const, verb, act: 'muster' as const, category };
+        log.note({ ...event, status: 'attempted' });
+        try {
+          const result = original.apply(actions, args) as ReturnType<GameActions['muster']>;
+          log.note({ ...event, status: result.ok ? 'accepted' : 'refused' });
+          return result;
+        } catch (error) {
+          log.note({ ...event, status: 'threw' });
+          throw error;
+        }
+      }
+      if (verb === 'delegateChoice' || verb === 'delegateRecord') {
+        const event = {
+          kind: 'action' as const, verb, act: 'delegate' as const,
+          category: verb === 'delegateChoice' ? 'choice' as const : 'record' as const,
+          change: args[1] === null ? 'clear' as const : 'set' as const,
+        };
+        log.note({ ...event, status: 'attempted' });
+        try {
+          const result = original.apply(actions, args);
+          // Neither delegation verb returns a success flag. "returned"
+          // means only that the call finished, not that a setting changed.
+          log.note({ ...event, status: 'returned' });
+          return result;
+        } catch (error) {
+          log.note({ ...event, status: 'threw' });
+          throw error;
+        }
+      }
       log.note({
         kind: 'action', verb, act: RECORDED_VERBS[verb],
         ...(verb === 'advance' && typeof args[0] === 'number' ? { years: args[0] } : {}),
