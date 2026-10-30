@@ -191,6 +191,15 @@ Meanwhile:
 - Achievement `ending_all_long` needs **all five** Long Line endings. The v1
   rate table measured `ending_apotheosis` at **0/100** in every column.
 
+**31 October source-copy truth audit (E, #1988):** The draft short
+description formerly said the game unfolded "across five centuries". That is
+true of Long Line (500 years), but not the default Short Line (300 years).
+The revised short description leads with the player's decision over the
+Chronicle and says "across centuries"; About This Game gives both lengths
+explicitly and describes Apotheosis as a difficult path, not a promised
+outcome. This corrects a claim in **repository draft copy only**. It is not a
+Steamworks publication, a new player test or approval of the final positioning.
+
 **Market reading:** achievement hunters and completionists read Steam's global
 unlock percentages. An achievement at roughly 0% beside the store promise is a
 public, quantified version of "the choices don't matter". Pick a route before
