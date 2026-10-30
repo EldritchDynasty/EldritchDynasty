@@ -162,14 +162,20 @@ describe('the record-return report (#1987)', () => {
       row({ source: source({ mode: 'omit', discrepancies: [] }), first: follow, firstByKind: { followup: follow } }),
       row({ source: source({ mode: 'omit', discrepancies: [] }), ending: 'broken_line', broke: true, playedElapsed: 40 }),
       row({ recordOffers: 3 }),
-      row({ recordOffers: 0, firstOfferElapsed: undefined }),
+      row({ recordOffers: 0, firstOfferElapsed: undefined, interludes: 0, firstInterludeElapsed: undefined }),
     ];
     const [any, omit, embellish] = summariseRecordReturns(rows);
-    expect(any).toMatchObject({ mode: 'any', runs: 5, offered: 4, altered: 3 });
+    expect(any).toMatchObject({ mode: 'any', runs: 5, offered: 4, altered: 3, noInterlude: 1 });
+    expect(any!.firstInterludeElapsed.n).toBe(4);
     expect(any!.returned).toMatchObject({ hits: 2, n: 3 });
     expect(any!.alterationReturned).toMatchObject({ hits: 1, n: 3 });
     expect(any!.within.map((w) => w.share.hits)).toEqual([1, 1, 2]);
+    // The broken house was watched for 22 years, so no "within" cut observes it.
+    expect(any!.within.map((w) => [w.observed.hits, w.observed.n])).toEqual([[1, 2], [1, 2], [2, 2]]);
     expect(any!.afterYears).toMatchObject({ n: 2, median: 50, max: 75 });
+    // Four prompts before the choice, the choice itself, then nine or thirty.
+    expect(any!.fromSigning).toMatchObject({ n: 2, median: 24.5, max: 35 });
+    expect(any!.sources).toEqual([['the_source', 3]]);
     expect(any!.firstKinds).toEqual({ echo: 1, followup: 1 });
     expect(any!.anyKind).toEqual({ echo: 1, followup: 2 });
     // The broken house is censored at its own end: 40 played, 18 when it altered.
