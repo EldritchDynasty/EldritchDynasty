@@ -28,6 +28,11 @@ const emit = defineEmits<{
 }>();
 
 const plain = computed(() => props.proseMode === 'plainenglish');
+/** First in-place glossary term (#1991), sharing the existing house-key copy. */
+const standingDefinition = computed(() => plain.value
+  ? 'How the wider world regards this family.'
+  : 'the regard the wider world gives the house.');
+const standingOpen = ref(false);
 const PLAIN_RESPECT: Record<RespectTier, string> = {
   unknown: 'Not known',
   known: 'Known',
@@ -268,12 +273,24 @@ const muster = computed(() => {
           </dd>
         </div>
         <div>
-          <dt>{{ plain ? 'Reputation' : 'Standing' }}</dt>
+          <dt>
+            <button
+              type="button"
+              class="standing-term"
+              :aria-expanded="standingOpen"
+              :aria-controls="standingOpen ? 'standing-term-definition' : undefined"
+              @click="standingOpen = !standingOpen"
+              @keydown.esc.stop.prevent="standingOpen = false"
+            >{{ plain ? 'Reputation' : 'Standing' }}</button>
+          </dt>
           <dd>
             <span :class="{ delta: moved?.respect }">{{ respectLabel(view.respect) }}</span><span
               v-if="moved?.respect"
               class="delta"
             > (was {{ respectLabel(moved.respect.from) }})</span>
+          </dd>
+          <dd v-if="standingOpen" id="standing-term-definition" class="standing-definition soft">
+            {{ standingDefinition }}
           </dd>
         </div>
         <div>
@@ -300,7 +317,7 @@ const muster = computed(() => {
         <summary>{{ plain ? 'What these numbers mean' : 'What these readings mean' }}</summary>
         <dl>
           <div><dt>{{ plain ? 'Money balance' : 'Treasury' }}</dt><dd>{{ plain ? 'The family’s money in crowns. A negative balance means the family owes money.' : 'crowns the house can spend.' }}</dd></div>
-          <div><dt>{{ plain ? 'Reputation' : 'Standing' }}</dt><dd>{{ plain ? 'How the wider world regards this family.' : 'the regard the wider world gives the house.' }}</dd></div>
+          <div><dt>{{ plain ? 'Reputation' : 'Standing' }}</dt><dd>{{ standingDefinition }}</dd></div>
           <div><dt>{{ plain ? 'Unrest' : 'Discontent' }}</dt><dd>{{ plain ? 'How much unrest is building inside the family and on its land.' : 'how much strain is building inside the house and its holdings.' }}</dd></div>
           <div><dt>{{ plain ? 'Recovered clauses' : 'Ledger' }}</dt><dd>{{ plain ? 'How many parts of the old bargain the family has found.' : 'how much of the old bargain the family has recovered.' }}</dd></div>
         </dl>
@@ -441,6 +458,14 @@ const muster = computed(() => {
 .house-key dd {
   margin: 0;
 }
+/* One touch/keyboard affordance in the existing ledger, not a hover tooltip. */
+.standing-term {
+  border: 0; padding: 0; background: transparent; color: inherit;
+  font: inherit; cursor: pointer; text-decoration: underline dotted;
+  text-underline-offset: .16em;
+}
+.standing-term:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
+.house-ledger .standing-definition { grid-column: 1 / -1; margin: 0 0 4px; max-width: 32ch; }
 .house-key {
   margin-top: 3px;
   color: var(--ink-soft);
