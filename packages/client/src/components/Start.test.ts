@@ -153,6 +153,30 @@ describe('fresh RNG seeds for a new house (#1013)', () => {
 });
 
 describe('campaign choice (#66)', () => {
+  it('describes the Long Line summit as a difficult goal, not a guaranteed route (#1978)', async () => {
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      const w = mount(Start, {
+        props: { actions: spyActions(), resumable: false, proseMode },
+      });
+      try {
+        await flush();
+        const long = w.findAll('label.campaign')
+          .find((label) => label.find('input').attributes('value') === 'long');
+        expect(long, 'the Long Line description is missing').toBeTruthy();
+        expect(long!.text()).toContain('nine Ledger clauses');
+        expect(long!.text()).toContain('Apotheosis');
+        expect(long!.text()).not.toMatch(/complete ladder|reach every ascension level/i);
+        if (proseMode === 'original') {
+          expect(long!.text()).toContain('The summit is not promised.');
+        } else {
+          expect(long!.text()).toContain('Reaching every level is not guaranteed.');
+        }
+      } finally {
+        w.unmount();
+      }
+    }
+  });
+
   it('defaults to A Short Line and lets the player explicitly choose Long', async () => {
     const actions = spyActions();
     const w = mount(Start, { props: { actions, resumable: false } });
