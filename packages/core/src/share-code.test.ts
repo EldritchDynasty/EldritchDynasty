@@ -184,6 +184,31 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(problemOf(forge(code, (p) => { p.push(1); }))).toEqual({ kind: 'damaged' });
   });
 
+  it('refuses a non-canonical base64url alias, even with a matching check', () => {
+    // A final base64 character contains unused padding bits when the byte
+    // length is not divisible by three. Changing just one of those bits used
+    // to produce a second valid-looking code for the same founding.
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    let original = '';
+    for (const length of [1, 2, 3]) {
+      const candidate = forge(code, (p) => { p[9] = 'A'.repeat(length); });
+      if (candidate.split('.')[1]!.length % 4 !== 0) {
+        original = candidate;
+        break;
+      }
+    }
+    expect(original).not.toBe('');
+    const body = original.split('.')[1]!;
+    const last = body[body.length - 1]!;
+    const changed = alphabet[alphabet.indexOf(last) ^ 1]!;
+    const alias = body.slice(0, -1) + changed;
+    // The changed code decodes to the same bytes; a reissued checksum alone
+    // must not make it a code our encoder would have produced.
+    expect(problemOf(`ED1.${alias}.${hashSeed('ED1', alias).toString(36)}`))
+      .toEqual({ kind: 'damaged' });
+    expect(readShareCode(original, content, { build: BUILD }).ok).toBe(true);
+  });
+
   it('refuses a well-formed code whose places are not in this prologue', () => {
     expect(problemOf(forge(code, (p) => { p[7] = 99; }))).toEqual({ kind: 'damaged' });
     expect(problemOf(forge(code, (p) => { p[6] = [0, 0]; }))).toEqual({ kind: 'damaged' });
