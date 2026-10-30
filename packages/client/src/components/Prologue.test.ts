@@ -247,6 +247,14 @@ describe('optional friends at signing (#1984)', () => {
     });
     try {
       await readyToSign(wrapper);
+      // Finish the required family inputs before offering optional names.
+      // A reader can sign immediately without opening the disclosure.
+      const sections = wrapper.findAll('section.choice');
+      const houseIndex = sections.findIndex((section) =>
+        section.find('input[aria-label="Name the house"]').exists());
+      const friendsIndex = sections.findIndex((section) => section.classes('friends'));
+      expect(houseIndex).toBeGreaterThan(-1);
+      expect(friendsIndex).toBe(houseIndex + 1);
       expect(wrapper.get('.founder-section').attributes('aria-labelledby')).toBe('founder-section-heading');
       expect(wrapper.get('#founder-section-heading').text()).toBe('Who signs the book');
       const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
