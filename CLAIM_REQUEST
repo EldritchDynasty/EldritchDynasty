@@ -1,1 +1,1 @@
-/claim 1995 --agent chatgpt/issue-1995-share-code-guard-20261030 --paths packages/core/src/share-code.ts packages/core/src/share-code.test.ts
+/claim check --agent chatgpt/issue-1995-share-code-guard-20261030
