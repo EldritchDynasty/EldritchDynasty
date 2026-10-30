@@ -156,6 +156,38 @@ describe('Standing legibility (#356)', () => {
     ]);
   });
 
+  it.each(['original', 'plainenglish'] as const)('opens the Standing term in place by click and Escape (%s)', async (mode) => {
+    const current = view();
+    const before = structuredClone(current);
+    const wrapper = mount(Standing, {
+      attachTo: document.body,
+      props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode },
+    });
+    try {
+      const control = wrapper.get('.house-ledger .standing-term');
+      expect(control.element.tagName).toBe('BUTTON');
+      expect(control.text()).toBe(mode === 'original' ? 'Standing' : 'Reputation');
+      expect(control.attributes('aria-expanded')).toBe('false');
+      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      (control.element as HTMLButtonElement).focus();
+      await control.trigger('click');
+      expect(control.attributes('aria-expanded')).toBe('true');
+      expect(control.attributes('aria-controls')).toBe('standing-term-definition');
+      expect(wrapper.get('#standing-term-definition').text()).toBe(mode === 'original'
+        ? 'the regard the wider world gives the house.'
+        : 'How the wider world regards this family.');
+      await control.trigger('keydown', { key: 'Escape' });
+      expect(control.attributes('aria-expanded')).toBe('false');
+      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      expect(document.activeElement).toBe(control.element);
+      await control.trigger('click');
+      await control.trigger('click');
+      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      expect(current).toEqual(before);
+      expect(wrapper.emitted()).toEqual({});
+    } finally { wrapper.unmount(); }
+  });
+
   it('provides visible, non-hover explanations for the readings and the Assize', () => {
     const wrapper = mount(Standing, {
       props: { view: view(), jump: null, saveStatus: 'idle' },
