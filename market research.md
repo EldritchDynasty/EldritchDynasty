@@ -1,6 +1,7 @@
 # Eldritch Dynasty — Market Research and Commercial Design Implications
 
 **Research updated:** 17 October 2026 (previous revision: 3 October 2026)  
+**Comparator desk-check addendum:** 30 October 2026 (§5 and sources); this is not a full refresh of the older market figures.  
 **Repository context:** `main` at `e5ab83c`, the issue tracker on 17 October,
 `docs/BALANCE-LOG.md`, `store/steam/README.md` and `issuesneedingowneraction`  
 **Original research issue:** #184; consolidation #402  
@@ -96,13 +97,13 @@ Five evidence classes. Each figure in this document is labelled with one.
 | **D. Analyst and secondary reporting** | GameDiscoverCo, How To Market A Game, Sensor Tower, AppMagic, Alinea and VG Insights estimates, press summaries | Medium to low. Estimates and samples differ. Several are vendor blogs. |
 | **E. Repository evidence** | What the game does and what it measures | High for this codebase on the date checked. |
 
-**Limits of this revision.** In this research session the page fetcher could not
-resolve any external host, and direct requests to Steam's store API were refused
-by the network policy. New figures here therefore come from **search-engine
-summaries of the named pages**, not from reading the pages directly. Wherever a
-figure matters to a decision, the source is listed in §21 so it can be opened
-and checked. Comparator review counts are kept from the **27 September 2026**
-snapshot rather than refreshed by guesswork.
+**Limits of the 17 October revision.** Its page fetcher could not resolve
+external hosts or Steam's store API, so the figures added then came from search
+summaries, not directly inspected pages. The **30 October comparator addendum**
+checked the linked Steam store listings for *Bloodweight* and *Star Dynasties*
+directly, with the dated review counts in §5. That verifies **storefront claims
+and metadata only**, not the mechanics, sales or player experience. Other rows
+retain their original dates; do not treat the addendum as a complete refresh.
 
 The user brief for this document asks for official sources and for skepticism
 toward marketing. Several hits in this research were vendor blogs selling
@@ -182,8 +183,11 @@ game. All figures are class **E**.
 
 Meanwhile:
 
-- `store/steam/README.md` sells the Long Line with *"the complete Ascension
-  Ladder"*.
+- The 30 October source copy in `store/steam/README.md` now describes a
+  *difficult path toward Apotheosis* and explicitly says the summit is not
+  promised to every house. The earlier unqualified "complete Ascension Ladder"
+  phrasing was withdrawn; the need to demonstrate a player-equivalent route in
+  #1978 remains.
 - Achievement `ending_all_long` needs **all five** Long Line endings. The v1
   rate table measured `ending_apotheosis` at **0/100** in every column.
 
@@ -236,8 +240,8 @@ in their displayed USD store context, not silently converted into NZD.
 
 | Game | Why it matters | Steam signal | Lesson for Eldritch Dynasty |
 |---|---|---:|---|
-| **Bloodweight** *(new, C; 30 Oct 2026)* | [Steam app 4522140](https://store.steampowered.com/app/4522140/) advertises 100 generations, one heir at a time and a Soul Teller who records the dynasty; released 20 May 2026 by adarkfable | USD 14.99 listed; 1 user review, insufficient for a Steam score (C) | Chronicle and generational strategy are not distinctive words alone. Test whether its chronicle can actually be altered before making any comparative claim. **Not played or independently verified.** |
-| **Star Dynasties** *(new, C; 30 Oct 2026)* | [Steam app 1194590](https://store.steampowered.com/app/1194590/) describes a turn-based feudal dynasty in space, with procedural personal politics and light empire management; released 1 Sep 2021 | 423 Steam user reviews, 70% positive in the checked storefront view (C); historical listing, not sales | Long-form dynastic politics has a comparator outside fantasy. Its setting and action structure differ; no assertion of equivalent mechanics. |
+| **Bloodweight** *(new, C; 30 Oct 2026)* | [Steam app 4522140](https://store.steampowered.com/app/4522140/) advertises 100 generations, one heir at a time and a Soul Teller who records the dynasty; released 20 May 2026 by adarkfable | USD 14.99 listed; **1** user review and no aggregate Steam score (C) | Chronicle and generational strategy are not distinctive words alone. Whether its chronicle can actually be altered or read back consequentially is **unverified gameplay**; no hands-on comparison or sales inference. |
+| **Star Dynasties** *(new, C; 30 Oct 2026)* | [Steam app 1194590](https://store.steampowered.com/app/1194590/) describes a turn-based feudal dynasty in space, with procedural personal politics and light empire management; released 1 Sep 2021 | 421 Steam user reviews, 70% positive in the 30 Oct storefront check (C); historical listing, not sales | Long-form dynastic politics has a comparator outside fantasy. Its setting and action structure differ; no assertion of equivalent mechanics. |
 | **Crusader Kings III** | Dynasty fantasy at mass scale | ~50,000 English reviews, ~90% | Recurring named people turn systems into stories |
 | **Wildermyth** | Procedural people plus authored events | ~11,688 English reviews, Overwhelmingly Positive | Recurrence and transformation make procedural characters memorable |
 | **Pentiment** *(new)* | Medieval, manuscript look, history told by unreliable people | ~95% of ~9,300–9,600 reviews (C, third-party trackers, Oct 2026); USD 19.99 (≈ NZD 34) | Illuminated-manuscript presentation sells text-first play. Unit estimates of 189k–275k are tracker guesses (D), not sales evidence |
@@ -257,6 +261,29 @@ in their displayed USD store context, not silently converted into NZD.
 | **Six Ages: Ride Like the Wind** | Storybook clan strategy and myth | ~460 reviews, ~81% | Biased advisers make opaque worlds learnable. Mobile-first studio |
 | **Great Houses of Calderia** | Direct family-strategy comparison | ~409 reviews, ~60% | "Family grand strategy" alone is not enough. Execution and focus matter |
 | **Norland** | Family-centred systemic medieval drama | ~2,900 English reviews, ~82% | A broader simulation raises expectations about complexity |
+
+### Competitor evidence boundary and hands-on handoff (#1988)
+
+The 30 October checks above read public [Bloodweight](https://store.steampowered.com/app/4522140/)
+and [Star Dynasties](https://store.steampowered.com/app/1194590/) Steam pages
+(**C: storefront snapshots**). The listed description, price and review count
+are not evidence of feature execution, unit sales or audience retention. In
+particular, one Bloodweight review is too small for a meaningful sentiment
+summary. The earlier third-party *Star Dynasties* unit estimate is class **D**
+and is not used as a measured sales figure here.
+
+**A human with legitimate access still needs to perform the two-hour Bloodweight
+teardown.** Record the date, platform, game build/version and time played;
+write down the first ten minutes of onboarding and first consequential heir
+choice; capture one concrete Soul Teller/chronicle entry, whether the player
+can edit/omit it and whether a later scene refers back to that exact entry.
+Record what was *not* encountered in the session rather than inferring absence.
+On the same dated pass, record the live price, review count and rating if Steam
+offers one, then sample the actual reviews with quotations/sources and a stated
+denominator. Separate direct observations from developer claims and reviewer
+opinions. Post the findings on #1988 for the owner to compare with the already
+approved falsified-Record store positioning; **no game was purchased or played
+for this addendum**.
 
 **The useful pattern:** narrow, readable games earn exceptional sentiment.
 "Dynasty" and "medieval management" do not sell themselves past confusion. Text
@@ -971,6 +998,8 @@ page fetcher could not reach external hosts. Open them before acting on a figure
 
 ## Store snapshots (C)
 
+- Bloodweight — https://store.steampowered.com/app/4522140/ *(direct store spot-check, 30 Oct 2026; gameplay unverified)*
+- Star Dynasties — https://store.steampowered.com/app/1194590/ *(direct store spot-check, 30 Oct 2026; reviews are not sales)*
 - Crusader Kings III — https://store.steampowered.com/app/1158310/
 - Wildermyth — https://store.steampowered.com/app/763890/
 - Pentiment — https://store.steampowered.com/app/1205520/ *(new)*
