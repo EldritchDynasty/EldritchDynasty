@@ -113,10 +113,13 @@ where they agree with a stronger source, and they are labelled **D**.
 
 # 3. Executive conclusion
 
-There is still no close one-to-one competitor. That is good, but it carries a
-marketing burden: nobody arrives knowing what "a five-century unreliable-record
-bloodline strategy game" feels like. The game must teach that identity through
-play, fast.
+A close **marketed** comparator now exists: *Bloodweight* (Steam, 20 May 2026),
+which advertises generations, a Soul Teller and a lasting chronicle (C,
+storefront claims; not independently played). That makes "a chronicle of your
+dynasty" an insufficient standalone hook. *Eldritch Dynasty* must demonstrate
+its narrower distinction early: the player chooses what the Record states,
+can falsify it, and later encounters the consequences. This is a product
+positioning hypothesis, not a verified feature comparison with *Bloodweight*.
 
 1. **Protect the narrow hook. Do not broaden the genre.** *The King is Watching*
    shows a clear, consistent interaction scaling commercially: more than
@@ -225,11 +228,16 @@ These are commercial strengths. Say so in marketing.
 
 # 5. Comparable market
 
-Snapshot of **27 September 2026** (C) unless marked. This is not a ranking, and
-review count is not a sales estimate.
+Snapshot of **27 September 2026** (C) unless marked. Rows explicitly dated
+**30 October 2026** are later Steam storefront spot-checks. This is not a
+ranking, and review count is not a sales estimate. Store descriptions are
+developer/publisher claims, not hands-on verification. Prices are presented
+in their displayed USD store context, not silently converted into NZD.
 
 | Game | Why it matters | Steam signal | Lesson for Eldritch Dynasty |
 |---|---|---:|---|
+| **Bloodweight** *(new, C; 30 Oct 2026)* | [Steam app 4522140](https://store.steampowered.com/app/4522140/) advertises 100 generations, one heir at a time and a Soul Teller who records the dynasty; released 20 May 2026 by adarkfable | USD 14.99 listed; 1 user review, insufficient for a Steam score (C) | Chronicle and generational strategy are not distinctive words alone. Test whether its chronicle can actually be altered before making any comparative claim. **Not played or independently verified.** |
+| **Star Dynasties** *(new, C; 30 Oct 2026)* | [Steam app 1194590](https://store.steampowered.com/app/1194590/) describes a turn-based feudal dynasty in space, with procedural personal politics and light empire management; released 1 Sep 2021 | 423 Steam user reviews, 70% positive in the checked storefront view (C); historical listing, not sales | Long-form dynastic politics has a comparator outside fantasy. Its setting and action structure differ; no assertion of equivalent mechanics. |
 | **Crusader Kings III** | Dynasty fantasy at mass scale | ~50,000 English reviews, ~90% | Recurring named people turn systems into stories |
 | **Wildermyth** | Procedural people plus authored events | ~11,688 English reviews, Overwhelmingly Positive | Recurrence and transformation make procedural characters memorable |
 | **Pentiment** *(new)* | Medieval, manuscript look, history told by unreliable people | ~95% of ~9,300–9,600 reviews (C, third-party trackers, Oct 2026); USD 19.99 (≈ NZD 34) | Illuminated-manuscript presentation sells text-first play. Unit estimates of 189k–275k are tracker guesses (D), not sales evidence |
