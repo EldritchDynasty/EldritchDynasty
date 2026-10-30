@@ -400,7 +400,8 @@ export class Sound {
     if (!input) return this.stopDrone();
     this.attempt(() => {
       const wanted = droneScore(input);
-      if (!wanted) return this.stopDrone();
+      // The frame's silence is a beat, not the ordinary 1.4-second exit fade.
+      if (!wanted) return this.stopDrone(0.02);
 
       const key = JSON.stringify(wanted);
       if (this.drone && key === this.droneKey) return;
@@ -417,7 +418,7 @@ export class Sound {
     });
   }
 
-  stopDrone() {
+  stopDrone(fadeSeconds = 1.4) {
     const d = this.drone;
     if (!d || !this.context) return;
     this.drone = null;
@@ -425,11 +426,12 @@ export class Sound {
     const ctx = this.context;
     this.attempt(() => {
       const now = ctx.currentTime;
-      // Faded, not cut. A drone that stops instantly is a click.
+      // A short ramp prevents a click when the frame interrupts the drone;
+      // ordinary exits keep the full fade. Stop shortly after zero gain.
       d.gain.gain.setValueAtTime(d.gain.gain.value, now);
-      d.gain.gain.linearRampToValueAtTime(0, now + 1.4);
+      d.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
       // Every node here is a source this class started, so stopping is safe.
-      for (const n of d.nodes) n.stop(now + 1.5);
+      for (const n of d.nodes) n.stop(now + fadeSeconds + Math.min(0.1, fadeSeconds));
     });
   }
 
