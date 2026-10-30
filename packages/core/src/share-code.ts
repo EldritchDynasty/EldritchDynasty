@@ -248,7 +248,13 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // The product path founds every campaign at its own start year. A run built
   // any other way is a test's house, and a code would promise what `newGame`'s
   // front door cannot begin.
-  if (!def || founding.year !== campaignDef(w.campaign).startYear) return { ok: false, unavailable: 'unrepresentable' };
+  // The public Start UI restricts seeds to uint32, but core's newGame API
+  // also accepts other numbers. Do not export a code whose wire schema will
+  // reject its own seed when a caller founded the world programmatically.
+  if (!def || founding.year !== campaignDef(w.campaign).startYear
+    || !Number.isInteger(w.seed) || w.seed < 0 || w.seed > 0xffffffff) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const signing = w.decisionLog.find((row) => row.kind === 'signing');
   const given = signing?.answers ?? {};
   const answers = Object.keys(given).length ? def.examination.map((q) => {
