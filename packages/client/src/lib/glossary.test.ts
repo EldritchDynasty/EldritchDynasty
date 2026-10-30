@@ -10,10 +10,14 @@ describe('first Standing glossary term in saved Chronicle text', () => {
   });
 
   it('matches the Plain English label without marking the Original label', () => {
+    // Saved Original prose stays Original when the reader switches mode.
     expect(splitFirstStanding('Standing and Reputation.', 'plainenglish')).toEqual([
-      { text: 'Standing and ' },
+      { text: 'Standing', term: 'standing' },
+      { text: ' and Reputation.' },
+    ]);
+    expect(splitFirstStanding('Reputation is known.', 'original')).toEqual([
       { text: 'Reputation', term: 'standing' },
-      { text: '.' },
+      { text: ' is known.' },
     ]);
     expect(standingGlossaryDefinition('plainenglish')).toBe('How the wider world regards this family.');
   });
