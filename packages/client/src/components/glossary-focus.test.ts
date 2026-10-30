@@ -44,6 +44,9 @@ describe('in-place Standing disclosure', () => {
     const wrapper = render('Reputation is known.', 'plainenglish');
     await wrapper.get('button').trigger('click');
     expect(wrapper.get('[role="note"]').text()).toBe('How the wider world regards this family.');
+    const historical = render('Standing was challenged.', 'plainenglish');
+    await historical.get('button').trigger('click');
+    expect(historical.get('[role="note"]').text()).toBe('How the wider world regards this family.');
     const plain = render('An unrelated chronicle line.', 'plainenglish');
     expect(plain.find('button').exists()).toBe(false);
     expect(plain.text()).toBe('An unrelated chronicle line.');
