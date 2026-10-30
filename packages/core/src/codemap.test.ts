@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -871,9 +871,13 @@ describe('the editor Vite entry points', () => {
         const path = join(dir, name);
         hash.update(path.slice(root.length));
         const stat = statSync(path);
-        hash.update(`${stat.size}:${stat.mtimeMs}`);
+        // Directory mtime changes after transient lock-file creation/removal,
+        // even when no persistent output remains. Hash the final tree instead.
         if (stat.isDirectory()) visit(path);
-        else hash.update(readFileSync(path));
+        else {
+          hash.update(`${stat.size}:${stat.mtimeMs}`);
+          hash.update(readFileSync(path));
+        }
       }
     };
     visit(root);
@@ -881,6 +885,21 @@ describe('the editor Vite entry points', () => {
   }
 
   describe('read-only CLI and explicit portable execution', () => {
+    it('ignores transient directory metadata but still detects persistent file changes', () => {
+      const { cwd, write } = checkout();
+      const before = snapshot(cwd);
+      const gitDir = join(cwd, '.git');
+      const temp = join(gitDir, 'ephemeral-lock');
+      writeFileSync(temp, 'temporary');
+      rmSync(temp);
+      // Force the directory timestamp change so this regression is reliable
+      // even on filesystems with coarse mtime resolution.
+      utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
+      expect(snapshot(cwd)).toBe(before);
+      write('packages/core/src/permanent.ts', 'export const changed = true;\\n');
+      expect(snapshot(cwd)).not.toBe(before);
+    });
+
     it('plans dirty local changes from a subdirectory without credentials or writes', async () => {
       const { cwd } = checkout();
       const before = snapshot(cwd);
