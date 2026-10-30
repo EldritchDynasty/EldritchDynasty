@@ -183,6 +183,35 @@ describe('answers and the gaps between them', () => {
     expect(gaps[0]).toMatchObject({ from: { kind: 'start' }, to: { at: 5_000, year: 1301, kind: 'glimpse' } });
   });
 
+  it('starts fresh Chronicle evidence and censored gaps for a second house with reused ids and seed', () => {
+    const c = clock();
+    const l = log(c);
+    const page = [{ id: 'chr_1', year: 1044, answer: 'glimpse' as const }];
+    l.note({ kind: 'run', campaign: 'short', seed: 17 });
+    l.chronicle(page);
+    c.tick(1_000);
+    l.chronicle([]);
+    l.chronicle(page); // same house, genuinely a revisit
+    c.tick(1_000);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    l.note({ kind: 'run', campaign: 'short', seed: 17 }); // repeated run identity
+    l.chronicle(page); // different house, fresh despite the same page id
+    c.tick(1_000);
+    l.chronicle([]);
+    l.chronicle(page); // still a revisit inside the second house
+
+    const pages = l.events.filter((e) => e.kind === 'page');
+    expect(pages.map((e) => 'revisit' in e && e.revisit === true))
+      .toEqual([false, true, false, true]);
+    expect(l.events.filter((e) => e.kind === 'run')).toHaveLength(2);
+    const summary = l.artifact().summary;
+    expect(summary.answers).toBe(2);
+    expect(summary.gaps.filter((g) => g.to.kind === 'new-run')).toEqual([
+      expect.objectContaining({ censored: true, wallMs: 2_000, from: { at: 0, year: 1044, kind: 'glimpse' } }),
+    ]);
+    expect(summary.gaps.filter((g) => g.from.kind === 'start')).toHaveLength(2);
+  });
+
   it('a begun run is news from its first page; a failed pick-up leaves the run on screen as news', async () => {
     const l = log();
     l.note({ kind: 'action', verb: 'resume', act: 'start' });
@@ -227,7 +256,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/3', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/4', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
