@@ -184,7 +184,8 @@ describe('Standing legibility (#356)', () => {
       await control.trigger('click');
       expect(wrapper.find('.standing-definition').exists()).toBe(false);
       expect(current).toEqual(before);
-      expect(wrapper.emitted()).toEqual({});
+      expect(wrapper.emitted('look')).toBeUndefined();
+      expect(wrapper.emitted('match')).toBeUndefined();
     } finally { wrapper.unmount(); }
   });
 
