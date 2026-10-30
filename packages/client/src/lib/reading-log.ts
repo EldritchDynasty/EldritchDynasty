@@ -1,4 +1,5 @@
 import type { ChronicleView, MusterOrder, RecordOption, TableOrder } from '@ed/core';
+import { MusterOrderS, TableOrderS } from '@ed/schema';
 import { parseRecordOption, type GameActions } from './game.js';
 
 /**
@@ -24,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 5: Record choices now capture their enumerated mode and application result, without typed prose. */
-export const READING_LOG_FORMAT = 'ed-reading-log/5';
+/** 6: malformed Table/Muster categories cannot leak caller text or intercept an action. */
+export const READING_LOG_FORMAT = 'ed-reading-log/6';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -46,10 +47,20 @@ export const READING_LOG_CAVEATS = [
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
+  'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
+
+// The schema owns the closed command vocabulary. The recorder only keeps
+// those category literals, never an arbitrary value from an invalid caller.
+const TABLE_ORDER_KINDS: ReadonlySet<string> = new Set(TableOrderS.options.map((o) => o.shape.kind.value));
+const MUSTER_ORDER_OPS: ReadonlySet<string> = new Set(MusterOrderS.options.map((o) => o.shape.op.value));
+
+function safeCategory<T extends string>(value: unknown, known: ReadonlySet<string>): T | 'unknown' {
+  return typeof value === 'string' && known.has(value) ? value as T : 'unknown';
+}
 
 export function readingLogRequested(search: string): boolean {
   const value = new URLSearchParams(search).get(READING_LOG_QUERY);
@@ -102,8 +113,8 @@ export type ReadingLogEvent =
   | { at: number; kind: 'decision'; year: number; decision: string; event: string; seen: boolean }
   | { at: number; kind: 'action'; verb: LegacyVerb; act: (typeof RECORDED_VERBS)[LegacyVerb]; years?: number }
   | { at: number; kind: 'action'; verb: 'record'; act: 'answer'; mode: RecordOption | 'unknown'; decision?: string; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
-  | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
-  | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind'] | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op'] | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'delegateChoice' | 'delegateRecord'; act: 'delegate'; category: 'choice' | 'record'; change: 'set' | 'clear'; status: 'attempted' | 'returned' | 'threw' }
   | { at: number; kind: 'ended' }
   | { at: number; kind: 'end'; reason: EndReason };
@@ -434,7 +445,8 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // Table and Muster return explicit success/refusal. Keep the attempt
       // even if the call throws, and do not log its free-text refusal reason.
       if (verb === 'order') {
-        const category = (args[0] as TableOrder).kind;
+        const category = safeCategory<TableOrder['kind']>(
+          (args[0] as { kind?: unknown } | null | undefined)?.kind, TABLE_ORDER_KINDS);
         const event = { kind: 'action' as const, verb, act: 'table' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
@@ -447,7 +459,8 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         }
       }
       if (verb === 'muster') {
-        const category = (args[0] as MusterOrder).op;
+        const category = safeCategory<MusterOrder['op']>(
+          (args[0] as { op?: unknown } | null | undefined)?.op, MUSTER_ORDER_OPS);
         const event = { kind: 'action' as const, verb, act: 'muster' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
