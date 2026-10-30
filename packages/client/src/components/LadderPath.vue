@@ -77,44 +77,57 @@ function stateText(step: PathStep): string {
         <span class="soft">{{ stateText(step) }}</span>
       </div>
       <template v-if="step.target && ascension.diagnosis">
-        <div class="rubric small next-rung">
-          {{ plain ? 'Next level' : 'Next rung' }} · {{ ascension.diagnosis.targetTitle }}
-          <span v-if="ascension.diagnosis.name" class="dim">
-            · {{ ascension.diagnosis.name }}
-          </span>
-        </div>
-        <div
-          v-for="blocker in ascension.diagnosis.blockers"
-          :key="blocker.kind + blocker.text"
-          class="ladder-blocker small"
+        <section
+          class="preparation-guide"
+          :aria-label="plain ? 'Preparing for the next level' : 'Preparing for the next rung'"
         >
-          <div>{{ blocker.text }}</div>
-          <div class="soft">{{ blocker.hint }}</div>
-        </div>
-        <details v-if="ascension.diagnosis.route" class="power-route small">
-          <summary class="rubric">{{ ascension.diagnosis.route.title }}</summary>
-          <p>{{ ascension.diagnosis.route.rule }}</p>
-          <ul v-if="ascension.diagnosis.route.daughters.length">
-            <li v-for="woman in ascension.diagnosis.route.daughters" :key="woman.person">
-              <button class="quiet" @click="emit('look', woman.person)">{{ woman.name }}</button>
-              <p v-for="line in woman.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <ul v-if="ascension.diagnosis.route.cards.length">
-            <li v-for="card in ascension.diagnosis.route.cards" :key="card.card">
-              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
-              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <p v-if="ascension.diagnosis.route.none" class="soft">{{ ascension.diagnosis.route.none }}</p>
-          <ul v-if="ascension.diagnosis.route.alternatives.length">
-            <li v-for="card in ascension.diagnosis.route.alternatives" :key="card.card">
-              <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
-              <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
-            </li>
-          </ul>
-          <p class="dim">{{ ascension.diagnosis.route.caution }}</p>
-        </details>
+          <div class="rubric small next-rung">
+            {{ plain ? 'Next level' : 'Next rung' }} · {{ ascension.diagnosis.targetTitle }}
+            <span v-if="ascension.diagnosis.name" class="dim">
+              · {{ ascension.diagnosis.name }}
+            </span>
+          </div>
+          <p v-if="ascension.diagnosis.blockers.length" class="preparation-note small soft">
+            {{ plain
+              ? 'This is the first obstacle shown for the next level. Meeting it may reveal another requirement.'
+              : 'The first bar to this rung is named here; another may stand behind it.'
+            }}
+          </p>
+          <div
+            v-for="blocker in ascension.diagnosis.blockers"
+            :key="blocker.kind + blocker.text"
+            class="ladder-blocker small"
+          >
+            <p class="blocker-fact">{{ blocker.text }}</p>
+            <p class="soft blocker-action">
+              <span class="rubric">{{ plain ? 'What to try' : 'A way forward' }} · </span>{{ blocker.hint }}
+            </p>
+          </div>
+          <details v-if="ascension.diagnosis.route" class="power-route small">
+            <summary class="rubric">{{ ascension.diagnosis.route.title }}</summary>
+            <p>{{ ascension.diagnosis.route.rule }}</p>
+            <ul v-if="ascension.diagnosis.route.daughters.length">
+              <li v-for="woman in ascension.diagnosis.route.daughters" :key="woman.person">
+                <button class="quiet" @click="emit('look', woman.person)">{{ woman.name }}</button>
+                <p v-for="line in woman.evidence" :key="line" class="soft">{{ line }}</p>
+              </li>
+            </ul>
+            <ul v-if="ascension.diagnosis.route.cards.length">
+              <li v-for="card in ascension.diagnosis.route.cards" :key="card.card">
+                <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
+                <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
+              </li>
+            </ul>
+            <p v-if="ascension.diagnosis.route.none" class="soft">{{ ascension.diagnosis.route.none }}</p>
+            <ul v-if="ascension.diagnosis.route.alternatives.length">
+              <li v-for="card in ascension.diagnosis.route.alternatives" :key="card.card">
+                <button class="quiet" @click="emit('match', card.decision, card.card)">{{ card.name }} · {{ card.label }}</button>
+                <p v-for="line in card.evidence" :key="line" class="soft">{{ line }}</p>
+              </li>
+            </ul>
+            <p class="dim">{{ ascension.diagnosis.route.caution }}</p>
+          </details>
+        </section>
       </template>
       <div v-else-if="step.target" class="rubric small next-rung">
         {{ plain ? 'Next level' : 'Next rung' }} · {{ step.title }}
@@ -140,6 +153,10 @@ function stateText(step: PathStep): string {
 .ladder-step-head strong { font-weight: 500; }
 .ladder-step-head .soft { font-size: var(--t-label); }
 .next-rung { margin-top: 6px; }
+.preparation-guide { max-width: 48ch; }
+.preparation-note { margin: 4px 0 8px; }
+.ladder-blocker p { margin: 3px 0; }
+.blocker-action .rubric { white-space: nowrap; }
 .ladder-blocker { max-width: 48ch; margin-top: 3px; }
 .ladder-blocker .soft { margin-top: 2px; }
 .power-route { margin-top: 12px; max-width: 48ch; }
