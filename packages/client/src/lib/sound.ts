@@ -341,7 +341,8 @@ export class Sound {
 
   set muted(value: boolean) {
     this.#muted = value;
-    if (value) this.stopDrone();
+    // A reader switching sound off should not hear the remaining soft exit fade.
+    if (value) this.stopDrone(0.02);
     else if (this.lastDrone) this.setDrone(this.lastDrone);
   }
 
