@@ -210,6 +210,7 @@ describe('answers and the gaps between them', () => {
       expect.objectContaining({ censored: true, wallMs: 2_000, from: { at: 0, year: 1044, kind: 'glimpse' } }),
     ]);
     expect(summary.gaps.filter((g) => g.from.kind === 'start')).toHaveLength(2);
+    expect(summary.gaps.filter((g) => g.from.kind === 'start')[1]?.years).toBeNull();
   });
 
   it('a begun run is news from its first page; a failed pick-up leaves the run on screen as news', async () => {
