@@ -100,6 +100,8 @@ export class SoundBed {
   #preference: SoundPreference = { on: false, volume: 1 };
   #unlocked = false;
   #away = false;
+  /** A gesture may resume a paused host, but must never wake a hidden document. */
+  #documentHidden = false;
   #scene: DroneInput | null = null;
   #sceneKey = 'null';
   #detach: () => void = () => undefined;
@@ -133,6 +135,7 @@ export class SoundBed {
 
   /** The player touched the page: audio is allowed, and they are evidently here. */
   gesture(): void {
+    if (this.#documentHidden) return;
     this.#unlocked = true;
     this.#away = false;
     this.#settle();
@@ -172,15 +175,21 @@ export class SoundBed {
     const session = (nav as { audioSession?: { type?: unknown } } | undefined)?.audioSession;
     if (session?.type === 'auto') session.type = 'ambient';
     const gesture = () => this.gesture();
-    const visibility = () => (doc.visibilityState === 'hidden' ? this.hide() : this.show());
+    const visibility = () => {
+      this.#documentHidden = doc.visibilityState === 'hidden';
+      if (this.#documentHidden) this.hide();
+      else this.show();
+    };
     const hide = () => this.hide();
-    const show = () => this.show();
+    // A pageshow can arrive before visibilitychange while the page remains
+    // hidden (for example when a tab is restored in the background).
+    const show = () => visibility();
     for (const type of GESTURES) win.addEventListener(type, gesture, true);
     doc.addEventListener('visibilitychange', visibility);
     win.addEventListener('pagehide', hide);
     win.addEventListener('pageshow', show);
     const unpause = onPause?.(hide) ?? (() => undefined);
-    if (doc.visibilityState === 'hidden') this.hide();
+    visibility();
     this.#detach = () => {
       for (const type of GESTURES) win.removeEventListener(type, gesture, true);
       doc.removeEventListener('visibilitychange', visibility);
