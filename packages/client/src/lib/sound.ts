@@ -367,10 +367,12 @@ export class Sound {
     if (!this.ctor || this.#failed) return null;
     if (!this.context || !this.out) {
       const ctx = new this.ctor();
+      // Own the context immediately: createGain/connect may throw after the
+      // audio thread opens. attempt() must be able to close that partial engine.
+      this.context = ctx;
       const out = ctx.createGain();
       out.gain.value = this.#volume;
       out.connect(ctx.destination);
-      this.context = ctx;
       this.out = out;
     }
     // Suspended until a gesture. Harmless to call when it is already running.
