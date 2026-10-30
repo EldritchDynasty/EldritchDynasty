@@ -358,6 +358,18 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().docket[0]?.ambition).toBeUndefined();
   });
 
+  it('does not advertise a two-rite relative whom the Unmaking cannot cast (#1978)', () => {
+    const ctx = testWorld(content);
+    ctx.world.houseAmbition = 'raise_ascendant';
+    const relative = place(ctx, {
+      sex: 'male', age: 45, name: 'The Unwoken Rite Holder',
+    });
+    // Both rite flags alone are insufficient. The actual Unmaking casts the
+    // foremost Hierophant, not an arbitrary living relative with both flags.
+    relative.rites.push('vessel', 'great_rite');
+    expect(ambitionView(ctx)?.ahead).toBeUndefined();
+  });
+
   it('reports current Ascension standing as progress and keeps the best rung as history', () => {
     const g = newGame(content, { seed: 3275, campaign: 'long', decider: 'chronicler' });
     g.setAmbition('raise_ascendant');
