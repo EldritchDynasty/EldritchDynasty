@@ -668,16 +668,16 @@ describe('the ascent says what its last step will ask, in time (#1867 §6)', () 
     return ctx;
   }
 
-  it('warns the Long Line once an elder has taken both rites, naming him', () => {
+  it('does not mistake an unready two-rite holder for the Unmaking elder', () => {
     const ctx = house('long');
     expect(ambitionView(ctx)!.ahead).toBeUndefined();
     const elder = place(ctx, { sex: 'male', age: 58, name: 'Aldren the Elder' });
     elder.rites.push('vessel');
     expect(ambitionView(ctx)!.ahead, 'one rite is not yet the elder the last step spends').toBeUndefined();
     elder.rites.push('great_rite');
-    expect(ambitionView(ctx)!.ahead).toBe(
-      'Aldren the Elder has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.',
-    );
+    // The rites alone do not prove the ELDER role: the foremost eligible
+    // expresser must also have reached Hierophant in the public ranking.
+    expect(ambitionView(ctx)!.ahead).toBeUndefined();
 
     // Once the Unmaking has been done, there is nothing left to prepare for.
     const raised = place(ctx, { sex: 'male', age: 30, name: 'The Raised' });
