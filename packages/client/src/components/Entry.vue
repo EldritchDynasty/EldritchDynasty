@@ -123,7 +123,7 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
     <!-- Only Chronicle reading receives term controls. The creditor's spoken
          reading stays uninterleaved and all saved/exported prose is untouched. -->
     <p v-if="!blank">
-      <GlossaryText v-if="!read" :text="entry.text" :prose-mode="proseMode" />
+      <GlossaryText v-if="!read" :text="entry.text ?? ''" :prose-mode="proseMode" />
       <template v-else>{{ entry.text }}</template>
     </p>
     <!-- To a screen reader this was once only `&nbsp;`; to a pointer it later
