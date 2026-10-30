@@ -421,15 +421,14 @@ export function newGameFromShareCode(
   ];
   if (missing.length) return { ok: false, problem: { kind: 'names_needed', missing } };
 
-  // A founder name the code left out is the recipient's to give, or to leave
-  // blank and sign as the authored founder, exactly as the signing allows.
+  // A founder name the code left out is the recipient's to give, or to
+  // leave blank. An authored founder (no founder payload) is not a missing
+  // name: caller-provided, possibly stale input must not turn it into a
+  // different signing behind the code's back.
   const founderName = f.founder?.name ?? given.founder?.trim();
-  let founder: FounderAnswer | undefined;
-  if (f.founder) {
-    founder = { gender: f.founder.gender, configuration: f.founder.configuration, ...(founderName ? { name: founderName } : {}) };
-  } else if (founderName) {
-    founder = { name: founderName };
-  }
+  const founder: FounderAnswer | undefined = f.founder
+    ? { gender: f.founder.gender, configuration: f.founder.configuration, ...(founderName ? { name: founderName } : {}) }
+    : undefined;
 
   const session = newGame(source, {
     seed: f.seed,
