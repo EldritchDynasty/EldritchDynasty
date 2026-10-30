@@ -1,4 +1,5 @@
-import type { ChronicleView, MusterOrder, TableOrder } from '@ed/core';
+import type { ChronicleView, MusterOrder, RecordOption, TableOrder } from '@ed/core';
+import { RecordOptionS } from '@ed/schema';
 import type { GameActions } from './game.js';
 
 /**
@@ -24,8 +25,8 @@ import type { GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 4: distinct houses within one page load never share Chronicle page identities or answer gaps. */
-export const READING_LOG_FORMAT = 'ed-reading-log/4';
+/** 5: Record choices now capture their enumerated mode and application result, without typed prose. */
+export const READING_LOG_FORMAT = 'ed-reading-log/5';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -36,7 +37,7 @@ export const READING_LOG_MAX_EVENTS = 20_000;
 /** What the notice says, word for word — the switch is not informed consent without it. */
 export const READING_LOG_NOTICE =
   'Reading log is on. On this device only, it records which pages and decisions are shown, the in-game year, '
-  + 'when this window is in front, which panel is open, which buttons you press and Table/Muster/delegation categories and results. It records no text you type, '
+  + 'when this window is in front, which panel is open, which buttons you press, Record/Omit/Embellish modes and results, and Table/Muster/delegation categories and results. It records no text you type, '
   + 'is not part of your saved game, and leaves this device only if you export it.';
 
 export const READING_LOG_CAVEATS = [
@@ -45,7 +46,8 @@ export const READING_LOG_CAVEATS = [
   'A censored gap ended without a next answer (export, stop, unload, new house or the event cap); it is a lower bound.',
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
-  'For Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
+  'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
+  'Record actions carry the chosen mode and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
@@ -80,7 +82,7 @@ const RECORDED_VERBS = {
 } as const satisfies Partial<Record<keyof GameActions, 'start' | 'advance' | 'answer' | 'dismiss' | 'table' | 'muster' | 'delegate'>>;
 
 export type RecordedVerb = keyof typeof RECORDED_VERBS;
-type LegacyVerb = Exclude<RecordedVerb, 'order' | 'muster' | 'delegateChoice' | 'delegateRecord'>;
+type LegacyVerb = Exclude<RecordedVerb, 'record' | 'order' | 'muster' | 'delegateChoice' | 'delegateRecord'>;
 
 /** The verbs that pick up a saved run, whose chronicle the reader saw in some other session. */
 const PICKUPS: ReadonlySet<RecordedVerb> = new Set(['resume', 'load', 'importSave']);
@@ -100,6 +102,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
   | { at: number; kind: 'decision'; year: number; decision: string; event: string; seen: boolean }
   | { at: number; kind: 'action'; verb: LegacyVerb; act: (typeof RECORDED_VERBS)[LegacyVerb]; years?: number }
+  | { at: number; kind: 'action'; verb: 'record'; act: 'answer'; mode: RecordOption | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op']; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'delegateChoice' | 'delegateRecord'; act: 'delegate'; category: 'choice' | 'record'; change: 'set' | 'clear'; status: 'attempted' | 'returned' | 'threw' }
@@ -403,6 +406,26 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
   for (const verb of Object.keys(RECORDED_VERBS) as RecordedVerb[]) {
     const original = actions[verb] as (...args: unknown[]) => unknown;
     (wrapped as Record<RecordedVerb, unknown>)[verb] = (...args: unknown[]) => {
+      // Observe which kind of Record was attempted and whether it took. The
+      // third argument is player-entered wording: never copy it into the log.
+      // Validate against the schema-owned union so even a malformed caller
+      // cannot smuggle arbitrary prose into an exported artifact.
+      if (verb === 'record') {
+        const choice = RecordOptionS.safeParse(args[1]);
+        const event = {
+          kind: 'action' as const, verb, act: 'answer' as const,
+          mode: choice.success ? choice.data : 'unknown' as const,
+        };
+        log.note({ ...event, status: 'attempted' });
+        try {
+          const result = original.apply(actions, args) as ReturnType<GameActions['record']>;
+          log.note({ ...event, status: result ? 'accepted' : 'refused' });
+          return result;
+        } catch (error) {
+          log.note({ ...event, status: 'threw' });
+          throw error;
+        }
+      }
       // Table and Muster return explicit success/refusal. Keep the attempt
       // even if the call throws, and do not log its free-text refusal reason.
       if (verb === 'order') {
