@@ -422,6 +422,35 @@ describe('the bed decides when the house may be heard', () => {
     expect(ctx.gains[0]!.gain.value).toBe(0.5);
   });
 
+  it('treats zero volume as mute without opening a silent audio device', () => {
+    const { e, page, bed } = bedOnBoard();
+    bed.prefer({ on: true, volume: 0 });
+    page.fire('win:pointerdown');
+    bed.cue('bell');
+    expect(bed.audible).toBe(false);
+    expect(e.made, 'zero volume opened an audio context').toHaveLength(0);
+
+    // The Age may change while silent; only the latest drone should return.
+    bed.scene(COLD);
+    bed.prefer({ on: true, volume: 0.35 });
+    expect(bed.audible).toBe(true);
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
+    expect(ctx.gains[0]!.gain.value).toBe(0.35);
+
+    // Setting the slider to zero again must stop the drone and new cues.
+    bed.prefer({ on: true, volume: 0 });
+    expect(humming(ctx)).toHaveLength(0);
+    const before = ctx.sources.length;
+    bed.cue('page');
+    expect(ctx.sources).toHaveLength(before);
+
+    bed.prefer({ on: true, volume: 0.7 });
+    expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
+    expect(ctx.gains[0]!.gain.value).toBe(0.7);
+    expect(e.made).toHaveLength(1);
+  });
+
   it('goes quiet out of sight and comes back to the current scene', () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:click');
