@@ -169,7 +169,9 @@ export async function copyTextInBrowser(text: string): Promise<void> {
   if (typeof document === 'undefined' || typeof document.execCommand !== 'function') {
     throw new Error('this browser cannot copy');
   }
-  const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  // The invoking control can be an SVG element, not just an HTMLElement.
+  // Keep any focusable element so fallback copy preserves keyboard position.
+  const focused = document.activeElement;
   const area = document.createElement('textarea');
   area.value = text;
   area.setAttribute('readonly', '');
@@ -186,7 +188,7 @@ export async function copyTextInBrowser(text: string): Promise<void> {
     if (!document.execCommand('copy')) throw new Error('the browser refused to copy');
   } finally {
     area.remove();
-    focused?.focus();
+    if (focused && 'focus' in focused && typeof focused.focus === 'function') focused.focus();
   }
 }
 
