@@ -1,8 +1,8 @@
 verdict: ok
 exit: 0
-request: /claim 1995 --agent chatgpt/issue-1995-share-code-guard-20261030 --paths packages/core/src/share-code.ts packages/core/src/share-code.test.ts
-request-commit: 4b0f900a44105aa6c23544fdae41bebccbac6247
+request: /claim check --agent chatgpt/issue-1995-share-code-guard-20261030
+request-commit: cbf82f1e3124d5ea9e3e9ebaea7d96b87fdc8310
 
-held: 1995 → chatgpt/issue-1995-share-code-guard-20261030 (lane code)
-  land it with: Closes #1995
-  the janitor retires the claims and deletes the branch behind that.
+holding 1995 (lane code, 1m)
+landing commit needs: Closes #1995
+7 other claim(s) open, none overlapping the 2 path(s) your claim declares.
