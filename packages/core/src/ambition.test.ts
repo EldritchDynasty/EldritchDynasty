@@ -698,6 +698,7 @@ describe('the ascent says what its last step will ask, in time (#1867 §6)', () 
     candidate.acquired[ELDRITCH_GIFT] = 400;
     candidate.acquired[ELDRITCH_REACH] = 400;
     candidate.acquired.mind = 400;
+    candidate.madness = 65;
     candidate.spellsKnown = ctx.content.spellbooks.map((book) => book.id);
     candidate.rites.push('vessel', 'great_rite');
     candidate.phenotype = undefined;
