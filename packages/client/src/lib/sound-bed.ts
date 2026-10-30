@@ -173,8 +173,13 @@ export class SoundBed {
     // Ambient: mixes with whatever the player is already listening to, and
     // obeys a phone's silent switch, where the engine supports saying so.
     // `auto` is the only value replaced; a host that chose already chose.
-    const session = (nav as { audioSession?: { type?: unknown } } | undefined)?.audioSession;
-    if (session?.type === 'auto') session.type = 'ambient';
+    // Some hosts expose the optional Audio Session API but reject writes (or
+    // even throw when reading its property). That must not stop the game from
+    // attaching its visibility/gesture listeners or accepting player actions.
+    try {
+      const session = (nav as { audioSession?: { type?: unknown } } | undefined)?.audioSession;
+      if (session?.type === 'auto') session.type = 'ambient';
+    } catch { /* unsupported audio policy: the browser/host retains its default */ }
     const gesture = () => this.gesture();
     const visibility = () => {
       this.#documentHidden = doc.visibilityState === 'hidden';
