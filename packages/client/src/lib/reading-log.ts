@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 6: malformed Table/Muster categories cannot leak caller text or intercept an action. */
-export const READING_LOG_FORMAT = 'ed-reading-log/6';
+/** 7: successful share-code starts delimit runs; refused codes never replace the active house. */
+export const READING_LOG_FORMAT = 'ed-reading-log/7';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -49,6 +49,7 @@ export const READING_LOG_CAVEATS = [
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
+  'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
@@ -63,6 +64,7 @@ export type ReadingAnswerKind = 'interlude' | NonNullable<ChronicleView['answer'
 /** The verbs worth a line. Reads (`book`, `advice`, …) are not actions. */
 const RECORDED_VERBS = {
   begin: 'start',
+  beginFromShareCode: 'start',
   resume: 'start',
   load: 'start',
   importSave: 'start',
@@ -192,7 +194,7 @@ export class ReadingLog {
     if (this.#ended || this.truncated) return;
     if (event.kind === 'action' && event.act === 'start') {
       this.#pickingUp = PICKUPS.has(event.verb);
-      if (event.verb === 'begin') {
+      if (event.verb === 'begin' || event.verb === 'beginFromShareCode') {
         // The next house can reuse every Chronicle id (especially with a
         // repeated seed). A page fresh to that house is not a revisit to
         // another one, and its first chronicle window is new evidence.
@@ -361,7 +363,7 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         break;
       }
       case 'action':
-        if (e.act === 'start' && e.verb === 'begin') {
+        if (e.act === 'start' && (e.verb === 'begin' || e.verb === 'beginFromShareCode')) {
           // Answer-to-answer delays never span different houses. Censor
           // the previous house's unfinished gap and start a new clock.
           // The first Begin does not end a preceding house: foreground
@@ -432,6 +434,14 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
           log.note({ ...event, status: 'threw' });
           throw error;
         }
+      }
+      // Share-code starts are atomic. A refused code leaves the old run intact,
+      // so it must not clear its page identities or censor its current gap.
+      // Never include the pasted code or recipient names in a research log.
+      if (verb === 'beginFromShareCode') {
+        const result = original.apply(actions, args) as ReturnType<GameActions['beginFromShareCode']>;
+        if (result === null) log.note({ kind: 'action', verb, act: 'start' });
+        return result;
       }
       // Table and Muster return explicit success/refusal. Keep the attempt
       // even if the call throws, and do not log its free-text refusal reason.
