@@ -316,6 +316,26 @@ describe('the player, over a fake engine', () => {
     expect(humming(ctx)).toHaveLength(0);
   });
 
+  it('silences the frame in milliseconds, while normal exits retain their fade', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const first = [...ctx.sources];
+
+    s.setDrone({ registers: ['warm'], frame: true });
+    expect(first.every((source) => source.stopped !== undefined
+      && source.stopped <= ctx.currentTime + 0.05),
+    'the frame left a long drone tail beneath the interlude').toBe(true);
+
+    s.setDrone(WARM);
+    const second = ctx.sources.slice(first.length);
+    s.setDrone(null);
+    expect(second.every((source) => source.stopped === ctx.currentTime + 1.5),
+      'ordinary exits lost their gentle fade').toBe(true);
+  });
+
   it('suspends without forgetting, and wakes into what was playing', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
