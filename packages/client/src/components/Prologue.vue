@@ -125,8 +125,8 @@ function selectedAnswer(questionId: string): string | undefined {
 /**
  * THE FIVE (`core/src/people/friends.ts`).
  *
- * Five rows, blank, each a name and one of two buttons. Answering is optional
- * and the sign button never waits on it — a player who does not want to put
+ * Up to five rows, each a name and one of two buttons, are disclosed only
+ * when requested. Answering is optional and signing never waits on it — a player who does not want to put
  * their own life into a game about a family being eaten is a player whose bag
  * is simply empty, and every other thing on this screen still works.
  *
@@ -400,26 +400,26 @@ function signOnEnter(event: KeyboardEvent): void {
           <summary>{{ plain ? 'Add friends (optional)' : 'Name them, if you wish' }}</summary>
           <div class="friends-fields">
             <div v-for="(friend, i) in friends" :key="i" class="friend">
-          <input
-            v-model="friend.name"
-            maxlength="32"
-            :placeholder="plain ? `Friend ${i + 1}` : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
-            :aria-label="plain ? `Name friend ${i + 1}` : `Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
-          />
-          <div class="sex">
-            <button
-              class="which"
-              :class="{ on: friend.sex === 'female' }"
-              :aria-pressed="friend.sex === 'female'"
-              @click="friend.sex = 'female'"
-            >{{ plain ? 'Female' : 'She' }}</button>
-            <button
-              class="which"
-              :class="{ on: friend.sex === 'male' }"
-              :aria-pressed="friend.sex === 'male'"
-              @click="friend.sex = 'male'"
-            >{{ plain ? 'Male' : 'He' }}</button>
-          </div>
+              <input
+                v-model="friend.name"
+                maxlength="32"
+                :placeholder="plain ? `Friend ${i + 1}` : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
+                :aria-label="plain ? `Name friend ${i + 1}` : `Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
+              />
+              <div class="sex">
+                <button
+                  class="which"
+                  :class="{ on: friend.sex === 'female' }"
+                  :aria-pressed="friend.sex === 'female'"
+                  @click="friend.sex = 'female'"
+                >{{ plain ? 'Female' : 'She' }}</button>
+                <button
+                  class="which"
+                  :class="{ on: friend.sex === 'male' }"
+                  :aria-pressed="friend.sex === 'male'"
+                  @click="friend.sex = 'male'"
+                >{{ plain ? 'Male' : 'He' }}</button>
+              </div>
             </div>
           </div>
         </details>
