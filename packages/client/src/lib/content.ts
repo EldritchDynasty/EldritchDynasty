@@ -1,6 +1,24 @@
 import docs from 'virtual:ed-content';
-import { assembleBundle, ProseCatalogueS, type ContentBundle, type ProseVariant } from '@ed/schema';
+import { assembleBundle, MusterOrderS, ProseCatalogueS, TableOrderS, type ContentBundle, type ProseVariant } from '@ed/schema';
+import type { MusterOrder, TableOrder } from '@ed/core';
 import type { Platform } from '../platform.js';
+
+/** Bounded order categories for the opt-in reading log. Keep runtime schema
+ * validation in this module, one of the client's permitted schema seams. */
+const TABLE_ORDER_KINDS: ReadonlySet<string> = new Set(TableOrderS.options.map((o) => o.shape.kind.value));
+const MUSTER_ORDER_OPS: ReadonlySet<string> = new Set(MusterOrderS.options.map((o) => o.shape.op.value));
+
+function boundedCategory<T extends string>(value: unknown, allowed: ReadonlySet<string>): T | 'unknown' {
+  return typeof value === 'string' && allowed.has(value) ? value as T : 'unknown';
+}
+
+export function readingLogTableCategory(value: unknown): TableOrder['kind'] | 'unknown' {
+  return boundedCategory<TableOrder['kind']>(value, TABLE_ORDER_KINDS);
+}
+
+export function readingLogMusterCategory(value: unknown): MusterOrder['op'] | 'unknown' {
+  return boundedCategory<MusterOrder['op']>(value, MUSTER_ORDER_OPS);
+}
 
 /**
  * The shipped content is pre-parsed at build time (#109). The normal path
