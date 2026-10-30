@@ -24,8 +24,8 @@ import type { GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 3: Table/Muster/delegation attempts have bounded category and terminal outcome events. */
-export const READING_LOG_FORMAT = 'ed-reading-log/3';
+/** 4: distinct houses within one page load never share Chronicle page identities or answer gaps. */
+export const READING_LOG_FORMAT = 'ed-reading-log/4';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -42,7 +42,8 @@ export const READING_LOG_NOTICE =
 export const READING_LOG_CAVEATS = [
   'foregroundMs counts time the page was visible and focused outside declared breaks: an exposure proxy, not reading time.',
   'Game years are simulation pacing, not elapsed time.',
-  'A censored gap ended without a next answer (export, stop, unload or the event cap); it is a lower bound.',
+  'A censored gap ended without a next answer (export, stop, unload, new house or the event cap); it is a lower bound.',
+  'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
   'For Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
@@ -117,7 +118,7 @@ export interface ReadingLogBuild {
 /** One stretch between two answers, on three clocks. */
 export interface AnswerGap {
   from: { at: number; year: number | null; kind: ReadingAnswerKind | 'start' };
-  to: { at: number; year: number | null; kind: ReadingAnswerKind | EndReason | 'cap' | 'open' };
+  to: { at: number; year: number | null; kind: ReadingAnswerKind | EndReason | 'cap' | 'open' | 'new-run' };
   wallMs: number;
   foregroundMs: number;
   years: number | null;
@@ -185,7 +186,17 @@ export class ReadingLog {
    */
   note(event: Untimed<ReadingLogEvent>): void {
     if (this.#ended || this.truncated) return;
-    if (event.kind === 'action' && event.act === 'start') this.#pickingUp = PICKUPS.has(event.verb);
+    if (event.kind === 'action' && event.act === 'start') {
+      this.#pickingUp = PICKUPS.has(event.verb);
+      if (event.verb === 'begin') {
+        // The next house can reuse every Chronicle id (especially with a
+        // repeated seed). A page fresh to that house is not a revisit to
+        // another one, and its first chronicle window is new evidence.
+        this.#shown.clear();
+        this.#window.clear();
+        this.#last.delete('run');
+      }
+    }
     const state = stateKey(event);
     if (state) {
       if (this.#last.get(state[0]) === state[1]) return;
@@ -341,7 +352,19 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         open = { at: e.at, year: e.year, kind: e.answer, foreground, decisions: 0 };
         break;
       }
-      case 'pane': case 'prose': case 'run': case 'action': case 'ended': case 'end': break;
+      case 'action':
+        if (e.act === 'start' && e.verb === 'begin') {
+          // Answer-to-answer delays never span different houses. Censor
+          // the previous house's unfinished gap and start a new clock.
+          // Skip the empty boundary at the log's first ever begin.
+          if (e.at > open.at || open.year !== null || open.decisions > 0) {
+            close(e.at, year, 'new-run', true);
+          }
+          open = { at: e.at, year: null, kind: 'start', foreground, decisions: 0 };
+          year = null;
+        }
+        break;
+      case 'pane': case 'prose': case 'run': case 'ended': case 'end': break;
       default: assertNever(e);
     }
   }
