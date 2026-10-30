@@ -337,32 +337,33 @@ describe('Record mode research (#1987)', () => {
       },
     } as unknown as Parameters<typeof recordActions>[0];
     const actions = recordActions(bare, l);
-    expect(actions.record('decision_1', 'record', 'private truth')).toBe(true);
-    expect(actions.record('decision_2', 'omit', 'private omission')).toBe(false);
-    expect(actions.record('decision_3', 'embellish', 'private lie')).toBe(true);
+    expect(actions.record('dec_1', 'record', 'private truth')).toBe(true);
+    expect(actions.record('dec_2', 'omit', 'private omission')).toBe(false);
+    expect(actions.record('dec_3', 'embellish', 'private lie')).toBe(true);
     // Even an invalid runtime option must not export attacker-controlled prose.
     expect(actions.record('decision_4', 'do not export this' as Parameters<typeof actions.record>[1], 'private text')).toBe(true);
     expect(calls).toEqual([
-      ['decision_1', 'record', 'private truth'],
-      ['decision_2', 'omit', 'private omission'],
-      ['decision_3', 'embellish', 'private lie'],
+      ['dec_1', 'record', 'private truth'],
+      ['dec_2', 'omit', 'private omission'],
+      ['dec_3', 'embellish', 'private lie'],
       ['decision_4', 'do not export this', 'private text'],
     ]);
     const events = l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...event }) => event);
     expect(events).toEqual([
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', status: 'attempted' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', status: 'accepted' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', status: 'attempted' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', status: 'refused' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'attempted' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'accepted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', decision: 'dec_1', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', decision: 'dec_1', status: 'accepted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', decision: 'dec_2', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', decision: 'dec_2', status: 'refused' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', decision: 'dec_3', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', decision: 'dec_3', status: 'accepted' },
       { kind: 'action', verb: 'record', act: 'answer', mode: 'unknown', status: 'attempted' },
       { kind: 'action', verb: 'record', act: 'answer', mode: 'unknown', status: 'accepted' },
     ]);
     const exported = JSON.stringify(l.artifact());
     expect(exported).not.toContain('private');
     expect(exported).not.toContain('do not export this');
-    expect(exported).not.toContain('decision_1');
+    expect(exported).toContain('"decision":"dec_1"');
+    expect(exported).not.toContain('decision_4');
     expect(l.artifact().format).toBe('ed-reading-log/5');
   });
 
@@ -377,11 +378,11 @@ describe('Record mode research (#1987)', () => {
       },
     } as unknown as Parameters<typeof recordActions>[0];
     const actions = recordActions(bare, l);
-    expect(() => actions.record('decision_5', 'embellish', 'private wording')).toThrow(error);
+    expect(() => actions.record('dec_5', 'embellish', 'private wording')).toThrow(error);
     expect(calls).toBe(1);
     expect(l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...event }) => event)).toEqual([
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'attempted' },
-      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'threw' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', decision: 'dec_5', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', decision: 'dec_5', status: 'threw' },
     ]);
     expect(JSON.stringify(l.artifact())).not.toContain('private');
   });
