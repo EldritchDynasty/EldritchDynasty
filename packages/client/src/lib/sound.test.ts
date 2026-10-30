@@ -458,6 +458,30 @@ describe('the bed decides when the house may be heard', () => {
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
   });
 
+  it('ignores pageshow and gestures while the document is still hidden', () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    page.doc.visibilityState = 'hidden';
+    page.fire('doc:visibilitychange');
+    expect(humming(ctx)).toHaveLength(0);
+    const before = ctx.sources.length;
+
+    // Browser lifecycle events can race when a tab is restored in the
+    // background. Neither event may wake its old drone or sound a new cue.
+    page.fire('win:pageshow');
+    page.fire('win:keydown');
+    bed.gesture();
+    bed.cue('bell');
+    expect(bed.audible).toBe(false);
+    expect(ctx.sources).toHaveLength(before);
+
+    page.doc.visibilityState = 'visible';
+    page.fire('win:pageshow');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+  });
+
   it('lets the frame kill the drone, and closing it restores the Ages', () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:pointerdown');
@@ -479,8 +503,14 @@ describe('the bed decides when the house may be heard', () => {
     const attached = page.count();
     bed.prefer({ on: true, volume: 1 });
     bed.scene(WARM);
-    bed.gesture();
+    bed.gesture(); // a hidden document must not accept even a direct wake
     expect(attached).toBeGreaterThan(0);
+    expect(bed.audible).toBe(false);
+    expect(e.made).toHaveLength(0);
+    page.doc.visibilityState = 'visible';
+    page.fire('doc:visibilitychange');
+    expect(bed.audible).toBe(false); // the hidden gesture did not unlock audio
+    page.fire('win:keydown');
     expect(bed.audible).toBe(true);
     bed.dispose();
     expect(page.count()).toBe(0);
