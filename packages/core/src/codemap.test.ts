@@ -896,7 +896,7 @@ describe('the editor Vite entry points', () => {
       // even on filesystems with coarse mtime resolution.
       utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
       expect(snapshot(cwd)).toBe(before);
-      write('packages/core/src/permanent.ts', 'export const changed = true;\\n');
+      write('packages/core/src/permanent.ts', 'export const changed = true;\n');
       expect(snapshot(cwd)).not.toBe(before);
     });
 
