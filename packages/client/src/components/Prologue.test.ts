@@ -224,6 +224,75 @@ describe('founding submit single-flight (#1484)', () => {
   });
 });
 
+describe('optional friends at signing (#1984)', () => {
+  function withFriends(): PrologueView {
+    return { ...prologueView(), friendsWanted: 2 };
+  }
+
+  async function readyToSign(wrapper: VueWrapper): Promise<void> {
+    await revealChoices(wrapper);
+    await answerFounder(wrapper);
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+    }
+    await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+    await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+  }
+
+  it('groups founder identity and leaves friend naming closed and optional in both prose modes', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: withFriends(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await readyToSign(wrapper);
+      expect(wrapper.get('.founder-section').attributes('aria-labelledby')).toBe('founder-section-heading');
+      expect(wrapper.get('#founder-section-heading').text()).toBe('Who signs the book');
+      const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
+      expect(disclosure.open).toBe(false);
+      expect(wrapper.get('details.friend-names summary').text()).toBe('Name them, if you wish');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({ friends: [] }));
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('details.friend-names summary').text()).toBe('Add friends (optional)');
+      expect(wrapper.get('#founder-section-heading').text()).toBe('About the founder');
+      expect(disclosure.open).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps optional names and sex selections when the disclosure closes or language changes', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: withFriends(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await readyToSign(wrapper);
+      const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
+      disclosure.open = true;
+      await nextTick();
+      await wrapper.get('input[aria-label="Name the first friend"]').setValue('Mara');
+      await wrapper.findAll('.friend')[0]!.findAll('button')[1]!.trigger('click');
+      disclosure.open = false;
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      disclosure.open = true;
+      await nextTick();
+      expect((wrapper.get('input[aria-label="Name friend 1"]').element as HTMLInputElement).value).toBe('Mara');
+      expect(wrapper.findAll('.friend')[0]!.findAll('button')[1]!.attributes('aria-pressed')).toBe('true');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        friends: [{ name: 'Mara', sex: 'male' }],
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('The Examination (#343)', () => {
   it('uses the person-name limit, keeps mechanics hidden until selection, and uses native keyboard controls', async () => {
     const wrapper = mount(Prologue, {
