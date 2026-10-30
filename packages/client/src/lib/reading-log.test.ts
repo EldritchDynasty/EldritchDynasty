@@ -227,7 +227,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/2', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/3', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -276,6 +276,93 @@ function playUntil(game: ReturnType<typeof createGame>, actions: ReturnType<type
     if (game.view.value?.namesWanted.length) actions.keepSuggestedNames();
   }
 }
+
+describe('Table action research (#1992)', () => {
+  it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
+    const l = log();
+    const accepted = { ok: true, spent: 2, left: 8 };
+    const refused = { ok: false, reason: 'a private reason to omit' };
+    const calls: unknown[][] = [];
+    const bare = {
+      order(o: unknown) {
+        calls.push(['order', o]);
+        return o === orderA ? accepted : refused;
+      },
+      muster(o: unknown) {
+        calls.push(['muster', o]);
+        return o === musterA ? refused : accepted;
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const orderA = { kind: 'study', person: 'someone' } as unknown as Parameters<typeof actions.order>[0];
+    const orderB = { kind: 'lotBid', bid: 5 } as unknown as Parameters<typeof actions.order>[0];
+    const musterA = { op: 'reinforce', detail: 'do not export' } as unknown as Parameters<typeof actions.muster>[0];
+    const musterB = { op: 'withdraw' } as unknown as Parameters<typeof actions.muster>[0];
+
+    expect(actions.order(orderA)).toBe(accepted);
+    expect(actions.order(orderB)).toBe(refused);
+    expect(actions.muster(musterA)).toBe(refused);
+    expect(actions.muster(musterB)).toBe(accepted);
+    expect(calls).toEqual([['order', orderA], ['order', orderB], ['muster', musterA], ['muster', musterB]]);
+
+    const events = l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...e }) => e);
+    expect(events).toEqual([
+      { kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'accepted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'lotBid', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'lotBid', status: 'refused' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'reinforce', status: 'attempted' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'reinforce', status: 'refused' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'attempted' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'accepted' },
+    ]);
+    expect(JSON.stringify(l.artifact())).not.toContain('a private reason to omit');
+    expect(JSON.stringify(l.artifact())).not.toContain('someone');
+    expect(JSON.stringify(l.artifact())).not.toContain('do not export');
+  });
+
+  it('preserves thrown errors and one invocation; delegation completion does not imply an applied change', () => {
+    const l = log();
+    const failure = new Error('do not log private thrown content');
+    const calls: unknown[][] = [];
+    const bare = {
+      order(o: unknown) {
+        calls.push(['order', o]);
+        throw failure;
+      },
+      delegateChoice(event: string, choice: string | null) {
+        calls.push(['choice', event, choice]);
+      },
+      delegateRecord(event: string, option: string | null) {
+        calls.push(['record', event, option]);
+        if (option !== null) throw failure;
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const order = { kind: 'seekBook', userText: 'private' } as unknown as Parameters<typeof actions.order>[0];
+    expect(() => actions.order(order)).toThrow(failure);
+    expect(actions.delegateChoice('unexported-event', null)).toBeUndefined();
+    expect(actions.delegateRecord('another-event', null)).toBeUndefined();
+    expect(() => actions.delegateRecord('another-event', 'embellish')).toThrow(failure);
+    expect(calls).toEqual([
+      ['order', order], ['choice', 'unexported-event', null],
+      ['record', 'another-event', null], ['record', 'another-event', 'embellish'],
+    ]);
+    const events = l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...e }) => e);
+    expect(events).toEqual([
+      { kind: 'action', verb: 'order', act: 'table', category: 'seekBook', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'seekBook', status: 'threw' },
+      { kind: 'action', verb: 'delegateChoice', act: 'delegate', category: 'choice', change: 'clear', status: 'attempted' },
+      { kind: 'action', verb: 'delegateChoice', act: 'delegate', category: 'choice', change: 'clear', status: 'returned' },
+      { kind: 'action', verb: 'delegateRecord', act: 'delegate', category: 'record', change: 'clear', status: 'attempted' },
+      { kind: 'action', verb: 'delegateRecord', act: 'delegate', category: 'record', change: 'clear', status: 'returned' },
+      { kind: 'action', verb: 'delegateRecord', act: 'delegate', category: 'record', change: 'set', status: 'attempted' },
+      { kind: 'action', verb: 'delegateRecord', act: 'delegate', category: 'record', change: 'set', status: 'threw' },
+    ]);
+    expect(JSON.stringify(l.artifact())).not.toContain('unexported-event');
+    expect(JSON.stringify(l.artifact())).not.toContain('do not log private thrown content');
+  });
+});
 
 describe('a resumed save is not read twice', () => {
   // The window a resumed view carries is up to sixty pages of history. Before
