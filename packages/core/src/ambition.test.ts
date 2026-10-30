@@ -15,6 +15,9 @@ import { relevantPeople } from './people/relevance.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { mustSurface } from './delegation.js';
+import { grantHeirloom, standingOf } from './ascension.js';
+import { phenotypeOf } from './people/factory.js';
+import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
 import { queueChoice, type PendingMatch, type PendingRecord } from './events/decisions.js';
 import type { SimCtx } from './world.js';
 
@@ -683,6 +686,28 @@ describe('the ascent says what its last step will ask, in time (#1867 §6)', () 
     const raised = place(ctx, { sex: 'male', age: 30, name: 'The Raised' });
     raised.rites.push('unmaking');
     expect(ambitionView(ctx)!.ahead).toBeUndefined();
+  });
+
+  it('names a witnessed foremost Hierophant who can actually fill the elder slot', () => {
+    const ctx = house('long');
+    const elder = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((person) => phenotypeOf(person, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    expect(elder, 'the founding cast supplies an expresser').toBeDefined();
+    const candidate = elder!;
+    candidate.awakening.awakened = true;
+    candidate.acquired[ELDRITCH_GIFT] = 400;
+    candidate.acquired[ELDRITCH_REACH] = 400;
+    candidate.acquired.mind = 400;
+    candidate.spellsKnown = ctx.content.spellbooks.map((book) => book.id);
+    candidate.rites.push('vessel', 'great_rite');
+    candidate.phenotype = undefined;
+    ctx.world.respect = 'exalted';
+    for (const id of ['the_ninefold_seal', 'the_ring', 'the_rod']) grantHeirloom(ctx, id);
+
+    expect(standingOf(ctx, candidate).rung).not.toBe('none');
+    expect(ambitionView(ctx)!.ahead).toBe(
+      `${candidate.name} has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.`,
+    );
   });
 
   it('says nothing on the Short Line, whose horizon is not the God rung', () => {
