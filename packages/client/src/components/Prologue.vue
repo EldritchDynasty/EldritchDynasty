@@ -285,7 +285,9 @@ function signOnEnter(event: KeyboardEvent): void {
     </button>
 
     <template v-else-if="!prologue.founded">
-      <section v-if="prologue.namePrompt" class="choice founder-name">
+      <section v-if="prologue.namePrompt" class="founder-section" aria-labelledby="founder-section-heading">
+        <h2 id="founder-section-heading" class="stage-title">{{ plain ? 'About the founder' : 'Who signs the book' }}</h2>
+        <div class="choice founder-name">
         <h3 class="label">{{ plain ? 'Your name' : 'The name' }}</h3>
         <p class="prompt">{{ prologue.namePrompt }}</p>
         <input
@@ -304,9 +306,9 @@ function signOnEnter(event: KeyboardEvent): void {
             @click="chooseGender(option.id)"
           >{{ plain ? option.plain : option.original }}</button>
         </div>
-      </section>
+        </div>
 
-      <section v-if="prologue.namePrompt" class="choice founding-configuration">
+        <div class="choice founding-configuration">
         <h3 class="label">{{ plain ? 'Which parent carries the family blood' : 'Whose blood the house carries' }}</h3>
         <button
           v-for="option in CONFIGURATIONS"
@@ -319,6 +321,7 @@ function signOnEnter(event: KeyboardEvent): void {
           <strong>{{ plain ? option.plain : option.original }}</strong>
           <span class="line">{{ plain ? option.plainLine : option.line }}</span>
         </button>
+        </div>
       </section>
 
       <section
@@ -390,7 +393,13 @@ function signOnEnter(event: KeyboardEvent): void {
       <section class="choice friends">
         <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of your blood' }}</h3>
         <p class="prompt">{{ prologue.friendsPrompt }}</p>
-        <div v-for="(friend, i) in friends" :key="i" class="friend">
+        <!-- Keep the personal names optional and out of the required signing
+             path. Native details preserve keyboard/touch disclosure and keep
+             entered names mounted when the reader closes this section. -->
+        <details v-if="friends.length" class="friend-names">
+          <summary>{{ plain ? 'Add friends (optional)' : 'Name them, if you wish' }}</summary>
+          <div class="friends-fields">
+            <div v-for="(friend, i) in friends" :key="i" class="friend">
           <input
             v-model="friend.name"
             maxlength="32"
@@ -411,7 +420,9 @@ function signOnEnter(event: KeyboardEvent): void {
               @click="friend.sex = 'male'"
             >{{ plain ? 'Male' : 'He' }}</button>
           </div>
-        </div>
+            </div>
+          </div>
+        </details>
       </section>
 
       <section class="choice">
@@ -475,6 +486,9 @@ function signOnEnter(event: KeyboardEvent): void {
 button.on, .on { }
 .on { margin-top: 10px; }
 .choice { margin-top: 30px; }
+.founder-section { margin-top: 30px; }
+.founder-section .choice { margin-top: 16px; }
+.stage-title { margin: 0 0 16px; color: var(--ink-soft); font-size: var(--t-card); font-weight: 600; }
 .choice .prompt { margin: 0 0 12px; line-height: 1.7; color: var(--ink-soft); font-size: var(--t-card); }
 .question { border: 0; padding: 0; margin: 0 0 24px; min-width: 0; }
 .question legend { padding: 0; width: 100%; }
@@ -496,6 +510,10 @@ input { width: 100%; font-size: var(--t-body); }
 /* The last question is two paragraphs and the break between them is the beat
    the whole passage turns on, so it survives the way the opening does. */
 .friends .prompt { white-space: pre-line; }
+.friend-names { margin-top: 14px; }
+.friend-names summary { color: var(--ink); cursor: pointer; padding: 10px 0; min-height: 44px; line-height: 24px; }
+.friend-names summary:focus-visible { outline: 2px solid var(--rubric); outline-offset: 3px; }
+.friends-fields { padding-top: 10px; }
 .friend { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .friend input { flex: 1 1 auto; font-size: var(--t-card); }
 .sex { display: flex; flex: 0 0 auto; gap: 4px; }
