@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
 import type { AchievementView, EpilogueView, SessionView, ShareCodeProblem } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
 import { shareCodeProblem } from '../lib/share-code';
+import { copyTextInBrowser } from '../platform';
 import { downloadBlob } from '../lib/download';
 
 vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
@@ -257,6 +258,41 @@ describe('the last night shows the code', () => {
     expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1.named.x');
   });
 
+  it('copies the code shown, says so, and forgets the receipt once the code changes', async () => {
+    const shareCode = (names: boolean) => ({ ok: true as const, code: names ? 'ED1.named.x' : 'ED1.plain.x' });
+    const copyText = vi.fn(async () => true);
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode, copyText } as unknown as GameActions } });
+    const status = w.get('.share-copy [role="status"]');
+    expect(status.text()).toBe('');
+    await w.get('.share-copy button').trigger('click');
+    await flushPromises();
+    expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.plain.x');
+    expect(status.text()).toBe('Copied.');
+    // The receipt was for the nameless code; the named one has not been copied.
+    await w.get('.share-names input').setValue(true);
+    expect(status.text()).toBe('');
+    await w.get('.share-copy button').trigger('click');
+    await flushPromises();
+    expect(copyText).toHaveBeenLastCalledWith('ED1.named.x');
+    expect(status.text()).toBe('Copied.');
+  });
+
+  it.each([
+    ['original', 'Copy the code', 'The copy did not take. Select the code and copy it by hand.'],
+    ['plainenglish', 'Copy code', 'Could not copy. Select the code and copy it yourself.'],
+  ] as const)('says when the copy failed, in %s', async (proseMode, label, failed) => {
+    const shareCode = () => ({ ok: true as const, code: 'ED1.plain.x' });
+    const copyText = vi.fn(async () => false);
+    const w = mount(Ending, { props: { view, epilogue, proseMode, actions: { restart: vi.fn(), shareCode, copyText } as unknown as GameActions } });
+    const button = w.get('.share-copy button');
+    expect(button.text()).toBe(label);
+    await button.trigger('click');
+    await flushPromises();
+    expect(w.get('.share-copy [role="status"]').text()).toBe(failed);
+    // The code is still there to select by hand.
+    expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1.plain.x');
+  });
+
   it('draws no code for a run that has none to give', () => {
     const shareCode = () => ({ ok: false as const, unavailable: 'demonstration' as const });
     const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode } as unknown as GameActions } });
@@ -280,5 +316,65 @@ describe('every refusal is worded in both modes', () => {
 
   it('passes the signing\'s own refusal through untouched', () => {
     expect(shareCodeProblem({ kind: 'refused', reason: 'that name is taken' }, 'plainenglish')).toBe('that name is taken');
+  });
+});
+
+/** The browser's half of the copy seam (#1995): every shipped WebView runs it. */
+describe('copying in a browser', () => {
+  afterEach(() => {
+    // Own properties over jsdom's: deleting them restores what was there.
+    Reflect.deleteProperty(navigator, 'clipboard');
+    Reflect.deleteProperty(document, 'execCommand');
+  });
+  function stubClipboard(writeText?: (text: string) => Promise<void>): void {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: writeText ? { writeText } : undefined });
+  }
+  function stubExecCommand(result: boolean | Error): { copied: string[] } {
+    const copied: string[] = [];
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      value: vi.fn(() => {
+        if (result instanceof Error) throw result;
+        const area = document.activeElement;
+        if (area instanceof HTMLTextAreaElement) copied.push(area.value.slice(area.selectionStart, area.selectionEnd));
+        return result;
+      }),
+    });
+    return { copied };
+  }
+
+  it('uses the Clipboard API where it is granted', async () => {
+    const writeText = vi.fn(async () => undefined);
+    stubClipboard(writeText);
+    const exec = stubExecCommand(true);
+    await copyTextInBrowser('ED1.a.b');
+    expect(writeText).toHaveBeenCalledExactlyOnceWith('ED1.a.b');
+    expect(exec.copied).toEqual([]);
+  });
+
+  it('falls back to a selected textarea where the API is refused, and leaves focus where it was', async () => {
+    stubClipboard(async () => { throw new DOMException('denied', 'NotAllowedError'); });
+    const exec = stubExecCommand(true);
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    button.focus();
+    try {
+      await copyTextInBrowser('ED1.a.b');
+      expect(exec.copied).toEqual(['ED1.a.b']);
+      expect(document.querySelector('textarea')).toBeNull();
+      expect(document.activeElement).toBe(button);
+    } finally {
+      button.remove();
+    }
+  });
+
+  it.each([
+    ['refuses', false],
+    ['throws', new Error('no clipboard')],
+  ] as const)('rejects when the fallback %s too, so nobody is told it copied', async (_what, result) => {
+    stubClipboard(undefined);
+    stubExecCommand(result);
+    await expect(copyTextInBrowser('ED1.a.b')).rejects.toThrow();
+    expect(document.querySelector('textarea')).toBeNull();
   });
 });

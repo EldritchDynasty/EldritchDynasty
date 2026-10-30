@@ -53,6 +53,12 @@ export interface Platform {
   exportSave(save: unknown): Promise<void>;
   /** Ask the host for an interchange file, where that is possible. */
   importSave(): Promise<unknown | null>;
+  /**
+   * Optional: put plain text on the device clipboard, rejecting if it could
+   * not. A host without one gets `copyTextInBrowser`, which every shipped
+   * WebView also runs.
+   */
+  copyText?(text: string): Promise<void>;
   /** The last reliable notification before the host backgrounds or exits. */
   onPause(listener: () => void): () => void;
   /** A host back gesture. The browser implementation deliberately has none. */
@@ -79,6 +85,7 @@ interface Bridge {
   readUserContent(): Promise<Record<string, string>>;
   exportSave(save: unknown): Promise<void>;
   importSave(): Promise<unknown | null>;
+  copyText?(text: string): Promise<void>;
   onPause(listener: () => void): () => void;
   onBack(listener: () => boolean): () => void;
   onSmokeCommand?(listener: (command: SmokeCommand) => Promise<SmokeResult>): () => void;
@@ -140,6 +147,47 @@ function readableBrowserRecord(value: unknown, name: string): unknown {
     throw new TypeError(`the browser ${name} record is invalid`);
   }
   return value;
+}
+
+/**
+ * Copy for a page in any browser or WebView. The asynchronous Clipboard API
+ * first; where it is missing or refused (an insecure origin, a WebView that
+ * withholds the permission) the older selected-textarea copy, which needs only
+ * the click that called it. Rejects if neither took, so the caller can say so
+ * rather than claim a copy that did not happen. Focus goes back where it was.
+ */
+export async function copyTextInBrowser(text: string): Promise<void> {
+  const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+  if (clipboard?.writeText) {
+    try {
+      await clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall through to the older path.
+    }
+  }
+  if (typeof document === 'undefined' || typeof document.execCommand !== 'function') {
+    throw new Error('this browser cannot copy');
+  }
+  const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.setAttribute('aria-hidden', 'true');
+  area.style.position = 'fixed';
+  area.style.top = '0';
+  area.style.left = '-9999px';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  try {
+    // The copy takes the focused element's selection.
+    area.focus();
+    area.select();
+    if (!document.execCommand('copy')) throw new Error('the browser refused to copy');
+  } finally {
+    area.remove();
+    focused?.focus();
+  }
 }
 
 /** The full demo implementation: durable local saves and download/file import. */
@@ -278,6 +326,8 @@ export function browserPlatform(): Platform {
         window.removeEventListener('pagehide', listener);
       };
     },
+
+    copyText: copyTextInBrowser,
 
     onBack() { return () => undefined; },
   };

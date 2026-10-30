@@ -6,7 +6,8 @@ import type { MemberView } from './kin';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
   afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
-  ageBoundariesForPages, MAX_PLATE_CANVAS_HEIGHT, plateHeight, plateName, plateRows, plateSpan, plateSubtitle, plateSvg, reads, wrap,
+  ageBoundariesForPages, MAX_PLATE_CANVAS_HEIGHT, PLATE, plateFoot, plateFootLines, plateHeight, plateName, plateRows, plateSpan,
+  plateSubtitle, plateSvg, reads, rowFont, wrap,
   type Measure,
 } from './book.js';
 
@@ -273,7 +274,7 @@ describe('the plate', () => {
   it('passes one snapshot of the current image caption to PNG and SVG export paths (#1706)', () => {
     const source = readFileSync(join(import.meta.dirname, '../components/Book.vue'), 'utf8');
     expect(source).toContain('const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);');
-    expect(source).toContain('plateSvg(rows, houseName, plateCaption)');
+    expect(source).toContain('plateSvg(rows, houseName, plateCaption, foot)');
     expect(source).toContain('c.fillText(plateCaption, PLATE.pad, 88)');
     expect(source).not.toContain('plateSubtitle(entries, lens.value)');
     expect(source).toContain('PLAIN_LENS_LABELS[l.id]');
@@ -617,5 +618,94 @@ describe('browser Blob downloads', () => {
     expect(f.revokeObjectURL).not.toHaveBeenCalled();
     vi.runAllTimers();
     expect(f.revokeObjectURL).toHaveBeenCalledExactlyOnceWith('blob:test-image');
+  });
+});
+
+/**
+ * THE CODE ON THE PICTURE (#1995). An image is what travels, so the founding
+ * goes with it: in the plate's foot and at the Afterimage's end, in a
+ * monospace face, wrapped only where the column forces it, and always the
+ * code without names.
+ */
+describe('share codes on exported images', () => {
+  const CODE = 'ED1.' + 'aB1lI0Oo-_'.repeat(24) + '.c0ffee12';
+
+  it('leaves a plate without a code exactly as it was', () => {
+    const foot = plateFoot(null, monospace);
+    expect(foot).toEqual({ label: 'Eldritch Dynasty', code: [], height: PLATE.foot });
+    const rows = plateRows([entry()], monospace);
+    expect(plateHeight(rows, foot)).toBe(plateHeight(rows));
+    expect(plateFootLines(foot, 500)).toEqual([{ text: 'Eldritch Dynasty', y: 472, mono: false }]);
+    expect(plateSvg(rows, 'House', 'A chronicle', foot)).toBe(plateSvg(rows, 'House', 'A chronicle'));
+  });
+
+  it('wraps the code inside the column without losing a character, and grows the foot to hold it', () => {
+    const fonts: string[] = [];
+    const measure: Measure = (text, font) => { fonts.push(font); return text.length * 8; };
+    const foot = plateFoot(CODE, measure);
+    const inner = PLATE.width - PLATE.pad * 2;
+    expect(foot.code.length).toBeGreaterThan(1);
+    expect(foot.code.join('')).toBe(CODE);
+    for (const line of foot.code) expect(line.length * 8).toBeLessThanOrEqual(inner);
+    expect(fonts.every((font) => font === rowFont({ size: 12, mono: true }))).toBe(true);
+
+    const rows = plateRows([entry()], measure);
+    const height = plateHeight(rows, foot);
+    expect(height - plateHeight(rows)).toBe(foot.height - PLATE.foot);
+    const lines = plateFootLines(foot, height);
+    expect(lines.map((line) => line.text)).toEqual([foot.label, ...foot.code]);
+    expect(lines.at(-1)!.y).toBe(height - 28);
+    // Nothing in the foot overlaps the last Chronicle row.
+    expect(lines[0]!.y).toBeGreaterThan(PLATE.head + rows.reduce((h, r) => h + r.size * 1.5 + r.gap, 0));
+  });
+
+  it('says in both modes that the names are not in it', () => {
+    expect(plateFoot(CODE, monospace).label).toBe('Eldritch Dynasty · The same beginning, names withheld');
+    expect(plateFoot(CODE, monospace, 'plainenglish').label)
+      .toBe('Eldritch Dynasty · Share code for this starting point (names not included)');
+  });
+
+  it('draws the same foot into the vector plate, in the monospace face', () => {
+    const foot = plateFoot(CODE, monospace);
+    const rows = plateRows([entry()], monospace);
+    const svg = plateSvg(rows, 'House', 'A chronicle', foot);
+    const height = plateHeight(rows, foot);
+    expect(svg).toContain('height="' + height + '"');
+    for (const { text, y, mono } of plateFootLines(foot, height)) {
+      expect(svg).toContain('y="' + y + '"');
+      expect(svg).toContain('>' + text + '</text>');
+      if (mono) expect(svg).toContain('font-family="ui-monospace, Menlo, Consolas, &quot;Courier New&quot;, monospace" font-size="12">' + text);
+    }
+  });
+
+  const input = {
+    houseName: 'Salt', campaignName: 'A Short Line', seed: 7, year: 1342,
+    endingTitle: 'T', endingSummary: 'S', read: [],
+    reckoning: {
+      pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+      clauses: 0, clausesTotal: 3, attestedTitle: null, livingBlood: 1,
+    },
+  };
+
+  it('ends the Afterimage on the code, monospace, when the run has one', () => {
+    expect(afterimageModel(input).share).toBeUndefined();
+    const model = afterimageModel({ ...input, shareCode: CODE });
+    expect(model.share).toEqual({ heading: 'THE SAME BEGINNING · NAMES WITHHELD', code: CODE });
+    expect(afterimageModel({ ...input, shareCode: CODE }, 'plainenglish').share?.heading)
+      .toBe('SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)');
+
+    const without = afterimageLayout(afterimageModel(input), monospace).rows;
+    const rows = afterimageLayout(model, monospace).rows;
+    const added = rows.slice(without.length);
+    expect(added[0]!.text).toBe(model.share!.heading);
+    const code = added.slice(1);
+    expect(code.every((row) => row.mono)).toBe(true);
+    expect(code.map((row) => row.text).join('')).toBe(CODE);
+    expect(without.some((row) => row.mono)).toBe(false);
+  });
+
+  it('chooses the face per row', () => {
+    expect(rowFont({ size: 14, mono: true })).toBe(`14px ${PLATE.mono}`);
+    expect(rowFont({ size: 19, italic: true })).toBe(`italic 19px ${PLATE.serif}`);
   });
 });

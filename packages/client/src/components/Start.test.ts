@@ -11,6 +11,7 @@ import { CAMPAIGN_CHOICES, createGame, type GameActions, type ChapterBeat } from
 import type { Platform, SaveSummary } from '../platform';
 import type { RunLibrary } from '@ed/schema';
 import { hasSeenProse, rememberSeenProse, seenProseKey } from '../lib/accessibility';
+import { afterimageLayout, afterimageModel, plateFoot, type Measure } from '../lib/book';
 
 /**
  * ── THE FRONT DOOR (issue #67) ────────────────────────────────────────────
@@ -2266,5 +2267,55 @@ describe('the front door begins from a share code', () => {
     expect(w.get('#share-code-error').text()).toBe('Part of this code is missing or wrong. Copy the whole code again.');
     expect(w.findAll('button').some((b) => b.text() === 'Start from this code')).toBe(false);
   });
+
+  /**
+   * What the picture carries is what the recipient types (#1995): wrapped at
+   * the image's column, rejoined line by line, read and begun as the same
+   * house. A narrow measure forces several breaks.
+   */
+  it('begins the same house from the code as either image wraps it', async () => {
+    const { code } = await senderCode();
+    const measure: Measure = (text) => text.length * 31;
+    const foot = plateFoot(code, measure);
+    const afterimage = afterimageLayout(afterimageModel({
+      houseName: 'Salt', campaignName: 'A Short Line', seed: 199510, year: 1342, endingTitle: 'T', endingSummary: 'S',
+      read: [], shareCode: code,
+      reckoning: { pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0, clauses: 0, clausesTotal: 3, attestedTitle: null, livingBlood: 1 },
+    }), measure).rows.filter((row) => row.mono).map((row) => row.text);
+    expect(foot.code.length).toBeGreaterThan(1);
+    expect(afterimage.length).toBeGreaterThan(1);
+    for (const typed of [foot.code.join('\n'), afterimage.join(' ')]) {
+      const recipient = createGame(content, sharePlatform());
+      const read = recipient.actions.readShareCode(typed);
+      expect(read.ok).toBe(true);
+      expect(recipient.actions.beginFromShareCode(typed, {
+        house: SIGNED.houseName, founder: SIGNED.founder.name, friends: SIGNED.friends.map((f) => f.name),
+      })).toBeNull();
+      expect(recipient.actions.shareCode(false)).toEqual({ ok: true, code });
+    }
+  });
 });
 
+describe('copying goes through the host', () => {
+  it('asks the host to copy, and reports whether it took', async () => {
+    const host = sharePlatform();
+    const copyText = vi.fn(async () => undefined);
+    const game = createGame(content, { ...host, copyText });
+    expect(await game.actions.copyText('ED1.a.b')).toBe(true);
+    expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.a.b');
+    copyText.mockRejectedValueOnce(new Error('no clipboard'));
+    expect(await game.actions.copyText('ED1.a.b')).toBe(false);
+  });
+
+  it('falls back to the browser clipboard for a host with none of its own', async () => {
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      const game = createGame(content, sharePlatform());
+      expect(await game.actions.copyText('ED1.a.b')).toBe(true);
+      expect(writeText).toHaveBeenCalledExactlyOnceWith('ED1.a.b');
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+});

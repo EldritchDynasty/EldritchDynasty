@@ -9,7 +9,7 @@ import Entry from './Entry.vue';
 import RecordedLife from './RecordedLife.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, isWritten, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads,
+  LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, isWritten, plateFoot, plateFootLines, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads, rowFont,
   type Lens, type Measure,
 } from '../lib/book';
 
@@ -30,7 +30,7 @@ const props = defineProps<{
   houseName: string;
   close: () => void;
   /** Only the two reads behind a page's way back (issue #269). */
-  actions: Pick<GameActions, 'causeOf' | 'answeredBy'>;
+  actions: Pick<GameActions, 'causeOf' | 'answeredBy' | 'shareCode'>;
   /** Open at this page, because the panel followed a link past its window. */
   focus?: string;
   /** Public names from kept pages, including ancestors outside the living halls. */
@@ -260,12 +260,15 @@ async function plate(): Promise<void> {
     };
 
     const rows = plateRows(entries, measure);
-    const height = plateHeight(rows);
+    // The founding, never its names: see `plateFoot` (#1995).
+    const share = props.actions.shareCode(false);
+    const foot = plateFoot(share.ok ? share.code : null, measure, props.proseMode);
+    const height = plateHeight(rows, foot);
     // Full Long-Line books exceed browser canvas dimensions. Keep every
     // Chronicle line (and the ruled omissions) in a vector download instead
     // of silently dropping the entire image when getContext/toBlob fails.
     if (height > MAX_PLATE_CANVAS_HEIGHT) {
-      const svg = plateSvg(rows, houseName, plateCaption);
+      const svg = plateSvg(rows, houseName, plateCaption, foot);
       downloadBlob(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
@@ -305,15 +308,17 @@ async function plate(): Promise<void> {
         c.stroke();
       } else {
         c.fillStyle = r.colour;
-        c.font = `${r.italic ? 'italic ' : ''}${r.size}px ${PLATE.serif}`;
+        c.font = rowFont(r);
         c.fillText(r.text, PLATE.pad, y);
       }
       y += r.size * 0.3 + r.gap;
     }
 
     c.fillStyle = PLATE.faint;
-    c.font = `12px ${PLATE.serif}`;
-    c.fillText('Eldritch Dynasty', PLATE.pad, canvas.height - 28);
+    for (const line of plateFootLines(foot, canvas.height)) {
+      c.font = rowFont({ size: 12, mono: line.mono });
+      c.fillText(line.text, PLATE.pad, line.y);
+    }
 
     const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
     if (!blob) { plateError.value = PLATE_ERROR; return; }

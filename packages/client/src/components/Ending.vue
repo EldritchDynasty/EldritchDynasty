@@ -6,7 +6,7 @@ import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  PLATE, afterimageLayout, afterimageModel, afterimageName, type Measure,
+  PLATE, afterimageLayout, afterimageModel, afterimageName, rowFont, type Measure,
 } from '../lib/book';
 
 const props = defineProps<{ view: SessionView; epilogue: EpilogueView; achievements?: readonly AchievementView[]; actions: GameActions; proseMode?: ProseMode }>();
@@ -41,9 +41,24 @@ const plain = computed(() => props.proseMode === 'plainenglish');
  */
 const shareNames = ref(false);
 const share = computed(() => props.actions.shareCode(shareNames.value));
+const nameless = computed(() => props.actions.shareCode(false));
 function selectAll(event: Event): void {
   if (event.target instanceof HTMLTextAreaElement) event.target.select();
 }
+/** Which code the last copy put on the clipboard, or that it failed. Ticking the box clears it. */
+const copied = ref<{ code: string; ok: boolean } | null>(null);
+async function copyShare(): Promise<void> {
+  if (!share.value.ok) return;
+  const code = share.value.code;
+  copied.value = { code, ok: await props.actions.copyText(code) };
+}
+const copyStatus = computed(() => {
+  if (!copied.value || !share.value.ok || copied.value.code !== share.value.code) return '';
+  if (copied.value.ok) return 'Copied.';
+  return plain.value
+    ? 'Could not copy. Select the code and copy it yourself.'
+    : 'The copy did not take. Select the code and copy it by hand.';
+});
 
 const afterimage = computed(() => afterimageModel({
   houseName: props.view.houseName,
@@ -68,6 +83,8 @@ const afterimage = computed(() => afterimageModel({
   read: props.epilogue.read,
   evidence: props.epilogue.afterimage,
   members: props.view.halls?.flatMap((hall) => hall.members),
+  // Never the named code, whatever the box above says: an image travels.
+  ...(nameless.value.ok ? { shareCode: nameless.value.code } : {}),
 }, props.proseMode));
 
 const savingAfterimage = ref(false);
@@ -116,7 +133,7 @@ async function saveAfterimage(): Promise<void> {
         ink.stroke();
       } else {
         ink.fillStyle = row.colour;
-        ink.font = `${row.italic ? 'italic ' : ''}${row.size}px ${PLATE.serif}`;
+        ink.font = rowFont(row);
         ink.fillText(row.text, PLATE.pad, y);
       }
       y += row.size * 1.5 + row.gap;
@@ -280,6 +297,10 @@ async function saveAfterimage(): Promise<void> {
       </label>
       <label class="dim small" for="share-code">{{ plain ? 'Share code' : 'The code' }}</label>
       <textarea id="share-code" class="share-code" readonly rows="3" spellcheck="false" :value="share.code" @focus="selectAll" />
+      <div class="row share-copy">
+        <button class="quiet small" type="button" @click="copyShare()">{{ plain ? 'Copy code' : 'Copy the code' }}</button>
+        <span class="dim small" role="status" aria-live="polite">{{ copyStatus }}</span>
+      </div>
     </section>
 
     <div class="row ending-actions">
@@ -329,6 +350,7 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
 .share { margin-top: 28px; }
 .share-names { display: flex; gap: 8px; align-items: baseline; margin: 10px 0; }
 .share-names input { width: auto; }
+.share-copy { gap: 12px; align-items: baseline; margin-top: 8px; }
 .share-code { display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--t-fine); word-break: break-all; resize: vertical; }
 .beginning .rubric { color: var(--rubric); }
 .read .top { justify-content: space-between; align-items: baseline; gap: 10px; }

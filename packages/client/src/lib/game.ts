@@ -18,6 +18,7 @@ import { foldStanding } from './jump.js';
 import { valenceOf, type Valence } from './valence.js';
 import {
   BROWSER_IMPORT_CANCELLED,
+  copyTextInBrowser,
   currentPlatform,
   type Platform,
   type SaveSummary,
@@ -331,6 +332,8 @@ export interface GameActions {
    * A refusal changes nothing: the current run and its autosave stay as they were.
    */
   beginFromShareCode(code: string, names: SharedNames): ShareCodeProblem | null;
+  /** Put text on the device clipboard through the host. False if nothing was copied. */
+  copyText(text: string): Promise<boolean>;
   /** Leave the prologue. The thesis has been read; the years start now. */
   enter(): void;
   /** Presentation only: select wording for material rendered from this point onward. */
@@ -674,6 +677,15 @@ export function createGame(
 
     readShareCode(code) {
       return readShareCode(code, source, { build: BUILD });
+    },
+
+    async copyText(text) {
+      try {
+        await (platform.copyText ?? copyTextInBrowser)(text);
+        return true;
+      } catch {
+        return false;
+      }
     },
 
     beginFromShareCode(code, names) {
