@@ -183,6 +183,24 @@ describe('answers and the gaps between them', () => {
     expect(gaps[0]).toMatchObject({ from: { kind: 'start' }, to: { at: 5_000, year: 1301, kind: 'glimpse' } });
   });
 
+  it('does not invent a new-house boundary when the first Begin follows time on the title screen', () => {
+    const c = clock();
+    const l = log(c);
+    c.tick(5_000);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    l.note({ kind: 'run', campaign: 'short', seed: 42 });
+    c.tick(2_000);
+    l.chronicle([{ id: 'first', year: 1044, answer: 'glimpse' }]);
+    const { gaps, answers } = l.artifact().summary;
+    expect(answers).toBe(1);
+    expect(gaps.some((g) => g.to.kind === 'new-run')).toBe(false);
+    expect(gaps[0]).toMatchObject({
+      from: { at: 0, year: null, kind: 'start' },
+      to: { at: 7_000, year: 1044, kind: 'glimpse' },
+      censored: false,
+    });
+  });
+
   it('starts fresh Chronicle evidence and censored gaps for a second house with reused ids and seed', () => {
     const c = clock();
     const l = log(c);
