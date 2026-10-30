@@ -315,6 +315,9 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   const gaps: AnswerGap[] = [];
   let open = { at: 0, year: null as number | null, kind: 'start' as AnswerGap['from']['kind'], foreground: 0, decisions: 0 };
   let answers = 0, decisions = 0;
+  // A first Begin is not a house-to-house transition: the player may have
+  // spent time at the title screen before any house existed.
+  let hasHouse = false;
 
   const advance = (to: number) => {
     const span = Math.max(0, Math.min(to, stop) - last);
@@ -343,9 +346,10 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'visible': visible = e.visible; break;
       case 'focus': focused = e.focused; break;
       case 'break': onBreak = e.on; break;
-      case 'year': year = e.year; break;
-      case 'decision': decisions++; open.decisions++; break;
+      case 'year': year = e.year; hasHouse = true; break;
+      case 'decision': hasHouse = true; decisions++; open.decisions++; break;
       case 'page': case 'interlude': {
+        hasHouse = true;
         if (!e.answer || e.revisit || ('carried' in e && e.carried)) break;
         answers++;
         close(e.at, e.year, e.answer, false);
@@ -356,15 +360,18 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         if (e.act === 'start' && e.verb === 'begin') {
           // Answer-to-answer delays never span different houses. Censor
           // the previous house's unfinished gap and start a new clock.
-          // Skip the empty boundary at the log's first ever begin.
-          if (e.at > open.at || open.year !== null || open.decisions > 0) {
+          // The first Begin does not end a preceding house: foreground
+          // time before the first house still belongs to the initial gap.
+          if (hasHouse) {
             close(e.at, year, 'new-run', true);
+            open = { at: e.at, year: null, kind: 'start', foreground, decisions: 0 };
           }
-          open = { at: e.at, year: null, kind: 'start', foreground, decisions: 0 };
+          hasHouse = true;
           year = null;
         }
         break;
-      case 'pane': case 'prose': case 'run': case 'ended': case 'end': break;
+      case 'run': hasHouse = true; break;
+      case 'pane': case 'prose': case 'ended': case 'end': break;
       default: assertNever(e);
     }
   }
