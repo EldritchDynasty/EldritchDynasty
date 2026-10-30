@@ -615,17 +615,24 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   // elder spent to raise a younger descendant — was first said at the God
   // gate itself, when it was too late to raise anyone. Said here instead, the
   // moment the house has an elder who has taken both rites.
-  const elder = w.campaign === 'long' && !w.people.living().some((p) => p.rites.includes('unmaking'))
-    ? w.people.living().find((p) => p.houseOfOrigin === w.playerHouse
-      && p.rites.includes('vessel') && p.rites.includes('great_rite'))
+  // The Unmaking's ELDER slot is `foremost`, with a Hierophant floor and
+  // both earlier rites. Naming any two-rite relative here sent players toward
+  // a sacrifice the actual authored ritual could not cast (#1978).
+  const elder = w.campaign === 'long'
+    && !w.people.living().some((p) => p.rites.includes('unmaking'))
+    && foremost
+    && RUNG_ORDER.indexOf(foremost.standing.rung) >= RUNG_ORDER.indexOf('hierophant')
+    ? w.people.get(foremost.person)
     : undefined;
+  const readyElder = elder?.rites.includes('vessel') && elder.rites.includes('great_rite')
+    ? elder : undefined;
   return {
     ...shown,
-    ...(elder
+    ...(readyElder
       ? {
         ahead: msg(ctx, 'ambition.view.ascent_ahead',
           '{ELDER} has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.',
-          { ELDER: elder.name }),
+          { ELDER: readyElder.name }),
       }
       : {}),
     progress: {
