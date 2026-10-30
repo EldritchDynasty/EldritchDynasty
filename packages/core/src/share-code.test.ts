@@ -175,6 +175,17 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     const code = codeOf(founded(), { names: true });
     const wrapped = code.replace(/(.{40})/g, '$1\n  ');
     expect(readShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+    // Frequent line breaks still fit the bounded raw input envelope.
+    expect(readShareCode(code.split('').join('\n '), content, { build: BUILD }).ok).toBe(true);
+  });
+
+  it('bounds padded input before normalizing away whitespace', () => {
+    const code = codeOf(founded());
+    const padded = `${' \n'.repeat(SHARE_CODE_MAX + 1)}${code}`;
+    expect(problemOf(padded)).toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
+    // The actual decoded payload limit remains the declared SHARE_CODE_MAX.
+    expect(problemOf(`ED1.${'A'.repeat(SHARE_CODE_MAX)}.0`))
+      .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
   });
 });
 
