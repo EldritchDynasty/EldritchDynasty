@@ -275,7 +275,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/4', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/5', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -324,6 +324,68 @@ function playUntil(game: ReturnType<typeof createGame>, actions: ReturnType<type
     if (game.view.value?.namesWanted.length) actions.keepSuggestedNames();
   }
 }
+
+describe('Record mode research (#1987)', () => {
+  it('logs each Record mode and accepted/refused outcome without copying player text', () => {
+    const l = log();
+    const calls: unknown[][] = [];
+    const bare = {
+      record(decision: string, option: unknown, said?: string) {
+        expect(this).toBe(bare);
+        calls.push([decision, option, said]);
+        return option !== 'omit';
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    expect(actions.record('decision_1', 'record', 'private truth')).toBe(true);
+    expect(actions.record('decision_2', 'omit', 'private omission')).toBe(false);
+    expect(actions.record('decision_3', 'embellish', 'private lie')).toBe(true);
+    // Even an invalid runtime option must not export attacker-controlled prose.
+    expect(actions.record('decision_4', 'do not export this' as Parameters<typeof actions.record>[1], 'private text')).toBe(true);
+    expect(calls).toEqual([
+      ['decision_1', 'record', 'private truth'],
+      ['decision_2', 'omit', 'private omission'],
+      ['decision_3', 'embellish', 'private lie'],
+      ['decision_4', 'do not export this', 'private text'],
+    ]);
+    const events = l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...event }) => event);
+    expect(events).toEqual([
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'record', status: 'accepted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'omit', status: 'refused' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'accepted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'unknown', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'unknown', status: 'accepted' },
+    ]);
+    const exported = JSON.stringify(l.artifact());
+    expect(exported).not.toContain('private');
+    expect(exported).not.toContain('do not export this');
+    expect(exported).not.toContain('decision_1');
+    expect(l.artifact().format).toBe('ed-reading-log/5');
+  });
+
+  it('records a thrown Record attempt once and rethrows the same error', () => {
+    const l = log();
+    const error = new Error('private failure detail');
+    let calls = 0;
+    const bare = {
+      record(_decision: string, _option: unknown, _said: string) {
+        calls++;
+        throw error;
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    expect(() => actions.record('decision_5', 'embellish', 'private wording')).toThrow(error);
+    expect(calls).toBe(1);
+    expect(l.events.filter((e) => e.kind === 'action').map(({ at: _at, ...event }) => event)).toEqual([
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'attempted' },
+      { kind: 'action', verb: 'record', act: 'answer', mode: 'embellish', status: 'threw' },
+    ]);
+    expect(JSON.stringify(l.artifact())).not.toContain('private');
+  });
+});
 
 describe('Table action research (#1992)', () => {
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
