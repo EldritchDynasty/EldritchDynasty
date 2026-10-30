@@ -201,7 +201,7 @@ class FakeSource {
  * Just enough `AudioContext` for `Sound` to build into. `refuse` is a device
  * that will not open; `reject` is one whose resume/suspend/close all refuse.
  */
-function fakeEngine(options: { refuse?: boolean; reject?: boolean } = {}) {
+function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: boolean } = {}) {
   const made: FakeContext[] = [];
   class FakeContext {
     state = 'suspended';
@@ -216,6 +216,7 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean } = {}) {
       made.push(this);
     }
     createGain() {
+      if (options.refuseGain) throw new Error('NotSupportedError: output gain unavailable');
       const node = { gain: param(1), connect: <T>(to: T) => to };
       this.gains.push(node);
       return node;
@@ -331,6 +332,21 @@ describe('the player, over a fake engine', () => {
     expect(() => s.setDrone(WARM)).not.toThrow();
     expect(() => { s.wake(); s.suspend(); s.close(); }).not.toThrow();
     expect(s.available).toBe(false);
+  });
+
+  it('closes a newly opened context if output setup fails', () => {
+    const e = fakeEngine({ refuseGain: true });
+    const s = new Sound(e.ctor);
+    s.muted = false;
+
+    expect(() => s.cue('page')).not.toThrow();
+    expect(s.available).toBe(false);
+    expect(e.made).toHaveLength(1);
+    expect(e.made[0]!.calls).toContain('close');
+    expect(e.made[0]!.state).toBe('closed');
+    // The failed context is not reused or repeatedly opened by later cues.
+    s.cue('bell');
+    expect(e.made).toHaveLength(1);
   });
 
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
