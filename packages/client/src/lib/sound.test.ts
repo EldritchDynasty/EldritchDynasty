@@ -778,6 +778,12 @@ describe('the bed decides when the house may be heard', () => {
     expect(bed.audible).toBe(false);
     expect(ctx.sources).toHaveLength(before);
 
+    // Native foreground callbacks can race the browser's visibility state.
+    // Even an explicit show must not unmute a hidden page or rebuild its drone.
+    bed.show();
+    expect(bed.audible).toBe(false);
+    expect(ctx.sources).toHaveLength(before);
+
     page.doc.visibilityState = 'visible';
     page.fire('win:pageshow');
     expect(bed.audible).toBe(true);
