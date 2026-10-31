@@ -9,11 +9,22 @@ export interface AfterimageSource {
   choice?: string;
 }
 
+/** The rite's named victim and the exact surviving page that attributes the act. */
+export interface AfterimageSpent {
+  person: string;
+  name: string;
+  epithet?: string;
+  source: AfterimageSource;
+}
+
 export interface AfterimageEvidence {
   people: { person: string; name: string; epithet?: string; sources: AfterimageSource[] }[];
   /** The last seal-holder's surviving recorded ancestry, including archived people. */
   line?: { id: string; name: string; epithet?: string; head: boolean; record: { parents: { mother?: string; father?: string } } }[];
-  spent?: { person: string; name: string; epithet?: string; source: AfterimageSource };
+  /** Earliest documented sacrifice, whatever house the subject came from. */
+  spent?: AfterimageSpent;
+  /** Earliest documented sacrifice of this house's own blood, for its reckoning. */
+  spentBlood?: AfterimageSpent;
   /** Smallest preserved generation-opening count, not a continuous population minimum. */
   brush?: { count: number; source: AfterimageSource };
   embellishment?: AfterimageSource;
@@ -57,7 +68,8 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     ])) mention(id, sourceOf(page));
   }
 
-  let spent: AfterimageEvidence['spent'];
+  let spent: AfterimageSpent | undefined;
+  let spentBlood: AfterimageSpent | undefined;
   for (const decision of w.decisionLog) {
     if (decision.kind !== 'outcome') continue;
     // Omitted outcomes cannot supply names or reconstruct the missing account.
@@ -86,8 +98,12 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         if (!p || p.died !== decision.year || !page.people?.includes(id)) continue;
         if (effect.rite === 'vessel' && p.status !== 'vessel_consumed') continue;
         if (effect.rite === 'unmaking' && p.status !== 'dead') continue;
-        if (!spent || page.year < spent.source.year) {
-          spent = { person: id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}), source: sourceOf(page) };
+        const witnessed = { person: id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}), source: sourceOf(page) };
+        if (!spent || page.year < spent.source.year) spent = witnessed;
+        // The Afterimage may rightly lead with an outsider, but that must not
+        // hide a later blood-relative sacrifice from the bloodline reckoning.
+        if (p.houseOfOrigin === w.playerHouse && (!spentBlood || page.year < spentBlood.source.year)) {
+          spentBlood = witnessed;
         }
       }
     }
@@ -132,6 +148,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
       || a.sources[0]!.year - b.sources[0]!.year
       || (a.person < b.person ? -1 : a.person > b.person ? 1 : 0)).slice(0, 3),
     ...(spent ? { spent } : {}),
+    ...(spentBlood ? { spentBlood } : {}),
     ...(brush ? { brush } : {}),
     ...(embellishment ? { embellishment: sourceOf(embellishment) } : {}),
     ...(blank ? { blank: sourceOf(blank) } : {}),
