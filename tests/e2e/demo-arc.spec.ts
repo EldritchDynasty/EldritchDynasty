@@ -75,6 +75,14 @@ async function openSavedDemo(page: Page, mode: ProseMode, save: ReturnType<Retur
     }
   }, { save, full, mode, key: ACCESSIBILITY_STORAGE_KEY });
   await page.goto('/');
+  await resumeDemo(page, mode);
+}
+
+/**
+ * A page load always opens on Start; the client never auto-resumes. Return to
+ * the Demonstration through its own saved-demo control, as a player would.
+ */
+async function resumeDemo(page: Page, mode: ProseMode) {
   await page.getByRole('region', {
     name: mode === 'original' ? 'Demonstrations kept' : 'Saved demonstrations',
   }).getByRole('button', {
@@ -97,8 +105,13 @@ for (const mode of ['original', 'plainenglish'] as const) {
     const docket = page.locator('.docket');
     await expect(docket).toBeVisible();
     await expect(docket).toContainText(mode === 'original' ? 'what the book will say' : 'Choose what to record');
+    // The pending Record must survive a real reload: the page comes back on
+    // Start, and the same unanswered page is waiting in the resumed save.
     await page.reload();
+    await expect(page.locator('.board')).toHaveCount(0);
+    await resumeDemo(page, mode);
     await expect(docket).toBeVisible();
+    await expect(docket).toContainText(mode === 'original' ? 'what the book will say' : 'Choose what to record');
 
     await docket.getByRole('button', {
       name: mode === 'original' ? /Write it as it happened/ : /Record what happened/,
@@ -164,7 +177,9 @@ for (const mode of ['original', 'plainenglish'] as const) {
 
     const ending = page.locator('main.ending');
     await expect(ending).toBeVisible();
-    await expect(ending.locator('.year')).toHaveText('1075');
+    // The verdict's own year heads the page; Chronicle excerpts below it carry
+    // their own `.year` badges, so only the direct child names the ending.
+    await expect(ending.locator(':scope > p.year')).toHaveText('1075');
     await expect(ending).toContainText(mode === 'original' ? 'The reckoning' : 'Ending summary');
     await fullSaveUnchanged(page, full);
     expect(errors).toEqual([]);
