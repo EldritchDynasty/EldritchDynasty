@@ -520,14 +520,18 @@ describe('a due step waits for its event\'s conditions (#996)', () => {
 const ANSWERED = 'the_hall_is_answered';
 const ARC = 'inline_the_hall_that_waited__somebody_reads_it_properly';
 
+/** Exactly these policies and this wording on the Hall answer, whatever ships. */
 function withPolicies(source: ContentBundle, policies: Record<string, MissingPolicy>, inheritedBody?: string): ContentBundle {
   return {
     ...source,
     events: source.events.map((event) => {
       if (event.id !== ANSWERED) return event;
-      const slots = Object.fromEntries(Object.entries(event.slots).map(([id, spec]) =>
-        [id, policies[id] ? { ...spec, onMissing: policies[id] } : spec]));
-      return { ...event, slots, ...(inheritedBody ? { inheritedBody } : {}) } as EventTemplate;
+      const slots = Object.fromEntries(Object.entries(event.slots).map(([id, spec]) => {
+        const { onMissing: _shipped, ...rest } = spec;
+        return [id, policies[id] ? { ...rest, onMissing: policies[id] } : rest];
+      }));
+      const { inheritedBody: _wording, ...rest } = event;
+      return { ...rest, slots, ...(inheritedBody ? { inheritedBody } : {}) } as EventTemplate;
     }),
   };
 }
