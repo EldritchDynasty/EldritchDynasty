@@ -453,6 +453,11 @@ export function afterimageQuote(
 }
 
 /** The factual small page: no grade, no rank, no "best" ending. */
+/** A byname is an existing historical label, never inferred from a Chronicle sentence. */
+function afterimageNameOf(person: { name: string; epithet?: string }): string {
+  return person.epithet ? `${person.name} ${person.epithet}` : person.name;
+}
+
 export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'original'): AfterimageModel {
   const r = input.reckoning;
   const quote = afterimageQuote(input.read);
@@ -462,13 +467,13 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
   for (const person of evidence?.people ?? []) {
     memories.push({
       heading: plain ? 'Remembered person' : 'A name the book keeps',
-      text: person.name,
+      text: afterimageNameOf(person),
       source: person.sources[0],
     });
   }
   if (evidence?.spent) memories.push({
     heading: plain ? 'Named in the rite account' : 'The name given to the rite',
-    text: evidence.spent.name, source: evidence.spent.source,
+    text: afterimageNameOf(evidence.spent), source: evidence.spent.source,
   });
   if (evidence?.brush) memories.push({
     heading: plain ? 'Smallest preserved generation-opening count' : 'Where the line stood thinnest in a generation account',
@@ -492,7 +497,7 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
   const seen = new Set<string>();
   while (person && !seen.has(person.id)) {
     seen.add(person.id);
-    line.unshift(person.name);
+    line.unshift(afterimageNameOf(person));
     const parent = recordedParent(person, members);
     person = members.find((member) => member.id === parent);
   }
