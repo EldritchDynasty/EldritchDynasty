@@ -16,7 +16,7 @@ const props = defineProps<{ slots: Record<string, SlotSpec>; event: EventTemplat
 const emit = defineEmits<{ change: [] }>();
 
 const ROLES = SlotRoleS.options;
-const MISSING = ['cancel_arc', 'recast', 'continue_absent', 'inherit:heir', 'inherit:eldest_child', 'inherit:closest_blood', 'inherit:house_successor'];
+const MISSING = ['cancel_arc', 'recast', 'continue_absent', 'inherit:heir', 'inherit:eldest_child', 'inherit:closest_blood', 'inherit:house_successor', 'inherit:hall'];
 
 const names = computed(() => Object.keys(props.slots));
 
@@ -61,6 +61,7 @@ function rename(from: string, to: string) {
   props.slots[clean] = spec;
   props.event.body = renameSlotTokens(props.event.body, from, clean);
   if (props.event.absentBody) props.event.absentBody = renameSlotTokens(props.event.absentBody, from, clean);
+  if (props.event.inheritedBody) props.event.inheritedBody = renameSlotTokens(props.event.inheritedBody, from, clean);
   touch();
 }
 

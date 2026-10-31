@@ -125,7 +125,7 @@ export const CORE_MESSAGE_VARIANTS_FILE = 'messages.yaml';
  * of event/arc/character prose fields that can drift from the migration audit.
  */
 export const CONTENT_PROSE_KEYS: ReadonlySet<string> = new Set([
-  'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'description',
+  'text', 'body', 'label', 'chronicle', 'blurb', 'title', 'absentBody', 'inheritedBody', 'description',
   'teller', 'bias', 'opening', 'subject', 'provenance', 'owed', 'name', 'given', 'line', 'place',
   'closing', 'because', 'cause', 'thesis', 'notarisedBy',
   'friendsPrompt', 'housePrompt', 'namePrompt', 'campaignText', 'inheritedLine',

@@ -1390,6 +1390,42 @@ describe('the rules that had never caught anything', () => {
     });
   });
 
+  // ── slots/inherited-body (#1977) ───────────────────────────────────────
+
+  describe('slots/inherited-body', () => {
+    const slotted = (x: ContentBundle) => x.events.find((ev) => ev.id === 'the_hall_is_answered')!;
+
+    it('refuses inherited wording on an event whose slots can never pass', () => {
+      const b = withEvents((x) => {
+        const e = slotted(x);
+        for (const spec of Object.values(e.slots)) delete spec.onMissing;
+        e.inheritedBody = 'A successor brings {COUSIN} the old letter.';
+      });
+      expect(messages('slots/inherited-body', b)).toMatch(/never renders/);
+    });
+
+    it.each([['recast'], [{ inherit: 'hall' }], [{ inherit: 'heir' }]] as const)('accepts it beside onMissing %j', (policy) => {
+      const b = withEvents((x) => {
+        const e = slotted(x);
+        e.slots.COUSIN!.onMissing = policy as never;
+        e.inheritedBody = 'A successor brings {COUSIN} the old letter.';
+      });
+      expect(runRule('slots/inherited-body', b)).toEqual([]);
+    });
+
+    it('checks the tokens of every alternative body, not only the ordinary one', () => {
+      const b = withEvents((x) => {
+        const e = slotted(x);
+        e.slots.COUSIN!.onMissing = { inherit: 'hall' };
+        e.inheritedBody = 'A successor brings {NOBODY} the old letter.';
+        e.absentBody = 'Nobody is left to bring {GHOST} anything.';
+      });
+      const text = messages('slots/references', b);
+      expect(text).toMatch(/inheritedBody references undefined slot \{NOBODY\}/);
+      expect(text).toMatch(/absentBody references undefined slot \{GHOST\}/);
+    });
+  });
+
   // ── event/shape ────────────────────────────────────────────────────────
 
   describe('event/shape', () => {

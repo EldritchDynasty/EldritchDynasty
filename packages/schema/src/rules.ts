@@ -269,9 +269,11 @@ const slotReferences: ValidationRule = {
       const slotIds = new Set(Object.keys(e.slots));
       // `{NARRATOR}` is the founder without a slot (forms.ts).
       const known = (slot: string) => slotIds.has(slot) || slot === NARRATOR_TOKEN;
-      for (const token of slotTokens(e.body)) {
-        if (token.form === undefined && !known(token.slot)) {
-          issues.push(err(this.id, `event:${e.id}`, `body references undefined slot {${token.slot}}`));
+      for (const [field, text] of [['body', e.body], ['absentBody', e.absentBody], ['inheritedBody', e.inheritedBody]] as const) {
+        for (const token of slotTokens(text ?? '')) {
+          if (token.form === undefined && !known(token.slot)) {
+            issues.push(err(this.id, `event:${e.id}`, `${field} references undefined slot {${token.slot}}`));
+          }
         }
       }
       // A form token renders raw when it cannot resolve, so an unknown one is a
@@ -415,6 +417,28 @@ const arcBoundSlots: ValidationRule = {
         if (spec.bind === 'arc' && spec.onMissing === 'continue_absent' && !e.absentBody) {
           issues.push(err(this.id, at, 'continue_absent requires absentBody — otherwise this renders a token for a man forty years in the ground'));
         }
+      }
+    }
+    return issues;
+  },
+};
+
+/**
+ * An `inheritedBody` is read only when a kept binding passed to somebody
+ * else (#1977). On an event none of whose slots can pass, it is a field that
+ * nothing reads (invariant 11) — prose that looks authored and never shows.
+ */
+const inheritedBodies: ValidationRule = {
+  id: 'slots/inherited-body',
+  about: 'An inheritedBody needs a slot whose onMissing can pass the binding to a successor.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      if (e.inheritedBody === undefined) continue;
+      const passes = Object.values(e.slots).some((spec) => spec.onMissing === 'recast'
+        || (typeof spec.onMissing === 'object' && 'inherit' in spec.onMissing));
+      if (!passes) {
+        issues.push(err(this.id, `event:${e.id}`, 'inheritedBody on an event with no recast or inherit slot never renders'));
       }
     }
     return issues;
@@ -1746,6 +1770,7 @@ const voiceContract: ValidationRule = {
       const threshold = e.tier === 'frame' ? FRAME_PROSE_SENTENCE_THRESHOLD : PROSE_SENTENCE_THRESHOLD;
       issues.push(...proseIssues(`event:${e.id}`, e.body, threshold));
       if (e.absentBody) issues.push(...proseIssues(`event:${e.id}/absentBody`, e.absentBody, threshold));
+      if (e.inheritedBody) issues.push(...proseIssues(`event:${e.id}/inheritedBody`, e.inheritedBody, threshold));
     }
     return issues;
   },
@@ -2654,6 +2679,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   slotReferences,
   negatedRelationOnPlayerCast,
   arcBoundSlots,
+  inheritedBodies,
   countedSlots,
   recastRole,
   madnessGate,

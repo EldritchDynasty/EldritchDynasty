@@ -183,9 +183,14 @@ export function proseForEventTitle(ctx: SimCtx, event: EventTemplate): string {
     : event.title;
 }
 
-export function eventBodyAddress(ctx: SimCtx, event: EventTemplate, absent = false): string | undefined {
+export function eventBodyAddress(
+  ctx: SimCtx,
+  event: EventTemplate,
+  field: boolean | 'body' | 'absentBody' | 'inheritedBody' = 'body',
+): string | undefined {
   const base = eventBaseAddress(ctx, event);
-  return base === undefined ? undefined : `${base}.${absent ? 'absentBody' : 'body'}`;
+  const key = field === true ? 'absentBody' : field === false ? 'body' : field;
+  return base === undefined ? undefined : `${base}.${key}`;
 }
 
 export function recordChronicleAddress(
@@ -295,14 +300,21 @@ export function proseForOutcome(
 }
 
 export function proseForEventBody(ctx: SimCtx, event: EventTemplate, body: string): string {
+  // The arc phase presents `{ ...event, body: absentBody }`, so the copy's
+  // `body` IS its alternative wording. Ask the alternatives first, or that
+  // page is looked up under `.body` against the wrong Original and never
+  // shows its Plain English.
+  for (const field of ['absentBody', 'inheritedBody'] as const) {
+    const text = event[field];
+    if (text !== undefined && body === text) {
+      return isContentProseField(field, body)
+        ? renderProse(ctx, eventBodyAddress(ctx, event, field), body)
+        : body;
+    }
+  }
   if (body === event.body) {
     return isContentProseField('body', body)
       ? renderProse(ctx, eventBodyAddress(ctx, event), body)
-      : body;
-  }
-  if (event.absentBody !== undefined && body === event.absentBody) {
-    return isContentProseField('absentBody', body)
-      ? renderProse(ctx, eventBodyAddress(ctx, event, true), body)
       : body;
   }
   return body;
