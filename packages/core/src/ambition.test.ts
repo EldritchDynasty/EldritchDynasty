@@ -417,6 +417,12 @@ describe('house ambition (issue #210)', () => {
     outcome.effects = [{ kind: 'tutor', target: { slot: 'PUPIL' }, attr: 'reason', op: 'cancel' }];
     expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('endanger');
 
+    // "Household" includes people outside the named ascent programme; a
+    // broad target alone cannot be credited as the Scion's preparation.
+    outcome.effects = [{ kind: 'tutor', target: 'household', attr: 'reason', op: 'begin' }];
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+    outcome.effects = [{ kind: 'tutor', target: { slot: 'PUPIL' }, attr: 'reason', op: 'begin' }];
+
     // An unfilled target cannot justify the claim, nor can an unchosen branch.
     delete pending.fill.PUPIL;
     expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
