@@ -384,6 +384,53 @@ describe('the house afterimage (#260)', () => {
     ],
   };
 
+  it('carries existing bynames into the attributed Afterimage and archived recorded ancestry (#2098)', () => {
+    const page = { year: 1200, page: 'signed-deed', text: 'The book named Meriel.' };
+    const evidence = {
+      people: [{ person: 'meriel', name: 'Meriel', epithet: 'of the Tides', sources: [page] }],
+      spent: { person: 'meriel', name: 'Meriel', epithet: 'of the Tides', source: page },
+      line: [
+        { id: 'last', name: 'Élodie', epithet: 'the Witness', head: true, record: { parents: { mother: 'meriel' } } },
+        { id: 'meriel', name: 'Meriel', epithet: 'of the Tides', head: false, record: { parents: {} } },
+      ],
+    };
+    const before = structuredClone(evidence);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const model = afterimageModel({ ...source, evidence }, mode);
+      expect(model.memories.map((memory) => memory.text)).toEqual([
+        'Meriel of the Tides',
+        'Meriel of the Tides',
+        'Meriel of the Tides → Élodie the Witness',
+      ]);
+      expect(model.memories[0]!.source?.page).toBe('signed-deed');
+      const svg = afterimageSvg(model, afterimageLayout(model, monospace));
+      expect(svg).toContain('Meriel of the Tides');
+      expect(svg).toContain('Élodie the Witness');
+    }
+    expect(evidence).toEqual(before);
+
+    // Old saves and older read-model projections still have only names.
+    const legacy = afterimageModel({ ...source, evidence: {
+      people: [{ person: 'meriel', name: 'Meriel', sources: [page] }],
+      spent: { person: 'meriel', name: 'Meriel', source: page },
+      line: evidence.line.map(({ id, name, head, record }) => ({ id, name, head, record })),
+    } });
+    expect(legacy.memories.map((memory) => memory.text)).toEqual([
+      'Meriel', 'Meriel', 'Meriel → Élodie',
+    ]);
+
+    // The fallback tree uses recorded, not actual, parentage. An unrecorded
+    // true parent must never appear in the exported family account.
+    const fallback = afterimageModel({ ...source, members: [
+      { id: 'last', name: 'Élodie', epithet: 'the Witness', head: true,
+        parents: { father: 'hidden' }, record: { parents: { mother: 'meriel' } } },
+      { id: 'meriel', name: 'Meriel', epithet: 'of the Tides', record: { parents: {} } },
+      { id: 'hidden', name: 'Hidden true parent', epithet: 'the Secret', record: { parents: {} } },
+    ] as MemberView[] });
+    expect(fallback.memories.at(-1)?.text).toBe('Meriel of the Tides → Élodie the Witness');
+    expect(JSON.stringify(fallback)).not.toContain('Hidden true parent');
+  });
+
   it('is deterministic and changes when the finished account changes', () => {
     const first = afterimageModel(source);
     expect(afterimageModel(source)).toEqual(first);
