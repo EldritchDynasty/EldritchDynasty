@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref } from 'vue';
-import { CAMPAIGN_CHOICES, type GameActions } from '../lib/game';
+import { CAMPAIGN_CHOICES, isDemoSaveSlot, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { LibraryRun, ProseMode, RunLibrary } from '@ed/schema';
 import ReadingSettings from './ReadingSettings.vue';
@@ -120,7 +120,9 @@ const showAdvanced = ref(false);
 // its original data is available through Copy out, without overwriting it.
 // Hide the duplicate again if a later Continue succeeds.
 const namedSaves = computed(() => saves.value.filter((s) =>
-  !(props.resumable && resumeRefused.value === null && s.slot === 'autosave')));
+  !isDemoSaveSlot(s.slot) && !(props.resumable && resumeRefused.value === null && s.slot === 'autosave')));
+/** Demo saves always get their own continuation, never the full-campaign Continue control. */
+const demoSaves = computed(() => saves.value.filter((s) => isDemoSaveSlot(s.slot)));
 const completedHouses = computed(() => [...(props.library?.runs ?? [])].reverse());
 const libraryIsReady = computed(() => props.libraryReady ?? true);
 /** The Advanced field is a user-editable number input: Vue's .number modifier
@@ -203,7 +205,7 @@ async function refreshSaves(): Promise<void> {
   if (listingSaves.value) return;
   listingSaves.value = true;
   try {
-    saves.value = await props.actions.listSaves();
+    saves.value = await props.actions.listSaves(true);
     saveListError.value = null;
   } catch {
     // A failed host read says nothing about whether earlier runs exist.
@@ -380,11 +382,12 @@ onMounted(() => { void refreshSaves(); });
       <label v-for="choice in CAMPAIGN_CHOICES" :key="choice.id" class="campaign panel">
         <input v-model="campaign" type="radio" name="campaign" :value="choice.id" />
         <span>
-          <strong>{{ choice.name }}{{ plain ? (choice.id === 'short' ? ' (shorter campaign)' : ' (longer campaign)') : '' }}</strong>
+          <strong>{{ choice.name }}{{ plain ? (choice.id === 'short' ? ' (shorter campaign)' : choice.id === 'long' ? ' (longer campaign)' : ' (demonstration)') : '' }}</strong>
           <span class="dim small">
             {{ choice.years }} years
             <template v-if="choice.id === 'short'">{{ plain ? ' — the default. Resolve three Ledger clauses, with four possible endings over 300 years.' : ' — the default. A three-clause Ledger to settle, with four endings shaped for a three-century line.' }}</template>
-            <template v-else>{{ plain ? ' — resolve all nine Ledger clauses, work toward the difficult goal of Apotheosis, and encounter more stories. Reaching every level is not guaranteed.' : ' — nine Ledger clauses to settle, a difficult road toward Apotheosis, and broader story reach. The summit is not promised.' }}</template>
+            <template v-else-if="choice.id === 'long'">{{ plain ? ' — resolve all nine Ledger clauses, work toward the difficult goal of Apotheosis, and encounter more stories. Reaching every level is not guaranteed.' : ' — nine Ledger clauses to settle, a difficult road toward Apotheosis, and broader story reach. The summit is not promised.' }}</template>
+            <template v-else>{{ plain ? ' — a separate first account: one Age, a Record choice, an interlude and a verdict. A saved demonstration cannot become a full campaign; Short and Long continue the family over many generations.' : ' — one Age, a choice for the Record, the creditor’s reading and a last-night verdict. Its saved line cannot become a Short or Long Line; those tell the longer history.' }}</template>
           </span>
         </span>
       </label>
@@ -444,7 +447,7 @@ onMounted(() => { void refreshSaves(); });
       <article v-for="run in completedHouses" :key="run.id" class="library-run">
         <div class="library-title">
           <strong>{{ run.house }}</strong>
-          <span class="dim small">— {{ run.ending.title }}, {{ run.endedYear }}</span>
+          <span class="dim small">— {{ run.ending.title }}, {{ run.endedYear }}<template v-if="run.campaign === 'demo'"> · {{ plain ? 'Demonstration' : 'The Demonstration' }}</template></span>
           <button
             v-if="confirmingRemoveRun !== run.id"
             class="quiet small"
@@ -486,6 +489,30 @@ onMounted(() => { void refreshSaves(); });
             :disabled="exportingSlots.has(save.slot)"
             @click="exportSave(save.slot)"
             :aria-label="plain ? `Export saved game ${save.slot}` : `Copy out saved run ${save.slot}`"
+          >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
+          <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
+            {{ displayError(saveActionError.message) }}
+          </p>
+        </li>
+      </ul>
+    </section>
+
+
+    <section v-if="demoSaves.length" class="demo-saved panel" :aria-label="plain ? 'Saved demonstrations' : 'Demonstrations kept'">
+      <h2>{{ plain ? 'Saved demonstrations' : 'Demonstrations kept' }}</h2>
+      <p class="dim small">{{ plain ? 'These 33-year games are separate from your full campaigns. Continue or export one here.' : 'These short accounts remain apart from the full lines. Return to one, or copy it out.' }}</p>
+      <ul>
+        <li v-for="save in demoSaves" :key="save.slot">
+          <button class="quiet" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="load(save.slot)">
+            {{ save.slot === 'demo-autosave' ? (plain ? 'Continue the demonstration' : 'Return to the Demonstration') : save.slot.slice('demo-'.length) }}
+            <span class="dim">— {{ save.year ?? (plain ? 'unknown year' : 'an unread year') }}</span>
+            <span v-if="loadingSlot === save.slot" class="dim"> · Loading…</span>
+          </button>
+          <button
+            class="quiet small"
+            :disabled="exportingSlots.has(save.slot)"
+            @click="exportSave(save.slot)"
+            :aria-label="plain ? `Export saved demonstration ${save.slot}` : `Copy out demonstration ${save.slot}`"
           >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
             {{ displayError(saveActionError.message) }}
@@ -587,7 +614,7 @@ input { width: 9ch; }
 .share-start textarea { display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--t-fine); word-break: break-all; }
 .share-name { margin-top: 8px; }
 .share-name input { width: 100%; max-width: 32ch; }
-.saved { margin-top: 26px; }
+.saved, .demo-saved { margin-top: 26px; }
 .reading { margin-top: 26px; }
 .reading h2 {
   margin: 0 0 12px; font-size: var(--t-label); letter-spacing: .14em;
@@ -604,11 +631,11 @@ input { width: 9ch; }
 .library-title strong { font-weight: 600; }
 .library-title button { margin-left: auto; }
 .excerpt { margin: 6px 0 0; line-height: 1.55; color: var(--ink-soft); font-style: italic; }
-.saved h2 { margin: 0; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; }
-.saved p { margin: 8px 0; }
-.saved ul { list-style: none; padding: 0; margin: 0; }
-.saved li + li { margin-top: 4px; }
-.saved .save-action-error { margin: 6px 0 0; }
+.saved h2, .demo-saved h2 { margin: 0; font-size: var(--t-label); letter-spacing: .14em; text-transform: uppercase; }
+.saved p, .demo-saved p { margin: 8px 0; }
+.saved ul, .demo-saved ul { list-style: none; padding: 0; margin: 0; }
+.saved li + li, .demo-saved li + li { margin-top: 4px; }
+.saved .save-action-error, .demo-saved .save-action-error { margin: 6px 0 0; }
 .save-list-error { margin-top: 14px; }
 .save-list-error p { margin: 0 0 8px; }
 .advanced { margin-top: 46px; }

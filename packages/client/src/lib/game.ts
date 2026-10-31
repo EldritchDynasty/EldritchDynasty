@@ -46,8 +46,8 @@ import {
  * `session.ts` — not a peek at `.ctx`.
  */
 
-/** The two product profiles the front door may offer, from the engine's one source of truth. */
-export const CAMPAIGN_CHOICES = [CAMPAIGNS.short, CAMPAIGNS.long] as const;
+/** Full campaigns remain first (Short is the default); the existing miniature has its own entry. */
+export const CAMPAIGN_CHOICES = [CAMPAIGNS.short, CAMPAIGNS.long, CAMPAIGNS.demo] as const;
 
 /** Schema-owned limit exposed through the client's one simulation seam. */
 export const FOUNDER_NAME_MAX = PERSON_NAME_MAX;
@@ -84,8 +84,8 @@ const AUTOSAVE = 'autosave';
 /**
  * Demo persistence is deliberately a separate namespace (#323 Track C).
  *
- * The demo is not offered on the normal front door yet. Letting it write the
- * ordinary `autosave` slot would make a hidden 33-year product profile replace
+ * The demo has its own start and resume controls. Letting it write the
+ * ordinary `autosave` slot would make the 33-year product profile replace
  * a player's Short/Long sitting and then appear behind "Continue the last
  * sitting". Hosts keep treating slots as opaque strings; the client owns this
  * product boundary.
@@ -96,7 +96,7 @@ function slotForCampaign(slot: string, campaign: CampaignId): string {
   return campaign === 'demo' ? `${DEMO_SAVE_PREFIX}${slot}` : slot;
 }
 
-function isDemoSaveSlot(slot: string): boolean {
+export function isDemoSaveSlot(slot: string): boolean {
   return slot.startsWith(DEMO_SAVE_PREFIX);
 }
 
@@ -348,7 +348,8 @@ export interface GameActions {
   setProseVariants(variants: readonly ProseVariant[]): void;
   resume(): Promise<boolean>;
   load(slot: string): Promise<boolean>;
-  listSaves(): Promise<SaveSummary[]>;
+  /** Explicit front-door listing may include the otherwise separate Demonstration saves. */
+  listSaves(includeDemo?: boolean): Promise<SaveSummary[]>;
   /** `cancelled` is a browser picker dismissal, not an invalid selected file. */
   importSave(): Promise<boolean | 'cancelled'>;
   exportSave(slot: string): Promise<boolean>;
@@ -761,9 +762,12 @@ export function createGame(
       }
     },
 
-    async listSaves() {
-      // This is an explicit user-visible read. Unlike background refreshes,
-      // a host failure must reach Start.vue so it can offer Retry (#1176).
+    async listSaves(includeDemo = false) {
+      // The ordinary store catalogue still excludes demo slots, preserving the
+      // full-campaign host contract. Only the explicit front door asks for all
+      // slots and presents demo saves under their own heading (#2063).
+      if (includeDemo) return platform.listSaves();
+      // A host failure must reach the caller so it can offer Retry (#1176).
       await refreshSaves(true);
       return saves.value;
     },
@@ -1193,8 +1197,8 @@ export function createGame(
     // listed saved run or restore an older catalogue.
     const revision = ++saveListRevision;
     try {
-      // Until Track C exposes an explicit demo entry point, its private
-      // namespace must not leak into the normal "Runs written down" list.
+      // The ordinary store catalogue is full-campaign-only; the start screen
+      // explicitly includes demo slots through listSaves(true) (#2063).
       const listed = (await platform.listSaves()).filter((save) => !isDemoSaveSlot(save.slot));
       if (revision === saveListRevision) saves.value = listed;
     } catch (error) {
