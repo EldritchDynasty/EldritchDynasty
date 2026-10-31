@@ -79,6 +79,35 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(saved(begun.session)).toBe(saved(original));
   });
 
+  it('replays an explicitly blank founder-name answer in a named share code', () => {
+    // Founding permits a blank answer: the authored name is shown, but the
+    // signing log still records exactly what the player submitted.
+    for (const name of ['', '   ']) {
+      const original = founded({ ...SIGNED, founder: { ...SIGNED.founder, name } });
+      const code = codeOf(original, { names: true });
+      const read = readShareCode(code, content, { build: BUILD });
+      expect(read.ok && read.founding.founder?.name).toBe(name);
+      const imported = newGameFromShareCode(code, content, { build: BUILD });
+      expect(imported.ok && saved(imported.session)).toBe(saved(original));
+    }
+  });
+
+  it('does not invent a blank founder-name answer when a recipient leaves it empty', () => {
+    const original = founded({
+      ...SIGNED,
+      founder: { gender: 'woman', configuration: 'blood_mother' },
+    });
+    const imported = newGameFromShareCode(codeOf(original), content, {
+      build: BUILD,
+      names: {
+        house: SIGNED.houseName,
+        founder: '   ',
+        friends: SIGNED.friends.map((friend) => friend.name),
+      },
+    });
+    expect(imported.ok && saved(imported.session)).toBe(saved(original));
+  });
+
   it('leaves every typed name out unless asked, and says which the recipient supplies', () => {
     const code = codeOf(founded());
     const payload = payloadOf(code);
