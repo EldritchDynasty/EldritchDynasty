@@ -67,6 +67,16 @@ function usableFocusTarget(element: HTMLElement, root: HTMLElement): boolean {
     && !cssConcealed(element, root);
 }
 
+/** A host can throw from focus(), not merely refuse it; try the next target. */
+function tryFocus(target: HTMLElement): boolean {
+  try {
+    target.focus();
+  } catch {
+    return false;
+  }
+  return document.activeElement === target;
+}
+
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
   return [...card.querySelectorAll<HTMLElement>(
@@ -157,8 +167,7 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
         const inside = modalFocusable(top);
         const target = back && inside.includes(back) ? back : inside[0];
         if (target) {
-          target.focus();
-          if (document.activeElement === target) return;
+          if (tryFocus(target)) return;
         }
         // A parent with no usable controls still owns keyboard focus.
         if (!top.hasAttribute('tabindex')) top.tabIndex = -1;
@@ -167,15 +176,13 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       }
 
       if (back?.isConnected && usableFocusTarget(back, document.body)) {
-        back.focus();
-        if (document.activeElement === back) return;
+        if (tryFocus(back)) return;
       }
       // A pane may have folded or become inert while the dialog was open.
       // Share the trap's visibility rules and keep looking if focus fails.
       for (const target of document.querySelectorAll<HTMLElement>('.clock button, .board button')) {
         if (!usableFocusTarget(target, document.body)) continue;
-        target.focus();
-        if (document.activeElement === target) return;
+        if (tryFocus(target)) return;
       }
     });
   });
