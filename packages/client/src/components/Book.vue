@@ -280,51 +280,51 @@ async function plate(): Promise<void> {
     // or encoding fails on a memory-limited browser. Do not discard the plate.
     let png: Blob | null = null;
     try {
-    const canvas = document.createElement('canvas');
-    canvas.width = PLATE.width;
-    canvas.height = height;
-    const c = canvas.getContext('2d');
-    if (!c) throw new Error('PNG canvas context unavailable');
+      const canvas = document.createElement('canvas');
+      canvas.width = PLATE.width;
+      canvas.height = height;
+      const c = canvas.getContext('2d');
+      if (!c) throw new Error('PNG canvas context unavailable');
 
-    c.fillStyle = PLATE.ground;
-    c.fillRect(0, 0, canvas.width, canvas.height);
+      c.fillStyle = PLATE.ground;
+      c.fillRect(0, 0, canvas.width, canvas.height);
 
-    c.fillStyle = PLATE.ink;
-    c.font = `500 30px ${PLATE.serif}`;
-    c.fillText(houseName, PLATE.pad, 64);
-    c.fillStyle = PLATE.faint;
-    c.font = `13px ${PLATE.serif}`;
-    c.fillText(plateCaption, PLATE.pad, 88);
-    c.strokeStyle = PLATE.rule;
-    c.beginPath();
-    c.moveTo(PLATE.pad, 106);
-    c.lineTo(PLATE.width - PLATE.pad, 106);
-    c.stroke();
+      c.fillStyle = PLATE.ink;
+      c.font = `500 30px ${PLATE.serif}`;
+      c.fillText(houseName, PLATE.pad, 64);
+      c.fillStyle = PLATE.faint;
+      c.font = `13px ${PLATE.serif}`;
+      c.fillText(plateCaption, PLATE.pad, 88);
+      c.strokeStyle = PLATE.rule;
+      c.beginPath();
+      c.moveTo(PLATE.pad, 106);
+      c.lineTo(PLATE.width - PLATE.pad, 106);
+      c.stroke();
 
-    let y = PLATE.head;
-    for (const r of rows) {
-      y += r.size * 1.2;
-      if (r.rule) {
-        c.strokeStyle = PLATE.rule;
-        c.beginPath();
-        c.moveTo(PLATE.pad, y - 4);
-        c.lineTo(PLATE.width - PLATE.pad, y - 4);
-        c.stroke();
-      } else {
-        c.fillStyle = r.colour;
-        c.font = rowFont(r);
-        c.fillText(r.text, PLATE.pad, y);
+      let y = PLATE.head;
+      for (const r of rows) {
+        y += r.size * 1.2;
+        if (r.rule) {
+          c.strokeStyle = PLATE.rule;
+          c.beginPath();
+          c.moveTo(PLATE.pad, y - 4);
+          c.lineTo(PLATE.width - PLATE.pad, y - 4);
+          c.stroke();
+        } else {
+          c.fillStyle = r.colour;
+          c.font = rowFont(r);
+          c.fillText(r.text, PLATE.pad, y);
+        }
+        y += r.size * 0.3 + r.gap;
       }
-      y += r.size * 0.3 + r.gap;
-    }
 
-    c.fillStyle = PLATE.faint;
-    for (const line of plateFootLines(foot, canvas.height)) {
-      c.font = rowFont({ size: 12, mono: line.mono });
-      c.fillText(line.text, PLATE.pad, line.y);
-    }
+      c.fillStyle = PLATE.faint;
+      for (const line of plateFootLines(foot, canvas.height)) {
+        c.font = rowFont({ size: 12, mono: line.mono });
+        c.fillText(line.text, PLATE.pad, line.y);
+      }
 
-    png = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+      png = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
     } catch {
       // Canvas allocation, painting or PNG encoding is unavailable: use SVG.
     }
