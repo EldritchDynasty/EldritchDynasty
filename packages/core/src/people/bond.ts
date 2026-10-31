@@ -83,6 +83,9 @@ export function bindService(ctx: SimCtx, p: Person, marks: number): boolean {
   // A cleared number input, non-finite value or fractional debt must never
   // reach the contract or treasury. NaN passes ordinary bounds comparisons.
   if (!Number.isSafeInteger(marks) || marks < 1 || marks > MAX_BOND) return false;
+  // A bond must be serviceable. The schema checks already-bonded contracts,
+  // but this verb also converts existing ordinary contracts into bonds.
+  if (!Number.isFinite(c.wage) || c.wage <= 0) return false;
 
   c.term = 'bonded';
   c.debt = marks;
