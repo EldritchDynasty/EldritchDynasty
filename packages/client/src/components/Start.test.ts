@@ -297,9 +297,14 @@ describe('the Demonstration front door (#2063)', () => {
 
     expect(await reloaded.actions.resume()).toBe(true);
     expect(reloaded.view.value?.campaign.id).toBe('short');
-    // Loading a save round-trips JSON: undefined-valued optional fields disappear,
-    // but the canonical persisted bytes must remain unchanged.
-    expect(JSON.stringify(host.saves.get('demo-autosave'))).toBe(JSON.stringify(demo));
+    // Resuming writes a fresh autosave timestamp. Compare the actual run state
+    // after JSON round-tripping, excluding only that expected clock metadata.
+    const reSavedDemo = JSON.parse(JSON.stringify(host.saves.get('demo-autosave')));
+    const originalDemo = JSON.parse(JSON.stringify(demo));
+    expect(reSavedDemo.savedAt).toEqual(expect.any(String));
+    delete reSavedDemo.savedAt;
+    delete originalDemo.savedAt;
+    expect(reSavedDemo).toEqual(originalDemo);
   });
 
   it('reports a refused Demonstration resume at its own row, leaving full Continue available', async () => {
