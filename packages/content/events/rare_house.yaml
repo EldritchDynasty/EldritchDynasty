@@ -1197,6 +1197,8 @@ events:
     weight: 130
     tags: [succession, kin, blood, standing]
     purposes: [advance_clause, change_relationship, test_magic_rule]
+    conditions:
+      bloodCount: { op: eq, value: 1 }
     slots:
       HEAD: { role: head }
     body: >-
