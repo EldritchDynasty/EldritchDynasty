@@ -47,18 +47,21 @@ describe('native exported interchange JSON roots (#1411)', () => {
     expect(serializations).toBe(1);
   });
 
-  it('names every normal share export independently even when its campaign year matches (#2201)', () => {
-    const first = '123e4567-e89b-42d3-a456-426614174000';
-    const second = '123e4567-e89b-42d3-a456-426614174001';
+  it('names same-year exports separately using widely supported Web Crypto bytes (#2201)', () => {
+    const first = new Uint8Array(16);
+    const second = new Uint8Array(16);
+    second[15] = 1;
     const olderExport = exportInterchangeFilename(1260, first);
     const laterExport = exportInterchangeFilename(1260, second);
-    expect(olderExport).toBe('eldritch-1260-123e4567-e89b-42d3-a456-426614174000.json');
+    expect(olderExport).toBe('eldritch-1260-00000000000000000000000000000000.json');
+    expect(laterExport).toBe('eldritch-1260-00000000000000000000000000000001.json');
     expect(laterExport).not.toBe(olderExport);
-    expect(exportInterchangeFilename(undefined, first)).toBe('eldritch-run-123e4567-e89b-42d3-a456-426614174000.json');
-    expect(exportInterchangeFilename(0, first)).toBe('eldritch-0-123e4567-e89b-42d3-a456-426614174000.json');
+    expect(exportInterchangeFilename(undefined, first)).toBe('eldritch-run-00000000000000000000000000000000.json');
+    expect(exportInterchangeFilename(0, first)).toBe('eldritch-0-00000000000000000000000000000000.json');
+    expect(() => exportInterchangeFilename(1260, new Uint8Array(0))).toThrow('16 bytes');
 
     const bridge = text('src/platform-bridge.ts');
-    expect(bridge).toContain("exportInterchangeFilename(saveSummary('run', save).year, crypto.randomUUID())");
+    expect(bridge).toContain("exportInterchangeFilename(saveSummary('run', save).year, crypto.getRandomValues(new Uint8Array(16)))");
     expect(bridge).toContain("const SMOKE_EXPORT = 'eldritch-smoke-export.json'");
     expect(bridge).toContain('writeSmokeInterchange: writeInterchange');
   });
