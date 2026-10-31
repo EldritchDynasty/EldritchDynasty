@@ -21,10 +21,10 @@
  *   row, which is what `presentFrame` writes when it shows one. A run with no
  *   interlude keeps that status: no year is substituted for a missing one.
  * - Every `the_last_of_the_line` offer (the Head's docket held it) with the
- *   living blood at the time and how it was answered. That event declares no
- *   `bloodCount` condition, so it is a rare Head scene that may fire at any
- *   size of family: an offer is reported with its blood count, never read as
- *   "the one-survivor rescue was offered".
+ *   living blood at the time and how it was answered. The current scene is
+ *   gated at exactly one living blood (#1993); older stored reports may
+ *   include offers at larger counts, so retain and report their observed
+ *   blood counts instead of silently rewriting historical cohorts.
  * - The thin window before a break: years ending with one or two of the blood.
  *
  * Surviving runs are right-censored at their term. They are counted in every
@@ -247,6 +247,19 @@ export function playLineBreakRun(
 export interface LineBreakInput { seed: number; policy: LineBreakPolicy }
 
 export function lineBreakInputs(runs: number, policies: readonly LineBreakPolicy[], offset = 0): LineBreakInput[] {
+  // A truncated, overlapping or empty cohort must not be reported as a new
+  // independent sample for #1993's threshold decision. Reject bad CLI and
+  // programmatic inputs before any expensive simulation work starts.
+  if (!Number.isSafeInteger(runs) || runs <= 0) {
+    throw new RangeError('line-break run count must be a positive safe integer');
+  }
+  if (!Number.isSafeInteger(offset) || offset < 0) {
+    throw new RangeError('line-break seed offset must be a nonnegative safe integer');
+  }
+  if (!Number.isSafeInteger(LINE_BREAK_SEED_START + offset + runs - 1)) {
+    throw new RangeError('line-break seed range exceeds safe integers');
+  }
+  if (!policies.length) throw new RangeError('line-break cohort must include a policy');
   return policies.flatMap((policy) =>
     Array.from({ length: runs }, (_, i) => ({ seed: LINE_BREAK_SEED_START + offset + i, policy })));
 }
@@ -343,6 +356,7 @@ export interface LineBreakSummary {
 }
 
 export function summariseLineBreaks(rows: readonly LineBreakRun[]): LineBreakSummary[] {
+  if (!rows.length) throw new RangeError('line-break report has no observations');
   const keys = [...new Set(rows.map((r) => `${r.campaign}/${r.policy}`))];
   return keys.map((key) => {
     const col = rows.filter((r) => `${r.campaign}/${r.policy}` === key);
@@ -448,7 +462,8 @@ if (isMain) {
     for (const p of policies) {
       if (!LINE_BREAK_POLICIES.includes(p)) throw new Error(`unknown policy ${p}; one of ${LINE_BREAK_POLICIES.join(', ')}`);
     }
-    const runs = Number(process.argv.slice(2).find((a) => !a.startsWith('--'))) || LINE_BREAK_DEFAULT_RUNS;
+    const runArg = process.argv.slice(2).find((a) => !a.startsWith('--'));
+    const runs = runArg === undefined ? LINE_BREAK_DEFAULT_RUNS : Number(runArg);
     rows = measureLineBreaks(loadContent(), runs, campaign, policies, Number(flag('offset') ?? 0));
     const output = flag('output');
     if (output) writeFileSync(output, JSON.stringify(rows, null, 2) + '\n');
