@@ -97,12 +97,17 @@ describe('the sound preference (#1986)', () => {
     expect(read({ sound: true, soundVolume: 0.25 })).toMatchObject({ sound: true, soundVolume: 0.25 });
   });
 
-  it('uses the default level when a legacy preference has no volume', () => {
-    for (const old of [{}, { sound: 'off' }, { sound: 0 }, { sound: false }]) {
-      expect(read(old), JSON.stringify(old)).toMatchObject({
-        sound: typeof old.sound === 'boolean' ? old.sound : true,
-        soundVolume: 1,
-      });
+  it('preserves a legacy missing sound preference and its default level', () => {
+    expect(read({})).toMatchObject({ sound: true, soundVolume: 1 });
+    expect(read({ textScale: 'large', sound: false })).toMatchObject({
+      sound: false, soundVolume: 1,
+    });
+  });
+
+  it('does not enable audio for an explicitly corrupt stored switch', () => {
+    for (const bad of ['off', 0, null, {}, 1]) {
+      expect(read({ sound: bad }), JSON.stringify(bad))
+        .toMatchObject({ sound: false, soundVolume: 1 });
     }
   });
 
