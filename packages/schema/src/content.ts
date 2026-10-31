@@ -19,6 +19,7 @@ import { ParcelDefS } from './parcel.js';
 import { PositionDefS } from './position.js';
 import { MysticWorkingDefS } from './mystic.js';
 import { ProseCatalogueS } from './prose.js';
+import { GlossaryTermS } from './glossary.js';
 
 /** Authored starting cast. Genomes are rolled from the seed, never authored. */
 export const SeedPersonS = z.object({
@@ -89,6 +90,8 @@ export const ContentBundleS = z.object({
   positions: z.array(PositionDefS).default([]),
   /** Learned workings a practitioner can be assigned to as a standing duty (#1866 B). */
   mysticWorkings: z.array(MysticWorkingDefS).default([]),
+  /** Shared reader glossary, never persisted in WorldState (#1991). */
+  glossary: z.array(GlossaryTermS).default([]),
   /** Authored Plain English counterparts, stored beside the source prose they answer. */
   proseVariants: ProseCatalogueS.default([]),
 });
