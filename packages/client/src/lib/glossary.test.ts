@@ -29,6 +29,22 @@ describe('first Standing glossary term in saved Chronicle text', () => {
       .toEqual([{ text: 'Reputational reputation' }]);
   });
 
+  it('does not mark labels inside supplementary-plane Unicode words', () => {
+    // An astral letter or digit is two UTF-16 units. Examining just the
+    // neighbour's last/first unit misses its Unicode word-character class.
+    for (const value of ['𐐀Standing', 'Standing𐐀', '𝟘Standing', 'Reputation𐐀']) {
+      expect(splitFirstStanding(value, 'original')).toEqual([{ text: value }]);
+    }
+    const text = '𐐀Standing Standing𐐀 ✨Standing✨';
+    const segments = splitFirstStanding(text, 'plainenglish');
+    expect(segments).toEqual([
+      { text: '𐐀Standing Standing𐐀 ✨' },
+      { text: 'Standing', term: 'standing' },
+      { text: '✨' },
+    ]);
+    expect(segments.map((segment) => segment.text).join('')).toBe(text);
+  });
+
   it('marks standalone labels at either end and leaves unmatched text unchanged', () => {
     expect(splitFirstStanding('Standing', 'original'))
       .toEqual([{ text: 'Standing', term: 'standing' }]);
