@@ -157,21 +157,16 @@ function readableBrowserRecord(value: unknown, name: string): unknown {
  * rather than claim a copy that did not happen. Focus goes back where it was.
  */
 export async function copyTextInBrowser(text: string): Promise<void> {
-  // Some embedded browsers throw on the optional property getter itself.
-  // Access failure is the same as an unavailable API: try selected-textarea copy.
-  let clipboard: Clipboard | undefined;
+  // An embedded host may reject either optional property lookup (including
+  // writeText itself), or the asynchronous write. All mean "try the fallback".
   try {
-    clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
-  } catch {
-    // Fall through to the existing click-gesture fallback.
-  }
-  if (clipboard?.writeText) {
-    try {
+    const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+    if (clipboard?.writeText) {
       await clipboard.writeText(text);
       return;
-    } catch {
-      // Fall through to the older path.
     }
+  } catch {
+    // Fall through to selected-textarea copy while the user gesture is active.
   }
   if (typeof document === 'undefined' || typeof document.execCommand !== 'function') {
     throw new Error('this browser cannot copy');
