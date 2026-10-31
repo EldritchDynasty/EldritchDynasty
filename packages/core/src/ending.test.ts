@@ -1206,14 +1206,14 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
       embellished: false,
     });
     expect(original.beginning?.ambition?.name).toBe('Deepen the blood');
-    setProseMode(ctx, 'plainenglish');
-    expect(epilogueOf(ctx)!.purpose).toEqual(original.purpose);
-    expect(epilogueOf(ctx)!.id).toBe(original.id);
+    expect(digestOf(ctx)).toBe(before);
     // The epilogue gives the client only detached strings, not a writable page.
     original.purpose!.text = 'A rewritten account.';
     expect(ctx.world.chronicle[0]!.text).toBe('The house wrote that Meriel walked away.');
-    // Prose-mode preference is outside the simulation digest.
-    expect(digestOf(ctx)).toBe(before);
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose?.text).toBe('The house wrote that Meriel walked away.');
+    expect(epilogueOf(ctx)!.purpose?.person).toBe('Meriel of the Tides');
+    expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
   it('keeps an embellished page disputed, and never reconstructs an omitted one', () => {
