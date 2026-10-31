@@ -179,10 +179,26 @@ export function summariseFieldCampaigns(runs: readonly Run[]) {
   }).filter(row => row !== undefined));
 }
 
+/**
+ * Report columns rely on unique paired integer seeds. Validate the entire
+ * requested span before sampling: separately safe inputs can still overflow
+ * at the last seed, silently duplicating observations (#2175).
+ */
+export function assertMysticFieldSampleRange(runs: number, seedBase: number): void {
+  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) {
+    throw new Error('Expected positive runs and integer seed base');
+  }
+  // Subtract first. `seedBase + runs - 1` rounds at MAX_SAFE_INTEGER + 1
+  // even when the intended final seed is exactly MAX_SAFE_INTEGER.
+  if (!Number.isSafeInteger(seedBase + (runs - 1))) {
+    throw new Error('Mystic field sample range exceeds the safe integer seed limit');
+  }
+}
+
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-muster-report.ts')) {
   const runs = Number(process.argv[2] ?? 24);
   const seedBase = Number(process.argv[3] ?? 187400);
-  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) throw new Error('Expected positive runs and integer seed base');
+  assertMysticFieldSampleRange(runs, seedBase);
   const content = loadContent();
   const samples: Run[] = [];
   const controls: { seed: number; campaign: string; policy: string; equal: boolean }[] = [];
