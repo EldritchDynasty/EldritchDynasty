@@ -27,9 +27,16 @@ describe('Steam achievement backend (#323)', () => {
   it('keeps the shipped App ID external and accepts a positive development override', () => {
     expect(configuredSteamAppId({})).toBeUndefined();
     expect(configuredSteamAppId({ ED_STEAM_APP_ID: '480' })).toBe(480);
-    expect(() => configuredSteamAppId({ ED_STEAM_APP_ID: '0' })).toThrow(/positive integer/);
-    expect(() => configuredSteamAppId({ ED_STEAM_APP_ID: '4.2' })).toThrow(/positive integer/);
-    expect(() => configuredSteamAppId({ ED_STEAM_APP_ID: 'not-a-number' })).toThrow(/positive integer/);
+    expect(configuredSteamAppId({ ED_STEAM_APP_ID: ' 480 ' })).toBe(480);
+    expect(configuredSteamAppId({ ED_STEAM_APP_ID: '000480' })).toBe(480);
+    expect(configuredSteamAppId({ ED_STEAM_APP_ID: ' ' })).toBeUndefined();
+    for (const invalid of [
+      '0', '4.2', 'not-a-number', '0x1e0', '0b111100000',
+      '4.8e2', '480.0', '+480', '-480', 'Infinity', '9007199254740992',
+    ]) {
+      expect(() => configuredSteamAppId({ ED_STEAM_APP_ID: invalid }), invalid)
+        .toThrow(/positive decimal integer/);
+    }
   });
 
   it('initialises Steam in the host and enables the overlay only after init succeeds', () => {
