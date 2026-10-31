@@ -3,6 +3,7 @@
  * Descriptive baseline, not a new balance gate or a simulation policy.
  */
 import { writeFileSync } from 'node:fs';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { loadContent } from '@ed/content';
 import type { Content } from '@ed/schema';
 import { livingBlood } from '../ending.js';
@@ -94,7 +95,7 @@ export function pairedMysticBaseline(runs: readonly Run[]) {
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-baseline.ts')) {
   const runs = Number(process.argv[2] ?? 64);
   const seedBase = Number(process.argv[3] ?? 186600);
-  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) throw new Error('Expected positive runs and integer seed base');
+  sampleSeedEnd(runs, seedBase);
   const content = loadContent();
   const samples: Run[] = [];
   const controls: { seed: number; campaign: string; policy: string; fullSaveEqual: boolean; hash: string }[] = [];

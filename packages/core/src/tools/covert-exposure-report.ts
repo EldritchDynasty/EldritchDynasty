@@ -4,6 +4,7 @@
  * Descriptive evidence; a funnel explains a rate, it never substitutes for one.
  */
 import { createHash } from 'node:crypto';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import type { Content, TableOrder } from '@ed/schema';
@@ -128,6 +129,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/covert-exposure-report.ts'))
   const n = Number(process.argv[2] ?? 24), seedBase = Number(process.argv[3] ?? 187700);
   const scenario = (process.argv[5] ?? 'ordinary') as Scenario;
   if (scenario !== 'ordinary' && scenario !== 'hostile') throw Error('Expected ordinary or hostile scenario');
+  const lastSeed = sampleSeedEnd(n, seedBase);
   const content = loadContent();
   const runs = Array.from({ length: n }, (_, i) => seedBase + i)
     .flatMap(seed => (['short', 'long'] as const).map(campaign => playExposureCampaign(content, seed, campaign, scenario)));
@@ -135,7 +137,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/covert-exposure-report.ts'))
   const control = playExposureCampaign(content, seedBase, 'short', scenario, false);
   const watched = runs.find(r => r.seed === seedBase && r.campaign === 'short')!;
   if (control.hash !== watched.hash) throw Error('The covert exposure funnel changed the save it observed');
-  const report = { issue: 1943, scenario, seeds: [seedBase, seedBase + n - 1], observerNeutral: true,
+  const report = { issue: 1943, scenario, seeds: [seedBase, lastSeed], observerNeutral: true,
     bounds: exposureBounds(runs, scenario), summary: exposureReport(runs),
     runs: runs.map(({ funnel: _f, ...r }) => r) };
   console.log(JSON.stringify({ bounds: report.bounds, summary: report.summary }, null, 2));
