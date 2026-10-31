@@ -1168,3 +1168,79 @@ describe('collection returns to where the run began (#1867 §6)', () => {
     expect(beginning.guardianSince).toBeUndefined();
   });
 });
+
+describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
+  function accountedRite() {
+    const ctx = atTheTerm();
+    const w = ctx.world;
+    w.campaign = 'long';
+    w.ending = { id: 'forgotten', year: w.year };
+    w.houseAmbition = 'deepen_blood';
+    const vessel = place(ctx, { name: 'Meriel', sex: 'female', age: 40 });
+    const ascendant = place(ctx, { name: 'Wystan', sex: 'male', age: 40 });
+    vessel.epithet = 'of the Tides';
+    w.chronicle = [page({
+      id: 'rite-page', year: w.year, eventId: 'the_vessel_rite',
+      text: 'The house wrote that Meriel walked away.',
+      people: [vessel.id, ascendant.id], record: 'record',
+    })];
+    w.decisionLog = [{
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [vessel.id], ASCENDANT: [ascendant.id] },
+    }];
+    w.people.kill(vessel.id, w.year, 'given to the rite', 'vessel_consumed');
+    return ctx;
+  }
+
+  it('reads a named, written rite cost beside the tracked aim without choosing another ending', () => {
+    const ctx = accountedRite();
+    const before = digestOf(ctx);
+    const original = epilogueOf(ctx)!;
+    expect(original.id).toBe('forgotten');
+    expect(original.purpose).toEqual({
+      kind: 'blood_spent',
+      person: 'Meriel of the Tides',
+      year: ctx.world.year,
+      text: 'The house wrote that Meriel walked away.',
+      embellished: false,
+    });
+    expect(original.beginning?.ambition?.name).toBe('Deepen the blood');
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toEqual(original.purpose);
+    expect(epilogueOf(ctx)!.id).toBe(original.id);
+    // The epilogue gives the client only detached strings, not a writable page.
+    original.purpose!.text = 'A rewritten account.';
+    expect(ctx.world.chronicle[0]!.text).toBe('The house wrote that Meriel walked away.');
+    // Prose-mode preference is outside the simulation digest.
+    expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('keeps an embellished page disputed, and never reconstructs an omitted one', () => {
+    const ctx = accountedRite();
+    ctx.world.chronicle[0]!.record = 'embellish';
+    expect(epilogueOf(ctx)!.purpose?.embellished).toBe(true);
+    ctx.world.chronicle[0]!.text = null;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
+  it('does not infer pursuit from selecting an ambition, an unsupported rite, or an ambiguous page', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    w.decisionLog = [];
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.decisionLog = [{
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [w.chronicle[0]!.people![0]!], ASCENDANT: [w.chronicle[0]!.people![1]!] },
+    }];
+    w.chronicle.push({ ...w.chronicle[0]!, id: 'other-page' });
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.chronicle.pop();
+    w.houseAmbition = 'restore_ledger';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.houseAmbition = 'deepen_blood';
+    w.campaign = 'short';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+});
