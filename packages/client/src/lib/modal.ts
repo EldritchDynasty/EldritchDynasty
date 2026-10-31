@@ -171,7 +171,8 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
         }
         // A parent with no usable controls still owns keyboard focus.
         if (!top.hasAttribute('tabindex')) top.tabIndex = -1;
-        top.focus();
+        // Even a custom parent card can reject programmatic focus.
+        tryFocus(top);
         return;
       }
 
