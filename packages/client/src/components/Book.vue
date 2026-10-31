@@ -267,20 +267,24 @@ async function plate(): Promise<void> {
     // Full Long-Line books exceed browser canvas dimensions. Keep every
     // Chronicle line (and the ruled omissions) in a vector download instead
     // of silently dropping the entire image when getContext/toBlob fails.
-    if (height > MAX_PLATE_CANVAS_HEIGHT) {
+    const downloadSvg = () => {
       const svg = plateSvg(rows, houseName, plateCaption, foot);
       downloadBlob(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
       );
-      return;
-    }
+    };
+    if (height > MAX_PLATE_CANVAS_HEIGHT) { downloadSvg(); return; }
 
+    // The measured rows can still be saved as vector when bitmap allocation
+    // or encoding fails on a memory-limited browser. Do not discard the plate.
+    let png: Blob | null = null;
+    try {
     const canvas = document.createElement('canvas');
     canvas.width = PLATE.width;
     canvas.height = height;
     const c = canvas.getContext('2d');
-    if (!c) { plateError.value = PLATE_ERROR; return; }
+    if (!c) throw new Error('PNG canvas context unavailable');
 
     c.fillStyle = PLATE.ground;
     c.fillRect(0, 0, canvas.width, canvas.height);
@@ -320,9 +324,12 @@ async function plate(): Promise<void> {
       c.fillText(line.text, PLATE.pad, line.y);
     }
 
-    const blob = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
-    if (!blob) { plateError.value = PLATE_ERROR; return; }
-    downloadBlob(blob, plateName(houseName, entries));
+    png = await new Promise<Blob | null>((res) => canvas.toBlob(res, 'image/png'));
+    } catch {
+      // Canvas allocation, painting or PNG encoding is unavailable: use SVG.
+    }
+    if (png) downloadBlob(png, plateName(houseName, entries));
+    else downloadSvg();
   } catch {
     // Canvas allocation/encoding and browser download APIs can all fail.
     // A silent click would leave a reader thinking their page was saved.
