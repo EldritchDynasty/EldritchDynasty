@@ -758,6 +758,18 @@ describe('share codes on exported images', () => {
     }
   });
 
+  it('gives a standalone Chronicle SVG an unbroken, escaped screen-reader description', () => {
+    const foot = plateFoot(CODE, monospace, 'plainenglish');
+    expect(foot.code.length).toBeGreaterThan(1);
+    const svg = plateSvg(plateRows([entry()], monospace), 'House <Ash> & Ink', 'The <book>', foot);
+    expect(svg).toContain('<title>House &lt;Ash&gt; &amp; Ink · The &lt;book&gt;</title>');
+    expect(svg).toContain(`<desc>${foot.label}. Share code: ${CODE}</desc>`);
+    // The visible rows still wrap for layout; the accessible code never does.
+    expect(svg).toContain('>' + foot.code[0]! + '</text>');
+    expect(svg).toContain('>' + foot.code[1]! + '</text>');
+    expect(plateSvg([], 'House', 'A chronicle')).not.toContain('<desc>');
+  });
+
   const input = {
     houseName: 'Salt', campaignName: 'A Short Line', seed: 7, year: 1342,
     endingTitle: 'T', endingSummary: 'S', read: [],
@@ -796,6 +808,8 @@ describe('share codes on exported images', () => {
     expect(svg).toContain('width="1200" height="' + layout.height + '"');
     expect(svg).toContain('viewBox="0 0 1200 ' + layout.height + '"');
     expect(svg).toContain('House &lt;Ash&gt; &amp; &quot;Ink&quot;');
+    expect(svg).toContain('<title>House &lt;Ash&gt; &amp; &quot;Ink&quot; · T</title>');
+    expect(svg).toContain(`<desc>${model.share!.heading}: ${CODE}</desc>`);
     expect(svg).toContain('A &lt;line&gt; &amp; &quot;witness&quot;');
     expect(svg).not.toContain('House <Ash>');
     expect(svg).toContain('y="' + (layout.height - 28) + '"');
