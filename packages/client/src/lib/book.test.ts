@@ -5,7 +5,7 @@ import type { ChronicleEntry } from '@ed/core';
 import type { MemberView } from './kin';
 import { DOWNLOAD_URL_GRACE_MS, downloadBlob } from './download.js';
 import {
-  afterimageLayout, afterimageModel, afterimageName, afterimageQuote,
+  afterimageLayout, afterimageModel, afterimageName, afterimageQuote, afterimageSvg,
   ageBoundariesForPages, MAX_PLATE_CANVAS_HEIGHT, PLATE, plateFoot, plateFootLines, plateHeight, plateName, plateRows, plateSpan,
   plateSubtitle, plateSvg, reads, rowFont, wrap,
   type Measure,
@@ -702,6 +702,29 @@ describe('share codes on exported images', () => {
     expect(code.every((row) => row.mono)).toBe(true);
     expect(code.map((row) => row.text).join('')).toBe(CODE);
     expect(without.some((row) => row.mono)).toBe(false);
+  });
+
+  it('draws a tall-safe SVG from the measured Afterimage, with escaped prose and a readable code', () => {
+    const model = afterimageModel({
+      ...input,
+      houseName: 'House <Ash> & "Ink"',
+      endingSummary: 'A <line> & "witness"',
+      shareCode: CODE,
+    });
+    const layout = afterimageLayout(model, monospace);
+    const svg = afterimageSvg(model, layout);
+    expect(svg).toContain('width="1200" height="' + layout.height + '"');
+    expect(svg).toContain('viewBox="0 0 1200 ' + layout.height + '"');
+    expect(svg).toContain('House &lt;Ash&gt; &amp; &quot;Ink&quot;');
+    expect(svg).toContain('A &lt;line&gt; &amp; &quot;witness&quot;');
+    expect(svg).not.toContain('House <Ash>');
+    expect(svg).toContain('y="' + (layout.height - 28) + '"');
+    expect(svg).toContain('>' + model.footer + '</text>');
+
+    const code = layout.rows.find((row) => row.mono)!;
+    expect(code.text).toContain('ED1.');
+    expect(svg).toContain('font-family="ui-monospace, Menlo, Consolas, &quot;Courier New&quot;, monospace" font-size="14" font-style="normal">' + code.text + '</text>');
+    expect(svg).toContain('font-family="Georgia, &quot;Iowan Old Style&quot;, &quot;Palatino Linotype&quot;, serif" font-size="18" font-style="normal">A &lt;line&gt; &amp; &quot;witness&quot;</text>');
   });
 
   it('chooses the face per row', () => {
