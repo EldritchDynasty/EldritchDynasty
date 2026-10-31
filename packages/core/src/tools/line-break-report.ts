@@ -260,6 +260,9 @@ export function lineBreakInputs(runs: number, policies: readonly LineBreakPolicy
     throw new RangeError('line-break seed range exceeds safe integers');
   }
   if (!policies.length) throw new RangeError('line-break cohort must include a policy');
+  if (new Set(policies).size !== policies.length) {
+    throw new RangeError('line-break cohort policies must not be repeated');
+  }
   return policies.flatMap((policy) =>
     Array.from({ length: runs }, (_, i) => ({ seed: LINE_BREAK_SEED_START + offset + i, policy })));
 }
