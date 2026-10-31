@@ -90,7 +90,9 @@ test('demo autosave, chapter and export stay separate from a Short Line continua
   const demos = page.getByRole('region', { name: 'Demonstrations kept' });
   await expect(demos).toBeVisible();
   await expect(demos.getByRole('button', { name: /Return to the Demonstration/ })).toBeVisible();
-  await expect(demos.getByRole('button', { name: /chapter-fixture/ })).toBeVisible();
+  // Match the chapter action, not its sibling Copy out button, whose accessible
+  // name also contains the chapter slot identifier.
+  await expect(demos.getByRole('button', { name: /^chapter-fixture\b/ })).toBeVisible();
 
   const downloadEvent = page.waitForEvent('download');
   await demos.getByRole('button', { name: 'Copy out demonstration demo-autosave' }).click();
@@ -112,8 +114,8 @@ test('demo autosave, chapter and export stay separate from a Short Line continua
 test('a named Demonstration chapter can be loaded without replacing the full autosave #2159', async ({ page }) => {
   const { full } = await openWithSaves(page, 'plainenglish', { namedDemo: true });
   const demos = page.getByRole('region', { name: 'Saved demonstrations' });
-  await expect(demos.getByRole('button', { name: /chapter-fixture/ })).toBeVisible();
-  await demos.getByRole('button', { name: /chapter-fixture/ }).click();
+  await expect(demos.getByRole('button', { name: /^chapter-fixture\b/ })).toBeVisible();
+  await demos.getByRole('button', { name: /^chapter-fixture\b/ }).click();
   await expect(page.locator('.board')).toBeVisible();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
   await expect.poll(() => page.evaluate(() => {
