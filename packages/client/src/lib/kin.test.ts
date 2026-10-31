@@ -253,6 +253,34 @@ describe('recorded kinship paths (#268)', () => {
     expect(kinshipPath('child', 'truth', members)).toBeUndefined();
   });
 
+  it('keeps the shortest kinship explanation stable when hall members are reordered (#2144)', () => {
+    // A is ancestor of both B and C; D records B and C as parents.
+    // A -> B -> D and A -> C -> D are both two steps long.
+    const a = person({ id: 'a', sex: 'male' });
+    const b = person({
+      id: 'b', sex: 'male',
+      record: { attrs: {}, claimedTraits: [], parents: { father: 'a' }, claimed: [] },
+    });
+    const c = person({
+      id: 'c',
+      record: { attrs: {}, claimedTraits: [], parents: { father: 'a' }, claimed: [] },
+    });
+    const d = person({
+      id: 'd',
+      record: { attrs: {}, claimedTraits: [], parents: { father: 'b', mother: 'c' }, claimed: [] },
+    });
+    const ordered = [a, b, c, d];
+    const reordered = [a, c, b, d];
+    const before = structuredClone(ordered);
+    const steps = (members: MemberView[]) => kinshipPath('a', 'd', members)
+      ?.map((step) => [step.person.id, step.relation]);
+
+    expect(steps(ordered)).toEqual([['b', 'son'], ['d', 'daughter']]);
+    expect(steps(reordered)).toEqual(steps(ordered));
+    expect(kinshipPath('a', 'b', reordered)?.map((step) => step.relation)).toEqual(['son']);
+    expect(ordered).toEqual(before);
+  });
+
   it('returns undefined rather than guessing when the recorded graph is disconnected', () => {
     const members = [person({ id: 'a' }), person({ id: 'b' })];
     expect(kinshipPath('a', 'b', members)).toBeUndefined();
