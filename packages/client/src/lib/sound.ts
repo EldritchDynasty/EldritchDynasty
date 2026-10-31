@@ -288,7 +288,17 @@ type Ctor = new () => AudioContext;
 function detectEngine(): Ctor | null {
   if (typeof window === 'undefined') return null;
   const w = window as unknown as { AudioContext?: Ctor; webkitAudioContext?: Ctor };
-  return w.AudioContext ?? w.webkitAudioContext ?? null;
+  // Optional Web Audio properties may throw on restricted WebViews.
+  // One refused constructor must not hide a working prefixed fallback.
+  for (const name of ['AudioContext', 'webkitAudioContext'] as const) {
+    try {
+      const ctor = w[name];
+      if (typeof ctor === 'function') return ctor;
+    } catch {
+      // A refused getter means this engine is unavailable, not a game error.
+    }
+  }
+  return null;
 }
 
 /**
