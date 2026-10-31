@@ -596,7 +596,8 @@ export const YEAR_PHASES: readonly Phase[] = [
     run({ ctx, rng, report, autoResolve }) {
       for (const step of dueArcSteps(ctx, rng, 'tale')) {
         const event = ctx.content.mustEvent(step.node.event, `arc node ${step.node.id}`);
-        const body = step.absent && event.absentBody ? event.absentBody : event.body;
+        const body = step.absent && event.absentBody ? event.absentBody
+          : step.inherited && event.inheritedBody ? event.inheritedBody : event.body;
         present(ctx, { ...event, body }, step.fill, step.playerCast, rng, report, autoResolve, step);
       }
     },

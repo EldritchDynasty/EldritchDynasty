@@ -656,6 +656,8 @@ export const PendingDecisionS = z.discriminatedUnion('kind', [
       node: z.unknown(),
       fill: SlotFillS,
       absent: z.boolean(),
+      /** #1977: a kept person passed to a successor. Older saves lack it. */
+      inherited: z.boolean().optional(),
     }).optional(),
   }),
   z.object({

@@ -1,11 +1,12 @@
-import type { ArcDecision, ArcDef, ArcInstance, ArcNode, MissingPolicy, Outcome } from '@ed/schema';
-import { DECISION_ARC_BINDINGS, eventInCampaign, stillCastable } from '@ed/schema';
+import type { ArcDecision, ArcDef, ArcInstance, ArcNode, MissingPolicy, Outcome, SlotSpec } from '@ed/schema';
+import { DECISION_ARC_BINDINGS, MAIN_BRANCH, eventInCampaign, isActiveBranch, stillCastable } from '@ed/schema';
 import type { SimCtx } from '../world.js';
-import { evalCondition } from './conditions.js';
-import { resolveSlots, soleCast, type SlotFill } from './slots.js';
+import { evalCondition, evalFilter } from './conditions.js';
+import { candidatesFor, resolveSlots, soleCast, type SlotFill } from './slots.js';
 import { streamFor, type Rng } from '../rng.js';
 import { campaignDef } from '../campaign.js';
 import { minimumArcYears } from './arc-reach.js';
+import { branchOf, wouldSpeakFor } from '../people/branches.js';
 
 export { minimumArcYears } from './arc-reach.js';
 
@@ -177,6 +178,11 @@ export interface ArcStep {
   playerCast: string[];
   /** True when a bound cast member is gone and the node must render absent. */
   absent: boolean;
+  /**
+   * True when `inherit` or `recast` gave a kept slot to somebody new before
+   * this node fired (#1977), so an authored `inheritedBody` is the true page.
+   */
+  inherited?: boolean;
 }
 
 /**
@@ -209,17 +215,22 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
 
     // Repair bindings before resolving anything else.
     let absent = false;
+    let inherited = false;
     let cancelled = false;
     for (const slotId of arc.bindings) {
       const boundId = inst.bindings[slotId];
       if (!boundId) continue;
       const person = ctx.world.people.get(boundId);
+      const spec = event.slots[slotId];
       // `stillCastable`, not `isAlive`: the guardian and a consumed Vessel are
       // both people a scene can still be about, and this line used to cancel
       // any substory whose cast contained one. See `schema/src/person.ts`.
-      if (person && stillCastable(person)) continue;
-
-      const spec = event.slots[slotId];
+      //
+      // Except where the slot is an office (#1977). `recast` names whoever
+      // holds the role now, so a kept Head who has become the guardian, or
+      // has handed on the seal, is missing from it however castable he is.
+      if (person && stillCastable(person)
+        && !(spec?.onMissing === 'recast' && !candidatesFor(spec, ctx, inst.bindings).some((p) => p.id === boundId))) continue;
 
       // A binding this node does not reference cannot be missing from its
       // point of view. Treating an undeclared slot as an unfillable one meant
@@ -235,15 +246,17 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
       if (policy === 'recast') {
         const res = resolveSlots({ ...event, slots: { [slotId]: spec! } } as never, ctx, rng);
         const recast = res.ok ? soleCast(res.fill, slotId) : undefined;
-        if (recast) inst.bindings[slotId] = recast;
+        if (recast) { inst.bindings[slotId] = recast; inherited = true; }
         else { cancelled = true; break; }
         continue;
       }
       // `inherit` is the policy that earns its keep: a rival dies mid-feud and
       // his son takes it up, so the grudge, the arc and the binding all move
       // down one generation together.
-      const heir = inheritFrom(boundId, policy.inherit, ctx);
-      if (heir) inst.bindings[slotId] = heir;
+      const heir = policy.inherit === 'hall'
+        ? hallSuccessor(boundId, slotId, spec, inst.bindings, ctx)
+        : inheritFrom(boundId, policy.inherit, ctx);
+      if (heir) { inst.bindings[slotId] = heir; inherited = true; }
       else { cancelled = true; break; }
     }
 
@@ -267,7 +280,7 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
       continue;
     }
 
-    out.push({ instance: inst, node, fill: res.fill, playerCast: res.playerCast, absent });
+    out.push({ instance: inst, node, fill: res.fill, playerCast: res.playerCast, absent, ...(inherited ? { inherited } : {}) });
   }
 
   if (out.length) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
@@ -287,7 +300,44 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
  * his heir, then his closest blood, then his house. Only a vanished house ends
  * it, which is the correct way for a feud to end.
  */
-type InheritMode = Extract<MissingPolicy, { inherit: string }>['inherit'];
+type InheritMode = Exclude<Extract<MissingPolicy, { inherit: string }>['inherit'], 'hall'>;
+
+/**
+ * WHO NOW SPEAKS FOR HIS HALL (#1977).
+ *
+ * `inheritFrom`'s last resort is anybody of his house of origin, which is
+ * right for a feud and wrong for a branch's demand: the third hall's letter
+ * landed in the fourth hall's hands, or the main house's, and `resolveSlots`
+ * accepts a preset without asking whether it still fits the slot. So this
+ * asks the narrower question and checks the answer.
+ *
+ * The hall is the cadet branch he last lived in; it must still stand. Its
+ * speaker is `wouldSpeakFor`'s reading, which elects nobody. He must be
+ * alive, pass this slot's own filters, and stand in no other binding of the
+ * story — a cadet recalled to hold the seal does not write to himself.
+ */
+function hallSuccessor(
+  personId: string,
+  slotId: string,
+  spec: SlotSpec,
+  bindings: Readonly<Record<string, string>>,
+  ctx: SimCtx,
+): string | undefined {
+  const w = ctx.world;
+  const p = w.people.get(personId);
+  if (!p) return undefined;
+  const last = [...p.membership].reverse().find((m) => m.house === w.playerHouse);
+  const branch = last?.branch;
+  if (!branch || branch === MAIN_BRANCH) return undefined;
+  const state = w.branches.get(branch);
+  if (!state || !isActiveBranch(state)) return undefined;
+
+  const speaker = wouldSpeakFor(ctx, branch);
+  if (!speaker || speaker.id === p.id || speaker.status !== 'alive') return undefined;
+  if (branchOf(w, speaker, w.year) !== branch) return undefined;
+  if (Object.entries(bindings).some(([other, id]) => other !== slotId && id === speaker.id)) return undefined;
+  return spec.filters.every((f) => evalFilter(f, speaker, ctx, bindings, spec.role)) ? speaker.id : undefined;
+}
 
 function inheritFrom(personId: string, mode: InheritMode, ctx: SimCtx): string | undefined {
   const store = ctx.world.people;

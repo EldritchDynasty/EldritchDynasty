@@ -157,12 +157,19 @@ export function isLadderRole(role: string | undefined): boolean {
  * finding its cast dead is the NORMAL case. `inherit` is the policy that earns
  * its keep: a rival dies mid-feud and his son takes it up, and the grudge, the
  * arc and the binding all move down a generation together.
+ *
+ * `hall` is the branch's own successor (#1977): whoever now speaks for the
+ * cadet hall the missing person last lived in. It never falls back to another
+ * hall or to the house at large — a demand made by the third hall is not
+ * carried by the fourth — and the successor must still pass this slot's own
+ * filters and stand in no other binding of the story. No such speaker ends
+ * the story, as `cancel_arc` would.
  */
 export const MissingPolicyS = z.union([
   z.literal('cancel_arc'),
   z.literal('recast'),
   z.literal('continue_absent'),
-  z.object({ inherit: z.enum(['heir', 'eldest_child', 'closest_blood', 'house_successor']) }),
+  z.object({ inherit: z.enum(['heir', 'eldest_child', 'closest_blood', 'house_successor', 'hall']) }),
 ]);
 export type MissingPolicy = z.infer<typeof MissingPolicyS>;
 
@@ -848,6 +855,14 @@ export const EventTemplateS = z.object({
   body: z.string(),
   /** Required when arc bindings may be dead by the time this node fires. */
   absentBody: z.string().optional(),
+  /**
+   * The body when a kept person has passed to a successor (#1977): `inherit`
+   * or `recast` replaced a binding before this node fired, so the people on
+   * the page are not the people the story started with. `absentBody` wins
+   * when someone is also absent. `slots/inherited-body` refuses one on an
+   * event with no slot that can pass.
+   */
+  inheritedBody: z.string().optional(),
 
   interaction: InteractionS,
   record: RecordBlockS.optional(),
