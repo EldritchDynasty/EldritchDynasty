@@ -1223,12 +1223,12 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     const w = ctx.world;
     const relative = w.chronicle[0]!.people![0]!;
     const ascendant = w.chronicle[0]!.people![1]!;
-    const outsider = place(ctx, { name: 'Ronan', sex: 'male', age: 40 });
+    const outsider = place(ctx, { name: 'Rowena', sex: 'female', age: 40 });
     outsider.houseOfOrigin = asId('another-house');
     w.people.kill(outsider.id, w.year - 1, 'given to the earlier rite', 'vessel_consumed');
     w.chronicle.unshift(page({
       id: 'earlier-outsider-rite', year: w.year - 1, eventId: 'the_vessel_rite',
-      text: 'The house wrote that Ronan was offered.', people: [outsider.id, ascendant], record: 'record',
+      text: 'The house wrote that Rowena was offered.', people: [outsider.id, ascendant], record: 'record',
     }));
     w.decisionLog.unshift({
       kind: 'outcome', event: 'the_vessel_rite', year: w.year - 1,
