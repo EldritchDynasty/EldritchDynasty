@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadBundle } from '@ed/content';
 import { canonical } from '@ed/core';
 import { RegisterS, type Register } from '@ed/schema';
@@ -265,6 +265,34 @@ const COLD: DroneInput = { registers: ['cold'], frame: false };
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('the player, over a fake engine', () => {
+  it('survives throwing browser AudioContext getters and still tries the prefixed fallback', () => {
+    const fallback = fakeEngine();
+    vi.stubGlobal('window', {
+      get AudioContext(): never { throw new Error('NotAllowedError: AudioContext getter refused'); },
+      get webkitAudioContext() { return fallback.ctor; },
+    });
+    try {
+      const sound = new Sound();
+      expect(sound.available).toBe(true);
+      expect(fallback.made, 'engine creation must wait for an audible cue').toHaveLength(0);
+      sound.muted = false;
+      expect(() => sound.cue('page')).not.toThrow();
+      expect(fallback.made).toHaveLength(1);
+
+      vi.stubGlobal('window', {
+        get AudioContext(): never { throw new Error('AudioContext refused'); },
+        get webkitAudioContext(): never { throw new Error('webkitAudioContext refused'); },
+      });
+      expect(() => new Sound()).not.toThrow();
+      const silent = new Sound();
+      expect(silent.available).toBe(false);
+      silent.muted = false;
+      expect(() => silent.cue('seal')).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('builds nothing while muted, then starts every voice before it stops one', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
