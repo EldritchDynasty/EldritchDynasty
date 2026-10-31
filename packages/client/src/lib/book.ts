@@ -321,7 +321,7 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
   const height = plateHeight(rows, foot);
   const font = plateXml(PLATE.serif);
   const parts = [
-    '<svg xmlns="http://www.w3.org/2000/svg"'
+    '<svg xmlns="http://www.w3.org/2000/svg" role="img"'
       + ' width="' + PLATE.width + '" height="' + height + '"'
       + ' viewBox="0 0 ' + PLATE.width + ' ' + height + '">',
     '<rect width="' + PLATE.width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
@@ -606,7 +606,7 @@ export function afterimageSvg(model: AfterimageModel, layout: AfterimageLayout):
   const height = layout.height;
   const width = PLATE.width;
   const parts = [
-    '<svg xmlns="http://www.w3.org/2000/svg"'
+    '<svg xmlns="http://www.w3.org/2000/svg" role="img"'
       + ' width="' + width + '" height="' + height + '"'
       + ' viewBox="0 0 ' + width + ' ' + height + '">',
     '<rect width="' + width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
