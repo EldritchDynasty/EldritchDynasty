@@ -293,6 +293,67 @@ describe('the player, over a fake engine', () => {
     }
   });
 
+  it('tries prefixed Web Audio when the standard constructor refuses', () => {
+    const standard = fakeEngine({ refuse: true });
+    const prefixed = fakeEngine();
+    vi.stubGlobal('window', { AudioContext: standard.ctor, webkitAudioContext: prefixed.ctor });
+    try {
+      const sound = new Sound();
+      expect(sound.available).toBe(true);
+      expect(prefixed.made, 'the fallback was opened before the first cue').toHaveLength(0);
+      sound.muted = false;
+      expect(() => sound.cue('page')).not.toThrow();
+      expect(sound.available).toBe(true);
+      expect(standard.made).toHaveLength(0);
+      expect(prefixed.made).toHaveLength(1);
+      sound.setDrone(WARM);
+      expect(heldPitches(prefixed.made[0]!)).toEqual(pitchesOf(WARM));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('closes a partly initialised standard engine before using the prefixed one', () => {
+    const standard = fakeEngine({ refuseGain: true });
+    const prefixed = fakeEngine();
+    vi.stubGlobal('window', { AudioContext: standard.ctor, webkitAudioContext: prefixed.ctor });
+    try {
+      const sound = new Sound();
+      sound.muted = false;
+      expect(() => sound.cue('plain')).not.toThrow();
+      expect(standard.made).toHaveLength(1);
+      expect(standard.made[0]!.calls).toContain('close');
+      expect(standard.made[0]!.state).toBe('closed');
+      expect(prefixed.made).toHaveLength(1);
+      expect(sound.available).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('fails silently after both constructors refuse and does not retry them', () => {
+    const standard = fakeEngine({ refuse: true });
+    const prefixed = fakeEngine({ refuse: true });
+    vi.stubGlobal('window', { AudioContext: standard.ctor, webkitAudioContext: prefixed.ctor });
+    try {
+      const sound = new Sound();
+      sound.muted = false;
+      expect(() => sound.cue('page')).not.toThrow();
+      expect(sound.available).toBe(false);
+      expect(() => { sound.cue('seal'); sound.setDrone(WARM); }).not.toThrow();
+
+      // Explicit injection is intentionally a single engine, even if window
+      // happens to expose another constructor.
+      const injected = new Sound(standard.ctor);
+      injected.muted = false;
+      expect(() => injected.cue('bell')).not.toThrow();
+      expect(injected.available).toBe(false);
+      expect(prefixed.made).toHaveLength(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('builds nothing while muted, then starts every voice before it stops one', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
