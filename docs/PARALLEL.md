@@ -80,6 +80,13 @@ working branch first, then put one of these exact commands in an issue comment:
 /claim steal 93 --agent chatgpt/issue-93-recovery
 ```
 
+For `--paths`, bare paths remain comma- or whitespace-separated. To name **one**
+repository filename containing spaces, quote that complete path with single or
+double quotes, for example `--paths "market research.md" tools/agents.mjs`.
+Quotes delimit a path; they are not stored in the claim commit. Literal commas
+inside a filename, nested/escaped quotes and shell interpolation are unsupported.
+The transport does not invoke a shell on the supplied request.
+
 The named `lane-content` and `lane-gates` locks use the **same**
 `/claim` transport as numbered issues. **For content YAML, claim `lane-content`
 first, then take the numbered content issue** with the same `--agent` branch.
