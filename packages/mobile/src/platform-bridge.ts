@@ -58,7 +58,7 @@ const platform = {
   },
 
   async exportSave(save: unknown): Promise<void> {
-    const name = exportInterchangeFilename(saveSummary('run', save).year, crypto.randomUUID());
+    const name = exportInterchangeFilename(saveSummary('run', save).year, crypto.getRandomValues(new Uint8Array(16)));
     await writeInterchange(save, name);
     const uri = await Filesystem.getUri({ path: name, directory: Directory.Documents });
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
