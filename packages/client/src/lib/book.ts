@@ -584,6 +584,44 @@ export function afterimageLayout(model: AfterimageModel, measure: Measure): Afte
   };
 }
 
+/**
+ * A vector Afterimage for tall or bitmap-constrained browsers (#2073).
+ * Use the EXACT measured PNG rows and positions, rather than rewrapping text:
+ * the nameless founding code must remain readable in its monospaced face.
+ * Escape all player-controlled strings before placing them in XML.
+ */
+export function afterimageSvg(model: AfterimageModel, layout: AfterimageLayout): string {
+  const height = layout.height;
+  const width = PLATE.width;
+  const parts = [
+    '<svg xmlns="http://www.w3.org/2000/svg"'
+      + ' width="' + width + '" height="' + height + '"'
+      + ' viewBox="0 0 ' + width + ' ' + height + '">',
+    '<rect width="' + width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
+  ];
+  let y = 64;
+  for (const row of layout.rows) {
+    if (row.rule) {
+      parts.push('<line x1="' + PLATE.pad + '" y1="' + y
+        + '" x2="' + (width - PLATE.pad) + '" y2="' + y
+        + '" stroke="' + plateXml(row.colour) + '"/>');
+    } else {
+      parts.push('<text x="' + PLATE.pad + '" y="' + y
+        + '" fill="' + plateXml(row.colour)
+        + '" font-family="' + plateXml(row.mono ? PLATE.mono : PLATE.serif)
+        + '" font-size="' + row.size
+        + '" font-style="' + (row.italic ? 'italic' : 'normal') + '">'
+        + plateXml(row.text) + '</text>');
+    }
+    y += row.size * 1.5 + row.gap;
+  }
+  parts.push('<text x="' + PLATE.pad + '" y="' + (height - 28)
+    + '" fill="' + PLATE.faint + '" font-family="' + plateXml(PLATE.serif)
+    + '" font-size="12">' + plateXml(model.footer) + '</text>');
+  parts.push('</svg>');
+  return parts.join('\n');
+}
+
 /** Stable, collision-resistant enough for several finished houses in one folder. */
 export function afterimageName(houseName: string, seed: number, year: number): string {
   return `${houseSlug(houseName)}-${year}-seed-${seed}-afterimage.png`;
