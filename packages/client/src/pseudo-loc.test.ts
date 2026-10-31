@@ -120,4 +120,45 @@ describe('pseudo localisation (#276)', () => {
     stop();
     expect(document.documentElement.dataset.pseudoLoc).toBeUndefined();
   });
+  it('preserves mixed-case contenteditable hosts before and after reactive updates (#2141)', async () => {
+    const root = document.createElement('main');
+    root.innerHTML = [
+      '<div contenteditable="TRUE">Edited <strong>inside</strong></div>',
+      '<div contenteditable="PlAiNtExT-OnLy">Plain draft</div>',
+      '<div contenteditable="tRuE"><span class="fixed" contenteditable="FALSE">Fixed caption</span><span class="draft">Continued draft</span></div>',
+      '<p>Ordinary display</p>',
+    ].join('');
+    document.body.append(root);
+
+    const upper = root.children[0] as HTMLElement;
+    const plaintext = root.children[1] as HTMLElement;
+    const nested = root.children[2] as HTMLElement;
+    const fixed = nested.querySelector('.fixed')!;
+    const draft = nested.querySelector('.draft')!;
+    const display = root.querySelector('p')!;
+    const stop = installPseudoLocalisation(root);
+
+    // The browser treats the values as case-insensitive. An explicitly
+    // noneditable child is display text; inheriting siblings remain editable.
+    expect(upper.textContent).toBe('Edited inside');
+    expect(plaintext.textContent).toBe('Plain draft');
+    expect(draft.textContent).toBe('Continued draft');
+    expect(fixed.textContent).toMatch(/^⟦.*⟧$/);
+    expect(display.textContent).toMatch(/^⟦.*⟧$/);
+
+    upper.querySelector('strong')!.textContent = 'new words';
+    plaintext.textContent = 'Changed draft';
+    fixed.textContent = 'Updated label';
+    draft.textContent = 'More draft';
+    display.textContent = 'More display';
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(upper.textContent).toBe('Edited new words');
+    expect(plaintext.textContent).toBe('Changed draft');
+    expect(draft.textContent).toBe('More draft');
+    expect(fixed.textContent).toMatch(/^⟦.*⟧$/);
+    expect(display.textContent).toMatch(/^⟦.*⟧$/);
+    stop();
+  });
+
 });
