@@ -183,6 +183,8 @@ const DRIVES_A_BATCH: Record<string, string> = {
   'packages/core/src/tools/stall.test.ts':
     'one 3-year density run proving table-order failure wiring; the rest, gate:stall\'s readings '
     + 'included, is hand-built — 0.2s',
+  'packages/core/src/tools/table-load-report.test.ts':
+    'the #2173 seed-span validator over literal numbers; imports the report but plays nothing — 0.0s',
 };
 
 function batchDrivingModules(): Set<string> {
