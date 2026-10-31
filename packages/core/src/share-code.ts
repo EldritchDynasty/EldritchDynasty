@@ -441,8 +441,18 @@ export function newGameFromShareCode(
   // name: caller-provided, possibly stale input must not turn it into a
   // different signing behind the code's back.
   const founderName = f.founder?.name ?? given.founder?.trim();
+  // An explicit empty name is a real signing answer in the decision log:
+  // blank leaves the authored person's name, but it is still recorded. A
+  // named code must preserve that answer byte-for-byte to reproduce its save.
+  // When names were excluded, however, a blank recipient field is no answer.
   const founder: FounderAnswer | undefined = f.founder
-    ? { gender: f.founder.gender, configuration: f.founder.configuration, ...(founderName ? { name: founderName } : {}) }
+    ? {
+        gender: f.founder.gender,
+        configuration: f.founder.configuration,
+        ...(f.founder.name !== undefined
+          ? { name: f.founder.name }
+          : founderName ? { name: founderName } : {}),
+      }
     : undefined;
 
   const session = newGame(source, {
