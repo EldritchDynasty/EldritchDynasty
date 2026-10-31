@@ -172,6 +172,8 @@ const DRIVES_A_BATCH: Record<string, string> = {
     'the founding bottleneck verdict over hand-built runs; plays nothing — 0.0s',
   'packages/core/src/war-gate.test.ts':
     'the war verdict over hand-built runs; plays nothing — 0.0s',
+  'packages/core/src/tools/mystic-muster-report.test.ts':
+    'the #2175 seed-span validator over literal numbers; imports the report but plays nothing — 0.0s',
   'packages/core/src/tools/replay-divergence.test.ts':
     'the run-two comparator and report rows over hand-built decision streams; plays nothing — 0.0s',
   'packages/core/src/tools/line-break-report.test.ts':
