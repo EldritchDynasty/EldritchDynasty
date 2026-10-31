@@ -934,6 +934,74 @@ describe('share codes painted on exported images', () => {
   });
 });
 
+/** PNG is a convenience; the already-measured Chronicle must survive as SVG (#2058). */
+describe('Chronicle plate SVG fallback when bitmap export fails (#2058)', () => {
+  const context = {
+    font: '',
+    measureText: (text: string) => ({ width: text.length * 7 }),
+    fillRect: () => {}, fillText: () => {},
+    beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+  } as unknown as CanvasRenderingContext2D;
+
+  async function assertSvgDownload(): Promise<void> {
+    const calls = vi.mocked(downloadBlob).mock.calls;
+    expect(calls).toHaveLength(1);
+    const [blob, name] = calls[0]!;
+    expect(blob.type).toBe('image/svg+xml;charset=utf-8');
+    expect(name).toBe(plateName('Gearithy', BOOK).replace(/\\.png$/, '.svg'));
+    const svg = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(blob);
+    });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('The cousin was taken to the altar at Bramme.');
+    expect(svg).toContain('ED1.anonymous.x');
+    expect(svg).toContain('The same beginning, names withheld');
+  }
+
+  function mountExport() {
+    return mount(Book, { props: {
+      book: BOOK, ages: [], houseName: 'Gearithy', close: () => {},
+      actions: { ...readsOver(BOOK), shareCode: () => ({ ok: true as const, code: 'ED1.anonymous.x' }) },
+    } });
+  }
+
+  it('uses one SVG when the final PNG canvas cannot provide a drawing context', async () => {
+    const ctx = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValueOnce(context).mockReturnValueOnce(null);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob');
+    vi.mocked(downloadBlob).mockClear();
+    const w = mountExport();
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      expect(ctx).toHaveBeenCalledTimes(2);
+      expect(encoding).not.toHaveBeenCalled();
+      await assertSvgDownload();
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally { w.unmount(); vi.restoreAllMocks(); }
+  });
+
+  it.each(['null', 'throw'] as const)('uses one SVG when PNG encoding returns %s', async (failure) => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((done) => {
+      if (failure === 'throw') throw new Error('PNG encoder unavailable');
+      done(null);
+    });
+    vi.mocked(downloadBlob).mockClear();
+    const w = mountExport();
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      expect(encoding).toHaveBeenCalledTimes(1);
+      await assertSvgDownload();
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally { w.unmount(); vi.restoreAllMocks(); }
+  });
+});
+
 /** Keep the asynchronous naming regression in the measured export component suite. */
 describe('house afterimage filename snapshot (#1508)', () => {
   it('names the encoded PNG for the house actually painted, even if view props change mid-export', async () => {
