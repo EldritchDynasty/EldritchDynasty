@@ -48,7 +48,8 @@ const TASKS = {
 /** Explicit cross-references cover the whole ambition, including Regency preparation. */
 const AMBITIONS: Record<HouseAmbitionId, readonly TableTarget[]> = {
   deepen_blood: ['market', 'papers', 'marriages', 'programme'],
-  raise_ascendant: ['programme', 'shelf', 'tutoring', 'duties', 'forcing', 'longWait', 'greatWork'],
+  // A named successor needs a viable family line as well as study and rites.
+  raise_ascendant: ['programme', 'market', 'papers', 'marriages', 'shelf', 'tutoring', 'duties', 'forcing', 'longWait', 'greatWork'],
   restore_ledger: ['greatWork', 'shelf', 'preferences'],
   secure_branches: ['programme', 'marriages', 'market', 'security', 'land'],
 };
