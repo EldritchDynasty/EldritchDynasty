@@ -225,6 +225,36 @@ describe('founding submit single-flight (#1484)', () => {
 });
 
 describe('optional friends at signing (#1984)', () => {
+  it('does not invite friends when this signing requests none, in either prose mode (#2154)', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      await answerFounder(wrapper);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+
+      expect(wrapper.find('section.friends').exists()).toBe(false);
+      expect(wrapper.text()).not.toContain('And five who were not of your blood');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({ friends: [] }));
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.find('section.friends').exists()).toBe(false);
+      expect(wrapper.text()).not.toContain('Up to five friends outside the family');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+
   function withFriends(): PrologueView {
     return { ...prologueView(), friendsWanted: 2 };
   }
