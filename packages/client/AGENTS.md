@@ -102,10 +102,14 @@ The drop is the effect; do not smooth it out. The prologue's thesis gets a
 screen to itself for the same reason, which is what `openingSeen` is for — a
 line that lands under a family tree does nothing.
 
-The signing collects the founder's name and Examination answers before the
-house, heirloom, grudge and optional friends. `GameSession.found()` validates
-and rebuilds that start atomically. The founder is still the authored male
-signer; the gender/configuration work in #1867 is not shipped.
+The signing collects the founder's name, gender, blood-parent configuration
+and Examination answers before the house, heirloom, grudge and optional
+friends. Gender governs how the founder is referred to; it does not determine
+which body carried the blood into the house. A man or woman preselects the
+matching `blood_father` or `blood_mother` configuration; a nonbinary founder
+chooses, and anyone may change that selection. Never infer the configuration
+from the name or gender alone. `GameSession.found()` validates and rebuilds
+that start atomically (#1867).
 
 ## Sound
 
