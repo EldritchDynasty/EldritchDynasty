@@ -196,15 +196,22 @@ export class SoundBed {
     win.addEventListener('pageshow', show);
     const unpause = onPause?.(hide) ?? (() => undefined);
     visibility();
-    this.#detach = () => {
+    // A former attachment may still have its cleanup callback in a caller.
+    // Calling that stale callback must neither tear down nor forget a newer
+    // attachment. Each cleanup owns only its own listeners and host pause hook.
+    let detached = false;
+    const detach = () => {
+      if (detached) return;
+      detached = true;
       for (const type of GESTURES) win.removeEventListener(type, gesture, true);
       doc.removeEventListener('visibilitychange', visibility);
       win.removeEventListener('pagehide', hide);
       win.removeEventListener('pageshow', show);
       unpause();
-      this.#detach = () => undefined;
+      if (this.#detach === detach) this.#detach = () => undefined;
     };
-    return this.#detach;
+    this.#detach = detach;
+    return detach;
   }
 
   /** Let go of the listeners and the audio thread. */
