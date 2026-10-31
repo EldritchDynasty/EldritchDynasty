@@ -15,14 +15,17 @@ function assertNever(value: never, what: string): never {
 }
 
 function nameList(missing: readonly SharedName[], plain: boolean): string {
-  return missing.map((name) => {
+  const names = missing.map((name) => {
     switch (name) {
-      case 'founder': return plain ? 'the founder' : "the founder's";
-      case 'house': return plain ? 'the family name' : "the house's";
-      case 'friends': return plain ? 'every friend' : "each friend's";
+      case 'founder': return "the founder's name";
+      case 'house': return plain ? 'the family name' : "the house's name";
+      case 'friends': return "each friend's name";
       default: return assertNever(name, 'shared name');
     }
-  }).join(', ');
+  });
+  if (names.length <= 1) return names.join('');
+  if (names.length === 2) return names.join(' and ');
+  return `${names.slice(0, -1).join(', ')}, and ${names.at(-1)}`;
 }
 
 function editionPart(part: 'format' | 'content' | 'build', plain: boolean): string {
@@ -59,10 +62,12 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     }
     case 'demonstration':
       return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code is from the Demonstration, which is not a house\'s beginning.';
-    case 'names_needed':
+    case 'names_needed': {
+      const plural = problem.missing.length !== 1;
       return plain
-        ? `Enter the missing names: ${nameList(problem.missing, plain)}.`
-        : `The code left names out. Give ${nameList(problem.missing, plain)}.`;
+        ? `Enter the missing ${plural ? 'names' : 'name'}: ${nameList(problem.missing, plain)}.`
+        : `The code left ${plural ? 'names' : 'a name'} out. Give ${nameList(problem.missing, plain)}.`;
+    }
     case 'refused':
       // Already the signing's own refusal, worded by core in the reader's mode.
       return problem.reason;
