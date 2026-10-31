@@ -687,8 +687,18 @@ export function createGame(
     },
 
     async copyText(text) {
+      // A native bridge may reject even when the embedded browser can copy.
+      // BrowserPlatform already delegates to this helper; do not invoke it twice.
       try {
-        await (platform.copyText ?? copyTextInBrowser)(text);
+        if (platform.copyText && platform.copyText !== copyTextInBrowser) {
+          await platform.copyText(text);
+          return true;
+        }
+      } catch {
+        // Fall through to the WebView/browser clipboard.
+      }
+      try {
+        await copyTextInBrowser(text);
         return true;
       } catch {
         return false;
