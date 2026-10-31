@@ -707,7 +707,7 @@ faction simulation. This game deliberately leaves most of those out.
 
 Store line:
 
-> **Breed a bloodline for five centuries, decide what the family writes about
+> **Shape a bloodline across centuries, decide what the family writes about
 > what it did, and face the creditor who kept the other copy.**
 
 ## Claims the evidence supports today
