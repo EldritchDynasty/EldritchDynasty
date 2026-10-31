@@ -18,9 +18,12 @@ export function serializeInterchange(save: unknown): string {
  * A share export is a new Documents file, not a save slot. Including only
  * the year silently overwrote an earlier export from another house (or an
  * earlier version of the same house) at the same year. The caller supplies
- * a fresh crypto.randomUUID() per export; unlike the smoke interchange path,
- * user exports must never reuse a fixed basename.
+ * fresh 128-bit random bytes per export via Web Crypto's widely available
+ * getRandomValues (older iOS WebViews lack randomUUID). Unlike the fixed smoke
+ * interchange path, normal user exports must not reuse a basename.
  */
-export function exportInterchangeFilename(year: number | undefined, exportId: string): string {
-  return `eldritch-${year ?? 'run'}-${exportId}.json`;
+export function exportInterchangeFilename(year: number | undefined, nonce: Uint8Array): string {
+  if (nonce.length !== 16) throw new RangeError('mobile export nonce must have 16 bytes');
+  const token = Array.from(nonce, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `eldritch-${year ?? 'run'}-${token}.json`;
 }
