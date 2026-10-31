@@ -40,6 +40,12 @@ const steps = computed<PathStep[]>(() => {
   });
 });
 
+/** The diagnosis names the candidate, not necessarily the current foremost. */
+function inspectCandidate(): void {
+  const person = props.ascension.diagnosis?.person;
+  if (person) emit('look', person);
+}
+
 function stateText(step: PathStep): string {
   switch (step.state) {
     case 'not-yet':
@@ -84,7 +90,14 @@ function stateText(step: PathStep): string {
           <div class="rubric small next-rung">
             {{ plain ? 'Next level' : 'Next rung' }} · {{ ascension.diagnosis.targetTitle }}
             <span v-if="ascension.diagnosis.name" class="dim">
-              · {{ ascension.diagnosis.name }}
+              ·
+              <button
+                v-if="ascension.diagnosis.person"
+                type="button"
+                class="quiet candidate-link"
+                @click="inspectCandidate"
+              >{{ ascension.diagnosis.name }}</button>
+              <template v-else>{{ ascension.diagnosis.name }}</template>
             </span>
           </div>
           <p v-if="ascension.diagnosis.blockers.length" class="preparation-note small soft">
@@ -163,6 +176,7 @@ function stateText(step: PathStep): string {
 .blocker-action .rubric { white-space: nowrap; }
 .ladder-blocker { max-width: 48ch; margin-top: 3px; }
 .ladder-blocker .soft { margin-top: 2px; }
+.candidate-link { min-height: 40px; text-align: left; overflow-wrap: anywhere; }
 .power-route { margin-top: 12px; max-width: 48ch; }
 .power-route p { margin: 4px 0; }
 .power-route ul { margin: 8px 0; padding-left: 16px; }
