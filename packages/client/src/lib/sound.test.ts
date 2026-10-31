@@ -450,6 +450,28 @@ describe('the player, over a fake engine', () => {
       'ordinary exits lost their gentle fade').toBe(true);
   });
 
+  it('silences an already-ringing cue and keeps volume changes muted', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('bell');
+    const ctx = e.made[0]!;
+    const out = ctx.gains[0]!;
+    expect(out.gain.value).toBe(1);
+    expect(ctx.sources).toHaveLength(cueScore('bell').voices.length);
+
+    // These voices are already scheduled to decay, so muting must silence the
+    // common output rather than merely prevent the next cue from starting.
+    s.muted = true;
+    expect(out.gain.value).toBe(0);
+    s.volume = 0.35;
+    expect(out.gain.value, 'the volume slider unmuted a ringing bell').toBe(0);
+
+    s.muted = false;
+    expect(out.gain.value).toBe(0.35);
+    expect(e.made, 'unmuting reopened the existing audio device').toHaveLength(1);
+  });
+
   it('mutes the running drone promptly rather than leaving an audible tail', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
