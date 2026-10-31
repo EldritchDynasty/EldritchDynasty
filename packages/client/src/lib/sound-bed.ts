@@ -215,7 +215,11 @@ export class SoundBed {
       doc.removeEventListener('visibilitychange', visibility);
       win.removeEventListener('pagehide', hide);
       win.removeEventListener('pageshow', show);
-      unpause();
+      try {
+        unpause();
+      } catch {
+        // A refusing native unsubscriber must not block audio shutdown.
+      }
       if (this.#detach === detach) this.#detach = () => undefined;
     };
     this.#detach = detach;
