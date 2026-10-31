@@ -352,7 +352,12 @@ export class Sound {
 
   set muted(value: boolean) {
     this.#muted = value;
-    // A reader switching sound off should not hear the remaining soft exit fade.
+    // The drone has a dedicated stop, but cues already scheduled (particularly
+    // the long bell) share the output. Silence that bus as well, immediately.
+    // Do not open a context just to mute one; a failed output stays silent.
+    this.attempt(() => {
+      if (this.out) this.out.gain.value = value ? 0 : this.#volume;
+    });
     if (value) this.stopDrone(0.02);
     else if (this.lastDrone) this.setDrone(this.lastDrone);
   }
@@ -369,7 +374,7 @@ export class Sound {
     // A host may invalidate its output after the context was opened. Changing
     // Reading settings must fail into silence, never throw into the UI.
     this.attempt(() => {
-      if (this.out) this.out.gain.value = this.#volume;
+      if (this.out) this.out.gain.value = this.#muted ? 0 : this.#volume;
     });
   }
 
