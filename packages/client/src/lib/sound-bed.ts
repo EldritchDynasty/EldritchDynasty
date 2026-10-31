@@ -194,7 +194,15 @@ export class SoundBed {
     doc.addEventListener('visibilitychange', visibility);
     win.addEventListener('pagehide', hide);
     win.addEventListener('pageshow', show);
-    const unpause = onPause?.(hide) ?? (() => undefined);
+    // Native hosts can refuse an optional pause subscription synchronously.
+    // Browser visibility and gesture handling must still attach, and the
+    // returned detach must still remove those listeners.
+    let unpause: () => void = () => undefined;
+    try {
+      unpause = onPause?.(hide) ?? unpause;
+    } catch {
+      // Treat the unavailable host hook as silence, not a failed game mount.
+    }
     visibility();
     // A former attachment may still have its cleanup callback in a caller.
     // Calling that stale callback must neither tear down nor forget a newer
