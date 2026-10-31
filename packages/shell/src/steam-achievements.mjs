@@ -13,9 +13,11 @@ export function configuredSteamAppId(env = process.env) {
   const raw = String(env.ED_STEAM_APP_ID ?? '').trim();
   if (raw === '') return undefined;
 
+  // Steam App IDs are decimal identifiers, not JavaScript numeric expressions.
+  // Number() alone accepts 0x1e0, 4.8e2 and 480.0 as 480, disguising typos.
   const appId = Number(raw);
-  if (!Number.isSafeInteger(appId) || appId <= 0) {
-    throw new Error('ED_STEAM_APP_ID must be a positive integer');
+  if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(appId) || appId <= 0) {
+    throw new Error('ED_STEAM_APP_ID must be a positive decimal integer');
   }
   return appId;
 }
