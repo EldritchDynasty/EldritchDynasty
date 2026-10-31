@@ -51,8 +51,12 @@ function savePath(slot: string): string {
 function slotFromFile(name: string): string | null {
   if (!name.endsWith('.json')) return null;
   try {
-    const slot = decodeURIComponent(name.slice(0, -'.json'.length));
-    return slot || null;
+    const encoded = name.slice(0, -'.json'.length);
+    const slot = decodeURIComponent(encoded);
+    // Readdir must describe the same file readSave(slot) will open. Accepting
+    // noncanonical percent escapes (e.g. %61utosave for autosave) can expose a
+    // phantom slot or overwrite the real slot's list metadata.
+    return slot && encodeURIComponent(slot) === encoded ? slot : null;
   } catch {
     return null;
   }
