@@ -20,6 +20,14 @@ const TOOL_HASH = createHash('sha256').update(readFileSync(new URL(import.meta.u
 const POLICIES = ['unassigned', 'life', 'guards', 'life_and_guards'] as const;
 type Policy = typeof POLICIES[number];
 
+/** Guard the inclusive sample span before drawing independent paired houses. */
+export function assertSafeThreatSweepSeedSpan(runs: number, seedBase: number): void {
+  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)
+    || !Number.isSafeInteger(seedBase + (runs - 1))) {
+    throw Error('Expected positive runs and safe integer seed span');
+  }
+}
+
 export function playThreatSweep(content: Content, seed: number, policy: Policy, observed = true) {
   const ctx = testWorld(content, seed);
   ctx.world.treasury = 400;
@@ -95,7 +103,7 @@ export function summariseThreatSweep(runs: readonly Run[]) {
 
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-threat-sweep.ts')) {
   const n = Number(process.argv[2] ?? 128), seedBase = Number(process.argv[3] ?? 187850);
-  if (!Number.isSafeInteger(n) || n < 1 || !Number.isSafeInteger(seedBase)) throw Error('Expected positive runs and integer seed base');
+  assertSafeThreatSweepSeedSpan(n, seedBase);
   const content = loadContent(), samples: Run[] = [], controls: { policy: string; seed: number; equal: boolean }[] = [];
   for (const policy of POLICIES) for (let i=0; i<n; i++) {
     const row = playThreatSweep(content,seedBase+i,policy); samples.push(row);
