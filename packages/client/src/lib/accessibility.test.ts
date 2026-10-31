@@ -97,10 +97,29 @@ describe('the sound preference (#1986)', () => {
     expect(read({ sound: true, soundVolume: 0.25 })).toMatchObject({ sound: true, soundVolume: 0.25 });
   });
 
-  it('falls back on anything that is not a switch or a level', () => {
-    for (const bad of [{ sound: 'off' }, { sound: 0 }, { soundVolume: 2 }, { soundVolume: -0.1 }, { soundVolume: '0.5' }, { soundVolume: null }]) {
-      expect(read(bad), JSON.stringify(bad)).toMatchObject({ sound: true, soundVolume: 1 });
+  it('uses the default level when a legacy preference has no volume', () => {
+    for (const old of [{}, { sound: 'off' }, { sound: 0 }, { sound: false }]) {
+      expect(read(old), JSON.stringify(old)).toMatchObject({
+        sound: typeof old.sound === 'boolean' ? old.sound : true,
+        soundVolume: 1,
+      });
     }
+  });
+
+  it('treats an explicitly corrupt saved level as silence, never full volume', () => {
+    // These values can survive JSON storage even if the slider cannot emit
+    // them. A device should not become louder because its setting is damaged.
+    for (const bad of [2, -0.1, '0.5', null, false, 'NaN']) {
+      expect(read({ sound: true, soundVolume: bad }), JSON.stringify(bad))
+        .toMatchObject({ sound: true, soundVolume: 0 });
+    }
+    // JSON turns non-finite numbers into null; they must also fail closed.
+    expect(read({ sound: true, soundVolume: Number.NaN }).soundVolume).toBe(0);
+    expect(read({ sound: true, soundVolume: Infinity }).soundVolume).toBe(0);
+    // A legitimate level remains intact, including both limits.
+    expect(read({ soundVolume: 0 }).soundVolume).toBe(0);
+    expect(read({ soundVolume: 0.3 }).soundVolume).toBe(0.3);
+    expect(read({ soundVolume: 1 }).soundVolume).toBe(1);
   });
 });
 
