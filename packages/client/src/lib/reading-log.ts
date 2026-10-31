@@ -435,6 +435,15 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
           throw error;
         }
       }
+      // An ordinary Begin is also a transaction boundary: if the new game
+      // cannot be built, the old house and its page identities remain current.
+      // Vue observes the new view on its next update, after this synchronous
+      // action returns, so successful starts still reset before new pages.
+      if (verb === 'begin') {
+        const result = original.apply(actions, args);
+        log.note({ kind: 'action', verb, act: 'start' });
+        return result;
+      }
       // Share-code starts are atomic. A refused code leaves the old run intact,
       // so it must not clear its page identities or censor its current gap.
       // Never include the pasted code or recipient names in a research log.
