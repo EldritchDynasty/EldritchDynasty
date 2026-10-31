@@ -143,7 +143,7 @@ export function assertTableLoadSampleRange(runs: number, seedBase: number): void
   if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) {
     throw new Error('Expected positive runs and integer seed base');
   }
-  if (!Number.isSafeInteger(seedBase + runs - 1)) {
+  if (!Number.isSafeInteger(seedBase + (runs - 1))) {
     throw new Error('Table-load sample range exceeds the safe integer seed limit');
   }
 }
