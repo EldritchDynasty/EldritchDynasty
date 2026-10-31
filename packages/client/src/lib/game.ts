@@ -353,6 +353,8 @@ export interface GameActions {
   /** `cancelled` is a browser picker dismissal, not an invalid selected file. */
   importSave(): Promise<boolean | 'cancelled'>;
   exportSave(slot: string): Promise<boolean>;
+  /** Remove only a Demonstration slot; normal campaign slots are never eligible. */
+  deleteDemoSave(slot: string): Promise<void>;
   deleteLibraryRun(id: string): Promise<void>;
   clearLibrary(): Promise<void>;
   /** Retry discovering the existing Library after a host read failure. */
@@ -805,6 +807,17 @@ export function createGame(
       } catch {
         return false;
       }
+    },
+
+    async deleteDemoSave(slot) {
+      // A UI mistake or crafted call must never delete the ordinary autosave.
+      if (!isDemoSaveSlot(slot) || slot.length <= DEMO_SAVE_PREFIX.length) {
+        throw new Error('not a demonstration save slot');
+      }
+      // A pending demo autosave could otherwise finish after deletion and
+      // resurrect the slot. Serialize the explicit removal on the same tail.
+      const { done } = mutateAutosave(() => platform.deleteSave(slot));
+      await done;
     },
 
     async deleteLibraryRun(id) {
