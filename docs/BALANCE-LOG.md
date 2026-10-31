@@ -16264,3 +16264,43 @@ scratch (`/tmp/1977/*`). SHA-256 prefixes: baseline shards `f14f520d`,
 replays `d6cf397b` / `4ac9bc04`; both `gate:long` logs `ba8df777`. Reproduce:
 `npm run report:story-routes -- --runs=200 --seed-start=<1977000 + 6200k>
 --seed-step=31 --controls=2 --output=<file>` for `k = 0..3`.
+
+### Addendum, same day: the landed head carries #2042 too
+
+PR #2062 (#2042) held `lane-content` red for over six hours. Its claim was
+taken over at the owner's direction, so the landing head `8c869c0d` carries
+both changes. #2042 adds `bloodCount: { op: eq, value: 1 }` to
+`the_last_of_the_line`, plus deterministic witnesses for its three outcomes
+on a house whose Head is the only living blood. That condition re-rolls
+the rare draw, so the #1977 numbers above (measured without it) were
+re-measured on the same 800 paired seeds, with a #2042-only column to
+attribute the difference.
+
+| Seeds `1977000 + 31i`, 800 Long Lines | main | + #1977 | + #2042 | both (`8c869c0d`) |
+|---|---|---|---|---|
+| `the_hall_that_waited` fires (houses) | 61 (57) | 61 (57) | 48 (45) | 49 (45) |
+| Hall answer: promises delivered | 13/27 | 18/26 | 8/19 | 12/19 = 63.2% [41.0, 80.9] |
+| Roof letter: promises delivered | 10/34 | 32/35 | 11/29 | 26/30 = 86.7% [70.3, 94.7] |
+| `the_last_of_the_line` fires (houses) | 75 (74) | 75 (74) | 63 (52) | 63 (52) |
+| Longest answer silence, mean / max | 54.40 / 99 | 54.40 / 99 | 54.32 / 106 | 54.32 / 106 |
+
+- **#1977 leaves the invitation alone on either base.** It changes delivery,
+  not incidence. The lower launch count belongs to #2042's re-roll of which
+  rare scene wins a year: 61 → 48 without #1977, 61 → 49 with it. That is
+  a paired-seed divergence, not a demonstrated rate change (57 vs 45
+  houses, about 1.2 standard errors).
+- **On the landed head**, both continuations keep their gain over the
+  corresponding no-#1977 column: 8/19 → 12/19 and 11/29 → 26/30.
+- **#2042's scene now speaks only when it is true.** It still reaches 52
+  houses, every one of them at exactly one living blood. Whether that
+  changes how often a line breaks before its first interlude is #1993's
+  independent re-measurement, not claimed here.
+- **`gate:long`** on the landed head (24 Long Lines, seeds `20000 + 37*i`)
+  gives the same endings: 1 unmade, 6 broken_line, 10 forgotten, 7 devoured.
+  Mean longest answer silence is 53.7 (max 60), against 53.8 (max 62) on
+  main.
+
+Artifacts are workspace scratch (`/tmp/1977/*`). SHA-256 prefixes: final
+shards `92c8fb22`, `fdf821e3`, `570a984f`, `b0403e25`; #2042-only shards
+`24de13b4`, `99ea93e7`, `02caf731`, `10f1e458` (main `67cb6314` plus the one
+condition); final `gate:long` log `0f0d319c`.
