@@ -21,7 +21,12 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
   if (kind === 'resume' || kind === 'export') return { kind };
   if (kind === 'import') {
     const path = url.searchParams.get('path');
-    return path ? { kind, path } : null;
+    // The Debug-only smoke URL comes from an external appUrlOpen event.
+    // Only a Documents basename may reach Filesystem.readFile; never let an
+    // absolute/traversal path escape the simulator's interchange directory.
+    if (!path || path !== path.trim() || path === '.' || path === '..'
+      || /[\\/:\x00-\x1f\x7f]/u.test(path)) return null;
+    return { kind, path };
   }
   return null;
 }
