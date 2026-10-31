@@ -1218,6 +1218,14 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('does not count another house’s rite victim as a cost to this bloodline', () => {
+    const ctx = accountedRite();
+    const vesselId = ctx.world.chronicle[0]!.people![0]!;
+    const vessel = ctx.world.people.get(vesselId)!;
+    vessel.houseOfOrigin = asId('another-house');
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
   it('keeps an embellished page disputed, and never reconstructs an omitted one', () => {
     const ctx = accountedRite();
     ctx.world.chronicle[0]!.record = 'embellish';
