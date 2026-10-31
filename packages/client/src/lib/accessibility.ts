@@ -86,6 +86,7 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
     } | null;
     // Missing volume is a legacy preference; a present but invalid level is
     // corruption. Treat corruption as silence, never as a jump to full volume.
+    const storedSound = parsed?.sound;
     const storedVolume = parsed?.soundVolume;
     return {
       textScale: isTextScale(parsed?.textScale) ? parsed.textScale : DEFAULT_ACCESSIBILITY.textScale,
@@ -96,7 +97,8 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
       showEverythingFromStart: typeof parsed?.showEverythingFromStart === 'boolean'
         ? parsed.showEverythingFromStart
         : null,
-      sound: typeof parsed?.sound === 'boolean' ? parsed.sound : DEFAULT_ACCESSIBILITY.sound,
+      sound: storedSound === undefined ? DEFAULT_ACCESSIBILITY.sound
+        : typeof storedSound === 'boolean' ? storedSound : false,
       soundVolume: storedVolume === undefined ? DEFAULT_ACCESSIBILITY.soundVolume
         : isVolume(storedVolume) ? storedVolume : 0,
     };
