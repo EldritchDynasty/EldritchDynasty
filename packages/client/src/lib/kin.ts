@@ -202,6 +202,16 @@ export function kinshipPath(
     }
   }
 
+  // BFS must not change its explanation when hall order changes. Multiple
+  // recorded routes can be equally short (including contradictory pedigrees),
+  // so use stable ids/relations to choose between them, not insertion order.
+  for (const adjacent of edges.values()) {
+    adjacent.sort((a, b) => {
+      if (a.person.id !== b.person.id) return a.person.id < b.person.id ? -1 : 1;
+      return a.relation === b.relation ? 0 : a.relation < b.relation ? -1 : 1;
+    });
+  }
+
   const previous = new Map<string, { id: string; step: KinshipStep }>();
   const seen = new Set<string>([startId]);
   const queue: string[] = [startId];
