@@ -59,8 +59,8 @@ describe('what the reader asked for', () => {
 
   it('finds composed and decomposed accents in Chronicle text and titles (#2125)', () => {
     const decomposed = entry({
-      title: 'The E\\u0301vidence',
-      text: 'Jose\\u0301 testified for the house.',
+      title: 'The E\u0301vidence',
+      text: 'Jose\u0301 testified for the house.',
     });
     const composed = entry({
       title: 'The Évidence',
@@ -69,14 +69,14 @@ describe('what the reader asked for', () => {
 
     // Either spelling must find the same visible name, in both directions.
     expect(reads(decomposed, { ...all, find: 'JOSÉ' })).toBe(true);
-    expect(reads(composed, { ...all, find: 'Jose\\u0301' })).toBe(true);
+    expect(reads(composed, { ...all, find: 'Jose\u0301' })).toBe(true);
     expect(reads(decomposed, { ...all, find: 'ÉVIDENCE' })).toBe(true);
-    expect(reads(composed, { ...all, find: 'e\\u0301vidence' })).toBe(true);
+    expect(reads(composed, { ...all, find: 'e\u0301vidence' })).toBe(true);
 
     // Canonical equivalence is not an accent-insensitive search policy.
     expect(reads(composed, { ...all, find: 'jose' })).toBe(false);
     expect(reads(decomposed, { ...all, find: 'evidence' })).toBe(false);
-    expect(reads(entry({ text: null, title: 'Jose\\u0301' }), { ...all, find: 'josé' })).toBe(false);
+    expect(reads(entry({ text: null, title: 'Jose\u0301' }), { ...all, find: 'josé' })).toBe(false);
   });
 
   /**
