@@ -203,6 +203,7 @@ describe('ending image export failures', () => {
       );
       const blob = vi.mocked(downloadBlob).mock.calls[0]![0];
       expect(blob.type).toContain('image/svg+xml');
+      expect(blob.size).toBeGreaterThan(100);
       expect(w.find('[role="alert"]').exists()).toBe(false);
     } finally {
       w.unmount();
