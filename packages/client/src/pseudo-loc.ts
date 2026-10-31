@@ -77,7 +77,9 @@ function skipTextNode(node: Node): boolean {
     if (element.tagName === 'OPTION' && !element.hasAttribute('value')) return true;
 
     // Editing hosts inherit through descendants, unless explicitly disabled.
-    const editable = element.getAttribute('contenteditable');
+    // HTML enumerated contenteditable values are case-insensitive. Preserve
+    // editable drafts even when a host writes TRUE or PLAINTEXT-ONLY.
+    const editable = element.getAttribute('contenteditable')?.toLowerCase();
     if (editable === 'false') return false;
     if (editable === '' || editable === 'true' || editable === 'plaintext-only') return true;
     element = element.parentElement;
