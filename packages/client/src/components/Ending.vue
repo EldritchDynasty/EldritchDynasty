@@ -45,12 +45,18 @@ const nameless = computed(() => props.actions.shareCode(false));
 function selectAll(event: Event): void {
   if (event.target instanceof HTMLTextAreaElement) event.target.select();
 }
-/** Which code the last copy put on the clipboard, or that it failed. Ticking the box clears it. */
+/** Which code the latest copy put on the clipboard, or that it failed. */
 const copied = ref<{ code: string; ok: boolean } | null>(null);
+// Clipboard operations can finish out of order. Only the latest click may
+// publish a receipt, even when an older request finishes last.
+let copyAttempt = 0;
 async function copyShare(): Promise<void> {
   if (!share.value.ok) return;
   const code = share.value.code;
-  copied.value = { code, ok: await props.actions.copyText(code) };
+  const attempt = ++copyAttempt;
+  copied.value = null;
+  const ok = await props.actions.copyText(code);
+  if (attempt === copyAttempt) copied.value = { code, ok };
 }
 const copyStatus = computed(() => {
   if (!copied.value || !share.value.ok || copied.value.code !== share.value.code) return '';
