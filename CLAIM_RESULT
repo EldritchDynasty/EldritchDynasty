@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim 2076 --agent chatgpt/issue-2076-byname-provenance-contract-20261031 --paths docs/BYNAME-CONTRACT.md
+request-commit: dcdea880dd547c3aa79cbcd3a173ccf7402e5156
+
+held: 2076 → chatgpt/issue-2076-byname-provenance-contract-20261031 (lane code)
+  land it with: Closes #2076
+  the janitor retires the claims and deletes the branch behind that.
