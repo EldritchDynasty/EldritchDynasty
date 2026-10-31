@@ -2459,6 +2459,63 @@ describe('reader-only decision identifiers (#1736, #1737)', () => {
 });
 
 
+describe('in-place glossary in the decision Docket (#1991)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'explains a term in %s without editing authored prose or intercepting choice controls',
+    async (proseMode) => {
+      const decision = {
+        ...choiceDecision(),
+        body: 'Standing changed. Reputation followed. This is not outStanding.',
+      } as SessionView['docket'][number];
+      const snapshot = structuredClone(decision);
+      const actions = spyActions();
+      const wrapper = mount(Docket, {
+        attachTo: document.body,
+        props: { decision, actions: actions as unknown as GameActions, proseMode },
+      });
+      try {
+        await wrapper.vm.$nextTick();
+        expect(wrapper.get('.body').element.textContent).toBe(decision.body);
+        expect(wrapper.findAll('.body .glossary-term')).toHaveLength(1);
+        const term = wrapper.get('.body .glossary-term');
+        expect(term.text()).toBe('Standing');
+        expect(term.attributes('aria-expanded')).toBe('false');
+        expect(wrapper.find('.choices .glossary-term').exists()).toBe(false);
+
+        (term.element as HTMLButtonElement).focus();
+        await term.trigger('keydown', { key: '1' });
+        expect(actions.choose).not.toHaveBeenCalled();
+
+        await term.trigger('click');
+        expect(term.attributes('aria-expanded')).toBe('true');
+        expect(wrapper.get('.body .glossary-definition').text()).toBe(
+          proseMode === 'plainenglish'
+            ? 'How the wider world regards this family.'
+            : 'the regard the wider world gives the house.',
+        );
+        expect(wrapper.get('.body').element.textContent).toContain(decision.body.slice(0, 17));
+
+        await wrapper.setProps({
+          proseMode: proseMode === 'original' ? 'plainenglish' : 'original',
+        });
+        expect(wrapper.get('.body .glossary-definition').text()).toBe(
+          proseMode === 'original'
+            ? 'How the wider world regards this family.'
+            : 'the regard the wider world gives the house.',
+        );
+        await term.trigger('keydown', { key: 'Escape' });
+        expect(wrapper.find('.body .glossary-definition').exists()).toBe(false);
+        expect(term.attributes('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(term.element);
+        expect(actions.choose).not.toHaveBeenCalled();
+        expect(decision).toEqual(snapshot);
+      } finally {
+        wrapper.unmount();
+      }
+    },
+  );
+});
+
 // Editor round-trip controls use this repository's isolated component-test harness.
 
 const familyEditorFixture = () => reactive(EventTemplateS.parse({
