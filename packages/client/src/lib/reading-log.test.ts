@@ -116,6 +116,59 @@ describe('the three clocks', () => {
   });
 });
 
+describe('accepted ordinary Begin boundaries (#2069)', () => {
+  const page = [{ id: 'chr_1', year: 1044, answer: 'glimpse' as const }];
+
+  it('keeps the old house, page identity and answer gap if Begin throws', () => {
+    const l = log();
+    l.note({ kind: 'run', campaign: 'short', seed: 13 });
+    l.chronicle(page);
+    l.chronicle([]); // the same page can be revisited after an empty window
+    const error = new Error('could not start the new game');
+    const received: unknown[][] = [];
+    const actions = recordActions({
+      begin: (...args: unknown[]) => {
+        received.push(args);
+        throw error;
+      },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+
+    expect(() => actions.begin(19, 'long')).toThrow(error);
+    expect(received).toEqual([[19, 'long']]);
+    l.chronicle(page);
+
+    const pages = l.events.filter((e) => e.kind === 'page');
+    expect(pages).toHaveLength(2);
+    expect(pages.map((e) => 'revisit' in e && e.revisit === true)).toEqual([false, true]);
+    expect(l.events.some((e) => e.kind === 'action' && e.verb === 'begin')).toBe(false);
+    expect(l.artifact().summary.answers).toBe(1);
+    expect(l.artifact().summary.gaps.some((gap) => gap.to.kind === 'new-run')).toBe(false);
+  });
+
+  it('records a successful Begin once, before the new house reuses Chronicle identities', () => {
+    const l = log();
+    l.note({ kind: 'run', campaign: 'short', seed: 13 });
+    l.chronicle(page);
+    l.chronicle([]);
+    const received: unknown[][] = [];
+    const actions = recordActions({
+      begin: (...args: unknown[]) => { received.push(args); },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+
+    expect(actions.begin(13, 'short')).toBeUndefined();
+    expect(received).toEqual([[13, 'short']]);
+    l.note({ kind: 'run', campaign: 'short', seed: 13 });
+    l.chronicle(page);
+
+    expect(l.events.filter((e) => e.kind === 'page').map((e) => 'revisit' in e && e.revisit === true))
+      .toEqual([false, false]);
+    expect(l.events.filter((e) => e.kind === 'run')).toHaveLength(2);
+    expect(l.events.filter((e) => e.kind === 'action' && e.verb === 'begin')).toHaveLength(1);
+    expect(l.artifact().summary.gaps.filter((gap) => gap.to.kind === 'new-run')).toHaveLength(1);
+    expect(l.artifact().summary.answers).toBe(2);
+  });
+});
+
 describe('answers and the gaps between them', () => {
   it('measures each gap on wall, foreground and game-year clocks, and censors the last', () => {
     const c = clock();
