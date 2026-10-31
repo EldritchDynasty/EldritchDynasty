@@ -55,7 +55,6 @@ function onKeydown(event: KeyboardEvent): void {
 .glossary-term:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
 .glossary-definition {
   display: inline; margin-left: .35em; color: var(--ink-soft);
-  font-size: .92em;
 }
 .glossary-definition::before { content: '— '; }
 </style>
