@@ -13,3 +13,14 @@ export function serializeInterchange(save: unknown): string {
   }
   return serialized;
 }
+
+/**
+ * A share export is a new Documents file, not a save slot. Including only
+ * the year silently overwrote an earlier export from another house (or an
+ * earlier version of the same house) at the same year. The caller supplies
+ * a fresh crypto.randomUUID() per export; unlike the smoke interchange path,
+ * user exports must never reuse a fixed basename.
+ */
+export function exportInterchangeFilename(year: number | undefined, exportId: string): string {
+  return `eldritch-${year ?? 'run'}-${exportId}.json`;
+}
