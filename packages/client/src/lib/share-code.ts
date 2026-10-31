@@ -63,6 +63,13 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'demonstration':
       return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code is from the Demonstration, which is not a house\'s beginning.';
     case 'names_needed': {
+      // 'friends' is one missing-name category but can mean several people.
+      // Counting categories would misleadingly ask for only one name.
+      if (problem.missing.length === 1 && problem.missing[0] === 'friends') {
+        return plain
+          ? 'Enter a name for every friend in this code.'
+          : 'The code left the friends unnamed. Give each one a name.';
+      }
       const plural = problem.missing.length !== 1;
       return plain
         ? `Enter the missing ${plural ? 'names' : 'name'}: ${nameList(problem.missing, plain)}.`
