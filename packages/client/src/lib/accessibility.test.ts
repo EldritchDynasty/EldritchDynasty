@@ -853,6 +853,48 @@ describe('modal keyboard Tab targets (#1004)', () => {
     }
   });
 
+  it('continues to a usable control if opener and earlier fallback focus throw (#2143)', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const board = document.createElement('div');
+    board.className = 'board';
+    board.innerHTML = '<button id="throws">Unusable host</button><button id="usable">Usable</button>';
+    const opener = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(board, opener, host);
+    opener.focus();
+
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [h('button', 'Close')]);
+      },
+    }));
+    const failingOpener = vi.spyOn(opener, 'focus').mockImplementation(() => {
+      throw new Error('custom opener focus failed');
+    });
+    const failingBoard = vi.spyOn(board.querySelector<HTMLButtonElement>('#throws')!, 'focus').mockImplementation(() => {
+      throw new Error('host board focus failed');
+    });
+    try {
+      app.mount(host);
+      app.unmount();
+      expect(() => callbacks.shift()!(0)).not.toThrow();
+      expect(document.activeElement).toBe(board.querySelector('#usable'));
+    } finally {
+      failingOpener.mockRestore();
+      failingBoard.mockRestore();
+      host.remove();
+      opener.remove();
+      board.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('skips disabled controls, hidden inputs, and negative tab indexes', () => {
     const card = document.createElement('section');
     card.innerHTML = `
