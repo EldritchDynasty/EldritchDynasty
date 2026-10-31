@@ -118,8 +118,12 @@ export class SoundBed {
 
   prefer(preference: SoundPreference): void {
     if (this.#disposed) return;
-    this.#preference = { on: preference.on, volume: preference.volume };
-    this.engine.volume = preference.volume;
+    // Fail closed on corrupt values before the bed decides whether to open
+    // an audio device; the engine's own setter enforces the same limit.
+    const volume = Number.isFinite(preference.volume)
+      ? Math.min(1, Math.max(0, preference.volume)) : 0;
+    this.#preference = { on: preference.on, volume };
+    this.engine.volume = volume;
     this.#settle();
   }
 
