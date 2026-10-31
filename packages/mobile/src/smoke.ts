@@ -13,8 +13,14 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
 
   const kind = url.hostname;
   if (kind === 'save') {
-    const seed = Number(url.searchParams.get('seed') ?? '1042');
-    const years = Number(url.searchParams.get('years') ?? '40');
+    const rawSeed = url.searchParams.get('seed');
+    const rawYears = url.searchParams.get('years');
+    // Number('') and Number(' ') are zero, and Number('0x10') accepts hex.
+    // Smoke links identify reproducible runs: supplied values must be decimal.
+    if ((rawSeed !== null && !/^-?[0-9]+$/.test(rawSeed))
+      || (rawYears !== null && !/^[0-9]+$/.test(rawYears))) return null;
+    const seed = Number(rawSeed ?? '1042');
+    const years = Number(rawYears ?? '40');
     if (!Number.isSafeInteger(seed) || !Number.isSafeInteger(years) || years < 0) return null;
     return { kind, seed, years };
   }
