@@ -277,6 +277,58 @@ describe('the last night shows the code', () => {
     expect(status.text()).toBe('Copied.');
   });
 
+  it('ignores an older copy failure that finishes after the newest success', async () => {
+    const shareCode = () => ({ ok: true as const, code: 'ED1.plain.x' });
+    const finish: Array<(ok: boolean) => void> = [];
+    const copyText = vi.fn(() => new Promise<boolean>((resolve) => { finish.push(resolve); }));
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode, copyText } as unknown as GameActions } });
+    try {
+      const button = w.get('.share-copy button');
+      const status = w.get('.share-copy [role="status"]');
+      await button.trigger('click');
+      await button.trigger('click');
+      expect(copyText).toHaveBeenCalledTimes(2);
+      finish[1]!(true);
+      await flushPromises();
+      expect(status.text()).toBe('Copied.');
+      finish[0]!(false);
+      await flushPromises();
+      expect(status.text()).toBe('Copied.');
+
+      // A third attempt clears the previous receipt while it is pending.
+      await button.trigger('click');
+      expect(status.text()).toBe('');
+      finish[2]!(false);
+      await flushPromises();
+      expect(status.text()).toContain('The copy did not take.');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('does not let an old nameless copy replace a newer named-code failure', async () => {
+    const shareCode = (names: boolean) => ({ ok: true as const, code: names ? 'ED1.named.x' : 'ED1.plain.x' });
+    const finish: Array<(ok: boolean) => void> = [];
+    const copyText = vi.fn(() => new Promise<boolean>((resolve) => { finish.push(resolve); }));
+    const w = mount(Ending, { props: { view, epilogue, actions: { restart: vi.fn(), shareCode, copyText } as unknown as GameActions } });
+    try {
+      const status = w.get('.share-copy [role="status"]');
+      await w.get('.share-copy button').trigger('click');
+      await w.get('.share-names input').setValue(true);
+      await w.get('.share-copy button').trigger('click');
+      expect(copyText).toHaveBeenNthCalledWith(1, 'ED1.plain.x');
+      expect(copyText).toHaveBeenNthCalledWith(2, 'ED1.named.x');
+      finish[1]!(false);
+      await flushPromises();
+      expect(status.text()).toContain('The copy did not take.');
+      finish[0]!(true);
+      await flushPromises();
+      expect(status.text()).toContain('The copy did not take.');
+    } finally {
+      w.unmount();
+    }
+  });
+
   it.each([
     ['original', 'Copy the code', 'The copy did not take. Select the code and copy it by hand.'],
     ['plainenglish', 'Copy code', 'Could not copy. Select the code and copy it yourself.'],
