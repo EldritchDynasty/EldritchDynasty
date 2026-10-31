@@ -449,7 +449,10 @@ export function renderBody(body: string, fill: SlotFill, ctx: SimCtx): string {
       ? narratorOf(ctx)
       : castPeople(fill, name, ctx);
     if (!people.length) return m;
-    if (form === undefined) return nameList(people.map((p) => p.epithet ?? p.name));
+    if (form === undefined) {
+      // A byname qualifies a person's name; it must not replace their identity in a page.
+      return nameList(people.map((p) => p.epithet ? `${p.name} ${p.epithet}` : p.name));
+    }
     return renderForm(people.length > 1 ? 'plural' : grammarOf(people[0]!), form) ?? m;
   });
 }
