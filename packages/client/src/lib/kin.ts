@@ -84,6 +84,10 @@ function attached(hall: MemberView[]): Set<string> {
     if (recordedParent(m, hall) !== undefined) continue; // has blood here; anchors itself
     const spouse = partner(m, hall);
     if (!spouse) continue;
+    // A one-sided spouse link is not enough to remove a root. The supposed
+    // anchor cannot draw m beside them unless they name m as their spouse.
+    // Keep m's own row instead of silently losing a person from the tree.
+    if (spouse.spouse?.id !== m.id) continue;
     // Only where the spouse anchors the row. Two rootless partners stay two
     // rows: attaching either to the other would pick one arbitrarily, and the
     // arbitrary pick is the one that reads as a mistake.
