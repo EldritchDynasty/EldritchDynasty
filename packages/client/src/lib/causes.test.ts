@@ -1,6 +1,7 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import type { ChronicleCause, ChronicleEntry } from '@ed/core';
-import { answeredLabel, causeLink, linksFor } from './causes';
+import { answeredLabel, causeLink, findEntry, linksFor } from './causes';
 
 /**
  * THE WAY BACK NAMES A YEAR AND NOTHING ELSE (issue #269, §29 rule 1).
@@ -83,5 +84,33 @@ describe('links for what is drawn', () => {
     expect([...links.keys()]).toEqual(['a', 'b']);
     expect(links.get('a')).toEqual({ answered: [1067] });
     expect(links.get('b')?.cause?.page).toBe('a');
+  });
+});
+
+
+describe('finding Chronicle entries by recorded id (#2151)', () => {
+  it('includes the root when it is already the requested page', () => {
+    const root = document.createElement('article');
+    // IDs must be compared as values, never spliced into a CSS selector.
+    const id = 'chr_1]"special';
+    root.dataset.entry = id;
+    const descendant = document.createElement('article');
+    descendant.dataset.entry = 'another';
+    root.appendChild(descendant);
+
+    expect(findEntry(root, id)).toBe(root);
+    expect(findEntry(root, 'another')).toBe(descendant);
+    expect(findEntry(root, 'missing')).toBeUndefined();
+  });
+
+  it('also searches a container, and tolerates a missing root', () => {
+    const container = document.createElement('section');
+    const page = document.createElement('article');
+    page.dataset.entry = 'chr_2';
+    container.appendChild(page);
+
+    expect(findEntry(container, 'chr_2')).toBe(page);
+    expect(findEntry(document, 'chr_2')).toBeUndefined(); // detached from document
+    expect(findEntry(null, 'chr_2')).toBeUndefined();
   });
 });
