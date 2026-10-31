@@ -3,7 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import Kin from './Kin.vue';
-import { kinshipPath, roots, type MemberView } from '../lib/kin';
+import { kinshipPath, recordedParent, roots, type MemberView } from '../lib/kin';
 import type { GameStore } from '../lib/game';
 
 /**
@@ -226,11 +226,11 @@ function rootsOf(hall: HallView): MemberView[] {
     if (found) return [found];
   }
   if (directLine.value) {
-    const candidateIds = new Set(members.map((member) => member.id));
-    return members.filter((member) => {
-      const parentIds = [member.record.parents.mother, member.record.parents.father];
-      return !parentIds.some((id) => id !== undefined && candidateIds.has(id));
-    });
+    // A forged record can name people as each other's parents. The normal
+    // tree breaks one edge of such a cycle in its display projection; use
+    // that same cycle-safe rule here or Main family line can lose them all.
+    // Keep the direct-line subset and its existing independent spouse rows.
+    return members.filter((member) => recordedParent(member, members) === undefined);
   }
   return roots(members);
 }
