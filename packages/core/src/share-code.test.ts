@@ -253,6 +253,18 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(readShareCode(withinRawLimit, content, { build: BUILD }).ok).toBe(true);
   });
 
+  it('reads copied codes containing invisible zero-width spaces (#1995)', () => {
+    const code = codeOf(founded(), { names: true });
+    // U+200B is not matched by JavaScript's whitespace class, but some apps
+    // insert it when wrapping pasted text; it is not part of base64url.
+    const wrapped = code.split('').join('\u200B\n');
+    expect(readShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+    expect(newGameFromShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+    // Ignoring invisible separators must not evade the raw-input limit.
+    expect(problemOf('\u200B'.repeat(SHARE_CODE_MAX * 4) + code))
+      .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
+  });
+
   it('bounds padded input before normalizing away whitespace', () => {
     const code = codeOf(founded());
     const padded = `${' \n'.repeat(SHARE_CODE_MAX * 2 + 1)}${code}`;
