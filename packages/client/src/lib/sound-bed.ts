@@ -155,7 +155,9 @@ export class SoundBed {
   }
 
   show(): void {
-    if (this.#disposed || !this.#away) return;
+    // A host can announce a foreground return while the browser still says
+    // this page is hidden. Do not unmute the drone on that stale signal.
+    if (this.#disposed || !this.#away || this.#documentHidden) return;
     this.#away = false;
     this.#settle();
   }
