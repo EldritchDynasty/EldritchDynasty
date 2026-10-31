@@ -25,6 +25,24 @@ describe('iOS runtime smoke protocol', () => {
     expect(parseSmokeCommand('eldritchdynasty-smoke://import')).toBeNull();
   });
 
+  it('keeps default smoke parameters but rejects ambiguous numeric spellings (#2179)', () => {
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save'))
+      .toEqual({ kind: 'save', seed: 1042, years: 40 });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?seed=-42&years=0'))
+      .toEqual({ kind: 'save', seed: -42, years: 0 });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?seed=9007199254740991&years=1'))
+      .toEqual({ kind: 'save', seed: Number.MAX_SAFE_INTEGER, years: 1 });
+
+    for (const query of [
+      'seed=', 'seed=%20', 'years=', 'years=%20',
+      'seed=0x10', 'seed=1e3', 'seed=1.0', 'seed=+23',
+      'years=0x10', 'years=1e2', 'years=1.0', 'years=-1',
+      'seed=9007199254740992', 'years=9007199254740992',
+    ]) {
+      expect(parseSmokeCommand(`eldritchdynasty-smoke://save?${query}`), query).toBeNull();
+    }
+  });
+
   it('hashes canonical snapshot data and carries host evidence', async () => {
     await expect(smokeEvidence(
       { kind: 'export' },
