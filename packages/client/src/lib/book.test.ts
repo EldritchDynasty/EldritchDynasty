@@ -762,6 +762,7 @@ describe('share codes on exported images', () => {
     const foot = plateFoot(CODE, monospace, 'plainenglish');
     expect(foot.code.length).toBeGreaterThan(1);
     const svg = plateSvg(plateRows([entry()], monospace), 'House <Ash> & Ink', 'The <book>', foot);
+    expect(svg).toContain('<svg xmlns="http://www.w3.org/2000/svg" role="img"');
     expect(svg).toContain('<title>House &lt;Ash&gt; &amp; Ink · The &lt;book&gt;</title>');
     expect(svg).toContain(`<desc>${foot.label}. Share code: ${CODE}</desc>`);
     // The visible rows still wrap for layout; the accessible code never does.
@@ -805,6 +806,7 @@ describe('share codes on exported images', () => {
     });
     const layout = afterimageLayout(model, monospace);
     const svg = afterimageSvg(model, layout);
+    expect(svg).toContain('<svg xmlns="http://www.w3.org/2000/svg" role="img"');
     expect(svg).toContain('width="1200" height="' + layout.height + '"');
     expect(svg).toContain('viewBox="0 0 1200 ' + layout.height + '"');
     expect(svg).toContain('House &lt;Ash&gt; &amp; &quot;Ink&quot;');
