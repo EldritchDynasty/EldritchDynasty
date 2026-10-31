@@ -278,6 +278,16 @@ export function droneScore(input: DroneInput): Score | null {
     );
   }
 
+  // A seventh overlapping Age can push the summed voice gains beyond PEAK.
+  // Keep the established mix untouched for ordinary stacks; attenuate the
+  // entire chord only when it would breach the score-wide ceiling. Scaling all
+  // voices together preserves their authored relative levels and harmonies.
+  const totalGain = voices.reduce((sum, voice) => sum + voice.gain, 0);
+  if (totalGain > PEAK) {
+    const scale = (PEAK * (1 - 1e-12)) / totalGain;
+    for (const voice of voices) voice.gain *= scale;
+  }
+
   return { voices, sustain: true };
 }
 
