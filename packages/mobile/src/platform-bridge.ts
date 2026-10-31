@@ -5,7 +5,7 @@ import type { Platform } from '../../client/src/platform.js';
 import { mobileStorage, saveSummary } from './storage.js';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 import { chooseSaveFile } from './file-chooser.js';
-import { serializeInterchange } from './interchange.js';
+import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -58,7 +58,7 @@ const platform = {
   },
 
   async exportSave(save: unknown): Promise<void> {
-    const name = `eldritch-${saveSummary('run', save).year ?? 'run'}.json`;
+    const name = exportInterchangeFilename(saveSummary('run', save).year, crypto.randomUUID());
     await writeInterchange(save, name);
     const uri = await Filesystem.getUri({ path: name, directory: Directory.Documents });
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
