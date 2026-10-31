@@ -67,6 +67,7 @@ describe('the content contract', () => {
       'parcels.yaml': 'parcels: []',
       'positions.yaml': 'positions: []',
       'mystic-workings.yaml': 'mysticWorkings: []',
+      'glossary.yaml': 'glossary: []',
       'events/one.yaml': [
         'events: []',
         'proseVariants:',
