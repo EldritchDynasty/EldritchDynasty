@@ -48,10 +48,14 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
         : `That is longer than any code this game writes (${problem.max} characters).`;
     case 'not_a_code':
       return plain ? 'This is not a share code. Share codes start with ED1.' : 'That is not a share code. A code begins ED1.';
-    case 'unsupported_version':
+    case 'unsupported_version': {
+      // The ED version is parsed from pasted text. Do not echo a thousands-digit
+      // malformed prefix into the Start screen's refusal message (#2139).
+      const label = /^[0-9]{1,8}$/.test(problem.version) ? ` (ED${problem.version})` : '';
       return plain
-        ? `This code uses a format this version cannot read (ED${problem.version}).`
-        : `That code is written in a hand this game cannot read (ED${problem.version}).`;
+        ? `This code uses a format this version cannot read${label}.`
+        : `That code is written in a hand this game cannot read${label}.`;
+    }
     case 'damaged':
       return plain ? 'Part of this code is missing or wrong. Copy the whole code again.' : 'Part of the code is missing or miscopied. Copy it again, whole.';
     case 'other_edition': {
