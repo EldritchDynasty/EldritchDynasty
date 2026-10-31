@@ -2,14 +2,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { copyTextInBrowser } from './platform.js';
 
 describe('fallback clipboard copy preserves focus (#2034)', () => {
-  it.each([true, false])('restores SVG keyboard focus when legacy copy succeeds=%s', async (allowed) => {
+  it.each([
+    { allowed: true, restoreThrows: false },
+    { allowed: false, restoreThrows: false },
+    { allowed: true, restoreThrows: true },
+    { allowed: false, restoreThrows: true },
+  ])('preserves clipboard result (copy succeeds=$allowed, focus restore throws=$restoreThrows)', async ({ allowed, restoreThrows }) => {
     const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
     const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
     const originalHTMLElement = Object.getOwnPropertyDescriptor(globalThis, 'HTMLElement');
 
     let active: unknown;
     // A focusable SVG control has a focus method but is not an HTMLElement.
-    const svgControl = { focus: vi.fn(() => { active = svgControl; }) };
+    const svgControl = { focus: vi.fn(() => {
+      if (restoreThrows) throw new Error('control was torn down');
+      active = svgControl;
+    }) };
     active = svgControl;
     const area = {
       value: '',
@@ -41,7 +49,9 @@ describe('fallback clipboard copy preserves focus (#2034)', () => {
       expect(area.select).toHaveBeenCalledOnce();
       expect(area.remove).toHaveBeenCalledOnce();
       expect(svgControl.focus).toHaveBeenCalledOnce();
-      expect(active).toBe(svgControl);
+      // A failed focus restoration must never erase a successful copy or
+      // replace an original copy rejection with a cleanup error.
+      expect(active).toBe(restoreThrows ? area : svgControl);
     } finally {
       for (const [key, descriptor] of [
         ['document', originalDocument],
