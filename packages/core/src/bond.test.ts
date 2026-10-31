@@ -594,3 +594,46 @@ describe('bond advances refuse invalid numeric input without mutating state (#10
     expect(ctx.world.treasury).toBe(1000 - marks / CROWN);
   });
 });
+
+
+describe('a debt advance requires a wage that can repay it (#2186)', () => {
+  it.each([
+    ['zero', 0],
+    ['negative', -1],
+    ['NaN', Number.NaN],
+    ['positive infinity', Number.POSITIVE_INFINITY],
+    ['negative infinity', Number.NEGATIVE_INFINITY],
+  ])('refuses a bond when the existing wage is %s, without side effects', (_label, wage) => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 1000;
+    const p = place(ctx, { sex: 'male', age: 30, name: 'Servant', contract: contract({ wage }) });
+    const before = {
+      debt: p.contract!.debt,
+      term: p.contract!.term,
+      treasury: ctx.world.treasury,
+      pages: ctx.world.chronicle.length,
+    };
+
+    expect(bindService(ctx, p, 100)).toBe(false);
+    expect({
+      debt: p.contract!.debt,
+      term: p.contract!.term,
+      treasury: ctx.world.treasury,
+      pages: ctx.world.chronicle.length,
+    }).toEqual(before);
+  });
+
+  it('still converts a correctly paid servant into a serviceable bond', () => {
+    const ctx = testWorld(bundle);
+    const p = place(ctx, {
+      sex: 'female', age: 30, name: 'Servant', contract: contract({ wage: 3 }),
+    });
+
+    expect(bindService(ctx, p, 6)).toBe(true);
+    expect(serviceBonds(ctx)).toHaveLength(0);
+    expect(p.contract!.debt).toBe(3);
+    expect(serviceBonds(ctx).map((x) => x.id)).toContain(p.id);
+    expect(p.contract!.term).toBe('yearly');
+    expect(p.contract!.debt).toBe(0);
+  });
+});
