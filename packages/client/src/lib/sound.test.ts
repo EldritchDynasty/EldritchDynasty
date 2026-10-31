@@ -736,6 +736,28 @@ describe('the bed decides when the house may be heard', () => {
     expect(e.made[0]!.calls).toContain('close');
   });
 
+  it('keeps browser audio and cleanup working when a host pause hook refuses registration', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    expect(() => bed.attach(page.doc, page.win, () => {
+      throw new Error('native pause hook is unavailable');
+    })).not.toThrow();
+    expect(page.count(), 'host refusal prevented browser listeners').toBeGreaterThan(0);
+
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    page.doc.visibilityState = 'hidden';
+    page.fire('doc:visibilitychange');
+    expect(humming(ctx)).toHaveLength(0);
+    bed.dispose();
+    expect(page.count(), 'host refusal leaked browser listeners').toBe(0);
+  });
+
   it('asks for an ambient session, and leaves a host\'s own choice alone', () => {
     const page = fakePage();
     const auto = { audioSession: { type: 'auto' } };
