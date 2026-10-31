@@ -187,7 +187,7 @@ describe('sound teardown is terminal (#2116)', () => {
       addEventListener: vi.fn(), removeEventListener: vi.fn(),
     };
     const win = { addEventListener: vi.fn(), removeEventListener: vi.fn() };
-    let latePause = () => undefined;
+    let latePause: () => void = () => undefined;
     const bed = new SoundBed(engine);
     bed.attach(doc, win, (listener) => {
       latePause = listener;
