@@ -205,6 +205,88 @@ describe('campaign choice (#66)', () => {
   });
 });
 
+
+describe('the Demonstration front door (#2063)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'offers the existing 33-year profile without replacing the default Short Line (%s)',
+    async (proseMode) => {
+      const actions = spyActions();
+      const w = mount(Start, { props: { actions, resumable: false, proseMode } });
+      try {
+        await flush();
+        const choices = w.findAll('label.campaign');
+        expect(choices.map((label) => label.find('input').attributes('value'))).toEqual(['short', 'long', 'demo']);
+        expect(w.get('input[value="short"]').element).toHaveProperty('checked', true);
+        const demo = choices.find((label) => label.find('input').attributes('value') === 'demo');
+        expect(demo!.text()).toContain('A Demonstration');
+        expect(demo!.text()).toContain('33 years');
+        expect(demo!.text()).toMatch(/Record/);
+        expect(demo!.text()).toMatch(/cannot become a (full campaign|Short or Long Line)/);
+        await demo!.find('input').setValue(true);
+        expect(w.text()).toContain('1075');
+        await w.get('button.primary').trigger('click');
+        expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'demo');
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('keeps full Continue separate from a saved Demonstration and exports exact slots', async () => {
+    const actions = spyActions([
+      { slot: 'autosave', year: 1111 },
+      { slot: 'demo-autosave', year: 1059 },
+      { slot: 'demo-chapter-the_insurrection-1054', year: 1054 },
+      { slot: 'chapter-1-1080', year: 1080 },
+    ]);
+    const w = mount(Start, { props: { actions, resumable: true } });
+    try {
+      await flush();
+      expect(actions.listSaves).toHaveBeenCalledWith(true);
+      expect(w.get('section.saved').text()).toContain('chapter-1-1080');
+      expect(w.get('section.saved').text()).not.toContain('demo');
+      expect(w.get('section.demo-saved').text()).toContain('Return to the Demonstration');
+      expect(w.get('section.demo-saved').text()).toContain('chapter-the_insurrection-1054');
+      expect(w.get('section.demo-saved').text()).not.toContain('demo-autosave');
+
+      await w.get('section.demo-saved li button').trigger('click');
+      expect(actions.load).toHaveBeenCalledWith('demo-autosave');
+      expect(actions.resume).not.toHaveBeenCalled();
+      await w.get('section.demo-saved li button[aria-label^="Copy out"]').trigger('click');
+      expect(actions.exportSave).toHaveBeenCalledWith('demo-autosave');
+
+      const continueFull = w.findAll('.primary-row button')
+        .find((button) => button.text() === 'Continue the last sitting')!;
+      await continueFull.trigger('click');
+      expect(actions.resume).toHaveBeenCalledOnce();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('reports a refused Demonstration resume at its own row, leaving full Continue available', async () => {
+    const actions = spyActions([{ slot: 'demo-autosave', year: 1061 }]);
+    vi.mocked(actions.load).mockResolvedValueOnce(false);
+    const w = mount(Start, { props: { actions, resumable: true, proseMode: 'plainenglish' } });
+    try {
+      await flush();
+      expect(w.find('section.saved').exists()).toBe(false);
+      const demo = w.get('section.demo-saved');
+      await demo.get('li button').trigger('click');
+      await flush();
+      expect(demo.get('.save-action-error').text()).toContain('Could not load this saved game.');
+      expect(actions.resume).not.toHaveBeenCalled();
+      await demo.get('li button').trigger('click');
+      await flush();
+      expect(demo.find('.save-action-error').exists()).toBe(false);
+      await w.findAll('.primary-row button')[0]!.trigger('click');
+      expect(actions.resume).toHaveBeenCalledOnce();
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('Begin and Continue never race on the Start screen (#1493)', () => {
   it('disables Begin while Continue is pending and ignores a stale synthetic click', async () => {
     const actions = spyActions();
