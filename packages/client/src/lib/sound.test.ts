@@ -152,9 +152,25 @@ describe('the drone shifts by Age', () => {
     }
   });
 
-  it('stays under the peak however many Ages are running', () => {
-    const many: Register[] = ['warm', 'cold', 'institutional', 'cold', 'warm'];
-    expect(peakOf(droneScore({ registers: many, frame: false })!)).toBeLessThanOrEqual(PEAK);
+  it('keeps the authored five-Age mix and caps even much larger overlapping stacks', () => {
+    const ordinary: Register[] = ['warm', 'cold', 'institutional', 'cold', 'warm'];
+    const baseline = droneScore({ registers: ordinary, frame: false })!;
+    expect(peakOf(baseline)).toBeLessThanOrEqual(PEAK);
+    // Earlier chords must not be silently quietened by the new ceiling.
+    expect(baseline.voices[0]!.gain).toBe(0.045);
+    expect(baseline.voices[2]!.gain).toBe(0.038);
+
+    // Six is still safe; seven crosses PEAK before attenuation. Longer
+    // fictional overlaps must not become louder merely because they are rare.
+    for (const count of [6, 7, 32, 100]) {
+      const registers = Array.from({ length: count }, (_, i) => ordinary[i % ordinary.length]!);
+      const chord = droneScore({ registers, frame: false })!;
+      expect(chord.voices).toHaveLength(2 + count * 2);
+      expect(peakOf(chord), `${count} simultaneous Ages exceed the volume ceiling`)
+        .toBeLessThanOrEqual(PEAK);
+      expect(chord.voices.every((voice) => voice.gain > 0)).toBe(true);
+      expect(chord.voices[2]!.gain).toBeGreaterThan(chord.voices[4]!.gain);
+    }
   });
 
   /** §24: the frame "kills the drone entirely". Not ducks it. Kills it. */
