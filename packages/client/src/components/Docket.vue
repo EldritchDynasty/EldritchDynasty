@@ -5,6 +5,7 @@ import type { ProseMode } from '@ed/schema';
 import { futureOf, type GameActions } from '../lib/game';
 import { isControl, isField, shortcutFor } from '../lib/keys';
 import { replayDisposition } from '../lib/accessibility';
+import GlossaryText from './GlossaryText.vue';
 
 const props = defineProps<{
   decision: SessionView['docket'][number];
@@ -372,7 +373,9 @@ const letDecideLabel = computed(() => plain.value
           ? (plain ? 'Mythic event — an extraordinary moment in the family’s history' : '✦ A mythic event')
           : (plain ? 'Rare event — an unusual moment in the family’s history' : '✧ A rare event') }}
       </p>
-      <p class="body">{{ decision.body }}</p>
+      <!-- Explain a knowable term only in free-standing Docket prose: never nest
+           a glossary control inside an answer button or alter the saved event. -->
+      <p class="body"><GlossaryText :text="decision.body" :prose-mode="proseMode" /></p>
       <p v-if="metBefore" class="met-before dim small">
         <span aria-hidden="true">↺</span>
         <span>{{ plain ? 'You have seen this event before' : 'met before' }}</span>
