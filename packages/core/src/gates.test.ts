@@ -130,8 +130,22 @@ describe('#431 forced-Awakening provenance', () => {
 });
 
 describe('#439 merge outcome-reach cost', () => {
+  // Scope the control to a stable, fully witnessed event. The shipped corpus
+  // can legitimately add conditional outcomes whose witnesses are pending
+  // (#2042), which must make the real gate sample rather than skip. These
+  // two tests instead isolate the skip/fallback switch from content churn.
+  const witnessedFixture = (): ContentBundle => {
+    const bundle = structuredClone(content.bundle);
+    const event = bundle.events.find((entry) => entry.id === 'the_last_of_the_cheese');
+    if (!event || event.interaction.kind !== 'choice') {
+      throw new Error('the witnessed outcome fixture is missing');
+    }
+    bundle.events = [event];
+    return bundle;
+  };
+
   it('skips the 800-run played batch when every declared outcome is witnessed', () => {
-    const { ok, lines } = gateUnwitnessedOutcomeReach(content, { runs: 1, years: 1 });
+    const { ok, lines } = gateUnwitnessedOutcomeReach(witnessedFixture(), { runs: 1, years: 1 });
     expect(ok, lines.join('\n')).toBe(true);
     expect(lines[0]).toMatch(/skipped 1 runs x 1y/);
     expect(lines[1]).toMatch(/deterministic witnesses; 0 outcome\(s\) still sampled/);
@@ -139,17 +153,15 @@ describe('#439 merge outcome-reach cost', () => {
   });
 
   it('runs the canonical sampled verdict again when an authored outcome has no witness', () => {
-    const bundle = structuredClone(content.bundle);
-    const event = bundle.events.find((entry) =>
-      entry.interaction.kind === 'narration' && entry.interaction.outcomes.length > 0);
-    if (!event || event.interaction.kind !== 'narration') {
-      throw new Error('no narration event for an unwitnessed outcome fixture');
-    }
-    const originalOutcome = event.interaction.outcomes[0]!;
+    const bundle = witnessedFixture();
+    const event = bundle.events[0]!;
+    if (event.interaction.kind !== 'choice') throw new Error('expected a choice fixture');
+    const originalOutcome = event.interaction.choices[0]!.outcomes[0]!;
     originalOutcome.id = 'new_unwitnessed_outcome' as typeof originalOutcome.id;
     const { lines } = gateUnwitnessedOutcomeReach(bundle, { runs: 1, years: 1 });
     expect(lines[0]).not.toContain('skipped');
     expect(lines.join('\n')).toMatch(/1 outcome\(s\) still sampled/);
+    expect(lines.join('\n')).toContain('the_last_of_the_cheese/eat_it -> new_unwitnessed_outcome');
   });
 });
 
