@@ -18,6 +18,7 @@ import type { ParcelDef } from './parcel.js';
 import type { MysticWorkingDef } from './mystic.js';
 import type { PositionDef } from './position.js';
 import type { ProseVariant } from './prose.js';
+import type { GlossaryTerm } from './glossary.js';
 import { desugarInline, inlineArcId, outcomesOf } from './desugar.js';
 import { contentSourcesOf } from './assemble.js';
 
@@ -72,6 +73,7 @@ export interface Content {
   readonly positions: PositionDef[];
   readonly mysticWorkings: MysticWorkingDef[];
   readonly proseVariants: ProseVariant[];
+  readonly glossary: GlossaryTerm[];
 
   /** True for any compiled or authored content id in this bundle. */
   has(id: string): boolean;
@@ -227,6 +229,7 @@ export function indexContent(source: ContentBundle | Content): Content {
     positions: b.positions,
     mysticWorkings: b.mysticWorkings,
     proseVariants: b.proseVariants,
+    glossary: b.glossary,
 
     has: (id) => allIds.has(id),
     sourceOf: (id) => sourcesById.get(id),

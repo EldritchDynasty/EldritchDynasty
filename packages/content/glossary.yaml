@@ -1,0 +1,14 @@
+# Only public vocabulary. Definitions have no effect on the simulation.
+glossary:
+  - id: standing
+    names:
+      original: Standing
+      plainenglish: Reputation
+    aliases:
+      # Historical prose does not change language when reader preferences do.
+      original: [Standing, Reputation]
+      plainenglish: [Reputation, Standing]
+    definition:
+      original: the regard the wider world gives the house.
+      plainenglish: How the wider world regards this family.
+    related: []

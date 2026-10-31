@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitFirstStanding, standingGlossaryDefinition } from './glossary.js';
+import { glossaryDefinition, splitFirstGlossary, splitFirstStanding, standingGlossaryDefinition } from './glossary.js';
 
 describe('first Standing glossary term in saved Chronicle text', () => {
   it('preserves every character while marking only the first standalone label', () => {
@@ -55,5 +55,22 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     expect(splitFirstStanding('No glossary word here.', 'original'))
       .toEqual([{ text: 'No glossary word here.' }]);
     expect(splitFirstStanding('', 'original')).toEqual([{ text: '' }]);
+  });
+});
+
+
+describe('glossary collection integration (#1991)', () => {
+  it('uses the same two definitions for inline and ledger disclosures', () => {
+    expect(glossaryDefinition('standing', 'original')).toBe('the regard the wider world gives the house.');
+    expect(glossaryDefinition('standing', 'plainenglish')).toBe('How the wider world regards this family.');
+    expect(glossaryDefinition('missing')).toBeUndefined();
+  });
+  it('matches the earliest alias from authored data in either reading mode', () => {
+    const source = 'Reputation, then Standing.';
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const pieces = splitFirstGlossary(source, mode);
+      expect(pieces.map(p => p.text).join('')).toBe(source);
+      expect(pieces.filter(p => p.term)).toEqual([{ text: 'Reputation', term: 'standing' }]);
+    }
   });
 });
