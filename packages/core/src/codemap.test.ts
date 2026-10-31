@@ -1,6 +1,6 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { basename, dirname, join, sep } from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -864,19 +864,42 @@ describe('the editor Vite entry points', () => {
     write('packages/core/src/example.ts', 'export const n = 2;\n');
     return { cwd, write, git };
   }
-  function snapshot(root: string): string {
+  function snapshot(root: string, afterListing?: (dir: string, names: readonly string[]) => void): string {
     const hash = createHash('sha256');
+    const gitPrefix = join(root, '.git') + sep;
+    const disappearedGitEntry = (path: string, error: unknown) =>
+      path.startsWith(gitPrefix) && (error as NodeJS.ErrnoException).code === 'ENOENT';
     const visit = (dir: string) => {
-      for (const name of readdirSync(dir).sort()) {
+      const names = readdirSync(dir).sort();
+      afterListing?.(dir, names);
+      for (const name of names) {
         const path = join(dir, name);
-        hash.update(path.slice(root.length));
-        const stat = statSync(path);
+        let stat;
+        try {
+          stat = statSync(path);
+        } catch (error) {
+          // Git maintenance can remove a lock after directory enumeration.
+          if (disappearedGitEntry(path, error)) continue;
+          throw error;
+        }
         // Directory mtime changes after transient lock-file creation/removal,
         // even when no persistent output remains. Hash the final tree instead.
-        if (stat.isDirectory()) visit(path);
-        else {
+        if (stat.isDirectory()) {
+          hash.update(path.slice(root.length));
+          visit(path);
+        } else {
+          let contents: Buffer;
+          try {
+            contents = readFileSync(path);
+          } catch (error) {
+            // The same lock can disappear between stat and the content read.
+            if (disappearedGitEntry(path, error)) continue;
+            throw error;
+          }
+          // Do not hash a vanished file's name or metadata.
+          hash.update(path.slice(root.length));
           hash.update(`${stat.size}:${stat.mtimeMs}`);
-          hash.update(readFileSync(path));
+          hash.update(contents);
         }
       }
     };
@@ -897,6 +920,27 @@ describe('the editor Vite entry points', () => {
       utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
       expect(snapshot(cwd)).toBe(before);
       write('packages/core/src/permanent.ts', 'export const changed = true;\n');
+      expect(snapshot(cwd)).not.toBe(before);
+    });
+
+    it('ignores a Git lock removed after enumeration but detects a persistent Git write', () => {
+      const { cwd } = checkout();
+      const before = snapshot(cwd);
+      const objects = join(cwd, '.git', 'objects');
+      const lock = join(objects, 'maintenance.lock');
+      writeFileSync(lock, 'temporary');
+
+      let removed = false;
+      const after = snapshot(cwd, (dir, names) => {
+        if (dir === objects && names.includes('maintenance.lock')) {
+          rmSync(lock);
+          removed = true;
+        }
+      });
+      expect(removed).toBe(true); // Deterministically hit readdirSync -> statSync race.
+      expect(after).toBe(before);
+
+      writeFileSync(join(objects, 'permanent-object'), 'persistent change');
       expect(snapshot(cwd)).not.toBe(before);
     });
 
