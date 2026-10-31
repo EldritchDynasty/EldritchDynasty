@@ -27,3 +27,30 @@ describe('share code import name prompts (#1995)', () => {
       .toBe("The code left names out. Give the house's name and each friend's name.");
   });
 });
+
+describe('unsupported share-code version refusals (#2139)', () => {
+  it('keeps a useful short version number in both reading modes', () => {
+    const problem: ShareCodeProblem = { kind: 'unsupported_version', version: '2' };
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe('This code uses a format this version cannot read (ED2).');
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe('That code is written in a hand this game cannot read (ED2).');
+  });
+
+  it('does not echo an oversized user-controlled version into either refusal', () => {
+    // readShareCode recognises ED<digits>. before checking the code body.
+    // A bounded paste may still contain thousands of digits in that prefix.
+    const problem: ShareCodeProblem = { kind: 'unsupported_version', version: '9'.repeat(1500) };
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe('This code uses a format this version cannot read.');
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe('That code is written in a hand this game cannot read.');
+  });
+
+  it('bounds the label without discarding a concise edition number', () => {
+    const longest: ShareCodeProblem = { kind: 'unsupported_version', version: '12345678' };
+    const oversized: ShareCodeProblem = { kind: 'unsupported_version', version: '123456789' };
+    expect(shareCodeProblem(longest, 'plainenglish')).toContain('(ED12345678)');
+    expect(shareCodeProblem(oversized, 'plainenglish')).not.toContain('123456789');
+  });
+});
