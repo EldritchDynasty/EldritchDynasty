@@ -340,8 +340,9 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
         + '" x2="' + (PLATE.width - PLATE.pad) + '" y2="' + (y - 4)
         + '" stroke="' + PLATE.rule + '"/>');
     } else {
+      // Match the face used by rowFont during measurement and PNG drawing.
       parts.push('<text x="' + PLATE.pad + '" y="' + y + '" fill="' + plateXml(row.colour)
-        + '" font-family="' + font + '" font-size="' + row.size
+        + '" font-family="' + (row.mono ? plateXml(PLATE.mono) : font) + '" font-size="' + row.size
         + '" font-style="' + (row.italic ? 'italic' : 'normal')
         + '">' + plateXml(row.text) + '</text>');
     }
