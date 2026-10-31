@@ -173,6 +173,91 @@ describe('ending image uses the selected reader mode (#1717)', () => {
 });
 
 describe('ending image export failures', () => {
+  const view = {
+    houseName: 'House Ash', seed: 47,
+    campaign: { id: 'short', name: 'A Short Line', startYear: 1042, endYear: 1342 },
+  } as SessionView;
+  const makeEnding = (summary = 'An unsettled account.') => ({
+    year: 1342, title: 'The last night', summary, opening: '', closing: '', ring: [], read: [],
+    reckoning: {
+      pages: 0, blanks: 0, embellished: 0, standingLies: 0, provenLies: 0,
+      clauses: 0, clausesTotal: 3, attested: 'none', livingBlood: 1, rungsWithheld: 0,
+    },
+  }) as unknown as EpilogueView;
+  const actions = {
+    restart: vi.fn(),
+    shareCode: () => ({ ok: true as const, code: 'ED1.abc.123' }),
+  } as unknown as GameActions;
+
+  it('exports a vector Afterimage when final bitmap allocation fails, retaining the nameless code', async () => {
+    const gauge = { measureText: (text: string) => ({ width: text.length * 7 }) } as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValueOnce(gauge).mockReturnValueOnce(null);
+    const w = mount(Ending, { props: { view, epilogue: makeEnding(), actions } });
+    try {
+      await w.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(canvas).toHaveBeenCalledTimes(2);
+      expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+        expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
+      );
+      const blob = vi.mocked(downloadBlob).mock.calls[0]![0];
+      expect(blob.type).toContain('image/svg+xml');
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+      canvas.mockRestore();
+      vi.mocked(downloadBlob).mockClear();
+    }
+  });
+
+  it('exports SVG if PNG encoding returns null, instead of losing the image', async () => {
+    const ink = {
+      measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect: () => {}, fillText: () => {},
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(ink);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => { callback(null); });
+    const w = mount(Ending, { props: { view, epilogue: makeEnding(), actions } });
+    try {
+      await w.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(encoding).toHaveBeenCalledTimes(1);
+      expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+        expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
+      );
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      vi.mocked(downloadBlob).mockClear();
+    }
+  });
+
+  it('exports SVG directly for a tall Afterimage without requesting a final bitmap', async () => {
+    const gauge = { measureText: (text: string) => ({ width: text.length * 7 }) } as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(gauge);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob');
+    const w = mount(Ending, { props: { view, epilogue: makeEnding('A remembered debt. '.repeat(1500)), actions } });
+    try {
+      await w.get('.ending-actions button').trigger('click');
+      await flushPromises();
+      expect(canvas).toHaveBeenCalledTimes(1);
+      expect(encoding).not.toHaveBeenCalled();
+      expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+        expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
+      );
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      vi.mocked(downloadBlob).mockClear();
+    }
+  });
+
   it('reports a failed canvas allocation and leaves the export available for retry', async () => {
     const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const view = { houseName: '家', seed: 1, campaign: { name: 'A Short Line' } } as SessionView;
