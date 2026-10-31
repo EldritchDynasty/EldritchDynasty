@@ -391,6 +391,40 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().docket[0]?.ambition).toBeUndefined();
   });
 
+  it('only credits a delegated tutor when its actual pupil is in the ascent programme (#2190)', () => {
+    const g = newGame(content, { seed: 2190, campaign: 'long', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const candidate = oneSubject(g.ctx);
+    g.ctx.world.scion = candidate.id;
+    const other = place(g.ctx, { sex: 'female', age: 28, name: 'Another Pupil' });
+    const pending = bloodChoice(g.ctx);
+    const interaction = pending.event.interaction;
+    if (interaction.kind !== 'choice') throw new Error('expected a choice fixture');
+    const outcome = interaction.choices[0]?.outcomes[0];
+    if (!outcome) throw new Error('expected a chosen outcome fixture');
+    outcome.effects = [{ kind: 'tutor', target: { slot: 'PUPIL' }, attr: 'reason', op: 'begin' }];
+
+    // The branch was delegated, but its pupil is neither the chosen Scion,
+    // the heir nor the publicly foremost candidate.
+    pending.fill.PUPIL = other.id;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+
+    // The identical act becomes relevant only when it actually names the Scion.
+    pending.fill.PUPIL = candidate.id;
+    expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
+      surface: 'choice', effect: 'advance',
+    }));
+    outcome.effects = [{ kind: 'tutor', target: { slot: 'PUPIL' }, attr: 'reason', op: 'cancel' }];
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('endanger');
+
+    // An unfilled target cannot justify the claim, nor can an unchosen branch.
+    delete pending.fill.PUPIL;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+    pending.fill.PUPIL = candidate.id;
+    delete g.ctx.world.delegation.choices[pending.event.id];
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+  });
+
   it('does not advertise a two-rite relative whom the Unmaking cannot cast (#1978)', () => {
     const ctx = testWorld(content);
     ctx.world.houseAmbition = 'raise_ascendant';
