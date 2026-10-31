@@ -565,6 +565,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   if (ctx.world.campaign !== 'long' || ctx.world.houseAmbition !== 'deepen_blood') return undefined;
   const spent = evidence.spent;
   if (!spent || spent.source.text === null) return undefined;
+  // Afterimage can include anybody named in a rite; only an actual member
+  // of this house's blood can be counted as the cost of its bloodline aim.
+  if (ctx.world.people.get(spent.person)?.houseOfOrigin !== ctx.world.playerHouse) return undefined;
   const pages = ctx.world.chronicle.filter((page) =>
     page.year === spent.source.year
     && page.text === spent.source.text
