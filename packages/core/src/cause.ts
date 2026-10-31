@@ -16,17 +16,20 @@ export interface ChronicleCause {
  */
 interface BookIndex {
   byId: Map<string, ChronicleEntry>;
-  /** A Discrepancy's embellished page: where the book first told it. */
-  embellished: Map<string, ChronicleEntry>;
+  /** A unique embellished page; null means several pages reuse the authored Discrepancy id. */
+  embellished: Map<string, ChronicleEntry | null>;
 }
 
 function indexBook(ctx: SimCtx): BookIndex {
   const byId = new Map<string, ChronicleEntry>();
-  const embellished = new Map<string, ChronicleEntry>();
+  const embellished = new Map<string, ChronicleEntry | null>();
   for (const entry of ctx.world.chronicle) {
     if (entry.id) byId.set(entry.id, entry);
-    if (entry.discrepancyId && entry.record === 'embellish' && !embellished.has(entry.discrepancyId)) {
-      embellished.set(entry.discrepancyId, entry);
+    if (entry.discrepancyId && entry.record === 'embellish') {
+      // The authored id can recur for different people or even in one year.
+      // Never present the first firing as the cause of every later dispute.
+      if (embellished.has(entry.discrepancyId)) embellished.set(entry.discrepancyId, null);
+      else embellished.set(entry.discrepancyId, entry);
     }
   }
   return { byId, embellished };
@@ -57,8 +60,9 @@ function resolve(ctx: SimCtx, book: BookIndex, reference: string): ChronicleCaus
   const entry = book.byId.get(reference);
   if (entry?.cause) return describedCause(book, entry.cause);
 
-  // A discrepancy's durable identity already sits on the embellished page.
-  // Once it is proven or buried, that page is the recoverable origin. Accept
+  // A proved or buried Discrepancy can link back to its Chronicle page only
+  // if exactly one embellished page has that authored id. Repeated firings
+  // share a saved state, but not an unambiguous historical origin. Accept
   // either the discrepancy id itself or any Chronicle entry carrying it.
   const discrepancyId = entry?.discrepancyId
     ?? (ctx.world.discrepancies.has(reference) ? reference : undefined);
