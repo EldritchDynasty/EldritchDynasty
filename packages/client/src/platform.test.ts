@@ -1567,7 +1567,8 @@ describe('the mobile bridge stays interchangeable with every other host', () => 
 
   it('imports the same interchange files and exports JSON on browser and mobile hosts', () => {
     expect(acceptList(mobileSource)).toBe(acceptList(clientSource));
-    expect(mobileSource).toMatch(/const name = `eldritch-\$\{[^}]+\}\.json`/);
+    expect(mobileSource).toContain("const name = exportInterchangeFilename(saveSummary('run', save).year, crypto.getRandomValues(new Uint8Array(16)))");
+    expect(mobileSource).toContain('await writeInterchange(save, name);');
     // Browser file naming and MIME are asserted by the runtime export tests below.
   });
 });
