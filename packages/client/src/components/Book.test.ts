@@ -948,7 +948,7 @@ describe('Chronicle plate SVG fallback when bitmap export fails (#2058)', () => 
     expect(calls).toHaveLength(1);
     const [blob, name] = calls[0]!;
     expect(blob.type).toBe('image/svg+xml;charset=utf-8');
-    expect(name).toBe(plateName('Gearithy', BOOK).replace(/\\.png$/, '.svg'));
+    expect(name).toBe(plateName('Gearithy', BOOK).replace(/\.png$/, '.svg'));
     const svg = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result));
