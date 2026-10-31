@@ -81,6 +81,9 @@ export function linksFor(
  */
 export function findEntry(root: ParentNode | null | undefined, id: string): HTMLElement | undefined {
   if (!root) return undefined;
+  // querySelectorAll finds descendants only. A caller may already be scoped
+  // to the page itself, so include a matching root before walking within it.
+  if (root instanceof HTMLElement && root.dataset.entry === id) return root;
   for (const el of root.querySelectorAll<HTMLElement>('[data-entry]')) {
     if (el.dataset.entry === id) return el;
   }
