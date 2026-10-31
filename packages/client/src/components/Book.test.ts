@@ -93,13 +93,15 @@ describe('recorded lives in the Book and spine (#1944)', () => {
   it.each(['original', 'plainenglish'] as const)('opens an ancestor, follows a source through filters, and returns focus to the history link (%s)', async (proseMode) => {
     const wrapper = mount(Book, { attachTo: document.body, props: {
       book: pages, ages: [], houseName: 'The Recorded House', close: () => {}, actions: readsOver(pages), proseMode,
-      milestones, people: [{ id: 'ancestor', name: 'Alys of Bramme' }],
+      milestones, people: [{ id: 'ancestor', name: 'Alys of Bramme', epithet: 'the Witness' }],
     } });
     try {
+      expect(wrapper.get('[data-person="ancestor"]').text()).toContain('Alys of Bramme the Witness');
       await wrapper.get('[data-person="ancestor"]').trigger('click');
       await flushPromises();
       expect(document.activeElement).toBe(wrapper.get('.person-history').element);
-      expect(wrapper.get('.person-history h4').text()).toBe('Alys of Bramme');
+      expect(wrapper.get('.person-history h4').text()).toBe('Alys of Bramme the Witness');
+      expect(wrapper.get('.person-history').attributes('aria-label')).toContain('Alys of Bramme the Witness');
       await wrapper.get('#chronicle-book-search').setValue('nothing matches');
       const origin = wrapper.get('[data-milestone="recorded-deed"]');
       (origin.element as HTMLElement).focus();
@@ -686,26 +688,27 @@ describe('the panel', () => {
     }
   });
 
-  it('keeps historical cast named without offering an unreachable link (#1077)', async () => {
+  it.each(['original', 'plainenglish'] as const)('keeps historical bynames without offering an unreachable link (#1077, #2100) (%s)', async (proseMode) => {
     const page = { ...entry('chr_dead', 1067, 'Her name remains on the page.'), people: ['per_dead', 'per_alive'] };
     const w = mount(Chronicle, {
       props: {
         view: {
           chronicle: [page],
           chroniclePeople: [
-            { id: 'per_dead', name: 'Mara' },
+            { id: 'per_dead', name: 'Mara', epithet: 'the Chronicler' },
             { id: 'per_alive', name: 'Nora' },
           ],
           halls: [{ members: [{ id: 'per_alive', name: 'Nora' }] }],
           campaign: { endYear: 1542 },
         } as never,
         frame: [],
+        proseMode,
         actions: readsOver([page]),
       },
     });
     try {
       const historical = w.get('[data-person-history="per_dead"]');
-      expect(historical.text()).toContain('Mara');
+      expect(historical.text()).toContain('Mara the Chronicler');
       expect(historical.text()).toContain('not in a living hall');
       expect(w.find('button[data-person="per_dead"]').exists()).toBe(false);
 
