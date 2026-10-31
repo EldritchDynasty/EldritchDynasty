@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { RememberedPassage } from '../lib/game';
+import GlossaryText from './GlossaryText.vue';
 
 /**
  * WHAT THE YEARS DID (issue #49).
@@ -51,7 +52,9 @@ const onTree = computed(() => new Set(
             {{ line.text }}
           </button>
           <template v-else>
-            <span>{{ line.text }}</span>
+            <!-- Non-navigable history can disclose known terms here. Keep actual
+                 person-navigation rows as single buttons: no nested controls. -->
+            <GlossaryText :text="line.text" :prose-mode="proseMode" />
             <!-- The cast named them before this year took them. The label and
                  sentence are the engine's own words, read back rather than
                  rewritten into an epitaph (issue #44). -->
