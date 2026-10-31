@@ -563,7 +563,10 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
  */
 function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose | undefined {
   if (ctx.world.campaign !== 'long' || ctx.world.houseAmbition !== 'deepen_blood') return undefined;
-  const spent = evidence.spent;
+  // Afterimage.spent is the first rite victim of any origin. That subject
+  // can be an outsider, so use the independently witnessed house-blood cost
+  // rather than silently omitting a later sacrifice of a relative.
+  const spent = evidence.spentBlood;
   if (!spent || spent.source.text === null) return undefined;
   // Afterimage can include anybody named in a rite; only an actual member
   // of this house's blood can be counted as the cost of its bloodline aim.
