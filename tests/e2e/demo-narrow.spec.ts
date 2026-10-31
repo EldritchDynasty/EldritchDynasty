@@ -70,6 +70,21 @@ async function expectNoDocumentOverflow(page: Page) {
   expect(layout.body, 'body is wider than the phone viewport').toBeLessThanOrEqual(layout.viewport);
 }
 
+/** Focused controls on the resumed phone board must be reachable without panning. */
+async function expectFocusedControlInViewport(page: Page) {
+  const bounds = await page.evaluate(() => {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement)) return null;
+    const { left, right, top, bottom } = active.getBoundingClientRect();
+    return { left, right, top, bottom, width: window.innerWidth, height: window.innerHeight };
+  });
+  if (!bounds) throw new Error('No HTML control is focused');
+  expect(bounds.left, 'focused control starts outside the phone viewport').toBeGreaterThanOrEqual(0);
+  expect(bounds.right, 'focused control ends outside the phone viewport').toBeLessThanOrEqual(bounds.width);
+  expect(bounds.top, 'focused control is above the phone viewport').toBeGreaterThanOrEqual(0);
+  expect(bounds.bottom, 'focused control is below the phone viewport').toBeLessThanOrEqual(bounds.height);
+}
+
 for (const scenario of scenarios) {
   test(`narrow Demonstration launch uses the real signing and preserves the full save (${scenario.mode}) #2168`, async ({ page }) => {
     const errors: string[] = [];
@@ -112,6 +127,27 @@ for (const scenario of scenarios) {
 
     await expect(page.locator('.board')).toBeVisible();
     await expectNoDocumentOverflow(page);
+    // The resume action was keyboard-operable on Start; the *resumed* board
+    // must also expose reachable controls at 320px with the largest reader text.
+    const board = page.locator('.board');
+    const chronicle = page.locator('.panes button.book');
+    await chronicle.focus();
+    await expect(chronicle).toBeFocused();
+    await expectFocusedControlInViewport(page);
+    await page.keyboard.press('Enter');
+    await expect(board).toHaveAttribute('data-pane', 'chronicle');
+    await expect(chronicle).toHaveAttribute('aria-pressed', 'true');
+    await expectNoDocumentOverflow(page);
+
+    const house = page.locator('.panes button').first();
+    await house.focus();
+    await expect(house).toBeFocused();
+    await expectFocusedControlInViewport(page);
+    await page.keyboard.press('Enter');
+    await expect(board).toHaveAttribute('data-pane', 'house');
+    await expect(house).toHaveAttribute('aria-pressed', 'true');
+    await expectNoDocumentOverflow(page);
+
     const campaign = await page.evaluate(() =>
       JSON.parse(localStorage.getItem('ed:save:demo-autosave')!).campaign);
     expect(campaign).toBe('demo');
