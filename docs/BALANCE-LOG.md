@@ -16153,3 +16153,114 @@ not its text reacts to the alteration. This is one predeclared sample, so a
 rate claim after any change needs an independent one (step 6).
 
 **No target or intervention is recorded yet** (step 4). Nothing was tuned.
+
+## 2026-10-31 — #1977: who owns the Hall's two promises
+
+**Question.** #1946's audit found the Hall answer and the roof letter losing
+most of their promises to a kept person's death. #1977 asks which of those
+promises belong to a person and which to a branch, and for one inherited
+obligation and one personal closure built on the existing `onMissing`
+policies.
+
+### Ownership matrix (decided before any measurement)
+
+| Continuation | Slot | Owned by | After a death |
+|---|---|---|---|
+| `the_hall_is_answered` (the letter was heard) | HEAD | the seal | `recast`: whoever holds the seal at the due year |
+| | COUSIN | the third hall | `{ inherit: hall }`: whoever now speaks for that same hall, grown (16+) and alive; no speaker, an extinct hall, or a speaker already in the story ends it |
+| `the_hall_stops_writing` (answered about a roof) | HEAD | the seal | `recast`, as above |
+| | COUSIN | the writer himself | `continue_absent`: an authored closure, no effects |
+
+Both pages keep the launching page as their cause. A Head recalled from the
+writer's own hall is both ends of the letter, so the story ends there.
+
+**Why the roof letter is personal.** It is one man's four drafts, answered
+about a roof. The arrangement that follows carries his slight and his
+grudge. Once he is dead, there is nobody left to be slighted, so the closure
+writes the silence and moves nothing. **Why the heard letter is the hall's.**
+The steward's reading is that the third hall asks whether anybody *in that
+hall* will hold anything. That question does not die with its writer.
+
+**Mechanism.** The generic `inherit` falls back to anybody of the house of
+origin, and `resolveSlots` accepts a preset without re-checking it. So this
+change adds `inherit: hall`, which reads `wouldSpeakFor` (it elects nobody),
+re-applies the slot's own filters, and has no fallback. `recast` now treats
+a kept person who has left the slot's role pool as missing: a Head who
+became the guardian, or handed on the seal. No shipped content used `recast`
+before. `inheritedBody` is the successor's page.
+`proseForEventBody` now resolves alternative bodies before `.body`; until now
+the arc phase's `{ ...event, body: absentBody }` copy was looked up under
+`.body`, so Plain English never showed for an arc's absent page.
+
+### Protocol
+
+Paired Long Lines, canonical chronicler auto-resolution
+(`report:story-routes`, the #1974 per-promise observer), 500 years, seeds
+`1977000 + 31*i`, `i = 0..799`, in four shards of 200 with two
+complete-save observer controls each (eight in total, all equal). Baseline:
+`main` at `0234c7690dae`. Candidate: frozen scratch revision `62d8a278`,
+which is this branch's engine commits plus the content commit
+(content hash `f91815897b2c…`). Node 22.23.4. Wilson 95% intervals over
+independent houses. Outcomes come from replaying the 57 houses that launched
+a Hall promise and reading each instance's history.
+
+### Results
+
+The invitation is unchanged: `the_hall_that_waited` fires 61 times in 57
+houses in both columns. These are separate measures: template incidence,
+the launch, and delivery given a promise.
+
+| Measure | Baseline | Candidate |
+|---|---|---|
+| Hall answer: houses reached /800 | 13 = 1.625% [0.952, 2.760] | 18 = 2.250% [1.428, 3.528] |
+| Hall answer: promises delivered | 13/27 = 48.1% [30.7, 66.0] | 18/26 = 69.2% [50.0, 83.5] |
+| — delivered with HEAD passed / COUSIN passed / both | 0 / 0 / 0 | 3 / 2 / 1 |
+| — answered *given* / *promised* | 8 / 5 | 9 / 9 |
+| — lost: COUSIN / HEAD / both | 8 / 3 / 3 (all `cancel_arc`) | 6 / 0 / 2 (no grown speaker in the writer's hall) |
+| Roof letter: houses reached /800 | 10 = 1.250% [0.680, 2.286] | 32 = 4.000% [2.847, 5.592] |
+| Roof letter: promises delivered | 10/34 = 29.4% [16.8, 46.2] | 32/35 = 91.4% [77.6, 97.0] |
+| — the hall arranges itself (houses) | 10 = 1.250% [0.680, 2.286] | 18 = 2.250% [1.428, 3.528] |
+| — quiet closure, writer dead | 0 | 14 |
+| — delivered with HEAD passed | 0 | 13 |
+| — lost | 8 COUSIN, 10 HEAD, 5 both | 2 HEAD (one writer recalled to the seat, one with no castable Head) |
+| Term exhaustion (start refused) | 1 roof | 1 roof |
+| Longest answer silence, mean / max (years) | 54.40 / 99 | 54.40 / 99 |
+
+The candidate's `report:story-routes` labels the hall/recast cancellations
+`cancelled_other_or_unknown`, because its classifier only knows
+`cancel_arc`. The breakdown above comes from the recorded `missing` slots
+and their policies. The tool itself was not changed.
+
+**Pacing and endings.** `gate:long` on 24 Long Lines (seeds `20000 + 37*i`,
+chronicler) prints byte-identical output for both revisions. Endings are
+**1 unmade, 6 broken_line, 10 forgotten, 7 devoured**. Mean longest answer
+silence is 53.8 (max 62). This is an equality observation on a small sample,
+not a powered ending claim; a Hall letter is rare enough that 24 houses may
+not exercise it.
+
+### What this says
+
+- Most of the roof letter's losses were the Head's death (10 of 23) or both
+  (5). Recasting the seal as an office recovers those as real arrangements,
+  which nearly doubles the houses that see the hall arrange itself. The
+  writer's own death now writes the closure instead of nothing.
+- The heard letter now passes to the writer's hall in 3 of 18 deliveries.
+  The six remaining COUSIN losses are halls with nobody grown left to speak
+  for them, and those end without substitution, as decided.
+- The *promised* answer is more common in the candidate (9 vs 5). This sample
+  is small and the chronicler's draw is a coin, so it is not evidence of a
+  shift in how houses answer.
+
+### Limits
+
+Bot policies only. These are delivery and reach measurements, not evidence
+that players notice or value the successor's page or the closure. Paired
+seeds diverge after the first changed scene, so the columns compare sampled
+distributions, not matched counterfactuals. No independent candidate sample
+was run; a rate claim beyond this pair needs one. Artifacts are workspace
+scratch (`/tmp/1977/*`). SHA-256 prefixes: baseline shards `f14f520d`,
+`ca6a44c4`, `ebf02d56`, `64f60692`; candidate shards `c0a8f2ef`, `42fd39c7`,
+`839e1a55`, `12e1e09e`; per-promise traces `26776f3a` / `fd833cb7`; outcome
+replays `d6cf397b` / `4ac9bc04`; both `gate:long` logs `ba8df777`. Reproduce:
+`npm run report:story-routes -- --runs=200 --seed-start=<1977000 + 6200k>
+--seed-step=31 --controls=2 --output=<file>` for `k = 0..3`.
