@@ -3,11 +3,12 @@ import { loadBundle } from '@ed/content';
 import type { ArcDef, ArcInstance, ContentBundle, EventTemplate, MissingPolicy, Outcome, Person } from '@ed/schema';
 import { asId } from '@ed/schema';
 import { evalCondition } from '@ed/core';
-import { advanceArc, applyEffect, CAMPAIGNS, chooseSuccessor, dueArcSteps, genomeOf, place, startArc, testRng, testWorld } from '@ed/core';
+import { advanceArc, applyEffect, CAMPAIGNS, chooseSuccessor, dueArcSteps, genomeOf, phase, place, startArc, testRng, testWorld } from '@ed/core';
 import { executeOutcomeWitness } from './events/reach.js';
 import { applyRecord, queueChoice, resolveChoice } from './events/decisions.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import type { SimCtx } from './world.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 
 // The BUNDLE, not the indexed content: these tests add an arc, and `indexContent`
 // hands an already-indexed `Content` straight back — so spreading one would give
@@ -178,15 +179,31 @@ describe('the Hall letter before collection (#1971)', () => {
     expect(dueArcSteps(answered, testRng())).toHaveLength(0);
   });
 
-  it('still cancels when the kept writer dies instead of substituting another cousin', () => {
+  // #1977 decided the demand is the hall's: its own speaker carries it, and
+  // no cousin of any other hall is ever substituted for the writer.
+  it('ends the letter when his own hall has nobody, never substituting another hall\'s cousin', () => {
     const { ctx, instance, cousin } = letter();
     ctx.world.people.kill(cousin.id, ctx.world.year, 'before the promised return');
-    place(ctx, { sex: 'male', age: 30, name: 'Another cousin', branch: 'term_test_hall' })
-      .membership.find(entry => entry.to === undefined)!.kind = 'cadet';
+    const elsewhere = place(ctx, { sex: 'male', age: 50, name: 'Another hall\'s cousin', branch: 'term_other_hall' });
+    elsewhere.membership.find(entry => entry.to === undefined)!.kind = 'cadet';
+    ctx.world.branches.set('term_other_hall', {
+      id: asId('term_other_hall'), name: 'The fourth hall', house: asId(ctx.world.playerHouse), founder: elsewhere.id,
+      splitFrom: 'main', foundedYear: ctx.world.year - 10, speaker: elsewhere.id, grievance: 0,
+    });
     ctx.world.year = instance.dueYear!;
     expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
     expect(instance.status).toBe('cancelled');
     expect(instance.bindings.COUSIN).toBe(cousin.id);
+  });
+
+  it('passes the dead writer\'s letter to whoever now speaks for his hall', () => {
+    const { ctx, instance, cousin } = letter();
+    ctx.world.people.kill(cousin.id, ctx.world.year, 'before the promised return');
+    const successor = place(ctx, { sex: 'male', age: 30, name: 'Another cousin', branch: 'term_test_hall' });
+    ctx.world.year = instance.dueYear!;
+    const [step] = dueArcSteps(ctx, testRng()).filter(entry => entry.instance.id === instance.id);
+    expect(step?.inherited).toBe(true);
+    expect(instance.bindings.COUSIN).toBe(successor.id);
   });
 
   it('still retries unmet conditions past collection instead of overriding the premise', () => {
@@ -764,5 +781,130 @@ describe('the successor\'s page is the inherited body, and it survives a save (#
     const event = ctx.content.mustEvent(step!.node.event);
     expect(step!.inherited).toBe(true);
     expect(event.inheritedBody).toBeUndefined();
+  });
+});
+
+/**
+ * THE SHIPPED HALL (#1977). The ownership matrix, as authored: the Hall
+ * answer is the third hall's demand put to the seal, so both ends pass; the
+ * roof letter was one man's, so it closes quietly when he dies.
+ */
+describe('the shipped Hall continuations follow the ownership matrix (#1977)', () => {
+  const ROOF = 'inline_the_hall_that_waited__it_is_about_a_roof';
+
+  function shipped(outcome: 'somebody_reads_it_properly' | 'it_is_about_a_roof', arc: string) {
+    const ctx = testWorld(base, 19770, 1300);
+    ctx.world.discontent = 40;
+    for (const p of ctx.world.people.living()) {
+      const current = p.membership.find((m) => m.to === undefined);
+      if (current?.kind === 'cadet') current.kind = 'blood';
+    }
+    const writer = hallCadet(ctx, 'The letter writer', 'third_hall', 40);
+    cadetHall(ctx, 'third_hall', writer);
+    const rng = testRng('shipped-hall');
+    vi.spyOn(rng, 'range').mockImplementation((min) => min);
+    const result = executeOutcomeWitness(ctx, ctx.content.mustEvent('the_hall_that_waited'), {
+      expectedOutcomeId: outcome, targetWeightedOutcome: true, rng,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((a) => a.arc === arc)!;
+    const head = ctx.world.people.get(instance.bindings.HEAD!)!;
+    const page = ctx.world.chronicle.find((entry) => entry.eventId === 'the_hall_that_waited')!;
+    return { ctx, instance, writer, head, page };
+  }
+
+  it('declares the policies the matrix names', () => {
+    const answered = loadBundle().events.find((e) => e.id === ANSWERED)!;
+    const roof = loadBundle().events.find((e) => e.id === 'the_hall_stops_writing')!;
+    expect(answered.slots.HEAD!.onMissing).toBe('recast');
+    expect(answered.slots.COUSIN!.onMissing).toEqual({ inherit: 'hall' });
+    expect(answered.inheritedBody).toMatch(/letter about the roof/);
+    expect(roof.slots.HEAD!.onMissing).toBe('recast');
+    expect(roof.slots.COUSIN!.onMissing).toBe('continue_absent');
+    expect(roof.absentBody).toBeDefined();
+  });
+
+  it('brings the heard letter back through the hall\'s new speaker, and the answer lands on that hall', () => {
+    const { ctx, instance, writer, page } = shipped('somebody_reads_it_properly', ARC);
+    const son = place(ctx, { sex: 'male', age: 24, name: 'Aldren of the third hall', branch: 'third_hall' });
+    const other = hallCadet(ctx, 'A fourth-hall cousin', 'fourth_hall', 45);
+    cadetHall(ctx, 'fourth_hall', other);
+    ctx.world.people.kill(writer.id, ctx.world.year, 'before the promised return');
+    ctx.world.year = instance.dueYear!;
+    const report = phase('arcs', ctx, false);
+    const pending = report.pending.find((d) => d.kind === 'choice' && d.event.id === ANSWERED);
+    if (pending?.kind !== 'choice') throw new Error('the successor\'s page was not put to the player');
+    expect(pending.body).toContain('letter about the roof');
+    expect(pending.body).toContain(son.name);
+    expect(pending.fill.COUSIN).toBe(son.id);
+
+    // The docket survives a save with its successor and wording intact.
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), ctx.content);
+    expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(ctx)));
+    const before = { third: resumed.world.branches.get('third_hall')!.grievance = 40, fourth: resumed.world.branches.get('fourth_hall')!.grievance = 40 };
+    expect(resolveChoice(resumed, pending.id, 'give_them_something_real', testRng()).ok).toBe(true);
+    expect(resumed.world.branches.get('third_hall')!.grievance).toBeLessThan(before.third);
+    expect(resumed.world.branches.get('fourth_hall')!.grievance).toBe(before.fourth);
+    const pages = resumed.world.chronicle.filter((entry) => entry.eventId === ANSWERED);
+    expect(pages).toHaveLength(1);
+    expect(pages[0]!.cause).toEqual({ year: page.year, page: page.id });
+    expect(pages[0]!.text).toContain(son.name);
+    expect(resumed.world.arcs.get(instance.id)?.status).toBe('ended');
+  });
+
+  it('reads the successor\'s page in Plain English too', () => {
+    const { ctx, instance, writer } = shipped('somebody_reads_it_properly', ARC);
+    place(ctx, { sex: 'male', age: 24, name: 'Aldren of the third hall', branch: 'third_hall' });
+    ctx.world.people.kill(writer.id, ctx.world.year, 'before the promised return');
+    setProseVariants(ctx, base.proseVariants);
+    setProseMode(ctx, 'plainenglish');
+    ctx.world.year = instance.dueYear!;
+    const pending = phase('arcs', ctx, false).pending.find((d) => d.kind === 'choice' && d.event.id === ANSWERED);
+    expect(pending?.kind === 'choice' && pending.body).toContain('Nobody there pretends any longer');
+    expect(missingPlainEnglish(ctx).filter((address) => address.includes('the_hall_is_answered'))).toEqual([]);
+  });
+
+  it('lets a child of the hall carry nothing: no grown speaker ends the story', () => {
+    const { ctx, instance, writer } = shipped('somebody_reads_it_properly', ARC);
+    place(ctx, { sex: 'male', age: 9, name: 'A boy of the third hall', branch: 'third_hall' });
+    ctx.world.people.kill(writer.id, ctx.world.year, 'before the promised return');
+    ctx.world.year = instance.dueYear!;
+    expect(phase('arcs', ctx, false).pending).toHaveLength(0);
+    expect(instance.status).toBe('cancelled');
+  });
+
+  it('closes the roof letter quietly when its writer is dead: no grudge from the grave, one page', () => {
+    const { ctx, instance, writer, head, page } = shipped('it_is_about_a_roof', ROOF);
+    ctx.world.people.kill(writer.id, ctx.world.year, 'before his hall goes quiet');
+    const grievance = ctx.world.branches.get('third_hall')!.grievance;
+    const respect = ctx.world.respect;
+    const relationships = canonical([...ctx.world.relationships.entries()]);
+    ctx.world.year = instance.dueYear!;
+    phase('arcs', ctx, true);
+    const pages = ctx.world.chronicle.filter((entry) => entry.eventId === 'the_hall_stops_writing');
+    expect(pages).toHaveLength(1);
+    expect(pages[0]!.cause).toEqual({ year: page.year, page: page.id });
+    expect(pages[0]!.text).toContain('quiet for peace');
+    expect(ctx.world.branches.get('third_hall')!.grievance).toBe(grievance);
+    expect(ctx.world.respect).toBe(respect);
+    expect(canonical([...ctx.world.relationships.entries()])).toBe(relationships);
+    expect(pages[0]!.text).toContain(head.name === ctx.world.people.get(instance.bindings.HEAD!)!.name ? head.name : '');
+    expect(instance.status).toBe('ended');
+    expect(dueArcSteps(ctx, testRng())).toHaveLength(0);
+  });
+
+  it('still lets the living writer\'s hall stop writing to a new Head, who inherits the grudge', () => {
+    const { ctx, instance, writer, head } = shipped('it_is_about_a_roof', ROOF);
+    head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
+    const next = place(ctx, { sex: 'male', age: 35, name: 'The new Head', castSlots: ['head'] });
+    ctx.world.people.kill(head.id, ctx.world.year, 'the long reign ends');
+    ctx.world.year = instance.dueYear!;
+    phase('arcs', ctx, true);
+    const pages = ctx.world.chronicle.filter((entry) => entry.eventId === 'the_hall_stops_writing');
+    expect(pages).toHaveLength(1);
+    expect(pages[0]!.text).toContain('arrange things');
+    expect(instance.bindings).toMatchObject({ HEAD: next.id, COUSIN: writer.id });
+    const grudge = [...ctx.world.relationships.values()].find((r) => r.from === writer.id && r.to === next.id);
+    expect(grudge?.sentiment).toBeLessThan(0);
   });
 });

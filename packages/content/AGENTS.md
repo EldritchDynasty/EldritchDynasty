@@ -97,6 +97,13 @@ npm run validate     # every content rule; exits non-zero on any error
   Never hand-write "he" for the founder (`prose/founder-forms`).
 - An arc-bound slot with `onMissing: continue_absent` **must** supply `absentBody`
   — otherwise it renders a token for a man forty years in the ground.
+- **Decide who owns a kept slot before choosing its policy** (#1977). `recast`
+  is an office (whoever holds the role now); `{ inherit: hall }` is a cadet
+  hall's demand, carried by whoever now speaks for that same hall and checked
+  against the slot's filters; a personal promise closes with `continue_absent`,
+  an `absentBody` and `onlyIf`-guarded outcomes so the dead act on nothing.
+  `inheritedBody` is the page when a binding passed; `the_hall_that_waited.yaml`
+  is the worked example.
 - **IDs are `snake_case` and are never renamed after commit.** Save files
   reference them. Slot names are not save-referenced and may be renamed — the
   editor rewrites the body's `{TOKEN}`s with them.
