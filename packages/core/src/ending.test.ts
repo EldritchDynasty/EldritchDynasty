@@ -1218,6 +1218,44 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('does not let an earlier outsider rite hide a later documented blood-relative cost', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const relative = w.chronicle[0]!.people![0]!;
+    const ascendant = w.chronicle[0]!.people![1]!;
+    const outsider = place(ctx, { name: 'Rowena', sex: 'female', age: 40 });
+    outsider.houseOfOrigin = asId('another-house');
+    w.people.kill(outsider.id, w.year - 1, 'given to the earlier rite', 'vessel_consumed');
+    w.chronicle.unshift(page({
+      id: 'earlier-outsider-rite', year: w.year - 1, eventId: 'the_vessel_rite',
+      text: 'The house wrote that Rowena was offered.', people: [outsider.id, ascendant], record: 'record',
+    }));
+    w.decisionLog.unshift({
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year - 1,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [outsider.id], ASCENDANT: [ascendant] },
+    });
+
+    const before = digestOf(ctx);
+    const evidence = afterimageEvidence(ctx);
+    // The shared Afterimage still chooses the earliest recorded sacrifice.
+    expect(evidence.spent?.person).toBe(outsider.id);
+    // But the bloodline reading must not lose the later named relative.
+    expect(evidence.spentBlood?.person).toBe(relative);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Meriel of the Tides',
+      year: w.year, text: 'The house wrote that Meriel walked away.',
+    });
+    expect(digestOf(ctx)).toBe(before);
+    expect(selectEnding(ctx)).toBe('forgotten');
+
+    // With the relative's written page omitted, the outsider cannot serve
+    // as substitute evidence of what this family spent.
+    w.chronicle[1]!.text = null;
+    expect(afterimageEvidence(ctx).spentBlood).toBeUndefined();
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
   it('does not count another house’s rite victim as a cost to this bloodline', () => {
     const ctx = accountedRite();
     const vesselId = ctx.world.chronicle[0]!.people![0]!;
