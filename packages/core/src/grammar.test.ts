@@ -27,6 +27,24 @@ describe('rendering slot forms', () => {
     expect(renderBody(body, { HEAD: her.id }, ctx)).toBe('Bren set down her cup. She was not hungry.');
   });
 
+  it('keeps the personal name beside a byname in bare slot tokens (#2183)', () => {
+    const { ctx, him, her } = cast();
+    him.epithet = 'the Witness';
+
+    // The name is still available to the reader; the byname is not a substitute.
+    expect(renderBody('{HEAD} kept {HEAD.their} seal.', { HEAD: him.id }, ctx))
+      .toBe('Aldous the Witness kept his seal.');
+    // Existing unnamed persons and singular pronouns are unchanged.
+    expect(renderBody('{HEAD} kept {HEAD.their} seal.', { HEAD: her.id }, ctx))
+      .toBe('Bren kept her seal.');
+
+    her.epithet = 'of the Ashes';
+    expect(renderBody('{SENT} rode out; {SENT.they} {SENT.has} not returned.', {
+      SENT: [him.id, her.id],
+    }, ctx)).toBe('Aldous the Witness and Bren of the Ashes rode out; they have not returned.');
+    expect(renderBody('{SENT}', { SENT: [her.id] }, ctx)).toBe('Bren of the Ashes');
+  });
+
   it('takes the plural for a party of more than one, and the member\'s own grammar for a party of one', () => {
     const { ctx, him, her } = cast();
     const body = '{SENT} rode out; {SENT.they} {SENT.has} not come back.';
