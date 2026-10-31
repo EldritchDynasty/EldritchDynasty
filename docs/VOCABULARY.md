@@ -251,6 +251,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 
 | rule | what it is for |
 |---|---|
+| `glossary/refs` | Glossary ids and aliases are unique, and related terms resolve. |
 | `ids/unique` | Two events with one id means one of them is unreachable, and save files name both. |
 | `primordial/coverage` | Every potentially major ordinary outcome has a material, non-recursive authored response and paired feedback. |
 | `primordial/site` | Potentially major incidents declare one physical site with resolvable participant slots. |

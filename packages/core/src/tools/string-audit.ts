@@ -88,6 +88,7 @@ export const CONTENT_NOT_PROSE: ReadonlyMap<string, string> = new Map([
   ['note', 'a founding character\'s designer note (`SeedPersonS.note`); never rendered'],
   ['effect', 'a clause\'s designer note on what it changes at 1542; clauses.yaml says it is never shown'],
   ['plainenglish', 'the authored counterpart itself; it answers a work item and must not recursively create another'],
+  ['original', 'the Original half of an inline voice pair (glossary.yaml); its `plainenglish` sibling is authored beside it, so it needs no separate work item'],
 ]);
 
 const words = (s: string) => s.trim().split(/\s+/).filter(Boolean).length;
