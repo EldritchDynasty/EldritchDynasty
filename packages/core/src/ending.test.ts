@@ -1236,6 +1236,9 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
       fill: { VESSEL: [outsider.id], ASCENDANT: [ascendant] },
     });
 
+    // Read the ending first, as the test above does: that warms derived
+    // phenotype caches, so the digest compares stored state, not a cold cache.
+    expect(selectEnding(ctx)).toBe('forgotten');
     const before = digestOf(ctx);
     const evidence = afterimageEvidence(ctx);
     // The shared Afterimage still chooses the earliest recorded sacrifice.
