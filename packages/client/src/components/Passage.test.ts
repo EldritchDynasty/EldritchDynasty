@@ -46,9 +46,19 @@ describe('in-place glossary on non-navigable factual passage lines (#2087)', () 
             : 'How the wider world regards this family.',
         );
 
+        // A mode change may collapse a previously opened definition. Finish
+        // this disclosure, then deliberately open the next mode's definition:
+        // both modes must still be accessible, without requiring stale state.
+        await marked[0]!.trigger('keydown', { key: 'Escape' });
+        expect(wrapper.find('.glossary-definition').exists()).toBe(false);
+        expect(document.activeElement).toBe(marked[0]!.element);
+
         await wrapper.setProps({
           proseMode: proseMode === 'original' ? 'plainenglish' : 'original',
         });
+        expect(marked[0]!.attributes('aria-expanded')).toBe('false');
+        await marked[0]!.trigger('click');
+        expect(marked[0]!.attributes('aria-expanded')).toBe('true');
         expect(wrapper.get('.glossary-definition').text()).toBe(
           proseMode === 'original'
             ? 'How the wider world regards this family.'
