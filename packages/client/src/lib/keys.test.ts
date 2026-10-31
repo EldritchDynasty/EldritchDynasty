@@ -1,7 +1,8 @@
+// @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isControl, shortcutFor } from './keys.js';
+import { isControl, isField, shortcutFor } from './keys.js';
 
 /**
  * THE FOUR TIMES A SHORTCUT MUST NOT FIRE (issue #58).
@@ -146,5 +147,60 @@ describe('what a keypress means', () => {
     for (const key of ['a', 'F5', 'Tab', 'ArrowLeft', 'Backspace']) {
       expect(shortcutFor({ key }), `"${key}" was claimed`).toBeNull();
     }
+  });
+});
+
+describe('focus inside open shadow roots (#2147)', () => {
+  it('keeps numbered choices away from an input inside a shadow host', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const input = document.createElement('input');
+    shadow.append(input);
+    document.body.append(host);
+
+    try {
+      input.focus();
+      expect(document.activeElement).toBe(host);
+      expect(shadow.activeElement).toBe(input);
+      expect(isField(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: '3', inField: isField(document.activeElement) })).toBeNull();
+    } finally {
+      host.remove();
+    }
+  });
+
+  it('leaves Enter and Space to a button through nested open shadow roots', () => {
+    const outer = document.createElement('div');
+    const first = outer.attachShadow({ mode: 'open' });
+    const nestedHost = document.createElement('div');
+    const second = nestedHost.attachShadow({ mode: 'open' });
+    const button = document.createElement('button');
+    first.append(nestedHost);
+    second.append(button);
+    document.body.append(outer);
+
+    try {
+      button.focus();
+      expect(document.activeElement).toBe(outer);
+      expect(first.activeElement).toBe(nestedHost);
+      expect(second.activeElement).toBe(button);
+      expect(isControl(document.activeElement)).toBe(true);
+      for (const key of ['Enter', ' ']) {
+        expect(shortcutFor({ key, onControl: isControl(document.activeElement) })).toBeNull();
+      }
+    } finally {
+      outer.remove();
+    }
+  });
+
+  it('keeps ordinary DOM controls and unfocused shadow hosts unchanged', () => {
+    const host = document.createElement('div');
+    host.attachShadow({ mode: 'open' });
+    expect(isField(host)).toBe(false);
+    expect(isControl(host)).toBe(false);
+    expect(isField(document.createElement('textarea'))).toBe(true);
+    expect(isControl(document.createElement('button'))).toBe(true);
+    expect(shortcutFor({ key: 'Enter', onControl: isControl(host) }))
+      .toEqual({ kind: 'advance', years: 1 });
   });
 });
