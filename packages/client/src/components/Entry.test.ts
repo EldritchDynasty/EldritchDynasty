@@ -30,8 +30,8 @@ describe('Chronicle evidence glossary (#2089)', () => {
         expect(w.find('p .glossary-term').exists()).toBe(false);
         expect(w.findAll('.claims .glossary-term')).toHaveLength(1);
         expect(w.findAll('.claims li').map((li) => li.text())).toEqual([
-          entry.claims![0].text,
-          entry.claims![1].text,
+          entry.claims?.[0]?.kind === 'deed' ? entry.claims[0].text : '',
+          entry.claims?.[1]?.kind === 'deed' ? entry.claims[1].text : '',
         ]);
         const button = w.get('.claims .glossary-term');
         expect(button.text()).toBe('Standing');
@@ -66,14 +66,14 @@ describe('Chronicle evidence glossary (#2089)', () => {
         expect(w.findAll('p .glossary-term')).toHaveLength(1);
         expect(w.find('.claims .glossary-term').exists()).toBe(false);
         expect(w.findAll('.claims li').map((li) => li.text())).toEqual([
-          entry.claims![0].text,
-          entry.claims![1].text,
+          entry.claims?.[0]?.kind === 'deed' ? entry.claims[0].text : '',
+          entry.claims?.[1]?.kind === 'deed' ? entry.claims[1].text : '',
         ]);
         await w.setProps({ read: true });
         expect(w.find('.glossary-term').exists()).toBe(false);
         expect(w.findAll('.claims li').map((li) => li.text())).toEqual([
-          entry.claims![0].text,
-          entry.claims![1].text,
+          entry.claims?.[0]?.kind === 'deed' ? entry.claims[0].text : '',
+          entry.claims?.[1]?.kind === 'deed' ? entry.claims[1].text : '',
         ]);
       } finally { w.unmount(); }
     },
