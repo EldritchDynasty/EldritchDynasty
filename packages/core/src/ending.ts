@@ -465,9 +465,23 @@ export interface RingBeat {
   changed?: 'given' | 'owed';
 }
 
+/** One specific cost the written book can set against a tracked family purpose. */
+export interface EpiloguePurpose {
+  kind: 'blood_spent';
+  /** The same recorded person as the attributed rite, not a guessed subject. */
+  person: string;
+  year: number;
+  /** The exact surviving words of the page; a blank cannot supply this account. */
+  text: string;
+  /** The family's improved account is a claim, not independent proof. */
+  embellished: boolean;
+}
+
 export interface EpilogueView {
   /** Derived, attributed historical selections for the shareable house image. */
   afterimage?: AfterimageEvidence;
+  /** A narrow, evidence-backed concluding account of a pursued family purpose. */
+  purpose?: EpiloguePurpose;
   id: EndingId;
   title: string;
   opening: string;
@@ -537,6 +551,36 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
   };
 }
 
+/**
+ * A purpose is not evidence of its own pursuit. The house may have aimed to
+ * deepen its blood and still put a named relative into a rite. Show that cost
+ * only when the rite's successful mark, exact decision and written named page
+ * have already been joined by afterimageEvidence. A missing or ambiguous page
+ * cannot be turned into a family story by the UI.
+ *
+ * This is an account OF THE BOOK, not a new verdict about the person or a
+ * modification to the creditor's ending choice.
+ */
+function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose | undefined {
+  if (ctx.world.campaign !== 'long' || ctx.world.houseAmbition !== 'deepen_blood') return undefined;
+  const spent = evidence.spent;
+  if (!spent || spent.source.text === null) return undefined;
+  const pages = ctx.world.chronicle.filter((page) =>
+    page.year === spent.source.year
+    && page.text === spent.source.text
+    && (spent.source.page === undefined || page.id === spent.source.page));
+  // Two indistinguishable pages are not proof that either refers to this rite.
+  if (pages.length !== 1) return undefined;
+  const page = pages[0]!;
+  return {
+    kind: 'blood_spent',
+    person: spent.epithet ? `${spent.name} ${spent.epithet}` : spent.name,
+    year: page.year,
+    text: page.text!,
+    embellished: page.record === 'embellish',
+  };
+}
+
 /** How much of the book the last night quotes back. */
 export const EPILOGUE_PAGES = 30;
 
@@ -602,6 +646,8 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
       'The Ledger remained unresolved: {CLAUSES} of {TOTAL} clauses were recovered.',
       { CLAUSES: String(reckoning.clauses), TOTAL: String(reckoning.clausesTotal) });
 
+  const afterimage = afterimageEvidence(ctx);
+  const purpose = purposeOf(ctx, afterimage);
   const view: EpilogueView = {
     id: w.ending.id,
     title: endingProse(ctx, def, 'title', def.title),
@@ -612,7 +658,8 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
     summary: `${endingSummary(ctx, w.ending.id, reckoning)} ${ledger}`,
     reckoning,
     read,
-    afterimage: afterimageEvidence(ctx),
+    afterimage,
+    ...(purpose ? { purpose } : {}),
     year: w.ending.year,
   };
   const beginning = beginningOf(ctx);
