@@ -277,7 +277,7 @@ async function importSave(): Promise<void> {
 
 async function exportSave(slot: string): Promise<void> {
   // The DOM disabled state can lag an event within a tick; guard the verb too.
-  if (exportingSlots.value.has(slot) || deletingDemoSlot.value !== null || confirmingDemoDelete.value === slot) return;
+  if (exportingSlots.value.has(slot) || deletingDemoSlot.value !== null) return;
   exportingSlots.value.add(slot);
   const revision = ++saveActionRevision;
   saveActionError.value = null;
@@ -549,7 +549,7 @@ onMounted(() => { void refreshSaves(); });
           </button>
           <button
             class="quiet small"
-            :disabled="exportingSlots.has(save.slot)"
+            :disabled="exportingSlots.has(save.slot) || deletingDemoSlot !== null"
             @click="exportSave(save.slot)"
             :aria-label="plain ? `Export saved demonstration ${save.slot}` : `Copy out demonstration ${save.slot}`"
           >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
@@ -559,12 +559,12 @@ onMounted(() => { void refreshSaves(); });
             :disabled="!libraryIsReady || selectingRun || libraryBusy || listingSaves || exportingSlots.has(save.slot)"
             :aria-label="plain ? `Remove saved demonstration ${save.slot}` : `Remove demonstration ${save.slot}`"
             @click="requestDeleteDemo(save.slot)"
-          >{{ plain ? 'Remove' : 'Remove' }}</button>
+          >Remove</button>
           <div v-else class="demo-delete-confirm">
             <p class="small">{{ plain ? 'Remove this saved demonstration? Your full campaigns will stay saved.' : 'Remove this Demonstration from the device? The full lines remain untouched.' }}</p>
             <button
               class="quiet small confirm-remove"
-              :disabled="deletingDemoSlot !== null"
+              :disabled="deletingDemoSlot !== null || exportingSlots.has(save.slot)"
               @click="deleteDemo(save.slot)"
             >{{ deletingDemoSlot === save.slot ? 'Removing…' : (plain ? 'Yes, remove this demonstration' : 'Yes, remove this Demonstration') }}</button>
             <button class="quiet small" :disabled="deletingDemoSlot !== null" @click="cancelDeleteDemo()">Cancel</button>
