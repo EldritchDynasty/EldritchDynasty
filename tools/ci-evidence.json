@@ -26,7 +26,7 @@
     },
     {
       "id": "editor",
-      "claim": "Open the authoring tool in Chromium: it boots, every view renders and builds a world, browsing is not editing, and a keystroke is not a re-index. Node cannot see a Vue proxy reaching structuredClone; only a browser can.",
+      "claim": "Open the shipped client and authoring tool in real Chromium. Client suites cover the front door, save/continuation paths, audio lifecycle and exported share images; editor suites verify boot, rendering, browsing without editing and keyboard input. Browser-only failures (including a Vue proxy reaching structuredClone) must block the required merge verdict.",
       "evidenceType": "deterministic",
       "currentTier": "merge-blocking",
       "proposedTier": "merge-blocking"
