@@ -12,6 +12,7 @@ import { declaredOutcomes, executeFrameOutcomeWitness as executeFrameOutcomeWitn
 import { evalCondition } from './conditions.js';
 import { dueArcSteps, startArc, startDecisionArcs } from './arcs.js';
 import { maintainCast } from '../people/succession.js';
+import { livingBlood } from '../ending.js';
 import { queueChoice, queueRecord, resolveChoice, resolveRecord } from './decisions.js';
 import {
   EXPRESSER_WAKING_LIFT, genomeOf, LATE_WAKING_AGE, phenotypeOf, rollAwakening,
@@ -3211,6 +3212,64 @@ describe('authored founding-bottleneck blood-count outcome witnesses', () => {
 });
 
 
+// #2042: the scene says "there is one of the blood left in this hall", so it
+// asks for exactly one. Its witnesses build that house — every other living
+// blood relative gone, the Head the whole of the family — and drive each
+// outcome through the production eligibility path, with a second relative
+// shown to keep it shut.
+describe('the last of the line is witnessed with exactly one living blood (#2042)', () => {
+  function lastOfTheLine(seed: number, extraBlood = false) {
+    const ctx = testWorld(content, seed);
+    ctx.world.generation = Math.max(ctx.world.generation, FREQUENCY_PROFILES.rare.minGeneration);
+    const head = ctx.world.people.living().find((person) => person.castSlots.includes('head'));
+    if (!head) throw new Error('last-of-the-line witness has no Head');
+    for (const person of ctx.world.people.blood(ctx.world.playerHouse)) {
+      if (person.status === 'alive' && person.id !== head.id) {
+        ctx.world.people.kill(person.id, ctx.world.year, 'removed by the last-of-the-line fixture');
+      }
+    }
+    if (extraBlood) place(ctx, { sex: 'male', age: 30, name: 'Witness Second Blood ' + seed });
+    return { ctx, head };
+  }
+
+  it('is shut at two living blood, open at one, and commits every outcome there', () => {
+    const event = content.event('the_last_of_the_line');
+    if (!event || event.interaction.kind === 'narration') throw new Error('the_last_of_the_line changed interaction');
+
+    const blocked = lastOfTheLine(20420, true).ctx;
+    expect(livingBlood(blocked.world)).toBe(2);
+    expect(evalCondition(event.conditions, blocked), 'two of the blood is not the last of the line').toBe(false);
+
+    const { ctx: selection, head } = lastOfTheLine(20421);
+    expect(livingBlood(selection.world)).toBe(1);
+    expect(evalCondition(event.conditions, selection)).toBe(true);
+    const slots = resolveSlots(event, selection, makeRng(20422));
+    expect(slots.ok && slots.fill.HEAD).toBe(head.id);
+    expect(ambientPool(selection).some((candidate) => candidate.id === event.id)).toBe(true);
+
+    const declared: string[] = [];
+    const witnessed: string[] = [];
+    let seed = 20430;
+    for (const choice of event.interaction.choices) {
+      for (const outcome of choice.outcomes) {
+        declared.push(outcomeKey(String(event.id), String(choice.id), String(outcome.id)));
+        const ctx = lastOfTheLine(seed).ctx;
+        const result = executeOutcomeWitness(ctx, event, {
+          choiceId: choice.id,
+          expectedOutcomeId: outcome.id,
+          rng: alwaysFirstWeighted(seed + 1),
+          targetWeightedOutcome: choice.outcomes.length > 1,
+        });
+        expect(result.ok, String(choice.id) + '/' + String(outcome.id) + ': ' + result.reason).toBe(true);
+        if (result.key) witnessed.push(result.key);
+        seed += 2;
+      }
+    }
+    expect(witnessed.sort()).toEqual(declared.sort());
+  });
+});
+
+
 describe('forcing rites cast either kind of boy and commit every guarded outcome (#1817)', () => {
   const ids = ['the_drowning', 'the_drowning_repeated', 'the_seven_lamp_vigil', 'the_dark_year_fast'];
 
@@ -5741,6 +5800,35 @@ describe('authored discontent-and-cadet outcome witnesses', () => {
     }
 
     expect(witnessed.sort()).toEqual(declared.sort());
+  });
+
+  // #1977: the roof letter was its writer's own. When he dies before his hall
+  // goes quiet, the continuation still fires, absent, and only the closure
+  // can be drawn — the arrangement's guard needs him alive.
+  it('executes the roof letter\'s closure as the due step after its writer dies', () => {
+    const ctx = hallFixture(4530, 40);
+    const opening = content.event('the_hall_that_waited')!;
+    const launched = executeOutcomeWitness(ctx, opening, {
+      expectedOutcomeId: 'it_is_about_a_roof', rng: alwaysFirstWeighted(4531), targetWeightedOutcome: true,
+    });
+    expect(launched.ok, launched.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()]
+      .find((entry) => entry.arc === 'inline_the_hall_that_waited__it_is_about_a_roof');
+    if (!instance) throw new Error('the roof letter started no continuation');
+    const writer = ctx.world.people.get(instance.bindings.COUSIN!)!;
+    ctx.world.people.kill(writer.id, ctx.world.year, 'before his hall goes quiet');
+    ctx.world.year = instance.dueYear!;
+    const step = dueArcSteps(ctx, makeRng(4532)).find((entry) => entry.instance.id === instance.id);
+    if (!step) throw new Error('the roof letter did not come due with its writer dead');
+    expect(step.absent).toBe(true);
+    const event = content.event('the_hall_stops_writing')!;
+    const result = executeOutcomeWitness(ctx, event, {
+      expectedOutcomeId: 'the_quiet_is_taken_for_peace', rng: alwaysFirstWeighted(4533),
+      targetWeightedOutcome: true, arcStep: step,
+    });
+    expect(result.ok, result.reason).toBe(true);
+    expect(result.key).toBe('the_hall_stops_writing||the_quiet_is_taken_for_peace');
+    expect(instance.status).toBe('ended');
   });
 });
 

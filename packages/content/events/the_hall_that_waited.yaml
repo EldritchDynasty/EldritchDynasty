@@ -90,13 +90,28 @@ events:
     repeatable: true
     tags: [succession, branches, forewarned]
     purposes: [change_relationship, change_standing, buy_patience]
+    # WHO OWES WHOM (#1977). The question belongs to the third hall and is put
+    # to the seal, so neither end of it dies with a man. HEAD is the office:
+    # whoever holds the seal when the answer falls due. COUSIN is the hall:
+    # if the writer dies first, whoever now speaks for that same hall brings
+    # the letter back. Another hall's cousin never does, and a hall with
+    # nobody grown left to speak for it ends the story.
     slots:
-      HEAD: { role: head }
-      COUSIN: { role: cadet, filters: [{ status: [alive] }] }
+      HEAD: { role: head, onMissing: recast }
+      COUSIN:
+        role: cadet
+        filters: [{ status: [alive] }, { age: { op: gte, value: 16 } }]
+        onMissing: { inherit: hall }
     body: >-
       Being told early is worth about a decade, and a decade is enough to do
       this without anybody losing anything in front of witnesses. {HEAD} has
       that long to decide what the third hall is actually owed.
+    inheritedBody: >-
+      The letter about the roof is still in the steward's box. Two people
+      stood at either end of it, and they are not both alive to see it
+      answered. {COUSIN} speaks for the third hall now, and nobody in that
+      hall pretends any more that it was about slates. {COUSIN.They}
+      ask{COUSIN.s} {HEAD} plainly what the third hall is owed.
     interaction:
       kind: choice
       choices:
@@ -106,7 +121,7 @@ events:
             - id: given
               weight: 100
               text: >-
-                {COUSIN} is given a thing that is genuinely his — an income
+                {COUSIN} is given a thing that is genuinely {COUSIN.theirs} — an income
                 that does not come through the main house, and a say in one
                 matter that the main house then does not overrule. It costs
                 money and it costs a small public amount of face, and the third
@@ -146,9 +161,17 @@ events:
     repeatable: true
     tags: [succession, branches]
     purposes: [change_relationship, change_standing, plant_rumour]
+    # The roof letter was one man's (#1977): four drafts, and an answer about
+    # a roof. If he dies before his hall goes quiet, the grievance goes into
+    # the ground with him. What is left is silence rather than an arrangement,
+    # and nobody is written down as slighted by a dead man. HEAD is the
+    # office, as above.
     slots:
-      HEAD: { role: head }
-      COUSIN: { role: cadet, filters: [{ status: [alive] }] }
+      HEAD: { role: head, onMissing: recast }
+      COUSIN: { role: cadet, filters: [{ status: [alive] }], onMissing: continue_absent }
+    absentBody: >-
+      {COUSIN} died without writing to the main house again. Nobody else in
+      the third hall took up letters after {COUSIN.them}, and nobody came to say why.
     body: >-
       Nobody comes to the main house to say it, which is how {HEAD} finds out
       last. The third hall has stopped writing letters, and a hall that has
@@ -159,6 +182,7 @@ events:
       outcomes:
         - id: they_arrange_it_between_themselves
           weight: 100
+          onlyIf: { slot: COUSIN, filters: [{ status: [alive] }] }
           text: >-
             What they do instead is arrange things. A marriage the main house
             hears about afterwards. A lease signed by a man who has no business
@@ -176,6 +200,14 @@ events:
                 sentiment: -30,
                 grudge: { severity: 40, inheritance: all_blood },
               }
+        - id: the_quiet_is_taken_for_peace
+          weight: 100
+          onlyIf: { slot: COUSIN, filters: [{ not: { status: [alive] } }] }
+          text: >-
+            {HEAD} takes the quiet for peace, because quiet is the cheapest
+            thing a hall can send and it costs nothing to believe. The letter
+            about the roof goes into a drawer with the answer pinned to it.
+          effects: []
     rumour: { id: rumour_the_third_hall_arranges_itself, accuracy: 0.4, spread: 3 }
 
 proseVariants:
@@ -220,11 +252,11 @@ proseVariants:
     plainenglish: >-
       Give them something official: a post, an income, or a say in decisions.
   - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=give_them_something_real].outcomes[id=given].text"
-    of: "6ee58f1d18e614f1"
+    of: "4d268f5bd2a39787"
     plainenglish: >-
-      {COUSIN} receives his own source of income, separate from the main
-      house. He also gets a say in one decision, and the main house respects
-      that decision. This costs money and a small amount of public standing.
+      {COUSIN} receives something that is {COUSIN.theirs} alone: an income
+      separate from the main house, and a say in one decision that the main
+      house then respects. This costs money and a small amount of public standing.
       For about thirty years, the third hall stops counting how long it has
       waited.
   - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].interaction.choices[id=promise_them].label"
@@ -258,3 +290,23 @@ proseVariants:
       rebellion, but it is not obedience either. By the time the main house
       understands what is happening, the arrangements have lasted fifteen
       years and become routine.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_is_answered].inheritedBody"
+    of: "7ec5b9cade814566"
+    plainenglish: >-
+      The letter about the roof is still in the steward's box. The two people
+      it passed between are not both alive to see it answered. {COUSIN} speaks
+      for the third hall now. Nobody there pretends any longer that the letter
+      was about roof slates. {COUSIN.They} ask{COUSIN.s} {HEAD} directly what
+      the third hall is owed.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_stops_writing].absentBody"
+    of: "d9b779a59d9052d9"
+    plainenglish: >-
+      {COUSIN} died without writing to the main house again. Nobody else in
+      the third hall started writing letters after {COUSIN.them}, and nobody
+      came to explain why.
+  - address: "content:events/the_hall_that_waited.yaml#events[id=the_hall_stops_writing].interaction.outcomes[id=the_quiet_is_taken_for_peace].text"
+    of: "739ed831b06533ad"
+    plainenglish: >-
+      {HEAD} assumes the silence means peace. Silence costs a hall nothing to
+      send, and believing in it costs nothing either. The letter about the
+      roof is put away in a drawer with its answer attached.
