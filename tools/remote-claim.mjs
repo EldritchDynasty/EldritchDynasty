@@ -57,14 +57,56 @@ function validateAgent(agent) {
 }
 
 function validatePaths(raw) {
-  const paths = String(raw ?? '').trim().split(/[,\s]+/).filter(Boolean);
-  if (!raw || paths.length === 0 || paths.some((p) =>
+  // The comment is data, not a shell command. Only a complete quoted token may
+  // contain spaces: bare paths keep their legacy comma/whitespace separators.
+  // Commas inside quotes are deliberately unsupported: agents.mjs splits the
+  // comma-separated argv token it receives, and cannot preserve a literal comma.
+  const invalid = () => syntaxError(
+    'paths must be repository paths separated by commas or whitespace; quote an entire path containing spaces',
+  );
+  const paths = [];
+  let path = '';
+  let quote = null;
+  let closedQuote = false;
+  const finish = () => {
+    if (quote || (closedQuote && !path)) throw invalid();
+    if (path) {
+      paths.push(path);
+      path = '';
+      closedQuote = false;
+    }
+  };
+
+  for (const char of String(raw ?? '').trim()) {
+    if (quote) {
+      if (char === quote) {
+        quote = null;
+        closedQuote = true;
+      } else if (char === ',') {
+        throw invalid();
+      } else {
+        path += char;
+      }
+    } else if (char === '"' || char === "'") {
+      if (path || closedQuote) throw invalid();
+      quote = char;
+    } else if (char === ',' || /\s/.test(char)) {
+      finish();
+    } else {
+      if (closedQuote) throw invalid();
+      path += char;
+    }
+  }
+  finish();
+
+  if (paths.length === 0 || paths.some((p) =>
     p.startsWith('/')
     || p.startsWith('--')
     || p.includes('..')
     || p.includes('//')
-    || !/^[A-Za-z0-9._/*-]+$/.test(p))) {
-    throw syntaxError('paths must be a non-empty repository path list separated by commas or whitespace');
+    || p.trim() !== p
+    || !/^[A-Za-z0-9._/* -]+$/.test(p))) {
+    throw invalid();
   }
   return paths.join(',');
 }
