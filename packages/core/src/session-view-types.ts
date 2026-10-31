@@ -184,7 +184,7 @@ export interface SessionView {
   interventions?: InterventionView[];
   /** Names on kept Chronicle pages, including ancestors outside the window and living halls.
    * This is a read-model index, not a new saved-world record. */
-  chroniclePeople: { id: string; name: string }[];
+  chroniclePeople: { id: string; name: string; epithet?: string }[];
   /** The frame (concept §2, issue #13) — separate from `chronicle` on purpose. See `world.frame`. */
   frame: FrameEntry[];
   docket: SessionDecisionView[];
