@@ -246,7 +246,11 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
       if (policy === 'recast') {
         const res = resolveSlots({ ...event, slots: { [slotId]: spec! } } as never, ctx, rng);
         const recast = res.ok ? soleCast(res.fill, slotId) : undefined;
-        if (recast) { inst.bindings[slotId] = recast; inherited = true; }
+        // A cadet recalled to take the seal is the new Head and still the
+        // writer; the story cannot cast one man on both ends of its letter.
+        const doubled = recast !== undefined
+          && Object.entries(inst.bindings).some(([other, id]) => other !== slotId && id === recast);
+        if (recast && !doubled) { inst.bindings[slotId] = recast; inherited = true; }
         else { cancelled = true; break; }
         continue;
       }

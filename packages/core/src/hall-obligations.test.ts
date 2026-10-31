@@ -179,6 +179,16 @@ describe('inherit: hall passes a branch demand to the same hall (#1977)', () => 
     expect(instance.bindings.COUSIN).toBe(writer.id);
   });
 
+  it('ends the story when the new Head is the writer himself, recalled to the seat', () => {
+    const { ctx, instance, head, writer } = letter({ HEAD: 'recast', COUSIN: { inherit: 'hall' } });
+    head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
+    ctx.world.people.kill(head.id, ctx.world.year, 'the long reign ends');
+    writer.castSlots = [...writer.castSlots, 'head'];
+    expect(due(ctx, instance)).toHaveLength(0);
+    expect(instance.status).toBe('cancelled');
+    expect(instance.bindings.HEAD).toBe(head.id);
+  });
+
   it('cancels when both have gone and only the office can pass', () => {
     const { ctx, instance, head, writer } = letter({ HEAD: 'recast' });
     head.castSlots = head.castSlots.filter((slot) => slot !== 'head');
