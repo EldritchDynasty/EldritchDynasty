@@ -10,10 +10,10 @@ export interface AfterimageSource {
 }
 
 export interface AfterimageEvidence {
-  people: { person: string; name: string; sources: AfterimageSource[] }[];
+  people: { person: string; name: string; epithet?: string; sources: AfterimageSource[] }[];
   /** The last seal-holder's surviving recorded ancestry, including archived people. */
-  line?: { id: string; name: string; head: boolean; record: { parents: { mother?: string; father?: string } } }[];
-  spent?: { person: string; name: string; source: AfterimageSource };
+  line?: { id: string; name: string; epithet?: string; head: boolean; record: { parents: { mother?: string; father?: string } } }[];
+  spent?: { person: string; name: string; epithet?: string; source: AfterimageSource };
   /** Smallest preserved generation-opening count, not a continuous population minimum. */
   brush?: { count: number; source: AfterimageSource };
   embellishment?: AfterimageSource;
@@ -39,11 +39,15 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
   const written = pages.filter((page) => page.text !== null);
-  const people = new Map<string, { person: string; name: string; sources: AfterimageSource[] }>();
+  const people = new Map<string, { person: string; name: string; epithet?: string; sources: AfterimageSource[] }>();
   const mention = (id: string, source: AfterimageSource): void => {
     const p = w.people.get(id);
     if (!p) return;
-    const reading = people.get(id) ?? { person: id, name: p.name, sources: [] };
+    const reading = people.get(id) ?? {
+      person: id, name: p.name,
+      ...(p.epithet ? { epithet: p.epithet } : {}),
+      sources: [],
+    };
     reading.sources.push(source);
     people.set(id, reading);
   };
@@ -83,7 +87,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         if (effect.rite === 'vessel' && p.status !== 'vessel_consumed') continue;
         if (effect.rite === 'unmaking' && p.status !== 'dead') continue;
         if (!spent || page.year < spent.source.year) {
-          spent = { person: id, name: p.name, source: sourceOf(page) };
+          spent = { person: id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}), source: sourceOf(page) };
         }
       }
     }
@@ -110,7 +114,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     if (!p) continue;
     // Exactly session.ts's record.parents projection. No true parentage,
     // phenotype or inferred missing ancestor crosses the seam.
-    line.push({ id, name: p.name, head: id === lastHead, record: { parents: { ...p.claimedParents } } });
+    line.push({
+      id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}),
+      head: id === lastHead, record: { parents: { ...p.claimedParents } },
+    });
     for (const parent of [p.claimedParents.father, p.claimedParents.mother]) {
       if (parent) ancestors.push(parent);
     }
