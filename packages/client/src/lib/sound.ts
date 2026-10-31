@@ -338,6 +338,8 @@ export class Sound {
   private out: GainNode | null = null;
   private drone: { nodes: AudioScheduledSourceNode[]; gain: GainNode } | null = null;
   private lastDrone: DroneInput | null = null;
+  /** Buffers belong to their AudioContext, not to individual page turns. Weak keys never retain a closed device. */
+  private readonly noiseBuffers = new WeakMap<AudioContext, AudioBuffer>();
   /** What the playing drone was built from, so an unchanged one is left alone. */
   private droneKey = '';
   private readonly ctors: readonly Ctor[];
@@ -554,7 +556,7 @@ export class Sound {
     const made: AudioScheduledSourceNode[] = [];
     for (const v of score.voices) {
       const t0 = at + v.delay;
-      const source = v.type === 'noise' ? noise(ctx) : tone(ctx, v, t0);
+      const source = v.type === 'noise' ? noise(ctx, this.noiseBuffers) : tone(ctx, v, t0);
       const gain = ctx.createGain();
 
       // Graph first, so nothing is ever started into nowhere.
@@ -629,15 +631,20 @@ function tone(ctx: AudioContext, v: Voice, t0: number): OscillatorNode {
 }
 
 /**
- * A second of white noise on a loop. One buffer per context would be tidier;
- * one per burst is two hundred bytes and a garbage collection, and the page
- * turn happens once a year.
+ * Half a second of white noise on a loop. Buffer allocation is substantial at
+ * real device sample rates, so the page's two bursts and all later page turns
+ * reuse one buffer per context. Separate sources still have independent filters
+ * and envelopes. A WeakMap does not retain an audio device after it closes.
  */
-function noise(ctx: AudioContext): AudioBufferSourceNode {
-  const frames = Math.floor(ctx.sampleRate * 0.5);
-  const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+function noise(ctx: AudioContext, buffers: WeakMap<AudioContext, AudioBuffer>): AudioBufferSourceNode {
+  let buffer = buffers.get(ctx);
+  if (!buffer) {
+    const frames = Math.floor(ctx.sampleRate * 0.5);
+    buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < frames; i++) data[i] = Math.random() * 2 - 1;
+    buffers.set(ctx, buffer);
+  }
   const src = ctx.createBufferSource();
   src.buffer = buffer;
   src.loop = true;

@@ -227,6 +227,7 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     sources: FakeSource[] = [];
     gains: { gain: ReturnType<typeof param> }[] = [];
     calls: string[] = [];
+    buffers: unknown[] = [];
     constructor() {
       if (options.refuse) throw new Error('NotSupportedError: no audio device');
       made.push(this);
@@ -241,7 +242,9 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     createBufferSource() { return this.source(); }
     createBuffer(_channels: number, frames: number) {
       const data = new Float32Array(frames);
-      return { getChannelData: () => data };
+      const buffer = { getChannelData: () => data };
+      this.buffers.push(buffer);
+      return buffer;
     }
     createBiquadFilter() { return { type: '', frequency: param(), Q: param(), connect: <T>(to: T) => to }; }
     resume() { return this.settle('resume', 'running'); }
@@ -385,6 +388,27 @@ describe('the player, over a fake engine', () => {
     expect(ctx.sources).toHaveLength(cueScore('page').voices.length + droneScore(WARM)!.voices.length);
     expect(ctx.sources.every((source) => source.started !== undefined)).toBe(true);
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+  });
+
+  it('reuses page noise within a context, but makes a new buffer for a replacement context', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page'); // two independently filtered noise bursts
+    s.cue('page'); // another turn of the page
+
+    const first = e.made[0]!;
+    const noiseSources = first.sources.filter((source) => source.buffer !== null);
+    expect(noiseSources.length).toBeGreaterThan(2);
+    expect(first.buffers, 'each page burst allocated another noise buffer').toHaveLength(1);
+    expect(new Set(noiseSources.map((source) => source.buffer)).size).toBe(1);
+
+    const original = first.buffers[0];
+    s.close();
+    s.cue('page');
+    const replacement = e.made[1]!;
+    expect(replacement.buffers).toHaveLength(1);
+    expect(replacement.buffers[0], 'a new audio device reused the old context buffer').not.toBe(original);
   });
 
   it('turns the whole bed down and never up', () => {
