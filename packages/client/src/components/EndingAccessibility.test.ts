@@ -314,6 +314,32 @@ describe('every refusal is worded in both modes', () => {
     expect(plain).not.toBe(original);
   });
 
+  it.each([
+    {
+      missing: ['house'],
+      original: "The code left a name out. Give the house's name.",
+      plain: 'Enter the missing name: the family name.',
+    },
+    {
+      missing: ['house', 'friends'],
+      original: "The code left names out. Give the house's name and each friend's name.",
+      plain: "Enter the missing names: the family name and each friend's name.",
+    },
+    {
+      missing: ['founder', 'house', 'friends'],
+      original: "The code left names out. Give the founder's name, the house's name, and each friend's name.",
+      plain: "Enter the missing names: the founder's name, the family name, and each friend's name.",
+    },
+  ] satisfies Array<{
+    missing: Extract<ShareCodeProblem, { kind: 'names_needed' }>['missing'];
+    original: string;
+    plain: string;
+  }>)('names omitted from a share code in both modes (case %#)', ({ missing, original, plain }) => {
+    const problem: ShareCodeProblem = { kind: 'names_needed', missing };
+    expect(shareCodeProblem(problem, 'original')).toBe(original);
+    expect(shareCodeProblem(problem, 'plainenglish')).toBe(plain);
+  });
+
   it('passes the signing\'s own refusal through untouched', () => {
     expect(shareCodeProblem({ kind: 'refused', reason: 'that name is taken' }, 'plainenglish')).toBe('that name is taken');
   });
