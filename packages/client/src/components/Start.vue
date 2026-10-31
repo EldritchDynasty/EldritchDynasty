@@ -46,6 +46,7 @@ const PLAIN_ERRORS: Record<string, string> = {
   'That saved run could not be read.': 'Could not load this saved game.',
   'That file was not a run this version can read.': 'This file is not a saved game this version can open.',
   'That saved run could not be written out.': 'Could not export this saved game.',
+  'That demonstration could not be removed. Try again.': 'Could not remove this saved demonstration. Try again.',
   'The Library could not be cleared. Your saved houses are still here. Try again.': 'Could not clear the completed games. Nothing was removed. Try again.',
   'That house could not be removed from the Library. Try again.': 'Could not remove this completed house. Try again.',
 };
@@ -85,6 +86,9 @@ const loadingSlot = ref<string | null>(null);
 // Two rapid clicks must not open duplicate host export pickers for one slot.
 // Different slots remain independently exportable while another is pending.
 const exportingSlots = ref(new Set<string>());
+/** Explicit confirmation before deleting a separately stored demo. */
+const confirmingDemoDelete = ref<string | null>(null);
+const deletingDemoSlot = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 /** A slow host recovery must not overlap a second Library read. */
 const retryingLibrary = ref(false);
@@ -97,7 +101,7 @@ const clearingLibrary = ref(false);
 /** An in-progress Library read or write must settle before selecting a saved run. */
 const libraryBusy = computed(() => retryingLibrary.value || clearingLibrary.value || removingRun.value !== null);
 /** A saved-run selection can archive an ended run; it must not race Library edits. */
-const selectingRun = computed(() => resuming.value || loadingSlot.value !== null || importingSave.value);
+const selectingRun = computed(() => resuming.value || loadingSlot.value !== null || importingSave.value || deletingDemoSlot.value !== null);
 /**
  * THE FRONT DOOR OFFERS A HOUSE, NOT AN IMPLEMENTATION DETAIL (issue #67).
  *
@@ -273,7 +277,7 @@ async function importSave(): Promise<void> {
 
 async function exportSave(slot: string): Promise<void> {
   // The DOM disabled state can lag an event within a tick; guard the verb too.
-  if (exportingSlots.value.has(slot)) return;
+  if (exportingSlots.value.has(slot) || deletingDemoSlot.value !== null || confirmingDemoDelete.value === slot) return;
   exportingSlots.value.add(slot);
   const revision = ++saveActionRevision;
   saveActionError.value = null;
@@ -287,6 +291,41 @@ async function exportSave(slot: string): Promise<void> {
     }
   } finally {
     exportingSlots.value.delete(slot);
+  }
+}
+
+function requestDeleteDemo(slot: string): void {
+  // Both UI and API enforce the demo namespace: this cannot touch full saves.
+  if (!isDemoSaveSlot(slot) || !demoSaves.value.some((save) => save.slot === slot)
+    || !libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value
+    || listingSaves.value || exportingSlots.value.has(slot)) return;
+  confirmingDemoDelete.value = slot;
+  saveActionError.value = null;
+}
+
+function cancelDeleteDemo(): void {
+  if (deletingDemoSlot.value !== null) return;
+  confirmingDemoDelete.value = null;
+  saveActionError.value = null;
+}
+
+async function deleteDemo(slot: string): Promise<void> {
+  if (!isDemoSaveSlot(slot) || confirmingDemoDelete.value !== slot
+    || !demoSaves.value.some((save) => save.slot === slot)
+    || !libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value
+    || listingSaves.value || exportingSlots.value.has(slot)) return;
+  deletingDemoSlot.value = slot;
+  saveActionError.value = null;
+  try {
+    await props.actions.deleteDemoSave(slot);
+    // Remove only after the host confirms deletion. A failure retains the
+    // visible entry, its export button and a retryable confirmation.
+    saves.value = saves.value.filter((save) => save.slot !== slot);
+    confirmingDemoDelete.value = null;
+  } catch {
+    saveActionError.value = { slot, message: 'That demonstration could not be removed. Try again.' };
+  } finally {
+    deletingDemoSlot.value = null;
   }
 }
 
@@ -500,7 +539,7 @@ onMounted(() => { void refreshSaves(); });
 
     <section v-if="demoSaves.length" class="demo-saved panel" :aria-label="plain ? 'Saved demonstrations' : 'Demonstrations kept'">
       <h2>{{ plain ? 'Saved demonstrations' : 'Demonstrations kept' }}</h2>
-      <p class="dim small">{{ plain ? 'These 33-year games are separate from your full campaigns. Continue or export one here.' : 'These short accounts remain apart from the full lines. Return to one, or copy it out.' }}</p>
+      <p class="dim small">{{ plain ? 'These 33-year games are separate from your full campaigns. Continue, export or remove one here.' : 'These short accounts remain apart from the full lines. Return to one, copy it out, or remove it.' }}</p>
       <ul>
         <li v-for="save in demoSaves" :key="save.slot">
           <button class="quiet" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="load(save.slot)">
@@ -514,6 +553,22 @@ onMounted(() => { void refreshSaves(); });
             @click="exportSave(save.slot)"
             :aria-label="plain ? `Export saved demonstration ${save.slot}` : `Copy out demonstration ${save.slot}`"
           >{{ exportingSlots.has(save.slot) ? (plain ? 'Exporting…' : 'Copying out…') : (plain ? 'Export' : 'Copy out') }}</button>
+          <button
+            v-if="confirmingDemoDelete !== save.slot"
+            class="quiet small"
+            :disabled="!libraryIsReady || selectingRun || libraryBusy || listingSaves || exportingSlots.has(save.slot)"
+            :aria-label="plain ? `Remove saved demonstration ${save.slot}` : `Remove demonstration ${save.slot}`"
+            @click="requestDeleteDemo(save.slot)"
+          >{{ plain ? 'Remove' : 'Remove' }}</button>
+          <div v-else class="demo-delete-confirm">
+            <p class="small">{{ plain ? 'Remove this saved demonstration? Your full campaigns will stay saved.' : 'Remove this Demonstration from the device? The full lines remain untouched.' }}</p>
+            <button
+              class="quiet small confirm-remove"
+              :disabled="deletingDemoSlot !== null"
+              @click="deleteDemo(save.slot)"
+            >{{ deletingDemoSlot === save.slot ? 'Removing…' : (plain ? 'Yes, remove this demonstration' : 'Yes, remove this Demonstration') }}</button>
+            <button class="quiet small" :disabled="deletingDemoSlot !== null" @click="cancelDeleteDemo()">Cancel</button>
+          </div>
           <p v-if="saveActionError?.slot === save.slot" class="rubric small save-action-error" role="status">
             {{ displayError(saveActionError.message) }}
           </p>
