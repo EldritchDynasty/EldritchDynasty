@@ -49,6 +49,44 @@ describe('ladder preparation reads the existing diagnosis (#1978)', () => {
     } finally { wrapper.unmount(); }
   });
 
+  it.each(['original', 'plainenglish'] as const)('opens the diagnosed candidate, not the foremost (%s)', async (mode) => {
+    const ascension = ladder();
+    // The strongest person is not necessarily the candidate under diagnosis.
+    ascension.diagnosis = { ...ascension.diagnosis!, person: 'p2', name: 'Maren' };
+    const before = structuredClone(ascension);
+    const wrapper = mount(LadderPath, { props: { ascension, proseMode: mode } });
+    try {
+      const candidate = wrapper.get('.preparation-guide .candidate-link');
+      expect(candidate.element.tagName).toBe('BUTTON');
+      expect(candidate.attributes('type')).toBe('button');
+      expect(candidate.text()).toBe('Maren');
+      await candidate.trigger('click');
+      expect(wrapper.emitted('look')).toEqual([['p2']]);
+      expect(ascension).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+
+  it('shows an unlinked name when no ID is available and updates safely with a new diagnosis', async () => {
+    const ascension = ladder();
+    const wrapper = mount(LadderPath, { props: { ascension } });
+    try {
+      expect(wrapper.get('.next-rung').text()).toContain('Maren');
+      expect(wrapper.find('.candidate-link').exists()).toBe(false);
+      await wrapper.setProps({ ascension: {
+        ...ascension, diagnosis: { ...ascension.diagnosis!, person: 'p3', name: 'Elian' },
+      } });
+      const candidate = wrapper.get('.candidate-link');
+      expect(candidate.text()).toBe('Elian');
+      await candidate.trigger('click');
+      expect(wrapper.emitted('look')).toEqual([['p3']]);
+      await wrapper.setProps({ ascension: {
+        ...ascension, diagnosis: { ...ascension.diagnosis!, person: 'p4', name: undefined },
+      } });
+      expect(wrapper.find('.candidate-link').exists()).toBe(false);
+      expect(wrapper.text()).not.toContain('Elian');
+    } finally { wrapper.unmount(); }
+  });
+
   it('replaces the visible guidance on a new engine reading without retaining old advice', async () => {
     const ascension = ladder();
     const wrapper = mount(LadderPath, { props: { ascension } });
