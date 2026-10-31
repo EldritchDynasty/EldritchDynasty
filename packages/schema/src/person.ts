@@ -80,7 +80,7 @@ export type RetainerRole = z.infer<typeof RetainerRoleS>;
 export const RetainerContractS = z.object({
   role: RetainerRoleS,
   term: z.enum(['seasonal', 'yearly', 'lifetime', 'bonded', 'hereditary']),
-  wage: z.number(),                       // in marks per year
+  wage: z.number(),                       // marks per year; bonds require positive repayment
   loyalty: z.number().min(0).max(100).default(50),
   boundTo: z.string(),
   onEmployerDeath: z.enum(['released', 'passes_to_heir', 'freed', 'follows_named']).default('passes_to_heir'),
