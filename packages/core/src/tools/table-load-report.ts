@@ -133,10 +133,25 @@ export function summariseTableLoad(runs: readonly Run[]) {
   }).filter(row => row !== undefined));
 }
 
+/**
+ * Every requested sample must have its own exactly representable integer
+ * seed. Checking each input independently is insufficient: at the upper
+ * boundary, seedBase + 1 and seedBase + 2 can round to the same Number and
+ * masquerade as two independent observations (#2173).
+ */
+export function assertTableLoadSampleRange(runs: number, seedBase: number): void {
+  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) {
+    throw new Error('Expected positive runs and integer seed base');
+  }
+  if (!Number.isSafeInteger(seedBase + (runs - 1))) {
+    throw new Error('Table-load sample range exceeds the safe integer seed limit');
+  }
+}
+
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/table-load-report.ts')) {
   const runs = Number(process.argv[2] ?? 24);
   const seedBase = Number(process.argv[3] ?? 199200);
-  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) throw new Error('Expected positive runs and integer seed base');
+  assertTableLoadSampleRange(runs, seedBase);
   const content = loadContent();
   const samples: Run[] = [];
   const controls: { seed: number; campaign: string; policy: string; equal: boolean }[] = [];
