@@ -30,7 +30,7 @@ Shape a bloodline through marriages and inheritance, then decide what its Chroni
 ## About This Game
 
 ```text
-Your family's Chronicle is evidence you can falsify, and your descendants inherit whichever account you leave behind. When the Record opens, record what happened, omit it, or embellish it for standing now. An omission or embellishment can leave a discrepancy that the creditor may later read back.
+Your family's Chronicle is evidence you can falsify, and your descendants inherit whichever account you leave behind. When the Record opens, record what happened, omit it, or embellish it for standing now. Recording the truth may cost the house standing but preserve useful knowledge for descendants; an omission or embellishment can leave a discrepancy the creditor may later read back.
 
 In 1042, your ancestor signed something. In 1542, the other party comes to collect.
 
@@ -39,8 +39,6 @@ Eldritch Dynasty is a text-based generational strategy game about one family, on
 You do not play a hero. You play the will of a bloodline. Across generations you choose who marries whom, who inherits, who is spent, what the family records, and what it leaves conveniently blank.
 
 The people in the house inherit genomes rather than rolled stat blocks. Desired traits can concentrate. Recessives can surface. Marrying outward can thin the blood, while marrying inward can preserve exactly the thing that ruins the descendants you were trying to strengthen.
-
-The chronicle is not a log. It is evidence you are allowed to edit. Record the truth and descendants inherit useful knowledge at a social cost. Omit it and they may repeat the mistake, while the missing account can leave a discrepancy for later readers. Embellish it and the house gains standing now while leaving a discrepancy that somebody may prove centuries later.
 
 Every generation leaves a family tree and a book behind it. Cadet branches split away. Ages begin and end. Houses remember insults differently. The Church keeps its own version. The final reckoning reads the record the family chose to make, not a neutral transcript of what really happened.
 
