@@ -422,6 +422,40 @@ describe('the connector-only remote claim transport', () => {
     ]);
   });
 
+  it('preserves quoted space-containing paths without interpreting shell syntax', async () => {
+    const { parseClaimRequest, argsFor } = await module();
+    for (const path of ['"market research.md"', "'market research.md'"]) {
+      const request = parseClaimRequest(
+        `/claim 2091 --agent chatgpt/issue-2091-paths --paths ${path} tools/agents.mjs,docs/PARALLEL.md`,
+      );
+      expect(request.paths).toBe('market research.md,tools/agents.mjs,docs/PARALLEL.md');
+      expect(argsFor(request)).toEqual([
+        'take', '2091', '--agent', 'chatgpt/issue-2091-paths',
+        '--paths', 'market research.md,tools/agents.mjs,docs/PARALLEL.md',
+      ]);
+    }
+
+    for (const bad of [
+      '"unfinished',
+      '"a,b.md"',
+      '"name with space"suffix',
+      'part" name.md"',
+      '""',
+      '"   "',
+      '"../outside path"',
+      '"/absolute path"',
+      '"foo//bar path"',
+      '"$HOME/secret path"',
+      '"file; touch exploit"',
+      '"file\\\\ name"',
+      '"a\\tb"',
+    ]) {
+      expect(() => parseClaimRequest(
+        `/claim 2091 --agent chatgpt/issue-2091-paths --paths ${bad}`,
+      ), bad).toThrow(/Expected one of:/);
+    }
+  });
+
   it('uses the same canonical lane-content and lane-gates mutex through both remote transports', async () => {
     const { parseClaimRequest, argsFor } = await module();
     for (const [name, lane] of [['lane-content', 'content'], ['lane-gates', 'gates']] as const) {
@@ -550,7 +584,8 @@ describe('the connector-only remote claim transport', () => {
       git(session, 'remote', 'add', 'origin', join(dir, 'origin.git'));
       git(session, 'push', '-q', 'origin', 'HEAD:refs/heads/main',
         'HEAD:refs/heads/chatgpt/issue-93-topic', 'HEAD:refs/heads/chatgpt/issue-93-rival',
-        'HEAD:refs/heads/chatgpt/issue-93-lane');
+        'HEAD:refs/heads/chatgpt/issue-93-lane',
+        'HEAD:refs/heads/chatgpt/issue-93-quoted');
       const base = git(session, 'rev-parse', 'HEAD');
 
       // What a connector does: a branch, and one file committed on it.
@@ -612,6 +647,20 @@ describe('the connector-only remote claim transport', () => {
       expect(laneClaim).toContain(`agent: ${laneAgent}`);
       expect(laneClaim).toContain('lane: content');
       expect(resultOf(laneAgent)).toContain('held: lane-content');
+
+      // The claim commit is the actual mutex metadata; this must persist one
+      // complete filename, not separate `market` and `research.md` paths.
+      const quotedAgent = 'chatgpt/issue-93-quoted';
+      const quotedSha = request(quotedAgent,
+        `/claim 94 --agent ${quotedAgent} --paths "market research.md" tools/agents.mjs`);
+      expect(run(quotedAgent, quotedSha)).toBe(0);
+      const quotedClaim = git(dir, '--git-dir', join(dir, 'origin.git'),
+        'log', '-1', '--format=%B', 'claim/94');
+      expect(quotedClaim).toContain('path: market research.md');
+      expect(quotedClaim).toContain('path: tools/agents.mjs');
+      expect(quotedClaim).not.toMatch(/^path: market$/m);
+      expect(quotedClaim).not.toMatch(/^path: research.md$/m);
+      expect(resultOf(quotedAgent)).toContain('held: 94');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

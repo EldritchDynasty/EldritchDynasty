@@ -641,3 +641,100 @@ describe('legacy Preferences corruption is not absence (#1259)', () => {
     expect(removals).toEqual(['ed:library']);
   });
 });
+
+
+describe('native save filenames are canonical slot identities (#2109)', () => {
+  const canonical = JSON.stringify({ format: 41, year: 1450, savedAt: '2026-10-31T00:00:00Z' });
+  const alias = JSON.stringify({ format: 41, year: 1200 });
+  const legacy = JSON.stringify({ format: 41, year: 1100 });
+
+  it('does not let an alias mask an intact autosave, regardless of directory order', async () => {
+    for (const entries of [
+      ['auto%73ave.json', 'autosave.json'],
+      ['autosave.json', 'auto%73ave.json'],
+    ]) {
+      const reads: string[] = [];
+      const removals: string[] = [];
+      const files = {
+        async readdir() { return { files: entries.map(name => ({ name, type: 'file' as const })) }; },
+        async readFile({ path }: { path: string }) {
+          reads.push(path);
+          const name = path.split('/').at(-1);
+          return { data: name === 'autosave.json' ? canonical : alias };
+        },
+        async writeFile() { throw new Error('native autosave already exists'); },
+        async deleteFile() {},
+      };
+      const prefs = {
+        async keys() { return { keys: ['ed:save:autosave'] }; },
+        async get() { return { value: legacy }; },
+        async remove({ key }: { key: string }) { removals.push(key); },
+      };
+      const store = mobileStorage(files, prefs);
+      await expect(store.listSaves()).resolves.toEqual([
+        { slot: 'autosave', format: 41, year: 1450, savedAt: '2026-10-31T00:00:00Z' },
+      ]);
+      await expect(store.readSave('autosave')).resolves.toEqual(JSON.parse(canonical));
+      expect(reads).toEqual(['eldritch/saves/autosave.json', 'eldritch/saves/autosave.json']);
+      expect(removals).toEqual(['ed:save:autosave']);
+    }
+  });
+
+  it('does not let a noncanonical alias suppress migration of a real legacy slot', async () => {
+    const bytes = new Map([['eldritch/saves/auto%73ave.json', alias]]);
+    const writes: string[] = [];
+    const removals: string[] = [];
+    const files = {
+      async readdir() { return { files: [{ name: 'auto%73ave.json', type: 'file' as const }] }; },
+      async readFile({ path }: { path: string }) {
+        const data = bytes.get(path);
+        if (data === undefined) throw Object.assign(new Error('missing'), { code: 'OS-PLUG-FILE-0008' });
+        return { data };
+      },
+      async writeFile({ path, data }: { path: string; data: string }) {
+        writes.push(path);
+        bytes.set(path, data);
+      },
+      async deleteFile() {},
+    };
+    const prefs = {
+      async keys() { return { keys: ['ed:save:autosave'] }; },
+      async get() { return { value: legacy }; },
+      async remove({ key }: { key: string }) { removals.push(key); },
+    };
+    const store = mobileStorage(files, prefs);
+    await expect(store.listSaves()).resolves.toEqual([{ slot: 'autosave', format: 41, year: 1100 }]);
+    expect(writes).toEqual(['eldritch/saves/autosave.json']);
+    expect(removals).toEqual(['ed:save:autosave']);
+    expect(bytes.get('eldritch/saves/auto%73ave.json')).toBe(alias);
+    await expect(store.readSave('autosave')).resolves.toEqual(JSON.parse(legacy));
+  });
+
+  it('retains canonical encodings for spaces, literal percent, slashes and Unicode', async () => {
+    const slot = 'A %/世';
+    const name = encodeURIComponent(slot) + '.json';
+    const path = 'eldritch/saves/' + name;
+    const reads: string[] = [];
+    const files = {
+      async readdir() { return { files: [{ name, type: 'file' as const }, { name: 'A%20%25%2f%e4%b8%96.json', type: 'file' as const }] }; },
+      async readFile({ path: file }: { path: string }) {
+        reads.push(file);
+        if (file !== path) throw new Error('unexpected alias read');
+        return { data: canonical };
+      },
+      async writeFile() {},
+      async deleteFile() {},
+    };
+    const prefs = {
+      async keys() { return { keys: [] as string[] }; },
+      async get() { return { value: null }; },
+      async remove() {},
+    };
+    const store = mobileStorage(files, prefs);
+    await expect(store.listSaves()).resolves.toEqual([
+      { slot, format: 41, year: 1450, savedAt: '2026-10-31T00:00:00Z' },
+    ]);
+    await expect(store.readSave(slot)).resolves.toEqual(JSON.parse(canonical));
+    expect(reads).toEqual([path, path]);
+  });
+});

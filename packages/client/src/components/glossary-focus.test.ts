@@ -40,6 +40,37 @@ describe('in-place Standing disclosure', () => {
     expect(wrapper.text()).toBe(text);
   });
 
+  it('starts each new line and prose mode with its own collapsed disclosure', async () => {
+    const wrapper = render('Standing was raised.');
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('true');
+    expect(wrapper.find('[role="note"]').exists()).toBe(true);
+
+    // The same component instance may render another passage or Chronicle line.
+    await wrapper.setProps({ text: 'Standing was challenged.' });
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('[role="note"]').exists()).toBe(false);
+    expect(wrapper.text()).toBe('Standing was challenged.');
+
+    // A missing term must not leave a hidden open state for a later line.
+    await wrapper.get('button').trigger('click');
+    await wrapper.setProps({ text: 'No glossary term here.' });
+    expect(wrapper.find('button').exists()).toBe(false);
+    await wrapper.setProps({ text: 'Standing was restored.' });
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('[role="note"]').exists()).toBe(false);
+
+    await wrapper.get('button').trigger('click');
+    await wrapper.setProps({ proseMode: 'plainenglish' });
+    expect(wrapper.get('button').attributes('aria-expanded')).toBe('false');
+    expect(wrapper.find('[role="note"]').exists()).toBe(false);
+
+    // The new line can still be opened normally with the new definition.
+    await wrapper.get('button').trigger('click');
+    expect(wrapper.get('[role="note"]').text())
+      .toBe('How the wider world regards this family.');
+  });
+
   it('uses the Plain English definition and leaves text with no term alone', async () => {
     const wrapper = render('Reputation is known.', 'plainenglish');
     await wrapper.get('button').trigger('click');

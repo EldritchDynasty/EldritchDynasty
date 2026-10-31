@@ -178,6 +178,31 @@ describe('contradictory recorded-parent cycles (#1400)', () => {
 });
 
 describe('recorded kinship paths (#268)', () => {
+  it('requires both records to name the spouse before calling either one married', () => {
+    const members = [
+      person({
+        id: 'a', sex: 'male',
+        spouse: { id: 'b', name: 'b', marriedIn: true },
+      }),
+      person({ id: 'b', sex: 'female' }),
+    ];
+    const before = structuredClone(members);
+
+    // A's stale marriage assertion must not invent a relationship in B's
+    // opposite direction, or join unrelated family branches through a ghost.
+    expect(kinshipPath('a', 'b', members)).toBeUndefined();
+    expect(kinshipPath('b', 'a', members)).toBeUndefined();
+    expect(members).toEqual(before);
+
+    // Once the records agree, the ordinary married couple remains navigable.
+    const reciprocal = [
+      members[0]!,
+      person({ id: 'b', sex: 'female', spouse: { id: 'a', name: 'a', marriedIn: false } }),
+    ];
+    expect(kinshipPath('a', 'b', reciprocal)?.map((step) => step.relation)).toEqual(['wife']);
+    expect(kinshipPath('b', 'a', reciprocal)?.map((step) => step.relation)).toEqual(['husband']);
+  });
+
   it('crosses a cadet-hall boundary when the caller supplies both halls', () => {
     const seat = [
       person({ id: 'grand', sex: 'male' }),

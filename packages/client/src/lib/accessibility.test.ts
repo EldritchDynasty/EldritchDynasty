@@ -175,6 +175,68 @@ describe('sound listener ownership (#2055)', () => {
   });
 });
 
+describe('sound teardown is terminal (#2116)', () => {
+  it('does not revive an audio engine through queued callbacks after dispose', () => {
+    const engine: SoundEngine = {
+      available: true, muted: true, volume: 1,
+      cue: vi.fn(), setDrone: vi.fn(), suspend: vi.fn(),
+      wake: vi.fn(), close: vi.fn(),
+    };
+    const doc = {
+      visibilityState: 'visible' as DocumentVisibilityState,
+      addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    };
+    const win = { addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    let latePause: () => void = () => undefined;
+    const bed = new SoundBed(engine);
+    bed.attach(doc, win, (listener) => {
+      latePause = listener;
+      // A host may invoke a stale listener while its unsubscriber runs.
+      return () => { listener(); };
+    });
+    bed.prefer({ on: true, volume: 0.75 });
+    bed.scene({ registers: ['warm'], frame: false });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    bed.cue('page');
+    expect(engine.cue).toHaveBeenCalledTimes(1);
+    expect(engine.setDrone).toHaveBeenCalledTimes(1);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+
+    bed.dispose();
+    expect(bed.audible).toBe(false);
+    expect(engine.close).toHaveBeenCalledTimes(1);
+    const originalDocRegistrations = doc.addEventListener.mock.calls.length;
+    const originalWinRegistrations = win.addEventListener.mock.calls.length;
+    const originalDocRemovals = doc.removeEventListener.mock.calls.length;
+    const originalWinRemovals = win.removeEventListener.mock.calls.length;
+
+    // A delayed event or a retained game-action wrapper must not reopen the
+    // engine that component teardown just closed.
+    latePause();
+    bed.cue('bell');
+    bed.scene({ registers: ['cold'], frame: false });
+    bed.gesture();
+    bed.hide();
+    bed.show();
+    bed.prefer({ on: true, volume: 0.9 });
+    const staleDetach = bed.attach(doc, win);
+    staleDetach();
+    bed.dispose();
+    expect(bed.audible).toBe(false);
+    expect(engine.cue).toHaveBeenCalledTimes(1);
+    expect(engine.setDrone).toHaveBeenCalledTimes(1);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    expect(engine.suspend).not.toHaveBeenCalled();
+    expect(engine.close).toHaveBeenCalledTimes(1);
+    expect(engine.volume).toBe(0.75);
+    expect(doc.addEventListener).toHaveBeenCalledTimes(originalDocRegistrations);
+    expect(win.addEventListener).toHaveBeenCalledTimes(originalWinRegistrations);
+    expect(doc.removeEventListener).toHaveBeenCalledTimes(originalDocRemovals);
+    expect(win.removeEventListener).toHaveBeenCalledTimes(originalWinRemovals);
+  });
+});
+
 describe('the reading-comfort checklist (#275)', () => {
   it('keeps local preference storage optional even when the browser denies its getter (#410)', () => {
     const source = readFileSync(join(import.meta.dirname, '..', 'App.vue'), 'utf8');

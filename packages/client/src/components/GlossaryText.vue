@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue';
+import { computed, ref, useId, watch } from 'vue';
 import type { ProseMode } from '@ed/schema';
 import { splitFirstStanding, standingGlossaryDefinition } from '../lib/glossary';
 
@@ -11,6 +11,13 @@ const expanded = computed(() => containsTerm.value && open.value);
 const controlId = useId();
 const opener = ref<HTMLButtonElement | null>(null);
 const definition = computed(() => standingGlossaryDefinition(props.proseMode));
+
+// A reused passage or Chronicle component must not inherit an earlier line's
+// disclosure. The definition belongs to this text and language, not the slot.
+watch([() => props.text, () => props.proseMode], () => {
+  open.value = false;
+  opener.value = null;
+});
 
 function toggle(event: MouseEvent): void {
   // Vue collects template refs inside v-for into an array, even for one

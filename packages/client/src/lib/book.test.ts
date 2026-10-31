@@ -57,6 +57,28 @@ describe('what the reader asked for', () => {
     expect(reads(entry({ text: 'Somebody else entirely.' }), { ...all, find: 'wystan' })).toBe(false);
   });
 
+  it('finds composed and decomposed accents in Chronicle text and titles (#2125)', () => {
+    const decomposed = entry({
+      title: 'The E\u0301vidence',
+      text: 'Jose\u0301 testified for the house.',
+    });
+    const composed = entry({
+      title: 'The Évidence',
+      text: 'José testified for the house.',
+    });
+
+    // Either spelling must find the same visible name, in both directions.
+    expect(reads(decomposed, { ...all, find: 'JOSÉ' })).toBe(true);
+    expect(reads(composed, { ...all, find: 'Jose\u0301' })).toBe(true);
+    expect(reads(decomposed, { ...all, find: 'ÉVIDENCE' })).toBe(true);
+    expect(reads(composed, { ...all, find: 'e\u0301vidence' })).toBe(true);
+
+    // Canonical equivalence is not an accent-insensitive search policy.
+    expect(reads(composed, { ...all, find: 'jose' })).toBe(false);
+    expect(reads(decomposed, { ...all, find: 'evidence' })).toBe(false);
+    expect(reads(entry({ text: null, title: 'Jose\u0301' }), { ...all, find: 'josé' })).toBe(false);
+  });
+
   /**
    * The century buttons are the year control. A search that quietly matched
    * the year too would make the two impossible to tell apart — typing `12`
@@ -383,6 +405,53 @@ describe('the house afterimage (#260)', () => {
       entry({ year: 1508, record: 'embellish', text: 'A later, smaller improvement.' }),
     ],
   };
+
+  it('carries existing bynames into the attributed Afterimage and archived recorded ancestry (#2098)', () => {
+    const page = { year: 1200, page: 'signed-deed', text: 'The book named Meriel.' };
+    const evidence = {
+      people: [{ person: 'meriel', name: 'Meriel', epithet: 'of the Tides', sources: [page] }],
+      spent: { person: 'meriel', name: 'Meriel', epithet: 'of the Tides', source: page },
+      line: [
+        { id: 'last', name: 'Élodie', epithet: 'the Witness', head: true, record: { parents: { mother: 'meriel' } } },
+        { id: 'meriel', name: 'Meriel', epithet: 'of the Tides', head: false, record: { parents: {} } },
+      ],
+    };
+    const before = structuredClone(evidence);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const model = afterimageModel({ ...source, evidence }, mode);
+      expect(model.memories.map((memory) => memory.text)).toEqual([
+        'Meriel of the Tides',
+        'Meriel of the Tides',
+        'Meriel of the Tides → Élodie the Witness',
+      ]);
+      expect(model.memories[0]!.source?.page).toBe('signed-deed');
+      const svg = afterimageSvg(model, afterimageLayout(model, monospace));
+      expect(svg).toContain('Meriel of the Tides');
+      expect(svg).toContain('Élodie the Witness');
+    }
+    expect(evidence).toEqual(before);
+
+    // Old saves and older read-model projections still have only names.
+    const legacy = afterimageModel({ ...source, evidence: {
+      people: [{ person: 'meriel', name: 'Meriel', sources: [page] }],
+      spent: { person: 'meriel', name: 'Meriel', source: page },
+      line: evidence.line.map(({ id, name, head, record }) => ({ id, name, head, record })),
+    } });
+    expect(legacy.memories.map((memory) => memory.text)).toEqual([
+      'Meriel', 'Meriel', 'Meriel → Élodie',
+    ]);
+
+    // The fallback tree uses recorded, not actual, parentage. An unrecorded
+    // true parent must never appear in the exported family account.
+    const fallback = afterimageModel({ ...source, members: [
+      { id: 'last', name: 'Élodie', epithet: 'the Witness', head: true,
+        parents: { father: 'hidden' }, record: { parents: { mother: 'meriel' } } },
+      { id: 'meriel', name: 'Meriel', epithet: 'of the Tides', record: { parents: {} } },
+      { id: 'hidden', name: 'Hidden true parent', epithet: 'the Secret', record: { parents: {} } },
+    ] as MemberView[] });
+    expect(fallback.memories.at(-1)?.text).toBe('Meriel of the Tides → Élodie the Witness');
+    expect(JSON.stringify(fallback)).not.toContain('Hidden true parent');
+  });
 
   it('is deterministic and changes when the finished account changes', () => {
     const first = afterimageModel(source);

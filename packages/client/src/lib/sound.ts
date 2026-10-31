@@ -285,20 +285,21 @@ export function droneScore(input: DroneInput): Score | null {
 
 type Ctor = new () => AudioContext;
 
-function detectEngine(): Ctor | null {
-  if (typeof window === 'undefined') return null;
+function detectEngines(): Ctor[] {
+  if (typeof window === 'undefined') return [];
   const w = window as unknown as { AudioContext?: Ctor; webkitAudioContext?: Ctor };
-  // Optional Web Audio properties may throw on restricted WebViews.
-  // One refused constructor must not hide a working prefixed fallback.
+  const candidates: Ctor[] = [];
+  // A getter may work while its constructor refuses on this host. Retain the
+  // prefixed candidate until the first gesture actually tries both engines.
   for (const name of ['AudioContext', 'webkitAudioContext'] as const) {
     try {
       const ctor = w[name];
-      if (typeof ctor === 'function') return ctor;
+      if (typeof ctor === 'function' && !candidates.includes(ctor)) candidates.push(ctor);
     } catch {
-      // A refused getter means this engine is unavailable, not a game error.
+      // A refused getter must not hide a working prefixed fallback.
     }
   }
-  return null;
+  return candidates;
 }
 
 /**
@@ -329,7 +330,7 @@ export class Sound {
   private lastDrone: DroneInput | null = null;
   /** What the playing drone was built from, so an unchanged one is left alone. */
   private droneKey = '';
-  private readonly ctor: Ctor | null;
+  private readonly ctors: readonly Ctor[];
 
   #muted = true;
   #volume = 1;
@@ -343,7 +344,7 @@ export class Sound {
    * silent" would have quietly become "be loud".
    */
   constructor(ctor?: Ctor | null) {
-    this.ctor = ctor === undefined ? detectEngine() : ctor;
+    this.ctors = ctor === undefined ? detectEngines() : ctor === null ? [] : [ctor];
   }
 
   /** Off until asked for. §24's sound is sparse; zero is sparser. */
@@ -376,19 +377,32 @@ export class Sound {
    * True where there is an audio engine that works — false in node, in tests,
    * and once a real one has refused to start or to play.
    */
-  get available() { return this.ctor !== null && !this.#failed; }
+  get available() { return this.ctors.length > 0 && !this.#failed; }
 
   private engine(): { context: AudioContext; out: GainNode } | null {
-    if (!this.ctor || this.#failed) return null;
+    if (this.ctors.length === 0 || this.#failed) return null;
     if (!this.context || !this.out) {
-      const ctx = new this.ctor();
-      // Own the context immediately: createGain/connect may throw after the
-      // audio thread opens. attempt() must be able to close that partial engine.
-      this.context = ctx;
-      const out = ctx.createGain();
-      out.gain.value = this.#volume;
-      out.connect(ctx.destination);
-      this.out = out;
+      for (const ctor of this.ctors) {
+        let ctx: AudioContext | null = null;
+        try {
+          ctx = new ctor();
+          const out = ctx.createGain();
+          out.gain.value = this.#volume;
+          out.connect(ctx.destination);
+          this.context = ctx;
+          this.out = out;
+          break;
+        } catch {
+          // Some WebViews expose AudioContext but refuse to construct it or
+          // initialise its output. Close a partial engine before trying the
+          // prefixed constructor; never leak its rejected close() promise.
+          try { quietly(ctx?.close?.()); } catch { /* already unavailable */ }
+        }
+      }
+      if (!this.context || !this.out) {
+        this.#failed = true;
+        return null;
+      }
     }
     // Suspended until a gesture. Harmless to call when it is already running.
     this.watch(this.context.resume?.(), this.context);

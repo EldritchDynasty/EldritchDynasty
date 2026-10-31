@@ -2229,6 +2229,49 @@ async function openAdvanced(w: ReturnType<typeof mount>): Promise<void> {
 }
 
 describe('the front door begins from a share code', () => {
+  it('does not reuse a prior code\'s recipient names for a different founding', async () => {
+    const { code: firstCode } = await senderCode();
+    const secondSender = createGame(content, sharePlatform());
+    secondSender.actions.begin(199511, 'short');
+    expect(secondSender.actions.found(SIGNED).ok).toBe(true);
+    const second = secondSender.actions.shareCode(false);
+    if (!second.ok) throw new Error(second.unavailable);
+    expect(second.code).not.toBe(firstCode);
+
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false } });
+    try {
+      await openAdvanced(w);
+      await w.get('#share-code-in').setValue(firstCode);
+      await w.get('#share-founder').setValue('Maud Gearithy');
+      await w.get('#share-house').setValue('The House of Salt');
+      await w.get('#share-friend-0').setValue('Iona Vale');
+      await w.get('#share-friend-1').setValue('Corven Pike');
+
+      // Rewording the same founding does not discard what the recipient typed.
+      await w.setProps({ proseMode: 'plainenglish' });
+      expect((w.get('#share-house').element as HTMLInputElement).value).toBe('The House of Salt');
+      expect((w.get('#share-friend-0').element as HTMLInputElement).value).toBe('Iona Vale');
+
+      // A newly pasted code has its own names to collect, even if it has the
+      // same roster shape. In particular, A's completed fields must not let B
+      // begin automatically as a different house.
+      await w.get('#share-code-in').setValue(second.code);
+      expect((w.get('#share-founder').element as HTMLInputElement).value).toBe('');
+      expect((w.get('#share-house').element as HTMLInputElement).value).toBe('');
+      expect((w.get('#share-friend-0').element as HTMLInputElement).value).toBe('');
+      expect((w.get('#share-friend-1').element as HTMLInputElement).value).toBe('');
+      const begin = w.findAll('button').find((b) => b.text() === 'Start from this code');
+      await begin!.trigger('click');
+      expect(w.get('#share-code-error').text()).toContain('Enter the missing names');
+      expect(recipient.view.value).toBeNull();
+      expect(host.saves.has('autosave')).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('asks for the names the code left out, refuses without them, and keeps the old autosave', async () => {
     const { code, saved } = await senderCode();
     const host = sharePlatform();

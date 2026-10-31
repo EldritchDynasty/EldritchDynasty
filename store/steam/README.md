@@ -32,7 +32,7 @@ Shape a bloodline through marriages and inheritance, then decide what its Chroni
 ```text
 Your family's Chronicle is evidence you can falsify, and your descendants inherit whichever account you leave behind. When the Record opens, record what happened, omit it, or embellish it for standing now. Recording the truth may cost the house standing but preserve useful knowledge for descendants; an omission or embellishment can leave a discrepancy the creditor may later read back.
 
-In 1042, your ancestor signed something. In 1542, the other party comes to collect.
+In 1042, your ancestor signed something. The debt falls due in 1342 for a Short Line, or in 1542 for a Long Line—if the bloodline lasts that long.
 
 Eldritch Dynasty is a text-based generational strategy game about one family, one debt, and generations of consequences.
 
