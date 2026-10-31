@@ -42,6 +42,30 @@ describe('clipboard access fallback (#2049)', () => {
     }
   });
 
+  it('uses the legacy fallback when the writeText method getter itself throws', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: Object.defineProperty({}, 'writeText', {
+        configurable: true,
+        get() { throw new DOMException('writeText access denied', 'SecurityError'); },
+      }),
+    });
+    const copied: string[] = [];
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      value: vi.fn(() => {
+        const area = document.activeElement;
+        if (area instanceof HTMLTextAreaElement) {
+          copied.push(area.value.slice(area.selectionStart, area.selectionEnd));
+        }
+        return true;
+      }),
+    });
+    await expect(copyTextInBrowser('ED1.method.blocked')).resolves.toBeUndefined();
+    expect(copied).toEqual(['ED1.method.blocked']);
+    expect(document.querySelector('textarea')).toBeNull();
+  });
+
   it('still rejects if the Clipboard API getter throws and no fallback exists', async () => {
     refuseClipboardAccess();
     Object.defineProperty(document, 'execCommand', { configurable: true, value: undefined });
