@@ -331,7 +331,7 @@ describe('the volume', () => {
     }
   });
 
-  it('explains PNG encoding failure and returns the save button to usable state (#1327)', async () => {
+  it('falls back to SVG on PNG encoding failure and returns the save button to usable state (#2058)', async () => {
     const context = {
       measureText: (text: string) => ({ width: text.length * 7 }),
       fillRect: () => {}, fillText: () => {}, beginPath: () => {},
@@ -340,6 +340,8 @@ describe('the volume', () => {
     const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
     const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
       .mockImplementation((callback) => callback(null));
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
     const w = mountBook();
     try {
       const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
@@ -347,12 +349,15 @@ describe('the volume', () => {
       await save!.trigger('click');
       await flushPromises();
 
-      expect(w.get('[role="alert"]').text()).toContain('Try a smaller selection or another browser');
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+      expect(download).toHaveBeenCalledTimes(1);
+      expect(download).toHaveBeenLastCalledWith(expect.any(Blob), expect.stringMatching(/\.svg$/));
       expect((save!.element as HTMLButtonElement).disabled).toBe(false);
     } finally {
       w.unmount();
       encoding.mockRestore();
       canvas.mockRestore();
+      vi.mocked(downloadBlob).mockClear();
     }
   });
 
@@ -430,21 +435,22 @@ describe('the volume', () => {
       expect(download).toHaveBeenCalledTimes(1);
       expect(button.disabled).toBe(false);
 
-      // The guard unlocks for a failed attempt, preserving the error.
+      // A failed PNG encode falls back to one SVG; the synchronous guard unlocks.
       button.click();
       expect(encoding).toHaveBeenCalledTimes(2);
       callbacks[1]!(null);
       await flushPromises();
-      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+      expect(w.find('[role="alert"]').exists()).toBe(false);
       expect(button.disabled).toBe(false);
-      expect(download).toHaveBeenCalledTimes(1);
+      expect(download).toHaveBeenCalledTimes(2);
+      expect(download).toHaveBeenLastCalledWith(expect.any(Blob), expect.stringMatching(/\.svg$/));
 
-      // Retry also clears the old error and saves a single new page.
+      // Retry still saves a single fresh PNG.
       button.click();
       expect(encoding).toHaveBeenCalledTimes(3);
       callbacks[2]!(new Blob(['retry'], { type: 'image/png' }));
       await flushPromises();
-      expect(download).toHaveBeenCalledTimes(2);
+      expect(download).toHaveBeenCalledTimes(3);
       expect(download).toHaveBeenLastCalledWith(expect.any(Blob), expect.stringMatching(/\.png$/));
       expect(button.disabled).toBe(false);
       expect(w.find('[role="alert"]').exists()).toBe(false);
