@@ -5,6 +5,7 @@ import { canonical } from './save.js';
 import { hashSeed } from './rng.js';
 import { CAMPAIGNS } from './campaign.js';
 import { newGame, resumeGame, type GameSession } from './session.js';
+import { libraryRunOf } from './run-library.js';
 import { FRIEND_NAME_MAX, MAX_FRIENDS } from './people/friends.js';
 import {
   contentEdition, newGameFromShareCode, readShareCode, SHARE_CODE_MAX, type ShareCodeProblem,
@@ -141,6 +142,44 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(other.session.prologue()?.founded).toMatchObject({ heirloom: SIGNED.heirloom, grudge: SIGNED.grudge, houseName: 'Thornfield' });
     expect(other.session.save().seed).toBe(original.save().seed);
     expect(saved(other.session)).not.toBe(saved(original));
+  });
+
+  it('keeps the recipient\'s Library separate from the encoded founding', () => {
+    // An earlier completed house left a recorded claim that a second household
+    // may inherit. It is deliberately not part of the code a player shares.
+    const prior = newGame(content, { seed: 199499, campaign: 'short' });
+    const person = prior.ctx.world.people.household(prior.ctx.world.playerHouse, prior.year)[0]!;
+    prior.ctx.world.chronicle.push({
+      id: 'library_share_page',
+      year: 1200,
+      weight: 'paragraph',
+      text: `${person.name} was entered in the record.`,
+      named: true,
+      record: 'embellish',
+      claims: [{ kind: 'attr', person: person.id, attr: 'madness', value: 0 }],
+    });
+    prior.ctx.world.ending = { id: 'forgotten', year: CAMPAIGNS.short.endYear };
+    const library = libraryRunOf(prior.ctx);
+    expect(library?.entries.length).toBeGreaterThan(0);
+    if (!library) throw new Error('the prior run did not leave a Library');
+
+    const original = founded();
+    const code = codeOf(original, { names: true });
+    const without = newGameFromShareCode(code, content, { build: BUILD });
+    const withLibrary = newGameFromShareCode(code, content, { build: BUILD, libraryRuns: [library] });
+    const repeated = newGameFromShareCode(code, content, { build: BUILD, libraryRuns: [library] });
+    expect(without.ok && withLibrary.ok && repeated.ok).toBe(true);
+    if (!without.ok || !withLibrary.ok || !repeated.ok) return;
+
+    expect(saved(without.session)).toBe(saved(original));
+    expect(without.session.save().libraryMemories).toEqual([]);
+    expect(withLibrary.session.save().libraryMemories.length).toBeGreaterThan(0);
+    expect(saved(withLibrary.session)).not.toBe(saved(without.session));
+    // Equal local Library inputs still give an exact reproducible founding.
+    expect(saved(withLibrary.session)).toBe(saved(repeated.session));
+    expect(withLibrary.founding).toEqual(without.founding);
+    expect(withLibrary.session.prologue()?.founded).toEqual(without.session.prologue()?.founded);
+    expect(codeOf(withLibrary.session, { names: true })).toBe(code);
   });
 
   it('carries an authored founder as no founder at all, so there is no founder name to ask for', () => {
