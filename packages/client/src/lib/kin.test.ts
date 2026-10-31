@@ -101,6 +101,37 @@ describe('drawing a couple as a couple', () => {
     expect(drawnBeside(hall[0]!, hall)).toBeUndefined();
   });
 
+  it('keeps a one-sided married-in spouse visible instead of attaching them to a missing row (#2082)', () => {
+    const hall = [
+      person({ id: 'grand' }),
+      person({
+        id: 'son', sex: 'male',
+        record: { attrs: {}, claimedTraits: [], parents: { father: 'grand' }, claimed: [] },
+        // No reciprocal link to 'wife': the anchor cannot draw her beside him.
+      }),
+      person({
+        id: 'wife',
+        spouse: { id: 'son', name: 'son', marriedIn: false },
+      }),
+    ];
+    const before = structuredClone(hall);
+    expect(roots(hall).map((m) => m.id)).toEqual(['grand', 'wife']);
+    expect(drawnBeside(hall[1]!, hall)).toBeUndefined();
+
+    const seen: string[] = [];
+    const walk = (m: MemberView): void => {
+      seen.push(m.id);
+      const beside = drawnBeside(m, hall);
+      if (beside) seen.push(beside.id);
+      for (const child of children(m, hall)) walk(child);
+    };
+    for (const root of roots(hall)) walk(root);
+
+    expect(seen.sort()).toEqual(['grand', 'son', 'wife']);
+    expect(new Set(seen).size).toBe(hall.length);
+    expect(hall).toEqual(before);
+  });
+
   it('says nothing about a spouse who is in no hall of ours', () => {
     const hall = [person({ id: 'lone', spouse: { id: 'elsewhere', name: 'Far', marriedIn: true } })];
     expect(partner(hall[0]!, hall)).toBeUndefined();
