@@ -5,6 +5,8 @@ import type { MatchCard } from '../people/match.js';
 import { playToTheEnd } from './ending-gate.js';
 import {
   continuityCard,
+  LINE_BREAK_SEED_START,
+  lineBreakInputs,
   lineBreakReport,
   medianInterval,
   playLineBreakRun,
@@ -35,6 +37,24 @@ const broken = (elapsed: number, over: Partial<LineBreakRun> = {}) => row({
 });
 
 describe('the line-break report (#1993)', () => {
+  it('keeps independent seed cohorts exact and rejects invalid run counts and offsets', () => {
+    expect(lineBreakInputs(2, ['chronicler', 'heir_match'], 400)).toEqual([
+      { seed: LINE_BREAK_SEED_START + 400, policy: 'chronicler' },
+      { seed: LINE_BREAK_SEED_START + 401, policy: 'chronicler' },
+      { seed: LINE_BREAK_SEED_START + 400, policy: 'heir_match' },
+      { seed: LINE_BREAK_SEED_START + 401, policy: 'heir_match' },
+    ]);
+    for (const runs of [0, -1, 1.25, NaN, Infinity]) {
+      expect(() => lineBreakInputs(runs, ['chronicler'])).toThrow(/run count/);
+    }
+    for (const offset of [-1, 0.25, NaN, Infinity]) {
+      expect(() => lineBreakInputs(1, ['chronicler'], offset)).toThrow(/seed offset/);
+    }
+    expect(() => lineBreakInputs(1, ['chronicler'], Number.MAX_SAFE_INTEGER)).toThrow(/seed range/);
+    expect(() => lineBreakInputs(2, [])).toThrow(/include a policy/);
+    expect(() => summariseLineBreaks([])).toThrow(/no observations/);
+  });
+
   it('takes the open card whose face reads for continuity, never a closed one', () => {
     const fertile = card('fertile', { line: 'fertile', lineSeen: 3, dowry: 40 });
     const closed = card('closed', { line: 'fertile', lineSeen: 4, available: false });
