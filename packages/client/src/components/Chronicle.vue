@@ -39,7 +39,8 @@ watch(() => props.view, () => { snapshot.value += 1; });
  * kept-page provenance names. Never infer identities from prose.
  */
 const chronicleNamesById = computed(() => new Map(
-  (props.view.chroniclePeople ?? []).map((person) => [person.id, person.name]),
+  (props.view.chroniclePeople ?? []).map((person) => [person.id,
+    person.epithet ? `${person.name} ${person.epithet}` : person.name]),
 ));
 const navigableIds = computed(() => new Set(
   (props.view.halls ?? []).flatMap((hall) => hall.members.map((member) => member.id)),
