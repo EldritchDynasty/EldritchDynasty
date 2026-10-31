@@ -981,6 +981,7 @@ describe('Chronicle plate SVG fallback when bitmap export fails (#2058)', () => 
       expect(encoding).not.toHaveBeenCalled();
       await assertSvgDownload();
       expect(w.find('[role="alert"]').exists()).toBe(false);
+      expect(w.findAll('button').find((button) => button.text() === 'Save this as a page')!.attributes('disabled')).toBeUndefined();
     } finally { w.unmount(); vi.restoreAllMocks(); }
   });
 
@@ -998,6 +999,7 @@ describe('Chronicle plate SVG fallback when bitmap export fails (#2058)', () => 
       expect(encoding).toHaveBeenCalledTimes(1);
       await assertSvgDownload();
       expect(w.find('[role="alert"]').exists()).toBe(false);
+      expect(w.findAll('button').find((button) => button.text() === 'Save this as a page')!.attributes('disabled')).toBeUndefined();
     } finally { w.unmount(); vi.restoreAllMocks(); }
   });
 });
