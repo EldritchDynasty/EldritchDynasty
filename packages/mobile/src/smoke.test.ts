@@ -43,6 +43,35 @@ describe('iOS runtime smoke protocol', () => {
     }
   });
 
+  it('rejects ambiguous duplicate native smoke parameters (#2194)', () => {
+    for (const query of [
+      'seed=1042&seed=9000&years=40',
+      'seed=1042&seed=1042',
+      'seed=1042&seed=',
+      'years=40&years=0',
+      'years=40&years=40',
+      'years=40&years=',
+    ]) {
+      expect(parseSmokeCommand(`eldritchdynasty-smoke://save?${query}`), query).toBeNull();
+    }
+    for (const query of [
+      'path=smoke.json&path=other.json',
+      'path=smoke.json&path=smoke.json',
+      'path=smoke.json&path=',
+    ]) {
+      expect(parseSmokeCommand(`eldritchdynasty-smoke://import?${query}`), query).toBeNull();
+    }
+
+    // Ordinary single-value links still work, including the default and
+    // signed decimal seed and a single Documents basename.
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save'))
+      .toEqual({ kind: 'save', seed: 1042, years: 40 });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?seed=-42&years=0'))
+      .toEqual({ kind: 'save', seed: -42, years: 0 });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://import?path=smoke.json'))
+      .toEqual({ kind: 'import', path: 'smoke.json' });
+  });
+
   it('hashes canonical snapshot data and carries host evidence', async () => {
     await expect(smokeEvidence(
       { kind: 'export' },

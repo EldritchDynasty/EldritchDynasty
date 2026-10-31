@@ -13,6 +13,10 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
 
   const kind = url.hostname;
   if (kind === 'save') {
+    // A smoke witness must identify one run: get() silently accepts the first
+    // of several different seeds or year counts in an externally opened URL.
+    if (url.searchParams.getAll('seed').length > 1
+      || url.searchParams.getAll('years').length > 1) return null;
     const rawSeed = url.searchParams.get('seed');
     const rawYears = url.searchParams.get('years');
     // Number('') and Number(' ') are zero, and Number('0x10') accepts hex.
@@ -26,6 +30,8 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
   }
   if (kind === 'resume' || kind === 'export') return { kind };
   if (kind === 'import') {
+    // Do not choose an arbitrary first filename from conflicting parameters.
+    if (url.searchParams.getAll('path').length !== 1) return null;
     const path = url.searchParams.get('path');
     // The Debug-only smoke URL comes from an external appUrlOpen event.
     // Only a Documents basename may reach Filesystem.readFile; never let an
