@@ -399,8 +399,12 @@ describe('the player, over a fake engine', () => {
     expect(out.gain.value).toBe(1);
     s.volume = -1;
     expect(out.gain.value).toBe(0);
-    s.volume = Number.NaN;
-    expect(out.gain.value).toBe(1);
+    // Bad values (for example from an unreliable host) cannot blast the
+    // listener at full volume after they chose a quieter setting.
+    for (const invalid of [Number.NaN, Infinity, -Infinity]) {
+      s.volume = invalid;
+      expect(out.gain.value).toBe(0);
+    }
   });
 
   it('treats an invalidated host gain during a volume change as silence, not a settings error', () => {
@@ -718,6 +722,13 @@ describe('the bed decides when the house may be heard', () => {
     bed.cue('bell');
     expect(bed.audible).toBe(false);
     expect(e.made, 'zero volume opened an audio context').toHaveLength(0);
+
+    for (const invalid of [Number.NaN, Infinity, -Infinity]) {
+      bed.prefer({ on: true, volume: invalid });
+      bed.cue('bell');
+      expect(bed.audible, `${invalid} unexpectedly made audio audible`).toBe(false);
+      expect(e.made, `${invalid} opened an audio device`).toHaveLength(0);
+    }
 
     // The Age may change while silent; only the latest drone should return.
     bed.scene(COLD);
