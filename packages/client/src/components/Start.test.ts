@@ -264,6 +264,42 @@ describe('the Demonstration front door (#2063)', () => {
     }
   });
 
+  it('keeps real demo and full autosaves independent through reload and either resume path', async () => {
+    const host = sharePlatform();
+    const first = createGame(content, host);
+    await flush();
+    first.actions.begin(1979001, 'demo');
+    await flush();
+    const demo = host.saves.get('demo-autosave');
+    expect(demo).toMatchObject({ campaign: 'demo' });
+    expect(host.saves.has('autosave')).toBe(false);
+
+    first.actions.begin(1979002, 'short');
+    await flush();
+    const full = host.saves.get('autosave');
+    expect(full).toMatchObject({ campaign: 'short' });
+    expect(host.saves.get('demo-autosave')).toEqual(demo);
+
+    // The default store API and rolling continuation remain full-campaign-only.
+    expect(await first.actions.listSaves()).toEqual([{ slot: 'autosave' }]);
+    expect(first.saves.value).toEqual([{ slot: 'autosave' }]);
+    expect(await first.actions.listSaves(true)).toEqual(expect.arrayContaining([
+      { slot: 'autosave' }, { slot: 'demo-autosave' },
+    ]));
+
+    const reloaded = createGame(content, host);
+    await flush();
+    expect(reloaded.resumable.value).toBe(true);
+    expect(await reloaded.actions.load('demo-autosave')).toBe(true);
+    expect(reloaded.view.value?.campaign.id).toBe('demo');
+    await flush();
+    expect(host.saves.get('autosave')).toEqual(full);
+
+    expect(await reloaded.actions.resume()).toBe(true);
+    expect(reloaded.view.value?.campaign.id).toBe('short');
+    expect(host.saves.get('demo-autosave')).toEqual(demo);
+  });
+
   it('reports a refused Demonstration resume at its own row, leaving full Continue available', async () => {
     const actions = spyActions([{ slot: 'demo-autosave', year: 1061 }]);
     vi.mocked(actions.load).mockResolvedValueOnce(false);
