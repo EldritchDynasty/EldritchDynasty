@@ -432,10 +432,13 @@ describe('Windows / Android / iOS host interchange (#322)', () => {
       // The real public mobile export writes Documents and passes its URI to
       // Share, unlike a test that simply calls JSON.stringify itself.
       await mobile!.exportSave(mobileSnapshot);
-      const name = `eldritch-${mobileSnapshot.year}.json`;
+      expect(native.sharedUrls).toHaveLength(1);
+      const sharedUrl = native.sharedUrls[0]!;
+      expect(sharedUrl).toMatch(/^native:\/\/eldritch-\d+-[0-9a-f]{32}\.json$/);
+      const name = sharedUrl.slice('native://'.length);
+      expect(name.startsWith(`eldritch-${mobileSnapshot.year}-`)).toBe(true);
       const exportedBytes = native.documents.get(name);
       expect(exportedBytes).toBeDefined();
-      expect(native.sharedUrls).toEqual([`native://${name}`]);
       expect(JSON.parse(exportedBytes!)).toEqual(mobileSnapshot);
 
       // The iOS simulator's existing private interchange seam must agree with
