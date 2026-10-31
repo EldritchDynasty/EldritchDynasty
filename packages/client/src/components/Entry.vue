@@ -5,6 +5,7 @@ import type { ProseMode } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 import { isWritten } from '../lib/book';
 import GlossaryText from './GlossaryText.vue';
+import { splitFirstStanding } from '../lib/glossary';
 
 /**
  * ONE LINE OF THE BOOK, wherever the book is being read (issue #48).
@@ -88,6 +89,15 @@ const claims = computed(() => (blank.value ? [] : props.entry.claims ?? []).map(
     default: return assertNever(c);
   }
 }));
+
+/** The main sentence has priority: one glossary disclosure per Chronicle entry. */
+const firstClaimGlossaryIndex = computed(() => {
+  if (props.read || blank.value) return -1;
+  const containsTerm = (text: string) => splitFirstStanding(text, props.proseMode)
+    .some((part) => part.term === 'standing');
+  if (containsTerm(props.entry.text ?? '')) return -1;
+  return claims.value.findIndex(containsTerm);
+});
 
 const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
   .split('|')
@@ -183,7 +193,10 @@ const delegatedPolicies = computed(() => (props.entry.delegated ?? '')
          line that makes them, because a claim detached from its sentence is a
          fact from nowhere. -->
     <ul v-if="claims.length" class="claims dim small">
-      <li v-for="(c, i) in claims" :key="i">{{ c }}</li>
+      <li v-for="(c, i) in claims" :key="i">
+        <GlossaryText v-if="i === firstClaimGlossaryIndex" :text="c" :prose-mode="proseMode" />
+        <template v-else>{{ c }}</template>
+      </li>
     </ul>
   </article>
 </template>
