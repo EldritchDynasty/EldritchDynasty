@@ -300,6 +300,9 @@ function onKey(e: KeyboardEvent): void {
   if (document.querySelector('[aria-modal="true"]')) return;
 
   const el = document.activeElement;
+  // A focused glossary disclosure is for reading, not a numbered answer.
+  // Keep ordinary Docket shortcuts on the rest of the panel.
+  if (el?.matches('.glossary-term')) return;
   const press = shortcutFor({
     key: e.key,
     repeat: e.repeat,
