@@ -2441,14 +2441,51 @@ describe('the front door begins from a share code', () => {
 });
 
 describe('copying goes through the host', () => {
-  it('asks the host to copy, and reports whether it took', async () => {
-    const host = sharePlatform();
+  it('uses a successful native clipboard once and never retries in the browser', async () => {
     const copyText = vi.fn(async () => undefined);
-    const game = createGame(content, { ...host, copyText });
-    expect(await game.actions.copyText('ED1.a.b')).toBe(true);
-    expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.a.b');
-    copyText.mockRejectedValueOnce(new Error('no clipboard'));
-    expect(await game.actions.copyText('ED1.a.b')).toBe(false);
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      const game = createGame(content, { ...sharePlatform(), copyText });
+      expect(await game.actions.copyText('ED1.a.b')).toBe(true);
+      expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.a.b');
+      expect(writeText).not.toHaveBeenCalled();
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('tries the browser clipboard when a provided native bridge rejects (#2122)', async () => {
+    const copyText = vi.fn(async () => { throw new Error('native clipboard unavailable'); });
+    const writeText = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      const game = createGame(content, { ...sharePlatform(), copyText });
+      expect(await game.actions.copyText('ED1.native.failed')).toBe(true);
+      expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.native.failed');
+      expect(writeText).toHaveBeenCalledExactlyOnceWith('ED1.native.failed');
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('reports refusal when native and both browser clipboard paths fail (#2122)', async () => {
+    const copyText = vi.fn(async () => { throw new Error('native bridge refused'); });
+    const writeText = vi.fn(async () => { throw new Error('browser permission denied'); });
+    const exec = vi.fn(() => false);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    Object.defineProperty(document, 'execCommand', { configurable: true, value: exec });
+    try {
+      const game = createGame(content, { ...sharePlatform(), copyText });
+      expect(await game.actions.copyText('ED1.no.copy')).toBe(false);
+      expect(copyText).toHaveBeenCalledExactlyOnceWith('ED1.no.copy');
+      expect(writeText).toHaveBeenCalledExactlyOnceWith('ED1.no.copy');
+      expect(exec).toHaveBeenCalledExactlyOnceWith('copy');
+      expect(document.querySelector('textarea')).toBeNull();
+    } finally {
+      Reflect.deleteProperty(navigator, 'clipboard');
+      Reflect.deleteProperty(document, 'execCommand');
+    }
   });
 
   it('falls back to the browser clipboard for a host with none of its own', async () => {
