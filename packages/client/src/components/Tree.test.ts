@@ -459,6 +459,37 @@ describe('the family tree as a planning board (#268)', () => {
     wrapper.unmount();
   });
 
+  it('retains every selected member when the main family line contains a forged parent cycle (#2080)', async () => {
+    const view = largeView();
+    const parentRecord = (father: string) => ({
+      attrs: {}, claimedTraits: [], parents: { father }, claimed: [],
+    });
+    view.halls[0]!.members = [
+      person({ id: 'a', name: 'A', record: parentRecord('b') }),
+      person({ id: 'b', name: 'B', record: parentRecord('a') }),
+      person({ id: 'c', name: 'C' }),
+      person({ id: 'outside', name: 'Outside' }),
+    ];
+    const before = structuredClone(view);
+    const line = [{ person: 'a' }, { person: 'b' }, { person: 'c' }];
+    const wrapper = mount(Tree, { props: { view, selected: null, line } });
+    try {
+      await wrapper.get('[data-direct-line]').trigger('click');
+      // Without the normal tree's deterministic cycle-break, both 'a' and
+      // 'b' have a parent in this filtered subset, yielding zero roots.
+      expect(renderedIds(wrapper)).toEqual(['a', 'b', 'c']);
+      expect(wrapper.find('#member-outside').exists()).toBe(false);
+      expect(wrapper.findAll('.hall')).toHaveLength(1);
+      expect(wrapper.get('.hall h3').text()).toContain('3 shown');
+
+      await wrapper.get('[data-direct-line]').trigger('click');
+      expect(renderedIds(wrapper)).toEqual([
+        ...view.halls.flatMap((hall) => hall.members.map((member) => member.id)),
+      ].sort());
+      expect(view).toEqual(before);
+    } finally { wrapper.unmount(); }
+  });
+
   it('reveals an externally navigated person hidden by hall, branch, or filter state', async () => {
     const view = largeView();
     const wrapper = mount(Tree, {
