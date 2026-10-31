@@ -52,6 +52,8 @@ describe('the line-break report (#1993)', () => {
     }
     expect(() => lineBreakInputs(1, ['chronicler'], Number.MAX_SAFE_INTEGER)).toThrow(/seed range/);
     expect(() => lineBreakInputs(2, [])).toThrow(/include a policy/);
+    // A repeated CLI policy must not count the same two runs twice.
+    expect(() => lineBreakInputs(2, ['chronicler', 'chronicler'])).toThrow(/must not be repeated/);
     expect(() => summariseLineBreaks([])).toThrow(/no observations/);
   });
 
