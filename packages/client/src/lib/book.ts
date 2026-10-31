@@ -64,10 +64,12 @@ export function reads(entry: ChronicleEntry, r: Reading): boolean {
   if (r.lens === 'improved' && entry.record !== 'embellish') return false;
   if (r.lens === 'illuminated' && entry.weight !== 'illuminated') return false;
 
-  const needle = r.find.trim().toLowerCase();
+  // A name typed with a composed accent must find the same visible name
+  // stored with combining marks (and vice versa), without stripping accents.
+  const needle = r.find.trim().toLowerCase().normalize('NFC');
   if (!needle) return true;
   if (!isWritten(entry)) return false;
-  return `${entry.title ?? ''} ${entry.text ?? ''}`.toLowerCase().includes(needle);
+  return `${entry.title ?? ''} ${entry.text ?? ''}`.toLowerCase().normalize('NFC').includes(needle);
 }
 
 
