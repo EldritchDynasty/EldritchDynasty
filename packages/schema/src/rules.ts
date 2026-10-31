@@ -2669,7 +2669,46 @@ const choiceConsequence: ValidationRule = {
   },
 };
 
+
+/** Prevent ambiguous aliases and dangling links in the authored glossary. */
+const glossaryReferences: ValidationRule = {
+  id: 'glossary/refs',
+  about: 'Glossary ids and aliases are unique, and related terms resolve.',
+  check(content) {
+    const issues: Issue[] = [];
+    const ids = new Set<string>();
+    for (const term of content.glossary) {
+      if (ids.has(term.id)) issues.push(err(this.id, `glossary:${term.id}`, 'duplicate glossary id'));
+      ids.add(term.id);
+    }
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const aliases = new Map<string, string>();
+      for (const term of content.glossary) {
+        for (const alias of term.aliases[mode]) {
+          const key = alias.normalize('NFC').toLocaleLowerCase('en');
+          const previous = aliases.get(key);
+          if (previous !== undefined) {
+            issues.push(err(this.id, `glossary:${term.id}`,
+              `alias '${alias}' in ${mode} repeats one owned by '${previous}'`));
+          } else aliases.set(key, term.id);
+        }
+        if (!term.aliases[mode].includes(term.names[mode])) {
+          issues.push(err(this.id, `glossary:${term.id}`,
+            `${mode} display name must be a matchable alias`));
+        }
+      }
+    }
+    for (const term of content.glossary) {
+      for (const id of term.related) {
+        if (!ids.has(id)) issues.push(err(this.id, `glossary:${term.id}`, `unknown related term '${id}'`));
+      }
+    }
+    return issues;
+  },
+};
+
 export const CONTENT_RULES: readonly ValidationRule[] = [
+  glossaryReferences,
   uniqueIds,
   primordialCoverage,
   primordialSite,

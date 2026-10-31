@@ -53,6 +53,7 @@ export const CONTENT_LAYOUT: readonly CollectionSpec[] = [
   { key: 'parcels', source: { kind: 'file', path: 'parcels.yaml' } },
   { key: 'positions', source: { kind: 'file', path: 'positions.yaml' } },
   { key: 'mysticWorkings', source: { kind: 'file', path: 'mystic-workings.yaml' } },
+  { key: 'glossary', source: { kind: 'file', path: 'glossary.yaml' } },
   // A counterpart lives beside the Original prose it answers. Scanning every
   // YAML file keeps #415 batches independent instead of funnelling 127k words
   // through one global catalogue file.

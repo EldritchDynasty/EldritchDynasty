@@ -1,57 +1,53 @@
 import type { ProseMode } from '@ed/schema';
+import { loadBundle } from './content.js';
 
-/**
- * First delivered term for #1991. The Standing header and Chronicle share the
- * same reader-facing definition until the validated content glossary replaces
- * this small source. No game state, saved text or prose is changed.
- */
-export function standingGlossaryDefinition(mode?: ProseMode): string {
-  return mode === 'plainenglish'
-    ? 'How the wider world regards this family.'
-    : 'the regard the wider world gives the house.';
-}
-
-export type GlossarySegment = { text: string; term?: 'standing' };
-
+/** Text is split for rendering, never rewritten in a save or Chronicle. */
+export type GlossarySegment = { text: string; term?: string };
 const WORD_CHARACTER = /[\p{L}\p{M}\p{N}_]/u;
 
-/**
- * Only the capitalized vocabulary label, not "standing preference" in a
- * Chronicle note or a substring of another word. Return a split with at most
- * one term, preserving every input character in its original order.
- */
-export function splitFirstStanding(text: string, mode?: ProseMode): GlossarySegment[] {
-  // Chronicle prose is a fixed historical artefact: changing the reader's
-  // prose mode changes the explanation, not the word already saved on a page.
-  // Recognize both authored labels in both modes; earliest eligible wins.
-  const aliases = mode === 'plainenglish'
-    ? ['Reputation', 'Standing']
-    : ['Standing', 'Reputation'];
-  let match: { index: number; alias: string } | null = null;
-  for (const alias of aliases) {
-    let position = 0;
-    for (;;) {
-      const index = text.indexOf(alias, position);
-      if (index < 0) break;
-      // JS indexes UTF-16 units, but a boundary is a Unicode character:
-      // supplementary-plane letters and digits use two units. Look at the
-      // adjacent full code points, not at isolated surrogate halves.
-      const preceding = [...text.slice(Math.max(0, index - 2), index)].at(-1) ?? '';
-      const following = [...text.slice(index + alias.length, index + alias.length + 2)][0] ?? '';
-      if ((!preceding || !WORD_CHARACTER.test(preceding))
-        && (!following || !WORD_CHARACTER.test(following))) {
-        if (!match || index < match.index) match = { index, alias };
-        break;
+export function glossaryDefinition(id: string, mode: ProseMode = 'original'): string | undefined {
+  return loadBundle().glossary.find((term) => term.id === id)?.definition[mode];
+}
+
+/** Keep the Standing ledger and inline explanations on one authored source. */
+export function standingGlossaryDefinition(mode?: ProseMode): string {
+  return glossaryDefinition('standing', mode) ?? '';
+}
+
+/** Match the first full-word alias, keeping saved historical wording intact. */
+export function splitFirstGlossary(text: string, mode: ProseMode = 'original', onlyIds?: readonly string[]): GlossarySegment[] {
+  let match: { index: number; alias: string; id: string } | undefined;
+  for (const term of loadBundle().glossary) {
+    if (onlyIds && !onlyIds.includes(term.id)) continue;
+    for (const alias of term.aliases[mode]) {
+      let position = 0;
+      for (;;) {
+        const index = text.indexOf(alias, position);
+        if (index < 0) break;
+        // Unicode supplementary-plane letters must be inspected as whole code points.
+        const preceding = [...text.slice(Math.max(0, index - 2), index)].at(-1) ?? '';
+        const following = [...text.slice(index + alias.length, index + alias.length + 2)][0] ?? '';
+        if ((!preceding || !WORD_CHARACTER.test(preceding))
+          && (!following || !WORD_CHARACTER.test(following))) {
+          if (!match || index < match.index || (index === match.index && alias.length > match.alias.length)) {
+            match = { index, alias, id: term.id };
+          }
+          break;
+        }
+        position = index + alias.length;
       }
-      position = index + alias.length;
     }
   }
   if (!match) return [{ text }];
-  const { index, alias } = match;
   return [
-    ...(index ? [{ text: text.slice(0, index) }] : []),
-    { text: alias, term: 'standing' },
-    ...(index + alias.length < text.length
-      ? [{ text: text.slice(index + alias.length) }] : []),
+    ...(match.index ? [{ text: text.slice(0, match.index) }] : []),
+    { text: match.alias, term: match.id },
+    ...(match.index + match.alias.length < text.length
+      ? [{ text: text.slice(match.index + match.alias.length) }] : []),
   ];
+}
+
+/** Current shipped surfaces intentionally opt in to the first delivered term. */
+export function splitFirstStanding(text: string, mode?: ProseMode): GlossarySegment[] {
+  return splitFirstGlossary(text, mode, ['standing']);
 }
