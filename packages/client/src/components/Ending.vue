@@ -229,6 +229,24 @@ async function saveAfterimage(): Promise<void> {
       </p>
     </section>
 
+    <!-- An attributed, written rite cost beside a pursued bloodline purpose.
+         This is what the family's book says, not an omniscient second ending. -->
+    <section v-if="epilogue.purpose?.kind === 'blood_spent'" class="purpose" aria-labelledby="purpose-title">
+      <h3 id="purpose-title" class="label">{{ plain ? 'A cost of the family goal' : 'What the purpose cost' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          The family aimed to keep a wider living bloodline. In {{ epilogue.purpose.year }}, its Chronicle named {{ epilogue.purpose.person }} in the account of a rite. The page gives the family's version, not proof of everything that happened.
+        </template>
+        <template v-else>
+          The house would deepen its blood. Yet in {{ epilogue.purpose.year }} it set {{ epilogue.purpose.person }}'s name upon a rite's page. These were the words it left beside that purpose; no other witness speaks here.
+        </template>
+      </p>
+      <p v-if="epilogue.purpose.embellished" class="small dim">
+        {{ plain ? 'The family embellished this account.' : 'The hand that wrote this page had improved the telling.' }}
+      </p>
+      <blockquote>{{ epilogue.purpose.text }}</blockquote>
+    </section>
+
     <section class="tally">
       <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
@@ -368,6 +386,8 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
 .read { margin-bottom: 34px; }
 .beginning { margin-bottom: 34px; }
 .beginning-ambition { margin-top: 10px; }
+.purpose { margin: 0 0 34px; }
+.purpose blockquote { margin: 12px 0 0; padding-left: 14px; border-left: 2px solid var(--rule); white-space: pre-line; }
 .share { margin-top: 28px; }
 .share-names { display: flex; gap: 8px; align-items: baseline; margin: 10px 0; }
 .share-names input { width: auto; }
