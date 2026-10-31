@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import { createApp, defineComponent, h, ref } from 'vue';
+import { SoundBed, type SoundEngine } from './sound-bed';
 import { modalFocusable, useModal } from './modal';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -100,6 +101,77 @@ describe('the sound preference (#1986)', () => {
     for (const bad of [{ sound: 'off' }, { sound: 0 }, { soundVolume: 2 }, { soundVolume: -0.1 }, { soundVolume: '0.5' }, { soundVolume: null }]) {
       expect(read(bad), JSON.stringify(bad)).toMatchObject({ sound: true, soundVolume: 1 });
     }
+  });
+});
+
+/**
+ * Audio lifecycle belongs to the player's reading accessibility preference:
+ * a stale component cleanup may run after the page has been attached again.
+ * The old callback must not erase the current one's listener ownership.
+ */
+describe('sound listener ownership (#2055)', () => {
+  it('ignores a stale detach after reattachment and still disposes current listeners', () => {
+    const listeners = () => {
+      const byType = new Map<string, Set<() => void>>();
+      return {
+        addEventListener(type: string, listener: () => void) {
+          const set = byType.get(type) ?? new Set<() => void>();
+          set.add(listener);
+          byType.set(type, set);
+        },
+        removeEventListener(type: string, listener: () => void) {
+          byType.get(type)?.delete(listener);
+        },
+        count() {
+          return [...byType.values()].reduce((total, set) => total + set.size, 0);
+        },
+      };
+    };
+    const doc = { ...listeners(), visibilityState: 'visible' as DocumentVisibilityState };
+    const win = listeners();
+    const engine: SoundEngine = {
+      available: false, muted: true, volume: 1,
+      cue() {}, setDrone() {}, suspend() {}, wake() {}, close() {},
+    };
+    const bed = new SoundBed(engine);
+    let activePauseHooks = 0;
+    let unpaused = 0;
+    const onPause = (_listener: () => void) => {
+      activePauseHooks++;
+      let active = true;
+      return () => {
+        if (!active) return;
+        active = false;
+        activePauseHooks--;
+        unpaused++;
+      };
+    };
+
+    const firstDetach = bed.attach(doc, win, onPause);
+    const originalCount = doc.count() + win.count();
+    expect(originalCount).toBeGreaterThan(0);
+    expect(activePauseHooks).toBe(1);
+
+    const currentDetach = bed.attach(doc, win, onPause);
+    expect(doc.count() + win.count()).toBe(originalCount);
+    expect(activePauseHooks).toBe(1);
+    expect(unpaused).toBe(1); // reattach already detached the old listeners
+
+    firstDetach(); // delayed cleanup from the previous attachment
+    expect(doc.count() + win.count()).toBe(originalCount);
+    expect(activePauseHooks).toBe(1);
+
+    bed.dispose();
+    expect(doc.count() + win.count()).toBe(0);
+    expect(activePauseHooks).toBe(0);
+    expect(unpaused).toBe(2);
+
+    // A caller may still hold both handles; cleanup is idempotent.
+    firstDetach();
+    currentDetach();
+    bed.dispose();
+    expect(unpaused).toBe(2);
+    expect(doc.count() + win.count()).toBe(0);
   });
 });
 
