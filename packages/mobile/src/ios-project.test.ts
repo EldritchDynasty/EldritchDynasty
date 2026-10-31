@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { chooseSaveFile } from './file-chooser.js';
 import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
-import { serializeInterchange } from './interchange.js';
+import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
@@ -47,9 +47,25 @@ describe('native exported interchange JSON roots (#1411)', () => {
     expect(serializations).toBe(1);
   });
 
+  it('names every normal share export independently even when its campaign year matches (#2201)', () => {
+    const first = '123e4567-e89b-42d3-a456-426614174000';
+    const second = '123e4567-e89b-42d3-a456-426614174001';
+    const olderExport = exportInterchangeFilename(1260, first);
+    const laterExport = exportInterchangeFilename(1260, second);
+    expect(olderExport).toBe('eldritch-1260-123e4567-e89b-42d3-a456-426614174000.json');
+    expect(laterExport).not.toBe(olderExport);
+    expect(exportInterchangeFilename(undefined, first)).toBe('eldritch-run-123e4567-e89b-42d3-a456-426614174000.json');
+    expect(exportInterchangeFilename(0, first)).toBe('eldritch-0-123e4567-e89b-42d3-a456-426614174000.json');
+
+    const bridge = text('src/platform-bridge.ts');
+    expect(bridge).toContain("exportInterchangeFilename(saveSummary('run', save).year, crypto.randomUUID())");
+    expect(bridge).toContain("const SMOKE_EXPORT = 'eldritch-smoke-export.json'");
+    expect(bridge).toContain('writeSmokeInterchange: writeInterchange');
+  });
+
   it('uses the checked serialized value for both share and smoke interchange writes', () => {
     const bridge = text('src/platform-bridge.ts');
-    expect(bridge).toContain("import { serializeInterchange } from './interchange.js'");
+    expect(bridge).toContain("import { exportInterchangeFilename, serializeInterchange } from './interchange.js'");
     expect(bridge).toContain('data: serializeInterchange(save)');
     expect(bridge).toContain('await writeInterchange(save, name)');
     expect(bridge).toContain('writeSmokeInterchange: writeInterchange');
