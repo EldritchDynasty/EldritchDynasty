@@ -1195,6 +1195,7 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
 
   it('reads a named, written rite cost beside the tracked aim without choosing another ending', () => {
     const ctx = accountedRite();
+    const selectedEnding = selectEnding(ctx);
     const before = digestOf(ctx);
     const original = epilogueOf(ctx)!;
     expect(original.id).toBe('forgotten');
@@ -1206,6 +1207,7 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
       embellished: false,
     });
     expect(original.beginning?.ambition?.name).toBe('Deepen the blood');
+    expect(selectEnding(ctx)).toBe(selectedEnding);
     expect(digestOf(ctx)).toBe(before);
     // The epilogue gives the client only detached strings, not a writable page.
     original.purpose!.text = 'A rewritten account.';
