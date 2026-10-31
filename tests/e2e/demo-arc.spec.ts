@@ -80,7 +80,7 @@ async function openSavedDemo(page: Page, mode: ProseMode, save: ReturnType<Retur
   }).getByRole('button', {
     name: mode === 'original' ? /Return to the Demonstration/ : /Continue the demonstration/,
   }).click();
-  await expect(page.locator('main.board')).toBeVisible();
+  await expect(page.locator('.board')).toBeVisible();
 }
 
 async function fullSaveUnchanged(page: Page, full: ReturnType<ReturnType<typeof newGame>['save']>) {
