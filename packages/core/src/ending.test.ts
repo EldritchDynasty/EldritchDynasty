@@ -996,6 +996,7 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     const people = ['Élodie 家', 'Wystan', 'Meriel', 'Unmentioned'].map((name) =>
       place(ctx, { name, sex: 'female', age: 25 }));
     const [a, b, c, d] = people;
+    b!.epithet = 'the Witness';
     ctx.world.chronicle = [
       page({ id: 'first', people: [a!.id, b!.id, c!.id] }),
       page({ id: 'second', eventId: 'chosen', people: [a!.id] }),
@@ -1008,6 +1009,7 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     const before = digestOf(ctx);
     const first = afterimageEvidence(ctx);
     expect(first.people.map((p) => p.name)).toEqual(['Wystan', 'Élodie 家', 'Meriel']);
+    expect(first.people.map((p) => p.epithet)).toEqual(['the Witness', undefined, undefined]);
     expect(first.people[0]!.sources.some((source) => source.choice === 'keep' && source.page === 'second')).toBe(true);
     expect(afterimageEvidence(ctx)).toEqual(first);
     expect(digestOf(ctx)).toBe(before);
@@ -1039,6 +1041,7 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     const ctx = testWorld(content, 1042, 1200);
     const vessel = place(ctx, { name: 'Meriel', sex: 'female', age: 40 });
     const ascendant = place(ctx, { name: 'Wystan', sex: 'male', age: 40 });
+    vessel.epithet = 'of the Tides';
     ctx.world.chronicle = [page({ eventId: 'the_vessel_rite', people: [vessel.id, ascendant.id],
       text: 'Wystan said Meriel’s name. The book says she walked away.' })];
     ctx.world.decisionLog = [{ kind: 'outcome', event: 'the_vessel_rite', year: 1200,
@@ -1047,6 +1050,7 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     ctx.world.people.kill(vessel.id, 1200, 'given to the rite', 'vessel_consumed');
     const spent = afterimageEvidence(ctx).spent;
     expect(spent?.name).toBe('Meriel');
+    expect(spent?.epithet).toBe('of the Tides');
     expect(spent?.source.text).toBe('Wystan said Meriel’s name. The book says she walked away.');
     ctx.world.chronicle[0]!.text = null;
     expect(afterimageEvidence(ctx).spent).toBeUndefined();
@@ -1102,6 +1106,9 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     const parent = place(ctx, { name: 'The recorded mother', sex: 'female', age: 80 });
     const hidden = place(ctx, { name: 'The real mother', sex: 'female', age: 80 });
     const head = place(ctx, { name: 'The last head', sex: 'male', age: 50 });
+    head.epithet = 'the Witness';
+    parent.epithet = 'of the Tides';
+    hidden.epithet = 'the Secret';
     head.trueParents = { mother: hidden.id };
     head.claimedParents = { mother: parent.id };
     ctx.world.succession = [{ person: head.id, name: head.name, from: 1370 }];
@@ -1110,6 +1117,7 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     const before = digestOf(ctx);
     const evidence = afterimageEvidence(ctx);
     expect(evidence.line?.map((person) => person.name)).toEqual(['The last head', 'The recorded mother']);
+    expect(evidence.line?.map((person) => person.epithet)).toEqual(['the Witness', 'of the Tides']);
     expect(evidence.line?.[0]?.record.parents.mother).toBe(parent.id);
     expect(JSON.stringify(evidence)).not.toContain('The real mother');
     expect(digestOf(ctx)).toBe(before);
