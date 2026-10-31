@@ -758,6 +758,23 @@ describe('the bed decides when the house may be heard', () => {
     expect(page.count(), 'host refusal leaked browser listeners').toBe(0);
   });
 
+  it('closes audio and removes browser listeners when host pause unsubscribe throws', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    bed.attach(page.doc, page.win, () => () => {
+      throw new Error('native unsubscribe refused');
+    });
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(ctx).toBeDefined();
+    expect(() => bed.dispose()).not.toThrow();
+    expect(page.count(), 'unsubscriber prevented browser listener cleanup').toBe(0);
+    expect(ctx.calls, 'unsubscriber prevented audio context close').toContain('close');
+  });
+
   it('asks for an ambient session, and leaves a host\'s own choice alone', () => {
     const page = fakePage();
     const auto = { audioSession: { type: 'auto' } };
