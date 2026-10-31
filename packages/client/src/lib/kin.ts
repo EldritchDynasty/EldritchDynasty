@@ -193,7 +193,10 @@ export function kinshipPath(
 
     const spouseId = member.spouse?.id;
     const spouse = spouseId ? byId.get(spouseId) : undefined;
-    if (spouse) {
+    // A stale, one-sided spouse link is not a proven marriage. The family
+    // tree's attached() projection also requires reciprocity before joining
+    // a pair; the relationship path must not invent a bond it cannot draw.
+    if (spouse?.spouse?.id === member.id) {
       connect(member.id, spouse.id, spouseRelation(spouse));
       connect(spouse.id, member.id, spouseRelation(member));
     }
