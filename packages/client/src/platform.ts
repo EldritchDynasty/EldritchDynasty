@@ -190,7 +190,14 @@ export async function copyTextInBrowser(text: string): Promise<void> {
     if (!document.execCommand('copy')) throw new Error('the browser refused to copy');
   } finally {
     area.remove();
-    if (focused && 'focus' in focused && typeof focused.focus === 'function') focused.focus();
+    // Restoring a stale/custom control can throw after the copy has already
+    // succeeded. Focus recovery is best-effort: never turn a successful
+    // clipboard write into a refusal, or mask the original copy error.
+    try {
+      if (focused && 'focus' in focused && typeof focused.focus === 'function') focused.focus();
+    } catch {
+      // The textarea was removed; the copy result still belongs to the caller.
+    }
   }
 }
 

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { REVEAL_ELEMENTS, revealNotice, revealStorageKey, loadRevealed, saveRevealed, revealTransition } from './reveal';
 import type { SessionView, TableView } from '@ed/core';
 import type { HouseAmbitionId } from '@ed/schema';
-import { tableTasksFor } from './table-nav';
+import { tableTargetLabel, tableTasksFor } from './table-nav';
 
 const ORIGINAL = [
   'The clock can now move five years at a time.',
@@ -85,7 +85,7 @@ describe('Table task disclosure (#1941)', () => {
   const viewFor = (id: HouseAmbitionId) => ({ ambition: { id, name: `Goal: ${id}` } }) as SessionView;
   const routes = {
     deepen_blood: ['market', 'papers', 'marriages', 'programme'],
-    raise_ascendant: ['programme', 'shelf', 'tutoring', 'duties', 'forcing', 'longWait', 'greatWork'],
+    raise_ascendant: ['programme', 'market', 'papers', 'marriages', 'shelf', 'tutoring', 'duties', 'forcing', 'longWait', 'greatWork'],
     restore_ledger: ['greatWork', 'shelf', 'preferences'],
     secure_branches: ['programme', 'marriages', 'market', 'security', 'land'],
   } as const;
@@ -110,6 +110,18 @@ describe('Table task disclosure (#1941)', () => {
     expect(all.every(task => task.revealed && task.targets.length > 0)).toBe(true);
   });
 
+  it.each(['original', 'plainenglish'] as const)('links a tracked ascendant to existing successor preparations in %s (#2133)', (proseMode) => {
+    const tasks = tableTasksFor(viewFor('raise_ascendant'), table, { revealed: new Set(['table']), proseMode });
+    const ambition = tasks[0]!;
+    const routes = ambition.targets.filter((target) => ['market', 'papers', 'marriages'].includes(target));
+    expect(routes).toEqual(['market', 'papers', 'marriages']);
+    expect(routes.map((target) => tableTargetLabel(target, proseMode))).toEqual(proseMode === 'plainenglish'
+      ? ['Marriage market', 'Marriage papers', 'Marriage preferences']
+      : ['The market', 'The papers', 'Who the house marries']);
+    // Linking preparation is not permission to reveal unavailable forcing offers.
+    expect(ambition.targets).not.toContain('forcing');
+    expect(tasks.find((task) => task.id === 'heir')?.targets).toContain('market');
+  });
   it('keeps unavailable public quotes visible without treating affordability as a navigation gate', () => {
     const tasks = tableTasksFor(viewFor('restore_ledger'), table, { revealed: new Set(['table']) });
     expect(tasks[0]!.offer?.reason).toBe(table.ledgerSearch.reason);
