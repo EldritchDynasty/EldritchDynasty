@@ -113,6 +113,16 @@ export const RetainerContractS = z.object({
    * Discrepancy is a Discrepancy with legs.
    */
   knowsSecrets: z.array(FlagIdS).default([]),
+}).superRefine((contract, ctx) => {
+  // A bonded debt is paid down by wages, not by a hidden forgiveness rule.
+  // Zero or negative annual service would make the bond permanent or grow it.
+  if (contract.term === 'bonded' && (!Number.isFinite(contract.wage) || contract.wage <= 0)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['wage'],
+      message: 'Bonded service requires a positive, finite yearly wage',
+    });
+  }
 });
 export type RetainerContract = z.infer<typeof RetainerContractS>;
 
