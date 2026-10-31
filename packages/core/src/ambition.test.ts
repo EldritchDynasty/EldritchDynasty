@@ -330,6 +330,35 @@ describe('house ambition (issue #210)', () => {
     expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
   });
 
+  it('counts inflected Record tokens using the authored slot grammar (#2045)', () => {
+    const g = newGame(content, { seed: 2045, campaign: 'short', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const scion = oneSubject(g.ctx);
+    g.ctx.world.scion = scion.id;
+
+    const pending = quietRecord(g.ctx);
+    pending.fill = { SUBJECT: scion.id };
+
+    // A Record page may name a cast person through an inflected pronoun
+    // without containing a bare {SUBJECT} token.
+    pending.event.record!.options.record.chronicle = '{SUBJECT.They} kept the account.';
+    expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
+      surface: 'record', effect: 'advance',
+    }));
+
+    // Embellished wording is also a visible Record alternative.
+    pending.event.record!.options.record.chronicle = 'The account was kept.';
+    pending.event.record!.options.embellish.chronicle = 'The house praised {SUBJECT.their} work.';
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('advance');
+
+    // Valid tokens without a filled cast slot, and malformed tokens, reveal
+    // nothing. Simply being in the event fill must never surface a hint.
+    pending.event.record!.options.embellish.chronicle = 'No one was named.';
+    pending.event.record!.options.record.chronicle =
+      'The page lists {MISSING.their} and {SUBJECT..they}, neither a visible cast person.';
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+  });
+
   it('reads only the exact remembered choice branch when it changes the bloodline', () => {
     const g = newGame(content, { seed: 3273, campaign: 'short', decider: 'chronicler' });
     g.setAmbition('deepen_blood');
