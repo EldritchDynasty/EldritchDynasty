@@ -352,6 +352,47 @@ describe('answers and the gaps between them', () => {
     expect(l.artifact().summary.answers).toBe(3);
   });
 
+  it('treats fresh pages as news after any synchronously throwing pickup, and still carries a later successful pickup', async () => {
+    for (const verb of ['resume', 'load', 'importSave'] as const) {
+      const l = log();
+      const old = { id: 'old', year: 1042, answer: 'glimpse' as const };
+      const fresh = { id: 'fresh', year: 1050, answer: 'clause' as const };
+      l.note({ kind: 'run', campaign: 'short', seed: 17 });
+      l.chronicle([old]);
+      const error = new Error('private host error');
+      const called: string[] = [];
+      const bare = {
+        resume() { expect(this).toBe(bare); called.push('resume'); throw error; },
+        load(_slot: string) { expect(this).toBe(bare); called.push('load'); throw error; },
+        importSave() { expect(this).toBe(bare); called.push('importSave'); throw error; },
+      } as unknown as Parameters<typeof recordActions>[0];
+      const actions = recordActions(bare, l);
+      const call = verb === 'resume' ? () => actions.resume()
+        : verb === 'load' ? () => actions.load('private slot')
+          : () => actions.importSave();
+      expect(call).toThrow(error);
+      expect(called).toEqual([verb]);
+
+      // The failed verb did not change the house. A newly exposed answer
+      // must not be censored as a page inherited from an accepted save.
+      l.chronicle([old, fresh]);
+      expect(l.events.filter((e) => e.kind === 'page')
+        .map((e) => 'carried' in e && e.carried === true)).toEqual([false, false]);
+      expect(l.artifact().summary.answers).toBe(2);
+      expect(l.artifact().summary.gaps.some((g) => g.to.kind === 'new-run')).toBe(false);
+
+      const success = recordActions({
+        resume: async () => true,
+      } as unknown as Parameters<typeof recordActions>[0], l);
+      await success.resume();
+      l.chronicle([{ id: 'saved-history', year: 1060, answer: 'glimpse' }]);
+      expect(l.events.filter((e) => e.kind === 'page')
+        .map((e) => 'carried' in e && e.carried === true)).toEqual([false, false, true]);
+      expect(l.artifact().summary.answers).toBe(2);
+      expect(JSON.stringify(l.artifact())).not.toContain('private');
+    }
+  });
+
   it('records nothing after it ends, and an open log censors as open', () => {
     const c = clock();
     const l = log(c);
