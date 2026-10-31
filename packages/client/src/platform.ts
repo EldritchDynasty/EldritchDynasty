@@ -157,7 +157,14 @@ function readableBrowserRecord(value: unknown, name: string): unknown {
  * rather than claim a copy that did not happen. Focus goes back where it was.
  */
 export async function copyTextInBrowser(text: string): Promise<void> {
-  const clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+  // Some embedded browsers throw on the optional property getter itself.
+  // Access failure is the same as an unavailable API: try selected-textarea copy.
+  let clipboard: Clipboard | undefined;
+  try {
+    clipboard = typeof navigator === 'undefined' ? undefined : navigator.clipboard;
+  } catch {
+    // Fall through to the existing click-gesture fallback.
+  }
   if (clipboard?.writeText) {
     try {
       await clipboard.writeText(text);
