@@ -6,7 +6,7 @@ import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
 import {
-  PLATE, afterimageLayout, afterimageModel, afterimageName, rowFont, type Measure,
+  MAX_PLATE_CANVAS_HEIGHT, PLATE, afterimageLayout, afterimageModel, afterimageName, afterimageSvg, rowFont, type Measure,
 } from '../lib/book';
 
 const props = defineProps<{ view: SessionView; epilogue: EpilogueView; achievements?: readonly AchievementView[]; actions: GameActions; proseMode?: ProseMode }>();
@@ -120,38 +120,53 @@ async function saveAfterimage(): Promise<void> {
     const model = afterimage.value;
     const filename = afterimageName(props.view.houseName, props.view.seed, props.epilogue.year);
     const layout = afterimageLayout(model, measure);
-    const width = PLATE.width;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = layout.height;
-    const ink = canvas.getContext('2d');
-    if (!ink) throw new Error('2D canvas unavailable');
+    // The measured rows also have a vector representation. Tall plates cannot
+    // safely allocate a bitmap in mobile WebViews; failed PNG allocation and
+    // encoding should not make the nameless founding code unshareable (#2073).
+    const saveSvg = () => downloadBlob(
+      new Blob([afterimageSvg(model, layout)], { type: 'image/svg+xml;charset=utf-8' }),
+      filename.replace(/\.png$/, '.svg'),
+    );
+    if (layout.height > MAX_PLATE_CANVAS_HEIGHT) {
+      saveSvg();
+    } else {
+      try {
+        const width = PLATE.width;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = layout.height;
+        const ink = canvas.getContext('2d');
+        if (!ink) throw new Error('2D canvas unavailable');
 
-    ink.fillStyle = PLATE.ground;
-    ink.fillRect(0, 0, canvas.width, canvas.height);
-    let y = 64;
-    for (const row of layout.rows) {
-      if (row.rule) {
-        ink.strokeStyle = row.colour;
-        ink.beginPath();
-        ink.moveTo(PLATE.pad, y);
-        ink.lineTo(width - PLATE.pad, y);
-        ink.stroke();
-      } else {
-        ink.fillStyle = row.colour;
-        ink.font = rowFont(row);
-        ink.fillText(row.text, PLATE.pad, y);
+        ink.fillStyle = PLATE.ground;
+        ink.fillRect(0, 0, canvas.width, canvas.height);
+        let y = 64;
+        for (const row of layout.rows) {
+          if (row.rule) {
+            ink.strokeStyle = row.colour;
+            ink.beginPath();
+            ink.moveTo(PLATE.pad, y);
+            ink.lineTo(width - PLATE.pad, y);
+            ink.stroke();
+          } else {
+            ink.fillStyle = row.colour;
+            ink.font = rowFont(row);
+            ink.fillText(row.text, PLATE.pad, y);
+          }
+          y += row.size * 1.5 + row.gap;
+        }
+
+        ink.fillStyle = PLATE.faint;
+        ink.font = `12px ${PLATE.serif}`;
+        ink.fillText(model.footer, PLATE.pad, canvas.height - 28);
+
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('PNG export unavailable');
+        downloadBlob(blob, filename);
+      } catch {
+        saveSvg();
       }
-      y += row.size * 1.5 + row.gap;
     }
-
-    ink.fillStyle = PLATE.faint;
-    ink.font = `12px ${PLATE.serif}`;
-    ink.fillText(model.footer, PLATE.pad, canvas.height - 28);
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-    if (!blob) throw new Error('PNG export unavailable');
-    downloadBlob(blob, filename);
   } catch {
     afterimageError.value = 'The house afterimage could not be saved. Try again.';
   } finally {
