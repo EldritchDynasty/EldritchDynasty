@@ -413,7 +413,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/6');
+    expect(l.artifact().format).toBe('ed-reading-log/7');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -470,7 +470,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/6');
+    expect(l.artifact().format).toBe('ed-reading-log/7');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
