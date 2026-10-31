@@ -169,6 +169,11 @@ const mayBeginShared = computed(() => sharedFounding.value !== null && libraryIs
   && !selectingRun.value && !libraryBusy.value);
 
 function onShareInput(): void {
+  // Recipient names belong to the code for which they were entered. A pasted
+  // replacement must not silently inherit a former house or friend's name.
+  // This only runs when the reader edits the code, not on prose-mode changes
+  // or while they fill in the name fields for the current founding.
+  shareNames.value = { founder: '', house: '', friends: [] };
   shareBeginError.value = null;
 }
 
