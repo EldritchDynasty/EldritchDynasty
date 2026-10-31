@@ -97,6 +97,8 @@ export type SoundEngine = Pick<Sound, 'muted' | 'volume' | 'available' | 'cue' |
  *   tracks the scene so a working engine would know where it is.
  */
 export class SoundBed {
+  /** Teardown is terminal: late UI/host callbacks must never reopen Web Audio. */
+  #disposed = false;
   #preference: SoundPreference = { on: false, volume: 1 };
   #unlocked = false;
   #away = false;
@@ -110,11 +112,12 @@ export class SoundBed {
 
   /** True only when a cue could be heard; zero volume must not open the audio device. */
   get audible(): boolean {
-    return this.#preference.on && this.#preference.volume > 0
+    return !this.#disposed && this.#preference.on && this.#preference.volume > 0
       && this.#unlocked && !this.#away && this.engine.available;
   }
 
   prefer(preference: SoundPreference): void {
+    if (this.#disposed) return;
     this.#preference = { on: preference.on, volume: preference.volume };
     this.engine.volume = preference.volume;
     this.#settle();
@@ -122,6 +125,7 @@ export class SoundBed {
 
   /** Where the drone should be. Called on every view; an unchanged scene is left alone. */
   scene(next: DroneInput | null): void {
+    if (this.#disposed) return;
     const key = JSON.stringify(next);
     if (key === this.#sceneKey) return;
     this.#scene = next;
@@ -136,7 +140,7 @@ export class SoundBed {
 
   /** The player touched the page: audio is allowed, and they are evidently here. */
   gesture(): void {
-    if (this.#documentHidden) return;
+    if (this.#disposed || this.#documentHidden) return;
     this.#unlocked = true;
     this.#away = false;
     this.#settle();
@@ -144,14 +148,14 @@ export class SoundBed {
   }
 
   hide(): void {
-    if (this.#away) return;
+    if (this.#disposed || this.#away) return;
     this.#away = true;
     this.#settle();
     this.engine.suspend();
   }
 
   show(): void {
-    if (!this.#away) return;
+    if (this.#disposed || !this.#away) return;
     this.#away = false;
     this.#settle();
   }
@@ -169,6 +173,7 @@ export class SoundBed {
     /** `navigator`, for the Audio Session API where an engine has one. */
     nav?: object,
   ): () => void {
+    if (this.#disposed) return () => undefined;
     this.#detach();
     // Ambient: mixes with whatever the player is already listening to, and
     // obeys a phone's silent switch, where the engine supports saying so.
@@ -228,6 +233,10 @@ export class SoundBed {
 
   /** Let go of the listeners and the audio thread. */
   dispose(): void {
+    if (this.#disposed) return;
+    // Mark terminal before cleanup: a host unsubscriber may synchronously
+    // invoke its old listener, and the sound engine must stay closed.
+    this.#disposed = true;
     this.#detach();
     this.engine.close();
   }
