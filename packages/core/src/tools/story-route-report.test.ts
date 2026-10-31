@@ -86,8 +86,22 @@ describe('story-route promises (#1946)', () => {
     expect(dueArcSteps(ctx, testRng('again')).some(step => step.instance.id === instance.id)).toBe(false);
   });
 
+  // The observer's own classification, on a Hall whose continuations still
+  // cancel on a death. #1977 gave the shipped Hall successors; that wiring is
+  // witnessed in arc-memory.test.ts, and this keeps the observer's
+  // `cancel_arc` path exercised whatever the YAML says.
+  const cancelling = (() => {
+    const bundle = structuredClone(content.bundle);
+    for (const event of bundle.events) {
+      if (event.id !== 'the_hall_is_answered' && event.id !== 'the_hall_stops_writing') continue;
+      for (const spec of Object.values(event.slots)) delete spec.onMissing;
+      delete event.inheritedBody;
+    }
+    return indexContent(bundle);
+  })();
+
   it.each(['HEAD', 'COUSIN'] as const)('reports a missing kept %s without substituting another person', (slot) => {
-    const { ctx } = hall();
+    const { ctx } = hall(cancelling);
     const observer = new StoryRouteObserver(ctx);
     letter(ctx);
     observer.afterYear();
