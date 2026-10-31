@@ -3,6 +3,7 @@
  * Descriptive evidence; failed product goals remain findings, never substitute gate passes.
  */
 import { createHash } from 'node:crypto';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { ALL_AFFINITIES, RESPECT_ORDER, RUNG_ORDER, type AffinityName, type Content, type MysticService, type TableOrder } from '@ed/schema';
@@ -331,7 +332,7 @@ if(process.argv[1]?.replace(/\\/g,'/').endsWith('/mystic-repertoire-report.ts'))
   const n=Number(process.argv[2]??24),seedBase=Number(process.argv[3]??187700);
   const scenario=process.argv[5]??'ordinary';
   if(scenario!=='ordinary'&&scenario!=='hostile')throw Error('Expected ordinary or hostile scenario');
-  if(!Number.isSafeInteger(n)||n<1||!Number.isSafeInteger(seedBase))throw Error('Expected positive runs and integer seed base');
+  sampleSeedEnd(n,seedBase);
   const content=loadContent(),samples:Run[]=[],controls:{campaign:string;policy:string;seed:number;equal:boolean}[]=[];
   const contentHash=createHash('sha256').update(canonical(content.bundle)).digest('hex');
   for(const campaign of ['short','long'] as const)for(const policy of REPERTOIRE_POLICIES)for(let i=0;i<n;i++){

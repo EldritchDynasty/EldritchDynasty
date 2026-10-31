@@ -9,6 +9,7 @@
  * Automatic study remains enabled in every column.
  */
 import { writeFileSync } from 'node:fs';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { createHash } from 'node:crypto';
 import { loadContent } from '@ed/content';
 import { ALL_AFFINITIES, type AffinityName, type Content } from '@ed/schema';
@@ -190,7 +191,7 @@ export function summariseChallengeRuns(runs: Run[]) {
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('/challenge-report.ts')) {
   const runs = Number(process.argv[2] ?? 64);
   const seedBase = Number(process.argv[3] ?? 181300);
-  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) throw new Error('Expected positive runs and integer seed base');
+  sampleSeedEnd(runs, seedBase);
   const content = loadContent();
   const samples: Run[] = [];
   for (const campaign of ['short', 'long'] as const) {

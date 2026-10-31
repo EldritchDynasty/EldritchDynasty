@@ -9,6 +9,7 @@
  * Experimental columns collect the existing service/working metrics; --funnel adds the full annual supply funnel.
  */
 import { createHash } from 'node:crypto';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -109,7 +110,8 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-practice-report.ts') 
   const args = process.argv.filter(arg => arg !== '--funnel');
   const n = Number(args[2] ?? 24), seedBase = Number(args[3] ?? 187700);
   const output = args[4], scenario = args[5] ?? 'ordinary', requested = args[6] ?? 'quoted_demand';
-  if (!Number.isSafeInteger(n) || n < 1 || !Number.isSafeInteger(seedBase) || !output) throw Error('Expected runs, integer seed and output path');
+  if (!output) throw Error('Expected runs, integer seed and output path');
+  const lastSeed = sampleSeedEnd(n, seedBase);
   if (scenario !== 'ordinary' && scenario !== 'hostile') throw Error('Expected ordinary or hostile');
   const historical: Run[] = args[7] && args[7] !== '-' ? JSON.parse(readFileSync(args[7], 'utf8')).samples : [];
   const variants = requested === 'historical' || requested === 'observer_controls' ? REPERTOIRE_POLICIES : requested.split(',').map(name => {
@@ -142,7 +144,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-practice-report.ts') 
     for (const row of checkpoint.samples) {
       const key = `${row.campaign}/${row.variant}/${row.seed}`;
       if (!variants.some(v => v === row.variant) || !['short', 'long'].includes(row.campaign) || !Number.isSafeInteger(row.seed)
-        || row.seed < seedBase || row.seed >= seedBase + n || seen.has(key)) throw Error(`Invalid checkpoint row: ${key}`);
+        || row.seed < seedBase || row.seed > lastSeed || seen.has(key)) throw Error(`Invalid checkpoint row: ${key}`);
       seen.add(key); samples.push({ ...row, sourceHashes: row.sourceHashes ?? checkpoint.hashes });
     }
     controls.push(...checkpoint.controls);
