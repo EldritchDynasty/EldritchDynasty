@@ -722,4 +722,49 @@ describe('watching changes nothing it watches', () => {
     expect(verbs, 'the recorder saw the verbs it passed through').toContain('advance');
     expect(verbs).toContain('letHimDecide');
   });
+  it('records real accepted/refused Table and Muster orders without changing the run (#2135)', async () => {
+    // The earlier save-equivalence witness only advances years and answers
+    // choices. Table actions can also change policy and append commands; prove
+    // that observing a successful order and two refusals is equally passive.
+    async function playOrders(recorded: boolean) {
+      const platform = memoryPlatform();
+      const game = createGame(loadBundle(), platform);
+      const reading = recorded ? log() : null;
+      const actions = reading ? recordActions(game.actions, reading) : game.actions;
+
+      actions.begin(19920, 'short');
+      const allowed = actions.order({ kind: 'marriages', policy: 'in' });
+      const denied = actions.order({ kind: 'study', person: 'nobody', book: 'nothing' });
+      const unavailable = actions.muster({ op: 'withdraw' });
+      await settle();
+
+      const save = platform.saves.get('autosave') as Record<string, unknown> | undefined;
+      expect(save, 'Table and Muster actions were autosaved').toBeDefined();
+      return {
+        results: [allowed, denied, unavailable],
+        save: canonical({ ...save, savedAt: '' }),
+        events: reading?.events.filter((e) => e.kind === 'action' && (e.act === 'table' || e.act === 'muster'))
+          .map(({ at: _at, ...e }) => e) ?? [],
+      };
+    }
+
+    const bare = await playOrders(false);
+    const observed = await playOrders(true);
+    expect(observed.results).toEqual(bare.results);
+    expect(observed.results.map((result) => result.ok)).toEqual([true, false, false]);
+    // A canonical save includes the RNG and decision log: if recording makes
+    // an extra order or changes a refusal, this equality fails.
+    expect(observed.save).toBe(bare.save);
+    expect(observed.events).toEqual([
+      { kind: 'action', verb: 'order', act: 'table', category: 'marriages', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'marriages', status: 'accepted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'attempted' },
+      { kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'refused' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'attempted' },
+      { kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'refused' },
+    ]);
+    expect(JSON.stringify(observed.events)).not.toContain('nobody');
+    expect(JSON.stringify(observed.events)).not.toContain('nothing');
+  });
+
 });
