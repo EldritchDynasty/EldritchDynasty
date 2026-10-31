@@ -402,7 +402,7 @@ function signOnEnter(event: KeyboardEvent): void {
       <!-- THE LAST QUESTION, and the only one not about the house. It is the
            one place the game reaches outside itself, so it is asked in the
            frame's own voice and never explained. -->
-      <section class="choice friends">
+      <section v-if="friends.length > 0" class="choice friends">
         <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of your blood' }}</h3>
         <p class="prompt">{{ prologue.friendsPrompt }}</p>
         <!-- Keep the personal names optional and out of the required signing
