@@ -502,7 +502,16 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         kind: 'action', verb, act: RECORDED_VERBS[verb],
         ...(verb === 'advance' && typeof args[0] === 'number' ? { years: args[0] } : {}),
       });
-      const result = original.apply(actions, args);
+      // An unsuccessful pick-up must not turn the next Chronicle window of
+      // the still-active house into history. Async refusals already clear the
+      // flag below; a synchronous host/store failure must do the same.
+      let result: unknown;
+      try {
+        result = original.apply(actions, args);
+      } catch (error) {
+        if (PICKUPS.has(verb)) log.pickUpFailed();
+        throw error;
+      }
       if (PICKUPS.has(verb) && result instanceof Promise) {
         result.then((ok) => { if (ok !== true) log.pickUpFailed(); }, () => log.pickUpFailed());
       }
