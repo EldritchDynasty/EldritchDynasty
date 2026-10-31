@@ -454,6 +454,9 @@ function effectRelevance(
           'The branch puts another working into a ladder candidate’s reach.') };
     }
     if (effect.kind === 'tutor') {
+      // A tutor for a different relative does not prepare this named ladder
+      // programme. Read the actual cast, not the branch's theme (#2190).
+      if (!tutorTargetsProgramme(ctx, decision, effect.target)) return undefined;
       return effect.op === 'cancel'
         ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.tutor_cancel',
           'The branch cuts short preparation already being given to a ladder candidate.') }
@@ -493,6 +496,37 @@ function effectRelevance(
   }
 
   return undefined;
+}
+
+/**
+ * A tutoring hint must follow the particular pupil in the chosen outcome.
+ * The cast and the house's public programme are enough: no hidden expression,
+ * genome or predicted result is consulted. Broad targets are deliberately
+ * silent unless a concrete named slot identifies a programme member.
+ */
+function tutorTargetsProgramme(
+  ctx: SimCtx,
+  decision: PendingChoice,
+  target: Extract<Effect, { kind: 'tutor' }>['target'],
+): boolean {
+  const named = new Set(
+    [ctx.world.scion, ctx.world.scionHeir, visibleAscensionRanking(ctx)[0]?.person]
+      .filter((id): id is string => Boolean(id)),
+  );
+  if (!named.size) return false;
+
+  if (typeof target === 'string') {
+    // Only a Head who is themselves in the programme is an unambiguous
+    // fixed target. Household, blood and children are whole groups.
+    return target === 'head'
+      && ctx.world.people.living().some((person) =>
+        person.castSlots.includes('head') && named.has(person.id));
+  }
+
+  const cast = decision.fill['slot' in target ? target.slot : target.all];
+  return typeof cast === 'string'
+    ? named.has(cast)
+    : Array.isArray(cast) && cast.some((person) => named.has(person));
 }
 
 function roleOf(decision: PendingChoice, slot: string): string | undefined {
