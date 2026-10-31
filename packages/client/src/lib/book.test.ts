@@ -734,6 +734,17 @@ describe('share codes on exported images', () => {
       .toBe('Eldritch Dynasty · Share code for this starting point (names not included)');
   });
 
+  it('retains a measured monospace row in the Chronicle SVG, beside ordinary prose', () => {
+    const rows = [
+      { text: 'ED1.0OIl', size: 12, colour: PLATE.ink, mono: true, gap: 4 },
+      { text: 'An ordinary line', size: 12, colour: PLATE.ink, gap: 4 },
+    ];
+    const svg = plateSvg(rows, 'House', 'A chronicle');
+    const xmlFont = (font: string) => font.replaceAll('"', '&quot;');
+    expect(svg).toContain(`font-family="${xmlFont(PLATE.mono)}" font-size="12" font-style="normal">ED1.0OIl</text>`);
+    expect(svg).toContain(`font-family="${xmlFont(PLATE.serif)}" font-size="12" font-style="normal">An ordinary line</text>`);
+  });
+
   it('draws the same foot into the vector plate, in the monospace face', () => {
     const foot = plateFoot(CODE, monospace);
     const rows = plateRows([entry()], monospace);
