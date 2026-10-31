@@ -1162,7 +1162,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]
     .flatMap((id) => {
       const person = w.people.get(id);
-      return person ? [{ id: String(id), name: person.name }] : [];
+      return person ? [{ id: String(id), name: person.name,
+        ...(person.epithet ? { epithet: person.epithet } : {}),
+      }] : [];
     });
 
   const campaign = campaignDef(w.campaign);
