@@ -2495,18 +2495,26 @@ describe('in-place glossary in the decision Docket (#1991)', () => {
         );
 
 
+        // A language change deliberately closes the existing disclosure: it
+        // must not carry an old explanation into a newly worded reading.
         await wrapper.setProps({
           proseMode: proseMode === 'original' ? 'plainenglish' : 'original',
         });
+        expect(wrapper.find('.body .glossary-definition').exists()).toBe(false);
+        const switchedTerm = wrapper.get('.body .glossary-term');
+        expect(switchedTerm.attributes('aria-expanded')).toBe('false');
+        (switchedTerm.element as HTMLButtonElement).focus();
+        await switchedTerm.trigger('click');
+        expect(switchedTerm.attributes('aria-expanded')).toBe('true');
         expect(wrapper.get('.body .glossary-definition').text()).toBe(
           proseMode === 'original'
             ? 'How the wider world regards this family.'
             : 'the regard the wider world gives the house.',
         );
-        await term.trigger('keydown', { key: 'Escape' });
+        await switchedTerm.trigger('keydown', { key: 'Escape' });
         expect(wrapper.find('.body .glossary-definition').exists()).toBe(false);
-        expect(term.attributes('aria-expanded')).toBe('false');
-        expect(document.activeElement).toBe(term.element);
+        expect(switchedTerm.attributes('aria-expanded')).toBe('false');
+        expect(document.activeElement).toBe(switchedTerm.element);
         expect(actions.choose).not.toHaveBeenCalled();
         expect(decision).toEqual(snapshot);
       } finally {
