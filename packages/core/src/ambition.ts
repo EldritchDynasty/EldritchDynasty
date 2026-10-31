@@ -4,6 +4,7 @@ import {
   isActiveBranch,
   RUNG_ORDER,
   isLadderRole,
+  slotTokens,
   type CampaignId,
   type Effect,
   type HouseAmbitionId,
@@ -312,8 +313,9 @@ function recordMentionedIds(decision: PendingRecord): string[] {
 
   // Slot markers are structure embedded in the localisable Record surface:
   // translation may replace every surrounding word, but it must keep
-  // {ASCENDANT}/{HEIR}/etc. for interpolation. Read only those markers, then
-  // map them through this firing's fill; a person cast elsewhere in the scene
+  // {ASCENDANT}/{HEIR}/etc., including forms such as {HEIR.their}, for
+  // interpolation. Use the shared authored-token grammar, then map only those
+  // markers through this firing's fill; a person cast elsewhere in the scene
   // is not thereby named on the Record page.
   const visible = [
     record.subject,
@@ -322,9 +324,7 @@ function recordMentionedIds(decision: PendingRecord): string[] {
   ];
   const slots = new Set<string>();
   for (const text of visible) {
-    for (const match of text.matchAll(/\{([A-Z][A-Z0-9_]*)\}/g)) {
-      if (match[1]) slots.add(match[1]);
-    }
+    for (const token of slotTokens(text)) slots.add(token.slot);
   }
 
   return [...slots].flatMap((slot) => {
