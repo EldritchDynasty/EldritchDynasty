@@ -41,8 +41,8 @@ async function openNarrow(page: Page, mode: ProseMode, withDemo: boolean) {
   const full = foundedSave('short');
   const demo = foundedSave('demo');
   await page.setViewportSize({ width: 320, height: 700 });
-  // Initial storage only: no init script survives into a second navigation
-  // within this test, so actual host writes can be observed unchanged.
+  // Tests make no later navigation: real host autosaves are not overwritten
+  // by this test's initial storage fixture.
   await page.addInitScript(({ full, demo, mode, withDemo, key }) => {
     localStorage.setItem('ed:save:autosave', JSON.stringify(full));
     if (withDemo) localStorage.setItem('ed:save:demo-autosave', JSON.stringify(demo));
@@ -103,7 +103,7 @@ for (const scenario of scenarios) {
     const full = await openNarrow(page, scenario.mode, true);
 
     const demos = page.getByRole('region', { name: scenario.region });
-    const resume = demos.getByRole('button', { name: scenario.resume, exact: true });
+    const resume = demos.getByRole('button', { name: /^(Return to the Demonstration|Continue the demonstration)\b/ });
     await expect(resume).toBeVisible();
     await expectNoDocumentOverflow(page);
     await resume.focus();
