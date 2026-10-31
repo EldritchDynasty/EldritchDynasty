@@ -72,17 +72,35 @@ export function shortcutFor(p: KeyPress): Shortcut | null {
   return null;
 }
 
+/**
+ * The document reports the shadow host as activeElement, while keyboard
+ * events from its inner controls still reach the window listener. Follow
+ * open shadow roots so their inputs and buttons keep their own keystrokes.
+ */
+function innermostActiveElement(el: Element): Element {
+  let active = el;
+  let inner = active.shadowRoot?.activeElement;
+  while (inner) {
+    active = inner;
+    inner = active.shadowRoot?.activeElement;
+  }
+  return active;
+}
+
 /** Whether a press should be read as typing rather than steering. */
 export function isField(el: Element | null): boolean {
   if (!el) return false;
-  const tag = el.tagName;
+  const active = innermostActiveElement(el);
+  const tag = active.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-    || (el as HTMLElement).isContentEditable === true;
+    || (active as HTMLElement).isContentEditable === true;
 }
 
 /** Whether the focused thing answers Space and Enter on its own. */
 export function isControl(el: Element | null): boolean {
-  return el?.tagName === 'BUTTON' || el?.tagName === 'A' || el?.tagName === 'SUMMARY';
+  if (!el) return false;
+  const tag = innermostActiveElement(el).tagName;
+  return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY';
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
