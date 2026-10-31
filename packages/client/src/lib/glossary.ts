@@ -33,8 +33,11 @@ export function splitFirstStanding(text: string, mode?: ProseMode): GlossarySegm
     for (;;) {
       const index = text.indexOf(alias, position);
       if (index < 0) break;
-      const preceding = index > 0 ? text[index - 1]! : '';
-      const following = text[index + alias.length] ?? '';
+      // JS indexes UTF-16 units, but a boundary is a Unicode character:
+      // supplementary-plane letters and digits use two units. Look at the
+      // adjacent full code points, not at isolated surrogate halves.
+      const preceding = [...text.slice(Math.max(0, index - 2), index)].at(-1) ?? '';
+      const following = [...text.slice(index + alias.length, index + alias.length + 2)][0] ?? '';
       if ((!preceding || !WORD_CHARACTER.test(preceding))
         && (!following || !WORD_CHARACTER.test(following))) {
         if (!match || index < match.index) match = { index, alias };
