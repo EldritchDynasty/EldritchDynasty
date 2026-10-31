@@ -709,7 +709,9 @@ describe('the panel', () => {
     try {
       const historical = w.get('[data-person-history="per_dead"]');
       expect(historical.text()).toContain('Mara the Chronicler');
-      expect(historical.text()).toContain('not in a living hall');
+      expect(historical.text()).toContain(
+        proseMode === 'plainenglish' ? 'not in a current household' : 'not in a living hall',
+      );
       expect(w.find('button[data-person="per_dead"]').exists()).toBe(false);
 
       const living = w.get('button[data-person="per_alive"]');
