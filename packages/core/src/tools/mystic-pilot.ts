@@ -5,6 +5,7 @@
  * the same house without one. Descriptive evidence, not a balance gate.
  */
 import { writeFileSync } from 'node:fs';
+import { sampleSeedEnd } from './sample-seed-span.js';
 import { loadContent } from '@ed/content';
 import type { Content, MysticAssignment, MysticBenefitKind } from '@ed/schema';
 import { livingBlood } from '../ending.js';
@@ -200,7 +201,7 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('/mystic-pilot.ts')) {
   const runs = Number(process.argv[2] ?? 32);
   const seedBase = Number(process.argv[3] ?? 187300);
   const campaigns = (process.argv[5] ?? 'short,long').split(',') as ('short' | 'long')[];
-  if (!Number.isSafeInteger(runs) || runs < 1 || !Number.isSafeInteger(seedBase)) throw new Error('Expected positive runs and integer seed base');
+  sampleSeedEnd(runs, seedBase);
   const content = loadContent();
   const samples: Run[] = [];
   const controls: { seed: number; campaign: string; policy: string; duty: string; fullSaveEqual: boolean }[] = [];
