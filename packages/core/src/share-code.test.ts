@@ -140,7 +140,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     // Interior formatting marks in a visible name are not stripped or rejected.
     const visible = newGameFromShareCode(code, content, {
       build: BUILD,
-      names: { house: 'Salt', friends: ['Alice', '家族\u200Dの友', 'Cora'] },
+      names: { house: 'Salt', friends: ['Iona Vale', '家族\u200Dの友', 'Edda Rook'] },
     });
     expect(visible.ok).toBe(true);
     if (visible.ok) {
@@ -148,7 +148,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       // not its scheduled order.
       const names = visible.session.ctx.world.friends.map((friend) => friend.name);
       expect(names).toHaveLength(3);
-      expect(names).toEqual(expect.arrayContaining(['Alice', '家族\u200Dの友', 'Cora']));
+      expect(names).toEqual(expect.arrayContaining(['Iona Vale', '家族\u200Dの友', 'Edda Rook']));
     }
   });
 
