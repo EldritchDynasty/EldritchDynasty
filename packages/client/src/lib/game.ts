@@ -1143,7 +1143,12 @@ export function createGame(
    */
   function saveChapterBoundary(save: ReturnType<GameSession['save']>, view: ChapterView): void {
     const slot = slotForCampaign(`chapter-${view.age}-${view.to}`, save.campaign);
-    void platform.writeSave(slot, save).then(() => refreshSaves()).catch(() => undefined);
+    // A pending chapter write must finish before the player can remove the
+    // same demonstration slot. Chapter snapshots and rolling autosaves share
+    // the host mutation log; otherwise a delayed native write can resurrect
+    // a chapter the front door has already deleted (#1979).
+    const { done } = mutateAutosave(() => platform.writeSave(slot, save));
+    void done.then(() => refreshSaves()).catch(() => undefined);
   }
 
   function archiveFinished(g: GameSession): void {
