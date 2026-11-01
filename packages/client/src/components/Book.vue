@@ -267,6 +267,9 @@ async function plate(): Promise<void> {
       return gauge.measureText(text).width;
     };
 
+    // The founding permits wide Unicode house names; measure the title once
+    // and use that same snapshot for bitmap and vector headers (#2371).
+    const titleWidth = measure(houseName, `500 30px ${PLATE.serif}`);
     const rows = plateRows(entries, measure);
     // The founding, never its names: see `plateFoot` (#1995).
     const share = props.actions.shareCode(false);
@@ -276,7 +279,7 @@ async function plate(): Promise<void> {
     // Chronicle line (and the ruled omissions) in a vector download instead
     // of silently dropping the entire image when getContext/toBlob fails.
     const downloadSvg = () => {
-      const svg = plateSvg(rows, houseName, plateCaption, foot);
+      const svg = plateSvg(rows, houseName, plateCaption, foot, titleWidth);
       downloadBlob(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
@@ -299,7 +302,7 @@ async function plate(): Promise<void> {
 
       c.fillStyle = PLATE.ink;
       c.font = `500 30px ${PLATE.serif}`;
-      c.fillText(houseName, PLATE.pad, 64);
+      c.fillText(houseName, PLATE.pad, 64, PLATE.width - 2 * PLATE.pad);
       c.fillStyle = PLATE.faint;
       c.font = `13px ${PLATE.serif}`;
       c.fillText(plateCaption, PLATE.pad, 88);
