@@ -7,7 +7,11 @@ export function externalWebUrl(value) {
   if (typeof value !== 'string' || !/^https?:\/\//i.test(value)) return null;
   try {
     const parsed = new URL(value);
-    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname) return null;
+    // Do not forward username/password fields from untrusted renderer links.
+    // A userinfo prefix can disguise the actual host (trusted.test@other.test)
+    // or send embedded Basic-auth credentials to an external site.
+    if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname
+      || parsed.username || parsed.password) return null;
     // Open the URL we validated, not the potentially non-canonical input.
     return parsed.href;
   } catch {
