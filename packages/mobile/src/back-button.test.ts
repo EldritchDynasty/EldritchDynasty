@@ -38,7 +38,9 @@ describe('native Android back-button fallthrough (#2364)', () => {
     const onExitError = vi.fn();
 
     handleNativeBackButton(() => false, false, goBack, exitApp, onExitError);
-    await vi.waitFor(() => expect(exitApp).toHaveBeenCalledOnce());
+    // Exit is invoked during the back event, not delayed until a microtask.
+    expect(exitApp).toHaveBeenCalledOnce();
+    await Promise.resolve();
 
     expect(goBack).not.toHaveBeenCalled();
     expect(onExitError).not.toHaveBeenCalled();
