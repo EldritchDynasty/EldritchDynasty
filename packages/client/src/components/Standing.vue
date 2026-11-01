@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, useId } from 'vue';
+import { computed, ref } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
 import type { ProseMode, RespectTier } from '@ed/schema';
@@ -7,6 +7,7 @@ import { needleAt } from '../lib/assize';
 import { signed } from '../lib/jump';
 import { standingGlossaryDefinition } from '../lib/glossary';
 import LadderPath from './LadderPath.vue';
+import GlossaryText from './GlossaryText.vue';
 
 const props = withDefaults(defineProps<{
   view: SessionView;
@@ -29,11 +30,8 @@ const emit = defineEmits<{
 }>();
 
 const plain = computed(() => props.proseMode === 'plainenglish');
-/** First in-place glossary term (#1991), sharing the existing house-key copy. */
+/** The ledger and its expandable word use one authored definition (#1991). */
 const standingDefinition = computed(() => standingGlossaryDefinition(props.proseMode));
-const standingOpen = ref(false);
-/** Each disclosure must have its own target when two ledgers share a page. */
-const standingDefinitionId = useId();
 const PLAIN_RESPECT: Record<RespectTier, string> = {
   unknown: 'Not known',
   known: 'Known',
@@ -273,25 +271,13 @@ const muster = computed(() => {
             > ({{ signed(moved.treasury) }})</span>
           </dd>
         </div>
-        <div>
-          <dt>
-            <button
-              type="button"
-              class="standing-term"
-              :aria-expanded="standingOpen"
-              :aria-controls="standingOpen ? standingDefinitionId : undefined"
-              @click="standingOpen = !standingOpen"
-              @keydown.esc.stop.prevent="standingOpen = false"
-            >{{ plain ? 'Reputation' : 'Standing' }}</button>
-          </dt>
+        <div class="standing-glossary-row">
+          <dt><GlossaryText :text="plain ? 'Reputation' : 'Standing'" :prose-mode="proseMode" /></dt>
           <dd>
             <span :class="{ delta: moved?.respect }">{{ respectLabel(view.respect) }}</span><span
               v-if="moved?.respect"
               class="delta"
             > (was {{ respectLabel(moved.respect.from) }})</span>
-          </dd>
-          <dd v-if="standingOpen" :id="standingDefinitionId" class="standing-definition soft">
-            {{ standingDefinition }}
           </dd>
         </div>
         <div>
@@ -459,14 +445,14 @@ const muster = computed(() => {
 .house-key dd {
   margin: 0;
 }
-/* One touch/keyboard affordance in the existing ledger, not a hover tooltip. */
-.standing-term {
-  border: 0; padding: 0; background: transparent; color: inherit;
-  font: inherit; cursor: pointer; text-decoration: underline dotted;
-  text-underline-offset: .16em;
+/* Keep the compact two-column ledger until the shared glossary opens. Its
+   definition sits beneath the label, without covering the value next to it. */
+.house-ledger .standing-glossary-row :deep(.glossary-definition) {
+  display: block;
+  width: 32ch;
+  max-width: min(32ch, 80vw);
+  margin: 4px 0;
 }
-.standing-term:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
-.house-ledger .standing-definition { grid-column: 1 / -1; margin: 0 0 4px; max-width: 32ch; }
 .house-key {
   margin-top: 3px;
   color: var(--ink-soft);
