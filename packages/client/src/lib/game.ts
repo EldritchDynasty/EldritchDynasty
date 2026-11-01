@@ -101,6 +101,20 @@ export function isDemoSaveSlot(slot: string): boolean {
 }
 
 /**
+ * A host slot's namespace and the saved campaign must agree. A restored or
+ * hand-edited slot can contain valid bytes for another campaign; loading it
+ * under the wrong Continue control would silently cross the demo/full boundary.
+ * Legacy full saves without a campaign field remain readable, but the newer
+ * Demonstration always needs an explicit demo campaign id.
+ */
+function saveMatchesSlot(slot: string, saved: unknown): boolean {
+  const campaign = saved && typeof saved === 'object' && !Array.isArray(saved)
+    ? (saved as { campaign?: unknown }).campaign
+    : undefined;
+  return isDemoSaveSlot(slot) ? campaign === 'demo' : campaign !== 'demo';
+}
+
+/**
  * HOW MUCH OF THE PASSAGE LOG IS KEPT (issue #49).
  *
  * A Long Line is five hundred years and the log is a tail, not an archive — the
@@ -758,7 +772,8 @@ export function createGame(
       const selection = ++runSelectionRevision;
       try {
         const saved = keptSave ?? await readKept();
-        return selection === runSelectionRevision ? loadSave(saved, true) : false;
+        return selection === runSelectionRevision && saveMatchesSlot(AUTOSAVE, saved)
+          ? loadSave(saved, true) : false;
       } catch {
         return false;
       }
@@ -768,7 +783,8 @@ export function createGame(
       const selection = ++runSelectionRevision;
       try {
         const saved = await platform.readSave(slot);
-        return selection === runSelectionRevision ? loadSave(saved) : false;
+        return selection === runSelectionRevision && saveMatchesSlot(slot, saved)
+          ? loadSave(saved) : false;
       } catch {
         return false;
       }
