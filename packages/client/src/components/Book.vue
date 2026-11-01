@@ -260,12 +260,22 @@ async function plate(): Promise<void> {
     // An export is one snapshot: props may change while PNG encoding awaits toBlob.
     const houseName = props.houseName;
     const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);
-    const gauge = document.createElement('canvas').getContext('2d');
-    if (!gauge) { plateError.value = PLATE_ERROR; return; }
-    const measure: Measure = (text, font) => {
-      gauge.font = font;
-      return gauge.measureText(text).width;
-    };
+    // A blocked or unavailable 2D context must not make a vector plate
+    // unavailable too. Without canvas metrics, estimate each grapheme at
+    // a conservative two ems: this can wrap early, but keeps the founding
+    // code and prose inside the SVG column on hosts without Canvas 2D.
+    let gauge: CanvasRenderingContext2D | null = null;
+    try { gauge = document.createElement('canvas').getContext('2d'); } catch { /* vector-only host */ }
+    const segmenter = gauge ? null : new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+    const measure: Measure = gauge
+      ? (text, font) => {
+          gauge!.font = font;
+          return gauge!.measureText(text).width;
+        }
+      : (text, font) => {
+          const size = Number(/([\\d.]+)px/.exec(font)?.[1] ?? 12);
+          return Array.from(segmenter!.segment(text)).length * size * 2;
+        };
 
     // The founding permits wide Unicode house names; measure the title once
     // and use that same snapshot for bitmap and vector headers (#2371).
@@ -285,7 +295,7 @@ async function plate(): Promise<void> {
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
       );
     };
-    if (height > MAX_PLATE_CANVAS_HEIGHT) { downloadSvg(); return; }
+    if (!gauge || height > MAX_PLATE_CANVAS_HEIGHT) { downloadSvg(); return; }
 
     // The measured rows can still be saved as vector when bitmap allocation
     // or encoding fails on a memory-limited browser. Do not discard the plate.
