@@ -16447,7 +16447,37 @@ Both variants stay in band. The margin to the 22% floor narrows from 2.8
 points to 1.0 and 0.7. These are fixed seeds, so the gate is deterministic.
 Any later change that saves lines will meet the floor sooner.
 
-**Outcome.** (a) lands as calibrated, `Refs #1993`. It cuts early breaks
+**Owner decision, same day: (a+) adopted.** The keeping now holds until the
+first interlude, and never for fewer than 30 years (`collateralKept`). The
+code is exactly the (a+) column measured above: 6/400 = 1.5% [0.7%, 3.2%] on
+the predeclared sample `205300 + i`, and `gate:endings` broken_line 116/512
+(22.7%), inside the band. That meets the step-3 target. The (a) paragraph
+below is kept as the record of what was measured first.
+
+**`gate:land` widened from 512 to 1,000 runs (owner's choice).** The keeping
+re-rolls every Long run it reaches. That took the land gate's thinnest
+claim, `damage:a_wet_seedmonth` reaching one run in four, under its 2 SE
+requirement. The gate's own verdict calls this a finding about the test.
+
+| Head | Land runs | `a_wet_seedmonth` route | Event fired |
+| --- | --- | --- | --- |
+| `main` `4ab1a632` | 512 | PASS, 2.3 SE | 156/512 |
+| (a) `ca771b02` | 512 | FAIL, 1.9 SE (147/512) | 152/512 |
+| (a+) | 512 | FAIL, 1.9 SE (148/512) | 153/512 |
+| (a+) | **1,000** | **PASS, 3.9 SE (312/1000)** | 312/1000 |
+
+At 1,000 runs on (a+), every other land claim also passes. The next
+thinnest is `damage:the_pigs_go_into_the_wood` at 5.9 SE, and the rest are
+at 14.9 SE or more. The extension continues #1810's unfiltered `42103 + 37i` sequence. No seed is
+dropped and no floor moves.
+
+On this container the land gate went from 241 s to 469 s. On hosted CI it
+was 332 s of a 619 s batch lane (run `41262960433`), so the lane is expected
+near 935 s, past the 675 s guard on the 540 s baseline. The owner chose to
+re-baseline `tools/gate-durations.json` from this PR's own hosted
+measurement rather than split the lane or lower the floor.
+
+**Outcome before the adoption.** (a) lands as calibrated, `Refs #1993`. It cuts early breaks
 in every cohort measured (Short chronicler 6.0% → 3.3% and 7.2% → 2.8% on
 the two fresh samples; Long 7.0% → 2.5%). It leaves the endings
 distribution in band, and it does not meet the owner's target. Whether to

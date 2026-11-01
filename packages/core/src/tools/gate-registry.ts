@@ -48,7 +48,12 @@ const LAND_SEEDS = [
   71072, 71089, 71106, 71123, 71140, 71157, 71174, 71191, 71208, 71225,
   // #1810: retain the legacy90; add a fixed, unfiltered sequence through512.
   // The ordinary land prices need this sample for the unchanged25%/2SE floor.
-  ...Array.from({ length: 422 }, (_, i) => 42103 + 37 * i),
+  // #1993: the same sequence extended to 1,000 runs. The collateral keeping
+  // re-rolls every Long run it reaches, which took `damage:a_wet_seedmonth`
+  // from 2.3 SE on main to 1.9 SE at 512 runs (148/512). The gate prescribed
+  // widening; at 1,000 runs it holds at 3.9 SE (312/1000) with every other
+  // claim passing. The floor and every earlier seed are unchanged.
+  ...Array.from({ length: 910 }, (_, i) => 42103 + 37 * i),
 ] as const;
 
 /**
