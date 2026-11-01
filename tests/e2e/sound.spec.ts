@@ -101,3 +101,42 @@ test('the house is heard after the first touch, and the switch in Reading settin
 
   expect(errors).toEqual([]);
 });
+
+
+test('a hidden page suspends the real engine and a visible return restores its drone (#2219)', async ({ page }) => {
+  const errors = await open(page, { showEverythingFromStart: true, sound: true });
+
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  const initially = await heard(page);
+  expect(initially.started, 'the foreground drone did not start').toBeGreaterThanOrEqual(2);
+  expect(initially.made).toBe(1);
+
+  // The lifecycle signal is simulated; AudioContext itself is Chromium's real
+  // implementation. This avoids depending on a headless runner's tab focus
+  // policy while still proving the actual suspend/resume transitions.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(async () => (await heard(page)).state).toBe('suspended');
+  const hidden = await heard(page);
+
+  // A pageshow event or even an apparent gesture must not override the
+  // document's still-hidden state and restart the ambient audio.
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event('pageshow'));
+    window.dispatchEvent(new Event('pointerdown'));
+  });
+  expect(await heard(page)).toEqual(hidden);
+
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThan(hidden.started);
+  const resumed = await heard(page);
+  expect(resumed.made, 'foregrounding created a second audio context').toBe(initially.made);
+  expect(errors).toEqual([]);
+});
