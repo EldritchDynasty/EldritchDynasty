@@ -864,7 +864,31 @@ describe('the editor Vite entry points', () => {
     write('packages/core/src/example.ts', 'export const n = 2;\n');
     return { cwd, write, git };
   }
-  function snapshot(root: string, afterListing?: (dir: string, names: readonly string[]) => void): string {
+  type SnapshotEntry = { kind: 'directory' } | {
+    kind: 'file'; size: number; mtimeMs: number; digest: string;
+  };
+  type SnapshotManifest = Map<string, SnapshotEntry>;
+  function describeSnapshotChanges(before: SnapshotManifest, after: SnapshotManifest): string {
+    const differences: string[] = [];
+    for (const path of [...new Set([...before.keys(), ...after.keys()])].sort()) {
+      const prior = before.get(path);
+      const current = after.get(path);
+      if (!prior) differences.push(`added: ${path}`);
+      else if (!current) differences.push(`removed: ${path}`);
+      else if (prior.kind !== current.kind) differences.push(`kind changed: ${path}`);
+      else if (prior.kind === 'file' && current.kind === 'file') {
+        if (prior.digest !== current.digest) differences.push(`content changed: ${path}`);
+        else if (prior.size !== current.size || prior.mtimeMs !== current.mtimeMs) {
+          differences.push(`metadata only: ${path} (size ${prior.size} → ${current.size}, mtime ${prior.mtimeMs} → ${current.mtimeMs})`);
+        }
+      }
+    }
+    return `Read-only fixture changed:\n${differences.length ? differences.join('\n') : '(no persistent entry difference; inspect snapshot traversal)'}`;
+  }
+  function snapshot(
+    root: string, afterListing?: (dir: string, names: readonly string[]) => void,
+    manifest?: SnapshotManifest,
+  ): string {
     const hash = createHash('sha256');
     const gitPrefix = join(root, '.git') + sep;
     const disappearedGitEntry = (path: string, error: unknown) =>
@@ -884,8 +908,10 @@ describe('the editor Vite entry points', () => {
         }
         // Directory mtime changes after transient lock-file creation/removal,
         // even when no persistent output remains. Hash the final tree instead.
+        const relative = path.slice(root.length).split(sep).join('/').replace(/^\//, '');
         if (stat.isDirectory()) {
           hash.update(path.slice(root.length));
+          manifest?.set(relative, { kind: 'directory' });
           visit(path);
         } else {
           let contents: Buffer;
@@ -897,6 +923,10 @@ describe('the editor Vite entry points', () => {
             throw error;
           }
           // Do not hash a vanished file's name or metadata.
+          manifest?.set(relative, {
+            kind: 'file', size: stat.size, mtimeMs: stat.mtimeMs,
+            digest: createHash('sha256').update(contents).digest('hex'),
+          });
           hash.update(path.slice(root.length));
           hash.update(`${stat.size}:${stat.mtimeMs}`);
           hash.update(contents);
@@ -944,6 +974,24 @@ describe('the editor Vite entry points', () => {
       expect(snapshot(cwd)).not.toBe(before);
     });
 
+    it('diagnoses durable contents, added and removed entries, and metadata-only Git changes', () => {
+      const { cwd, write } = checkout();
+      const beforeEntries: SnapshotManifest = new Map();
+      const before = snapshot(cwd, undefined, beforeEntries);
+      utimesSync(join(cwd, '.git', 'config'), new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
+      write('packages/core/src/example.ts', 'export const n = 3;\n');
+      write('added-file', 'a persistent addition');
+      rmSync(join(cwd, 'packages/core/src/example.test.ts'));
+      const afterEntries: SnapshotManifest = new Map();
+      const after = snapshot(cwd, undefined, afterEntries);
+      const changes = describeSnapshotChanges(beforeEntries, afterEntries);
+      expect(changes).toContain('metadata only: .git/config');
+      expect(changes).toContain('content changed: packages/core/src/example.ts');
+      expect(changes).toContain('added: added-file');
+      expect(changes).toContain('removed: packages/core/src/example.test.ts');
+      expect(after).not.toBe(before);
+    });
+
     it('plans dirty local changes from a subdirectory without credentials or writes', async () => {
       const { cwd } = checkout();
       const before = snapshot(cwd);
@@ -962,13 +1010,16 @@ describe('the editor Vite entry points', () => {
       const { cwd, git } = checkout();
       for (const base of ['missing-remote/main', 'HEAD']) {
         if (base === 'HEAD') writeFileSync(join(cwd, '.git/shallow'), git('rev-parse', 'HEAD') + '\n');
-        const before = snapshot(cwd);
+        const beforeEntries: SnapshotManifest = new Map();
+        const before = snapshot(cwd, undefined, beforeEntries);
         const result = spawnSync(process.execPath, [CLI, '--plan', '--base', base, '--json'], { cwd, env: gitEnv, encoding: 'utf8' });
         expect(result.status, result.stderr).toBe(0);
         const parsed = JSON.parse(result.stdout) as Plan;
         expect(parsed.uncertain).toBe(true);
         expect(commands(parsed.recommendedLocal)).toEqual([FULL]);
-        expect(snapshot(cwd)).toBe(before);
+        const afterEntries: SnapshotManifest = new Map();
+        const after = snapshot(cwd, undefined, afterEntries);
+        expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
       }
     });
 
