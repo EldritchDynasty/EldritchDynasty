@@ -131,6 +131,14 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
           }
           return fs.readFileSync(path, encoding);
         },
+        // The verified YAML reader opens the pathname and reads a file descriptor.
+        // Inject at that boundary too, without changing the legacy read mock.
+        openSync: (path: string, flags: number) => {
+          if (phase === 'read' && path === moving) {
+            throw Object.assign(new Error('entry vanished before open'), { code: 'ENOENT' });
+          }
+          return fs.openSync(path, flags);
+        },
       };
     });
     try {
@@ -166,6 +174,14 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
             throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
           }
           return fs.readFileSync(path, encoding);
+        },
+        // The verified YAML reader opens the pathname and reads a file descriptor.
+        // Inject at that boundary too, without changing the legacy read mock.
+        openSync: (path: string, flags: number) => {
+          if (phase === 'read' && path === blocked) {
+            throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
+          }
+          return fs.openSync(path, flags);
         },
       };
     });
