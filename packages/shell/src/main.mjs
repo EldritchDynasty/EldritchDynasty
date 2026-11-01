@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join, resolve } from 'node:path';
 // One implementation of the write guard, shared with the dev-server bridge.
 import { resolveExistingContentPath } from '../../content/tools/content-path.mjs';
@@ -12,7 +12,7 @@ import { parseImportedRun } from './run-import.mjs';
 import { desktopUserData } from './profile-root.mjs';
 import { readUserContent, resolveModEditorContentPath, userContentRoot } from './user-content.mjs';
 import { createSteamAchievementBackend, loadSteamworks } from './steam-achievements.mjs';
-import { handleExternalPopup } from './external-links.mjs';
+import { handleExternalNavigation, handleExternalPopup } from './external-links.mjs';
 import { inspectSeedDisclosure } from './seed-disclosure.mjs';
 import { nativeSnapshotSha256 } from './native-snapshot.mjs';
 
@@ -129,13 +129,17 @@ function createWindow() {
     },
   });
 
-  if (DEV_SERVER) win.loadURL(DEV_SERVER);
-  else win.loadFile(rendererEntry({
+  const rendererPath = rendererEntry({
     isPackaged: app.isPackaged,
     resourcesPath: process.resourcesPath,
     repo: REPO,
     target: MOD_EDITOR ? 'editor' : 'client',
-  }));
+  });
+  // Trust the bootstrap destination, never the current window URL: a page
+  // which has navigated elsewhere must not become the next trusted origin.
+  const trustedDocument = DEV_SERVER || pathToFileURL(rendererPath).href;
+  if (DEV_SERVER) win.loadURL(DEV_SERVER);
+  else win.loadFile(rendererPath);
 
   // NO MENU BAR IN THE GAME (#356). Electron's default File / Edit / View /
   // Window / Help bar is an application's chrome on top of a book, and every
@@ -147,12 +151,17 @@ function createWindow() {
 
   // A link to a rival house's chronicle opens in the browser, not in a window
   // with no address bar and our preload attached to it.
+  const openExternal = (target) => shell.openExternal(target);
+  const onExternalFailure = (error) =>
+    console.warn('[shell] external browser launch failed:', error?.message ?? error);
   win.webContents.setWindowOpenHandler(({ url }) =>
-    handleExternalPopup(
-      url,
-      (target) => shell.openExternal(target),
-      (error) => console.warn('[shell] external browser launch failed:', error?.message ?? error),
-    ));
+    handleExternalPopup(url, openExternal, onExternalFailure));
+
+  // A normal anchor or location.assign() navigates in this same window and
+  // never calls setWindowOpenHandler. Stop it before an unrelated site can
+  // load with the game's privileged save/content preload and IPC bridge.
+  win.webContents.on('will-navigate', (event, url) =>
+    handleExternalNavigation(event, url, trustedDocument, openExternal, onExternalFailure));
 
   return win;
 }
