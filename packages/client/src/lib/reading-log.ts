@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 8: founding acceptance and entry completion are distinct, redacted signing markers. */
-export const READING_LOG_FORMAT = 'ed-reading-log/8';
+/** 9: accepted/refused family choices and Matches are observable without typed answer text. */
+export const READING_LOG_FORMAT = 'ed-reading-log/9';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -37,7 +37,7 @@ export const READING_LOG_MAX_EVENTS = 20_000;
 /** What the notice says, word for word — the switch is not informed consent without it. */
 export const READING_LOG_NOTICE =
   'Reading log is on. On this device only, it records which pages and decisions are shown, the in-game year, '
-  + 'when this window is in front, which panel is open, which buttons you press, whether founding was accepted or refused and whether entry returned, Record/Omit/Embellish modes, generated decision ids and results, and Table/Muster/delegation categories and results. It records no text you type, '
+  + 'when this window is in front, which panel is open, which buttons you press, whether founding was accepted or refused and whether entry returned, Record/Omit/Embellish modes, generated decision ids and results, whether family choices and Matches were accepted or refused, and Table/Muster/delegation categories and results. It records no text you type, '
   + 'is not part of your saved game, and leaves this device only if you export it.';
 
 export const READING_LOG_CAVEATS = [
@@ -49,6 +49,7 @@ export const READING_LOG_CAVEATS = [
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
+  'Choose and Match record acceptance or refusal from their returned result, not an attempted click. Other answer verbs without a returned outcome remain attempts only; a Match refusal may include an unavailable card.',
   'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
   'Signing markers distinguish a founding attempt from accepted, refused or thrown results; enter returning is not proof a meaningful family decision was taken. Names, founder answers and refusal reasons are never recorded.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
@@ -90,7 +91,7 @@ const RECORDED_VERBS = {
 } as const satisfies Partial<Record<keyof GameActions, 'start' | 'signing' | 'advance' | 'answer' | 'dismiss' | 'table' | 'muster' | 'delegate'>>;
 
 export type RecordedVerb = keyof typeof RECORDED_VERBS;
-type LegacyVerb = Exclude<RecordedVerb, 'found' | 'enter' | 'record' | 'order' | 'muster' | 'delegateChoice' | 'delegateRecord'>;
+type LegacyVerb = Exclude<RecordedVerb, 'found' | 'enter' | 'record' | 'choose' | 'match' | 'order' | 'muster' | 'delegateChoice' | 'delegateRecord'>;
 
 /** The verbs that pick up a saved run, whose chronicle the reader saw in some other session. */
 const PICKUPS: ReadonlySet<RecordedVerb> = new Set(['resume', 'load', 'importSave']);
@@ -113,6 +114,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'action'; verb: 'found'; act: 'signing'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'enter'; act: 'signing'; status: 'attempted' | 'returned' | 'threw' }
   | { at: number; kind: 'action'; verb: 'record'; act: 'answer'; mode: RecordOption | 'unknown'; decision?: string; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
+  | { at: number; kind: 'action'; verb: 'choose' | 'match'; act: 'answer'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'order'; act: 'table'; category: TableOrder['kind'] | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'muster'; act: 'muster'; category: MusterOrder['op'] | 'unknown'; status: 'attempted' | 'accepted' | 'refused' | 'threw' }
   | { at: number; kind: 'action'; verb: 'delegateChoice' | 'delegateRecord'; act: 'delegate'; category: 'choice' | 'record'; change: 'set' | 'clear'; status: 'attempted' | 'returned' | 'threw' }
@@ -436,6 +438,25 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['record']>;
           log.note({ ...event, status: result ? 'accepted' : 'refused' });
+          return result;
+        } catch (error) {
+          log.note({ ...event, status: 'threw' });
+          throw error;
+        }
+      }
+      // The first consequential family decision is an accepted command, not
+      // merely a click. Neither the choice id, card id, cast nor player text
+      // belongs in the exported research log. Match returns a result object
+      // (or undefined when no run is active); Choose returns a boolean.
+      if (verb === 'choose' || verb === 'match') {
+        const event = { kind: 'action' as const, verb, act: 'answer' as const };
+        log.note({ ...event, status: 'attempted' });
+        try {
+          const result = original.apply(actions, args);
+          const accepted = verb === 'choose'
+            ? result === true
+            : (result as { ok?: unknown } | null | undefined)?.ok === true;
+          log.note({ ...event, status: accepted ? 'accepted' : 'refused' });
           return result;
         } catch (error) {
           log.note({ ...event, status: 'threw' });
