@@ -26,9 +26,9 @@ const SRC = join(import.meta.dirname, '..');
  * This looks only at `font-size` and at the `font:` shorthand.
  */
 
-/** `font-size: …` and any `font:` shorthand carrying a raw CSS size. */
-const SIZE = /font-size\s*:\s*([^;}]+)/g;
-const SHORTHAND = /font\s*:\s*([^;}]+)/g;
+/** CSS property names are case-insensitive, even when components use mixed case. */
+const SIZE = /font-size\s*:\s*([^;}]+)/gi;
+const SHORTHAND = /font\s*:\s*([^;}]+)/gi;
 
 /** The token block itself — the one place a real length may be written. */
 const TOKEN = /^\s*--t-[\w-]+\s*:/;
@@ -119,6 +119,16 @@ describe('the type scale', () => {
     expect(hardSizes('.year { font: bold 2vw sans-serif; }')).toEqual(['font: bold 2vw sans-serif']);
     expect(hardSizes('.year { font: 90%/1.5 serif; }')).toEqual(['font: 90%/1.5 serif']);
     expect(hardSizes('h1 { font-size: 2rem; }')).toEqual(['font-size: 2rem']);
+  });
+
+  it('rejects mixed-case font properties, but keeps role tokens and inherit', () => {
+    expect(hardSizes('.name { FONT-SIZE: 13px; }')).toEqual(['FONT-SIZE: 13px']);
+    expect(hardSizes('.name { Font-Size: 1.125rem; }')).toEqual(['Font-Size: 1.125rem']);
+    expect(hardSizes('.year { FONT: 500 26px/1.1 serif; }')).toEqual(['FONT: 500 26px/1.1 serif']);
+    expect(hardSizes('.year { FoNt: italic .9em Georgia; }')).toEqual(['FoNt: italic .9em Georgia']);
+    expect(hardSizes('.name { FONT-SIZE: var(--t-card); }')).toEqual([]);
+    expect(hardSizes('.year { FONT: 500 var(--t-body)/1.2 serif; }')).toEqual([]);
+    expect(hardSizes('button { FONT: inherit; }')).toEqual([]);
   });
 
   it('rejects font declarations split across lines', () => {
