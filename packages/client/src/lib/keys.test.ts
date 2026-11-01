@@ -173,6 +173,67 @@ describe('what a keypress means', () => {
   });
 });
 
+describe('ARIA fields and keyboard-activated selection controls (#2351)', () => {
+  it('does not turn text-entry or numeric-widget keystrokes into game choices', () => {
+    for (const role of ['textbox', 'searchbox', 'combobox', 'spinbutton']) {
+      const widget = document.createElement('div');
+      widget.setAttribute('role', role);
+      widget.tabIndex = 0;
+      expect(isField(widget), role).toBe(true);
+      for (const key of [' ', 'Enter', '?', '1', '9']) {
+        expect(shortcutFor({ key, inField: isField(widget) }), `${role}: ${key}`).toBeNull();
+      }
+      // Escape remains the global way out of a focused field.
+      expect(shortcutFor({ key: 'Escape', inField: isField(widget) }))
+        .toEqual({ kind: 'dismiss' });
+    }
+  });
+
+  it('leaves Space and Enter to custom selection widgets', () => {
+    for (const role of [
+      'checkbox', 'switch', 'radio', 'menuitem', 'menuitemcheckbox',
+      'menuitemradio', 'option', 'tab', 'treeitem', 'slider',
+      'scrollbar', 'listbox', 'menu', 'tree', 'radiogroup',
+    ]) {
+      const widget = document.createElement('div');
+      widget.setAttribute('role', role);
+      widget.tabIndex = 0;
+      expect(isControl(widget), role).toBe(true);
+      for (const key of [' ', 'Enter']) {
+        expect(shortcutFor({ key, onControl: isControl(widget) }), `${role}: ${key}`).toBeNull();
+      }
+      // The existing numbered-choice contract still applies to controls.
+      expect(shortcutFor({ key: '3', onControl: isControl(widget) }))
+        .toEqual({ kind: 'take', index: 2 });
+    }
+    const status = document.createElement('div');
+    status.setAttribute('role', 'status');
+    expect(isField(status)).toBe(false);
+    expect(isControl(status)).toBe(false);
+  });
+
+  it('respects ARIA roles behind shadow hosts and whitespace-separated role tokens', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const widget = document.createElement('span');
+    widget.setAttribute('role', '  textbox  ');
+    widget.tabIndex = 0;
+    shadow.append(widget);
+    document.body.append(host);
+    try {
+      widget.focus();
+      expect(document.activeElement).toBe(host);
+      expect(isField(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: '4', inField: isField(document.activeElement) })).toBeNull();
+      widget.setAttribute('role', 'checkbox');
+      expect(isControl(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: ' ', onControl: isControl(document.activeElement) })).toBeNull();
+    } finally {
+      host.remove();
+    }
+  });
+});
+
 describe('focus inside open shadow roots (#2147)', () => {
   it('keeps numbered choices away from an input inside a shadow host', () => {
     const host = document.createElement('div');
