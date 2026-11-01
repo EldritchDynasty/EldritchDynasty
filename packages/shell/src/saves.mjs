@@ -1,4 +1,4 @@
-import { lstatSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { closeSync, constants, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveSavePath, slotOfFile, SAVE_EXTENSION } from '../tools/save-slot.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
@@ -64,9 +64,10 @@ export function listSaves(root) {
     // when metadata lookup fails, with an explicit unreadable reason.
     const entry = { slot, bytes: 0, savedAt: undefined, year: undefined, format: undefined };
     try {
-      const stat = regularSaveStat(path);
-      entry.bytes = stat.size;
-      const save = requireSaveEnvelope(JSON.parse(readFileSync(path, 'utf8')));
+      const save = withVerifiedSave(path, (fd, stat) => {
+        entry.bytes = stat.size;
+        return requireSaveEnvelope(JSON.parse(readFileSync(fd, 'utf8')));
+      });
       entry.format = save.format;
       entry.year = typeof save?.year === 'number' ? save.year : undefined;
       entry.savedAt = typeof save?.savedAt === 'string' ? save.savedAt : undefined;
@@ -78,17 +79,38 @@ export function listSaves(root) {
   return out.sort((a, b) => String(b.savedAt ?? '').localeCompare(String(a.savedAt ?? '')) || a.slot.localeCompare(b.slot));
 }
 
-/** No entry named like a slot may redirect file reads outside the save root. */
-function regularSaveStat(path) {
-  const stat = lstatSync(path);
-  if (!stat.isFile()) throw new TypeError('save slot is not a regular file');
-  return stat;
+/**
+ * Verify the file we actually read, not only the pathname checked before it.
+ * A slot can be replaced between lstat() and open(); a later path-based read
+ * could follow a replacement symlink outside the save directory.
+ *
+ * O_NOFOLLOW rejects a link swapped in before open on POSIX. Windows does not
+ * provide it: compare the opened descriptor with both pathname observations
+ * there as well. Once validated, only the descriptor is read. Always close it,
+ * including on malformed JSON and failed envelope validation.
+ */
+function withVerifiedSave(path, read) {
+  const before = lstatSync(path);
+  if (!before.isFile()) throw new TypeError('save slot is not a regular file');
+  const flags = constants.O_RDONLY | (process.platform === 'win32' ? 0 : constants.O_NOFOLLOW);
+  const fd = openSync(path, flags);
+  try {
+    const opened = fstatSync(fd);
+    const after = lstatSync(path);
+    if (!opened.isFile() || !after.isFile()
+      || opened.dev !== before.dev || opened.ino !== before.ino
+      || after.dev !== opened.dev || after.ino !== opened.ino) {
+      throw new TypeError('save slot changed while being read');
+    }
+    return read(fd, opened);
+  } finally {
+    closeSync(fd);
+  }
 }
 
 export function readSave(root, slot) {
-  const path = resolveSavePath(root, slot);
-  regularSaveStat(path);
-  return requireSaveEnvelope(JSON.parse(readFileSync(path, 'utf8')));
+  return withVerifiedSave(resolveSavePath(root, slot),
+    (fd) => requireSaveEnvelope(JSON.parse(readFileSync(fd, 'utf8'))));
 }
 
 /**
