@@ -32,6 +32,12 @@ describe('iOS runtime smoke protocol', () => {
       .toEqual({ kind: 'save', seed: -42, years: 0 });
     expect(parseSmokeCommand('eldritchdynasty-smoke://save?seed=9007199254740991&years=1'))
       .toEqual({ kind: 'save', seed: Number.MAX_SAFE_INTEGER, years: 1 });
+    // Native smoke URLs are externally invoked; accepting an enormous but
+    // safe integer would queue pathological simulation work in the client.
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?years=500'))
+      .toEqual({ kind: 'save', seed: 1042, years: 500 });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?years=501')).toBeNull();
+    expect(parseSmokeCommand('eldritchdynasty-smoke://save?years=9007199254740991')).toBeNull();
 
     for (const query of [
       'seed=', 'seed=%20', 'years=', 'years=%20',
