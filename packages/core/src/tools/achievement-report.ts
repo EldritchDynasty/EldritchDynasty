@@ -24,6 +24,7 @@ import { saveGame } from '../save.js';
 import { bootstrap, clearNamingQueue } from '../sim.js';
 import { stepYear } from '../year/step.js';
 import { configureAscendant, prepareAscendantYear, resolveAscendantYear } from './ending-gate.js';
+import { sampleSeedEnd } from './sample-seed-span.js';
 
 const SHIPPED_CAMPAIGNS = ['short', 'long'] as const satisfies readonly CampaignId[];
 
@@ -87,7 +88,9 @@ export function measureAchievementRates(
   runs = ACHIEVEMENT_RATE_JUDGEABLE_RUNS,
   seedBase = 32300,
 ): AchievementSample[] {
-  if (!Number.isInteger(runs) || runs <= 0) throw new Error('runs must be a positive integer');
+  // Validate the inclusive last seed before any campaign is sampled. Safe
+  // inputs individually can still generate rounded, duplicate seeds together.
+  sampleSeedEnd(runs, seedBase);
 
   const samples: AchievementSample[] = [];
   for (const campaign of SHIPPED_CAMPAIGNS) {

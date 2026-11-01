@@ -149,6 +149,8 @@ const BATCH_SEED = /\b(bootstrap|bootstrapRun|runYears|newGame|TEST_FAMILIES)\b/
 const DRIVES_A_BATCH: Record<string, string> = {
   'packages/core/src/tools/story-route-report.test.ts':
     'route observers and production promises in built worlds; no years or campaign batch',
+  'packages/core/src/tools/achievement-report.test.ts':
+    'the #2198 seed-span refusals over literal numbers; every call throws before content or a campaign — 0.0s',
   'packages/core/src/campaign.test.ts':
     'funnel stage and observer helpers over hand-built worlds only; never calls its campaign batch entry point',
   'packages/core/src/events/reach.test.ts':

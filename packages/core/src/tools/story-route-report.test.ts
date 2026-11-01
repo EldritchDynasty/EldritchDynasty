@@ -11,7 +11,7 @@ import { canonical, loadGame, saveGame } from '../save.js';
 import { place, testRng, testWorld } from '../testing.js';
 import { runPhase } from '../year/phases.js';
 import { emptyReport } from '../year/report.js';
-import { binomialInterval, routeLaunchers, StoryRouteObserver, withoutGlimpses } from './story-route-report.js';
+import { binomialInterval, routeLaunchers, StoryRouteObserver, withoutGlimpses, storyRouteSeedEnd } from './story-route-report.js';
 
 const content = loadContent();
 
@@ -496,5 +496,34 @@ describe('story-route promises (#1946)', () => {
     expect(interval.lower!).toBeLessThan(0.005);
     expect(interval.upper!).toBeGreaterThan(0.01);
     expect(binomialInterval(0, 10).upper!).toBeGreaterThan(0);
+  });
+});
+
+describe('story-route seed integrity (#2215)', () => {
+  it.each([
+    [3, Number.MAX_SAFE_INTEGER, 1],
+    [3, Number.MAX_SAFE_INTEGER - 1, 2],
+    // The negative start can mask a stride that was already rounded.
+    [3, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+  ])('rejects a stepped %i-run range from %i by %i before any campaign', (runs, start, step) => {
+    expect(() => storyRouteSeedEnd(runs, start, step)).toThrow(/precision/);
+  });
+
+  it.each([
+    [0, 0, 1], [-1, 0, 1], [1.5, 0, 1],
+    [Number.MAX_SAFE_INTEGER + 1, 0, 1],
+    [1, NaN, 1], [1, Number.POSITIVE_INFINITY, 1],
+    [1, 0, 0], [1, 0, -1], [1, 0, 1.5],
+    [1, 0, Number.MAX_SAFE_INTEGER + 1],
+  ])('rejects invalid count/start/step values (%s, %s, %s)', (runs, start, step) => {
+    expect(() => storyRouteSeedEnd(runs, start, step)).toThrow(/Invalid integer batch options/);
+  });
+
+  it('keeps negative starts, defaults and the exact inclusive safe boundary', () => {
+    expect(storyRouteSeedEnd(800, 5000, 7)).toBe(10593);
+    expect(storyRouteSeedEnd(3, -100, 7)).toBe(-86);
+    expect(storyRouteSeedEnd(3, Number.MAX_SAFE_INTEGER - 2, 1)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(storyRouteSeedEnd(1, Number.MAX_SAFE_INTEGER, 1)).toBe(Number.MAX_SAFE_INTEGER);
+    expect(storyRouteSeedEnd(2, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)).toBe(0);
   });
 });
