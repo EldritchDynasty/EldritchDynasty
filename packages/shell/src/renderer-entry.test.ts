@@ -217,7 +217,7 @@ describe('atomic JSON scratch ownership (#2347)', () => {
 
     try {
       const { writeJsonAtomically } = await fixedScratchWriter();
-      expect(() => writeJsonAtomically(target, { format: 41 })).toThrow();
+      expect(() => writeJsonAtomically(target, { format: 41 })).toThrow(/EEXIST/);
       expect(readFileSync(scratch, 'utf8')).toBe('other writer data');
       expect(readFileSync(target, 'utf8')).toBe('previous destination');
     } finally {
