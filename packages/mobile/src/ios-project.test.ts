@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { chooseSaveFile } from './file-chooser.js';
 import { BROWSER_IMPORT_CANCELLED } from '../../client/src/platform.js';
 import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
+import { attachNativeListener, type NativeListenerHandle } from './native-listener.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
@@ -15,6 +16,72 @@ function text(path: string): string {
   return readFileSync(join(MOBILE, path), 'utf8');
 }
 
+
+describe('Capacitor native listener lifecycle (#2261)', () => {
+  const settled = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+  it('removes a registered listener once and keeps the original ready callback', async () => {
+    const handle = { remove: vi.fn(async () => {}) };
+    const onError = vi.fn();
+    const onReady = vi.fn();
+    const dispose = attachNativeListener(() => Promise.resolve(handle), onError, onReady);
+    await settled();
+    expect(onReady).toHaveBeenCalledOnce();
+    dispose();
+    dispose();
+    await settled();
+    expect(handle.remove).toHaveBeenCalledOnce();
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('removes a late native registration after cleanup won the race', async () => {
+    let resolve!: (handle: NativeListenerHandle) => void;
+    const pending = new Promise<NativeListenerHandle>((ready) => { resolve = ready; });
+    const handle = { remove: vi.fn(async () => {}) };
+    const onReady = vi.fn();
+    const onError = vi.fn();
+    const dispose = attachNativeListener(() => pending, onError, onReady);
+    dispose();
+    resolve(handle);
+    await settled();
+    expect(handle.remove).toHaveBeenCalledOnce();
+    expect(onReady).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it('observes synchronous and asynchronous registration failures even without cleanup', async () => {
+    const onError = vi.fn();
+    const syncError = new Error('native plugin not installed');
+    const asyncError = new Error('native registration refused');
+    const disposeSync = attachNativeListener(() => { throw syncError; }, onError);
+    attachNativeListener(() => Promise.reject(asyncError), onError);
+    await settled();
+    expect(onError).toHaveBeenCalledWith(syncError);
+    expect(onError).toHaveBeenCalledWith(asyncError);
+    disposeSync();
+    disposeSync();
+  });
+
+  it('observes failing native cleanup without an unhandled rejection', async () => {
+    const onError = vi.fn();
+    const failure = new Error('native remove refused');
+    const handle = { remove: vi.fn(async () => { throw failure; }) };
+    const dispose = attachNativeListener(() => Promise.resolve(handle), onError);
+    await settled();
+    dispose();
+    await settled();
+    expect(handle.remove).toHaveBeenCalledOnce();
+    expect(onError).toHaveBeenCalledWith(failure);
+  });
+
+  it('uses the guarded lifecycle for pause, back and simulator smoke listeners', () => {
+    const bridge = text('src/platform-bridge.ts');
+    expect(bridge).toContain("import { attachNativeListener } from './native-listener.js'");
+    expect(bridge.match(/(?:return )?attachNativeListener\\(/g)).toHaveLength(3);
+    expect(bridge).not.toContain('void registration.then((handle) => handle.remove())');
+    expect(bridge).toContain('path: SMOKE_READY');
+  });
+});
 
 describe('native exported interchange JSON roots (#1411)', () => {
   it('rejects non-object roots before Capacitor can write an unusable export', () => {
