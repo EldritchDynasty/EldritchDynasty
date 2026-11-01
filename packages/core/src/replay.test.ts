@@ -50,7 +50,7 @@ describe('public session input replay (#1910)', () => {
 
     const resumed = resumeGame(JSON.parse(JSON.stringify(s.save())), content);
     expect(resumed.line()[0]).toMatchObject({ name: first.name, epithet: 'the Witness' });
-    founder.epithet = undefined;
+    delete founder.epithet;
     expect(s.line()[0]).not.toHaveProperty('epithet');
   });
 
