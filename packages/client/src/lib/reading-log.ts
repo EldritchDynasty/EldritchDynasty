@@ -55,8 +55,10 @@ export const READING_LOG_CAVEATS = [
 ] as const;
 
 export function readingLogRequested(search: string): boolean {
-  const value = new URLSearchParams(search).get(READING_LOG_QUERY);
-  return value !== null && ['', '1', 'on', 'true', 'yes'].includes(value.toLowerCase());
+  // This research recorder is opt-in. Ambiguous duplicate switches must not
+  // silently take the first value and turn recording on despite a later "off".
+  const values = new URLSearchParams(search).getAll(READING_LOG_QUERY);
+  return values.length === 1 && ['', '1', 'on', 'true', 'yes'].includes(values[0]!.toLowerCase());
 }
 
 export type ReadingAnswerKind = 'interlude' | NonNullable<ChronicleView['answer']>;

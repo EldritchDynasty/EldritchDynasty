@@ -41,6 +41,18 @@ describe('the reading log is off unless asked for (#1945)', () => {
     expect(readingLogRequested('?reading-log')).toBe(true);
     expect(readingLogRequested('?reading-log=1')).toBe(true);
     expect(readingLogRequested('?x=1&reading-log=on')).toBe(true);
+    expect(readingLogRequested('?reading-log=TRUE')).toBe(true);
+    expect(readingLogRequested('?reading-log=YES')).toBe(true);
+  });
+
+  it('fails closed for repeated switches instead of trusting the first value', () => {
+    expect(readingLogRequested('?reading-log=1&reading-log=off')).toBe(false);
+    expect(readingLogRequested('?reading-log=off&reading-log=1')).toBe(false);
+    expect(readingLogRequested('?reading-log=1&reading-log=1')).toBe(false);
+    expect(readingLogRequested('?reading-log&reading-log=off')).toBe(false);
+    expect(readingLogRequested('?reading-log=on&seed=4&reading-log=true')).toBe(false);
+    // Other unrelated URL parameters can repeat without changing consent.
+    expect(readingLogRequested('?seed=4&seed=5&reading-log=yes')).toBe(true);
   });
 
   it('says what it records, that it stays on the device, and that the save is untouched', () => {
