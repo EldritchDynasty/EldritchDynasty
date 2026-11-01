@@ -391,6 +391,39 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().docket[0]?.ambition).toBeUndefined();
   });
 
+  it('only credits a delegated rite when its cast ascendant belongs to the ascent programme (#1978)', () => {
+    const g = newGame(content, { seed: 1978, campaign: 'long', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const candidate = oneSubject(g.ctx);
+    g.ctx.world.scion = candidate.id;
+    const other = place(g.ctx, { sex: 'male', age: 28, name: 'Another Rite Student' });
+    const pending = bloodChoice(g.ctx);
+    const interaction = pending.event.interaction;
+    if (interaction.kind !== 'choice') throw new Error('expected a choice fixture');
+    const outcome = interaction.choices[0]?.outcomes[0];
+    if (!outcome) throw new Error('expected a chosen outcome fixture');
+    outcome.effects = [{ kind: 'rite', rite: 'vessel', ascendant: 'ASCENDANT', subject: 'VESSEL' }];
+
+    // A rite for an unrelated student does not make this named Scion closer
+    // to the summit even when its effects occur in a delegated choice.
+    pending.fill.ASCENDANT = other.id;
+    pending.fill.VESSEL = candidate.id;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+
+    // The same rite matters when it is the named Scion who undertakes it.
+    pending.fill.ASCENDANT = candidate.id;
+    expect(ambitionRelevance(g.ctx, pending)).toEqual(expect.objectContaining({
+      surface: 'choice', effect: 'advance',
+    }));
+
+    // An unfilled cast or an unchosen branch cannot support a reading.
+    delete pending.fill.ASCENDANT;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+    pending.fill.ASCENDANT = candidate.id;
+    delete g.ctx.world.delegation.choices[pending.event.id];
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+  });
+
   it('only credits a delegated tutor when its actual pupil is in the ascent programme (#2190)', () => {
     const g = newGame(content, { seed: 2190, campaign: 'long', decider: 'chronicler' });
     g.setAmbition('raise_ascendant');
