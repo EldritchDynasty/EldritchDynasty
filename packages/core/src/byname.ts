@@ -205,8 +205,8 @@ export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>): Byna
  */
 export interface BynameView {
   text: string;
+  /** Says the pen as well: `attested` is Record; the other three are Embellish. */
   standing: BynameStanding;
-  pen?: BynamePen;
   year?: Year;
   page?: string;
   /** When the lie under a `contested` or `buried` byname was settled. */
@@ -223,7 +223,6 @@ export function bynameView(person: Pick<Person, 'epithet' | 'byname'>): BynameVi
     case 'record': return {
       text: person.epithet,
       standing,
-      pen: source.pen,
       year: grant.year,
       page: source.page,
       ...(grant.settled ? { settledYear: grant.settled.year } : {}),

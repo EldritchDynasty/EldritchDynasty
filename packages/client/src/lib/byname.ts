@@ -31,7 +31,6 @@ export function bynameTag(standing: BynameStanding, plain: boolean): string | un
 /** One sentence: where the byname came from and how it now stands. */
 export function bynameNote(byname: BynameView, plain: boolean): string {
   const year = byname.year;
-  const settled = byname.settledYear;
   switch (byname.standing) {
     case 'attested': return plain
       ? `Byname from the factual record of ${year}.`
@@ -40,11 +39,11 @@ export function bynameNote(byname: BynameView, plain: boolean): string {
       ? `Byname from a more favourable account written in ${year}.`
       : `Written into the book in ${year}, on a page the house improved.`;
     case 'contested': return plain
-      ? `Byname from a more favourable account written in ${year}. The discrepancy was proven${settled !== undefined ? ` in ${settled}` : ''}.`
-      : `Written into the book in ${year}, on a page the house improved; the discrepancy was proven${settled !== undefined ? ` in ${settled}` : ''}, and the name is still said.`;
+      ? `Byname from a more favourable account written in ${year}. It is still used.`
+      : `Written into the book in ${year}, on a page the house improved, and the name is still said.`;
     case 'buried': return plain
-      ? `Byname from a more favourable account written in ${year}. The dispute was buried${settled !== undefined ? ` in ${settled}` : ''}.`
-      : `Written into the book in ${year}, on a page the house improved; the doubt was buried${settled !== undefined ? ` in ${settled}` : ''}, not answered.`;
+      ? `Byname from a more favourable account written in ${year}. The dispute was not answered.`
+      : `Written into the book in ${year}, on a page the house improved; the doubt was buried, not answered.`;
     case 'unknown': return plain
       ? 'Byname of unrecorded origin.'
       : 'An old byname; the book does not say where it came from.';
