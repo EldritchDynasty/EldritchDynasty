@@ -57,6 +57,18 @@ describe('the line-break report (#1993)', () => {
     expect(() => summariseLineBreaks([])).toThrow(/no observations/);
   });
 
+  it('rejects an unsafe inclusive last seed without rounded-sum false positives (#2238)', () => {
+    // The first seed is MAX_SAFE_INTEGER - 2: three seeds fit exactly,
+    // but a fourth would exceed safe precision and could repeat a seed.
+    const offset = Number.MAX_SAFE_INTEGER - LINE_BREAK_SEED_START - 2;
+    expect(lineBreakInputs(3, ['chronicler'], offset)).toEqual([
+      { seed: Number.MAX_SAFE_INTEGER - 2, policy: 'chronicler' },
+      { seed: Number.MAX_SAFE_INTEGER - 1, policy: 'chronicler' },
+      { seed: Number.MAX_SAFE_INTEGER, policy: 'chronicler' },
+    ]);
+    expect(() => lineBreakInputs(4, ['chronicler'], offset)).toThrow(/seed range/);
+  });
+
   it('takes the open card whose face reads for continuity, never a closed one', () => {
     const fertile = card('fertile', { line: 'fertile', lineSeen: 3, dowry: 40 });
     const closed = card('closed', { line: 'fertile', lineSeen: 4, available: false });
