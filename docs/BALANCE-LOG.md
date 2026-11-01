@@ -16509,3 +16509,47 @@ Reproduce: `npm run gate:line-breaks -- 400 --campaign=short
 --offset=<2000|4000|6000> --output=<file>` (add `--policy=chronicler` for
 one column), and `npm run gate:endings`.
 
+
+## 2026-11-01 — #1990: earned bynames, the record-claim source
+
+**Question.** How often does the first byname source — a Record page's
+claim about one named person — name somebody, and whom? The contract's
+provisional target is a minority of relatives, Heads more often; the
+issue's wish is "most Heads and some notable relatives".
+
+**Ceiling first.** Before authoring, sixteen 500-year Long Lines under the
+ordinary chronicler (seeds 1990 + 37k, k = 0…15, `main` at `5a788e3`)
+committed claim-bearing Record pages about **59 of 192 Heads (30.7%,
+Wilson 24.6–37.6%)** and 43 other people. That bounds *any* record-claim
+source, even one authored on every claim-bearing block.
+
+**Authored.** Bynames on the record and embellish pens of 27 Record blocks
+that actually fired in that batch — 14 naming the Head, 13 naming a child,
+son, daughter, wife, bride, officer, veteran or pilgrim — 54 Originals with 54 Plain
+English counterparts.
+
+**Measured** at `76c6cb9f` (this branch, with that content), same sixteen seeds:
+
+| Policy | Heads named | Other blood named | Grants | Buried / proven |
+| --- | --- | --- | --- | --- |
+| Chronicler | 43/192 (22.4%, 17.1–28.8%) | 15/3005 (0.5%, 0.3–0.8%) | 68 | 3 / 0 |
+| Always Record | 39/185 (21.1%, 15.8–27.5%) | 24/3556 (0.7%, 0.5–1.0%) | 70 | — |
+| Always Embellish | 43/175 (24.6%, 18.8–31.5%) | 14/3405 (0.4%, 0.2–0.7%) | 67 | 13 / 0 |
+
+Always Omit names nobody (four-seed slow batch, 0/44 Heads, 0/605 others).
+Grants outside the blood are married-in family (7–10 a batch). Heads are
+named 30–60 times as often as other blood relatives, and the authored set
+reaches about three quarters of the ceiling.
+
+**Finding.** The contract's provisional shape holds. "Most Heads" does
+not, and cannot from this source: it needs a second `BynameSource` variant
+(death, succession or reign). No proof contested a byname in sixteen
+always-Embellish lines; burials did (13). The proven path is covered by
+witness tests, not by this batch.
+
+**Limits.** Bot policies. Whether a player can name three people from a
+run (#44) is a reader question and was not asked.
+
+**Reproduce.** `record-claims.slow.test.ts` (the four-seed batch,
+asserted); the sixteen-seed table is the same loop over seeds
+1990 + 37k, chronicler via `stepYear(ctx, true)`.
