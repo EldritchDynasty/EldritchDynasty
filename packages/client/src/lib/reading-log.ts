@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 9: accepted/refused family choices and Matches are observable without typed answer text. */
-export const READING_LOG_FORMAT = 'ed-reading-log/9';
+/** 10: successful saved-run pickups start a separate Chronicle identity and answer-gap epoch. */
+export const READING_LOG_FORMAT = 'ed-reading-log/10';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -46,6 +46,7 @@ export const READING_LOG_CAVEATS = [
   'A censored gap ended without a next answer (export, stop, unload, new house or the event cap); it is a lower bound.',
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
+  'The first Chronicle window after a successful saved-run pickup is carried history; the prior house gap is censored, not continued into the loaded save.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
@@ -106,6 +107,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'pane'; pane: string }
   | { at: number; kind: 'prose'; mode: string }
   | { at: number; kind: 'run'; campaign: string; seed: number }
+  | { at: number; kind: 'pickup' }
   | { at: number; kind: 'year'; year: number }
   | { at: number; kind: 'page'; year: number; page: string; event?: string; answer?: ReadingAnswerKind; revisit?: true; carried?: true }
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
@@ -234,6 +236,18 @@ export class ReadingLog {
     if (!entries) return;
     const carried = this.#pickingUp;
     this.#pickingUp = false;
+    if (carried) {
+      // A load/import/resume can replace the current house without a Begin.
+      // Saved houses can reuse the exact Chronicle ids we saw in the previous
+      // house. The first window is carried history, but it must be recorded
+      // once in its own identity epoch instead of being dropped as unchanged.
+      this.#shown.clear();
+      this.#window.clear();
+      this.#last.delete('run');
+      // A loaded save is a boundary for observer gaps as well as page IDs;
+      // only a successfully displayed Chronicle produces this marker.
+      this.note({ kind: 'pickup' });
+    }
     for (const entry of entries) if (entry.id && !this.#window.has(entry.id)) this.page(entry.year, entry, carried);
     this.#window = new Set(entries.flatMap((entry) => (entry.id ? [entry.id] : [])));
   }
@@ -301,7 +315,7 @@ function stateKey(event: Untimed<ReadingLogEvent>): [string, string] | null {
     case 'prose': return ['prose', event.mode];
     case 'year': return ['year', String(event.year)];
     case 'run': return ['run', `${event.campaign}:${event.seed}`];
-    case 'page': case 'interlude': case 'decision': case 'action': case 'ended': case 'end':
+    case 'page': case 'interlude': case 'decision': case 'action': case 'pickup': case 'ended': case 'end':
       return null;
     default: return assertNever(event);
   }
@@ -362,6 +376,16 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'focus': focused = e.focused; break;
       case 'break': onBreak = e.on; break;
       case 'year': year = e.year; hasHouse = true; break;
+      case 'pickup':
+        // A successful saved-run pickup ends the old answer gap. Its carried
+        // pages cannot answer a question from the house shown before the load.
+        if (hasHouse) {
+          close(e.at, year, 'new-run', true);
+          open = { at: e.at, year: null, kind: 'start', foreground, decisions: 0 };
+        }
+        hasHouse = true;
+        year = null;
+        break;
       case 'decision': hasHouse = true; decisions++; open.decisions++; break;
       case 'page': case 'interlude': {
         hasHouse = true;
