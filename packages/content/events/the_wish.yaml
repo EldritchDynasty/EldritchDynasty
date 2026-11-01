@@ -47,7 +47,12 @@ events:
     cooldownYears: 60
     campaigns: [short, long]
     tags: [tutor, household, wish]
-    purposes: [change_relationship, change_standing, worldbuild_through_action]
+    # Not change_relationship, though it changes one: every ordinary triple
+    # that names it is at the purpose-overlap allowance, and the editor's
+    # new-event seed needs the last free place in its own (BALANCE-LOG,
+    # 2026-11-01, #1976). The rumour below is real: the money is counted out
+    # where the household can hear it.
+    purposes: [change_standing, plant_rumour, worldbuild_through_action]
     conditions:
       all:
         - { generation: { op: gte, value: 2 } }
@@ -84,13 +89,15 @@ events:
               text: >-
                 A man comes up from Bramme at the end of Thaw with a box of
                 slates and an opinion about everything. The forty crowns are
-                counted out of the strongbox in front of {ASKER}, which is how
-                the house says it means a thing. For a month {ASKER} is at the
-                table before the tutor is, every morning. After that nobody
-                thinks it worth remarking on.
+                counted out of the strongbox in the hall, in front of {ASKER}
+                and anybody else who happens to be passing, which is how the
+                house says it means a thing. For a month {ASKER} is at the table
+                before the tutor is, every morning. The kitchen has its own view
+                of that, and the carters take it as far as Bramme.
               effects:
                 - { kind: tutor, target: { slot: ASKER }, attr: mind, op: begin }
                 - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: 12 }
+                - { kind: rumour, op: seed, id: rumour_the_child_who_asked_for_a_term, accuracy: 0.6 }
               next: { event: the_day_book, after: { minYears: 10, maxYears: 12 }, keep: [ASKER] }
         - id: the_terms_are_for_the_heir
           label: No. The house buys terms for its heir.
@@ -242,13 +249,17 @@ events:
   # return in none of 28 delivered promises in 240 Long Lines, so a guarded
   # closure would be an outcome no sampled batch shows (BALANCE-LOG,
   # 2026-11-01, #1976).
+  #
+  # Uncommon for its Record, as the day-book is: what the house writes down
+  # about whom it educates is the house's account of itself. As an arc node
+  # it spends no ration.
   - id: asked_again
     title: Asked Again
     tier: family
-    frequency: common
+    frequency: uncommon
     repeatable: true
     tags: [tutor, household, wish]
-    purposes: [change_standing, plant_rumour, worldbuild_through_action]
+    purposes: [change_relationship, change_standing, force_record_choice]
     slots:
       HEAD: { role: head }
       ASKER: { role: family_member, filters: [{ status: [alive] }], onMissing: cancel_arc }
@@ -302,6 +313,31 @@ events:
                 # wronging, and ASKER is the one who remembers it.
                 - { kind: relationship, from: head, to: { slot: ASKER }, grudge: { severity: 25, inheritance: heir_only } }
                 - { kind: rumour, op: seed, id: rumour_who_the_house_keeps_its_money_for, accuracy: 0.6 }
+    record:
+      subject: the second asking, and the house's answer
+      options:
+        record:
+          chronicle: >-
+            In this year the house was asked a second time to pay a tutor for a
+            child who was not its heir, by the one it had refused the first
+            time, and it gave its answer.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: answered a second asking for a tutor's term }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            In this year, as in every year, the house paid a tutor for any child
+            of the blood who asked for one, and nobody ever had to ask it twice.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: "paid a tutor for every child of the blood who asked, as the house always had" }
+          discrepancy:
+            id: the_term_the_house_always_paid
+            severity: minor
+            provableBy: [commons]
 
 proseVariants:
   - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].title"
@@ -326,13 +362,14 @@ proseVariants:
     plainenglish: >-
       Hire a tutor for {ASKER.them}. It costs forty crowns for eight years of lessons.
   - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=pay_for_the_term].outcomes[id=a_tutor_is_found].text"
-    of: "7d5b10150b282ef9"
+    of: "a466287e56b258e2"
     plainenglish: >-
       In late Thaw, a tutor arrives from Bramme with a box of writing slates
       and an opinion about everything. The forty crowns are counted out of the
-      strongbox in front of {ASKER}. That is how the house shows it is
-      serious. For a month, {ASKER} reaches the table before the tutor every
-      morning. After that, nobody thinks it is worth mentioning.
+      strongbox in the hall, in front of {ASKER} and anyone else passing by.
+      That is how the house shows it is serious. For a month, {ASKER} reaches
+      the table before the tutor every morning. The kitchen staff have their
+      own opinion about that, and the carters carry the story to Bramme.
   - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=the_terms_are_for_the_heir].label"
     of: "db8a9304f3e743f0"
     plainenglish: >-
@@ -469,3 +506,26 @@ proseVariants:
       nothing at the table. Later, in the yard, {ASKER} says a great deal to
       anyone who will listen about what this house is for and who it spends
       its money on. Some of it is unfair. Not enough of it.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.subject"
+    of: "1ae618b9897ea2c5"
+    plainenglish: >-
+      the second request, and how the house answered
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.record.chronicle"
+    of: "0cd1924045f8d24c"
+    plainenglish: >-
+      This year the house was asked a second time to pay for lessons for a
+      child who was not its heir. The request came from the person it had
+      refused the first time, and the house gave its answer.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.record.claims[0].text"
+    of: "cf9b6312796658d6"
+    plainenglish: >-
+      answered a second request to pay for a child's lessons
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.embellish.chronicle"
+    of: "8e9f5480b9efc42c"
+    plainenglish: >-
+      This year, as every year, the house paid a tutor for any child of the
+      family who asked for one. Nobody ever had to ask twice.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.embellish.claims[0].text"
+    of: "2e4c6071515f430d"
+    plainenglish: >-
+      paid a tutor for every child of the family who asked, as the house always had
