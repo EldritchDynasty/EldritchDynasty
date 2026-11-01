@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadContent } from '@ed/content';
@@ -480,6 +480,43 @@ describe('the save directory', () => {
     expect(bySlot.get('linked')?.year).toBeUndefined();
     expect(bySlot.get('linked')?.format).toBeUndefined();
     expect(() => readSave(root, 'linked')).toThrow('not a regular file');
+  });
+
+  it('reads both the slot and its listing through a verified descriptor (#2293)', () => {
+    writeSave(root, 'verified', aSave({ year: 1491 }));
+    expect(readSave(root, 'verified')).toMatchObject({ format: 6, year: 1491 });
+    expect(listSaves(root)).toMatchObject([{ slot: 'verified', format: 6, year: 1491 }]);
+
+    // A path-based read after lstat reintroduces a symlink swap window.
+    // Pin the invariant in both consumers, including a check of the opened
+    // descriptor against the path before and after open.
+    const source = readFileSync(new URL('./saves.mjs', import.meta.url), 'utf8');
+    expect(source).toContain('openSync(path, flags)');
+    expect(source).toContain('fstatSync(fd)');
+    expect(source).toContain('constants.O_NOFOLLOW');
+    expect(source).toContain('before.ino');
+    expect(source).toContain('after.ino');
+    expect(source).toContain("readFileSync(fd, 'utf8')");
+    expect(source).not.toContain("readFileSync(path, 'utf8')");
+    expect(source).toContain('closeSync(fd)');
+  });
+
+  it('keeps broken saves visible and releases their file descriptor on failed reads (#2293)', () => {
+    const path = join(root, 'broken.edsave.json');
+    const bytes = '{not json';
+    writeFileSync(path, bytes, 'utf8');
+
+    const [listed] = listSaves(root);
+    expect(listed).toMatchObject({
+      slot: 'broken', bytes: Buffer.byteLength(bytes), unreadable: expect.any(String),
+    });
+    expect(() => readSave(root, 'broken')).toThrow();
+
+    // A leaked descriptor can prevent rename/replace on supported Windows.
+    const renamed = join(root, 'renamed.edsave.json');
+    renameSync(path, renamed);
+    expect(readdirSync(root)).toEqual(['renamed.edsave.json']);
+    expect(readFileSync(renamed, 'utf8')).toBe(bytes);
   });
 
   it('ignores whatever else is in the directory', () => {
