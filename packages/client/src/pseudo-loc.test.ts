@@ -42,6 +42,15 @@ describe('pseudo localisation (#276)', () => {
     expect(pseudoLocRequested('?other=1')).toBe(false);
   });
 
+  it('refuses repeated pseudo-localisation flags regardless of order or value', () => {
+    expect(pseudoLocRequested('?pseudo-loc=1&pseudo-loc=0')).toBe(false);
+    expect(pseudoLocRequested('?pseudo-loc=0&pseudo-loc=1')).toBe(false);
+    expect(pseudoLocRequested('?pseudo-loc=1&pseudo-loc=1')).toBe(false);
+    expect(pseudoLocRequested('?pseudo-loc&pseudo-loc=true')).toBe(false);
+    expect(pseudoLocRequested('?pseudo-loc=0&other=1')).toBe(false);
+    expect(pseudoLocRequested('?pseudo-loc=true&other=1&other=2')).toBe(true);
+  });
+
   it('does not rewrite editable text or implicit option values (#1030)', async () => {
     const root = document.createElement('main');
     root.innerHTML = [

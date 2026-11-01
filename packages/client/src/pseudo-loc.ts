@@ -55,10 +55,9 @@ export function pseudoLocalise(text: string): string {
 }
 
 export function pseudoLocRequested(search: string): boolean {
-  const params = new URLSearchParams(search);
-  if (!params.has('pseudo-loc')) return false;
-  const value = params.get('pseudo-loc');
-  return value === '' || value === '1' || value === 'true';
+  const values = new URLSearchParams(search).getAll('pseudo-loc');
+  if (values.length !== 1) return false;
+  return values[0] === '' || values[0] === '1' || values[0] === 'true';
 }
 
 function transformAttribute(element: Element, name: string): void {
