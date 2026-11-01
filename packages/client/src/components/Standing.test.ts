@@ -2,6 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
+import { h } from 'vue';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { LandView, SessionView, StandingDelta, TableView } from '@ed/core';
@@ -200,7 +201,7 @@ describe('Standing legibility (#356)', () => {
       (control.element as HTMLButtonElement).focus();
       await control.trigger('click');
       expect(control.attributes('aria-expanded')).toBe('true');
-      expect(control.attributes('aria-controls')).toBe('standing-term-definition');
+      expect(control.attributes('aria-controls')).toBe(wrapper.get('.standing-definition').attributes('id'));
       expect(wrapper.get('#standing-term-definition').text()).toBe(mode === 'original'
         ? 'the regard the wider world gives the house.'
         : 'How the wider world regards this family.');
@@ -214,6 +215,36 @@ describe('Standing legibility (#356)', () => {
       expect(current).toEqual(before);
       expect(wrapper.emitted('look')).toBeUndefined();
       expect(wrapper.emitted('match')).toBeUndefined();
+    } finally { wrapper.unmount(); }
+  });
+
+  it('gives two Standing glossary disclosures distinct accessible targets (#1991)', async () => {
+    const current = view();
+    // Two ledgers in one Vue app must not reuse the same aria-controls target.
+    // A separate mount() for each would incorrectly test two unrelated app id scopes.
+    const wrapper = mount({
+      render: () => h('section', [
+        h(Standing, { view: current, jump: null, saveStatus: 'idle' }),
+        h(Standing, { view: current, jump: null, saveStatus: 'idle' }),
+      ]),
+    }, { attachTo: document.body });
+    try {
+      const buttons = wrapper.findAll('.house-ledger .standing-term');
+      expect(buttons).toHaveLength(2);
+      await buttons[0]!.trigger('click');
+      await buttons[1]!.trigger('click');
+      const targets = wrapper.findAll('.standing-definition');
+      expect(targets).toHaveLength(2);
+      const ids = targets.map((target) => target.attributes('id'));
+      expect(ids[0]).toBeTruthy();
+      expect(ids[1]).toBeTruthy();
+      expect(ids[0]).not.toBe(ids[1]);
+      expect(buttons.map((button) => button.attributes('aria-controls'))).toEqual(ids);
+      await buttons[0]!.trigger('keydown', { key: 'Escape' });
+      expect(buttons[0]!.attributes('aria-expanded')).toBe('false');
+      expect(buttons[1]!.attributes('aria-expanded')).toBe('true');
+      expect(wrapper.findAll('.standing-definition')).toHaveLength(1);
+      expect(wrapper.get('.standing-definition').attributes('id')).toBe(ids[1]);
     } finally { wrapper.unmount(); }
   });
 
