@@ -161,6 +161,24 @@ describe('a card says where an earned byname came from (#1990)', () => {
     } finally { w.unmount(); }
   });
 
+  it.each(['original', 'plainenglish'] as const)('shows an existing recorded byname once in family-card visible and accessible text (%s, #2317)', async (proseMode) => {
+    const legacy = { ...member(undefined, 'the Elder'), name: 'Adela the Elder' };
+    const original = structuredClone(legacy);
+    const w = mount(Member, { props: {
+      member: legacy, names: [], traitNames: [], open: false, proseMode,
+    } });
+    try {
+      const label = () => w.get('button.face .name');
+      expect(label().text()).toBe('Adela the Elder');
+      expect(w.get('button.face').element.textContent).not.toContain('the Elder the Elder');
+      await w.setProps({ member: { ...legacy, name: 'Adela' } });
+      expect(label().text()).toBe('Adela the Elder');
+      await w.setProps({ member: { ...legacy, epithet: undefined } });
+      expect(label().text()).toBe('Adela the Elder');
+      expect(legacy).toEqual(original);
+    } finally { w.unmount(); }
+  });
+
   it('shows an epithet of unknown origin without inventing a page for it', () => {
     const w = mount(Member, { props: {
       member: member({ text: 'the Elder', standing: 'unknown' }, 'the Elder'),
