@@ -10,6 +10,7 @@ import type { GameActions, RememberedPassage } from '../lib/game';
 import Interlude from './Interlude.vue';
 import Passage from './Passage.vue';
 import Book from './Book.vue';
+import GlossaryText from './GlossaryText.vue';
 import Entry from './Entry.vue';
 import Abroad from './Abroad.vue';
 import Chronicle from './Chronicle.vue';
@@ -1611,6 +1612,40 @@ describe('Chronicle century jump accessible names (#1733)', () => {
       await w.findAll('.jump button')[0]!.trigger('click');
       expect(w.find('[data-entry="old"]').exists()).toBe(true);
       expect(jump()[1]!.attributes('aria-pressed')).toBe('false');
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
+
+describe('inline glossary disclosure placement (#2366)', () => {
+  it('puts the definition beside the marked word, before the remaining prose, and restores focus on Escape', async () => {
+    const tail = ' and the rest of this long entry is the house's account of the bargain.';
+    const w = mount(GlossaryText, {
+      attachTo: document.body,
+      props: { text: `Standing${tail}`, proseMode: 'original' },
+    });
+    try {
+      const marked = w.get('button.glossary-term');
+      expect(marked.text()).toBe('Standing');
+      await marked.trigger('click');
+
+      const note = w.get('.glossary-definition');
+      expect(note.attributes('role')).toBe('note');
+      expect(marked.attributes('aria-controls')).toBe(note.attributes('id'));
+      const presented = w.get('.glossary-text').element.textContent ?? '';
+      expect(presented.indexOf('the regard the wider world gives the house.')).toBeGreaterThan(-1);
+      expect(presented.indexOf('the regard the wider world gives the house.'))
+        .toBeLessThan(presented.indexOf(tail));
+      // The tail remains unchanged text, with no duplicated words in the DOM.
+      expect(presented.split(tail)).toHaveLength(2);
+
+      (marked.element as HTMLButtonElement).focus();
+      await marked.trigger('keydown', { key: 'Escape' });
+      await flushPromises();
+      expect(w.find('.glossary-definition').exists()).toBe(false);
+      expect(document.activeElement).toBe(marked.element);
     } finally {
       w.unmount();
     }
