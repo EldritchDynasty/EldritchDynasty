@@ -99,8 +99,13 @@ export function isField(el: Element | null): boolean {
 /** Whether the focused thing answers Space and Enter on its own. */
 export function isControl(el: Element | null): boolean {
   if (!el) return false;
-  const tag = innermostActiveElement(el).tagName;
-  return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY';
+  const active = innermostActiveElement(el);
+  const tag = active.tagName;
+  // A keyboard-activated ARIA control also owns Enter/Space. Do not turn a
+  // year behind a role-based button or link, including inside open shadows.
+  const role = active.getAttribute?.('role');
+  return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY'
+    || role === 'button' || role === 'link';
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
