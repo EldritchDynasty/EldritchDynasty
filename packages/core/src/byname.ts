@@ -79,9 +79,9 @@ export function grantByname(ctx: SimCtx, commit: RecordBynameCommit): BynameAwar
 
 function grantFromPen(ctx: SimCtx, commit: RecordBynameCommit, pen: BynamePen): BynameAward | undefined {
   const w = ctx.world;
-  if (!w.chronicle.some((entry) => entry.id === commit.page)) return undefined;
   const earned = eligibleByname(ctx, commit.event, pen, commit.fill, commit.claims, commit.address);
-  if (!earned) return undefined;
+  // Cheap checks first: most Record commits author no byname at all.
+  if (!earned || !w.chronicle.some((entry) => entry.id === commit.page)) return undefined;
   const { person, text } = earned;
   person.epithet = text;
   person.byname = {
