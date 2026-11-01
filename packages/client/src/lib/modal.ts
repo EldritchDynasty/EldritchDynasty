@@ -161,6 +161,14 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       const top = survivingDialogs[survivingDialogs.length - 1];
       if (top && !top.contains(back)) return;
 
+      // Focus restoration is deferred a frame so a closing dialog can leave
+      // the DOM first. If a different connected element has gained focus in
+      // that frame, the newer interaction wins. Only an unfocused document
+      // (body/html) or the detached old dialog needs our fallback.
+      const active = document.activeElement;
+      if (!top && active instanceof Element && active.isConnected
+        && active !== document.body && active !== document.documentElement) return;
+
       if (top) {
         // A nested dialog may have disabled or hidden the control that opened
         // it. Restore within the still-open parent, never behind its scrim.
