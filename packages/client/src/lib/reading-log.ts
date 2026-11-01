@@ -44,6 +44,7 @@ export const READING_LOG_CAVEATS = [
   'foregroundMs counts time the page was visible and focused outside declared breaks: an exposure proxy, not reading time.',
   'Game years are simulation pacing, not elapsed time.',
   'A censored gap ended without a next answer (export, stop, unload, new house or the event cap); it is a lower bound.',
+  'After the event cap, no further time is measured. The terminal marker uses the cap instant even if Export is pressed later.',
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
   'The first Chronicle window after a successful saved-run pickup is carried history; the prior house gap is censored, not continued into the loaded save.',
@@ -174,6 +175,8 @@ export interface ReadingLogArtifact {
 export class ReadingLog {
   readonly events: ReadingLogEvent[] = [];
   truncated = false;
+  /** The first instant after the log filled, before unobserved time begins. */
+  #cappedAt: number | null = null;
   #ended: EndReason | null = null;
   readonly #origin: number;
   readonly #shown = new Set<string>();
@@ -220,6 +223,10 @@ export class ReadingLog {
       this.#last.set(state[0], state[1]);
     }
     if (this.events.length >= READING_LOG_MAX_EVENTS - 1) {
+      // Once further foreground/visibility events cannot be stored, the
+      // exposure clock must stop. Otherwise an export hours later silently
+      // counts unobserved time as if the last known focus state still held.
+      this.#cappedAt = this.now() - this.#origin;
       this.truncated = true;
       return;
     }
@@ -281,7 +288,9 @@ export class ReadingLog {
   end(reason: EndReason): void {
     if (this.#ended) return;
     // The end must always fit, or every gap after the cap loses its censoring.
-    this.events.push({ kind: 'end', reason, at: this.now() - this.#origin });
+    // Preserve the terminal reason without inventing a recorded interval
+    // after the event cap. Both the last marker and the summary stop there.
+    this.events.push({ kind: 'end', reason, at: this.#cappedAt ?? this.now() - this.#origin });
     this.#ended = reason;
   }
 
@@ -295,7 +304,7 @@ export class ReadingLog {
       caveats: READING_LOG_CAVEATS,
       truncated: this.truncated,
       events,
-      summary: summarize(events, this.now() - this.#origin, this.truncated),
+      summary: summarize(events, this.#cappedAt ?? this.now() - this.#origin, this.truncated),
     };
   }
 
