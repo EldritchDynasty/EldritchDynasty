@@ -219,3 +219,51 @@ test('wrong-campaign save slots cannot turn a Demonstration into a full continua
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(demo);
   expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBeNull();
 });
+
+
+for (const scenario of [
+  {
+    mode: 'original',
+    region: 'Demonstrations kept',
+    remove: 'Remove demonstration demo-autosave',
+    confirm: 'Confirm removing demonstration demo-autosave',
+    continue: 'Continue the last sitting',
+  },
+  {
+    mode: 'plainenglish',
+    region: 'Saved demonstrations',
+    remove: 'Remove saved demonstration demo-autosave',
+    confirm: 'Confirm removing saved demonstration demo-autosave',
+    continue: 'Continue your last game',
+  },
+] as const) {
+  test(`demonstration deletion confirmation retains keyboard focus (${scenario.mode}) #2383`, async ({ page }) => {
+    const { full } = await openWithSaves(page, scenario.mode, { demo: true });
+    const demos = page.getByRole('region', { name: scenario.region });
+    const remove = demos.getByRole('button', { name: scenario.remove, exact: true });
+
+    // The triggering Remove button disappears when its confirmation opens.
+    // Keyboard focus must follow the replacement, not fall back to <body>.
+    await remove.focus();
+    await page.keyboard.press('Enter');
+    const group = demos.getByRole('group', { name: scenario.confirm });
+    const confirm = group.getByRole('button', { name: /Yes, remove/ });
+    const cancel = group.getByRole('button', { name: 'Cancel', exact: true });
+    await expect(confirm).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(cancel).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(remove).toBeFocused();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+    expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).not.toBeNull();
+
+    // Removing the last demo must focus a surviving front-door action.
+    await page.keyboard.press('Enter');
+    await expect(confirm).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(demos).toHaveCount(0);
+    await expect(page.getByRole('button', { name: scenario.continue, exact: true })).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBeNull();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+  });
+}
