@@ -189,28 +189,60 @@ describe('ending image export failures', () => {
     shareCode: () => ({ ok: true as const, code: 'ED1.abc.123' }),
   } as unknown as GameActions;
 
-  it('exports a vector Afterimage when final bitmap allocation fails, retaining the nameless code', async () => {
-    const gauge = { measureText: (text: string) => ({ width: text.length * 7 }) } as CanvasRenderingContext2D;
-    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockReturnValueOnce(gauge).mockReturnValueOnce(null);
-    const w = mount(Ending, { props: { view, epilogue: makeEnding(), actions } });
-    try {
-      await w.get('.ending-actions button').trigger('click');
-      await flushPromises();
-      expect(canvas).toHaveBeenCalledTimes(2);
-      expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
-        expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
-      );
-      const blob = vi.mocked(downloadBlob).mock.calls[0]![0];
-      expect(blob.type).toContain('image/svg+xml');
-      expect(blob.size).toBeGreaterThan(100);
-      expect(w.find('[role="alert"]').exists()).toBe(false);
-    } finally {
-      w.unmount();
-      canvas.mockRestore();
-      vi.mocked(downloadBlob).mockClear();
-    }
-  });
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it('exports a vector Afterimage with the full nameless code despite the names opt-in (' + mode + ') #2369', async () => {
+      const anonymousCode = 'ED1.anonymous-founding.123';
+      const personallyNamedCode = 'ED1.private-names.456';
+      const shareCode = vi.fn((includeNames: boolean) => ({
+        ok: true as const, code: includeNames ? personallyNamedCode : anonymousCode,
+      }));
+      const gauge = { measureText: (text: string) => ({ width: text.length * 7 }) } as CanvasRenderingContext2D;
+      const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockReturnValueOnce(gauge).mockReturnValueOnce(null);
+      const w = mount(Ending, {
+        props: {
+          view, epilogue: makeEnding(), proseMode: mode,
+          actions: { restart: vi.fn(), shareCode } as unknown as GameActions,
+        },
+      });
+      try {
+        // The ending may show a personally named code, but exported images travel
+        // without consent from everyone named in the original run.
+        await w.get('.share-names input').setValue(true);
+        expect((w.get('#share-code').element as HTMLTextAreaElement).value).toBe(personallyNamedCode);
+
+        await w.get('.ending-actions button').trigger('click');
+        await flushPromises();
+        expect(canvas).toHaveBeenCalledTimes(2);
+        expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+          expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
+        );
+        const blob = vi.mocked(downloadBlob).mock.calls[0]![0];
+        expect(blob.type).toContain('image/svg+xml');
+        const source = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(blob);
+        });
+        const svg = new DOMParser().parseFromString(source, 'image/svg+xml');
+        expect(svg.querySelector('parsererror')).toBeNull();
+        // The visible code must match the complete, selectable assistive text.
+        const visible = [...svg.querySelectorAll('text')].map((node) => node.textContent);
+        const description = svg.querySelector('desc')?.textContent ?? '';
+        expect(visible).toContain(anonymousCode);
+        expect(description).toContain('Share code: ' + anonymousCode);
+        expect(visible).not.toContain(personallyNamedCode);
+        expect(description).not.toContain(personallyNamedCode);
+        expect(w.find('[role="alert"]').exists()).toBe(false);
+        expect(shareCode).toHaveBeenCalledWith(false);
+      } finally {
+        w.unmount();
+        canvas.mockRestore();
+        vi.mocked(downloadBlob).mockClear();
+      }
+    });
+  }
 
   it('exports SVG if PNG encoding returns null, instead of losing the image', async () => {
     const ink = {
