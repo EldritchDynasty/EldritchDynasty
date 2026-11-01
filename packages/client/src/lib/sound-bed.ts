@@ -191,13 +191,17 @@ export class SoundBed {
       const session = (nav as { audioSession?: { type?: unknown } } | undefined)?.audioSession;
       if (session?.type === 'auto') session.type = 'ambient';
     } catch { /* unsupported audio policy: the browser/host retains its default */ }
-    const gesture = () => this.gesture();
+    // A queued callback can survive unsubscribe during a remount. Only this
+    // attachment may unlock or suspend the currently attached audio device.
+    let active = true;
+    const gesture = () => { if (active) this.gesture(); };
     const visibility = () => {
+      if (!active) return;
       this.#documentHidden = doc.visibilityState === 'hidden';
       if (this.#documentHidden) this.hide();
       else this.show();
     };
-    const hide = () => this.hide();
+    const hide = () => { if (active) this.hide(); };
     // A pageshow can arrive before visibilitychange while the page remains
     // hidden (for example when a tab is restored in the background).
     const show = () => visibility();
@@ -222,6 +226,7 @@ export class SoundBed {
     const detach = () => {
       if (detached) return;
       detached = true;
+      active = false;
       for (const type of GESTURES) win.removeEventListener(type, gesture, true);
       doc.removeEventListener('visibilitychange', visibility);
       win.removeEventListener('pagehide', hide);
