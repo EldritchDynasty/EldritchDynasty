@@ -264,23 +264,32 @@ describe('mobile native save-list read failures', () => {
     await expect(store.listSaves()).resolves.toEqual([{ slot: 'ancestral', ...older }]);
   });
 
-  it('skips a damaged legacy key without losing native or later legacy saves (#1230)', async () => {
+  it('keeps an unreadable legacy slot visible without migrating its unknown bytes (#2259)', async () => {
     const oldSave = { format: 28, year: 1250, savedAt: '2026-10-03T00:00:00.000Z' };
+    const writes: string[] = [];
+    const removals: string[] = [];
+    const nativeFiles = {
+      ...files,
+      async writeFile({ path }: { path: string }) { writes.push(path); },
+    };
     const unreliablePreferences = {
       async keys() { return { keys: ['ed:save:damaged', 'ed:save:older'] }; },
       async get({ key }: { key: string }) {
         if (key === 'ed:save:damaged') throw new Error('legacy key denied');
         return { value: JSON.stringify(oldSave) };
       },
-      async remove() {},
+      async remove({ key }: { key: string }) { removals.push(key); },
     };
     const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
-      await expect(mobileStorage(files, unreliablePreferences).listSaves()).resolves.toEqual([
+      await expect(mobileStorage(nativeFiles, unreliablePreferences).listSaves()).resolves.toEqual([
         { slot: 'older', ...oldSave },
         { slot: 'healthy', format: 28, year: 1234, savedAt },
+        { slot: 'damaged' },
         { slot: 'unreadable' },
       ]);
+      expect(writes).toEqual(['eldritch/saves/older.json']);
+      expect(removals).toEqual(['ed:save:older']);
       expect(warning).toHaveBeenCalledWith(
         '[mobile] could not read legacy save slot damaged:',
         expect.objectContaining({ message: 'legacy key denied' }),
