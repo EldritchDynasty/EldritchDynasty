@@ -6,6 +6,7 @@ import { loadContent } from '@ed/content';
 import { bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
 import type { Platform } from '../../client/src/platform.js';
 import { writeJsonAtomically } from '../../shell/src/atomic-json.mjs';
+import { nativeSnapshotSha256 } from '../../shell/src/native-snapshot.mjs';
 import { readSave, saveRoot, writeSave } from '../../shell/src/saves.mjs';
 
 import { mobileStorage } from './storage.js';
@@ -117,6 +118,33 @@ describe('iOS runtime smoke protocol', () => {
     );
 
     expect(second.sha256).toBe(first.sha256);
+  });
+
+  it('agrees with the desktop smoke hash for mixed-case nested keys (#2417)', async () => {
+    const snapshot = {
+      format: 28,
+      savedAt: 'before resume',
+      world: { z: 1, A: 2, a: 3, Z: 4 },
+      year: 1082,
+    };
+    // Desktop sorts in code-unit order. The former mobile localeCompare order
+    // put a/A and z/Z together, producing a different hash for these same
+    // persisted bytes.
+    const expected = '9bb40ec8da721c786b2d61c48e10efd1ed829350a633a2cec7da4a54b1753768';
+    expect(nativeSnapshotSha256(snapshot)).toBe(expected);
+    expect((await smokeEvidence({ kind: 'resume' }, { snapshot })).sha256).toBe(expected);
+
+    // Key insertion order and refreshed transport metadata are irrelevant
+    // on both hosts; nested fields and array order are still included.
+    const reordered = {
+      year: 1082,
+      world: { a: 3, Z: 4, A: 2, z: 1 },
+      savedAt: 'after resume',
+      format: 28,
+    };
+    expect(nativeSnapshotSha256(reordered)).toBe(expected);
+    expect((await smokeEvidence({ kind: 'save', seed: 42, years: 40 }, { snapshot: reordered })).sha256)
+      .toBe(expected);
   });
 });
 
