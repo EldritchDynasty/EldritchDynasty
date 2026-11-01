@@ -405,3 +405,52 @@ describe('the frozen-ladder notice (#1803)', () => {
     );
   });
 });
+
+describe('full Continue respects the stored campaign namespace (#2355)', () => {
+  it('does not advertise a misplaced demo as a full save, without erasing the original bytes', async () => {
+    const misplaced = { campaign: 'demo', preserved: 'original bytes for recovery' };
+    const records = new Map<string, unknown>([
+      ['autosave', misplaced],
+      ['demo-autosave', { campaign: 'demo', preserved: 'separate demonstration' }],
+    ]);
+    const writes: string[] = [];
+    const deletes: string[] = [];
+    const host: Platform = {
+      listSaves: async () => [...records.keys()].map((slot) => ({ slot })),
+      readSave: async (slot) => records.get(slot) ?? null,
+      writeSave: async (slot, save) => { writes.push(slot); records.set(slot, save); },
+      deleteSave: async (slot) => { deletes.push(slot); records.delete(slot); },
+      readLibrary: async () => null,
+      writeLibrary: async () => undefined,
+      readUserContent: async () => ({}),
+      exportSave: async () => undefined,
+      importSave: async () => null,
+      onPause: () => () => undefined,
+      onBack: () => () => undefined,
+    };
+
+    const game = createGame(loadContent(), host);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    // The demo in the wrong slot is not a usable full-campaign Continue.
+    expect(game.resumable.value).toBe(false);
+    expect(await game.actions.resume()).toBe(false);
+    expect(game.view.value).toBeNull();
+    expect(records.get('autosave')).toBe(misplaced);
+    expect(writes).toEqual([]);
+    expect(deletes).toEqual([]);
+    expect(await game.actions.listSaves(true)).toContainEqual({ slot: 'demo-autosave' });
+
+    // A genuinely valid full campaign still appears and resumes on a fresh
+    // client; the separate demo has never been overwritten or deleted.
+    const founding = createGame(loadContent(), host);
+    founding.actions.begin(2355, 'short');
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(records.get('autosave')).toMatchObject({ campaign: 'short' });
+    const reloaded = createGame(loadContent(), host);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(reloaded.resumable.value).toBe(true);
+    expect(await reloaded.actions.resume()).toBe(true);
+    expect(reloaded.view.value?.campaign.id).toBe('short');
+    expect(records.get('demo-autosave')).toEqual({ campaign: 'demo', preserved: 'separate demonstration' });
+  });
+});
