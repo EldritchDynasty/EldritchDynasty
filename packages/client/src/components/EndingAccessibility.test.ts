@@ -299,6 +299,62 @@ describe('ending image export failures', () => {
     }
   });
 
+  it.each(['null', 'throw'] as const)(
+    'exports a full nameless Afterimage SVG via real SVG metrics if first Canvas 2D access is %s (#2400)',
+    async (failure) => {
+      const previous = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getComputedTextLength');
+      Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+        configurable: true,
+        value(this: SVGElement) { return (this.textContent ?? '').length * 7; },
+      });
+      const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(() => {
+        if (failure === 'throw') throw new Error('Canvas context blocked');
+        return null;
+      });
+      const anonymous = 'ED1.' + 'A'.repeat(210) + '.123';
+      const named = 'ED1.' + 'B'.repeat(210) + '.456';
+      const shareCode = vi.fn((withNames: boolean) => ({ ok: true as const, code: withNames ? named : anonymous }));
+      vi.mocked(downloadBlob).mockClear();
+      const w = mount(Ending, {
+        props: { view, epilogue: makeEnding(), actions: {
+          restart: vi.fn(), shareCode,
+        } as unknown as GameActions },
+      });
+      try {
+        await w.get('.share-names input').setValue(true);
+        await w.get('.ending-actions button').trigger('click');
+        await flushPromises();
+        expect(canvas).toHaveBeenCalledTimes(1);
+        expect(downloadBlob).toHaveBeenCalledExactlyOnceWith(
+          expect.any(Blob), 'house-ash-1342-seed-47-afterimage.svg',
+        );
+        const blob = vi.mocked(downloadBlob).mock.calls[0]![0];
+        const svgSource = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(blob);
+        });
+        const svg = new DOMParser().parseFromString(svgSource, 'image/svg+xml');
+        expect(svg.querySelector('parsererror')).toBeNull();
+        const description = svg.querySelector('desc')?.textContent ?? '';
+        expect(description).toContain(anonymous);
+        expect(description).not.toContain(named);
+        expect(svgSource).not.toContain(named);
+        expect(shareCode).toHaveBeenCalledWith(false);
+        expect(w.find('[role="alert"]').exists()).toBe(false);
+        expect(w.get('.ending-actions button').attributes('disabled')).toBeUndefined();
+        expect(document.querySelector('svg[style*="-10000px"]')).toBeNull();
+      } finally {
+        w.unmount();
+        canvas.mockRestore();
+        vi.mocked(downloadBlob).mockClear();
+        if (previous) Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', previous);
+        else Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+      }
+    },
+  );
+
   it('reports a failed canvas allocation and leaves the export available for retry', async () => {
     const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
     const view = { houseName: '家', seed: 1, campaign: { name: 'A Short Line' } } as SessionView;
