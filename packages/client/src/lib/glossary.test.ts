@@ -45,6 +45,29 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     expect(segments.map((segment) => segment.text).join('')).toBe(text);
   });
 
+  it('does not disclose aliases connected to Unicode words by joiners', () => {
+    // ZWNJ and ZWJ can form part of a written word, even though Unicode
+    // categorizes them as format characters rather than letters or marks.
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const joiner of ['\u200C', '\u200D']) {
+        for (const alias of ['Standing', 'Reputation']) {
+          for (const text of [`${alias}${joiner}word`, `word${joiner}${alias}`]) {
+            expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+          }
+        }
+      }
+    }
+
+    // Skipping an embedded use must not hide the next standalone label.
+    const text = 'word\u200DStanding Standing';
+    const pieces = splitFirstGlossary(text, 'original');
+    expect(pieces).toEqual([
+      { text: 'word\u200DStanding ' },
+      { text: 'Standing', term: 'standing' },
+    ]);
+    expect(pieces.map((piece) => piece.text).join('')).toBe(text);
+  });
+
   it('marks standalone labels at either end and leaves unmatched text unchanged', () => {
     expect(splitFirstStanding('Standing', 'original'))
       .toEqual([{ text: 'Standing', term: 'standing' }]);
