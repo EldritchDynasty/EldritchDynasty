@@ -162,3 +162,30 @@ test('pagehide and pageshow pause and restore the same Chromium audio context (#
   expect((await heard(page)).made).toBe(before.made);
   expect(errors).toEqual([]);
 });
+
+test('zero volume keeps Chromium silent until the reader raises it (#1986)', async ({ page }) => {
+  const errors = await open(page, { showEverythingFromStart: true, sound: true, soundVolume: 0 });
+
+  // Turning Sound on with a zero level is still silence, even after the
+  // first actual gesture and a live board. Do not needlessly open a device.
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'A year', exact: true })).toBeVisible();
+  expect(await heard(page)).toEqual({ made: 0, started: 0, state: 'none' });
+
+  await page.getByRole('button', { name: 'Reading, marks and keys' }).click();
+  await expect(page.getByRole('checkbox', { name: 'Sound', exact: true })).toBeChecked();
+  const level = page.getByRole('slider', { name: 'Volume' });
+  await expect(level).toHaveValue('0');
+  await level.press('ArrowRight');
+  await expect(level).toHaveValue('10');
+
+  // No second navigation or new world action is needed. The changed reading
+  // preference wakes the present Age's drone on the existing board.
+  await expect.poll(async () => (await heard(page)).made).toBe(1);
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThanOrEqual(2);
+  const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), ACCESSIBILITY_STORAGE_KEY);
+  expect(stored.sound).toBe(true);
+  expect(stored.soundVolume).toBe(0.1);
+  expect(errors).toEqual([]);
+});
