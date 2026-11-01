@@ -24,6 +24,21 @@ describe('land gate partitions (#1810)', () => {
     });
     expect(reduceGatePartitions(plan, parallel)).toEqual(reduceGatePartitions(plan, serial));
   });
+
+  it('keeps every observation stable when campaigns share a compiled content index', () => {
+    const source = indexContent(bundle).bundle;
+    const seeds = [901, 902, 903];
+    const shared = partitionGateInputs(seeds, 1);
+    const independent = partitionGateInputs(seeds, seeds.length);
+    const play = (plan: typeof shared) => reduceGatePartitions(
+      plan, plan.map((partition) => runLandGatePartition(source, partition, 12)),
+    );
+
+    // One worker now indexes the bundle once for all its seeds. Compare with
+    // fresh indexes in separate partitions to guard against state leaking
+    // between independent house runs.
+    expect(play(shared)).toEqual(play(independent));
+  });
 });
 const SEEDS = [
   1042, 77, 909, 5150, 2201, 6600, 3311, 8842, 4455, 1919,
