@@ -15,7 +15,7 @@ import { relevantPeople } from './people/relevance.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { mustSurface } from './delegation.js';
-import { standingOf } from './ascension.js';
+import { standingOf, visibleAscensionRanking } from './ascension.js';
 import { grantHeirloom } from './people/heirlooms.js';
 import { phenotypeOf } from './people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from './genetics/expression.js';
@@ -441,6 +441,50 @@ describe('house ambition (issue #210)', () => {
     // foremost Hierophant, not an arbitrary living relative with both flags.
     relative.rites.push('vessel', 'great_rite');
     expect(ambitionView(ctx)?.ahead).toBeUndefined();
+  });
+
+  it('prepares the named living Scion instead of silently switching to the foremost (#2404)', () => {
+    const ctx = testWorld(content);
+    ctx.world.campaign = 'long';
+    ctx.world.houseAmbition = 'raise_ascendant';
+    const leader = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
+      .find((p) => p.status === 'alive' && phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress);
+    expect(leader).toBeDefined();
+    const first = leader!;
+    first.awakening.awakened = true;
+    first.acquired[ELDRITCH_GIFT] = 400;
+    first.phenotype = undefined;
+
+    const chosen = place(ctx, { sex: 'male', age: 25, name: 'The Named Scion' });
+    chosen.genome = structuredClone(first.genome);
+    chosen.awakening.awakened = true;
+    chosen.phenotype = undefined;
+    ctx.world.scion = chosen.id;
+    expect(visibleAscensionRanking(ctx)[0]?.person).toBe(first.id);
+
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const view = ambitionView(ctx)!;
+      expect(view.status).toContain(first.name); // the ranking remains true
+      expect(view.next).toContain(chosen.name); // the player chose the programme
+      expect(view.next).not.toContain(first.name);
+    }
+    setProseMode(ctx, 'original');
+
+    // Regency advice must honor the same chosen candidate, not silently
+    // redirect the player to the stronger man when the seat is held for him.
+    const previousHead = ctx.world.people.living().find((p) => p.castSlots.includes('head'))!;
+    previousHead.castSlots = previousHead.castSlots.filter((slot) => slot !== 'head');
+    place(ctx, { sex: 'female', age: 40, name: 'Maud the Regent', castSlots: ['head'] });
+    expect(ambitionView(ctx)!.next).toContain(chosen.name);
+
+    // The order is not a second ranking. A dead or unwitnessed Scion never
+    // becomes an alleged expressor; the next plan falls back to visible fact.
+    chosen.awakening.awakened = false;
+    expect(ambitionView(ctx)!.next).toContain(first.name);
+    chosen.awakening.awakened = true;
+    ctx.world.people.kill(chosen.id, ctx.world.year, 'test death');
+    expect(ambitionView(ctx)!.next).toContain(first.name);
   });
 
   it('reports current Ascension standing as progress and keeps the best rung as history', () => {
