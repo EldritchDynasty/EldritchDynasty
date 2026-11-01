@@ -163,7 +163,7 @@ export function mobileStorage(
       : { present: true, value: parsed(value) };
   }
 
-  async function writeSave(slot: string, save: unknown): Promise<void> {
+  async function writeSaveUnlocked(slot: string, save: unknown): Promise<void> {
     await files.writeFile({
       path: savePath(slot),
       data: readableNativeJSON(save),
@@ -181,7 +181,7 @@ export function mobileStorage(
     }
   }
 
-  async function readSave(slot: string): Promise<unknown | null> {
+  async function readSaveUnlocked(slot: string): Promise<unknown | null> {
     const durable = await readFile(savePath(slot));
     if (durable.present) {
       // A present unreadable Data file is not an absent slot. Preserve its
@@ -197,7 +197,7 @@ export function mobileStorage(
       throw new TypeError('the legacy save file is unreadable');
     }
     try {
-      await writeSave(slot, legacy.value);
+      await writeSaveUnlocked(slot, legacy.value);
     } catch {
       // A migration failure must not turn an existing Android save into a
       // missing save. The next read will retry while the legacy key remains.
@@ -205,7 +205,7 @@ export function mobileStorage(
     return legacy.value;
   }
 
-  async function listSaves(): Promise<SaveSummary[]> {
+  async function listSavesUnlocked(): Promise<SaveSummary[]> {
     const saves = new Map<string, SaveSummary>();
     const nativeSlots = new Set<string>();
     // Retire a legacy copy only when it matches the native JSON snapshot.
@@ -299,7 +299,7 @@ export function mobileStorage(
       }
       saves.set(slot, saveSummary(slot, legacy.value));
       try {
-        await writeSave(slot, legacy.value);
+        await writeSaveUnlocked(slot, legacy.value);
       } catch {
         // Still list the old save. It remains intact and a later call retries.
       }
@@ -310,7 +310,7 @@ export function mobileStorage(
         || a.slot.localeCompare(b.slot));
   }
 
-  async function deleteSave(slot: string): Promise<void> {
+  async function deleteSaveUnlocked(slot: string): Promise<void> {
     // Remove the legacy copy first: if Preferences cleanup fails, keep the
     // authoritative Data file. Deleting it first lets a stale legacy snapshot
     // migrate back and resurrect a run the player just deleted.
@@ -318,7 +318,7 @@ export function mobileStorage(
     await removeFile(savePath(slot));
   }
 
-  async function writeLibrary(library: unknown): Promise<void> {
+  async function writeLibraryUnlocked(library: unknown): Promise<void> {
     await files.writeFile({
       path: LIBRARY_PATH,
       data: readableNativeJSON(library),
@@ -333,7 +333,7 @@ export function mobileStorage(
     }
   }
 
-  async function readLibrary(): Promise<unknown | null> {
+  async function readLibraryUnlocked(): Promise<unknown | null> {
     const durable = await readFile(LIBRARY_PATH);
     if (durable.present) {
       // A present native Library file with invalid JSON or unreadable bytes
@@ -359,12 +359,26 @@ export function mobileStorage(
     return legacy.value;
   }
 
+  // Native Data and legacy Preferences are separate asynchronous stores.
+  // A migration that read an absent Data file must not finish after a newer
+  // write/delete and overwrite (or resurrect) that newer decision. Serialize
+  // *whole* public operations, including the legacy read and durable write.
+  // Migrations call the unlocked helpers above rather than re-enter the queue.
+  // Recover the tail after a failure so a refused native read cannot block
+  // all future saves, Library writes or recovery attempts.
+  let tail: Promise<void> = Promise.resolve();
+  function inOrder<T>(run: () => Promise<T>): Promise<T> {
+    const operation = tail.then(run);
+    tail = operation.then(() => undefined, () => undefined);
+    return operation;
+  }
+
   return {
-    listSaves,
-    readSave,
-    writeSave,
-    deleteSave,
-    readLibrary,
-    writeLibrary,
+    listSaves: () => inOrder(listSavesUnlocked),
+    readSave: (slot: string) => inOrder(() => readSaveUnlocked(slot)),
+    writeSave: (slot: string, save: unknown) => inOrder(() => writeSaveUnlocked(slot, save)),
+    deleteSave: (slot: string) => inOrder(() => deleteSaveUnlocked(slot)),
+    readLibrary: () => inOrder(readLibraryUnlocked),
+    writeLibrary: (library: unknown) => inOrder(() => writeLibraryUnlocked(library)),
   };
 }
