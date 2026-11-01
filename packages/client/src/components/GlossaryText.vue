@@ -84,36 +84,41 @@ async function onKeydown(event: KeyboardEvent): Promise<void> {
 <template>
   <span class="glossary-text" @keydown="onKeydown">
     <template v-for="(segment, index) in segments" :key="index">
-      <button
-        v-if="segment.term"
-        type="button"
-        class="glossary-term"
-        :aria-expanded="expanded"
-        :aria-controls="expanded ? noteId(0) : undefined"
-        @click="toggle($event)"
-      >{{ segment.text }}</button><template v-else>{{ segment.text }}</template>
-    </template>
-    <span
-      v-for="(id, depth) in chain"
-      :id="noteId(depth)"
-      :key="id"
-      class="glossary-definition"
-      role="note"
-      tabindex="-1"
-    >
-      {{ glossaryDefinition(id, proseMode) }}
-      <span v-if="relatedAt(id, depth).length" class="glossary-related">
+      <template v-if="segment.term">
         <button
-          v-for="related in relatedAt(id, depth)"
-          :key="related.id"
           type="button"
           class="glossary-term"
-          :aria-expanded="chain[depth + 1] === related.id"
-          :aria-controls="chain[depth + 1] === related.id ? noteId(depth + 1) : undefined"
-          @click="openRelated(related.id, depth, $event)"
-        >{{ related.name }}</button>
-      </span>
-    </span>
+          :aria-expanded="expanded"
+          :aria-controls="expanded ? noteId(0) : undefined"
+          @click="toggle($event)"
+        >{{ segment.text }}</button>
+        <!-- Keep the whole bounded disclosure chain beside the marked word.
+             Appending it after the segments put the note at the far end of
+             long Chronicle passages, detached from what opened it (#2366). -->
+        <span
+          v-for="(id, depth) in chain"
+          :id="noteId(depth)"
+          :key="id"
+          class="glossary-definition"
+          role="note"
+          tabindex="-1"
+        >
+          {{ glossaryDefinition(id, proseMode) }}
+          <span v-if="relatedAt(id, depth).length" class="glossary-related">
+            <button
+              v-for="related in relatedAt(id, depth)"
+              :key="related.id"
+              type="button"
+              class="glossary-term"
+              :aria-expanded="chain[depth + 1] === related.id"
+              :aria-controls="chain[depth + 1] === related.id ? noteId(depth + 1) : undefined"
+              @click="openRelated(related.id, depth, $event)"
+            >{{ related.name }}</button>
+          </span>
+        </span>
+      </template>
+      <template v-else>{{ segment.text }}</template>
+    </template>
   </span>
 </template>
 
