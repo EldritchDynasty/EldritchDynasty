@@ -511,9 +511,10 @@ describe('Windows / Android / iOS host interchange (#322)', () => {
  * native bytes cannot be decoded today. An older Preferences copy must not
  * overwrite it on a "helpful" migration pass (#1196).
  */
-type NativeState = 'invalid-json' | 'unreadable' | 'valid' | 'absent';
+type NativeState = 'invalid-json' | 'unreadable' | 'object-not-save' | 'valid' | 'absent';
+type LegacyState = 'older' | 'same' | 'invalid' | 'denied';
 
-function fixture(native: NativeState) {
+function fixture(native: NativeState, legacy: LegacyState = 'older') {
   const writes: string[] = [];
   const removed: string[] = [];
   const oldSave = { format: 28, year: 1045, savedAt: '2026-09-01T00:00:00Z' };
@@ -525,14 +526,23 @@ function fixture(native: NativeState) {
     readFile: async () => {
       if (native === 'absent') throw Object.assign(new Error('not found'), { code: 'OS-PLUG-FILE-0008' });
       if (native === 'unreadable') throw new Error('Data file temporarily inaccessible');
-      return { data: native === 'invalid-json' ? '{bad json' : JSON.stringify(currentSave) };
+      return { data: native === 'invalid-json' ? '{bad json'
+        : native === 'object-not-save' ? JSON.stringify({ unrelated: true })
+          : JSON.stringify(currentSave) };
     },
     writeFile: async ({ path }: { path: string }) => { writes.push(path); },
     deleteFile: async () => undefined,
   };
   const preferences = {
     keys: async () => ({ keys: ['ed:save:autosave'] }),
-    get: async () => ({ value: JSON.stringify(oldSave) }),
+    get: async () => {
+      if (legacy === 'denied') throw new Error('Preferences read unavailable');
+      return { value: legacy === 'invalid' ? '{broken JSON'
+        : legacy === 'same'
+          // Deliberately reorder keys: semantic equality ignores object order.
+          ? JSON.stringify({ savedAt: currentSave.savedAt, year: currentSave.year, format: currentSave.format })
+          : JSON.stringify(oldSave) };
+    },
     remove: async ({ key }: { key: string }) => { removed.push(key); },
   };
   return { store: mobileStorage(files, preferences), writes, removed, oldSave, currentSave };
@@ -559,11 +569,34 @@ describe('native mobile save listing never overwrites unreadable data (#1196)', 
     expect(removed).toEqual([]);
   });
 
-  it('keeps native metadata and may retire a legacy backup after successfully parsing the native file', async () => {
+  it('preserves a different legacy backup while listing the native snapshot (#2338)', async () => {
     const { store, writes, removed, currentSave } = fixture('valid');
     expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...currentSave }]);
     expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('keeps a different backup even when the native bytes parse as an invalid save-shaped object', async () => {
+    const { store, writes, removed } = fixture('object-not-save');
+    expect(await store.listSaves()).toEqual([{ slot: 'autosave' }]);
+    expect(writes).toEqual([]);
+    expect(removed).toEqual([]);
+  });
+
+  it('retires a truly redundant backup even if JSON object keys have different orders', async () => {
+    const { store, writes, removed, currentSave } = fixture('valid', 'same');
+    expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...currentSave }]);
+    expect(writes).toEqual([]);
     expect(removed).toEqual(['ed:save:autosave']);
+  });
+
+  it('retains unreadable or temporarily unavailable legacy backups', async () => {
+    for (const legacy of ['invalid', 'denied'] as const) {
+      const { store, writes, removed, currentSave } = fixture('valid', legacy);
+      expect(await store.listSaves()).toEqual([{ slot: 'autosave', ...currentSave }]);
+      expect(writes).toEqual([]);
+      expect(removed).toEqual([]);
+    }
   });
 
   it('still migrates a legacy save whose native filename is genuinely absent', async () => {
@@ -741,7 +774,8 @@ describe('native save filenames are canonical slot identities (#2109)', () => {
       ]);
       await expect(store.readSave('autosave')).resolves.toEqual(JSON.parse(canonical));
       expect(reads).toEqual(['eldritch/saves/autosave.json', 'eldritch/saves/autosave.json']);
-      expect(removals).toEqual(['ed:save:autosave']);
+      // A native autosave and a different legacy snapshot are not redundant.
+      expect(removals).toEqual([]);
     }
   });
 
