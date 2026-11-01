@@ -442,7 +442,11 @@ function signOnEnter(event: KeyboardEvent): void {
                 :placeholder="plain ? `Friend ${i + 1}` : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
                 :aria-label="plain ? `Name friend ${i + 1}` : `Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
               />
-              <div class="sex">
+              <div
+                class="sex"
+                role="group"
+                :aria-label="plain ? `Sex of friend ${i + 1}` : `The ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend\'s sex`"
+              >
                 <button
                   class="which"
                   :class="{ on: friend.sex === 'female' }"
