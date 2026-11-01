@@ -108,7 +108,7 @@ events:
                 - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: -10 }
               next: { event: asked_again, after: { minYears: 9, maxYears: 12 }, keep: [ASKER] }
 
-  # THE LATER CHOICE THE TERM MADE. Two years after the term ends the old
+  # THE LATER CHOICE THE TERM MADE. Two to four years after the term ends the old
   # steward gives up the day-book. Keeping it in the family is only a good
   # answer if the term was finished AND the person it was bought for is
   # still here to use it, so every outcome reads one compound guard on ASKER.
