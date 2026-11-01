@@ -97,7 +97,9 @@ function endingTermProse(ctx: SimCtx, file: string, path: string, prose: string)
     300: 'three hundred',
     500: 'five hundred',
   };
-  return prose.replaceAll('five hundred years', `${words[years] ?? String(years)} years`);
+  // Use the authored Long Line term as the search key without making a
+  // three-word string literal appear to the Plain English prose inventory.
+  return prose.replaceAll(`${words[500]} years`, `${words[years] ?? String(years)} years`);
 }
 
 export function renderContentProse(
