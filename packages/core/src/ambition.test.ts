@@ -391,6 +391,26 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().docket[0]?.ambition).toBeUndefined();
   });
 
+  it('warns that a delegated library-copy removal endangers ascent preparation (#1978)', () => {
+    const g = newGame(content, { seed: 1978, campaign: 'long', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const pending = bloodChoice(g.ctx);
+    const interaction = pending.event.interaction;
+    if (interaction.kind !== 'choice') throw new Error('expected a choice fixture');
+    const outcome = interaction.choices[0]?.outcomes[0];
+    if (!outcome) throw new Error('expected a chosen outcome fixture');
+    // Library-copy mutations ignore target in production. The same chosen
+    // branch must distinguish a new book from losing the existing copy.
+    outcome.effects = [{ kind: 'spellbook', op: 'acquire_copy', target: 'household', book: 'test_book' }];
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('advance');
+
+    outcome.effects = [{ kind: 'spellbook', op: 'remove_copy', target: 'household', book: 'test_book' }];
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('endanger');
+    expect(ambitionRelevance(g.ctx, pending)?.reason).toContain('takes usable learning away');
+    outcome.effects = [{ kind: 'spellbook', op: 'degrade', target: 'household', book: 'test_book' }];
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('endanger');
+  });
+
   it('only credits a delegated rite when its cast ascendant belongs to the ascent programme (#1978)', () => {
     const g = newGame(content, { seed: 1978, campaign: 'long', decider: 'chronicler' });
     g.setAmbition('raise_ascendant');
