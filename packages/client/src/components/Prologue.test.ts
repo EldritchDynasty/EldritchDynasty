@@ -297,6 +297,9 @@ describe('optional friends at signing (#1984)', () => {
       expect(houseChoices[0]!.text()).toContain('The Seal');
       expect(houseChoices[1]!.text()).toContain('House Marrow');
       expect(houseChoices[2]!.find('input[aria-label="Name the house"]').exists()).toBe(true);
+      // Optional friend naming stays outside the required house-making group.
+      expect(houseSection.find('.friend-names').exists()).toBe(false);
+      expect(wrapper.get('.friends').element.previousElementSibling).toBe(houseSection.element);
       const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
       expect(disclosure.open).toBe(false);
       expect(wrapper.get('details.friend-names summary').text()).toBe('Name them, if you wish');
