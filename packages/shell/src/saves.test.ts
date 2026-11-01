@@ -294,6 +294,37 @@ describe('the save directory', () => {
     expect(listSaves(root)).toEqual([]);
   });
 
+  it('refuses case-only deletion aliases without losing an existing run (#2380)', () => {
+    writeSave(root, 'House', aSave({ year: 1442 }));
+    const path = join(root, 'House.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    // This would delete the actual House file on Windows even if a Linux
+    // developer saw only a harmless no-op from rmSync({ force: true }).
+    for (const alias of ['house', 'HOUSE', 'hOuSe']) {
+      expect(() => deleteSave(root, alias)).toThrow(SaveSlotError);
+      expect(readFileSync(path, 'utf8')).toBe(original);
+      expect(readdirSync(root)).toEqual(['House.edsave.json']);
+    }
+
+    // The real slot still deletes normally; an absent exact-case slot remains
+    // idempotent for hosts that repeat a successful deletion.
+    expect(deleteSave(root, 'House')).toBe(path);
+    expect(readdirSync(root)).toEqual([]);
+    expect(() => deleteSave(root, 'House')).not.toThrow();
+  });
+
+  it('refuses deletion through a differently-cased extension alias (#2380)', () => {
+    const path = join(root, 'House.EDSAVE.JSON');
+    const original = JSON.stringify(aSave({ year: 1420 }));
+    writeFileSync(path, original, 'utf8');
+
+    // A manually renamed file aliases House.edsave.json on Windows.
+    expect(() => deleteSave(root, 'House')).toThrow(SaveSlotError);
+    expect(readFileSync(path, 'utf8')).toBe(original);
+    expect(readdirSync(root)).toEqual(['House.EDSAVE.JSON']);
+  });
+
   it('refuses a different-case slot without replacing an existing Windows-compatible filename (#2272)', () => {
     writeSave(root, 'House', aSave({ year: 1442 }));
     const path = join(root, 'House.edsave.json');
