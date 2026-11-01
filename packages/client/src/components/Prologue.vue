@@ -355,7 +355,10 @@ function signOnEnter(event: KeyboardEvent): void {
 
       <!-- THE FOUNDING CHOICES. Both are simulation inputs: the gift goes into
            the house's hands and the grudge into the world, and at the term the ending
-           names which of them the selected line changed. -->
+           names which of them the selected line changed. Keep the complete
+           house-making group together without turning any answer optional. -->
+      <section class="house-section" aria-labelledby="house-section-heading">
+        <h2 id="house-section-heading" class="stage-title">{{ plain ? 'House name and commitments' : 'What the house will carry' }}</h2>
       <section class="choice">
         <h3 class="label">{{ plain ? 'Choose an heirloom' : 'You asked for one thing by name' }}</h3>
         <button
@@ -397,6 +400,7 @@ function signOnEnter(event: KeyboardEvent): void {
           :aria-label="plain ? 'Enter the family name' : 'Name the house'"
           @keydown.enter="signOnEnter($event)"
         />
+      </section>
       </section>
 
       <!-- THE LAST QUESTION, and the only one not about the house. It is the
@@ -486,8 +490,8 @@ function signOnEnter(event: KeyboardEvent): void {
 button.on, .on { }
 .on { margin-top: 10px; }
 .choice { margin-top: 30px; }
-.founder-section { margin-top: 30px; }
-.founder-section .choice { margin-top: 16px; }
+.founder-section, .house-section { margin-top: 30px; }
+.founder-section .choice, .house-section .choice { margin-top: 16px; }
 .stage-title { margin: 0 0 16px; color: var(--ink-soft); font-size: var(--t-card); font-weight: 600; }
 .choice .prompt { margin: 0 0 12px; line-height: 1.7; color: var(--ink-soft); font-size: var(--t-card); }
 .question { border: 0; padding: 0; margin: 0 0 24px; min-width: 0; }
