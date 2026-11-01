@@ -256,7 +256,10 @@ export function lineBreakInputs(runs: number, policies: readonly LineBreakPolicy
   if (!Number.isSafeInteger(offset) || offset < 0) {
     throw new RangeError('line-break seed offset must be a nonnegative safe integer');
   }
-  if (!Number.isSafeInteger(LINE_BREAK_SEED_START + offset + runs - 1)) {
+  // Subtract first: summing past 2^53 can round back to a "safe" integer
+  // after the final -1 and accidentally admit duplicate/unsafe seeds.
+  const headroom = Number.MAX_SAFE_INTEGER - LINE_BREAK_SEED_START;
+  if (offset > headroom || runs - 1 > headroom - offset) {
     throw new RangeError('line-break seed range exceeds safe integers');
   }
   if (!policies.length) throw new RangeError('line-break cohort must include a policy');
