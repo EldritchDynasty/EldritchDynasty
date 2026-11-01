@@ -16,10 +16,27 @@ const chain = ref<string[]>([]);
 const openers = ref<Array<HTMLButtonElement | null>>([]);
 const expanded = computed(() => chain.value.length > 0);
 const controlId = useId();
+const root = ref<HTMLElement | null>(null);
 
-watch([() => props.text, () => props.proseMode], () => {
+watch([() => props.text, () => props.proseMode], async () => {
+  // Removing an expanded related note removes its focused button as well.
+  // Only move focus when it was inside the disappearing disclosure: changing
+  // reading preferences elsewhere must never steal focus back to this passage.
+  const primary = root.value?.querySelector<HTMLButtonElement>('button.glossary-term');
+  const restoreFocus = chain.value.length > 0
+    && typeof document !== 'undefined'
+    && !!root.value?.contains(document.activeElement)
+    && document.activeElement !== primary;
   chain.value = [];
   openers.value = [];
+  if (!restoreFocus) return;
+
+  await nextTick();
+  // A changed passage may lose its only glossary alias. Keep keyboard focus
+  // with the surviving text; it is programmatic, never an extra Tab stop.
+  const host = root.value;
+  if (!host?.isConnected) return;
+  (host.querySelector<HTMLButtonElement>('button.glossary-term') ?? host).focus();
 });
 
 function buttonFrom(event: MouseEvent): HTMLButtonElement | null {
@@ -82,7 +99,7 @@ async function onKeydown(event: KeyboardEvent): Promise<void> {
 </script>
 
 <template>
-  <span class="glossary-text" @keydown="onKeydown">
+  <span ref="root" class="glossary-text" tabindex="-1" @keydown="onKeydown">
     <template v-for="(segment, index) in segments" :key="index">
       <template v-if="segment.term">
         <button
