@@ -32,6 +32,28 @@ function opening(s: GameSession) {
 }
 
 describe('public session input replay (#1910)', () => {
+  it('projects saved historical bynames in the read-only line without changing succession (#2227)', () => {
+    const s = newGame(content, { seed: SEED });
+    const first = s.ctx.world.succession[0]!;
+    const founder = s.ctx.world.people.get(first.person)!;
+    expect(first.name).toBe(founder.name);
+    expect(s.line()[0]).not.toHaveProperty('epithet');
+
+    founder.epithet = 'the Witness';
+    const saved = snapshot(s);
+    const inputCount = s.ctx.world.decisionLog.length;
+    const line = s.line();
+    expect(line[0]).toMatchObject({ person: founder.id, name: first.name, epithet: 'the Witness' });
+    expect(first.name).toBe(founder.name);
+    expect(snapshot(s)).toBe(saved);
+    expect(s.ctx.world.decisionLog).toHaveLength(inputCount);
+
+    const resumed = resumeGame(JSON.parse(JSON.stringify(s.save())), content);
+    expect(resumed.line()[0]).toMatchObject({ name: first.name, epithet: 'the Witness' });
+    founder.epithet = undefined;
+    expect(s.line()[0]).not.toHaveProperty('epithet');
+  });
+
   it('replays the exact page retained by a scheduled opening consequence (#1946)', () => {
     const s = newGame(content, { seed: SEED, decider: 'chronicler' });
     s.advance(8);
