@@ -136,14 +136,15 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   onMounted(() => {
     const active = document.activeElement;
     cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
-    const first = focusable()[0];
-    first?.focus();
-    if (card.value && document.activeElement !== first) {
-      // With no reachable control (or a control whose focus() failed),
-      // the dialog must own focus instead of leaving it behind the scrim.
+    // Hosts may refuse or throw on focus(), including on a custom first
+    // control. Try later usable controls before falling back to the card.
+    // None of these failures may skip installation of the keyboard trap.
+    const focusedChild = focusable().some(tryFocus);
+    if (!focusedChild && card.value) {
+      // With no reachable child, the dialog itself owns keyboard focus.
       // Programmatic focus must not introduce a new Tab stop.
       if (!card.value.hasAttribute('tabindex')) card.value.tabIndex = -1;
-      card.value.focus();
+      tryFocus(card.value);
     }
     window.addEventListener('keydown', onKey);
   });
