@@ -187,7 +187,9 @@ export function normaliseFriends(
   const seen = new Set<string>();
   for (const row of input) {
     const name = row.name.trim().replace(/\s+/g, ' ');
-    if (!name) continue;
+    // An optional friend with only zero-width or other default-ignorable
+    // Unicode marks is still an empty field, not a name to reserve for years.
+    if (!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()) continue;
     if (name.length > FRIEND_NAME_MAX) {
       return { ok: false, reason: msg(ctx, 'friends.refuse.too_long', "'{NAME}' is longer than a name", { NAME: name }) };
     }
