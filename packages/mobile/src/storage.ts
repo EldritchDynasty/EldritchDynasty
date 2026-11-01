@@ -352,7 +352,7 @@ export function mobileStorage(
       throw new TypeError('the legacy Library of Houses file is unreadable');
     }
     try {
-      await writeLibrary(legacy.value);
+      await writeLibraryUnlocked(legacy.value);
     } catch {
       // Same migration rule as saves: read the old value and retry later.
     }
