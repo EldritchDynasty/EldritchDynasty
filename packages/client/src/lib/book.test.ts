@@ -453,6 +453,37 @@ describe('the house afterimage (#260)', () => {
     expect(JSON.stringify(fallback)).not.toContain('Hidden true parent');
   });
 
+  it('does not repeat an epithet already at the end of a recorded name (#2231)', () => {
+    const page = { year: 1200, page: 'witness', text: 'The house named its witness.' };
+    const evidence = {
+      people: [
+        { person: 'ancestor', name: 'Adela the Elder', epithet: 'the Elder', sources: [page] },
+      ],
+      spent: { person: 'ancestor', name: 'Adela the Elder', epithet: 'the Elder', source: page },
+      line: [
+        { id: 'last', name: 'Élodie the Witness', epithet: 'the Witness', head: true,
+          record: { parents: { mother: 'ancestor' } } },
+        { id: 'ancestor', name: 'Adela the Elder', epithet: 'the Elder',
+          record: { parents: {} } },
+      ],
+    };
+    const before = structuredClone(evidence);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const model = afterimageModel({ ...source, evidence }, mode);
+      expect(model.memories.map((memory) => memory.text)).toEqual([
+        'Adela the Elder',
+        'Adela the Elder',
+        'Adela the Elder → Élodie the Witness',
+      ]);
+      const svg = afterimageSvg(model, afterimageLayout(model, monospace));
+      expect(svg).toContain('Adela the Elder');
+      expect(svg).toContain('Élodie the Witness');
+      expect(svg).not.toContain('the Elder the Elder');
+      expect(svg).not.toContain('the Witness the Witness');
+    }
+    expect(evidence).toEqual(before);
+  });
+
   it('is deterministic and changes when the finished account changes', () => {
     const first = afterimageModel(source);
     expect(afterimageModel(source)).toEqual(first);
