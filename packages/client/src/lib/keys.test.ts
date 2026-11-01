@@ -132,6 +132,29 @@ describe('what a keypress means', () => {
     expect(isControl({ tagName: 'DIV' } as Element)).toBe(false);
   });
 
+  it('leaves Enter and Space to keyboard-activated ARIA buttons and links (#2308)', () => {
+    for (const role of ['button', 'link']) {
+      const control = document.createElement('div');
+      control.tabIndex = 0;
+      control.setAttribute('role', role);
+      expect(isField(control)).toBe(false);
+      expect(isControl(control)).toBe(true);
+      for (const key of ['Enter', ' ']) {
+        expect(shortcutFor({ key, onControl: isControl(control) }), role).toBeNull();
+      }
+      // Numbered choices remain the player's shortcuts.
+      expect(shortcutFor({ key: '3', onControl: isControl(control) }))
+        .toEqual({ kind: 'take', index: 2 });
+    }
+
+    const ordinary = document.createElement('div');
+    expect(isControl(ordinary)).toBe(false);
+    ordinary.setAttribute('role', 'status');
+    expect(isControl(ordinary)).toBe(false);
+    expect(shortcutFor({ key: 'Enter', onControl: isControl(ordinary) }))
+      .toEqual({ kind: 'advance', years: 1 });
+  });
+
   /** Ctrl-R reloads and Cmd-L is the address bar. A game that eats those closes. */
   it('never touches a modified press', () => {
     for (const key of [' ', 'Enter', '1', '?', 'Escape']) {
@@ -190,6 +213,28 @@ describe('focus inside open shadow roots (#2147)', () => {
       }
     } finally {
       outer.remove();
+    }
+  });
+
+  it('does not advance behind an ARIA button inside an open shadow root (#2308)', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const button = document.createElement('span');
+    button.setAttribute('role', 'button');
+    button.tabIndex = 0;
+    shadow.append(button);
+    document.body.append(host);
+
+    try {
+      button.focus();
+      expect(document.activeElement).toBe(host);
+      expect(shadow.activeElement).toBe(button);
+      expect(isControl(document.activeElement)).toBe(true);
+      for (const key of ['Enter', ' ']) {
+        expect(shortcutFor({ key, onControl: isControl(document.activeElement) })).toBeNull();
+      }
+    } finally {
+      host.remove();
     }
   });
 
