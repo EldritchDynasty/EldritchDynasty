@@ -60,14 +60,25 @@ describe('grudges that outlive the men who took them, across whole runs', () => 
     // 3119, 3136, 3204, 3255, 3289, 3323, 3357, 3374) and replaced the rest
     // with seeds confirmed to survive the full thousand years elsewhere in
     // this suite.
+    //
+    // FORTY, NOT TWENTY-FOUR (#2296). #1993's collateral keeping re-rolled one
+    // run: seed 3357's line now breaks in 1208 instead of reaching the term,
+    // and it ends with nobody left to hold a grudge. That took 17 of 24 to 16,
+    // which is 1.7 standard errors, and `expectRate` refused it. Every other
+    // committed row came out identical. The floor stays where a broken system
+    // would read. The batch grows by sixteen runs of the canonical
+    // `5000 + 7*i` sequence, fixed BEFORE they were measured: 31 of 40 before
+    // that commit, 30 of 40 after, so 3.6 standard errors clear. Most of the
+    // runs with no grudge are lines that broke early, not families at peace.
     const SEEDS = [
       3000, 3017, 3051, 3068, 3119, 3136, 3204, 3255, 3289, 3323, 3357, 3374,
       1370, 1666, 1703, 4013, 4026, 4065, 4091, 1074, 1148, 1185, 1222, 1259,
+      ...Array.from({ length: 16 }, (_, i) => 5000 + 7 * i),
     ];
     const oldest: number[] = [];
     let withGrudges = 0;
-    for (let i = 0; i < 24; i += 1) {
-      const g = newGame(bundle, { seed: SEEDS[i], decider: 'chronicler' });
+    for (const seed of SEEDS) {
+      const g = newGame(bundle, { seed, decider: 'chronicler' });
       g.advance(CAMPAIGN_YEARS);
       const w = g.ctx.world;
       const grudges = [...w.relationships.values()].flatMap((r) => r.grudges);
@@ -77,7 +88,7 @@ describe('grudges that outlive the men who took them, across whole runs', () => 
     }
     expectRate({
       hits: withGrudges,
-      n: 24,
+      n: SEEDS.length,
       floor: 0.5,
       what: 'a Long Line and nobody fell out with anybody',
     });
