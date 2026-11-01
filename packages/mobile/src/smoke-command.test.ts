@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseSmokeCommand } from './smoke.js';
+import { parseSmokeCommand, settleSmokeCommand, smokeEvidence } from './smoke.js';
 
 describe('Debug-only iOS smoke import filenames (#2111)', () => {
   const importCommand = (path: string) =>
@@ -37,5 +37,37 @@ describe('Debug-only iOS smoke import filenames (#2111)', () => {
       .toEqual({ kind: 'save', seed: 1042, years: 40 });
     expect(parseSmokeCommand('eldritchdynasty-smoke://resume')).toEqual({ kind: 'resume' });
     expect(parseSmokeCommand('eldritchdynasty-smoke://export')).toEqual({ kind: 'export' });
+  });
+});
+
+describe('native smoke callback evidence settles even on synchronous failures (#2324)', () => {
+  const command = { kind: 'resume' } as const;
+
+  it('turns a synchronous callback throw into a terminal error rather than leaving received pending', async () => {
+    await expect(settleSmokeCommand(command, () => {
+      throw new Error('client smoke listener unavailable');
+    })).resolves.toEqual({
+      command: 'resume',
+      ok: false,
+      error: 'client smoke listener unavailable',
+    });
+  });
+
+  it('also handles rejected Promises and non-Error values', async () => {
+    await expect(settleSmokeCommand(command, async () => {
+      throw new Error('resume refused');
+    })).resolves.toEqual({
+      command: 'resume',
+      ok: false,
+      error: 'resume refused',
+    });
+    await expect(settleSmokeCommand(command, () => Promise.reject('native callback failed')))
+      .resolves.toEqual({ command: 'resume', ok: false, error: 'native callback failed' });
+  });
+
+  it('preserves the successful hashed snapshot evidence', async () => {
+    const result = { snapshot: { format: 41, year: 1243 }, year: 1243 };
+    const expected = await smokeEvidence(command, result);
+    await expect(settleSmokeCommand(command, async () => result)).resolves.toEqual(expected);
   });
 });
