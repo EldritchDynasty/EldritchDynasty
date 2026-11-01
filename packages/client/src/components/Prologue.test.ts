@@ -287,6 +287,16 @@ describe('optional friends at signing (#1984)', () => {
       expect(friendsIndex).toBe(houseIndex + 1);
       expect(wrapper.get('.founder-section').attributes('aria-labelledby')).toBe('founder-section-heading');
       expect(wrapper.get('#founder-section-heading').text()).toBe('Who signs the book');
+      // Keep the three consequential house choices in one named section;
+      // this is presentation only, not a change to founding prerequisites.
+      const houseSection = wrapper.get('.house-section');
+      expect(houseSection.attributes('aria-labelledby')).toBe('house-section-heading');
+      expect(wrapper.get('#house-section-heading').text()).toBe('What the house will carry');
+      const houseChoices = houseSection.findAll('section.choice');
+      expect(houseChoices).toHaveLength(3);
+      expect(houseChoices[0]!.text()).toContain('The Seal');
+      expect(houseChoices[1]!.text()).toContain('House Marrow');
+      expect(houseChoices[2]!.find('input[aria-label="Name the house"]').exists()).toBe(true);
       const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
       expect(disclosure.open).toBe(false);
       expect(wrapper.get('details.friend-names summary').text()).toBe('Name them, if you wish');
@@ -297,6 +307,7 @@ describe('optional friends at signing (#1984)', () => {
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('details.friend-names summary').text()).toBe('Add friends (optional)');
       expect(wrapper.get('#founder-section-heading').text()).toBe('About the founder');
+      expect(wrapper.get('#house-section-heading').text()).toBe('House name and commitments');
       expect(disclosure.open).toBe(false);
     } finally {
       wrapper.unmount();
