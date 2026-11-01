@@ -356,6 +356,21 @@ async function saveAfterimage(): Promise<void> {
       </div>
     </section>
 
+    <!-- The Demonstration is a complete house, not a save promoted into a
+         longer campaign. Keep this reader-local and leave authored last-night
+         prose unchanged (#2207, part of #1979). -->
+    <section v-if="view.campaign.id === 'demo'" class="demo-next" aria-labelledby="demo-next-title">
+      <h3 id="demo-next-title" class="label">{{ plain ? 'Continue with a full campaign' : 'Beyond this account' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          This completed Demonstration remains in your Library of Houses as a Demonstration house. Short and Long Lines follow a family through many more generations and Ages, with further choices about the Record and the creditor's debt. A Demonstration save cannot become a full campaign; a longer line begins as a new house.
+        </template>
+        <template v-else>
+          The Library of Houses keeps this Demonstration among its finished accounts. A Short or Long Line carries another house through many generations and Ages; there too the family decides what the Record says, and the creditor reads what is owed. This saved account cannot be made into either longer line. Another house must sign its own beginning.
+        </template>
+      </p>
+    </section>
+
     <div class="row ending-actions">
       <button class="quiet" :disabled="savingAfterimage" @click="saveAfterimage()">
         {{ savingAfterimage ? (plain ? 'Saving image…' : 'Setting the afterimage…') : (plain ? 'Save ending image' : 'Save the house afterimage') }}
@@ -423,6 +438,8 @@ h1 { font-size: var(--t-year); font-weight: 400; margin: 0 0 8px; color: var(--r
   margin: 40px 0 30px; padding-top: 22px; border-top: 1px solid var(--rule);
   font-size: var(--t-lead); color: var(--ink);
 }
+.demo-next { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--rule); }
+.demo-next p { color: var(--ink-soft); line-height: 1.75; }
 .ending-actions { justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .house-memory { margin-top: 32px; }
 .memory { margin: 24px 0; overflow-wrap: anywhere; }
