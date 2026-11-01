@@ -148,6 +148,16 @@ const friends = ref(
   Array.from({ length: props.prologue.friendsWanted }, () => ({ name: '', sex: 'female' as 'male' | 'female' })),
 );
 
+// A failed signing reports the inputs as they were submitted. If the player
+// corrects them, keep the previous refusal out of the current form. The store
+// still owns the result; another attempt (even one returning the same words)
+// must display its own failure, and a new refusal prop must be visible.
+const refusalSuperseded = ref(false);
+watch(() => props.refused, () => { refusalSuperseded.value = false; });
+watch([founderName, gender, configuration, answers, houseName, heirloom, grudge, friends], () => {
+  if (props.refused !== null) refusalSuperseded.value = true;
+}, { deep: true, flush: 'sync' });
+
 // The DOM still carries the previous beat's advance button until Vue patches
 // it. A second click on that stale button must not consume another reveal (or
 // mark the whole Prologue as read before its final beat was displayed).
@@ -226,6 +236,7 @@ let signing = false;
 function sign(): void {
   // Keyboard submission must obey the same requirements as the disabled button.
   if (wanted.value.length > 0 || signing) return;
+  refusalSuperseded.value = false;
   signing = true;
   try {
     const result = props.actions.found({
@@ -450,7 +461,7 @@ function signOnEnter(event: KeyboardEvent): void {
         </details>
       </section>
 
-      <p v-if="refused" class="rubric small">{{ refused }}</p>
+      <p v-if="refused && !refusalSuperseded" class="rubric small">{{ refused }}</p>
 
       <button class="primary sign" :disabled="wanted.length > 0" @click="sign()">
         {{ plain ? 'Sign the agreement' : 'Sign it' }}
