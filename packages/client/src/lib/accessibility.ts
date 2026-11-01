@@ -74,7 +74,10 @@ function isVolume(value: unknown): value is number {
 export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): AccessibilityPreferences {
   if (!storage) return { ...DEFAULT_ACCESSIBILITY };
   try {
-    const parsed = JSON.parse(storage.getItem(ACCESSIBILITY_STORAGE_KEY) ?? 'null') as {
+    const stored = storage.getItem(ACCESSIBILITY_STORAGE_KEY);
+    // No saved choice is a fresh install, not a damaged preference record.
+    if (stored === null) return { ...DEFAULT_ACCESSIBILITY };
+    const parsed = JSON.parse(stored) as {
       textScale?: unknown;
       readingFont?: unknown;
       proseMode?: unknown;
@@ -84,6 +87,11 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
       sound?: unknown;
       soundVolume?: unknown;
     } | null;
+    // A present record must be an object. A literal JSON null, array or scalar
+    // is damaged data, not a legacy preference missing its optional fields.
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      throw new TypeError('invalid stored reading preferences');
+    }
     // Missing volume is a legacy preference; a present but invalid level is
     // corruption. Treat corruption as silence, never as a jump to full volume.
     const storedSound = parsed?.sound;
@@ -103,7 +111,9 @@ export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): Acc
         : isVolume(storedVolume) ? storedVolume : 0,
     };
   } catch {
-    return { ...DEFAULT_ACCESSIBILITY };
+    // Damaged/blocked preferences do not prove the reader wants full-volume
+    // sound. Keep the screen usable, but never turn a corrupt record loud.
+    return { ...DEFAULT_ACCESSIBILITY, sound: false, soundVolume: 0 };
   }
 }
 
