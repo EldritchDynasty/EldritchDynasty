@@ -55,7 +55,8 @@ const historyPerson = ref<string | undefined>(props.person);
 watch(() => props.person, (id) => { if (id) void readLife(id); else historyPerson.value = undefined; });
 /** The index holds existing saved labels, not guesses from the page's prose. */
 function namedPerson(person: SessionView['chroniclePeople'][number]): string {
-  return person.epithet ? `${person.name} ${person.epithet}` : person.name;
+  return person.epithet && !person.name.endsWith(` ${person.epithet}`)
+    ? `${person.name} ${person.epithet}` : person.name;
 }
 const historyName = computed(() => {
   const person = props.people?.find((person) => person.id === historyPerson.value);
