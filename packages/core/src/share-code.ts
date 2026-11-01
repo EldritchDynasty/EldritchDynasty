@@ -356,11 +356,11 @@ export function readShareCode(
   // per code character, while bounding raw input before normalization so a
   // megabyte of whitespace cannot hide a small otherwise-valid code.
   if (code.length > SHARE_CODE_MAX * 4) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
-  // Sharing apps may insert U+200B zero-width spaces or U+2060 word joiners
-  // at visual wrap points. Neither is matched by JavaScript's `\s`, and
-  // neither belongs to our ASCII wire alphabet. Ignore both like line breaks,
-  // but only after the raw-input cap so padding cannot evade the bound.
-  const text = code.replace(/[\s\u200B\u2060]+/g, '');
+  // Rich-text copy can insert U+00AD soft hyphens, U+200B zero-width
+  // spaces, U+200C/U+200D zero-width joiners, or U+2060 word joiners at
+  // visual wrap points. None can belong to this ASCII wire alphabet; treat
+  // them like line breaks, but only after bounding the original raw input.
+  const text = code.replace(/[\s\u00AD\u200B-\u200D\u2060]+/g, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);

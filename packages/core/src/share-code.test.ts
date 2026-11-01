@@ -297,6 +297,24 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
   });
 
+  it('reads copied rich-text codes with soft hyphens and zero-width joiners (#2392)', () => {
+    const code = codeOf(founded(), { names: true });
+    for (const separator of ['\u00AD', '\u200C', '\u200D']) {
+      // Formatting may be introduced between any two visible code characters.
+      const wrapped = code.split('').join(`${separator}\n`);
+      expect(readShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+      expect(newGameFromShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+      // A flood of removed characters cannot bypass the raw input limit.
+      expect(problemOf(separator.repeat(SHARE_CODE_MAX * 4) + code))
+        .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
+    }
+    // Actual visible substitutions still fail the checksum; separators are
+    // formatting, never a licence to reinterpret or silently repair a code.
+    const body = code.split('.')[1]!;
+    const corrupt = code.replace(body, `A${body.slice(1)}`);
+    expect(problemOf(corrupt)).toEqual({ kind: 'damaged' });
+  });
+
   it('bounds padded input before normalizing away whitespace', () => {
     const code = codeOf(founded());
     const padded = `${' \n'.repeat(SHARE_CODE_MAX * 2 + 1)}${code}`;
