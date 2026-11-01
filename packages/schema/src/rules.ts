@@ -257,6 +257,64 @@ const recordClaimSymmetry: ValidationRule = {
   },
 };
 
+/**
+ * EARNED BYNAMES (#1990). A byname is the page's claim about one person,
+ * shortened into a name, so it must rest on that claim:
+ *
+ *   - it names a slot this event declares, and that slot is the target of a
+ *     claim on the SAME pen — the engine re-checks the committed page and
+ *     grants nothing if the claim landed elsewhere;
+ *   - it is words, not a template: no `{TOKEN}` (a byname outlives the cast
+ *     that rendered it), and none of the bearing words §29.4 keeps off a label;
+ *   - it is short enough to follow a name on a card and in a tree.
+ *
+ * Omit cannot carry one; its schema has no field for it.
+ */
+export const BYNAME_MAX_WORDS = 5;
+const bynameSlot: ValidationRule = {
+  id: 'byname/slot',
+  about: 'A byname names a declared slot that the same pen makes a claim about, in a few plain words.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) {
+      const checkRecord = (record: RecordBlock, source: string) => {
+        for (const pen of ['record', 'embellish'] as const) {
+          const option = record.options[pen];
+          const byname = option.byname;
+          if (!byname) continue;
+          const at = `event:${e.id}/${source}/${pen}`;
+          if (!e.slots[byname.slot]) {
+            issues.push(err(this.id, at, `byname names undeclared slot '${byname.slot}'`));
+          }
+          const claimed = option.claims.some((c) => typeof c.target === 'object'
+            && 'slot' in c.target && c.target.slot === byname.slot);
+          if (!claimed) {
+            issues.push(err(this.id, at, `byname for '${byname.slot}' rests on no claim about that slot — `
+              + 'a byname is the page\'s claim shortened into a name, so the page must make one'));
+          }
+          if (slotTokens(byname.text).length || /[{}]/.test(byname.text)) {
+            issues.push(err(this.id, at, 'byname text is words, not a template — no {TOKEN}'));
+          }
+          for (const word of bearingWordsIn(byname.text)) {
+            issues.push(err(this.id, at, `byname names bearing: '${word}' (concept §29, rule 1)`));
+          }
+          const words = byname.text.trim().split(/\s+/).length;
+          if (words > BYNAME_MAX_WORDS) {
+            issues.push(err(this.id, at, `byname runs ${words} words; it follows a name, keep it to ${BYNAME_MAX_WORDS}`));
+          }
+        }
+      };
+      if (e.record) checkRecord(e.record, 'record');
+      for (const row of e.recordByChoice ?? []) checkRecord(row, `recordByChoice:${row.id}`);
+      for (const row of e.recordByOutcome ?? []) checkRecord(row, `recordByOutcome:${row.id}`);
+      for (const o of outcomeGroups(e).flat()) {
+        if (o.primordial?.record) checkRecord(o.primordial.record, `primordial:${o.primordial.id}`);
+      }
+    }
+    return issues;
+  },
+};
+
 // ── Slots ─────────────────────────────────────────────────────────────────
 
 const slotReferences: ValidationRule = {
@@ -2715,6 +2773,7 @@ export const CONTENT_RULES: readonly ValidationRule[] = [
   threePurposes,
   frequencyObligations,
   recordClaimSymmetry,
+  bynameSlot,
   slotReferences,
   negatedRelationOnPlayerCast,
   arcBoundSlots,

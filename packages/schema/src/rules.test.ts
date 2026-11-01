@@ -2448,3 +2448,36 @@ describe('the consequence signature', () => {
     expect(arcWith({ flag: 'the_chair_is_kept' }), 'a guarded route is a different decision').toHaveLength(0);
   });
 });
+
+describe('an earned byname rests on its page\'s claim (#1990)', () => {
+  function withByname(byname: { slot: string; text: string }, pen: 'record' | 'embellish' = 'record'): ContentBundle {
+    const events = content.bundle.events.map((e) => {
+      if (e.id !== 'waking_early') return e;
+      const copy = structuredClone(e);
+      copy.record!.options[pen].byname = byname;
+      return copy;
+    });
+    return { ...content.bundle, events };
+  }
+  const errors = (b: ContentBundle) => runRule('byname/slot', b).filter((i) => i.level === 'error');
+
+  it('accepts a few plain words on a slot the same pen makes a claim about', () => {
+    expect(errors(withByname({ slot: 'CHILD', text: 'the Iron-and-Milk' }))).toEqual([]);
+    expect(errors(withByname({ slot: 'CHILD', text: 'Blood-Marked' }, 'embellish'))).toEqual([]);
+  });
+
+  it('refuses an undeclared slot, a slot the page makes no claim about, a template, bearing and a sentence', () => {
+    expect(errors(withByname({ slot: 'NOBODY', text: 'the Lost' })).some((i) => i.message.includes('undeclared'))).toBe(true);
+    expect(errors(withByname({ slot: 'HEAD', text: 'the Watchful' })).some((i) => i.message.includes('rests on no claim'))).toBe(true);
+    expect(errors(withByname({ slot: 'CHILD', text: 'the {HEAD} Child' })).some((i) => i.message.includes('template'))).toBe(true);
+    expect(errors(withByname({ slot: 'CHILD', text: 'the Proud' })).some((i) => i.message.includes('bearing'))).toBe(true);
+    expect(errors(withByname({ slot: 'CHILD', text: 'who woke early and was talked about for two generations' }))
+      .some((i) => i.message.includes('words'))).toBe(true);
+  });
+
+  it('Omit has nowhere to put one: its schema has no field, so the parser never hands one to the engine', () => {
+    const e = structuredClone(content.bundle.events.find((x) => x.id === 'waking_early')!);
+    (e.record!.options.omit as Record<string, unknown>).byname = { slot: 'CHILD', text: 'the Unwritten' };
+    expect(EventTemplateS.parse(e).record!.options.omit).not.toHaveProperty('byname');
+  });
+});

@@ -9,6 +9,7 @@ import type { AttributeId, HouseId, PersonId, TraitId, Year, SpellbookId, FlagId
 import type { EldritchProfile, Genome, GenomeRef } from './genome.js';
 import type { Sex } from './attributes.js';
 import type { Gender } from './founder.js';
+import type { BynameGrant } from './byname.js';
 
 /** A person's name is a short identity, not the longer house-name field. */
 export const PERSON_NAME_MAX = 32;
@@ -239,6 +240,12 @@ export interface Person {
   name: string;
   /** Optional byname or descriptive epithet, separate from the person's name. */
   epithet?: string;
+  /**
+   * Where an EARNED `epithet` came from (#1990): the page, the pen and the
+   * lie it rests on. Absent for an authored or legacy epithet, whose source
+   * is unknown and never invented. Written once, by `grantByname` in core.
+   */
+  byname?: BynameGrant;
   sex: Sex;
   sigilSeed: number;
   houseOfOrigin: HouseId;

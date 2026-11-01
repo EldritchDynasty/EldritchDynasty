@@ -28,6 +28,7 @@ import type { LibraryBookState } from './spellbook.js';
 import type { AuctionState, MarriagePromise } from './auction.js';
 import { StoredBidCurrencyS, AuctionLotKindS } from './auction.js';
 import { ResolvedClaimS } from './claim.js';
+import { BynameGrantS } from './byname.js';
 import type { Relationship } from './house.js';
 import type { FrequencyLedger } from './frequency.js';
 import type { TaleCirculationState } from './tale.js';
@@ -269,6 +270,8 @@ export const StoredPersonS = z.object({
   id: z.string(),
   name: z.string(),
   epithet: z.string().optional(),
+  /** #1990. Optional and additive: a save from before bynames were earned has none, and gains none on load. */
+  byname: BynameGrantS.optional(),
   sex: SexS,
   sigilSeed: z.number(),
   houseOfOrigin: z.string(),

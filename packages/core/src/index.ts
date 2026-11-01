@@ -54,6 +54,7 @@ export * from './table.js';
 export * from './table-load.js';
 export * from './auction.js';
 export * from './record.js';
+export * from './byname.js';
 export * from './run-library.js';
 export * from './tools/testFamilies.js';
 export * from './tools/fire-rate-gate.js';

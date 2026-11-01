@@ -3,13 +3,14 @@ import { CONTENT_ROOT, loadContent } from '@ed/content';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
-import { asId, ClaimS, proseOriginalHash } from '@ed/schema';
+import { asId, ClaimS, proseOriginalHash, type EventTemplate } from '@ed/schema';
 import { queueChoice, queueRecord, resolveChoice, resolveRecord, type RecordOption } from './events/decisions.js';
 import { makeRng } from './rng.js';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry, missingPlainEnglish,
   pedigreeF, place, poolScore, realizedHomozygosityOf, resolveClaim, revealPower, setProseMode,
   setProseVariants, visibleRecordView, saveGame, loadGame,
+  bynameStanding, bynameView, eventTitleAddress, newGame, type SimCtx,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -709,5 +710,261 @@ describe('Record deed-claim Plain English at commit time (#817)', () => {
     expect(frozenDeed('deed_plain')).toMatchObject({ text: plainRecord });
     expect(frozenDeed('embellish_plain')).toMatchObject({ text: plainEmbellish });
     expect(frozenDeed('deed_stale')).toMatchObject({ text: recordClaim.text });
+  });
+});
+
+/**
+ * EARNED BYNAMES (#1990) — the deterministic acceptance matrix from
+ * `docs/BYNAME-CONTRACT.md`. Hosted here rather than in a new file because a
+ * Record commit is the only place a byname is granted, and these states are
+ * built with the same `applyRecord` / docket helpers as the rest of this file.
+ */
+describe('a Record page earns a byname for the one person it names (#1990)', () => {
+  type Words = { record?: string; embellish?: string; slot?: string };
+  function bynamed(words: Words = {}): EventTemplate {
+    const e = structuredClone(bundle.events.find((x) => x.id === 'waking_early')!);
+    const slot = words.slot ?? 'CHILD';
+    e.record!.options.record.byname = { slot, text: words.record ?? 'the Iron-and-Milk' };
+    e.record!.options.embellish.byname = { slot, text: words.embellish ?? 'Blood-Marked' };
+    return e;
+  }
+  function page(ctx: SimCtx, id: string): void {
+    ctx.world.chronicle.push({ id, year: ctx.world.year, weight: 'paragraph', text: 'placeholder', named: false });
+  }
+  const lie = 'the_early_waking_lie';
+
+  it('Record grants the attested byname, with the exact page, pen and event as its source', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_record');
+    applyRecord(ctx, bynamed(), 'p_record', 'record', { CHILD: child.id });
+    expect(child.epithet).toBe('the Iron-and-Milk');
+    expect(child.byname).toEqual({
+      source: { kind: 'record', event: 'waking_early', pen: 'record', page: 'p_record' },
+      year: ctx.world.year,
+    });
+    expect(bynameStanding(child)).toBe('attested');
+    expect(bynameView(child)).toEqual({
+      text: 'the Iron-and-Milk', standing: 'attested', pen: 'record', year: ctx.world.year, page: 'p_record',
+    });
+  });
+
+  it('Embellish grants the flattering byname, tied to the lie it rests on, and it reads as claimed', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_lie');
+    applyRecord(ctx, bynamed(), 'p_lie', 'embellish', { CHILD: child.id });
+    expect(child.epithet).toBe('Blood-Marked');
+    expect(child.byname?.source).toEqual({
+      kind: 'record', event: 'waking_early', pen: 'embellish', page: 'p_lie', discrepancy: lie,
+    });
+    expect(bynameStanding(child)).toBe('claimed');
+  });
+
+  it('Omit grants nothing, and a later Omit never takes an earlier byname away', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_blank');
+    applyRecord(ctx, bynamed(), 'p_blank', 'omit', { CHILD: child.id });
+    expect(child.epithet).toBeUndefined();
+    expect(child.byname).toBeUndefined();
+
+    page(ctx, 'p_first');
+    applyRecord(ctx, bynamed(), 'p_first', 'record', { CHILD: child.id });
+    page(ctx, 'p_blank_again');
+    applyRecord(ctx, bynamed(), 'p_blank_again', 'omit', { CHILD: child.id });
+    expect(child.epithet).toBe('the Iron-and-Milk');
+    expect(child.byname?.source).toMatchObject({ page: 'p_first' });
+  });
+
+  it('the first byname stands: a later qualifying page cannot rename the person', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_one');
+    applyRecord(ctx, bynamed(), 'p_one', 'record', { CHILD: child.id });
+    ctx.world.year += 3;
+    page(ctx, 'p_two');
+    applyRecord(ctx, bynamed({ record: 'the Twice-Written' }), 'p_two', 'embellish', { CHILD: child.id });
+    expect(child.epithet).toBe('the Iron-and-Milk');
+    expect(child.byname?.source).toMatchObject({ page: 'p_one', pen: 'record' });
+  });
+
+  it('an authored or legacy epithet is preserved, and no source is invented for it', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'female', age: 9 });
+    child.epithet = 'the Elder';
+    page(ctx, 'p_named');
+    applyRecord(ctx, bynamed(), 'p_named', 'record', { CHILD: child.id });
+    expect(child.epithet).toBe('the Elder');
+    expect(child.byname).toBeUndefined();
+    expect(bynameView(child)).toEqual({ text: 'the Elder', standing: 'unknown' });
+  });
+
+  it('two firings of one template in one year name the right person on the right page', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const a = place(ctx, { sex: 'male', age: 9 });
+    const b = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_a');
+    page(ctx, 'p_b');
+    applyRecord(ctx, bynamed(), 'p_a', 'record', { CHILD: a.id });
+    applyRecord(ctx, bynamed(), 'p_b', 'embellish', { CHILD: b.id });
+    expect(a.byname?.source).toMatchObject({ page: 'p_a', pen: 'record' });
+    expect(b.byname?.source).toMatchObject({ page: 'p_b', pen: 'embellish', discrepancy: lie });
+    expect(ctx.world.chronicle.filter((entry) => entry.eventId === undefined && entry.id?.startsWith('p_'))).toHaveLength(2);
+  });
+
+  it('a proven lie contests only the byname resting on it; a buried one is buried, never proven', () => {
+    const proven = bootstrap(bundle, 1990, 1042);
+    const liar = place(proven, { sex: 'male', age: 9 });
+    const honest = place(proven, { sex: 'female', age: 9 });
+    page(proven, 'p_honest');
+    page(proven, 'p_liar');
+    applyRecord(proven, bynamed(), 'p_honest', 'record', { CHILD: honest.id });
+    applyRecord(proven, bynamed(), 'p_liar', 'embellish', { CHILD: liar.id });
+    proven.world.year += 7;
+    applyEffect({ kind: 'discrepancy', op: 'prove', id: lie }, proven, {});
+    expect(proven.world.discrepancies.get(lie)?.state).toBe('proven');
+    expect(bynameStanding(liar)).toBe('contested');
+    expect(bynameView(liar)).toMatchObject({ text: 'Blood-Marked', standing: 'contested', settledYear: proven.world.year });
+    expect(bynameStanding(honest)).toBe('attested');
+    // The historical words are kept; the qualification is a projection.
+    expect(liar.epithet).toBe('Blood-Marked');
+
+    const buried = bootstrap(bundle, 1990, 1042);
+    const kept = place(buried, { sex: 'male', age: 9 });
+    page(buried, 'p_kept');
+    applyRecord(buried, bynamed(), 'p_kept', 'embellish', { CHILD: kept.id });
+    applyEffect({ kind: 'discrepancy', op: 'bury', id: lie }, buried, {});
+    expect(bynameStanding(kept)).toBe('buried');
+  });
+
+  it('a proof finds its lie by provableBy too, and still settles only that telling', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const liar = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_liar');
+    applyRecord(ctx, bynamed(), 'p_liar', 'embellish', { CHILD: liar.id });
+    applyEffect({ kind: 'discrepancy', op: 'prove', provableBy: ['the_church'] }, ctx, {});
+    expect(bynameStanding(liar)).toBe('contested');
+  });
+
+  it('a repeated authored lie: the proof settles the latest telling, and an earlier settled one keeps its history', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const first = place(ctx, { sex: 'male', age: 9 });
+    const second = place(ctx, { sex: 'male', age: 9 });
+    const third = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_first');
+    applyRecord(ctx, bynamed(), 'p_first', 'embellish', { CHILD: first.id });
+    applyEffect({ kind: 'discrepancy', op: 'prove', id: lie }, ctx, {});
+    expect(bynameStanding(first)).toBe('contested');
+
+    // The same authored lie told again reopens the shared state for the new page.
+    ctx.world.year += 20;
+    page(ctx, 'p_second');
+    applyRecord(ctx, bynamed(), 'p_second', 'embellish', { CHILD: second.id });
+    expect(ctx.world.discrepancies.get(lie)?.state).toBe('open');
+    expect(bynameStanding(first)).toBe('contested');
+    expect(bynameStanding(second)).toBe('claimed');
+
+    // Superseded while still open: the third telling's proof is not the second's.
+    ctx.world.year += 20;
+    page(ctx, 'p_third');
+    applyRecord(ctx, bynamed(), 'p_third', 'embellish', { CHILD: third.id });
+    applyEffect({ kind: 'discrepancy', op: 'bury', id: lie }, ctx, {});
+    expect(bynameStanding(third)).toBe('buried');
+    expect(bynameStanding(second)).toBe('claimed');
+    expect(bynameStanding(first)).toBe('contested');
+  });
+
+  it('fails closed: an empty slot, a counted slot, a stranger, a claim that went elsewhere', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'male', age: 9 });
+    const other = place(ctx, { sex: 'female', age: 9 });
+    const stranger = place(ctx, { sex: 'male', age: 9, house: 'house_marrow' });
+    page(ctx, 'p_empty');
+    expect(applyRecord(ctx, bynamed(), 'p_empty', 'record', {})).toBeTruthy();
+    page(ctx, 'p_counted');
+    applyRecord(ctx, bynamed(), 'p_counted', 'record', { CHILD: [child.id, other.id] });
+    page(ctx, 'p_stranger');
+    applyRecord(ctx, bynamed(), 'p_stranger', 'record', { CHILD: stranger.id });
+    // The byname names HEAD, but the page's claim is about CHILD.
+    page(ctx, 'p_elsewhere');
+    applyRecord(ctx, bynamed({ slot: 'HEAD' }), 'p_elsewhere', 'record', { CHILD: child.id, HEAD: other.id });
+    for (const p of [child, other, stranger]) {
+      expect(p.epithet, p.name).toBeUndefined();
+      expect(p.byname, p.name).toBeUndefined();
+    }
+  });
+
+  it('the dead keep the name their page earned them', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'male', age: 9 });
+    ctx.world.people.kill(child.id, ctx.world.year, 'the fever');
+    page(ctx, 'p_dead');
+    applyRecord(ctx, bynamed(), 'p_dead', 'record', { CHILD: child.id });
+    expect(child.epithet).toBe('the Iron-and-Milk');
+  });
+
+  it('the docket reports the byname on the receipt, and the chronicler\'s pen grants the same way', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_docket');
+    const pending = queueRecord(ctx, bynamed(), 'p_docket', { CHILD: child.id })!;
+    const result = resolveRecord(ctx, pending.id, 'record');
+    expect(result).toMatchObject({ ok: true, byname: { person: child.id, text: 'the Iron-and-Milk' } });
+    const omitted = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_docket_blank');
+    const blank = queueRecord(ctx, bynamed(), 'p_docket_blank', { CHILD: omitted.id })!;
+    expect(resolveRecord(ctx, blank.id, 'omit').byname).toBeUndefined();
+  });
+
+  it('save and load keep the grant as history; loading never grants, and an older save gains no source', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const liar = place(ctx, { sex: 'male', age: 9 });
+    const legacy = place(ctx, { sex: 'female', age: 30 });
+    legacy.epithet = 'the Widow';
+    page(ctx, 'p_saved');
+    applyRecord(ctx, bynamed(), 'p_saved', 'embellish', { CHILD: liar.id });
+    applyEffect({ kind: 'discrepancy', op: 'prove', id: lie }, ctx, {});
+    const saved = saveGame(ctx);
+    const loaded = loadGame(saved, bundle);
+    expect(loaded.world.people.get(liar.id)?.epithet).toBe('Blood-Marked');
+    expect(loaded.world.people.get(liar.id)?.byname).toEqual(liar.byname);
+    expect(bynameStanding(loaded.world.people.get(liar.id)!)).toBe('contested');
+    expect(bynameStanding(loaded.world.people.get(legacy.id)!)).toBe('unknown');
+    expect(JSON.stringify(saveGame(loaded).people)).toBe(JSON.stringify(saved.people));
+
+    // A save written before #1990 has epithets and no `byname` field at all.
+    const old = JSON.parse(JSON.stringify(saved)) as { people: { id: string; byname?: unknown }[] };
+    for (const person of old.people) delete person.byname;
+    const oldLoaded = loadGame(old, bundle);
+    expect(oldLoaded.world.people.get(liar.id)?.epithet).toBe('Blood-Marked');
+    expect(oldLoaded.world.people.get(liar.id)?.byname).toBeUndefined();
+    expect(bynameView(oldLoaded.world.people.get(liar.id)!)).toEqual({ text: 'Blood-Marked', standing: 'unknown' });
+  });
+
+  it('the words are frozen in the prose mode the reader saw, and a later mode switch does not rename them', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const event = bynamed();
+    const address = `${eventTitleAddress(ctx, event)!.replace(/\.title$/, '')}.record.options.record.byname.text`;
+    setProseVariants(ctx, [{ address, of: proseOriginalHash('the Iron-and-Milk'), plainenglish: 'who woke at nine' }]);
+    setProseMode(ctx, 'plainenglish');
+    const child = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_plain');
+    applyRecord(ctx, event, 'p_plain', 'record', { CHILD: child.id });
+    expect(child.epithet).toBe('who woke at nine');
+    setProseMode(ctx, 'original');
+    expect(bynameView(child)?.text).toBe('who woke at nine');
+  });
+
+  it('the read model carries the byname as values, beside the epithet it explains', () => {
+    const session = newGame(bundle, { seed: 1990 });
+    const ctx = session.ctx;
+    const child = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_view');
+    applyRecord(ctx, bynamed(), 'p_view', 'embellish', { CHILD: child.id });
+    const member = session.view().halls.flatMap((hall) => hall.members).find((m) => m.id === child.id);
+    expect(member).toMatchObject({ epithet: 'Blood-Marked', byname: { standing: 'claimed', page: 'p_view', pen: 'embellish' } });
+    member!.byname!.text = 'mutated';
+    expect(child.epithet).toBe('Blood-Marked');
   });
 });

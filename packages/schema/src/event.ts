@@ -4,6 +4,7 @@ import { ALL_AFFINITIES } from './attributes.js';
 import { ConditionS, CompareOpS, DiscrepancyStateS, FilterS } from './conditions.js';
 import { FrequencyS } from './frequency.js';
 import { ClaimS } from './claim.js';
+import { RecordBynameS } from './byname.js';
 import { TargetS } from './target.js';
 import { ScheduleS } from './arc.js';
 import { DeciderS } from './decider.js';
@@ -632,6 +633,8 @@ export const RecordBlockS = z.object({
       grantsKnowledge: z.string().optional(),
       effects: z.array(EffectS).default([]),
       claims: z.array(ClaimS).default([]),
+      /** The attested byname this page earns its one named person (#1990). */
+      byname: RecordBynameS.optional(),
     }),
     omit: z.object({
       /** null prints as a dated blank line. The blank is a designed artefact. */
@@ -642,6 +645,8 @@ export const RecordBlockS = z.object({
       chronicle: z.string(),
       effects: z.array(EffectS).default([]),
       claims: z.array(ClaimS).default([]),
+      /** The flattering byname the lie earns; contested if the lie is proven (#1990). */
+      byname: RecordBynameS.optional(),
       discrepancy: z.object({
         id: z.string(),
         severity: z.enum(['minor', 'major', 'total']),
