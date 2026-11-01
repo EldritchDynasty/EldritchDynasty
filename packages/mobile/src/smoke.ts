@@ -87,3 +87,29 @@ export async function smokeEvidence(command: SmokeCommand, result: SmokeResult):
     ...(result.path === undefined ? {} : { path: result.path }),
   };
 }
+
+/**
+ * A client callback may reject its Promise or throw before returning one.
+ * Both failures need terminal smoke evidence; otherwise the native bridge
+ * leaves the simulator staring at the earlier "received" checkpoint.
+ * Keep failure normalisation here so the host never needs to call .then()
+ * on a callback whose execution has already thrown.
+ */
+export async function settleSmokeCommand(
+  command: SmokeCommand,
+  listener: (command: SmokeCommand) => Promise<SmokeResult>,
+): Promise<Awaited<ReturnType<typeof smokeEvidence>> | {
+  command: SmokeCommand['kind'];
+  ok: false;
+  error: string;
+}> {
+  try {
+    return await smokeEvidence(command, await listener(command));
+  } catch (error: unknown) {
+    return {
+      command: command.kind,
+      ok: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
