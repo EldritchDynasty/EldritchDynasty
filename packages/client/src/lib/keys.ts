@@ -87,9 +87,15 @@ function innermostActiveElement(el: Element): Element {
   return active;
 }
 
-/** ARIA roles are token lists; the first declared role is the intended one. */
-function focusedRole(el: Element): string | undefined {
-  return el.getAttribute?.('role')?.trim().split(/\s+/)[0];
+/**
+ * An ARIA role attribute can list fallbacks: a browser skips unknown roles
+ * before using a later supported token. Be conservative when suppressing
+ * global game shortcuts, so a text entry or activated widget cannot turn
+ * game years if an earlier, future role is not known to this browser.
+ */
+function hasRole(el: Element, roles: ReadonlySet<string>): boolean {
+  const raw = el.getAttribute('role');
+  return raw !== null && raw.trim().split(/\s+/).some((role) => roles.has(role));
 }
 
 /** Custom widgets also own keystrokes, even when they are not native inputs. */
@@ -107,7 +113,7 @@ export function isField(el: Element | null): boolean {
   const tag = active.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
     || (active as HTMLElement).isContentEditable === true
-    || FIELD_ROLES.has(focusedRole(active) ?? '');
+    || hasRole(active, FIELD_ROLES);
 }
 
 /** Whether the focused thing answers Space and Enter on its own. */
@@ -118,7 +124,7 @@ export function isControl(el: Element | null): boolean {
   // A keyboard-activated ARIA control also owns Enter/Space. Do not turn a
   // year behind a role-based button or link, including inside open shadows.
   return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY'
-    || CONTROL_ROLES.has(focusedRole(active) ?? '');
+    || hasRole(active, CONTROL_ROLES);
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
