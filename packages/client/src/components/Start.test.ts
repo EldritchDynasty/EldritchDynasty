@@ -2421,9 +2421,20 @@ describe('the front door begins from a share code', () => {
     expect(recipient.view.value).toBeNull();
     expect(host.saves.get('autosave')).toBe(earlier);
 
+    // Correcting a field clears the previous submission's refusal immediately.
+    // It must not silently retry founding or alter the existing autosave.
     await w.get('#share-founder').setValue('Maud Gearithy');
+    expect(w.find('#share-code-error').exists()).toBe(false);
+    expect(recipient.view.value).toBeNull();
+    expect(host.saves.get('autosave')).toBe(earlier);
+    await begin();
+    expect(w.get('#share-code-error').text()).toContain('friends');
     await w.get('#share-house').setValue('The House of Salt');
+    expect(w.find('#share-code-error').exists()).toBe(false);
+    await begin();
+    expect(w.get('#share-code-error').text()).toContain('friends');
     await w.get('#share-friend-0').setValue('Iona Vale');
+    expect(w.find('#share-code-error').exists()).toBe(false);
     await w.get('#share-friend-1').setValue('Corven Pike');
     await begin();
     await flush();
