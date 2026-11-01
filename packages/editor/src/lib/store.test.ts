@@ -1387,6 +1387,10 @@ describe('safe event duplication (#1888)', () => {
     const source = event(referenced!);
     const refs = eventBackreferences(store.bundle, source.id);
     expect(refs.some((ref) => ref.startsWith('arc '))).toBe(true);
+    // The recursive fallback must not repeat the same arc node as a raw
+    // bundle path: the named arc reference above is the actionable blocker.
+    expect(refs.some((ref) => ref.startsWith('event reference bundle.arcs[')
+      && ref.includes('.nodes['))).toBe(false);
     const result = duplicateEventDraft(store.bundle, source, suggestedDuplicateId(store.bundle, source));
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toContain('referenced by');
