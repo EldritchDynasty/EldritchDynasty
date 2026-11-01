@@ -109,7 +109,11 @@ function withVerifiedSave(path, read) {
 }
 
 export function readSave(root, slot) {
-  return withVerifiedSave(resolveSavePath(root, slot),
+  const target = resolveSavePath(root, slot);
+  // The same slot must not address a different saved filename when a profile
+  // moves from a case-sensitive system to Windows.
+  rejectCaseAlias(root, slot);
+  return withVerifiedSave(target,
     (fd) => requireSaveEnvelope(JSON.parse(readFileSync(fd, 'utf8'))));
 }
 
