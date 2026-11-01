@@ -12,3 +12,16 @@ export declare function handleExternalPopup(
   openExternal: (url: string) => Promise<unknown> | unknown,
   onError?: (error: unknown) => void,
 ): { action: 'deny' };
+
+/**
+ * A main-frame navigation may stay in the same bootstrapped application
+ * document (including query/hash changes). All other navigations are stopped;
+ * allowed web URLs open in the OS browser, never with the trusted preload.
+ */
+export declare function handleExternalNavigation(
+  event: { preventDefault(): void },
+  requested: string,
+  trustedDocument: string,
+  openExternal: (url: string) => Promise<unknown> | unknown,
+  onError?: (error: unknown) => void,
+): void;
