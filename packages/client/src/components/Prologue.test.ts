@@ -538,6 +538,37 @@ describe('who signed', () => {
     }));
   });
 
+  it('updates gender defaults until an explicit blood-parent choice, then preserves that choice', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 } });
+    try {
+      await ready(wrapper);
+      await answerFounder(wrapper, 0);
+      expect(pressed(wrapper), 'a man starts with the suggested blood father').toEqual(['true', 'false']);
+
+      await answerFounder(wrapper, 1);
+      expect(pressed(wrapper), 'the unmodified suggestion follows a gender change').toEqual(['false', 'true']);
+      await answerFounder(wrapper, 0);
+      expect(pressed(wrapper)).toEqual(['true', 'false']);
+
+      // A deliberate choice is independent of gender, including a later
+      // change back to the originally suggested pronouns.
+      await wrapper.findAll('.founding-configuration button')[1]!.trigger('click');
+      expect(pressed(wrapper)).toEqual(['false', 'true']);
+      await answerFounder(wrapper, 1);
+      await answerFounder(wrapper, 0);
+      await answerFounder(wrapper, 2);
+      expect(pressed(wrapper), 'later gender changes do not erase the chosen blood mother').toEqual(['false', 'true']);
+
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        founder: { name: 'Daveed', gender: 'nonbinary', configuration: 'blood_mother' },
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('asks a nonbinary founder to choose when nothing is chosen yet', async () => {
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
     await ready(wrapper);
