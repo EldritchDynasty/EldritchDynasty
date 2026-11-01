@@ -456,9 +456,10 @@ export function assizeFavour(ctx: SimCtx, kind: 'favour' | 'mercy' | 'exaction')
  * account's date and a name the clerk will not say aloud. A rescue the
  * player cannot see is a lie the player can feel (invariant 13).
  *
- * What it moves is MORTALITY, and only the blood's. For `KEEP_YEARS` the
- * house's own blood is off the thin-line amplifier and outside the Ages'
- * mortality multipliers, and the physician's `mercy` holds. This is the shape
+ * What it moves is MORTALITY, and only the blood's. Until the house has heard
+ * its first interlude, and never for less than `KEEP_YEARS`, the house's own
+ * blood is off the thin-line amplifier and outside the Ages' mortality
+ * multipliers. The physician's `mercy` holds for `KEEP_YEARS`. This is the shape
  * the Demigod path in `rollDeath` already uses. Violence, Madness overflow and
  * the max-age wall still apply. Genetics and authored outcomes are untouched.
  * Every death still goes through `kill()`.
@@ -474,9 +475,19 @@ export function assizeFavour(ctx: SimCtx, kind: 'favour' | 'mercy' | 'exaction')
  * The check draws no dice, so a run where it never fires plays exactly as it
  * did before.
  *
- * `broken_line` stays reachable. The keeping happens once. It ends after
- * `KEEP_YEARS`. It cannot reach a house that has already met the frame or a
- * house with nobody of the blood left.
+ * WHY UNTIL THE FIRST INTERLUDE. A fixed thirty-year window missed the owner's
+ * target on two fresh samples (3.3% and 2.8% of Short Lines still broke
+ * before the frame). Twelve of the thirteen remaining early breaks were kept
+ * lines that outlived the window while their first interlude was still late.
+ * Holding until the frame speaks measured 1.5% on a fresh sample and left
+ * `gate:endings` in band. The owner adopted it (#1993). The frame's own
+ * `FRAME_MAX_GAP_YEARS` ceiling bounds how long that can be.
+ *
+ * `broken_line` stays reachable. The keeping happens once. It ends once the
+ * first interlude has been delivered and `KEEP_YEARS` have passed. It cannot
+ * reach a house that has already met the frame, or a house with nobody of the
+ * blood left. Total breaks barely move; most kept lines that were going to
+ * break still break, after the player has met the frame.
  */
 export const COLLATERAL_KEPT = 'the_collateral_kept';
 /** The most living blood at which the keeping can be triggered. */
@@ -491,7 +502,7 @@ export const KEEP_AT = 3;
  */
 export const KEEP_FROM = 6;
 export const FOUNDING_YEARS = 25;
-/** How many mortality passes after the firing year the blood is kept. */
+/** The fewest mortality passes after the firing year that the blood is kept. */
 export const KEEP_YEARS = 30;
 /** The weighers' bill, in crowns. Two years' income at Regarded. */
 export const COLLATERAL_BILL = 120;
@@ -502,10 +513,16 @@ function aliveBlood(ctx: SimCtx) {
   return w.people.blood(w.playerHouse).filter((p) => p.status === 'alive');
 }
 
-/** Is the keeping in force this year? Runs from the year after it fired. */
+/**
+ * Is the keeping in force this year? It runs from the year after it fired,
+ * until the first interlude has been delivered and at least `KEEP_YEARS`
+ * mortality passes have been kept.
+ */
 export function collateralKept(ctx: SimCtx): boolean {
-  const at = ctx.world.assize.fired[COLLATERAL_KEPT];
-  return at !== undefined && ctx.world.year > at && ctx.world.year <= at + KEEP_YEARS;
+  const w = ctx.world;
+  const at = w.assize.fired[COLLATERAL_KEPT];
+  if (at === undefined || w.year <= at) return false;
+  return w.year <= at + KEEP_YEARS || w.frame.entries.length === 0;
 }
 
 /** Is this person one of the blood the keeping covers, this year? */

@@ -291,17 +291,36 @@ describe('when the collateral is kept', () => {
 });
 
 describe('what the keeping does', () => {
-  it('holds for the window after the firing year, then lets go', () => {
+  const interlude = (ctx: SimCtx) =>
+    ctx.world.frame.entries.push({ year: ctx.world.year, eventId: 'frame_x', outcomeId: 'o', text: 'An interlude.' });
+
+  it('holds for at least the window after the firing year, even if the frame speaks early', () => {
     const ctx = lineOf(2);
     const at = ctx.world.year;
     keepTheCollateral(ctx);
     // Mortality for the firing year has already been rolled; it starts next year.
     expect(collateralKept(ctx)).toBe(false);
+    ctx.world.year = at + 1;
+    interlude(ctx);
     for (let y = at + 1; y <= at + KEEP_YEARS; y++) {
       ctx.world.year = y;
       expect(collateralKept(ctx), `year ${y - at}`).toBe(true);
     }
     ctx.world.year = at + KEEP_YEARS + 1;
+    expect(collateralKept(ctx), 'the frame has spoken and the window is spent').toBe(false);
+  });
+
+  it('holds past the window until the first interlude, then lets go', () => {
+    const ctx = lineOf(2);
+    const at = ctx.world.year;
+    keepTheCollateral(ctx);
+    // No interlude yet: the keeping outlasts its minimum.
+    for (let y = at + KEEP_YEARS + 1; y <= at + 3 * KEEP_YEARS; y++) {
+      ctx.world.year = y;
+      expect(collateralKept(ctx), `year ${y - at}`).toBe(true);
+    }
+    // The frame speaks; from the next mortality pass the blood is on its own.
+    interlude(ctx);
     expect(collateralKept(ctx)).toBe(false);
   });
 
@@ -438,6 +457,8 @@ describe('save and resume around the keeping', () => {
     expect(resumed.world.assize.fired[COLLATERAL_KEPT]).toBe(ctx.world.assize.fired[COLLATERAL_KEPT]);
     expect(keepTheCollateral(resumed)).toBe(false);
     resumed.world.year += KEEP_YEARS;
+    expect(collateralKept(resumed), 'no interlude yet, so still kept').toBe(true);
+    resumed.world.frame.entries.push({ year: resumed.world.year, eventId: 'frame_x', outcomeId: 'o', text: 'An interlude.' });
     expect(collateralKept(resumed)).toBe(false);
   });
 
