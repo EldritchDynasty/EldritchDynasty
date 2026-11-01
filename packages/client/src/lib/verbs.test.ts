@@ -454,3 +454,81 @@ describe('full Continue respects the stored campaign namespace (#2355)', () => {
     expect(records.get('demo-autosave')).toEqual({ campaign: 'demo', preserved: 'separate demonstration' });
   });
 });
+
+describe('demonstration deletion validates stored saves (#2374)', () => {
+  function saveHost(): Platform & { records: Map<string, unknown>; deletes: string[] } {
+    const records = new Map<string, unknown>();
+    const deletes: string[] = [];
+    return {
+      records, deletes,
+      listSaves: async () => [...records.keys()].map((slot) => ({ slot })),
+      readSave: async (slot) => records.get(slot) ?? null,
+      writeSave: async (slot, save) => { records.set(slot, save); },
+      deleteSave: async (slot) => { deletes.push(slot); records.delete(slot); },
+      readLibrary: async () => null,
+      writeLibrary: async () => undefined,
+      readUserContent: async () => ({}),
+      exportSave: async () => undefined,
+      importSave: async () => null,
+      onPause: () => () => undefined,
+      onBack: () => () => undefined,
+    };
+  }
+
+  it('retains full, missing, malformed and unreadable demo-prefixed slots but removes a genuine demo', async () => {
+    const host = saveHost();
+    const game = createGame(loadContent(), host);
+    game.actions.begin(237401, 'short');
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    const full = host.records.get('autosave');
+    expect(full).toMatchObject({ campaign: 'short' });
+
+    game.actions.begin(237402, 'demo');
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(host.records.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
+
+    // A host restore can put perfectly valid Short/Long bytes under demo-*.
+    host.records.set('demo-restored-full', full);
+    host.records.set('demo-malformed', { campaign: 'demo' });
+    for (const slot of ['demo-restored-full', 'demo-malformed', 'demo-absent']) {
+      await expect(game.actions.deleteDemoSave(slot)).rejects.toThrow();
+      expect(host.deletes).toEqual([]);
+    }
+    expect(host.records.get('demo-restored-full')).toBe(full);
+    expect(host.records.get('demo-malformed')).toEqual({ campaign: 'demo' });
+
+    const read = host.readSave;
+    host.readSave = async (slot) => {
+      if (slot === 'demo-unreadable') throw new Error('host storage temporarily unavailable');
+      return read(slot);
+    };
+    await expect(game.actions.deleteDemoSave('demo-unreadable')).rejects.toThrow('host storage');
+    expect(host.deletes).toEqual([]);
+    await expect(game.actions.deleteDemoSave('autosave')).rejects.toThrow('not a demonstration save slot');
+
+    // Rejected queued mutations must not block a later legitimate deletion.
+    await game.actions.deleteDemoSave('demo-autosave');
+    expect(host.deletes).toEqual(['demo-autosave']);
+    expect(host.records.has('demo-autosave')).toBe(false);
+    expect(host.records.get('autosave')).toBe(full);
+    expect(host.records.get('demo-restored-full')).toBe(full);
+  });
+
+  it('reads and removes after a pending demo autosave, never resurrecting it', async () => {
+    const host = saveHost();
+    let finishWrite!: () => void;
+    const pending = new Promise<void>((resolve) => { finishWrite = resolve; });
+    host.writeSave = async (slot, save) => {
+      if (slot === 'demo-autosave') await pending;
+      host.records.set(slot, save);
+    };
+    const game = createGame(loadContent(), host);
+    game.actions.begin(237403, 'demo');
+    const removing = game.actions.deleteDemoSave('demo-autosave');
+    expect(host.deletes).toEqual([]);
+    finishWrite();
+    await removing;
+    expect(host.deletes).toEqual(['demo-autosave']);
+    expect(host.records.has('demo-autosave')).toBe(false);
+  });
+});
