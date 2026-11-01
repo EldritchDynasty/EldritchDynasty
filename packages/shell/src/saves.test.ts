@@ -823,6 +823,42 @@ describe('desktop user content', () => {
     expect(readUserContent(root)).toEqual({ 'events/local.yaml': 'local: true\n' });
   });
 
+  it('reads YAML only from the verified descriptor, not from a replaced pathname (#2295)', () => {
+    const root = userContentRoot(userData);
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, 'safe.yaml'), 'safe: true\n', 'utf8');
+    expect(readUserContent(root)).toEqual({ 'safe.yaml': 'safe: true\n' });
+
+    // Guard against a later refactor reopening the pathname after lstat.
+    const source = readFileSync(new URL('./user-content.mjs', import.meta.url), 'utf8');
+    expect(source).toContain('openSync(path, flags)');
+    expect(source).toContain('fstatSync(fd)');
+    expect(source).toContain('constants.O_NOFOLLOW');
+    expect(source).toContain('before.ino');
+    expect(source).toContain('after.ino');
+    expect(source).toContain("readFileSync(fd, 'utf8')");
+    expect(source).not.toContain("readFileSync(path, 'utf8')");
+    expect(source).toContain('closeSync(fd)');
+  });
+
+  it('does not load a linked YAML file, but still loads neighboring safe YAML (#2295)', () => {
+    const root = userContentRoot(userData);
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, 'safe.yaml'), 'safe: true\n');
+    const outside = outsideWithYaml();
+    try {
+      symlinkSync(join(outside, 'secret.yaml'), join(root, 'linked.yaml'), 'file');
+    } catch (error) {
+      if (['EPERM', 'EACCES', 'ENOSYS', 'EINVAL'].includes(
+        (error as NodeJS.ErrnoException).code ?? '',
+      )) return;
+      throw error;
+    }
+
+    expect(readUserContent(root)).toEqual({ 'safe.yaml': 'safe: true\n' });
+    expect(readFileSync(join(outside, 'secret.yaml'), 'utf8')).toBe('outside: secret\n');
+  });
+
   it('reads YAML recursively with content-relative keys and ignores other files', () => {
     const root = userContentRoot(userData);
     mkdirSync(join(root, 'events'), { recursive: true });
