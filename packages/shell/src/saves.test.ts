@@ -294,6 +294,40 @@ describe('the save directory', () => {
     expect(listSaves(root)).toEqual([]);
   });
 
+  it('refuses a different-case slot without replacing an existing Windows-compatible filename (#2272)', () => {
+    writeSave(root, 'House', aSave({ year: 1442 }));
+    const path = join(root, 'House.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    // On Windows these two names refer to the SAME file. Linux must refuse
+    // the second one as well rather than create an unportable save profile.
+    for (const alias of ['house', 'HOUSE', 'hOuSe']) {
+      expect(() => writeSave(root, alias, aSave({ year: 1550 })))
+        .toThrow(SaveSlotError);
+      expect(readFileSync(path, 'utf8')).toBe(original);
+      expect(readdirSync(root)).toEqual(['House.edsave.json']);
+    }
+
+    // An intentional overwrite using the identical spelling still works.
+    writeSave(root, 'House', aSave({ year: 1443 }));
+    expect(readSave(root, 'House').year).toBe(1443);
+    expect(readdirSync(root)).toEqual(['House.edsave.json']);
+    writeSave(root, 'Other', aSave({ year: 1444 }));
+    expect(listSaves(root).map(entry => entry.slot).sort()).toEqual(['House', 'Other']);
+  });
+
+  it('does not replace a manually case-renamed extension that aliases the native save on Windows (#2272)', () => {
+    const externalName = 'House.EDSAVE.JSON';
+    const path = join(root, externalName);
+    const original = '{"format":6,"year":1420}';
+    writeFileSync(path, original, 'utf8');
+
+    expect(() => writeSave(root, 'House', aSave({ year: 1550 })))
+      .toThrow(SaveSlotError);
+    expect(readFileSync(path, 'utf8')).toBe(original);
+    expect(readdirSync(root)).toEqual([externalName]);
+  });
+
   it('does not advertise a foreign filename that cannot be read or deleted as a slot', () => {
     const foreign = join(root, 'run .edsave.json');
     const original = JSON.stringify(aSave({ year: 1300 }));
