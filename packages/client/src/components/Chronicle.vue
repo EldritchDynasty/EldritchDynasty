@@ -40,7 +40,8 @@ watch(() => props.view, () => { snapshot.value += 1; });
  */
 const chronicleNamesById = computed(() => new Map(
   (props.view.chroniclePeople ?? []).map((person) => [person.id,
-    person.epithet ? `${person.name} ${person.epithet}` : person.name]),
+    person.epithet && !person.name.endsWith(` ${person.epithet}`)
+      ? `${person.name} ${person.epithet}` : person.name]),
 ));
 const navigableIds = computed(() => new Set(
   (props.view.halls ?? []).flatMap((hall) => hall.members.map((member) => member.id)),
