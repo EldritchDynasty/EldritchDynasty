@@ -638,7 +638,12 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const targetRung = w.campaign === 'short' ? 'hierophant' : 'god';
   const current = Math.max(0, RUNG_ORDER.indexOf(w.ascension.rung));
   const target = RUNG_ORDER.indexOf(targetRung);
-  const foremost = visibleAscensionRanking(ctx)[0];
+  const ranked = visibleAscensionRanking(ctx);
+  const foremost = ranked[0];
+  // The foremost is a measurement; the Scion is the player's named plan.
+  // Honor that plan only while the named person is still a visible candidate,
+  // without inferring expression from a genome the player cannot inspect (#2404).
+  const prepared = ranked.find(({ person }) => person === w.scion) ?? foremost;
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
   const regent = head && isRegent(w, head) ? head : undefined;
   const rungs = {
@@ -685,18 +690,18 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     status: foremost
       ? msg(ctx, 'ambition.view.ascent_foremost', '{NAME} is the foremost candidate.', { NAME: foremost.name })
       : msg(ctx, 'ambition.view.ascent_none', 'No living candidate is carrying the ascent.'),
-    next: regent && foremost
+    next: regent && prepared
       ? msg(ctx, 'ambition.view.ascent_next_regency',
         'While {REGENT} keeps the seal, nobody climbs. Keep {NAME} alive and taught, and spend the Regency on the archive and the family.',
-        { REGENT: regent.name, NAME: foremost.name })
+        { REGENT: regent.name, NAME: prepared.name })
       : regent
         ? msg(ctx, 'ambition.view.ascent_next_regency_none',
           'While {REGENT} keeps the seal, nobody climbs. Spend the Regency on the archive, the branches and the children who will.',
           { REGENT: regent.name })
-        : foremost
+        : prepared
           ? msg(ctx, 'ambition.view.ascent_next',
             'Keep {NAME} alive, read, and supplied while answering the blockers shown on the ladder.',
-            { NAME: foremost.name })
+            { NAME: prepared.name })
           : msg(ctx, 'ambition.view.ascent_next_none',
             'Name and prepare a Scion or heir rather than letting the programme choose itself.'),
   };
