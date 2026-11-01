@@ -727,7 +727,8 @@ function fakePage(hidden = false) {
   const win = target('win:');
   const fire = (key: string) => { for (const listener of [...(listeners.get(key) ?? [])]) listener(); };
   const count = () => [...listeners.values()].reduce((n, set) => n + set.size, 0);
-  return { doc, win, fire, count };
+  const snapshot = (key: string) => [...(listeners.get(key) ?? [])];
+  return { doc, win, fire, count, snapshot };
 }
 
 /** A bed over a fake engine, on a fake page, wanting the board's drone. */
@@ -948,6 +949,45 @@ describe('the bed decides when the house may be heard', () => {
     expect(() => bed.dispose()).not.toThrow();
     expect(page.count(), 'unsubscriber prevented browser listener cleanup').toBe(0);
     expect(ctx.calls, 'unsubscriber prevented audio context close').toContain('close');
+  });
+
+  it('ignores queued browser and host callbacks from a replaced attachment', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    let stalePause: () => void = () => undefined;
+    bed.attach(page.doc, page.win, (listener) => {
+      stalePause = listener;
+      return () => undefined; // Unsubscription cannot cancel a callback already queued.
+    });
+    const staleGesture = page.snapshot('win:pointerdown')[0]!;
+    const staleVisibility = page.snapshot('doc:visibilitychange')[0]!;
+    const stalePagehide = page.snapshot('win:pagehide')[0]!;
+
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    bed.attach(page.doc, page.win); // replaces every old subscription
+
+    staleGesture(); // must not unlock the new attachment
+    expect(bed.audible).toBe(false);
+    expect(e.made).toHaveLength(0);
+
+    page.fire('win:pointerdown'); // only the current attachment may unlock
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    stalePause();
+    stalePagehide();
+    staleVisibility();
+    expect(bed.audible, 'an obsolete callback muted the active page').toBe(true);
+    expect(ctx.calls, 'an obsolete callback suspended the active audio device')
+      .not.toContain('suspend');
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    page.fire('win:pagehide'); // the new attachment must still work
+    expect(bed.audible).toBe(false);
+    expect(ctx.calls).toContain('suspend');
+    bed.dispose();
+    expect(page.count()).toBe(0);
   });
 
   it('asks for an ambient session, and leaves a host\'s own choice alone', () => {
