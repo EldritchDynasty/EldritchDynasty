@@ -162,15 +162,17 @@ function begin(): void {
  */
 const shareInput = ref('');
 const shareNames = ref<{ founder: string; house: string; friends: string[] }>({ founder: '', house: '', friends: [] });
-const shareBeginError = ref<string | null>(null);
+/** Retain the structured refusal so changing reading mode rewords it. */
+const shareBeginProblem = ref<ReturnType<GameActions['beginFromShareCode']>>(null);
 const shareRead = computed(() => shareInput.value.trim() ? props.actions.readShareCode(shareInput.value) : null);
 const sharedFounding = computed(() => shareRead.value?.ok ? shareRead.value.founding : null);
 const shareCampaignName = computed(() => {
   const founding = sharedFounding.value;
   return founding ? CAMPAIGN_CHOICES.find((c) => c.id === founding.campaign)?.name ?? founding.campaign : '';
 });
-const shareProblem = computed(() => shareBeginError.value
-  ?? (shareRead.value && !shareRead.value.ok ? shareCodeProblem(shareRead.value.problem, props.proseMode) : null));
+const shareProblem = computed(() => (shareBeginProblem.value
+  ? shareCodeProblem(shareBeginProblem.value, props.proseMode)
+  : (shareRead.value && !shareRead.value.ok ? shareCodeProblem(shareRead.value.problem, props.proseMode) : null)));
 const mayBeginShared = computed(() => sharedFounding.value !== null && libraryIsReady.value
   && !selectingRun.value && !libraryBusy.value);
 
@@ -180,7 +182,7 @@ function onShareInput(): void {
   // This only runs when the reader edits the code, not on prose-mode changes
   // or while they fill in the name fields for the current founding.
   shareNames.value = { founder: '', house: '', friends: [] };
-  shareBeginError.value = null;
+  shareBeginProblem.value = null;
 }
 
 function beginShared(): void {
@@ -194,7 +196,7 @@ function beginShared(): void {
       house: names.house,
       friends: founding.friends.map((_, i) => names.friends[i] ?? ''),
     });
-    shareBeginError.value = problem ? shareCodeProblem(problem, props.proseMode) : null;
+    shareBeginProblem.value = problem;
   } finally {
     void nextTick().then(() => { beginning = false; });
   }
