@@ -745,7 +745,7 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     });
     expect(bynameStanding(child)).toBe('attested');
     expect(bynameView(child)).toEqual({
-      text: 'the Iron-and-Milk', standing: 'attested', pen: 'record', year: ctx.world.year, page: 'p_record',
+      text: 'the Iron-and-Milk', standing: 'attested', year: ctx.world.year, page: 'p_record',
     });
   });
 
@@ -1002,7 +1002,7 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     page(ctx, 'p_view');
     applyRecord(ctx, bynamed(), 'p_view', 'embellish', { CHILD: child.id });
     const member = session.view().halls.flatMap((hall) => hall.members).find((m) => m.id === child.id);
-    expect(member).toMatchObject({ epithet: 'Blood-Marked', byname: { standing: 'claimed', page: 'p_view', pen: 'embellish' } });
+    expect(member).toMatchObject({ epithet: 'Blood-Marked', byname: { standing: 'claimed', page: 'p_view' } });
     member!.byname!.text = 'mutated';
     expect(child.epithet).toBe('Blood-Marked');
   });

@@ -206,7 +206,7 @@ const mentionPages = computed(() =>
            only reports it, and never says whether the name is deserved. -->
       <div v-if="member.byname" class="small byname" data-byname :data-byname-standing="member.byname.standing">
         <span class="dim">{{ proseMode === 'plainenglish' ? 'Byname:' : 'called' }}</span>
-        {{ member.byname.text }}<span v-if="bynameTag(member.byname.standing, proseMode === 'plainenglish')" class="rubric"> · {{ bynameTag(member.byname.standing, proseMode === 'plainenglish') }}</span>.
+        {{ member.byname.text }}<span v-if="bynameTag(member.byname.standing, proseMode === 'plainenglish')" class="rubric">{{ ' · ' + bynameTag(member.byname.standing, proseMode === 'plainenglish') }}<template v-if="member.byname.settledYear !== undefined">{{ ' in ' + member.byname.settledYear }}</template></span>.
         {{ bynameNote(member.byname, proseMode === 'plainenglish') }}
         <button
           v-if="member.byname.page"

@@ -145,14 +145,14 @@ describe('a card says where an earned byname came from (#1990)', () => {
 
   it.each(['original', 'plainenglish'] as const)('names the byname in the accessible name and links its exact page (%s)', async (mode) => {
     const w = mount(Member, { props: {
-      member: member({ text: 'Blood-Marked', standing: 'contested', pen: 'embellish', year: 1187, page: 'chr_44', settledYear: 1201 }),
+      member: member({ text: 'Blood-Marked', standing: 'contested', year: 1187, page: 'chr_44', settledYear: 1201 }),
       names: [], traitNames: [], open: true, proseMode: mode,
     } });
     try {
       expect(w.get('button.face').text()).toContain('Ada Blood-Marked');
       const note = w.get('[data-byname]');
       expect(note.attributes('data-byname-standing')).toBe('contested');
-      expect(note.text()).toContain('discrepancy proven');
+      expect(note.text()).toContain('discrepancy proven in 1201');
       expect(note.text()).toContain('1187');
       expect(note.text()).toContain('1201');
       await w.get('[data-byname-page]').trigger('click');
