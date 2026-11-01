@@ -928,7 +928,10 @@ describe('the editor Vite entry points', () => {
             digest: createHash('sha256').update(contents).digest('hex'),
           });
           hash.update(path.slice(root.length));
-          hash.update(`${stat.size}:${stat.mtimeMs}`);
+          // Git may refresh administrative file timestamps without changing their
+          // contents. This read-only guard still hashes Git names and bytes, so
+          // persistent Git writes are rejected, not silently excused.
+          hash.update(relative.startsWith('.git/') ? `${stat.size}` : `${stat.size}:${stat.mtimeMs}`);
           hash.update(contents);
         }
       }
@@ -950,6 +953,19 @@ describe('the editor Vite entry points', () => {
       utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
       expect(snapshot(cwd)).toBe(before);
       write('packages/core/src/permanent.ts', 'export const changed = true;\n');
+      expect(snapshot(cwd)).not.toBe(before);
+    });
+
+    it('ignores a Git file timestamp refresh, but not a persistent Git file write', () => {
+      const { cwd } = checkout();
+      const config = join(cwd, '.git', 'config');
+      const before = snapshot(cwd);
+      // Git bookkeeping may refresh an administrative timestamp while the
+      // verifier reads history. The bytes, and therefore the checkout, remain.
+      utimesSync(config, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
+      expect(snapshot(cwd)).toBe(before);
+
+      writeFileSync(config, readFileSync(config, 'utf8') + '\n[fixture-change]\nvalue = changed\n');
       expect(snapshot(cwd)).not.toBe(before);
     });
 
