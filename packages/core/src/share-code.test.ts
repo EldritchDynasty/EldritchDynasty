@@ -143,8 +143,13 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       names: { house: 'Salt', friends: ['Alice', '家族\u200Dの友', 'Cora'] },
     });
     expect(visible.ok).toBe(true);
-    if (visible.ok) expect(visible.session.ctx.world.friends.map((friend) => friend.name))
-      .toEqual(['Alice', '家族\u200Dの友', 'Cora']);
+    if (visible.ok) {
+      // Founding deals friends into randomized windows: compare the roster,
+      // not its scheduled order.
+      const names = visible.session.ctx.world.friends.map((friend) => friend.name);
+      expect(names).toHaveLength(3);
+      expect(names).toEqual(expect.arrayContaining(['Alice', '家族\u200Dの友', 'Cora']));
+    }
   });
 
   it('is the same founding when the recipient gives the same names, and a disclosed different one otherwise', () => {
