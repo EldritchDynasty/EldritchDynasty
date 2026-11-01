@@ -133,3 +133,28 @@ for (const mode of ['original', 'plainenglish'] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+test('share-code name refusals follow the current prose mode without a second import #1995', async ({ page }) => {
+  const { game: sender } = makeFounded(2002, 'House Sender');
+  const code = sender.shareCode({ build });
+  expect(code.ok).toBe(true);
+  if (!code.ok) return;
+
+  await page.goto('/');
+  await expect(page.locator('main.start')).toBeVisible();
+  await page.getByRole('button', { name: 'Advanced', exact: true }).click();
+  await page.locator('#share-code-in').fill(code.code);
+
+  // A valid anonymous founding requires recipient names. The failed Begin is
+  // a structured reason, not English fixed to the mode at click time.
+  await page.getByRole('button', { name: 'Sign from this code' }).click();
+  await expect(page.locator('#share-code-error')).toContainText('The code left');
+  await expect(page.locator('main.start')).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Prose style' }).selectOption('plainenglish');
+  await expect(page.locator('#share-code-error')).toContainText('Enter the missing names');
+  await page.getByRole('combobox', { name: 'Writing style' }).selectOption('original');
+  await expect(page.locator('#share-code-error')).toContainText('The code left');
+
+  expect(await page.evaluate(() => localStorage.getItem('ed:save:autosave'))).toBeNull();
+});
