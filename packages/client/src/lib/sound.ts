@@ -423,7 +423,7 @@ export class Sound {
       }
     }
     // Suspended until a gesture. Harmless to call when it is already running.
-    this.watch(this.context.resume?.(), this.context);
+    this.watch(this.context.resume?.(), this.context, true);
     return { context: this.context, out: this.out };
   }
 
@@ -506,7 +506,7 @@ export class Sound {
     if (this.#muted) return;
     this.attempt(() => {
       const ctx = this.context;
-      if (ctx) this.watch(ctx.resume?.(), ctx);
+      if (ctx) this.watch(ctx.resume?.(), ctx, true);
     });
   }
 
@@ -525,11 +525,19 @@ export class Sound {
    * Run one piece of engine work, and turn a throw into silence. The context
    * goes too, so a half-built graph is never played into again.
    */
-  /** A rejected browser/host audio operation is a failed device, not a cue to retry forever. */
-  private watch(pending: Promise<unknown> | undefined, context: AudioContext): void {
-    pending?.catch(() => {
+  /**
+   * A browser can reject resume() with NotAllowedError when a backgrounded tab
+   * becomes visible before another user gesture. That is a temporary activation
+   * policy, not a dead device: keep the suspended context for gesture() / wake().
+   * Other refusals (including suspend()) still fail into silence.
+   */
+  private watch(pending: Promise<unknown> | undefined, context: AudioContext, resume = false): void {
+    pending?.catch((reason: unknown) => {
       // A stale promise from a disposed context must not disable a later one.
-      if (this.context === context && !this.#failed) this.fail();
+      if (this.context !== context || this.#failed) return;
+      if (resume && typeof reason === 'object' && reason !== null
+        && 'name' in reason && reason.name === 'NotAllowedError') return;
+      this.fail();
     });
   }
 
