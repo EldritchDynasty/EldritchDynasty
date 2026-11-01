@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, useId } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { StandingDelta } from '@ed/core';
 import type { ProseMode, RespectTier } from '@ed/schema';
@@ -32,6 +32,8 @@ const plain = computed(() => props.proseMode === 'plainenglish');
 /** First in-place glossary term (#1991), sharing the existing house-key copy. */
 const standingDefinition = computed(() => standingGlossaryDefinition(props.proseMode));
 const standingOpen = ref(false);
+/** Each disclosure must have its own target when two ledgers share a page. */
+const standingDefinitionId = useId();
 const PLAIN_RESPECT: Record<RespectTier, string> = {
   unknown: 'Not known',
   known: 'Known',
@@ -277,7 +279,7 @@ const muster = computed(() => {
               type="button"
               class="standing-term"
               :aria-expanded="standingOpen"
-              :aria-controls="standingOpen ? 'standing-term-definition' : undefined"
+              :aria-controls="standingOpen ? standingDefinitionId : undefined"
               @click="standingOpen = !standingOpen"
               @keydown.esc.stop.prevent="standingOpen = false"
             >{{ plain ? 'Reputation' : 'Standing' }}</button>
@@ -288,7 +290,7 @@ const muster = computed(() => {
               class="delta"
             > (was {{ respectLabel(moved.respect.from) }})</span>
           </dd>
-          <dd v-if="standingOpen" id="standing-term-definition" class="standing-definition soft">
+          <dd v-if="standingOpen" :id="standingDefinitionId" class="standing-definition soft">
             {{ standingDefinition }}
           </dd>
         </div>
