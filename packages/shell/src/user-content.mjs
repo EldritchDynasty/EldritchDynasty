@@ -1,4 +1,4 @@
-import { lstatSync, readdirSync, readFileSync } from 'node:fs';
+import { closeSync, constants, fstatSync, lstatSync, openSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { resolveExistingContentPath } from '../../content/tools/content-path.mjs';
 
@@ -36,6 +36,28 @@ export function resolveModEditorContentPath(root, path) {
   return resolveExistingContentPath(root, path);
 }
 
+/**
+ * Scan exactly the YAML file lstat inspected, not a new target reopened by
+ * pathname after another editor has replaced it. The descriptor protects the
+ * read even if the filename changes again later.
+ */
+function readVerifiedYaml(path, before) {
+  const flags = constants.O_RDONLY | (process.platform === 'win32' ? 0 : constants.O_NOFOLLOW);
+  const fd = openSync(path, flags);
+  try {
+    const opened = fstatSync(fd);
+    const after = lstatSync(path);
+    if (!opened.isFile() || !after.isFile()
+      || opened.dev !== before.dev || opened.ino !== before.ino
+      || after.dev !== opened.dev || after.ino !== opened.ino) {
+      throw new TypeError('user content changed while being read');
+    }
+    return readFileSync(fd, 'utf8');
+  } finally {
+    closeSync(fd);
+  }
+}
+
 export function readUserContent(root) {
   const out = {};
   if (!hasRegularContentRoot(root)) return out;
@@ -67,7 +89,7 @@ export function readUserContent(root) {
       }
       if (!stat.isFile() || !entry.endsWith('.yaml')) continue;
       try {
-        out[relative(root, path).split(sep).join('/')] = readFileSync(path, 'utf8');
+        out[relative(root, path).split(sep).join('/')] = readVerifiedYaml(path, stat);
       } catch (error) {
         if (error?.code === 'ENOENT') continue;
         throw error;
