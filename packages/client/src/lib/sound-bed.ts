@@ -122,7 +122,8 @@ export class SoundBed {
     // an audio device; the engine's own setter enforces the same limit.
     const volume = Number.isFinite(preference.volume)
       ? Math.min(1, Math.max(0, preference.volume)) : 0;
-    this.#preference = { on: preference.on, volume };
+    // Runtime inputs may come from imperfect host/storage adapters; only literal true may turn sound on.
+    this.#preference = { on: preference.on === true, volume };
     this.engine.volume = volume;
     this.#settle();
   }
