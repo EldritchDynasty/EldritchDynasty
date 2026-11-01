@@ -50,7 +50,9 @@ function canonicalJson(value: unknown): unknown {
   return Object.fromEntries(
     Object.entries(value as Record<string, unknown>)
       .filter(([, item]) => item !== undefined)
-      .sort(([left], [right]) => left.localeCompare(right))
+      // Match the desktop native snapshot's code-unit ordering; localeCompare
+      // differs on case and punctuation, giving identical saves different hashes.
+      .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
       .map(([key, item]) => [key, canonicalJson(item)]),
   );
 }
