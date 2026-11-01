@@ -191,8 +191,10 @@ describe('ending image export failures', () => {
 
   for (const mode of ['original', 'plainenglish'] as const) {
     it('exports a vector Afterimage with the full nameless code despite the names opt-in (' + mode + ') #2369', async () => {
-      const anonymousCode = 'ED1.anonymous-founding.123';
-      const personallyNamedCode = 'ED1.private-names.456';
+      // Deliberately longer than one line at the measured seven-pixel glyph width.
+      // A tiny fixture would not catch a wrapped code losing its tail.
+      const anonymousCode = 'ED1.' + 'A'.repeat(210) + '.123';
+      const personallyNamedCode = 'ED1.' + 'B'.repeat(210) + '.456';
       const shareCode = vi.fn((includeNames: boolean) => ({
         ok: true as const, code: includeNames ? personallyNamedCode : anonymousCode,
       }));
@@ -230,9 +232,15 @@ describe('ending image export failures', () => {
         // The visible code must match the complete, selectable assistive text.
         const visible = [...svg.querySelectorAll('text')].map((node) => node.textContent);
         const description = svg.querySelector('desc')?.textContent ?? '';
-        expect(visible).toContain(anonymousCode);
+        const heading = mode === 'plainenglish'
+          ? 'SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)'
+          : 'THE SAME BEGINNING · NAMES WITHHELD';
+        const headingAt = visible.indexOf(heading);
+        expect(headingAt).toBeGreaterThan(-1);
+        const codeLines = visible.slice(headingAt + 1, -1);
+        expect(codeLines.length).toBeGreaterThan(1);
+        expect(codeLines.join('')).toBe(anonymousCode);
         expect(description).toContain(': ' + anonymousCode);
-        expect(visible).not.toContain(personallyNamedCode);
         expect(description).not.toContain(personallyNamedCode);
         expect(w.find('[role="alert"]').exists()).toBe(false);
         expect(shareCode).toHaveBeenCalledWith(false);
