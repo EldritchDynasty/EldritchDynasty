@@ -87,13 +87,27 @@ function innermostActiveElement(el: Element): Element {
   return active;
 }
 
+/** ARIA roles are token lists; the first declared role is the intended one. */
+function focusedRole(el: Element): string | undefined {
+  return el.getAttribute?.('role')?.trim().split(/\s+/)[0];
+}
+
+/** Custom widgets also own keystrokes, even when they are not native inputs. */
+const FIELD_ROLES: ReadonlySet<string> = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
+const CONTROL_ROLES: ReadonlySet<string> = new Set([
+  'button', 'link', 'checkbox', 'switch', 'radio', 'menuitem',
+  'menuitemcheckbox', 'menuitemradio', 'option', 'tab', 'treeitem',
+  'slider', 'scrollbar', 'listbox', 'menu', 'tree', 'radiogroup',
+]);
+
 /** Whether a press should be read as typing rather than steering. */
 export function isField(el: Element | null): boolean {
   if (!el) return false;
   const active = innermostActiveElement(el);
   const tag = active.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-    || (active as HTMLElement).isContentEditable === true;
+    || (active as HTMLElement).isContentEditable === true
+    || FIELD_ROLES.has(focusedRole(active) ?? '');
 }
 
 /** Whether the focused thing answers Space and Enter on its own. */
@@ -103,9 +117,8 @@ export function isControl(el: Element | null): boolean {
   const tag = active.tagName;
   // A keyboard-activated ARIA control also owns Enter/Space. Do not turn a
   // year behind a role-based button or link, including inside open shadows.
-  const role = active.getAttribute?.('role');
   return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY'
-    || role === 'button' || role === 'link';
+    || CONTROL_ROLES.has(focusedRole(active) ?? '');
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
