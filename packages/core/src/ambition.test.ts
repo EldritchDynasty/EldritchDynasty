@@ -779,6 +779,15 @@ describe('the ascent says what its last step will ask, in time (#1867 §6)', () 
     expect(ambitionView(ctx)!.ahead).toBe(
       `${candidate.name} has taken both rites. The last step spends a two-rite elder to raise a younger descendant of the blood, so one great climber is not enough: prepare the next now.`,
     );
+
+    // Unmaking is a historical rite. Its recipient can later die without
+    // making the old final-step preparation relevant again (#2245).
+    const raised = place(ctx, { sex: 'male', age: 25, name: 'The Raised' });
+    raised.rites.push('unmaking');
+    expect(ambitionView(ctx)?.ahead).toBeUndefined();
+    ctx.world.people.kill(raised.id, ctx.world.year, 'test death');
+    expect(raised.status).toBe('dead');
+    expect(ambitionView(ctx)?.ahead).toBeUndefined();
   });
 
   it('says nothing on the Short Line, whose horizon is not the God rung', () => {
