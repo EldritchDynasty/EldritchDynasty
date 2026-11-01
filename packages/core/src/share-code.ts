@@ -433,9 +433,14 @@ export function newGameFromShareCode(
   const given = opts.names ?? {};
   const houseName = f.houseName ?? given.house?.trim() ?? '';
   const friendNames = f.friends.map((friend, i) => friend.name ?? given.friends?.[i]?.trim() ?? '');
+  // Unlike manual signing's optional friends, a shared roster is required:
+  // every encoded friend must receive a visible name. The founding validator
+  // skips invisible-only optional names, which would silently shorten an
+  // imported roster and break the code's mechanical founding contract (#2264).
   const missing: SharedName[] = [
     ...(!houseName ? ['house' as const] : []),
-    ...(friendNames.some((name) => !name) ? ['friends' as const] : []),
+    ...(friendNames.some((name) => !name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim())
+      ? ['friends' as const] : []),
   ];
   if (missing.length) return { ok: false, problem: { kind: 'names_needed', missing } };
 
