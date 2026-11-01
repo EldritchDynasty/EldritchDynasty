@@ -2,7 +2,7 @@
 import type {
   DiscrepancyState, RespectTier, CampaignId, Register, FrameEntry, Rung, EndingId, TaleForm, ResolvedClaim, PersonStatus,
 } from '@ed/schema';
-import type { PendingDecisionView } from './events/decisions.js';
+import type { PendingDecisionView, RecordBynamePreview } from './events/decisions.js';
 import type { AmbitionRelevance, HouseAmbitionView, HouseAmbitionOption, AmbitionRecommendation } from './ambition.js';
 import type { RecordStakes } from './record-stakes.js';
 import type { AgeMatchPriority, AgeRecordPriority } from './ages/strategy.js';
@@ -92,6 +92,8 @@ export type SessionDecisionView = PendingDecisionView & {
   ambition?: AmbitionRelevance;
   /** #1867 §5: what each offered Record option costs, by the rules. Record dockets only. */
   stakes?: RecordStakes;
+  /** #1990: the byname each pen would write, and about whom. Record dockets only. */
+  bynames?: RecordBynamePreview;
 };
 
 export interface SessionView {

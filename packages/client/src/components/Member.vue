@@ -6,6 +6,7 @@ import { MARKS, type Mark, madnessMark, markSays } from '../lib/marks';
 import { ageLabel } from '../lib/age';
 import type { GameStore } from '../lib/game';
 import RecordedLife from './RecordedLife.vue';
+import { bynameNote, bynameTag } from '../lib/byname';
 
 type MemberView = SessionView['halls'][number]['members'][number];
 
@@ -159,7 +160,10 @@ const mentionPages = computed(() =>
       @click="$emit('select', member.id)"
     >
       <span class="name">
-        {{ member.name }}<span v-if="member.epithet" class="dim"> {{ member.epithet }}</span>
+        <!-- The space is inside the expression: the compiler condenses away a
+             leading whitespace-only text node, which drew "AdaBlood-Marked"
+             the first time anything set an epithet (#1990). -->
+        {{ member.name }}<span v-if="member.epithet" class="dim">{{ ' ' + member.epithet }}</span>
       </span>
       <!-- SAID AS WELL AS DRAWN (issues #107, #275). A hover tooltip is
            not a reading channel: the same sentence is the accessible name,
@@ -197,6 +201,22 @@ const mentionPages = computed(() =>
     </div>
 
     <div v-if="open" :id="'detail-' + member.id" class="detail">
+      <!-- Where the byname came from (#1990): the page it rests on, said in
+           words and one tap away. The engine decides the standing; this
+           only reports it, and never says whether the name is deserved. -->
+      <div v-if="member.byname" class="small byname" data-byname :data-byname-standing="member.byname.standing">
+        <span class="dim">{{ proseMode === 'plainenglish' ? 'Byname:' : 'called' }}</span>
+        {{ member.byname.text }}<span v-if="bynameTag(member.byname.standing, proseMode === 'plainenglish')" class="rubric"> · {{ bynameTag(member.byname.standing, proseMode === 'plainenglish') }}</span>.
+        {{ bynameNote(member.byname, proseMode === 'plainenglish') }}
+        <button
+          v-if="member.byname.page"
+          type="button"
+          class="quiet small"
+          data-byname-page
+          :aria-label="proseMode === 'plainenglish' ? `Open the ${member.byname.year} Chronicle page this byname comes from` : `Open the page of ${member.byname.year} the name was written on`"
+          @click.stop="$emit('book', member.byname.page)"
+        >{{ proseMode === 'plainenglish' ? 'Open page' : 'the page' }}</button>
+      </div>
       <div v-if="claimedTraits.length" class="small">
         <span class="dim">{{ copy.trait }}</span> {{ claimedTraits.join(', ') }}
       </div>
@@ -215,7 +235,7 @@ const mentionPages = computed(() =>
         <template v-else-if="relationshipAnchor.id === member.id">{{ copy.traceStop }}</template>
         <template v-else>{{ copy.traceTo(relationshipAnchor.name, member.name) }}</template>
       </button>
-      <RecordedLife v-if="milestones" :person="member.id" :read="milestones" :prose-mode="proseMode" @book="$emit('book', $event)" />
+      <RecordedLife v-if="milestones" :person="member.id" :read="milestones" :prose-mode="proseMode" :byname-page="member.byname?.page" @book="$emit('book', $event)" />
       <div v-else-if="mentionPages.length" class="small mentions">
         <span class="dim">{{ copy.mentions }}</span>
         <button

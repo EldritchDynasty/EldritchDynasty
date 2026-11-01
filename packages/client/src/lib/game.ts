@@ -312,6 +312,8 @@ export interface Outcome {
    * it first. A Match and a Record are seals, so they carry none.
    */
   valence?: Valence;
+  /** The byname a Record page just earned somebody (#1990), from the engine's own receipt. */
+  byname?: { name: string; text: string };
 }
 
 /**
@@ -971,7 +973,10 @@ export function createGame(
 
     record(decision, option, said = '') {
       const result = session.value?.record(decision, option);
-      hold(result?.ok ? { said, text: result.line ?? null, kind: 'record' } : null);
+      hold(result?.ok ? {
+        said, text: result.line ?? null, kind: 'record',
+        ...(result.byname ? { byname: { name: result.byname.name, text: result.byname.text } } : {}),
+      } : null);
       refresh();
       return result?.ok ?? false;
     },

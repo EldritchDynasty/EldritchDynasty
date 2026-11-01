@@ -8,6 +8,8 @@ const props = defineProps<{
   person: string;
   read: GameStore['milestones'];
   proseMode?: ProseMode;
+  /** The exact page an earned byname rests on (#1990), marked where it appears. */
+  bynamePage?: string;
 }>();
 const emit = defineEmits<{ (e: 'book', page: string): void }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
@@ -32,9 +34,11 @@ function label(page: RecordedMilestone): string {
     }
   }
 }
+const bynameSource = computed(() => plain.value ? 'source of the byname' : 'where the name was written');
 function accessibleName(page: RecordedMilestone): string {
   const dispute = page.disputed ? ` — ${disputes.value[page.disputed]}` : '';
-  return `${page.year}: ${label(page)}${dispute} — ${plain.value ? 'open Chronicle page' : 'open page'}`;
+  const byname = page.entryId === props.bynamePage ? ` — ${bynameSource.value}` : '';
+  return `${page.year}: ${label(page)}${dispute}${byname} — ${plain.value ? 'open Chronicle page' : 'open page'}`;
 }
 </script>
 
@@ -45,7 +49,7 @@ function accessibleName(page: RecordedMilestone): string {
       <li v-for="page in pages" :key="page.entryId">
         <button type="button" class="quiet milestone" :data-milestone="page.entryId" :aria-label="accessibleName(page)" @click.stop="emit('book', page.entryId)">
           <span class="year dim">{{ page.year }}</span>
-          <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span></span>
+          <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span><span v-if="page.entryId === bynamePage" class="dim byname-source" data-byname-source> · {{ bynameSource }}</span></span>
         </button>
       </li>
     </ol>
@@ -56,7 +60,7 @@ function accessibleName(page: RecordedMilestone): string {
         <li v-for="page in all" :key="page.entryId">
           <button type="button" class="quiet milestone" :data-history-page="page.entryId" :aria-label="accessibleName(page)" @click.stop="emit('book', page.entryId)">
             <span class="year dim">{{ page.year }}</span>
-            <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span></span>
+            <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span><span v-if="page.entryId === bynamePage" class="dim byname-source" data-byname-source> · {{ bynameSource }}</span></span>
           </button>
         </li>
       </ol>

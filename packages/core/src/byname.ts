@@ -55,6 +55,8 @@ export interface RecordBynameCommit {
 /** Who was granted what, for the receipt. Absent when nothing was earned. */
 export interface BynameAward {
   person: string;
+  /** The person's name as it stands, so a receipt need not look them up. */
+  name: string;
   text: string;
 }
 
@@ -77,23 +79,10 @@ export function grantByname(ctx: SimCtx, commit: RecordBynameCommit): BynameAwar
 
 function grantFromPen(ctx: SimCtx, commit: RecordBynameCommit, pen: BynamePen): BynameAward | undefined {
   const w = ctx.world;
-  const authored = commit.event.record?.options[pen].byname;
-  if (!authored) return undefined;
-  const cast = castIn(commit.fill, authored.slot);
-  if (cast.length !== 1) return undefined;
-  const person = w.people.get(cast[0]!);
-  if (!person || !familyInYear(ctx, person, w.year)) return undefined;
-  if (!commit.claims.some((claim) => claim.person === person.id)) return undefined;
-  if (person.epithet !== undefined || person.byname !== undefined) return undefined;
   if (!w.chronicle.some((entry) => entry.id === commit.page)) return undefined;
-
-  const text = renderProse(
-    ctx,
-    commit.address === undefined ? undefined : `${commit.address}.options.${pen}.byname.text`,
-    authored.text,
-  ).trim();
-  if (!text) return undefined;
-
+  const earned = eligibleByname(ctx, commit.event, pen, commit.fill, commit.claims, commit.address);
+  if (!earned) return undefined;
+  const { person, text } = earned;
   person.epithet = text;
   person.byname = {
     source: {
@@ -107,7 +96,38 @@ function grantFromPen(ctx: SimCtx, commit: RecordBynameCommit, pen: BynamePen): 
     },
     year: w.year,
   };
-  return { person: person.id, text };
+  return { person: person.id, name: person.name, text };
+}
+
+/**
+ * Rules 2–5 above, shared by the grant and by the docket's preview so the
+ * button can never promise a name the commit would refuse. `claims` are the
+ * pen's claims resolved against this cast; `address` is the selected Record
+ * block's content address, for the Plain English counterpart.
+ */
+export function eligibleByname(
+  ctx: SimCtx,
+  event: EventTemplate,
+  pen: BynamePen,
+  fill: SlotFill,
+  claims: readonly ResolvedClaim[],
+  address?: string,
+): { person: Person; text: string } | undefined {
+  const w = ctx.world;
+  const authored = event.record?.options[pen].byname;
+  if (!authored) return undefined;
+  const cast = castIn(fill, authored.slot);
+  if (cast.length !== 1) return undefined;
+  const person = w.people.get(cast[0]!);
+  if (!person || !familyInYear(ctx, person, w.year)) return undefined;
+  if (!claims.some((claim) => claim.person === person.id)) return undefined;
+  if (person.epithet !== undefined || person.byname !== undefined) return undefined;
+  const text = renderProse(
+    ctx,
+    address === undefined ? undefined : `${address}.options.${pen}.byname.text`,
+    authored.text,
+  ).trim();
+  return text ? { person, text } : undefined;
 }
 
 /**

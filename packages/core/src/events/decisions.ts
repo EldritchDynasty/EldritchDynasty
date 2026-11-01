@@ -1,5 +1,5 @@
-import type { Decider, EventTemplate, LoggedDecision, Outcome, Person, Rung, Year } from '@ed/schema';
-import { recordFire, recordTemplateFire, RESPECT_ORDER } from '@ed/schema';
+import type { BynamePen, Decider, EventTemplate, LoggedDecision, Outcome, Person, Rung, Year } from '@ed/schema';
+import { BYNAME_PENS, recordFire, recordTemplateFire, RESPECT_ORDER } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { candidatesFor, castIn, castPeople, renderBody, type SlotFill } from './slots.js';
@@ -10,7 +10,7 @@ import { resolvePrimordial } from './primordial.js';
 import { resolveChoiceOutcome } from './checks.js';
 import { advanceArc, soleBindings, startArc, startDecisionArcs, type ArcStep } from './arcs.js';
 import { resolveClaim } from '../record.js';
-import { grantByname, type BynameAward } from '../byname.js';
+import { eligibleByname, grantByname, type BynameAward } from '../byname.js';
 import { RUNGS, rungIndex } from '../ascension.js';
 import { noteBearing } from '../bearing.js';
 import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type MatchOffer } from '../people/match.js';
@@ -304,6 +304,28 @@ export function queueRecord(
   };
   ctx.world.pendingDecisions.push(pending);
   return pending;
+}
+
+/** What each pen of a pending Record would name somebody (#1990). Derived, never saved. */
+export type RecordBynamePreview = Partial<Record<BynamePen, { person: string; name: string; text: string }>>;
+
+/**
+ * The docket's half of the byname rule: before the player picks a pen, say
+ * which name it would write and about whom. The same `eligibleByname` the
+ * commit uses, against the same cast and the same selected Record block, so
+ * the preview and the grant cannot disagree about a docket answered as shown.
+ */
+export function recordBynamePreview(ctx: SimCtx, pending: PendingRecord): RecordBynamePreview | undefined {
+  const block = pending.event.record;
+  if (!block) return undefined;
+  const address = recordProseBase(ctx, pending.event, pending.recordChoiceId, pending.recordOutcomeId);
+  const preview: RecordBynamePreview = {};
+  for (const pen of BYNAME_PENS) {
+    const claims = block.options[pen].claims.flatMap((claim) => resolveClaim(claim, ctx, pending.fill));
+    const earned = eligibleByname(ctx, pending.event, pen, pending.fill, claims, address);
+    if (earned) preview[pen] = { person: earned.person.id, name: earned.person.name, text: earned.text };
+  }
+  return Object.keys(preview).length ? preview : undefined;
 }
 
 export function queueMatch(ctx: SimCtx, offer: MatchOffer): PendingMatch {
