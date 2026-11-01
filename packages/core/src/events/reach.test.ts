@@ -8004,8 +8004,6 @@ describe('a relative\'s own wish, witnessed through both answers (#1976)', () =>
     { choice: 'pay_for_the_term', opened: 'a_tutor_is_found', alive: false, event: 'the_day_book', later: 'send_to_bramme', outcome: 'a_clerk_from_bramme' },
     { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: true, event: 'asked_again', later: 'pay_for_this_one', outcome: 'the_second_term' },
     { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: true, event: 'asked_again', later: 'no_again', outcome: 'refused_twice' },
-    { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: false, event: 'asked_again', later: 'pay_for_this_one', outcome: 'the_second_term_after_them' },
-    { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: false, event: 'asked_again', later: 'no_again', outcome: 'refused_after_them' },
   ] as const)('$choice, then $event/$later -> $outcome (asker alive: $alive)', ({ choice, opened, alive, event, later, outcome }) => {
     const { ctx, instance } = returnAfter(choice, opened, alive);
     const step = dueArcSteps(ctx, makeRng(19762)).find((s) => s.instance.id === instance.id)!;

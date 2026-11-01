@@ -282,32 +282,31 @@ describe('refusing the term (#1976)', () => {
     expect(instance!.bindings).toEqual({ ASKER: asker.id });
   });
 
-  it('an asker who died: the request still comes, and the dead hold no grudge', () => {
+  it('an asker who died is not replaced: nobody asks again, and the refusal is the last word', () => {
     const { ctx, asker } = house();
-    const { head, instance } = ask(ctx, asker, 'the_terms_are_for_the_heir');
+    const { head, page, instance } = ask(ctx, asker, 'the_terms_are_for_the_heir');
     ctx.world.year = instance!.dueYear!;
     ctx.world.people.kill(asker.id, ctx.world.year, 'before asking again');
     place(ctx, { sex: 'male', age: 13, name: 'Tamsin' });
+    place(ctx, { sex: 'female', age: 30, name: 'A cousin who was also refused once' });
 
-    const pending = returnOf(ctx, instance!.dueYear!, 'asked_again');
-    expect(pending.body).toContain('Wenna is not here to ask again');
-    expect(resolveChoice(ctx, pending.id, 'no_again', testRng()).ok).toBe(true);
-    expect(ctx.world.chronicle.at(-1)!.text).toContain('nobody at the table minds it enough to argue');
+    expect(phase('arcs', ctx, false).pending.some((d) => d.kind === 'choice' && d.event.id === 'asked_again')).toBe(false);
+    expect(instance!.status).toBe('cancelled');
+    expect(instance!.bindings).toEqual({ ASKER: asker.id });
+    expect(ctx.world.chronicle.filter((entry) => entry.eventId === 'asked_again')).toHaveLength(0);
+    expect(ctx.world.chronicle.find((entry) => entry.eventId === ASKING)?.id).toBe(page.id);
     expect(sentimentBetween(ctx.world, asker.id, head)).toBe(-10);
     expect(edge(ctx.world, asker.id, head)?.grudges ?? []).toHaveLength(0);
-    expect(ctx.world.rumours.has('rumour_who_the_house_keeps_its_money_for')).toBe(false);
   });
 
-  it('reads the absent return in Plain English with no missing variant', () => {
+  it('reads the absent day-book page in Plain English with no missing variant', () => {
     const { ctx, asker } = house();
-    const { instance } = ask(ctx, asker, 'the_terms_are_for_the_heir');
-    ctx.world.year = instance!.dueYear!;
-    ctx.world.people.kill(asker.id, ctx.world.year, 'before asking again');
-    place(ctx, { sex: 'male', age: 13, name: 'Tamsin' });
+    const { instance } = ask(ctx, asker, 'pay_for_the_term');
+    ctx.world.people.kill(asker.id, ctx.world.year, 'before the books changed hands');
     setProseVariants(ctx, base.proseVariants);
     setProseMode(ctx, 'plainenglish');
-    const pending = returnOf(ctx, instance!.dueYear!, 'asked_again');
-    expect(pending.body).toContain('someone at the table remembers that Wenna once asked');
+    const pending = returnOf(ctx, instance!.dueYear!, 'the_day_book');
+    expect(pending.body).toContain('but Wenna is not here to be asked');
     expect(missingPlainEnglish(ctx).filter((address) => address.includes('the_wish.yaml'))).toEqual([]);
   });
 });

@@ -21,10 +21,12 @@
 # every beat casts whoever holds the seal that year, and the prose says "the
 # house" wherever the earlier answer might have been somebody else's. ASKER
 # is the person and is kept for the whole chain. Nobody is ever substituted
-# for them. If they are dead or away when a beat falls due, `continue_absent`
-# renders the `absentBody`, and every outcome is guarded on ASKER, so an
-# absent person receives no relationship and takes no act. The child in
-# `asked_again` is the subject of a new request, not a stand-in for ASKER.
+# for them. If they are dead or away when the day-book falls due,
+# `continue_absent` renders the `absentBody`, and every outcome there is
+# guarded on ASKER, so an absent person receives no relationship and takes no
+# act. The second asking is ASKER's own act, so their death ends that story
+# instead. The child in `asked_again` is the subject of a new request, not a
+# stand-in for ASKER.
 #
 # WHAT THE TERM IS. The authored `tutor` effect goes through `beginTutoring`,
 # the same gate and the same forty-crown fee as the Table's own order. The
@@ -233,6 +235,13 @@ events:
   # fresh and is the subject of the request, never a replacement for the
   # person who made the first one. If no untaught child of the right age is in
   # the house, the beat waits five years at a time, as every arc beat does.
+  #
+  # The second asking is ASKER's own act, so ASKER's death ends the story
+  # (`cancel_arc`): nobody else asks, and the refusal's page is the last word.
+  # A closure page was written and measured first. The asker died before the
+  # return in none of 28 delivered promises in 240 Long Lines, so a guarded
+  # closure would be an outcome no sampled batch shows (BALANCE-LOG,
+  # 2026-11-01, #1976).
   - id: asked_again
     title: Asked Again
     tier: family
@@ -242,7 +251,7 @@ events:
     purposes: [change_standing, plant_rumour, worldbuild_through_action]
     slots:
       HEAD: { role: head }
-      ASKER: { role: family_member, filters: [{ status: [alive] }], onMissing: continue_absent }
+      ASKER: { role: family_member, filters: [{ status: [alive] }], onMissing: cancel_arc }
       CHILD:
         role: child
         filters:
@@ -260,11 +269,6 @@ events:
       time. It is for {CHILD}, who is about the age {ASKER} was when the house
       said no, and who gets the heir's sums right under {CHILD.their} breath.
       Forty crowns is still twenty cows.
-    absentBody: >-
-      {ASKER} is not here to ask again. Somebody at the table remembers that
-      {ASKER} once did, and what the house said, and brings it up, because
-      {CHILD} is about the age {ASKER} was then and gets the heir's sums right
-      under {CHILD.their} breath. Forty crowns is still twenty cows.
     interaction:
       kind: choice
       choices:
@@ -273,7 +277,6 @@ events:
           outcomes:
             - id: the_second_term
               weight: 100
-              onlyIf: { slot: ASKER, filters: [{ status: [alive] }] }
               text: >-
                 The tutor comes up from Bramme at the end of Thaw. {ASKER} is
                 at the table on the first morning, before the pupil is, and
@@ -282,21 +285,11 @@ events:
               effects:
                 - { kind: tutor, target: { slot: CHILD }, attr: mind, op: begin }
                 - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: 15 }
-            - id: the_second_term_after_them
-              weight: 100
-              onlyIf: { slot: ASKER, filters: [{ not: { status: [alive] } }] }
-              text: >-
-                The tutor comes up from Bramme at the end of Thaw, and the forty
-                crowns are counted out in the hall where the household can hear
-                it. Nobody says whose question it was. Everybody knows.
-              effects:
-                - { kind: tutor, target: { slot: CHILD }, attr: mind, op: begin }
         - id: no_again
           label: No. The terms are still for the heir.
           outcomes:
             - id: refused_twice
               weight: 100
-              onlyIf: { slot: ASKER, filters: [{ status: [alive] }] }
               text: >-
                 {HEAD} gives the same answer in nearly the same words. {ASKER}
                 says nothing at the table. Afterwards, in the yard, {ASKER} says
@@ -309,14 +302,6 @@ events:
                 # wronging, and ASKER is the one who remembers it.
                 - { kind: relationship, from: head, to: { slot: ASKER }, grudge: { severity: 25, inheritance: heir_only } }
                 - { kind: rumour, op: seed, id: rumour_who_the_house_keeps_its_money_for, accuracy: 0.6 }
-            - id: refused_after_them
-              weight: 100
-              onlyIf: { slot: ASKER, filters: [{ not: { status: [alive] } }] }
-              text: >-
-                The answer is the same as it was, and nobody at the table minds
-                it enough to argue. The sums keep coming out right at the cold
-                end of the long room.
-              effects: []
 
 proseVariants:
   - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].title"
@@ -463,14 +448,6 @@ proseVariants:
       {ASKER.them}. It is for {CHILD}, who is about the age {ASKER} was when
       the house refused, and who quietly gets the heir's sums right under
       {CHILD.their} breath. Forty crowns is still the price of twenty cows.
-  - address: "content:events/the_wish.yaml#events[id=asked_again].absentBody"
-    of: "a3c7a7397947de85"
-    plainenglish: >-
-      {ASKER} is not here to ask again. But someone at the table remembers
-      that {ASKER} once asked, and how the house answered. They raise it now,
-      because {CHILD} is about the age {ASKER} was then, and quietly gets the
-      heir's sums right under {CHILD.their} breath. Forty crowns is still the
-      price of twenty cows.
   - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=pay_for_this_one].label"
     of: "7e582d8ac4a6f3ae"
     plainenglish: >-
@@ -481,12 +458,6 @@ proseVariants:
       The tutor arrives from Bramme in late Thaw. On the first morning,
       {ASKER} is at the table before the pupil and says nothing about the
       years in between. Nothing needs saying. The lessons have been paid for.
-  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=pay_for_this_one].outcomes[id=the_second_term_after_them].text"
-    of: "f96ef1e5e2f41891"
-    plainenglish: >-
-      The tutor arrives from Bramme in late Thaw. The forty crowns are counted
-      out in the hall, where the whole household can hear. Nobody says whose
-      request it was. Everyone knows.
   - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=no_again].label"
     of: "2f932832debd2a5e"
     plainenglish: >-
@@ -498,9 +469,3 @@ proseVariants:
       nothing at the table. Later, in the yard, {ASKER} says a great deal to
       anyone who will listen about what this house is for and who it spends
       its money on. Some of it is unfair. Not enough of it.
-  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=no_again].outcomes[id=refused_after_them].text"
-    of: "46fab0210e52857d"
-    plainenglish: >-
-      The answer is the same as before, and nobody at the table cares enough
-      to argue. At the cold end of the long room, the sums keep coming out
-      right.
