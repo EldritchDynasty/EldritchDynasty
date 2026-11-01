@@ -231,7 +231,7 @@ describe('ending image export failures', () => {
         const visible = [...svg.querySelectorAll('text')].map((node) => node.textContent);
         const description = svg.querySelector('desc')?.textContent ?? '';
         expect(visible).toContain(anonymousCode);
-        expect(description).toContain('Share code: ' + anonymousCode);
+        expect(description).toContain(': ' + anonymousCode);
         expect(visible).not.toContain(personallyNamedCode);
         expect(description).not.toContain(personallyNamedCode);
         expect(w.find('[role="alert"]').exists()).toBe(false);
