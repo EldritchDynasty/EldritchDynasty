@@ -1075,6 +1075,35 @@ describe('the Library of Houses', () => {
     expect(parsed.runs[0]!.entries[0]!.id).toBe('good');
   });
 
+  it('keeps the latest valid copy of a Library run in last-seen order', () => {
+    const original = libraryRunOf(finishedLibraryHouse().ctx)!;
+    const other = { ...original, id: 'another-run', house: 'Another House' };
+    const correction = { ...original, house: 'Corrected House' };
+    const invalid = { ...original, house: 'Invalid copy', seed: 'not a seed' };
+    const parsed = readRunLibrary({ format: 1, runs: [original, other, correction, invalid] });
+
+    expect(parsed.runs.map(({ id, house }) => ({ id, house }))).toEqual([
+      { id: other.id, house: other.house },
+      { id: original.id, house: 'Corrected House' },
+    ]);
+    expect(parsed.runs[1]!.entries).toEqual(original.entries);
+  });
+
+  it('caps restored Library history by distinct run ids, not duplicate entries', () => {
+    const original = libraryRunOf(finishedLibraryHouse().ctx)!;
+    const many = Array.from({ length: 26 }, (_, index) => ({
+      ...original, id: `history-${index}`, house: `House ${index}`,
+    }));
+    const revised = { ...many[0]!, house: 'Revised House Zero' };
+    const parsed = readRunLibrary({ format: 1, runs: [...many, revised] });
+
+    expect(parsed.runs).toHaveLength(24);
+    expect(parsed.runs.map(({ id }) => id)).toEqual([
+      ...many.slice(3).map(({ id }) => id), 'history-0',
+    ]);
+    expect(parsed.runs.at(-1)!.house).toBe('Revised House Zero');
+  });
+
   it('does not move the historical digest when the installation library is empty', () => {
     const empty = bootstrap(content, 8118, 1042, 'long', []);
     // digest() normalizes format 23 + an empty additive field back to the
