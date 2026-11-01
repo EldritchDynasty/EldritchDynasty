@@ -2428,7 +2428,8 @@ describe('the front door begins from a share code', () => {
     expect(recipient.view.value).toBeNull();
     expect(host.saves.get('autosave')).toBe(earlier);
     await begin();
-    expect(w.get('#share-code-error').text()).toContain('friends');
+    // With the house and friend names still missing, the wording is singular.
+    expect(w.get('#share-code-error').text()).toContain("each friend's name");
     await w.get('#share-house').setValue('The House of Salt');
     expect(w.find('#share-code-error').exists()).toBe(false);
     await begin();
