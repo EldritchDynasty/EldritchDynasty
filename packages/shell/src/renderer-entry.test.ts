@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   GAME_PACKAGE,
@@ -97,5 +98,78 @@ describe('the two Windows package targets', () => {
     const entry = readFileSync(join(SHELL, 'src/mod-editor-main.mjs'), 'utf8');
     expect(entry.indexOf("process.env.ED_MOD_EDITOR = '1'"))
       .toBeLessThan(entry.indexOf("import('./main.mjs')"));
+  });
+});
+
+
+describe('native mod scan tolerates disappearing entries (#2274)', () => {
+  it.each(['stat', 'read'] as const)('retains healthy YAML when another entry disappears during %s', async (phase) => {
+    const profile = mkdtempSync(join(tmpdir(), 'ed-mod-scan-'));
+    const root = join(profile, 'mods', 'content');
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, 'healthy.yaml'), 'healthy: true\\n');
+    const moving = join(root, 'moving.yaml');
+    writeFileSync(moving, 'moving: true\\n');
+
+    // Deterministic file-removal races: the entry is present at enumeration,
+    // but a concurrent editor removes it before either stat or read. These
+    // are separate filesystem calls and cannot be reliably timed with a sleep.
+    vi.resetModules();
+    vi.doMock('node:fs', async () => {
+      const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+      return {
+        ...fs,
+        lstatSync: (path: string) => {
+          if (phase === 'stat' && path === moving) {
+            throw Object.assign(new Error('entry vanished before stat'), { code: 'ENOENT' });
+          }
+          return fs.lstatSync(path);
+        },
+        readFileSync: (path: string, encoding: BufferEncoding) => {
+          if (phase === 'read' && path === moving) {
+            throw Object.assign(new Error('entry vanished before read'), { code: 'ENOENT' });
+          }
+          return fs.readFileSync(path, encoding);
+        },
+      };
+    });
+    try {
+      const { readUserContent } = await import('./user-content.mjs');
+      expect(readUserContent(root)).toEqual({ 'healthy.yaml': 'healthy: true\\n' });
+    } finally {
+      vi.doUnmock('node:fs');
+      vi.resetModules();
+      rmSync(profile, { recursive: true, force: true });
+    }
+  });
+
+  it('still reports real read failures instead of silently hiding mods', async () => {
+    const profile = mkdtempSync(join(tmpdir(), 'ed-mod-scan-'));
+    const root = join(profile, 'mods', 'content');
+    mkdirSync(root, { recursive: true });
+    const blocked = join(root, 'blocked.yaml');
+    writeFileSync(blocked, 'blocked: true\\n');
+
+    vi.resetModules();
+    vi.doMock('node:fs', async () => {
+      const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+      return {
+        ...fs,
+        readFileSync: (path: string, encoding: BufferEncoding) => {
+          if (path === blocked) {
+            throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
+          }
+          return fs.readFileSync(path, encoding);
+        },
+      };
+    });
+    try {
+      const { readUserContent } = await import('./user-content.mjs');
+      expect(() => readUserContent(root)).toThrow('permission denied');
+    } finally {
+      vi.doUnmock('node:fs');
+      vi.resetModules();
+      rmSync(profile, { recursive: true, force: true });
+    }
   });
 });
