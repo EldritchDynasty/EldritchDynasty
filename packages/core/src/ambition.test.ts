@@ -391,6 +391,30 @@ describe('house ambition (issue #210)', () => {
     expect(g.view().docket[0]?.ambition).toBeUndefined();
   });
 
+  it('credits personal spellbook learning only to a cast programme member (#1978)', () => {
+    const g = newGame(content, { seed: 1978, campaign: 'long', decider: 'chronicler' });
+    g.setAmbition('raise_ascendant');
+    const candidate = oneSubject(g.ctx);
+    g.ctx.world.scion = candidate.id;
+    const outsider = place(g.ctx, { sex: 'male', age: 25, name: 'A Different Reader' });
+    const pending = bloodChoice(g.ctx);
+    const interaction = pending.event.interaction;
+    if (interaction.kind !== 'choice') throw new Error('expected choice');
+    const outcome = interaction.choices[0]?.outcomes[0];
+    if (!outcome) throw new Error('expected outcome');
+
+    outcome.effects = [{ kind: 'spellbook', op: 'study', target: { slot: 'PUPIL' }, book: 'test_book' }];
+    pending.fill.PUPIL = outsider.id;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+    pending.fill.PUPIL = candidate.id;
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('advance');
+
+    outcome.effects = [{ kind: 'spellbook', op: 'lose', target: { slot: 'PUPIL' }, book: 'test_book' }];
+    expect(ambitionRelevance(g.ctx, pending)?.effect).toBe('endanger');
+    delete pending.fill.PUPIL;
+    expect(ambitionRelevance(g.ctx, pending)).toBeUndefined();
+  });
+
   it('warns that a delegated library-copy removal endangers ascent preparation (#1978)', () => {
     const g = newGame(content, { seed: 1978, campaign: 'long', decider: 'chronicler' });
     g.setAmbition('raise_ascendant');
