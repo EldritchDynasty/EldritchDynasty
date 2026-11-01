@@ -130,6 +130,17 @@ heard (#1986). Do not add a cue; `sound.ts` states the budget.
   proves a loud and a silent session save the same bytes.
 - Sound never carries anything alone: every cue repeats something on screen.
 
+## Bynames
+
+An earned byname (#1990) arrives as `member.byname` (and on `line()` and
+`chroniclePeople`) beside the `epithet` it explains: the words, a standing,
+the pen and the exact page id. The Record docket carries `bynames` per pen,
+the engine's own preview of the commit, and the receipt carries the one the
+page earned. Draw those; never work out who would be named, or whether a lie
+was proven, in a component. `lib/byname.ts` words the standings in both modes
+and never says whether a byname is deserved. A standing of `unknown` is an
+authored or older epithet: show it, and invent no page for it.
+
 ## Share codes
 
 The last night shows the founding as a code, and Start → Advanced begins from
