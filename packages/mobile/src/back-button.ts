@@ -20,7 +20,11 @@ export function handleNativeBackButton(
     goBack();
     return;
   }
-  // A deferred invocation converts synchronous throws into a rejected Promise,
-  // while the catch also observes an asynchronous native rejection.
-  void Promise.resolve().then(exitApp).catch(onExitError);
+  // Attempt exit immediately, just as the native listener did before this
+  // fix; also observe the returned Promise and any synchronous bridge throw.
+  try {
+    void Promise.resolve(exitApp()).catch(onExitError);
+  } catch (error) {
+    onExitError(error);
+  }
 }
