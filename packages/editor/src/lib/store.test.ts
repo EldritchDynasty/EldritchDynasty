@@ -1442,6 +1442,29 @@ describe('nested event-reference safety (#1888)', () => {
 });
 
 describe('reference-safe event deletion (#1888)', () => {
+  it('uses the exact event selector for Plain English deletion blockers', () => {
+    const id = 'test_exact_prose_event';
+    const source = JSON.parse(JSON.stringify(event(EVENT)));
+    source.id = id;
+    delete source.arc;
+    const bundle = {
+      ...store.bundle,
+      events: [source],
+      arcs: [],
+      proseVariants: [
+        // Neither another event's ID nor the file path owns this event.
+        { address: `content:events/${id}.yaml#events[id=${id}_copy].title`, plainenglish: 'Another event' },
+        { address: `content:events/${id}.yaml#events[id=another_event].title`, plainenglish: 'Another file' },
+      ],
+    };
+    expect(eventDeletionBlockers(bundle, id)).toEqual([]);
+
+    const address = `content:events/elsewhere.yaml#events[id=${id}].interaction.choices[id=choose].label`;
+    bundle.proseVariants.push({ address, plainenglish: 'The actual event' });
+    expect(eventDeletionBlockers(bundle, id)).toEqual([
+      `Plain English counterpart ${address}`,
+    ]);
+  });
   it('refuses to preview an event used by a substory, and a dirty file', () => {
     const linked = store.bundle.arcs.flatMap((arc) => arc.nodes.map((node) => node.event))
       .find((id) => store.bundle.events.some((e) => e.id === id));
