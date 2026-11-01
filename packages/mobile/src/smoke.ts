@@ -25,7 +25,8 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
       || (rawYears !== null && !/^[0-9]+$/.test(rawYears))) return null;
     const seed = Number(rawSeed ?? '1042');
     const years = Number(rawYears ?? '40');
-    if (!Number.isSafeInteger(seed) || !Number.isSafeInteger(years) || years < 0) return null;
+    // A diagnostic link must not request more simulation than a full 500-year Long Line.
+    if (!Number.isSafeInteger(seed) || !Number.isSafeInteger(years) || years < 0 || years > 500) return null;
     return { kind, seed, years };
   }
   if (kind === 'resume' || kind === 'export') return { kind };
