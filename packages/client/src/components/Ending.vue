@@ -247,6 +247,20 @@ async function saveAfterimage(): Promise<void> {
       <blockquote>{{ epilogue.purpose.text }}</blockquote>
     </section>
 
+    <!-- A branch survives as a present household, not as proof of the player's
+         unrecorded intentions or an unsourced claim about how it was saved. -->
+    <section v-if="epilogue.purpose?.kind === 'branch_kept'" class="purpose" aria-labelledby="branch-purpose-title">
+      <h3 id="branch-purpose-title" class="label">{{ plain ? 'A family goal that endured' : 'What remained beneath another roof' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          The family aimed to keep its cadet households viable. {{ epilogue.purpose.founder }} founded {{ epilogue.purpose.branch }} in {{ epilogue.purpose.year }}. At the end, {{ epilogue.purpose.person }} still lived in that hall among family. The record shows what survives, not which decision saved it.
+        </template>
+        <template v-else>
+          The house had meant to secure its branches. In {{ epilogue.purpose.year }}, {{ epilogue.purpose.founder }} founded {{ epilogue.purpose.branch }}. At collection {{ epilogue.purpose.person }} yet lived beneath that separate roof, with family beside them. The house can name what remains; it cannot name from this alone the hand that preserved it.
+        </template>
+      </p>
+    </section>
+
     <section class="tally">
       <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
