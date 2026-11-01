@@ -116,6 +116,60 @@ describe('the three clocks', () => {
   });
 });
 
+describe('first-session signing transitions (#1984)', () => {
+  it('timestamps refused and accepted founding, and returned entry, without private inputs', () => {
+    const c = clock(), l = log(c);
+    const given: unknown[] = [];
+    let count = 0;
+    const bare = {
+      found(choice: unknown) { given.push(choice); return ++count === 1
+        ? { ok: false, reason: 'private refusal' } : { ok: true }; },
+      enter() { given.push('entry'); },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const choice = { houseName: 'private house', friends: [{ name: 'private friend' }] }
+      as unknown as Parameters<typeof actions.found>[0];
+    c.tick(100);
+    expect(actions.found(choice).ok).toBe(false);
+    c.tick(200);
+    expect(actions.found(choice).ok).toBe(true);
+    c.tick(300);
+    actions.enter();
+    expect(given).toEqual([choice, choice, 'entry']);
+    expect(l.events.filter(e => e.kind === 'action')).toMatchObject([
+      { at: 100, verb: 'found', act: 'signing', status: 'attempted' },
+      { at: 100, verb: 'found', act: 'signing', status: 'refused' },
+      { at: 300, verb: 'found', act: 'signing', status: 'attempted' },
+      { at: 300, verb: 'found', act: 'signing', status: 'accepted' },
+      { at: 600, verb: 'enter', act: 'signing', status: 'attempted' },
+      { at: 600, verb: 'enter', act: 'signing', status: 'returned' },
+    ]);
+    const artifact = l.artifact();
+    expect(artifact.format).toBe('ed-reading-log/8');
+    expect(artifact.summary.answers).toBe(0);
+    expect(artifact.summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
+    for (const secret of ['private house', 'private friend', 'private refusal']) {
+      expect(JSON.stringify(artifact)).not.toContain(secret);
+    }
+  });
+
+  it('records thrown signing calls and rethrows without logging private exceptions', () => {
+    const l = log(), error = new Error('private exception');
+    const bare = { found() { throw error; }, enter() { throw error; } }
+      as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    expect(() => actions.found({} as Parameters<typeof actions.found>[0])).toThrow(error);
+    expect(() => actions.enter()).toThrow(error);
+    expect(l.events.filter(e => e.kind === 'action')).toMatchObject([
+      { verb: 'found', status: 'attempted' },
+      { verb: 'found', status: 'threw' },
+      { verb: 'enter', status: 'attempted' },
+      { verb: 'enter', status: 'threw' },
+    ]);
+    expect(JSON.stringify(l.artifact())).not.toContain('private exception');
+  });
+});
+
 describe('accepted ordinary Begin boundaries (#2069)', () => {
   const page = [{ id: 'chr_1', year: 1044, answer: 'glimpse' as const }];
 
@@ -418,7 +472,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/7', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/8', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -507,7 +561,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/7');
+    expect(l.artifact().format).toBe('ed-reading-log/8');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -564,7 +618,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/7');
+    expect(l.artifact().format).toBe('ed-reading-log/8');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
