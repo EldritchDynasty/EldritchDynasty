@@ -356,10 +356,11 @@ export function readShareCode(
   // per code character, while bounding raw input before normalization so a
   // megabyte of whitespace cannot hide a small otherwise-valid code.
   if (code.length > SHARE_CODE_MAX * 4) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
-  // Some sharing apps insert U+200B zero-width spaces at visual wrap points.
-  // It is not matched by JavaScript's `\s`, but is never part of our ASCII
-  // wire alphabet. Ignore it like line breaks, after the raw-input cap.
-  const text = code.replace(/[\s\u200B]+/g, '');
+  // Sharing apps may insert U+200B zero-width spaces or U+2060 word joiners
+  // at visual wrap points. Neither is matched by JavaScript's `\s`, and
+  // neither belongs to our ASCII wire alphabet. Ignore both like line breaks,
+  // but only after the raw-input cap so padding cannot evade the bound.
+  const text = code.replace(/[\s\u200B\u2060]+/g, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
