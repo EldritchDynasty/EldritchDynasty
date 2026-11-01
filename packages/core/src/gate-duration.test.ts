@@ -70,10 +70,15 @@ describe('gate duration guard', () => {
       expect(committed.cpus).toBe(4);
       expect(checkGateDuration('batch', 1, committed, 2).judged).toBe(true);
       expect(committed.lanes.batch?.byCpus?.['2']?.evidence).toMatch(/run[s]? 40431290331/);
-      // The day it went private: 774s on 2 CPUs passes its own class and
-      // still fails the 4-CPU budget it was wrongly held to.
-      expect(checkGateDuration('batch', 774, committed, 2).ok).toBe(true);
-      expect(checkGateDuration('batch', 774, committed, 4).ok).toBe(false);
+      // Each class is judged against its own committed baseline.
+      expect(checkGateDuration('batch', 1, committed, 4).baselineSeconds).toBe(committed.lanes.batch?.seconds);
+      expect(checkGateDuration('batch', 1, committed, 2).baselineSeconds).toBe(committed.lanes.batch?.byCpus?.['2']?.seconds);
+      // The day it went private: 774s on 2 CPUs passed its own class and
+      // failed the 4-CPU budget it was wrongly held to. That budget was 540s
+      // then; #1993 has since raised it, so the incident is replayed on it.
+      const thatDay = { ...committed, lanes: { ...committed.lanes, batch: { ...committed.lanes.batch!, seconds: 540 } } };
+      expect(checkGateDuration('batch', 774, thatDay, 2).ok).toBe(true);
+      expect(checkGateDuration('batch', 774, thatDay, 4).ok).toBe(false);
     });
 
     it('says NOT JUDGED out loud, with what to record', () => {
