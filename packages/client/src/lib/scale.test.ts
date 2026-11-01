@@ -50,22 +50,26 @@ function scales(value: string): boolean {
  */
 export function hardSizes(css: string): string[] {
   const found: string[] = [];
-  for (const line of css.split('\n')) {
-    if (TOKEN.test(line)) continue;
-    for (const m of line.matchAll(SIZE)) {
-      if (!scales(m[1]!)) found.push(m[0].trim());
-    }
-    for (const m of line.matchAll(SHORTHAND)) {
-      // A shorthand resets font-size as well as font family. Relative lengths
-      // and percentages are raw sizes too: they scale with the root but evade
-      // the role-token ladder just as px does. Unitless line-height is fine.
-      // `font: inherit` and `font: 500 var(--t-body)/120% serif` stay valid.
-      // The part after "/" is line-height, not font-size; a percentage there
-      // is allowed when the size itself comes from a role token.
-      const sizeAndStyle = m[1]!.split('/')[0]!;
-      if (/(?:\d+(?:\.\d+)?|\.\d+)\s*(?:(?:px|pt|cm|mm|in|pc|rem|em|ch|ex|vw|vh|vmin|vmax)\b|%)/i.test(sizeAndStyle)) {
-        found.push(m[0].trim());
-      }
+  // CSS allows whitespace around a colon and between a property and its
+  // value. Testing one line at a time missed e.g. "font-size:\n 13px".
+  // Skip the permitted token definitions, then inspect complete declarations
+  // across line breaks rather than dropping the property half.
+  const declarations = css.split('\n')
+    .filter((line) => !TOKEN.test(line))
+    .join('\n');
+  for (const m of declarations.matchAll(SIZE)) {
+    if (!scales(m[1]!)) found.push(m[0].trim());
+  }
+  for (const m of declarations.matchAll(SHORTHAND)) {
+    // A shorthand resets font-size as well as font family. Relative lengths
+    // and percentages are raw sizes too: they scale with the root but evade
+    // the role-token ladder just as px does. Unitless line-height is fine.
+    // `font: inherit` and `font: 500 var(--t-body)/120% serif` stay valid.
+    // The part after "/" is line-height, not font-size; a percentage there
+    // is allowed when the size itself comes from a role token.
+    const sizeAndStyle = m[1]!.split('/')[0]!;
+    if (/(?:\d+(?:\.\d+)?|\.\d+)\s*(?:(?:px|pt|cm|mm|in|pc|rem|em|ch|ex|vw|vh|vmin|vmax)\b|%)/i.test(sizeAndStyle)) {
+      found.push(m[0].trim());
     }
   }
   return found;
@@ -112,6 +116,23 @@ describe('the type scale', () => {
     expect(hardSizes('.year { font: bold 2vw sans-serif; }')).toEqual(['font: bold 2vw sans-serif']);
     expect(hardSizes('.year { font: 90%/1.5 serif; }')).toEqual(['font: 90%/1.5 serif']);
     expect(hardSizes('h1 { font-size: 2rem; }')).toEqual(['font-size: 2rem']);
+  });
+
+  it('rejects font declarations split across lines', () => {
+    expect(hardSizes('.name { font-size:\n  13px; }'))
+      .toEqual(['font-size:\n  13px']);
+    expect(hardSizes('.name { font-size\n:\n  2rem; }'))
+      .toEqual(['font-size\n:\n  2rem']);
+    expect(hardSizes('.year { font:\n  500 1.125rem/1.3 serif; }'))
+      .toEqual(['font:\n  500 1.125rem/1.3 serif']);
+    expect(hardSizes('.year { font\n:\n  italic .9em Georgia; }'))
+      .toEqual(['font\n:\n  italic .9em Georgia']);
+  });
+
+  it('accepts multiline tokenized declarations without scanning role-token definitions', () => {
+    expect(hardSizes('.name { font-size:\n  var(--t-card); }')).toEqual([]);
+    expect(hardSizes('.year { font:\n  500 var(--t-body)/1.3 serif; }')).toEqual([]);
+    expect(hardSizes(':root {\n  --t-display: clamp(2.25rem, 7vw, 3rem);\n}')).toEqual([]);
   });
 
   it('passes what the client actually writes', () => {
