@@ -4,7 +4,7 @@ import type { SimCtx } from '../world.js';
 import { hashSeed, type Rng } from '../rng.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './factory.js';
 import { baseName } from './names.js';
-import { assizeFavour } from '../assize.js';
+import { assizeFavour, collateralKeeps } from '../assize.js';
 import { DEMIGOD_AGEING_STOPPED, standingOf } from '../ascension.js';
 import { BASELINE_MAX_AGE, coupleFertility, MOTHER_SHARE } from './vitality.js';
 import { branchOf, halls, softCapFor } from './branches.js';
@@ -108,11 +108,16 @@ export function rollDeath(p: Person, ctx: SimCtx, rng: Rng): boolean {
   // family is worth steadying, somebody competent is in the building and
   // fewer people die of the ordinary things.
   const mercy = assizeFavour(ctx, 'mercy');
+  // THE COLLATERAL KEPT (`assize.ts`, #1993). Once in a run, before the first
+  // interlude, the last few of the blood are kept out of the Age and off the
+  // thin-line amplifier for a window. The Demigod path above sets the same
+  // terms aside for the same reason. Violence, Madness and the wall stay.
+  const kept = collateralKeeps(ctx, p);
   // THE AGE THE HOUSE IS LIVING THROUGH (issue #42). Multiplicative across
   // stacked Ages, because two catastrophes at once are worse than either — and
   // `world.age.active` is a list precisely because they stack.
-  const ages = ageMortality(ctx);
-  const thin = thinBloodMortality(ctx, p);
+  const ages = kept ? 1 : ageMortality(ctx);
+  const thin = kept ? 1 : thinBloodMortality(ctx, p);
 
   // The terms in their historical order, so an uncared-for body's hazard is
   // the same float it always was and every existing run digests unchanged.

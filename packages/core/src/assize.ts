@@ -1,4 +1,4 @@
-import type { Year } from '@ed/schema';
+import type { Person, Year } from '@ed/schema';
 import { MAIN_BRANCH, assertNever, RESPECT_ORDER } from '@ed/schema';
 import { DEBT_FLOOR } from './economy.js';
 import { chronicleEntryId, type SimCtx } from './world.js';
@@ -8,7 +8,7 @@ import { phenotypeOf } from './people/factory.js';
 import { acquireLibraryCopy } from './people/library.js';
 import { addGrudge } from './people/relationships.js';
 import { namesakeBurden } from './people/naming.js';
-import { campaignDef, campaignProgress } from './campaign.js';
+import { campaignDef, campaignProgress, FULL_CAMPAIGN_IDS } from './campaign.js';
 import { msg } from './messages.js';
 
 
@@ -350,6 +350,8 @@ export const ASSIZE_RESPONSES: readonly AssizeResponse[] = [
 export interface AssizeReport {
   pressure: number;
   acted?: AssizeResponse;
+  /** The collateral was kept this year (#1993). Separate from the sitting. */
+  kept?: true;
 }
 
 /**
@@ -364,25 +366,27 @@ export interface AssizeReport {
 export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
   const w = ctx.world;
   hearCovertTestimony(ctx);
+  // Before the reading, so the world sees the house with the bill paid.
+  const done: { kept?: true } = keepTheCollateral(ctx) ? { kept: true } : {};
   const pressure = assizePressure(ctx);
   w.assize.pressure = pressure;
 
-  if (w.year - w.assize.lastSitting < ASSIZE_INTERVAL) return { pressure };
+  if (w.year - w.assize.lastSitting < ASSIZE_INTERVAL) return { pressure, ...done };
 
   const arm: AssizeArm | undefined = pressure >= RESENTS_AT ? 'resents'
     : pressure <= STEADIES_AT ? 'steadies'
       : undefined;
-  if (!arm) return { pressure };
+  if (!arm) return { pressure, ...done };
   const open = ASSIZE_RESPONSES.filter((r) => {
     if (r.arm !== arm) return false;
     const last = w.assize.fired[r.id];
     if (last !== undefined && w.year - last < r.cooldown) return false;
     return r.when ? r.when(ctx) : true;
   });
-  if (!open.length) return { pressure };
+  if (!open.length) return { pressure, ...done };
 
   const chosen = rng.pick(open);
-  if (!chosen) return { pressure };
+  if (!chosen) return { pressure, ...done };
 
   const entryId = chronicleEntryId(ctx);
   chosen.apply(ctx, rng, entryId);
@@ -395,7 +399,7 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
     text: chosen.line(ctx),
     named: false,
   });
-  return { pressure, acted: chosen };
+  return { pressure, ...done, acted: chosen };
 }
 
 /** Criminal consequences belong to the assize and a named copied statement,
@@ -426,6 +430,131 @@ function hearCovertTestimony(ctx: SimCtx): void {
 export function assizeFavour(ctx: SimCtx, kind: 'favour' | 'mercy' | 'exaction'): boolean {
   const until = ctx.world.assize[kind];
   return until !== undefined && ctx.world.year <= until;
+}
+
+// ── The collateral kept ───────────────────────────────────────────────────
+
+/**
+ * THE COLLATERAL KEPT (#1993, the owner's option (a)).
+ *
+ * The measurement first. On an independent predeclared sample of four
+ * hundred Short Lines under the chronicler, 6.0% [4.1, 8.8] of all runs broke
+ * before the first interlude, even after `the_last_of_the_line` was gated to
+ * fire only at one living blood (#2042). Those players never meet the frame,
+ * the Ledger or the reading. Almost all of those breaks were Plague collapses.
+ * The Age's mortality multiplier compounded with `thinBloodMortality` and took
+ * a line from five to nothing in a year or two, often before any docket could
+ * open. `docs/BALANCE-LOG.md` has the tables.
+ *
+ * So once in a run, before any interlude, the world acts for the party that
+ * needs the blood alive at the term. The creditor itself never appears (§18:
+ * on screen twice in five centuries). Its agents are ordinary people doing
+ * ordinary paid work. A physician from Bramme arrives whom nobody sent for.
+ * The weighers' counting house at Cawdry pays him from an account opened in
+ * the year of the signing, and then bills the house. The page names both
+ * actors, and names the creditor the only way this world does: by the
+ * account's date and a name the clerk will not say aloud. A rescue the
+ * player cannot see is a lie the player can feel (invariant 13).
+ *
+ * What it moves is MORTALITY, and only the blood's. For `KEEP_YEARS` the
+ * house's own blood is off the thin-line amplifier and outside the Ages'
+ * mortality multipliers, and the physician's `mercy` holds. This is the shape
+ * the Demigod path in `rollDeath` already uses. Violence, Madness overflow and
+ * the max-age wall still apply. Genetics and authored outcomes are untouched.
+ * Every death still goes through `kill()`.
+ *
+ * WHAT IT COSTS is a debt in the terms the house already has: `COLLATERAL_BILL`
+ * crowns off the treasury. A house that cannot meet it goes under
+ * `DEBT_FLOOR`, and `tickEconomy`'s ordinary broke-house slip turns the
+ * shortfall into standing that same year.
+ *
+ * WHY NO NEW STATE. "Once in a run" is the firing year in the existing
+ * `world.assize.fired` map, and the window is derived from that year. So a
+ * save taken mid-window resumes mid-window, and nothing joins the save format.
+ * The check draws no dice, so a run where it never fires plays exactly as it
+ * did before.
+ *
+ * `broken_line` stays reachable. The keeping happens once. It ends after
+ * `KEEP_YEARS`. It cannot reach a house that has already met the frame or a
+ * house with nobody of the blood left.
+ */
+export const COLLATERAL_KEPT = 'the_collateral_kept';
+/** The most living blood at which the keeping can be triggered. */
+export const KEEP_AT = 3;
+/**
+ * WHEN A SMALL LINE IS FAILING, AND NOT JUST YOUNG. A founding house of three
+ * is small by construction. Without this test the keeping fired in the first
+ * five years of many runs, and it was spent before the Plague reached a grown
+ * house. So a line counts as failing in two cases. It once stood at
+ * `KEEP_FROM` or more and has fallen to the last few. Or it has outlived its
+ * founding generation, `FOUNDING_YEARS`, and is still down to the last few.
+ */
+export const KEEP_FROM = 6;
+export const FOUNDING_YEARS = 25;
+/** How many mortality passes after the firing year the blood is kept. */
+export const KEEP_YEARS = 30;
+/** The weighers' bill, in crowns. Two years' income at Regarded. */
+export const COLLATERAL_BILL = 120;
+
+/** The player house's blood, alive. The same count `livingBlood` reads. */
+function aliveBlood(ctx: SimCtx) {
+  const w = ctx.world;
+  return w.people.blood(w.playerHouse).filter((p) => p.status === 'alive');
+}
+
+/** Is the keeping in force this year? Runs from the year after it fired. */
+export function collateralKept(ctx: SimCtx): boolean {
+  const at = ctx.world.assize.fired[COLLATERAL_KEPT];
+  return at !== undefined && ctx.world.year > at && ctx.world.year <= at + KEEP_YEARS;
+}
+
+/** Is this person one of the blood the keeping covers, this year? */
+export function collateralKeeps(ctx: SimCtx, p: Person): boolean {
+  const w = ctx.world;
+  return p.membership.some((m) => m.house === w.playerHouse && m.kind === 'blood') && collateralKept(ctx);
+}
+
+/**
+ * Whether the keeping may fire this year. Exported so a test can name each
+ * condition that refuses it.
+ */
+export function collateralDue(ctx: SimCtx): boolean {
+  const w = ctx.world;
+  if (w.ending) return false;
+  if (!FULL_CAMPAIGN_IDS.some((id) => id === w.campaign)) return false;
+  if (w.frame.entries.length > 0) return false;
+  if (w.assize.fired[COLLATERAL_KEPT] !== undefined) return false;
+  const founding = w.year - campaignDef(w.campaign).startYear < FOUNDING_YEARS;
+  if (founding && w.bloodHighWater < KEEP_FROM) return false;
+  const blood = aliveBlood(ctx).length;
+  return blood > 0 && blood <= KEEP_AT;
+}
+
+/**
+ * Fire the keeping if it is due. It draws no dice, so the Assize's own stream
+ * is the same whether this happens or not. Returns whether it fired.
+ */
+export function keepTheCollateral(ctx: SimCtx): boolean {
+  if (!collateralDue(ctx)) return false;
+  const w = ctx.world;
+  const blood = aliveBlood(ctx);
+  // The youngest of the blood is the one the house's future is riding on.
+  // Ties go to the earlier id, so the page is the same on every replay.
+  const kept = [...blood].sort((a, b) => b.born - a.born || a.id.localeCompare(b.id))[0]!;
+  w.assize.fired[COLLATERAL_KEPT] = w.year;
+  w.assize.mercy = Math.max(w.assize.mercy ?? w.year, w.year + KEEP_YEARS);
+  w.treasury -= COLLATERAL_BILL;
+  w.chronicle.push({
+    id: chronicleEntryId(ctx),
+    year: w.year,
+    weight: 'paragraph',
+    named: true,
+    people: blood.map((p) => p.id),
+    text: msg(ctx, 'assize.the_collateral_kept',
+      'A physician nobody in the house had sent for rode up from Bramme. His fee was already paid, by letter of exchange on the weighers’ counting house at Cawdry, from an account opened in the year of the signing. He took the room next to {PERSON}’s, kept the doors shut and the well covered, and the sickness in the valley stopped at the gate. In spring the weighers wrote for {PRICE} crowns, with the interest reckoned to the day. Their clerk would not say the name on the account aloud.',
+      { PERSON: kept.name, PRICE: String(COLLATERAL_BILL) }),
+  });
+  return true;
 }
 
 // ── The levers, and only these ────────────────────────────────────────────
