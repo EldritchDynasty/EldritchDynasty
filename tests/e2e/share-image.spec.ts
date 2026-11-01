@@ -43,10 +43,10 @@ for (const mode of ['original', 'plainenglish'] as const) {
     }, { save: foundedSave(), mode });
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
-    await page.getByRole('button', { name: 'Read it whole', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Continue your last game' : 'Continue the last sitting', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Read full Chronicle' : 'Read it whole', exact: true }).click();
     const download = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Save this as a page', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Save an image' : 'Save this as a page', exact: true }).click();
     expect((await download).suggestedFilename()).toMatch(/\.png$/);
 
     const painted = await page.evaluate(() => (window as unknown as { __painted: Painted[] }).__painted);
@@ -90,10 +90,10 @@ for (const mode of ['original', 'plainenglish'] as const) {
     }, { save: foundedSave(), mode });
     await page.goto('/');
 
-    await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
-    await page.getByRole('button', { name: 'Read it whole', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Continue your last game' : 'Continue the last sitting', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Read full Chronicle' : 'Read it whole', exact: true }).click();
     const pending = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Save this as a page', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish' ? 'Save an image' : 'Save this as a page', exact: true }).click();
     const download = await pending;
     expect(download.suggestedFilename()).toMatch(/\.svg$/);
     const svg = await readFile(await download.path(), 'utf8');
