@@ -142,12 +142,40 @@ describe('in-place Standing disclosure', () => {
       expect(document.activeElement).toBe(first.element);
       expect(wrapper.text()).toBe('Standing was questioned.');
 
-      // A change of language closes all levels, including related disclosures.
+      // Changing the live language removes the nested button that currently
+      // owns keyboard focus. Restore the primary term, not document.body.
       await first.trigger('click');
-      await wrapper.findAll('button').find((button) => button.text() === 'Ledger')!.trigger('click');
+      const related = wrapper.findAll('button').find((button) => button.text() === 'Ledger')!;
+      await related.trigger('click');
+      (related.element as HTMLButtonElement).focus();
+      expect(document.activeElement).toBe(related.element);
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.find('[role="note"]').exists()).toBe(false);
       expect(first.attributes('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(first.element);
+
+      // No alias in the replacement passage: retain a programmatic focus
+      // destination without adding a second keyboard Tab stop.
+      await first.trigger('click');
+      const plainRelated = wrapper.findAll('button').find((button) => button.text() === 'Book of debts')!;
+      await plainRelated.trigger('click');
+      (plainRelated.element as HTMLButtonElement).focus();
+      await wrapper.setProps({ text: 'There is no matching term here.' });
+      expect(wrapper.find('button').exists()).toBe(false);
+      const textRoot = wrapper.get('.glossary-text');
+      expect(textRoot.attributes('tabindex')).toBe('-1');
+      expect(document.activeElement).toBe(textRoot.element);
+
+      // A reader who changed their preference elsewhere keeps focus there.
+      const external = document.createElement('button');
+      document.body.append(external);
+      try {
+        external.focus();
+        await wrapper.setProps({ text: 'Standing was restored.' });
+        expect(document.activeElement).toBe(external);
+      } finally {
+        external.remove();
+      }
     } finally {
       glossary.splice(0, glossary.length, ...previous);
     }
