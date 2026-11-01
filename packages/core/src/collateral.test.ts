@@ -5,6 +5,7 @@ import {
   COLLATERAL_BILL, COLLATERAL_KEPT, FOUNDING_YEARS, KEEP_AT, KEEP_FROM, KEEP_YEARS,
   collateralDue, collateralKept, collateralKeeps, keepTheCollateral,
 } from './assize.js';
+import { afterimageEvidence } from './afterimage.js';
 import { DEBT_FLOOR } from './economy.js';
 import { rollDeath, thinBloodMortality } from './people/demography.js';
 import { coreMessageAddress } from './messages.js';
@@ -225,6 +226,19 @@ describe('what it costs, and what the book says', () => {
     const youngest = [...blood(ctx)].sort((a, b) => b.born - a.born)[0]!;
     expect(page!.text).toContain(youngest.name);
     expect(new Set(page!.people)).toEqual(new Set(blood(ctx).map((p) => p.id)));
+  });
+
+  it('reaches the Afterimage as the page itself, cited for each of the blood it kept', () => {
+    // The end-of-run account quotes recorded pages; it never paraphrases the
+    // bill. So the rescue reads the same there as it did in the book.
+    const ctx = lineOf(2);
+    keepTheCollateral(ctx);
+    const page = ctx.world.chronicle.at(-1)!;
+    const cited = afterimageEvidence(ctx).people;
+    for (const p of blood(ctx)) {
+      const reading = cited.find((entry) => entry.person === p.id);
+      expect(reading?.sources.some((source) => source.page === page.id && source.text === page.text)).toBe(true);
+    }
   });
 
   it('speaks the reader\'s setting, and the page keeps its words', () => {
