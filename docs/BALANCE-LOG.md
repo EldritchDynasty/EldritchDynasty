@@ -16553,3 +16553,101 @@ run (#44) is a reader question and was not asked.
 **Reproduce.** `record-claims.slow.test.ts` (the four-seed batch,
 asserted); the sixteen-seed table is the same loop over seeds
 1990 + 37k, chronicler via `stepYear(ctx, true)`.
+
+## 2026-11-01 — #1976: a relative asks for a tutor's term
+
+**Question.** Can a later-generation relative ask the house for something,
+and can the answer change a later choice involving that same person?
+`content/events/the_wish.yaml` is one bounded arc built on existing mechanisms:
+the authored `tutor` effect, `taught`/`inTerm`, inline `next` with `keep`,
+`continue_absent` with guarded outcomes, and a Record block. It needs no engine
+change.
+
+### Branch table (decided before measuring)
+
+| Initiating choice | Later scene | What it changes |
+|---|---|---|
+| `a_term_asked_for` / `pay_for_the_term`: `tutor` on ASKER through `beginTutoring` (40 crowns), ASKER→Head +12 | `the_day_book`, 10–12 years on (the term ends at 8). The old steward gives up the house's books. | **Keep them in the family**: if ASKER is alive and finished the term, +45 crowns, a rumour, ASKER +12; otherwise nothing is found. **Send to Bramme**: +25 crowns and the rumour; a lettered, living ASKER is passed over (ASKER −12). Plus a Record (embellishing it opens a minor Discrepancy, provable by the commons). |
+| `the_terms_are_for_the_heir`: ASKER→Head −10 | `asked_again`, 9–12 years on. ASKER asks for the same term for an untaught child of 10–15. | **Pay**: `tutor` on the child (40), ASKER +15. **Refuse again**: ASKER −15, and a grudge (severity 25, `heir_only`) that ASKER holds against the Head; a rumour. |
+
+HEAD is the office and is cast fresh every beat. ASKER is personal and is never
+substituted. The day-book uses `continue_absent` and an `absentBody`, with its
+outcomes guarded on `{ all: [alive, taught: mind] }` / its negation, so a dead,
+away or never-lettered ASKER takes no act. The second asking is ASKER's own act,
+so `asked_again` cancels if ASKER is gone. A missing child makes the return wait
+five years at a time. `startArc` refuses a return that cannot finish before
+collection.
+
+**What changed after measuring.** A guarded closure for an asker who died before
+asking again was written first. In the sample below that case occurred in 0 of
+28 delivered promises. The weekly `outcome-reach` gate reads a guarded outcome
+with no observed opportunity as dead, so the closure was cut and the beat
+changed to `cancel_arc` (commit `0cabd3be`). Every one of the chain's outcomes
+has a deterministic witness in `reach.test.ts`, which keeps the merge-lane
+manifest complete (1,193/1,193; `main` had 1,185/1,185, not the 1,191 that
+commit `ad840fc5`'s message states). Note that in a `relationship` effect the
+grudge is held by `to` against `from`, so ASKER's grudge is written `from: head,
+to: { slot: ASKER }`.
+
+### Protocol
+
+`report:story-routes` (canonical chronicler auto-resolution, the #1974
+per-promise observer), 240 Long Lines × 500 years, seeds `5000 + 7i`,
+`i = 0..239`, four complete-save observer controls (all equal). Content commit
+`6e8b4f2e` (content hash `787542522563…`). The later `0cabd3be` changes only a
+beat whose asker had died, which never occurred in this sample, so these runs
+are unchanged under it. Node 22.23.4. Wilson 95% intervals over independent
+houses. Artifact `routes-wish.json` (workspace scratch), SHA-256 prefix
+`5d56ad9a`.
+
+### Results
+
+| Measure | Value |
+|---|---|
+| Houses that asked (`a_term_asked_for`) | 57/240 = 23.8% [18.8, 29.5]; 67 askings (47 houses once, 10 twice) |
+| Answers (uniform chronicler) | 39 paid, 28 refused |
+| `the_day_book` promises delivered | 38/39 = 97.4% [86.8, 99.5]; 1 refused at start (too late to finish before 1542) |
+| — delivered with ASKER dead | 3 |
+| `asked_again` promises delivered | 27/28 = 96.4% [82.3, 99.4]; 1 still pending when its run ended |
+| — delivered with ASKER dead | 0 |
+| Kept cast changed before delivery | 0 of 65 |
+| Return page cites the exact launching page | 65/65 |
+| Cast waits (no eligible child) | 0 |
+| Houses reaching each return | `the_day_book` 35/240 = 14.6% [10.7, 19.6]; `asked_again` 25/240 = 10.4% [7.2, 14.9] |
+
+**Pacing and endings.** `gate:long -- 24 500 chronicler` (seeds `20000 + 37i`).
+The baseline is `main` at `6c63703b`, run from a separate worktree; the
+candidate is this branch. Paired seeds diverge after the first changed scene,
+so these are two samples, not matched counterfactuals.
+
+| | Baseline | Candidate |
+|---|---|---|
+| Longest answer silence, mean / max (years) | 56.0 / 60 | 57.0 / 62 |
+| Prompts per generation | 11.24 | 11.62 |
+| Player choices per run | 139.0 | 146.1 |
+| Term reached | 20/24 | 21/24 |
+| Endings: unmade / broken_line / forgotten / devoured | 1 / 4 / 12 / 7 | 0 / 3 / 11 / 10 |
+| Non-frame templates never seen | 37/518 | 38/521 |
+
+Twenty-four houses cannot support a claim about endings either way. The chain
+itself is small: in the route sample it put 132 choices (67 askings, 65 returns)
+across 240 houses, about 0.55 a house. Most of the +7 choices a run here comes
+from the candidate houses playing longer (21 of 24 reached the term, against
+20). Prompts per generation rise from 11.24 to 11.62, about 3%; this sample is
+too small to separate that from noise.
+Logs: `long-baseline.log` `e1f36cc5`, `long-candidate.log` `8f4b3f60`
+(workspace scratch, SHA-256 prefixes).
+
+**Fire rate and outcome reach.** `npm run gates -- fire-rate outcome-reach` on
+the final content (`0cabd3be`, 800 × 500y): still running when this entry was
+first written; the verdict replaces this sentence before landing.
+
+### Limits
+
+Bot policies only. The uniform chronicler pays and refuses about equally;
+players may not. These are reach and delivery measurements, not evidence that
+a reader remembers the asker, the request or the answer: #1945's recorder and
+protocol would be needed for that, and no reader session was run. One
+independent sample of 240 houses, so the rare branches have wide intervals;
+the absent day-book closure (3 cases) is the thinnest. The Short Line was not
+sampled separately; it has the same templates and runs the shorter clock.
