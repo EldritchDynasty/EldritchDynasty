@@ -824,6 +824,24 @@ describe('share codes on exported images', () => {
     },
   };
 
+  it('does not print a share-code invitation when the exported value is blank (#1995)', () => {
+    // Empty transport output must not leave a misleading "names withheld"
+    // caption or a blank monospace block in either image format.
+    for (const code of ['', ' ', '\n\t']) {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        const foot = plateFoot(code, monospace, mode);
+        expect(foot).toEqual(plateFoot(null, monospace, mode));
+        expect(plateSvg([], 'House', 'A chronicle', foot)).not.toContain('<desc>');
+
+        const model = afterimageModel({ ...input, shareCode: code }, mode);
+        expect(model.share).toBeUndefined();
+        const layout = afterimageLayout(model, monospace);
+        expect(layout.rows.some((row) => row.mono)).toBe(false);
+        expect(afterimageSvg(model, layout)).not.toContain('<desc>');
+      }
+    }
+  });
+
   it('ends the Afterimage on the code, monospace, when the run has one', () => {
     expect(afterimageModel(input).share).toBeUndefined();
     const model = afterimageModel({ ...input, shareCode: CODE });
