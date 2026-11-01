@@ -94,7 +94,7 @@ function innermostActiveElement(el: Element): Element {
  * game years if an earlier, future role is not known to this browser.
  */
 function hasRole(el: Element, roles: ReadonlySet<string>): boolean {
-  const raw = el.getAttribute('role');
+  const raw = el.getAttribute?.('role') ?? null;
   return raw !== null && raw.trim().split(/\s+/).some((role) => roles.has(role));
 }
 
