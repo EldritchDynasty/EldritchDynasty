@@ -462,7 +462,10 @@ export function afterimageQuote(
 /** The factual small page: no grade, no rank, no "best" ending. */
 /** A byname is an existing historical label, never inferred from a Chronicle sentence. */
 function afterimageNameOf(person: { name: string; epithet?: string }): string {
-  return person.epithet ? `${person.name} ${person.epithet}` : person.name;
+  // An older or authored recorded name can already contain its byname.
+  // The Afterimage is a reading of that record, not a new name to append twice.
+  return person.epithet && !person.name.endsWith(` ${person.epithet}`)
+    ? `${person.name} ${person.epithet}` : person.name;
 }
 
 export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'original'): AfterimageModel {
