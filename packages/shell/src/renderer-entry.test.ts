@@ -117,6 +117,9 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     vi.resetModules();
     vi.doMock('node:fs', async () => {
       const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+      // user-content.mjs now opens the file once and reads through its fd.
+      // Inject a read failure on that opened descriptor, not the old pathname.
+      let targetFd: number | undefined;
       return {
         ...fs,
         lstatSync: (path: string) => {
@@ -125,8 +128,13 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
           }
           return fs.lstatSync(path);
         },
-        readFileSync: (path: string, encoding: BufferEncoding) => {
-          if (phase === 'read' && path === moving) {
+        openSync: (...args: Parameters<typeof fs.openSync>) => {
+          const fd = fs.openSync(...args);
+          if (args[0] === moving) targetFd = fd;
+          return fd;
+        },
+        readFileSync: (path: string | number, encoding: BufferEncoding) => {
+          if (phase === 'read' && path === targetFd) {
             throw Object.assign(new Error('entry vanished before read'), { code: 'ENOENT' });
           }
           return fs.readFileSync(path, encoding);
@@ -161,6 +169,9 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     vi.resetModules();
     vi.doMock('node:fs', async () => {
       const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+      // user-content.mjs now opens the file once and reads through its fd.
+      // Inject a read failure on that opened descriptor, not the old pathname.
+      let targetFd: number | undefined;
       return {
         ...fs,
         lstatSync: (path: string) => {
@@ -169,8 +180,13 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
           }
           return fs.lstatSync(path);
         },
-        readFileSync: (path: string, encoding: BufferEncoding) => {
-          if (phase === 'read' && path === blocked) {
+        openSync: (...args: Parameters<typeof fs.openSync>) => {
+          const fd = fs.openSync(...args);
+          if (args[0] === blocked) targetFd = fd;
+          return fd;
+        },
+        readFileSync: (path: string | number, encoding: BufferEncoding) => {
+          if (phase === 'read' && path === targetFd) {
             throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
           }
           return fs.readFileSync(path, encoding);
