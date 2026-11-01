@@ -195,3 +195,89 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     }
   });
 });
+
+describe('atomic JSON scratch ownership (#2347)', () => {
+  const token = '11111111-1111-4111-8111-111111111111';
+
+  async function fixedScratchWriter() {
+    vi.resetModules();
+    vi.doMock('node:crypto', async () => ({
+      ...(await vi.importActual<typeof import('node:crypto')>('node:crypto')),
+      randomUUID: () => token,
+    }));
+    return import('./atomic-json.mjs');
+  }
+
+  it('preserves another writer\'s scratch on exclusive-create collision', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-atomic-ownership-'));
+    const target = join(dir, 'saved.json');
+    const scratch = `${target}.${token}.writing`;
+    writeFileSync(target, 'previous destination');
+    writeFileSync(scratch, 'other writer data');
+
+    try {
+      const { writeJsonAtomically } = await fixedScratchWriter();
+      expect(() => writeJsonAtomically(target, { format: 41 })).toThrow();
+      expect(readFileSync(scratch, 'utf8')).toBe('other writer data');
+      expect(readFileSync(target, 'utf8')).toBe('previous destination');
+    } finally {
+      vi.doUnmock('node:crypto');
+      vi.resetModules();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('closes the descriptor and removes only its own partial scratch after a write error', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-atomic-partial-'));
+    const target = join(dir, 'saved.json');
+    const scratch = `${target}.${token}.writing`;
+    writeFileSync(target, 'previous destination');
+    const close = vi.fn();
+    try {
+      vi.doMock('node:fs', async () => {
+        const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+        return {
+          ...fs,
+          closeSync: (fd: number) => {
+            close(fd);
+            fs.closeSync(fd);
+          },
+          writeFileSync: (file: string | number, data: string, options?: BufferEncoding) => {
+            if (typeof file === 'number') {
+              fs.writeFileSync(file, 'partial', 'utf8');
+              throw new Error('simulated disk full');
+            }
+            fs.writeFileSync(file, data, options);
+          },
+        };
+      });
+      const { writeJsonAtomically } = await fixedScratchWriter();
+      expect(() => writeJsonAtomically(target, { format: 41 })).toThrow('simulated disk full');
+      expect(close).toHaveBeenCalledOnce();
+      expect(() => readFileSync(scratch, 'utf8')).toThrow();
+      expect(readFileSync(target, 'utf8')).toBe('previous destination');
+    } finally {
+      vi.doUnmock('node:fs');
+      vi.doUnmock('node:crypto');
+      vi.resetModules();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('removes an owned scratch when the atomic rename fails', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-atomic-rename-'));
+    const target = join(dir, 'existing-directory');
+    const scratch = `${target}.${token}.writing`;
+    mkdirSync(target);
+    try {
+      const { writeJsonAtomically } = await fixedScratchWriter();
+      expect(() => writeJsonAtomically(target, { format: 41 })).toThrow();
+      expect(() => readFileSync(scratch, 'utf8')).toThrow();
+      expect(() => writeFileSync(join(target, 'probe'), 'still a directory')).not.toThrow();
+    } finally {
+      vi.doUnmock('node:crypto');
+      vi.resetModules();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
