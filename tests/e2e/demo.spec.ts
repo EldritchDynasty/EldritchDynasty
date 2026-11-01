@@ -209,10 +209,13 @@ test('wrong-campaign save slots cannot turn a Demonstration into a full continua
     localStorage.removeItem('ed:save:demo-autosave');
   }, demo);
   await page.reload();
-  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
-
   await expect(page.locator('main.start')).toBeVisible();
-  await expect(page.locator('.resume-refusal')).toContainText('The last sitting could not be resumed.');
+
+  // A mismatched full slot is preserved for recovery, but must not advertise a
+  // Continue control that resume() would refuse (#2355). The old expectation
+  // clicked that now-hidden button and timed out in Chromium.
+  await expect(page.getByRole('button', { name: 'Continue the last sitting', exact: true })).toHaveCount(0);
+  await expect(page.locator('.resume-refusal')).toHaveCount(0);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(demo);
   expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBeNull();
 });
