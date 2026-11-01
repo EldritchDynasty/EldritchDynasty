@@ -261,7 +261,7 @@ const FOOT_LINE = 18;
 const FOOT_CODE = { size: 12, mono: true } as const;
 
 export function plateFoot(code: string | null | undefined, measure: Measure, mode: ProseMode = 'original'): PlateFoot {
-  if (!code) return { label: 'Eldritch Dynasty', code: [], height: PLATE.foot };
+  if (!code?.trim()) return { label: 'Eldritch Dynasty', code: [], height: PLATE.foot };
   const lines = wrap(code, rowFont(FOOT_CODE), PLATE.width - PLATE.pad * 2, measure);
   return {
     label: mode === 'plainenglish'
@@ -541,7 +541,7 @@ export function afterimageModel(input: AfterimageInput, mode: ProseMode = 'origi
     quoteHeading: plain ? 'CHRONICLE EXCERPT' : 'FROM THE CHRONICLE',
     footer: plain ? 'Eldritch Dynasty · Ending image' : 'Eldritch Dynasty · House Afterimage',
     ...(quote ? { quote } : {}),
-    ...(input.shareCode ? {
+    ...(input.shareCode?.trim() ? {
       share: {
         heading: plain ? 'SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)' : 'THE SAME BEGINNING · NAMES WITHHELD',
         code: input.shareCode,
