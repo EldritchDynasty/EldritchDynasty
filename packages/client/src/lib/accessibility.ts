@@ -72,7 +72,10 @@ function isVolume(value: unknown): value is number {
 
 /** A bad or older preference must never stop the title screen from opening. */
 export function loadAccessibility(storage: Pick<Storage, 'getItem'> | null): AccessibilityPreferences {
-  if (!storage) return { ...DEFAULT_ACCESSIBILITY };
+  // A missing Storage object means the host denied persistence (App.vue's
+  // readingStorage returns null on SecurityError), not a fresh-install record.
+  // Without a trusted record, do not unexpectedly enable full-volume sound.
+  if (!storage) return { ...DEFAULT_ACCESSIBILITY, sound: false, soundVolume: 0 };
   try {
     const stored = storage.getItem(ACCESSIBILITY_STORAGE_KEY);
     // No saved choice is a fresh install, not a damaged preference record.
