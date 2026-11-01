@@ -400,7 +400,7 @@ describe('autosave mutation ordering', () => {
 });
 
 describe('chapter-boundary save integrity (#1194)', () => {
-  it('captures a boundary at its own year even when the same press turns later years', () => {
+  it('captures a boundary at its own year even when the same press turns later years', async () => {
     const host = memoryPlatform();
     const boundaryWrites: Array<{ slot: string; year: number }> = [];
     const write = host.writeSave;
@@ -442,6 +442,11 @@ describe('chapter-boundary save integrity (#1194)', () => {
       const prior = boundaryWrites.length;
       game.actions.advance(25);
       const after = game.view.value!.year;
+      // Chapter snapshots may share the serialized host mutation queue with
+      // autosaves (#2401). A single event-loop turn drains the fulfilled
+      // in-memory writes before this test inspects their snapshot years;
+      // checking in the same synchronous turn would falsely see no writes.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
       for (const { slot, year } of boundaryWrites.slice(prior)) {
         const closing = /^chapter-.+-(\d+)$/.exec(slot);
         expect(closing, `unexpected chapter save slot: ${slot}`).not.toBeNull();
