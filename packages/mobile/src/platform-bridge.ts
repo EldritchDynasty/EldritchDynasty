@@ -7,6 +7,7 @@ import { parseSmokeCommand, settleSmokeCommand } from './smoke.js';
 import { chooseSaveFile } from './file-chooser.js';
 import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
 import { attachNativeListener } from './native-listener.js';
+import { handleNativeBackButton } from './back-button.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -82,9 +83,13 @@ const platform = {
   onBack(listener: () => boolean): () => void {
     return attachNativeListener(
       () => App.addListener('backButton', ({ canGoBack }) => {
-        if (listener()) return;
-        if (canGoBack) window.history.back();
-        else void App.exitApp();
+        handleNativeBackButton(
+          listener,
+          canGoBack,
+          () => window.history.back(),
+          () => App.exitApp(),
+          (error) => console.warn('[mobile] native app exit failed:', error),
+        );
       }),
       (error) => console.warn('[mobile] back-button listener failed:', error),
     );
