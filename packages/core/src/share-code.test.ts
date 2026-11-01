@@ -127,6 +127,26 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       .toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['friends'] } });
   });
 
+  it('refuses invisible-only required friend names instead of dropping an encoded friend (#2264)', () => {
+    const code = codeOf(founded()); // Anonymous: three friends of specified sexes.
+    for (const invisible of ['\u200B', ' \u200D \u2060\\t', '\uFE0F']) {
+      const result = newGameFromShareCode(code, content, {
+        build: BUILD,
+        names: { house: 'Salt', friends: ['Alice', invisible, 'Cora'] },
+      });
+      expect(result).toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['friends'] } });
+    }
+
+    // Interior formatting marks in a visible name are not stripped or rejected.
+    const visible = newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: { house: 'Salt', friends: ['Alice', '家族\u200Dの友', 'Cora'] },
+    });
+    expect(visible.ok).toBe(true);
+    if (visible.ok) expect(visible.session.ctx.world.friends.map((friend) => friend.name))
+      .toEqual(['Alice', '家族\u200Dの友', 'Cora']);
+  });
+
   it('is the same founding when the recipient gives the same names, and a disclosed different one otherwise', () => {
     const original = founded();
     const names = { founder: 'Maud Gearithy', house: 'The House of Salt', friends: ['Iona Vale', 'Corven Pike', 'Edda Rook'] };
