@@ -1210,10 +1210,11 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(selectEnding(ctx)).toBe(selectedEnding);
     expect(digestOf(ctx)).toBe(before);
     // The epilogue gives the client only detached strings, not a writable page.
-    original.purpose!.text = 'A rewritten account.';
+    if (original.purpose?.kind !== 'blood_spent') throw new Error('expected a named rite cost');
+    original.purpose.text = 'A rewritten account.';
     expect(ctx.world.chronicle[0]!.text).toBe('The house wrote that Meriel walked away.');
     setProseMode(ctx, 'plainenglish');
-    expect(epilogueOf(ctx)!.purpose?.text).toBe('The house wrote that Meriel walked away.');
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ text: 'The house wrote that Meriel walked away.' });
     expect(epilogueOf(ctx)!.purpose?.person).toBe('Meriel of the Tides');
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
@@ -1270,7 +1271,7 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
   it('keeps an embellished page disputed, and never reconstructs an omitted one', () => {
     const ctx = accountedRite();
     ctx.world.chronicle[0]!.record = 'embellish';
-    expect(epilogueOf(ctx)!.purpose?.embellished).toBe(true);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ embellished: true });
     ctx.world.chronicle[0]!.text = null;
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
