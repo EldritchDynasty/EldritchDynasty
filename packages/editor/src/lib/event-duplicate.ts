@@ -69,8 +69,14 @@ export function eventDeletionBlockers(bundle: ContentBundle, id: string): string
     if (outcome.triggers) blocked.push(`arc trigger ${path}`);
     if (outcome.primordial?.triggers) blocked.push(`primordial arc trigger ${path}`);
   }
+  // Only the exact top-level event selector owns this counterpart. Matching
+  // anywhere in the address also catches unrelated event IDs and file names
+  // that merely contain this event's ID as a substring.
+  const selector = `#events[id=${encodeURIComponent(id)}]`;
   for (const variant of bundle.proseVariants) {
-    if (variant.address.includes(id)) blocked.push(`Plain English counterpart ${variant.address}`);
+    if (variant.address.startsWith('content:') && variant.address.includes(selector)) {
+      blocked.push(`Plain English counterpart ${variant.address}`);
+    }
   }
   return [...new Set(blocked)];
 }
