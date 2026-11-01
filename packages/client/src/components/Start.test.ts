@@ -330,6 +330,49 @@ describe('the Demonstration front door (#2063)', () => {
   });
 });
 
+describe('a refused demonstration deletion remains recoverable (#2374)', () => {
+  it('keeps the listed slot, export control and retry after rejecting a full-campaign snapshot', async () => {
+    const host = sharePlatform();
+    const fullGame = createGame(content, host);
+    fullGame.actions.begin(237404, 'short');
+    await flush();
+    const full = host.saves.get('autosave');
+    expect(full).toMatchObject({ campaign: 'short' });
+    host.saves.set('demo-restored', full);
+
+    const game = createGame(content, host);
+    const w = mount(Start, { props: { actions: game.actions, resumable: true } });
+    try {
+      await flush();
+      await w.get('section.demo-saved button[aria-label^="Remove"]').trigger('click');
+      await w.get('section.demo-saved .confirm-remove').trigger('click');
+      await flush();
+
+      const row = w.get('section.demo-saved li');
+      expect(row.text()).toContain('restored');
+      expect(row.get('.save-action-error').text()).toContain('could not be removed');
+      expect(row.find('button[aria-label^="Copy out"]').exists()).toBe(true);
+      expect(row.find('.confirm-remove').exists()).toBe(true);
+      expect(host.saves.get('demo-restored')).toBe(full);
+      expect(host.saves.get('autosave')).toBe(full);
+
+      // Once the host slot is a genuine demo, the same confirmation can be
+      // retried; only that entry disappears, never the full autosave.
+      const demoGame = createGame(content, host);
+      demoGame.actions.begin(237405, 'demo');
+      await flush();
+      host.saves.set('demo-restored', host.saves.get('demo-autosave'));
+      await row.get('.confirm-remove').trigger('click');
+      await flush();
+      expect(host.saves.has('demo-restored')).toBe(false);
+      expect(host.saves.get('autosave')).toBe(full);
+      expect(w.find('section.demo-saved').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
 describe('Begin and Continue never race on the Start screen (#1493)', () => {
   it('disables Begin while Continue is pending and ignores a stale synthetic click', async () => {
     const actions = spyActions();
