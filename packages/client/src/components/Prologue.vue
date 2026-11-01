@@ -76,9 +76,18 @@ const founderName = ref('');
  */
 const gender = ref<Gender | null>(null);
 const configuration = ref<FoundingConfiguration | null>(null);
+// Gender suggests a blood parent until the player explicitly chooses one.
+// Once chosen, pronouns cannot silently replace that separate mechanical input.
+let configurationChosen = false;
 function chooseGender(next: Gender): void {
   gender.value = next;
-  configuration.value = founderConfigurationFor(next) ?? configuration.value;
+  if (!configurationChosen) {
+    configuration.value = founderConfigurationFor(next) ?? configuration.value;
+  }
+}
+function chooseConfiguration(next: FoundingConfiguration): void {
+  configuration.value = next;
+  configurationChosen = true;
 }
 const GENDERS: readonly { id: Gender; original: string; plain: string }[] = [
   { id: 'man', original: 'A man', plain: 'Man' },
@@ -316,7 +325,7 @@ function signOnEnter(event: KeyboardEvent): void {
           class="option"
           :class="{ on: configuration === option.id }"
           :aria-pressed="configuration === option.id"
-          @click="configuration = option.id"
+          @click="chooseConfiguration(option.id)"
         >
           <strong>{{ plain ? option.plain : option.original }}</strong>
           <span class="line">{{ plain ? option.plainLine : option.line }}</span>
