@@ -107,9 +107,9 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     const profile = mkdtempSync(join(tmpdir(), 'ed-mod-scan-'));
     const root = join(profile, 'mods', 'content');
     mkdirSync(root, { recursive: true });
-    writeFileSync(join(root, 'healthy.yaml'), 'healthy: true\\n');
+    writeFileSync(join(root, 'healthy.yaml'), 'healthy: true\n');
     const moving = join(root, 'moving.yaml');
-    writeFileSync(moving, 'moving: true\\n');
+    writeFileSync(moving, 'moving: true\n');
 
     // Deterministic file-removal races: the entry is present at enumeration,
     // but a concurrent editor removes it before either stat or read. These
@@ -135,7 +135,7 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     });
     try {
       const { readUserContent } = await import('./user-content.mjs');
-      expect(readUserContent(root)).toEqual({ 'healthy.yaml': 'healthy: true\\n' });
+      expect(readUserContent(root)).toEqual({ 'healthy.yaml': 'healthy: true\n' });
     } finally {
       vi.doUnmock('node:fs');
       vi.resetModules();
@@ -148,7 +148,7 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     const root = join(profile, 'mods', 'content');
     mkdirSync(root, { recursive: true });
     const blocked = join(root, 'blocked.yaml');
-    writeFileSync(blocked, 'blocked: true\\n');
+    writeFileSync(blocked, 'blocked: true\n');
 
     vi.resetModules();
     vi.doMock('node:fs', async () => {
