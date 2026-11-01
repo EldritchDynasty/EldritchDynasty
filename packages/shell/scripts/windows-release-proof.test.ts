@@ -6,6 +6,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { EventEmitter } from 'node:events';
+import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import ts from 'typescript';
 import { nativeSnapshotSha256 } from '../src/native-snapshot.mjs';
@@ -363,7 +364,7 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     if (!createWindow) throw new Error('missing production window factory');
     let preferences: Record<string, unknown> = {};
     class Window {
-      webContents = { setWindowOpenHandler: vi.fn() };
+      webContents = { setWindowOpenHandler: vi.fn(), on: vi.fn() };
       constructor(options: { webPreferences: Record<string, unknown> }) { preferences = options.webPreferences; }
       loadFile() {}
       loadURL() {}
@@ -373,7 +374,7 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     // fixture missed the missing main-to-renderer handoff on the first tag.
     runInNewContext(`(${createWindow.getText(source)})()`, {
       BrowserWindow: Window, DEV_SERVER: null, MOD_EDITOR: modEditor, NATIVE_SMOKE: nativeSmoke,
-      join, HERE: '/shell', REPO: '/repo', app: { isPackaged: true },
+      join, pathToFileURL, HERE: '/shell', REPO: '/repo', app: { isPackaged: true },
       process: { resourcesPath: '/resources' }, rendererEntry: () => '/renderer/index.html',
     });
     type Bridge = {
