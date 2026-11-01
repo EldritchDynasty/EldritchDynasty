@@ -3,7 +3,7 @@ import { Directory, Encoding, Filesystem } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import type { Platform } from '../../client/src/platform.js';
 import { mobileStorage, saveSummary } from './storage.js';
-import { parseSmokeCommand, smokeEvidence } from './smoke.js';
+import { parseSmokeCommand, settleSmokeCommand } from './smoke.js';
 import { chooseSaveFile } from './file-chooser.js';
 import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
 import { attachNativeListener } from './native-listener.js';
@@ -109,13 +109,7 @@ const platform = {
           encoding: Encoding.UTF8,
         });
 
-        const evidence = await listener(command)
-          .then((result) => smokeEvidence(command, result))
-          .catch((error: unknown) => ({
-            command: command.kind,
-            ok: false as const,
-            error: error instanceof Error ? error.message : String(error),
-          }));
+        const evidence = await settleSmokeCommand(command, listener);
 
         await Filesystem.writeFile({
           path: SMOKE_RESULT,
