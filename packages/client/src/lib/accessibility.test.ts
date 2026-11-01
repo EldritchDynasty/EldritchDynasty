@@ -1089,6 +1089,102 @@ describe('modal native disclosure focus', () => {
 });
 
 
+describe('modal initial focus survives failed host controls (#2304)', () => {
+  it('skips throwing and refusing controls, then retains Escape handling', () => {
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    const outside = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(outside, host);
+    outside.focus();
+
+    const realFocus = HTMLElement.prototype.focus;
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (this: HTMLElement) {
+      if (this.id === 'throws') throw new Error('host denied focus');
+      if (this.id === 'refuses') return;
+      realFocus.call(this);
+    });
+    const close = vi.fn();
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, close);
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [
+          h('button', { id: 'throws' }, 'First'),
+          h('button', { id: 'refuses' }, 'Second'),
+          h('button', { id: 'usable' }, 'Third'),
+        ]);
+      },
+    }));
+
+    try {
+      expect(() => app.mount(host)).not.toThrow();
+      const card = host.querySelector('section')!;
+      expect(document.activeElement).toBe(card.querySelector('#usable'));
+      expect(card.hasAttribute('tabindex')).toBe(false);
+
+      const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      window.dispatchEvent(escape);
+      expect(escape.defaultPrevented).toBe(true);
+      expect(close).toHaveBeenCalledTimes(1);
+    } finally {
+      app.unmount();
+      focus.mockRestore();
+      host.remove();
+      outside.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it.each([false, true])('keeps keyboard handling when all children fail and card throws=%s', (throwCard) => {
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callback(0);
+      return 1;
+    });
+    const outside = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(outside, host);
+    outside.focus();
+
+    const realFocus = HTMLElement.prototype.focus;
+    const focus = vi.spyOn(HTMLElement.prototype, 'focus').mockImplementation(function (this: HTMLElement) {
+      if (this.id === 'unusable') throw new Error('child denied focus');
+      if (throwCard && this.tagName === 'SECTION') throw new Error('card denied focus');
+      realFocus.call(this);
+    });
+    const close = vi.fn();
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, close);
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [
+          h('button', { id: 'unusable' }, 'Continue'),
+        ]);
+      },
+    }));
+
+    try {
+      expect(() => app.mount(host)).not.toThrow();
+      const card = host.querySelector('section')!;
+      expect(card.getAttribute('tabindex')).toBe('-1');
+      expect(document.activeElement).toBe(throwCard ? outside : card);
+
+      const escape = new KeyboardEvent('keydown', { key: 'Escape', cancelable: true });
+      window.dispatchEvent(escape);
+      expect(escape.defaultPrevented).toBe(true);
+      expect(close).toHaveBeenCalledTimes(1);
+    } finally {
+      app.unmount();
+      focus.mockRestore();
+      host.remove();
+      outside.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 /**
  * A dialog with no enabled, visible controls must still own keyboard focus.
  * Without a card fallback, the element behind its scrim remains active and
