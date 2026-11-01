@@ -288,6 +288,19 @@ describe('the roster the signing takes', () => {
     ]);
   });
 
+  it('does not reserve invisible-only Unicode friend names', () => {
+    const checked = normaliseFriends(testWorld(content), [
+      { name: '\u200B', sex: 'male' },
+      { name: ' \u200D \u2060\t', sex: 'female' },
+      { name: '\uFE0F', sex: 'male' },
+      { name: '  家族\u200Dの友  ', sex: 'female' },
+    ], 1042);
+    expect(checked).toEqual({
+      ok: true,
+      friends: [{ name: '家族\u200Dの友', sex: 'female', dueFrom: 1042 }],
+    });
+  });
+
   /**
    * Two friends called Sam is a five-name bag that silently holds four: the
    * second can never be handed out, because the first put the name in
