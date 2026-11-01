@@ -294,6 +294,30 @@ describe('the save directory', () => {
     expect(listSaves(root)).toEqual([]);
   });
 
+  it('refuses case-only read aliases instead of opening a different saved run (#2382)', () => {
+    writeSave(root, 'House', aSave({ year: 1442 }));
+    const path = join(root, 'House.edsave.json');
+    const original = readFileSync(path, 'utf8');
+
+    // On Windows every alias would otherwise load House; on Linux this
+    // portable refusal protects a directory later copied onto Windows.
+    for (const alias of ['house', 'HOUSE', 'hOuSe']) {
+      expect(() => readSave(root, alias)).toThrow(SaveSlotError);
+      expect(readFileSync(path, 'utf8')).toBe(original);
+    }
+    expect(readSave(root, 'House')).toMatchObject({ year: 1442, format: 6 });
+    expect(() => readSave(root, 'Missing')).toThrow();
+  });
+
+  it('refuses a case-aliased extension while reading (#2382)', () => {
+    const path = join(root, 'House.EDSAVE.JSON');
+    const original = JSON.stringify(aSave({ year: 1420 }));
+    writeFileSync(path, original, 'utf8');
+
+    expect(() => readSave(root, 'House')).toThrow(SaveSlotError);
+    expect(readFileSync(path, 'utf8')).toBe(original);
+  });
+
   it('refuses case-only deletion aliases without losing an existing run (#2380)', () => {
     writeSave(root, 'House', aSave({ year: 1442 }));
     const path = join(root, 'House.edsave.json');
