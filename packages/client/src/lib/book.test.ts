@@ -296,7 +296,7 @@ describe('the plate', () => {
   it('passes one snapshot of the current image caption to PNG and SVG export paths (#1706)', () => {
     const source = readFileSync(join(import.meta.dirname, '../components/Book.vue'), 'utf8');
     expect(source).toContain('const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);');
-    expect(source).toContain('plateSvg(rows, houseName, plateCaption, foot)');
+    expect(source).toContain('plateSvg(rows, houseName, plateCaption, foot, titleWidth)');
     expect(source).toContain('c.fillText(plateCaption, PLATE.pad, 88)');
     expect(source).not.toContain('plateSubtitle(entries, lens.value)');
     expect(source).toContain('PLAIN_LENS_LABELS[l.id]');
@@ -342,6 +342,19 @@ describe('full Chronicle plate export beyond canvas limits (#1062)', () => {
     expect(svg).toContain('Eldritch Dynasty');
     expect(plateName('House of Salt', book).replace(/\.png$/, '.svg'))
       .toBe('house-of-salt-1100-1319.svg');
+  });
+
+  it('fits measured wide Unicode house titles inside the SVG header without truncating them (#2371)', () => {
+    const inner = PLATE.width - 2 * PLATE.pad;
+    const wide = '家'.repeat(48);
+    const measured = wide.length * 30;
+    expect(measured).toBeGreaterThan(inner);
+    const constrained = plateSvg([], wide, 'A chronicle', undefined, measured);
+    expect(constrained).toContain('<title>' + wide + ' · A chronicle</title>');
+    expect(constrained).toContain('textLength="' + inner + '" lengthAdjust="spacingAndGlyphs">' + wide + '</text>');
+    const short = plateSvg([], 'House Salt', 'A chronicle', undefined, 180);
+    expect(short).not.toContain('textLength=');
+    expect(short).toContain('>House Salt</text>');
   });
 
   it('replaces lone surrogate halves without damaging Unicode or XML escaping (#1402)', () => {
