@@ -101,7 +101,10 @@ export function readRunLibrary(raw: unknown): RunLibrary {
   const root = raw as { format?: unknown; runs?: unknown };
   if (root.format !== LIBRARY_FORMAT || !Array.isArray(root.runs)) return emptyRunLibrary();
 
-  const runs: LibraryRun[] = [];
+  // A restored or edited Library may contain multiple valid copies of one
+  // history. Match appendLibraryRun: the last valid copy wins, and takes its
+  // place at the end of the reading order rather than using another slot.
+  const runsById = new Map<string, LibraryRun>();
   for (const candidate of root.runs) {
     if (candidate === null || typeof candidate !== 'object' || Array.isArray(candidate)) continue;
     const object = candidate as Record<string, unknown>;
@@ -112,10 +115,12 @@ export function readRunLibrary(raw: unknown): RunLibrary {
       const parsed = LibraryEntryS.safeParse(entry);
       return parsed.success ? [parsed.data] : [];
     }).slice(-LIBRARY_ENTRY_CAP);
-    runs.push({ ...meta.data, entries });
+    const run = { ...meta.data, entries };
+    runsById.delete(run.id);
+    runsById.set(run.id, run);
   }
 
-  return { format: LIBRARY_FORMAT, runs: runs.slice(-LIBRARY_RUN_CAP) };
+  return { format: LIBRARY_FORMAT, runs: [...runsById.values()].slice(-LIBRARY_RUN_CAP) };
 }
 
 export function appendLibraryRun(library: RunLibrary, run: LibraryRun): RunLibrary {
