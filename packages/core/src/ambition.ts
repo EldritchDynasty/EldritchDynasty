@@ -456,6 +456,13 @@ function effectRelevance(
         'The branch performs one of the acts the upper ladder itself requires.') };
     }
     if (effect.kind === 'spellbook') {
+      // Gaining, studying or forgetting a working affects an individual.
+      // A delegated lesson for somebody outside the named programme is not
+      // preparation for the Scion. Copies, by contrast, belong to the house.
+      if (
+        (effect.op === 'gain' || effect.op === 'study' || effect.op === 'lose')
+        && !personalEffectTargetsProgramme(ctx, decision, effect.target)
+      ) return undefined;
       // Losing a physical copy is a loss of usable learning too. The engine
       // handles remove_copy by discarding the library copy, not gaining one.
       return effect.op === 'lose' || effect.op === 'degrade' || effect.op === 'remove_copy'
@@ -467,7 +474,7 @@ function effectRelevance(
     if (effect.kind === 'tutor') {
       // A tutor for a different relative does not prepare this named ladder
       // programme. Read the actual cast, not the branch's theme (#2190).
-      if (!tutorTargetsProgramme(ctx, decision, effect.target)) return undefined;
+      if (!personalEffectTargetsProgramme(ctx, decision, effect.target)) return undefined;
       return effect.op === 'cancel'
         ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.tutor_cancel',
           'The branch cuts short preparation already being given to a ladder candidate.') }
@@ -510,12 +517,12 @@ function effectRelevance(
 }
 
 /**
- * A tutoring hint must follow the particular pupil in the chosen outcome.
+ * Tutoring and personal spellbook hints must follow their actual pupil.
  * The cast and the house's public programme are enough: no hidden expression,
  * genome or predicted result is consulted. Broad targets are deliberately
  * silent unless a concrete named slot identifies a programme member.
  */
-function tutorTargetsProgramme(
+function personalEffectTargetsProgramme(
   ctx: SimCtx,
   decision: PendingChoice,
   target: Extract<Effect, { kind: 'tutor' }>['target'],
