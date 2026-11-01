@@ -1012,7 +1012,7 @@ describe('modal keyboard Tab targets (#1004)', () => {
   it('skips CSS-hidden Tab stops and ancestors but keeps visible controls', () => {
     const card = document.createElement('section');
     const style = document.createElement('style');
-    style.textContent = '.modal-collapsed { display: none; }';
+    style.textContent = '.modal-collapsed { display: none; } .modal-skipped { content-visibility: hidden; }';
     document.head.appendChild(style);
     try {
       card.innerHTML = `
@@ -1023,6 +1023,10 @@ describe('modal keyboard Tab targets (#1004)', () => {
         <div style="visibility: hidden"><button id="visibility-ancestor">Invisible ancestor</button></div>
         <button id="visibility-self" style="visibility: hidden">Invisible button</button>
         <div style="visibility: hidden"><button id="visibility-override" style="visibility: visible">Visible override</button></div>
+        <div style="content-visibility: hidden"><button id="content-hidden-ancestor">Skipped subtree</button></div>
+        <button id="content-hidden-self" style="content-visibility: hidden">Skipped button</button>
+        <div class="modal-skipped"><a id="content-hidden-class" href="#away">Skipped by stylesheet</a></div>
+        <div style="content-visibility: hidden"><button id="content-visible-override" style="visibility: visible">Still skipped</button></div>
         <button id="visible-last">Last</button>
       `;
       expect(modalFocusable(card).map((el) => el.id)).toEqual([
