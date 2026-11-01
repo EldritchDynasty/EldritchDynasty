@@ -234,6 +234,65 @@ describe('ARIA fields and keyboard-activated selection controls (#2351)', () => 
   });
 });
 
+describe('ARIA role fallback tokens do not steal widget keys (#2375)', () => {
+  it('suppresses typing shortcuts for a supported field role after an unknown token', () => {
+    const field = document.createElement('div');
+    field.tabIndex = 0;
+    field.setAttribute('role', '  future-text-entry   textbox  ');
+    expect(isField(field)).toBe(true);
+    expect(isControl(field)).toBe(false);
+
+    for (const key of ['1', '9', '?', 'Enter', ' ']) {
+      expect(shortcutFor({ key, inField: isField(field), onControl: isControl(field) }), key)
+        .toBeNull();
+    }
+    expect(shortcutFor({ key: 'Escape', inField: isField(field) }))
+      .toEqual({ kind: 'dismiss' });
+  });
+
+  it('leaves activation keys to a supported control fallback, not the game clock', () => {
+    const button = document.createElement('div');
+    button.tabIndex = 0;
+    button.setAttribute('role', 'future-button\\tbutton');
+    expect(isField(button)).toBe(false);
+    expect(isControl(button)).toBe(true);
+    for (const key of [' ', 'Enter']) {
+      expect(shortcutFor({ key, onControl: isControl(button) }), key).toBeNull();
+    }
+    expect(shortcutFor({ key: '3', onControl: isControl(button) }))
+      .toEqual({ kind: 'take', index: 2 });
+
+    const status = document.createElement('div');
+    status.setAttribute('role', 'status');
+    expect(isField(status)).toBe(false);
+    expect(isControl(status)).toBe(false);
+  });
+
+  it('detects the fallback role inside an open shadow root', () => {
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const widget = document.createElement('div');
+    widget.tabIndex = 0;
+    widget.setAttribute('role', 'future-searchbox searchbox');
+    shadow.append(widget);
+    document.body.append(host);
+    try {
+      widget.focus();
+      expect(document.activeElement).toBe(host);
+      expect(isField(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: '2', inField: isField(document.activeElement) }))
+        .toBeNull();
+
+      widget.setAttribute('role', 'future-checkbox checkbox');
+      expect(isControl(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: 'Enter', onControl: isControl(document.activeElement) }))
+        .toBeNull();
+    } finally {
+      host.remove();
+    }
+  });
+});
+
 describe('focus inside open shadow roots (#2147)', () => {
   it('keeps numbered choices away from an input inside a shadow host', () => {
     const host = document.createElement('div');
