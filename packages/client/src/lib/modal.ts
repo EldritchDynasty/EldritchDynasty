@@ -26,6 +26,35 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  * Check ancestors too: `getComputedStyle(button).display` is still "block"
  * when the button's parent has `display: none`.
  */
+/** Walk out of open shadow roots as well as ordinary DOM parents. */
+function composedParent(element: HTMLElement): HTMLElement | null {
+  if (element.parentElement) return element.parentElement;
+  const root = element.getRootNode();
+  return root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : null;
+}
+
+function composedContains(root: HTMLElement, element: HTMLElement | null): boolean {
+  for (let node = element; node; node = composedParent(node)) {
+    if (node === root) return true;
+  }
+  return false;
+}
+
+/** document.activeElement names a shadow host, not its focused inner button. */
+function deepestActiveElement(): Element | null {
+  let active = document.activeElement;
+  while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+  return active;
+}
+
+function concealedByAttribute(element: HTMLElement, card: HTMLElement): boolean {
+  for (let node: HTMLElement | null = element; node; node = composedParent(node)) {
+    if (node.matches('[hidden], [inert]')) return true;
+    if (node === card) break;
+  }
+  return false;
+}
+
 function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   // Visibility inherits, but a child can explicitly override a hidden ancestor.
   // Test the target's resolved value rather than ruling out such visible children.
@@ -35,7 +64,7 @@ function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   // Neither display:none nor content-visibility:hidden renders descendants.
   // Unlike visibility:hidden, a child's visibility:visible cannot override
   // either ancestor restriction. Check each ancestor up to the modal card.
-  for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+  for (let node: HTMLElement | null = element; node; node = composedParent(node)) {
     const style = window.getComputedStyle(node);
     if (style.display === 'none' || style.getPropertyValue('content-visibility') === 'hidden') return true;
     if (node === card) break;
@@ -51,10 +80,10 @@ function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
  * closed outer disclosure.
  */
 function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
-  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+  for (let parent = composedParent(element); parent; parent = composedParent(parent)) {
     if (parent.tagName === 'DETAILS' && !parent.hasAttribute('open')) {
       const summary = [...parent.children].find((child) => child.tagName === 'SUMMARY');
-      if (!summary?.contains(element)) return true;
+      if (!(summary instanceof HTMLElement) || !composedContains(summary, element)) return true;
     }
     if (parent === card) break;
   }
@@ -64,7 +93,7 @@ function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
 function usableFocusTarget(element: HTMLElement, root: HTMLElement): boolean {
   return element.tabIndex >= 0
     && !element.matches(':disabled')
-    && !element.closest('[hidden], [inert]')
+    && !concealedByAttribute(element, root)
     && !behindClosedDetails(element, root)
     && !(element instanceof HTMLInputElement && element.type === 'hidden')
     && !cssConcealed(element, root);
@@ -77,14 +106,26 @@ function tryFocus(target: HTMLElement): boolean {
   } catch {
     return false;
   }
-  return document.activeElement === target;
+  return deepestActiveElement() === target;
 }
 
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
-  return [...card.querySelectorAll<HTMLElement>(
-    'button, summary, [href], input, select, textarea, [tabindex]',
-  )].filter((element) => usableFocusTarget(element, card));
+  const found: HTMLElement[] = [];
+  const selector = 'button, summary, [href], input, select, textarea, [tabindex]';
+  // querySelectorAll does not enter shadow roots. Traverse in DOM order,
+  // visiting each open shadow tree where its host occurs in the dialog.
+  const walk = (root: Element | ShadowRoot): void => {
+    if (root instanceof Element && root.shadowRoot) walk(root.shadowRoot);
+    for (const child of root.children) {
+      if (child instanceof HTMLElement && child.matches(selector) && usableFocusTarget(child, card)) {
+        found.push(child);
+      }
+      walk(child);
+    }
+  };
+  walk(card);
+  return found;
 }
 
 export function useModal(card: Ref<HTMLElement | null>, close: () => void): void {
@@ -122,7 +163,7 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     }
     const first = inside[0]!;
     const last = inside[inside.length - 1]!;
-    const here = document.activeElement;
+    const here = deepestActiveElement();
     // The card itself may be focused while its children are loading, or a
     // once-focused control may have become disabled. Neither is a Tab stop:
     // start a fresh cycle within the dialog instead of escaping its scrim.
@@ -137,7 +178,7 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   }
 
   onMounted(() => {
-    const active = document.activeElement;
+    const active = deepestActiveElement();
     cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
     // Hosts may refuse or throw on focus(), including on a custom first
     // control. Try later usable controls before falling back to the card.
@@ -163,7 +204,7 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       const survivingDialogs = [...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
         .filter((dialog) => dialog !== card.value);
       const top = survivingDialogs[survivingDialogs.length - 1];
-      if (top && !top.contains(back)) return;
+      if (top && !composedContains(top, back)) return;
 
       // Focus restoration is deferred a frame so a closing dialog can leave
       // the DOM first. If a different connected element has gained focus in
