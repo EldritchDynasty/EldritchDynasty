@@ -300,6 +300,51 @@ describe('answers and the gaps between them', () => {
     expect(gaps[0]).toMatchObject({ from: { kind: 'start' }, to: { at: 5_000, year: 1301, kind: 'glimpse' } });
   });
 
+  it.each(['false', 'cancelled', 'rejected'] as const)(
+    'does not let a stale %s pickup turn newer saved history into fresh answers (#2257)',
+    async (failure) => {
+      const l = log();
+      const previous = { id: 'previous', year: 1044, answer: 'glimpse' as const };
+      const history = { id: 'saved-history', year: 1200, answer: 'clause' as const };
+      const fresh = { id: 'fresh', year: 1201, answer: 'glimpse' as const };
+      l.chronicle([previous]);
+
+      let resolveOld!: (value: boolean | 'cancelled') => void;
+      let rejectOld!: (reason: Error) => void;
+      const oldRead = new Promise<boolean | 'cancelled'>((resolve, reject) => {
+        resolveOld = resolve;
+        rejectOld = reject;
+      });
+      let resolveNew!: (value: boolean) => void;
+      const newRead = new Promise<boolean>((resolve) => { resolveNew = resolve; });
+      const actions = recordActions({
+        load: (slot: string) => slot === 'newer' ? newRead : oldRead,
+        importSave: () => oldRead,
+      } as unknown as Parameters<typeof recordActions>[0], l);
+
+      const older = failure === 'cancelled' ? actions.importSave() : actions.load('older');
+      // Attach a rejection handler before settling the older host call.
+      const olderResult = older.catch(() => 'rejected' as const);
+      const newer = actions.load('newer');
+
+      if (failure === 'rejected') rejectOld(new Error('stale host read'));
+      else resolveOld(failure === 'cancelled' ? 'cancelled' : false);
+      expect(await olderResult).toBe(failure === 'cancelled' ? 'cancelled' : failure === 'false' ? false : 'rejected');
+      resolveNew(true);
+      expect(await newer).toBe(true);
+
+      // The new session's Chronicle window is history even when the older
+      // request failed in between; only the next displayed page is an answer.
+      l.chronicle([history]);
+      l.chronicle([history, fresh]);
+      expect(l.events.filter((e) => e.kind === 'page')
+        .map((e) => [e.page, 'carried' in e && e.carried === true])).toEqual([
+        ['previous', false], ['saved-history', true], ['fresh', false],
+      ]);
+      expect(l.artifact().summary.answers).toBe(2);
+    },
+  );
+
   it('does not invent a new-house boundary when the first Begin follows time on the title screen', () => {
     const c = clock();
     const l = log(c);
