@@ -83,10 +83,16 @@ describe('reading preferences', () => {
     });
   });
 
-  it('keeps the new-install sound default when the record does not exist', () => {
-    for (const storage of [null, { getItem: () => null }]) {
-      expect(loadAccessibility(storage)).toMatchObject({ sound: true, soundVolume: 1 });
-    }
+  it('keeps the new-install sound default when accessible storage has no record', () => {
+    expect(loadAccessibility({ getItem: () => null }))
+      .toMatchObject({ sound: true, soundVolume: 1 });
+  });
+
+  it('starts silently when the browser cannot supply local storage', () => {
+    // App.vue's readingStorage() returns null when accessing localStorage
+    // throws SecurityError. That is not the same as a missing preferences key.
+    expect(loadAccessibility(null))
+      .toMatchObject({ sound: false, soundVolume: 0 });
   });
 
   it('does not enable sound if saved reading preferences cannot be decoded', () => {
