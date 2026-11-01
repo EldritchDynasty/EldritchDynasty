@@ -253,7 +253,7 @@ describe('ARIA role fallback tokens do not steal widget keys (#2375)', () => {
   it('leaves activation keys to a supported control fallback, not the game clock', () => {
     const button = document.createElement('div');
     button.tabIndex = 0;
-    button.setAttribute('role', 'future-button\\tbutton');
+    button.setAttribute('role', 'future-button  button');
     expect(isField(button)).toBe(false);
     expect(isControl(button)).toBe(true);
     for (const key of [' ', 'Enter']) {
