@@ -266,8 +266,10 @@ export function mobileStorage(
       try {
         legacy = await readLegacy(key);
       } catch (error) {
-        // One denied Preferences key must not hide Data saves or later
-        // legacy keys which can still be migrated.
+        // A listed legacy key still owns its slot when Preferences denies
+        // an individual read. Keep the run visible for an explicit retry,
+        // without migrating, replacing or removing its unknown bytes.
+        saves.set(slot, { slot });
         console.warn(`[mobile] could not read legacy save slot ${slot}:`, error);
         continue;
       }
