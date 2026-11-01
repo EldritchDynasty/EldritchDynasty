@@ -1260,3 +1260,61 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
     }
   });
 });
+
+describe('founding refusal follows submitted inputs (#2360)', () => {
+  it('retires stale words on edits and restores them on a repeated refusal', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: { ...prologueView(), friendsWanted: 2 },
+        actions: game,
+        refused: 'The first signing was refused.',
+        startYear: 1042,
+      },
+    });
+
+    try {
+      await revealChoices(wrapper);
+      expect(wrapper.get('.rubric').text()).toContain('The first signing was refused.');
+
+      await wrapper.get('input[aria-label="Name the founder"]').setValue('Alys');
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+
+      // A different failure delivered by the parent always gets a fresh turn.
+      await wrapper.setProps({ refused: 'The second signing was refused.' });
+      expect(wrapper.get('.rubric').text()).toContain('The second signing was refused.');
+
+      await answerFounder(wrapper);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+
+      // The mock keeps the same parent refusal string. A newly rejected
+      // submit must show it again even if the words have not changed.
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledTimes(1);
+      expect(wrapper.get('.rubric').text()).toContain('The second signing was refused.');
+
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Bronze');
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+      await wrapper.get('input[aria-label="Name the first friend"]').setValue('Mara');
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+
+      await wrapper.setProps({ refused: null });
+      await wrapper.setProps({ refused: 'A new reason from the parent.' });
+      expect(wrapper.get('.rubric').text()).toContain('A new reason from the parent.');
+      await answerButton(wrapper, 1, 2).trigger('click');
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.find('.rubric').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
