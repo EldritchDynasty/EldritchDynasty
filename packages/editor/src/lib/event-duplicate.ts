@@ -36,7 +36,7 @@ export function eventBackreferences(bundle: ContentBundle, id: string): string[]
       const at = Array.isArray(value) ? `${path}[${key}]` : `${path}.${key}`;
       if (key === 'event' && nested === id) {
         // The arc node and next links above have a friendlier explanation.
-        if (!/\\.nodes\\[\\d+\\]$/.test(path) && !path.endsWith('.next')) {
+        if (!/\.nodes\[\d+\]$/.test(path) && !path.endsWith('.next')) {
           references.push(`event reference ${at}`);
         }
       } else {
