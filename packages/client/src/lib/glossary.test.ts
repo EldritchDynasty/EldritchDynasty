@@ -68,6 +68,29 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     expect(pieces.map((piece) => piece.text).join('')).toBe(text);
   });
 
+  it('does not disclose aliases joined to a word by Unicode connector punctuation', () => {
+    // Pc includes more than ASCII underscore. The undertie, character tie,
+    // wavy low line and fullwidth low line must have identical boundaries.
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const connector of ['\u203F', '\u2040', '\uFE4F', '\uFF3F']) {
+        for (const alias of ['Standing', 'Reputation']) {
+          for (const text of [`word${connector}${alias}`, `${alias}${connector}word`]) {
+            expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+          }
+        }
+
+        // A rejected embedded occurrence must not hide a later real term.
+        const text = `word${connector}Standing Standing`;
+        const pieces = splitFirstGlossary(text, mode);
+        expect(pieces).toEqual([
+          { text: `word${connector}Standing ` },
+          { text: 'Standing', term: 'standing' },
+        ]);
+        expect(pieces.map(piece => piece.text).join('')).toBe(text);
+      }
+    }
+  });
+
   it('marks standalone labels at either end and leaves unmatched text unchanged', () => {
     expect(splitFirstStanding('Standing', 'original'))
       .toEqual([{ text: 'Standing', term: 'standing' }]);
