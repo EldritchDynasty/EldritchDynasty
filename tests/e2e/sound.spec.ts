@@ -189,3 +189,53 @@ test('zero volume keeps Chromium silent until the reader raises it (#1986)', asy
   expect(stored.soundVolume).toBe(0.1);
   expect(errors).toEqual([]);
 });
+
+
+test('a running sound bed mutes at zero and restores the same audio context (#2357)', async ({ page }) => {
+  const errors = await open(page, { showEverythingFromStart: true, sound: true, soundVolume: 1 });
+
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  const first = await heard(page);
+  expect(first.made).toBe(1);
+  expect(first.started).toBeGreaterThanOrEqual(2);
+
+  await page.getByRole('button', { name: 'Reading, marks and keys' }).click();
+  const level = page.getByRole('slider', { name: 'Volume' });
+  await expect(level).toHaveValue('100');
+
+  // A real keyboard interaction, not a direct store mutation: the player can
+  // turn a running drone off without turning the Sound preference off.
+  await level.press('Home');
+  await expect(level).toHaveValue('0');
+  await expect.poll(() => page.evaluate(key =>
+    JSON.parse(localStorage.getItem(key)!).soundVolume as number,
+  ACCESSIBILITY_STORAGE_KEY)).toBe(0);
+
+  const quiet = await heard(page);
+  // An extra page gesture, and an available clock press, must not create any
+  // sources while the sound bed is at zero. AudioContext may stay running,
+  // but silence must never be implemented as a new silent drone.
+  await page.evaluate(() => window.dispatchEvent(new Event('pointerdown')));
+  const year = page.getByRole('button', { name: 'A year', exact: true });
+  if (await year.isEnabled()) await year.click();
+  expect((await heard(page)).started).toBe(quiet.started);
+  expect((await heard(page)).made).toBe(first.made);
+
+  // No second signing or reload is needed to hear the current Age again.
+  await level.press('ArrowRight');
+  await expect(level).toHaveValue('10');
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThan(quiet.started);
+  expect((await heard(page)).made, 'restoring volume opened another context').toBe(first.made);
+  const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), ACCESSIBILITY_STORAGE_KEY);
+  expect(stored.sound).toBe(true);
+  expect(stored.soundVolume).toBe(0.1);
+
+  // The restored preference, not the old default, should survive relaunch.
+  await page.reload();
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThanOrEqual(2);
+  await page.getByRole('button', { name: 'Reading, marks and keys' }).click();
+  await expect(page.getByRole('slider', { name: 'Volume' })).toHaveValue('10');
+  expect(errors).toEqual([]);
+});
