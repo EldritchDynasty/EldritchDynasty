@@ -140,3 +140,25 @@ test('a hidden page suspends the real engine and a visible return restores its d
   expect(resumed.made, 'foregrounding created a second audio context').toBe(initially.made);
   expect(errors).toEqual([]);
 });
+
+
+test('pagehide and pageshow pause and restore the same Chromium audio context (#2219)', async ({ page }) => {
+  const errors = await open(page, { showEverythingFromStart: true, sound: true });
+
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  const before = await heard(page);
+  expect(before.started).toBeGreaterThanOrEqual(2);
+
+  // Some webviews signal backgrounding through the page lifecycle even when
+  // document.visibilityState never changes.
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await expect.poll(async () => (await heard(page)).state).toBe('suspended');
+  const hidden = await heard(page);
+
+  await page.evaluate(() => window.dispatchEvent(new Event('pageshow')));
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThan(hidden.started);
+  expect((await heard(page)).made).toBe(before.made);
+  expect(errors).toEqual([]);
+});
