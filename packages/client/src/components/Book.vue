@@ -273,7 +273,7 @@ async function plate(): Promise<void> {
           return gauge!.measureText(text).width;
         }
       : (text, font) => {
-          const size = Number(/([\\d.]+)px/.exec(font)?.[1] ?? 12);
+          const size = Number(/([\d.]+)px/.exec(font)?.[1] ?? 12);
           return Array.from(segmenter!.segment(text)).length * size * 2;
         };
 
