@@ -111,6 +111,48 @@ describe('diffLines', () => {
   });
 });
 
+describe('large editor diff previews (#2322)', () => {
+  const replay = (lines: DiffLine[], side: 'before' | 'after') =>
+    lines.filter((line) => line.kind !== (side === 'before' ? 'add' : 'del'))
+      .map((line) => line.text).join('\n');
+
+  it('compares a one-line edit in 5,000 lines without treating the rest as replacements', () => {
+    const original = Array.from({ length: 5_000 }, (_, i) => `yaml-line-${i}`);
+    const edited = [...original];
+    edited[2_500] = 'yaml-line-2500-edited';
+
+    const before = original.join('\n');
+    const after = edited.join('\n');
+    const diff = diffLines(before, after);
+
+    expect(diff.filter((line) => line.kind === 'same')).toHaveLength(4_999);
+    expect(diff.filter((line) => line.kind === 'del')).toEqual([
+      { kind: 'del', text: 'yaml-line-2500' },
+    ]);
+    expect(diff.filter((line) => line.kind === 'add')).toEqual([
+      { kind: 'add', text: 'yaml-line-2500-edited' },
+    ]);
+    expect(replay(diff, 'before')).toBe(before);
+    expect(replay(diff, 'after')).toBe(after);
+  });
+
+  it('shows a bounded, lossless preview for 2,000 completely divergent middle lines', () => {
+    const original = ['shared-header', ...Array.from({ length: 2_000 }, (_, i) => `before-${i}`), 'shared-footer'];
+    const edited = ['shared-header', ...Array.from({ length: 2_000 }, (_, i) => `after-${i}`), 'shared-footer'];
+    const before = original.join('\n');
+    const after = edited.join('\n');
+    const diff = diffLines(before, after);
+
+    expect(diff).toHaveLength(4_002);
+    expect(diff[0]).toEqual({ kind: 'same', text: 'shared-header' });
+    expect(diff.at(-1)).toEqual({ kind: 'same', text: 'shared-footer' });
+    expect(diff.slice(1, 2_001).every((line) => line.kind === 'del')).toBe(true);
+    expect(diff.slice(2_001, -1).every((line) => line.kind === 'add')).toBe(true);
+    expect(replay(diff, 'before')).toBe(before);
+    expect(replay(diff, 'after')).toBe(after);
+  });
+});
+
 describe('collapseContext', () => {
   const lines = (n: number) => Array.from({ length: n }, (_, i) => `line ${i}`).join('\n');
 
