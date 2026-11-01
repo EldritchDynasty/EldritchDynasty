@@ -120,7 +120,7 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       'Ledger was found again.',
     ]);
     const before = structuredClone(entry);
-    const wrapper = mount(Entry, { props: { entry, proseMode: 'plainenglish' } });
+    const wrapper = mount(Entry, { props: { entry, proseMode: 'plainenglish' }, attachTo: document.body });
     try {
       expect(wrapper.findAll('.glossary-term')).toHaveLength(1);
       const button = wrapper.get('.glossary-term');
