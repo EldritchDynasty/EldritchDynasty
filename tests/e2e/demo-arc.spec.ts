@@ -182,6 +182,46 @@ for (const mode of ['original', 'plainenglish'] as const) {
     await expect(ending.locator(':scope > p.year')).toHaveText('1075');
     await expect(ending).toContainText(mode === 'original' ? 'The reckoning' : 'Ending summary');
     await fullSaveUnchanged(page, full);
+
+    // The owner's #1979 front-door decision: a finished 33-year house enters
+    // the durable Library, explicitly identified as a Demonstration. The
+    // browser Platform writes this asynchronously, so wait for the real host
+    // record instead of inspecting a transient Vue projection.
+    const archivedDemos = () => page.evaluate(() => {
+      const saved = localStorage.getItem('ed:library');
+      if (!saved) return [];
+      const library = JSON.parse(saved) as {
+        runs: Array<{ campaign: string; house: string; endedYear: number }>;
+      };
+      return library.runs.filter((run) => run.campaign === 'demo')
+        .map(({ campaign, house, endedYear }) => ({ campaign, house, endedYear }));
+    });
+    await expect.poll(archivedDemos).toEqual([{
+      campaign: 'demo', house: 'House First Account', endedYear: 1075,
+    }]);
+
+    // An ended demo resumes as an ended demo. Reopening it must not enter the
+    // finished house twice, reclassify it as a full Line, or touch that Line.
+    await page.reload();
+    const libraryRow = page.locator('.library-run').filter({ hasText: 'House First Account' });
+    await expect(libraryRow).toContainText(mode === 'original' ? 'The Demonstration' : 'Demonstration');
+    await resumeDemo(page, mode).catch(async () => {
+      // A completed save opens on its ending rather than the living board.
+      await expect(page.locator('main.ending')).toBeVisible();
+    });
+    await expect(page.locator('main.ending')).toBeVisible();
+    await expect.poll(archivedDemos).toHaveLength(1);
+    await fullSaveUnchanged(page, full);
+
+    // The ordinary Continue action must still open the pre-existing full Line.
+    await page.reload();
+    await page.getByRole('button', {
+      name: mode === 'original' ? 'Continue the last sitting' : 'Continue your last game',
+      exact: true,
+    }).click();
+    await expect(page.locator('.board')).toBeVisible();
+    expect(await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('ed:save:autosave')!).campaign)).toBe('short');
     expect(errors).toEqual([]);
   });
 }
