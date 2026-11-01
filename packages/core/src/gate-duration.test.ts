@@ -31,6 +31,21 @@ describe('gate duration guard', () => {
     expect(result.limitSeconds).toBe(125);
   });
 
+  it('keeps measured 4-CPU merge-queue gate time inside budget without weakening the guard (#2415)', () => {
+    // The 1,000-run land gate passed all 12 batch checks on an Intel 4-CPU
+    // merge-group worker, but the earlier projection-based budget rejected it.
+    // Keep the measured correction explicit, and still reject a slower lane.
+    const committed = readGateDurations();
+    expect(committed.maxFactor).toBe(1.25);
+    const measured = checkGateDuration('batch', 980, committed, 4);
+    expect(measured).toMatchObject({
+      judged: true, ok: true, cpus: 4, baselineSeconds: 840, limitSeconds: 1050,
+    });
+    expect(checkGateDuration('batch', 1051, committed, 4).ok).toBe(false);
+    // The existing 2-CPU runner budget is separate, not rescaled by this work.
+    expect(committed.lanes.batch?.byCpus?.['2']?.seconds).toBe(780);
+  });
+
   it('fails closed when CI adds a lane with no committed duration', () => {
     expect(() => checkGateDuration('endings', 10, config)).toThrow(/no committed duration/);
   });
