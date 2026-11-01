@@ -89,6 +89,16 @@ function missingFile(error: unknown): boolean {
   return errorCode(error) === 'OS-PLUG-FILE-0008';
 }
 
+/** Compare parsed JSON without treating object key order as a save difference. */
+function equivalentJSON(left: unknown, right: unknown): boolean {
+  const canonical = (value: unknown): string | undefined => JSON.stringify(value, (_key, item: unknown) => (
+    item !== null && typeof item === 'object' && !Array.isArray(item)
+      ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
+      : item
+  ));
+  return canonical(left) === canonical(right);
+}
+
 /** Keep native records opaque but require a JSON object at their root.
  * Check the serialized result: toJSON() may turn an apparent object into a
  * scalar or array. Compact JSON.stringify emits '{' first for object roots.
@@ -198,9 +208,10 @@ export function mobileStorage(
   async function listSaves(): Promise<SaveSummary[]> {
     const saves = new Map<string, SaveSummary>();
     const nativeSlots = new Set<string>();
-    // A parseable native file may retire its legacy backup; a directory entry
-    // that cannot be read must NOT. It still owns the slot and blocks migration.
-    const readableNativeSlots = new Set<string>();
+    // Retire a legacy copy only when it matches the native JSON snapshot.
+    // A parseable object alone is not proof of a recoverable saved game: the
+    // actual schema is intentionally validated only by core, not this host.
+    const nativeRecords = new Map<string, unknown>();
     try {
       const { files: entries } = await files.readdir({
         path: SAVE_DIR,
@@ -218,7 +229,7 @@ export function mobileStorage(
         try {
           const native = await readFile(`${SAVE_DIR}/${entry.name}`);
           if (native.present && native.value !== null) {
-            readableNativeSlots.add(slot);
+            nativeRecords.set(slot, native.value);
             saves.set(slot, saveSummary(slot, native.value));
           }
         } catch (error) {
@@ -249,14 +260,20 @@ export function mobileStorage(
       if (!slot) continue;
 
       if (nativeSlots.has(slot)) {
-        // Even a malformed native file is authoritative for migration: leave
-        // its bytes and the old Preferences key intact for explicit recovery.
-        // Only valid files can safely complete the legacy-key cleanup.
-        if (readableNativeSlots.has(slot)) {
+        // A native file always wins the listing and must not be overwritten by
+        // an older Preferences snapshot. But a different legacy copy may be the
+        // only recoverable backup if that native JSON fails core validation.
+        // Only remove redundant identical JSON; an unreadable/missing legacy
+        // value or a denied Preferences read leaves the native listing intact.
+        if (nativeRecords.has(slot)) {
           try {
-            await preferences.remove({ key });
+            const legacy = await readLegacy(key);
+            if (legacy.present && legacy.value !== null
+              && equivalentJSON(nativeRecords.get(slot), legacy.value)) {
+              await preferences.remove({ key });
+            }
           } catch {
-            // The valid native file already wins; retry cleanup later.
+            // Listing Data must not depend on optional legacy storage.
           }
         }
         continue;
