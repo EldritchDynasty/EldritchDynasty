@@ -1321,8 +1321,11 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
 
   it('names a documented founding and a living relative, not a conjectured rescue', () => {
     const { ctx } = foundedHall();
-    const before = digestOf(ctx);
+    // The first chronicle reading may materialize a lazily stored genome; that
+    // is existing save representation, not this purpose. Settle it, then prove
+    // that reading the branch purpose changes nothing.
     const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
     const view = epilogueOf(ctx)!;
     expect(view.purpose).toEqual({
       kind: 'branch_kept', founder: 'Edrin', branch: 'The Orchard Hall',
