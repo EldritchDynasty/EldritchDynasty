@@ -185,7 +185,7 @@ describe('Standing legibility (#356)', () => {
     ]);
   });
 
-  it.each(['original', 'plainenglish'] as const)('opens the Standing term in place by click and Escape (%s)', async (mode) => {
+  it.each(['original', 'plainenglish'] as const)('opens the shared Standing glossary in place by click and Escape (%s)', async (mode) => {
     const current = view();
     const before = structuredClone(current);
     const wrapper = mount(Standing, {
@@ -193,25 +193,29 @@ describe('Standing legibility (#356)', () => {
       props: { view: current, jump: null, saveStatus: 'idle', proseMode: mode },
     });
     try {
-      const control = wrapper.get('.house-ledger .standing-term');
+      const control = wrapper.get('.house-ledger .glossary-term');
       expect(control.element.tagName).toBe('BUTTON');
+      expect(wrapper.findAll('.house-ledger .glossary-text')).toHaveLength(1);
       expect(control.text()).toBe(mode === 'original' ? 'Standing' : 'Reputation');
       expect(control.attributes('aria-expanded')).toBe('false');
-      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      expect(wrapper.find('.glossary-definition').exists()).toBe(false);
       (control.element as HTMLButtonElement).focus();
       await control.trigger('click');
       expect(control.attributes('aria-expanded')).toBe('true');
-      expect(control.attributes('aria-controls')).toBe(wrapper.get('.standing-definition').attributes('id'));
-      expect(wrapper.get('.standing-definition').text()).toBe(mode === 'original'
+      expect(control.attributes('aria-controls')).toBe(wrapper.get('.glossary-definition').attributes('id'));
+      expect(wrapper.get('.glossary-definition').text()).toBe(mode === 'original'
         ? 'the regard the wider world gives the house.'
         : 'How the wider world regards this family.');
+      expect(wrapper.findAll('.house-ledger > div').map(row => row.get('dd').text())[1]).toBe(
+        mode === 'original' ? 'regarded' : 'Well regarded',
+      );
       await control.trigger('keydown', { key: 'Escape' });
       expect(control.attributes('aria-expanded')).toBe('false');
-      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      expect(wrapper.find('.glossary-definition').exists()).toBe(false);
       expect(document.activeElement).toBe(control.element);
       await control.trigger('click');
       await control.trigger('click');
-      expect(wrapper.find('.standing-definition').exists()).toBe(false);
+      expect(wrapper.find('.glossary-definition').exists()).toBe(false);
       expect(current).toEqual(before);
       expect(wrapper.emitted('look')).toBeUndefined();
       expect(wrapper.emitted('match')).toBeUndefined();
@@ -229,11 +233,11 @@ describe('Standing legibility (#356)', () => {
       ]),
     }, { attachTo: document.body });
     try {
-      const buttons = wrapper.findAll('.house-ledger .standing-term');
+      const buttons = wrapper.findAll('.house-ledger .glossary-term');
       expect(buttons).toHaveLength(2);
       await buttons[0]!.trigger('click');
       await buttons[1]!.trigger('click');
-      const targets = wrapper.findAll('.standing-definition');
+      const targets = wrapper.findAll('.glossary-definition');
       expect(targets).toHaveLength(2);
       const ids = targets.map((target) => target.attributes('id'));
       expect(ids[0]).toBeTruthy();
@@ -243,8 +247,8 @@ describe('Standing legibility (#356)', () => {
       await buttons[0]!.trigger('keydown', { key: 'Escape' });
       expect(buttons[0]!.attributes('aria-expanded')).toBe('false');
       expect(buttons[1]!.attributes('aria-expanded')).toBe('true');
-      expect(wrapper.findAll('.standing-definition')).toHaveLength(1);
-      expect(wrapper.get('.standing-definition').attributes('id')).toBe(ids[1]);
+      expect(wrapper.findAll('.glossary-definition')).toHaveLength(1);
+      expect(wrapper.get('.glossary-definition').attributes('id')).toBe(ids[1]);
     } finally { wrapper.unmount(); }
   });
 
