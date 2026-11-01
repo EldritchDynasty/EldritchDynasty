@@ -832,9 +832,17 @@ export function createGame(
       if (!isDemoSaveSlot(slot) || slot.length <= DEMO_SAVE_PREFIX.length) {
         throw new Error('not a demonstration save slot');
       }
-      // A pending demo autosave could otherwise finish after deletion and
-      // resurrect the slot. Serialize the explicit removal on the same tail.
-      const { done } = mutateAutosave(() => platform.deleteSave(slot));
+      // A pending demo autosave must settle before checking the actual bytes:
+      // otherwise a late write can resurrect a removed slot. Do not trust the
+      // demo- prefix alone; a restored slot may contain a full campaign.
+      const { done } = mutateAutosave(async () => {
+        const saved = await platform.readSave(slot);
+        if (!saveMatchesSlot(slot, saved)) throw new Error('not a demonstration save');
+        // Use the real save loader as the validation authority, not merely the
+        // campaign field: missing, malformed or unreadable runs stay recoverable.
+        resumeGame(saved, source);
+        await platform.deleteSave(slot);
+      });
       await done;
     },
 
