@@ -205,10 +205,11 @@ for (const mode of ['original', 'plainenglish'] as const) {
     await page.reload();
     const libraryRow = page.locator('.library-run').filter({ hasText: 'House First Account' });
     await expect(libraryRow).toContainText(mode === 'original' ? 'The Demonstration' : 'Demonstration');
-    await resumeDemo(page, mode).catch(async () => {
-      // A completed save opens on its ending rather than the living board.
-      await expect(page.locator('main.ending')).toBeVisible();
-    });
+    await page.getByRole('region', {
+      name: mode === 'original' ? 'Demonstrations kept' : 'Saved demonstrations',
+    }).getByRole('button', {
+      name: mode === 'original' ? /Return to the Demonstration/ : /Continue the demonstration/,
+    }).click();
     await expect(page.locator('main.ending')).toBeVisible();
     await expect.poll(archivedDemos).toHaveLength(1);
     await fullSaveUnchanged(page, full);
