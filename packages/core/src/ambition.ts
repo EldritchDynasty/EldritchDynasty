@@ -456,7 +456,9 @@ function effectRelevance(
         'The branch performs one of the acts the upper ladder itself requires.') };
     }
     if (effect.kind === 'spellbook') {
-      return effect.op === 'lose' || effect.op === 'degrade'
+      // Losing a physical copy is a loss of usable learning too. The engine
+      // handles remove_copy by discarding the library copy, not gaining one.
+      return effect.op === 'lose' || effect.op === 'degrade' || effect.op === 'remove_copy'
         ? { effect: 'endanger', reason: msg(ctx, 'ambition.branch.spellbook_lose',
           'The branch takes usable learning away from a ladder candidate.') }
         : { effect: 'advance', reason: msg(ctx, 'ambition.branch.spellbook_gain',
