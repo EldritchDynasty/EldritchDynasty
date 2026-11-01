@@ -77,7 +77,7 @@ describe('Capacitor native listener lifecycle (#2261)', () => {
   it('uses the guarded lifecycle for pause, back and simulator smoke listeners', () => {
     const bridge = text('src/platform-bridge.ts');
     expect(bridge).toContain("import { attachNativeListener } from './native-listener.js'");
-    expect(bridge.match(/(?:return )?attachNativeListener\\(/g)).toHaveLength(3);
+    expect(bridge.match(/(?:return )?attachNativeListener\(/g)).toHaveLength(3);
     expect(bridge).not.toContain('void registration.then((handle) => handle.remove())');
     expect(bridge).toContain('path: SMOKE_READY');
   });
