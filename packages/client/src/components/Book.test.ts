@@ -331,8 +331,23 @@ describe('the volume', () => {
     }
   });
 
+  // jsdom has SVG elements but no geometry engine. Simulate the browser's
+  // real SVG measurement seam without relying on guessed metrics in production.
+  function withSvgTextMetrics(): () => void {
+    const previous = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getComputedTextLength');
+    Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+      configurable: true,
+      value(this: SVGElement) { return (this.textContent ?? '').length * 7; },
+    });
+    return () => {
+      if (previous) Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', previous);
+      else Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+    };
+  }
+
   it.each(['original', 'plainenglish'] as const)(
     'reports a vector download failure in either prose mode (#410, #1995)', async (proseMode) => {
+      const restoreSvg = withSvgTextMetrics();
       const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
       vi.mocked(downloadBlob).mockImplementationOnce(() => { throw new Error('Download blocked'); });
       const w = mountBook();
@@ -348,6 +363,7 @@ describe('the volume', () => {
       } finally {
         w.unmount();
         noCanvas.mockRestore();
+        restoreSvg();
         vi.mocked(downloadBlob).mockClear();
       }
     },
@@ -355,6 +371,7 @@ describe('the volume', () => {
 
   it.each(['null', 'throw'] as const)(
     'downloads an SVG even when the measurement canvas returns %s (#1995)', async (failure) => {
+      const restoreSvg = withSvgTextMetrics();
       const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
         .mockImplementation(() => {
           if (failure === 'throw') throw new Error('Canvas allocation blocked');
@@ -374,6 +391,7 @@ describe('the volume', () => {
       } finally {
         w.unmount();
         noCanvas.mockRestore();
+        restoreSvg();
         download.mockClear();
       }
     },
