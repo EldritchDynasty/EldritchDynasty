@@ -77,6 +77,10 @@ proseVariants:
     of: "586e80d9244ee56d"
     plainenglish: >-
       Cousins who had not written in forty years wrote, and then came. The house fed them without asking what they wanted.
+  - address: "core:messages#assize.the_collateral_kept"
+    of: "1dede71f68a742eb"
+    plainenglish: >-
+      A physician came from Bramme, though nobody in the house had sent for him. His fee had already been paid with a letter of exchange from the weighers’ counting house at Cawdry, out of an account opened in the year the contract was signed. He took the room next to {PERSON}’s, kept the doors shut and the well covered, and the sickness in the valley did not get past the gate. In spring the weighers asked the house for {PRICE} crowns, with interest counted to the day. Their clerk would not say aloud whose name was on the account.
   - address: "core:messages#succession.uncertain.single"
     of: "424166c07c058514"
     plainenglish: >-
