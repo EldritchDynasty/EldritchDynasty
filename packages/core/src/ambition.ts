@@ -443,6 +443,15 @@ function effectRelevance(
 
   if (ambition === 'raise_ascendant') {
     if (effect.kind === 'rite') {
+      // A rite performed for another relative is not progress for the named
+      // Ascension programme. Read the actual cast ascendant, just as tutoring
+      // reads its actual pupil; never infer eligibility from hidden genetics.
+      const ascendant = decision.fill[effect.ascendant];
+      const programme = new Set(
+        [ctx.world.scion, ctx.world.scionHeir, visibleAscensionRanking(ctx)[0]?.person]
+          .filter((id): id is string => Boolean(id)),
+      );
+      if (typeof ascendant !== 'string' || !programme.has(ascendant)) return undefined;
       return { effect: 'advance', reason: msg(ctx, 'ambition.branch.ladder_rite',
         'The branch performs one of the acts the upper ladder itself requires.') };
     }
