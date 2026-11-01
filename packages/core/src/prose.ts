@@ -1,6 +1,7 @@
 import { contentInterpolationTokens, isContentProseField, ProseCatalogueS, proseOriginalHash } from '@ed/schema';
 import type { Choice, ClauseDef, EventTemplate, Outcome, ProseMode, ProseVariant, TaleDef } from '@ed/schema';
 import type { SimCtx } from './world.js';
+import { campaignDef } from './campaign.js';
 
 /**
  * Runtime prose preference. It deliberately lives beside the world rather than
@@ -75,13 +76,38 @@ export function contentProseAddress(file: string, path: string): string {
   return `content:${file}#${path}`;
 }
 
+/**
+ * #2206: The Forgotten and the signing's THE SONS beat are shared by all
+ * campaign lengths; the beat also returns in every ending's ring. The authored
+ * Long Line text (including its reviewed Plain English variant) says "five
+ * hundred years"; render the other terms only *after* selecting that variant.
+ * This preserves fingerprints, the unchanged Long Line reading and the ring's
+ * one-beat replacement without changing authored content or a save.
+ */
+function speaksOfTheTerm(file: string, path: string): boolean {
+  return (file === 'endings.yaml' && path.startsWith('endings[id=forgotten].'))
+    || (file === 'prologue.yaml' && path === 'prologue[id=the_signing].triad[1].owed');
+}
+
+function endingTermProse(ctx: SimCtx, file: string, path: string, prose: string): string {
+  if (!speaksOfTheTerm(file, path)) return prose;
+  const years = campaignDef(ctx.world.campaign).years;
+  const words: Readonly<Record<number, string>> = {
+    33: 'thirty-three',
+    300: 'three hundred',
+    500: 'five hundred',
+  };
+  return prose.replaceAll('five hundred years', `${words[years] ?? String(years)} years`);
+}
+
 export function renderContentProse(
   ctx: SimCtx,
   file: string,
   path: string,
   original: string,
 ): string {
-  return renderProse(ctx, contentProseAddress(file, path), original);
+  const prose = renderProse(ctx, contentProseAddress(file, path), original);
+  return endingTermProse(ctx, file, path, prose);
 }
 
 /**
