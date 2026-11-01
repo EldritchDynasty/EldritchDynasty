@@ -367,7 +367,7 @@ describe('the volume', () => {
         const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
         await save!.trigger('click');
         await flushPromises();
-        expect(download).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/\\.svg$/));
+        expect(download).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/\.svg$/));
         expect(w.find('[role="alert"]').exists()).toBe(false);
         expect((save!.element as HTMLButtonElement).disabled).toBe(false);
         expect(noCanvas).toHaveBeenCalledTimes(1);
