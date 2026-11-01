@@ -306,6 +306,8 @@ describe('the save directory', () => {
       expect(readFileSync(path, 'utf8')).toBe(original);
     }
     expect(readSave(root, 'House')).toMatchObject({ year: 1442, format: 6 });
+    // A refused alias must not hide the genuine entry from the native save list.
+    expect(listSaves(root).map((entry) => entry.slot)).toEqual(['House']);
     expect(() => readSave(root, 'Missing')).toThrow();
   });
 
