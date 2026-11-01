@@ -156,7 +156,7 @@ describe('first-session signing transitions (#1984)', () => {
       { at: 600, verb: 'enter', act: 'signing', status: 'returned' },
     ]);
     const artifact = l.artifact();
-    expect(artifact.format).toBe('ed-reading-log/8');
+    expect(artifact.format).toBe('ed-reading-log/9');
     expect(artifact.summary.answers).toBe(0);
     expect(artifact.summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
     for (const secret of ['private house', 'private friend', 'private refusal']) {
@@ -177,6 +177,79 @@ describe('first-session signing transitions (#1984)', () => {
       { verb: 'enter', status: 'threw' },
     ]);
     expect(JSON.stringify(l.artifact())).not.toContain('private exception');
+  });
+});
+
+describe('accepted first family actions (#1984)', () => {
+  it('records the actual outcome of Choose and Match without exporting choices, cards or wording', () => {
+    const c = clock(), l = log(c);
+    const seen: unknown[][] = [];
+    const valid = { ok: true, line: 'private marriage line' };
+    const invalid = { ok: false, reason: 'private refusal' };
+    const bare = {
+      choose(...args: unknown[]) { seen.push(['choose', ...args]); return args[1] === 'yes'; },
+      match(...args: unknown[]) {
+        seen.push(['match', ...args]);
+        return args[1] === 'good' ? valid : args[1] === 'bad' ? invalid : undefined;
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const cast = { subject: 'private person' } as unknown as Parameters<typeof actions.choose>[2];
+
+    c.tick(100);
+    expect(actions.choose('private_decision', 'no', cast, 'private choice wording')).toBe(false);
+    c.tick(200);
+    expect(actions.choose('private_decision', 'yes', cast, 'private choice wording')).toBe(true);
+    c.tick(300);
+    expect(actions.match('private_hand', 'bad', 'private Match wording')).toBe(invalid);
+    expect(actions.match('private_hand', 'missing', 'private Match wording')).toBeUndefined();
+    c.tick(400);
+    expect(actions.match('private_hand', 'good', 'private Match wording')).toBe(valid);
+
+    expect(seen).toEqual([
+      ['choose', 'private_decision', 'no', cast, 'private choice wording'],
+      ['choose', 'private_decision', 'yes', cast, 'private choice wording'],
+      ['match', 'private_hand', 'bad', 'private Match wording'],
+      ['match', 'private_hand', 'missing', 'private Match wording'],
+      ['match', 'private_hand', 'good', 'private Match wording'],
+    ]);
+    expect(l.events.filter(e => e.kind === 'action')).toMatchObject([
+      { at: 100, verb: 'choose', act: 'answer', status: 'attempted' },
+      { at: 100, verb: 'choose', act: 'answer', status: 'refused' },
+      { at: 300, verb: 'choose', act: 'answer', status: 'attempted' },
+      { at: 300, verb: 'choose', act: 'answer', status: 'accepted' },
+      { at: 600, verb: 'match', act: 'answer', status: 'attempted' },
+      { at: 600, verb: 'match', act: 'answer', status: 'refused' },
+      { at: 600, verb: 'match', act: 'answer', status: 'attempted' },
+      { at: 600, verb: 'match', act: 'answer', status: 'refused' },
+      { at: 1_000, verb: 'match', act: 'answer', status: 'attempted' },
+      { at: 1_000, verb: 'match', act: 'answer', status: 'accepted' },
+    ]);
+    const artifact = JSON.stringify(l.artifact());
+    expect(l.artifact().format).toBe('ed-reading-log/9');
+    for (const secret of ['private_decision', 'private_hand', 'private choice', 'private Match',
+      'private person', 'private refusal', 'private marriage']) {
+      expect(artifact).not.toContain(secret);
+    }
+  });
+
+  it('logs thrown family actions but never logs the exception and never retries the call', () => {
+    const l = log(), error = new Error('private thrown error');
+    const seen: string[] = [];
+    const actions = recordActions({
+      choose() { seen.push('choose'); throw error; },
+      match() { seen.push('match'); throw error; },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    expect(() => actions.choose('dec_1', 'choice_1')).toThrow(error);
+    expect(() => actions.match('dec_2', 'card_1')).toThrow(error);
+    expect(seen).toEqual(['choose', 'match']);
+    expect(l.events.filter(e => e.kind === 'action')).toMatchObject([
+      { verb: 'choose', status: 'attempted' },
+      { verb: 'choose', status: 'threw' },
+      { verb: 'match', status: 'attempted' },
+      { verb: 'match', status: 'threw' },
+    ]);
+    expect(JSON.stringify(l.artifact())).not.toContain('private thrown error');
   });
 });
 
@@ -482,7 +555,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/8', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/9', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -571,7 +644,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/8');
+    expect(l.artifact().format).toBe('ed-reading-log/9');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -628,7 +701,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/8');
+    expect(l.artifact().format).toBe('ed-reading-log/9');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
