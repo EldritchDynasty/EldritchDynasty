@@ -135,6 +135,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | What a standing **delegation** answers, and what must still surface | `core/src/delegation.ts` → `mustSurface` | `deciders.test.ts`, `decisions.slow.test.ts` |
 | **Advisers** — a person's advice, never the engine's answer | `core/src/advisers.ts` | `advisers.test.ts` |
 | What the chronicle **claims** — the record layer, sigil drift | `core/src/record.ts` | `record.test.ts`, `record.slow.test.ts` |
+| **Earned bynames** — granted at the Record commit, provenance saved, contest stamped | `core/src/byname.ts`; wording on Record options (`schema/src/byname.ts`); `docs/BYNAME-CONTRACT.md` | `record.test.ts`, `record-claims.slow.test.ts`, `rules.test.ts` (`byname/slot`) |
 | **Echo repetition** across systems — counting structural frames rather than prose | `core/src/echoes.ts` | `echo-chains.test.ts`, `echo.slow.test.ts` |
 | Which page **answers** which — Chronicle backlinks | `core/src/cause.ts` | `packages/client/src/lib/causes.test.ts` |
 | **Nested tales** in circulation | `core/src/events/tales.ts` | `tales.test.ts`, `tales.slow.test.ts` |
