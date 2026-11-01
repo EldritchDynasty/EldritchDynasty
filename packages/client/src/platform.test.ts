@@ -17,6 +17,7 @@ import {
   type SmokeResult,
 } from './platform.js';
 import { mobileStorage } from '../../mobile/src/storage.js';
+import { attachNativeListener } from '../../mobile/src/native-listener.js';
 import { chooseSaveFile } from '../../mobile/src/file-chooser.js';
 import { readSave as readDesktopSave, saveRoot, writeSave as writeDesktopSave } from '../../shell/src/saves.mjs';
 import { nativeSnapshotSha256 } from '../../shell/src/native-snapshot.mjs';
@@ -2100,5 +2101,64 @@ describe('browser save export cleanup (Closes #893)', () => {
       if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
       else Reflect.deleteProperty(globalThis, 'document');
     }
+  });
+});
+
+
+/** The client platform suite already exercises mobile native-host helpers. */
+describe('Capacitor native listener ready cleanup (#2349)', () => {
+  const settled = () => new Promise<void>((resolve) => setImmediate(resolve));
+
+  it('removes an attached listener after synchronous or rejected setup', async () => {
+    for (const kind of ['throws', 'rejects'] as const) {
+      const failure = new Error(`follow-up ${kind}`);
+      const handle = { remove: vi.fn(async () => {}) };
+      const onError = vi.fn();
+      const onReady = kind === 'throws'
+        ? vi.fn(() => { throw failure; })
+        : vi.fn(async () => { throw failure; });
+      const dispose = attachNativeListener(() => Promise.resolve(handle), onError, onReady);
+
+      await settled();
+      expect(onReady).toHaveBeenCalledOnce();
+      expect(onError).toHaveBeenCalledOnce();
+      expect(onError).toHaveBeenCalledWith(failure);
+      expect(handle.remove).toHaveBeenCalledOnce();
+      dispose();
+      await settled();
+      expect(handle.remove).toHaveBeenCalledOnce();
+    }
+  });
+
+  it('reports a failed setup and a failed removal separately', async () => {
+    const setupError = new Error('ready failed');
+    const removalError = new Error('remove failed');
+    const handle = { remove: vi.fn(async () => { throw removalError; }) };
+    const onError = vi.fn();
+    const dispose = attachNativeListener(
+      () => Promise.resolve(handle), onError, async () => { throw setupError; },
+    );
+
+    await settled();
+    expect(onError.mock.calls.map(([error]) => error)).toEqual([setupError, removalError]);
+    expect(handle.remove).toHaveBeenCalledOnce();
+    dispose();
+    await settled();
+    expect(handle.remove).toHaveBeenCalledOnce();
+  });
+
+  it('lets disposal own removal when a pending setup later rejects', async () => {
+    let rejectReady!: (error: Error) => void;
+    const ready = new Promise<void>((_resolve, reject) => { rejectReady = reject; });
+    const handle = { remove: vi.fn(async () => {}) };
+    const onError = vi.fn();
+    const dispose = attachNativeListener(() => Promise.resolve(handle), onError, () => ready);
+
+    await settled();
+    dispose();
+    rejectReady(new Error('late follow-up failure'));
+    await settled();
+    expect(handle.remove).toHaveBeenCalledOnce();
+    expect(onError).toHaveBeenCalledOnce();
   });
 });
