@@ -139,8 +139,7 @@ describe('first-session signing transitions (#1984)', () => {
       enter() { given.push('entry'); },
     } as unknown as Parameters<typeof recordActions>[0];
     const actions = recordActions(bare, l);
-    const choice = { houseName: 'private house', friends: [{ name: 'private friend' }] }
-      as unknown as Parameters<typeof actions.found>[0];
+    const choice = { houseName: 'private house', friends: [{ name: 'private friend' }] } as unknown as Parameters<typeof actions.found>[0];
     c.tick(100);
     expect(actions.found(choice).ok).toBe(false);
     c.tick(200);
@@ -167,8 +166,7 @@ describe('first-session signing transitions (#1984)', () => {
 
   it('records thrown signing calls and rethrows without logging private exceptions', () => {
     const l = log(), error = new Error('private exception');
-    const bare = { found() { throw error; }, enter() { throw error; } }
-      as unknown as Parameters<typeof recordActions>[0];
+    const bare = { found() { throw error; }, enter() { throw error; } } as unknown as Parameters<typeof recordActions>[0];
     const actions = recordActions(bare, l);
     expect(() => actions.found({} as Parameters<typeof actions.found>[0])).toThrow(error);
     expect(() => actions.enter()).toThrow(error);
