@@ -117,6 +117,7 @@ describe('paying for the term (#1976)', () => {
     expect(ctx.world.treasury).toBe(before - TUTOR_FEE);
     expect(ctx.world.tutoring).toContainEqual({ person: asker.id, attr: 'mind', completes: 1200 + TUTOR_YEARS });
     expect(sentimentBetween(ctx.world, asker.id, head)).toBe(12);
+    expect(ctx.world.rumours.has('rumour_the_child_who_asked_for_a_term')).toBe(true);
     // The authored effect does not open the Table's own term callback: the
     // house tells this term once.
     expect([...ctx.world.arcs.values()].some((a) => a.arc === 'arc_the_term_paid_for')).toBe(false);
@@ -250,6 +251,12 @@ describe('refusing the term (#1976)', () => {
     const returned = answered.world.chronicle.find((entry) => entry.eventId === 'asked_again')!;
     expect(returned.cause).toEqual({ year: page.year, page: page.id });
     expect(answered.world.arcs.get(instance!.id)?.status).toBe('ended');
+
+    // What the house writes about whom it educates is its own record of itself.
+    const record = answered.world.pendingDecisions.find((d) => d.kind === 'record' && d.event.id === 'asked_again');
+    expect(record).toBeDefined();
+    expect(resolveRecord(answered, record!.id, 'embellish').ok).toBe(true);
+    expect(answered.world.discrepancies.get('the_term_the_house_always_paid')?.state).toBe('open');
   });
 
   it('refusing twice is a grudge the asker holds against the head, and a story in the yard', () => {
