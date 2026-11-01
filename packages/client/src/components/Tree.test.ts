@@ -179,6 +179,48 @@ describe('the family tree as a planning board (#268)', () => {
 
 
 
+  it.each(['original', 'plainenglish'] as const)('finds existing bynames as recorded names in %s without changing the person (#2224)', async (proseMode) => {
+    const current = largeView();
+    current.halls[0]!.members[1]!.name = 'Élodie';
+    current.halls[0]!.members[1]!.epithet = 'the Éver-Waking';
+    current.halls[0]!.members[2]!.name = 'Ada'; // no byname: old result remains unchanged
+    const original = structuredClone(current);
+    const wrapper = mount(Tree, {
+      props: { view: current, selected: null, proseMode },
+      attachTo: document.body,
+    });
+    try {
+      const search = wrapper.get('.find input');
+      await search.setValue('EVER-WAKING');
+      const result = wrapper.get('.matches button');
+      expect(result.text()).toBe('Élodie the Éver-Waking · The Seat');
+      expect(result.element.textContent).toContain('the Éver-Waking'); // accessible button name
+
+      // The same accent folding works for decomposed keyboard input, including
+      // a query spanning the person name and the saved byname.
+      await search.setValue('the E\u0301ver');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Élodie the Éver-Waking · The Seat']);
+      await search.setValue('elodie the ever');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Élodie the Éver-Waking · The Seat']);
+
+      const button = wrapper.get('.matches button');
+      (button.element as HTMLButtonElement).focus();
+      await button.trigger('click');
+      await wrapper.vm.$nextTick();
+      expect(wrapper.emitted('select')).toEqual([['p001']]);
+      expect(document.activeElement).toBe(wrapper.get('#member-p001 button.face').element);
+      expect(wrapper.find('.matches button').exists()).toBe(false);
+
+      await search.setValue('ada');
+      expect(wrapper.findAll('.matches button').map((b) => b.text())).toEqual(['Ada · The Seat']);
+      await search.setValue('not-a-byname');
+      expect(wrapper.findAll('.matches button')).toHaveLength(0);
+      expect(current).toEqual(original);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('restores keyboard focus after selecting a search result that is removed from the DOM (#1753)', async () => {
     const current = largeView();
     const original = structuredClone(current);
