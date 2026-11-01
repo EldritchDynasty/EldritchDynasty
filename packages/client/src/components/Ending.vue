@@ -107,12 +107,34 @@ async function saveAfterimage(): Promise<void> {
   if (savingAfterimage.value) return;
   savingAfterimage.value = true;
   afterimageError.value = null;
+  let measureSvg: SVGSVGElement | null = null;
   try {
-    const gauge = document.createElement('canvas').getContext('2d');
-    if (!gauge) throw new Error('2D canvas unavailable');
+    // SVG geometry remains usable when a host blocks Canvas 2D. Use real
+    // text metrics, never approximated glyph widths: the code must fit (#2400).
+    let gauge: CanvasRenderingContext2D | null = null;
+    try { gauge = document.createElement('canvas').getContext('2d'); } catch { /* try SVG */ }
+    let svgProbe: SVGTextElement | null = null;
+    if (!gauge) {
+      measureSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      measureSvg.setAttribute('aria-hidden', 'true');
+      measureSvg.style.cssText = 'position:fixed;left:-10000px;top:-10000px;visibility:hidden;pointer-events:none';
+      svgProbe = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      measureSvg.append(svgProbe);
+      document.body.append(measureSvg);
+    }
     const measure: Measure = (text, font) => {
-      gauge.font = font;
-      return gauge.measureText(text).width;
+      if (gauge) {
+        gauge.font = font;
+        return gauge.measureText(text).width;
+      }
+      if (!svgProbe) throw new Error('No text measurement available');
+      svgProbe.style.font = font;
+      svgProbe.textContent = text;
+      const width = svgProbe.getComputedTextLength();
+      if (!Number.isFinite(width) || width < 0 || (text.length > 0 && width === 0)) {
+        throw new Error('SVG text measurement unavailable');
+      }
+      return width;
     };
 
     // Keep the export filename paired with the same snapshot painted below.
@@ -127,7 +149,7 @@ async function saveAfterimage(): Promise<void> {
       new Blob([afterimageSvg(model, layout)], { type: 'image/svg+xml;charset=utf-8' }),
       filename.replace(/\.png$/, '.svg'),
     );
-    if (layout.height > MAX_PLATE_CANVAS_HEIGHT) {
+    if (!gauge || layout.height > MAX_PLATE_CANVAS_HEIGHT) {
       saveSvg();
     } else {
       try {
@@ -170,6 +192,7 @@ async function saveAfterimage(): Promise<void> {
   } catch {
     afterimageError.value = 'The house afterimage could not be saved. Try again.';
   } finally {
+    measureSvg?.remove();
     savingAfterimage.value = false;
   }
 }
