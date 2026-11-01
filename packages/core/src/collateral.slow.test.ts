@@ -45,10 +45,15 @@ describe('the collateral kept, in a played Short Line', () => {
   const { seed, at } = witness();
   const after = at + KEEP_YEARS + 2;
 
-  /** Play to `year`, through the session the client uses. */
+  /**
+   * Play to `year`, a year at a time, through the session the client uses.
+   * A year at a time on both sides because the decision log records each
+   * `advance` command as it was given: `advance(40)` and forty `advance(1)`
+   * reach the same world and different logs, so their digests differ.
+   */
   function playTo(year: number) {
     const g = newGame(bundle, { seed, decider: 'chronicler', campaign: 'short' });
-    g.advance(year - g.ctx.world.year);
+    while (g.year < year && !g.ctx.world.ending) g.advance(1);
     return g;
   }
 
@@ -64,10 +69,10 @@ describe('the collateral kept, in a played Short Line', () => {
   it.each([-1, 0, 1])('resumes a save taken %i years from the firing into the same house', (offset) => {
     const unbroken = playTo(after);
     const stopped = playTo(at + offset);
-    const resumed = resumeGame(JSON.parse(JSON.stringify(stopped.save())), bundle);
+    const resumed = resumeGame(JSON.parse(JSON.stringify(stopped.save())), bundle, { decider: 'chronicler' });
     if (offset >= 1) expect(collateralKept(resumed.ctx)).toBe(true);
-    resumed.advance(after - resumed.ctx.world.year);
-    expect(resumed.ctx.world.year).toBe(unbroken.ctx.world.year);
+    while (resumed.year < unbroken.year && !resumed.ctx.world.ending) resumed.advance(1);
+    expect(resumed.year).toBe(unbroken.year);
     expect(digest(resumed.save())).toBe(digest(unbroken.save()));
   });
 });

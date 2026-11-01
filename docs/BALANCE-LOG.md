@@ -16304,3 +16304,178 @@ Artifacts are workspace scratch (`/tmp/1977/*`). SHA-256 prefixes: final
 shards `92c8fb22`, `fdf821e3`, `570a984f`, `b0403e25`; #2042-only shards
 `24de13b4`, `99ea93e7`, `02caf731`, `10f1e458` (main `67cb6314` plus the one
 condition); final `gate:long` log `0f0d319c`.
+
+## 2026-11-01 — #1993 step 5: (c) misses, (a) the collateral kept, and (a) misses too
+
+**Question.** The owner's step-3 decision (30 October) adopted (c): gate
+`the_last_of_the_line` on `bloodCount: { op: eq, value: 1 }` (landed in
+`57fc94c5`, #2042). The target was set on an independent, predeclared
+sample of at least 400 Short Line chronicler runs. On it, the all-run share
+breaking before the first delivered interlude should be **≤ 2%** (point
+estimate). (a) was approved as the fallback: a once-per-run creditor
+intervention before the first interlude, through `assize.ts` only.
+Every protocol below was posted to #1993 before its batch ran.
+
+**Instrument.** `npm run gate:line-breaks` (`tools/line-break-report.ts`),
+unchanged. Default Library inputs, no Table orders. Wilson 95% intervals.
+Elapsed is `year − 1042`.
+
+### (c) on an independent sample: missed
+
+`main` `4ab1a632`, `--offset=2000` (seeds `201300 + i`; Short 400 and Long
+200 per policy):
+
+| Campaign / policy | Broke | Broke before first interlude | Broke before elapsed 100 | Offers at one blood · broken runs offered it first |
+| --- | --- | --- | --- | --- |
+| short / chronicler | 108/400 = 27.0% [22.9%, 31.6%] | **24/400 = 6.0% [4.1%, 8.8%]** | 61/400 = 15.3% | 41 of 41 · 32/108 |
+| short / heir_match | 107/400 = 26.8% [22.6%, 31.3%] | 17/400 = 4.3% [2.7%, 6.7%] | 55/400 = 13.8% | 40 of 40 · 33/107 |
+| long / chronicler | 58/200 = 29.0% [23.2%, 35.6%] | 12/200 = 6.0% [3.5%, 10.2%] | 33/200 = 16.5% | 18 of 18 · 15/58 |
+| long / heir_match | 56/200 = 28.0% [22.2%, 34.6%] | 7/200 = 3.5% [1.7%, 7.0%] | 28/200 = 14.0% | 24 of 24 · 19/56 |
+
+- **The gated scene now reaches the dying line.** It was offered before
+  the break in 32 of 108 Short chronicler breaks, against 0 of 91 in step 1,
+  and every offer came at one blood (22 recall, 19 write it all down).
+- **Survival barely moves.** Before-interlude breaks were 5.0% in step 1 and
+  are 6.0% here.
+- **The step-1 seeds replayed on `4ab1a632`** (Short chronicler, `199300 + 0…399`)
+  give 20/400 = 5.0% before the interlude and 93 breaks. The scene was
+  offered first in 29 of those 93.
+
+**Why: Plague collapses.** I traced the 24 early breaks. Every one opened was
+in the Plague (`mortalityMultiplier: 10`), compounded by
+`thinBloodMortality` (up to ×18.8). Lines went 5 → 0 or 7 → 2 → 0 within a
+year or two. 7 of the 24 never spent a year at exactly one blood, so a
+one-blood scene could not reach them.
+
+### (a): the collateral kept
+
+`assize.ts` `keepTheCollateral`, read by `rollDeath`.
+
+- **Trigger.** Once per Short or Long run, before any interlude. The line is
+  down to `KEEP_AT = 3` or fewer living blood, and it is *failing*:
+  - its high-water mark reached `KEEP_FROM = 6`; or
+  - it has outlived its `FOUNDING_YEARS = 25` founding generation.
+- **Effect.** For `KEEP_YEARS = 30` mortality passes, the blood's
+  thin-line amplifier and the Ages' multipliers read 1, and the existing
+  `mercy` lever is held. Violence, Madness and the max-age wall stay.
+  Deaths go through `kill()`.
+- **Bill.** 120 crowns, allowed under `DEBT_FLOOR` into the economy's
+  ordinary broke-house slip.
+- **Page.** One named paragraph page.
+- **State.** No new save state: the once-per-run record is
+  `assize.fired.the_collateral_kept`. The check draws no dice.
+
+**Calibration**, on the step-1 seeds only, paired against the 5.0% replay above:
+
+| `KEEP_AT` / failing test / `KEEP_YEARS` | Broke | Broke before first interlude |
+| --- | --- | --- |
+| 3 / high water ≥ 6 / 20 | 84 | 8/400 = 2.0% |
+| 3 / high water ≥ 6 / 30 | 82 | 7/400 = 1.8% |
+| 4 / high water ≥ 6 / 20 | 85 | 11/400 = 2.8% |
+| 4 / high water ≥ 6 / 30 | 82 | 8/400 = 2.0% |
+| 3 / high water ≥ 10 / 20 | 88 | 9/400 = 2.3% |
+| 4 / high water ≥ 10 / 30 | 85 | 8/400 = 2.0% |
+| 3 / high water ≥ 6 or past 25 years / 20 | 84 | 5/400 = 1.3% |
+| **3 / high water ≥ 6 or past 25 years / 30** | **82** | **3/400 = 0.8% [0.3%, 2.2%]** |
+| 2 / high water ≥ 6 or past 25 years / 30 | 91 | 8/400 = 2.0% |
+
+The first cut had no "failing" test and fired in elapsed years 3–9 of many
+runs. A founding house is three to five blood by construction. The
+high-water test fixed that but excluded small houses that never grew: 6 of
+the 7 residual breaks at `3/≥6/30` never passed 4–5 blood. The founding-
+generation alternative brings those back in.
+
+**Evaluation**: candidate `9cfb37d0` against `4ab1a632`, on paired seeds
+`203300 + i` declared before the run:
+
+| Cohort | `4ab1a632` before interlude | (a) before interlude | All breaks, base → (a) |
+| --- | --- | --- | --- |
+| **short / chronicler (400)** | 24 = 6.0% [4.1%, 8.8%] | **13 = 3.3% [1.9%, 5.5%]** | 113 → 112 |
+| short / heir_match (400) | 22 = 5.5% [3.7%, 8.2%] | 7 = 1.8% [0.9%, 3.6%] | 106 → 100 |
+| long / chronicler (200) | 14 = 7.0% [4.2%, 11.4%] | 5 = 2.5% [1.1%, 5.7%] | 64 → 59 |
+| long / heir_match (200) | 14 = 7.0% [4.2%, 11.4%] | 5 = 2.5% [1.1%, 5.7%] | 64 → 54 |
+
+**The ≤ 2% target is missed: 3.3%.** The calibration's 0.8% was the best of
+nine settings on one 400-seed sample and did not hold on fresh seeds.
+
+- **It defers more than it prevents.** In the Short chronicler evaluation:
+  - the keeping fired in 70 of 400 runs, at elapsed 8–95 (median 38),
+    with 1, 2 and 3 of the blood in 4, 12 and 54 of them;
+  - 58 of the 70 still broke, 57 after the window closed;
+  - the gap from window end to break has a median of 21 years, and 18 of
+    the 58 fall within 12 years;
+  - only 12 reached the term.
+  - Long chronicler: 39 fired, 31 broke later.
+- **The residual is a late first interlude.** 12 of the 13 remaining early
+  breaks were kept, outlived the window, and broke at elapsed 64–139 with no
+  interlude yet.
+  `events/frame.ts` already names why the opening runs long: no interlude's
+  `reads` hold yet, and a small, dying house rarely writes the pages that
+  make them hold. That part is frame delivery, not mortality.
+
+**`gate:endings` on `9cfb37d0`** (512 Long chronicler + 512 ascendant, seeds
+`5100 + i`): broken_line **118 (23.0%)**, inside the owner's 22–45% band;
+devoured 132 (25.8%) under its 45% ceiling; no FAIL.
+### A second fresh sample, and one variant measured for the owner
+
+Declared on #1993 before running: `--offset=6000` (seeds `205300 + 0…399`),
+Short chronicler, three columns on the same seeds. (a+) is (a) with one
+change: the keeping holds **until the first interlude is delivered, and
+never less than 30 years**. It is measured, not adopted. The frame's own
+108-year ceiling bounds how long it can last.
+
+| Short / chronicler, seeds `205300 + i` | Broke | Broke before first interlude |
+| --- | --- | --- |
+| `4ab1a632` | 101/400 = 25.3% | 29/400 = 7.2% [5.1%, 10.2%] |
+| (a), `2c88a174` | 93/400 = 23.3% | **11/400 = 2.8% [1.5%, 4.9%]** |
+| (a+) | 93/400 = 23.3% | **6/400 = 1.5% [0.7%, 3.2%]** |
+
+**(a) misses again: 2.8%, beside 3.3% on the first evaluation.** (a+) meets
+the ≤ 2% point estimate on a sample it was not tuned on. It loses no more
+lines in total than (a). The extra hold moves breaks past the first
+interlude rather than adding or removing them.
+
+**`gate:endings`** (512 Long chronicler + 512 ascendant, seeds `5100 + i`):
+
+| Head | broken_line (band 22–45%) | devoured (ceiling 45%) | FAIL lines |
+| --- | --- | --- | --- |
+| `4ab1a632` | 127 (24.8%) | 129 (25.2%) | none |
+| (a), `9cfb37d0` | 118 (23.0%) | 132 (25.8%) | none |
+| (a+) | 116 (22.7%) | 132 (25.8%) | none |
+
+Both variants stay in band. The margin to the 22% floor narrows from 2.8
+points to 1.0 and 0.7. These are fixed seeds, so the gate is deterministic.
+Any later change that saves lines will meet the floor sooner.
+
+**Outcome.** (a) lands as calibrated, `Refs #1993`. It cuts early breaks
+in every cohort measured (Short chronicler 6.0% → 3.3% and 7.2% → 2.8% on
+the two fresh samples; Long 7.0% → 2.5%). It leaves the endings
+distribution in band, and it does not meet the owner's target. Whether to
+adopt (a+), accept (a), or treat the late first interlude as a
+frame-delivery fault is the owner's decision on #1993. The Plain English
+row for `assize.the_collateral_kept` waits on `lane-content`. Until then a
+Plain English reader sees the Original, and `missingPlainEnglish` names
+the key.
+
+**Limits.**
+- These are bot policies. Whether a first-time player feels rescued or
+  cheated is an observation question.
+- Paired seeds diverge after the first changed year, so the base and
+  candidate columns compare sampled distributions.
+- The keeping's page and bill were checked by witness tests, not read by
+  players.
+
+**Artifacts** are workspace scratch (`/tmp/1993/*`). SHA-256 prefixes:
+
+| Batch | Files |
+| --- | --- |
+| (c) re-measure | Short `7f375931`, Long `3687de53` |
+| Step-1 replay | `0e1bd84c` |
+| Calibration | `3/≥6/20` `edc84d49`, adopted `f02d7b1e` |
+| First evaluation | candidate Short `7a362704`, Long `d6e16e5d`; base Short `45265640`, Long `c5a8eebc`; firings `7a20e7b9`; endings `e6174560` |
+| Second sample | (a) `fea05f2c`, (a+) `ecc901ab`, base `cfe37871`; (a+) endings `71e599cf`; base endings `25532d70` |
+
+Reproduce: `npm run gate:line-breaks -- 400 --campaign=short
+--offset=<2000|4000|6000> --output=<file>` (add `--policy=chronicler` for
+one column), and `npm run gate:endings`.
+
