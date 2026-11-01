@@ -2162,3 +2162,114 @@ describe('Capacitor native listener ready cleanup (#2349)', () => {
     expect(onError).toHaveBeenCalledOnce();
   });
 });
+
+
+describe('mobile legacy migration serializes with later mutations (#2394)', () => {
+  function deferred() {
+    let release!: () => void;
+    const promise = new Promise<void>((resolve) => { release = resolve; });
+    return { promise, release };
+  }
+
+  // Make a legacy lookup return the old value even if a concurrent write
+  // removes its key while the native bridge is awaiting that lookup.
+  function pausedLegacyGet(preferences: ReturnType<typeof mobilePreferenceStore>) {
+    const entered = deferred();
+    const resume = deferred();
+    const get = preferences.get.bind(preferences);
+    preferences.get = async ({ key }: { key: string }) => {
+      const snapshot = await get({ key });
+      entered.release();
+      await resume.promise;
+      return snapshot;
+    };
+    return { entered: entered.promise, resume: resume.release };
+  }
+
+  it('does not overwrite a newer native save with an in-flight legacy read', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:save:house': JSON.stringify({ year: 1080, format: 40 }),
+    });
+    const pendingLegacy = pausedLegacyGet(preferences);
+    const storage = mobileStorage(files, preferences);
+
+    const reading = storage.readSave('house');
+    await pendingLegacy.entered;
+    const newer = { year: 1190, format: 41 };
+    const writing = storage.writeSave('house', newer);
+    await Promise.resolve();
+    pendingLegacy.resume();
+    await Promise.all([reading, writing]);
+
+    expect(JSON.parse(files.data.get('eldritch/saves/house.json')!)).toEqual(newer);
+    expect(preferences.data.has('ed:save:house')).toBe(false);
+  });
+
+  it('does not resurrect a deleted save after a pending legacy read', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:save:house': JSON.stringify({ year: 1080, format: 40 }),
+    });
+    const pendingLegacy = pausedLegacyGet(preferences);
+    const storage = mobileStorage(files, preferences);
+
+    const reading = storage.readSave('house');
+    await pendingLegacy.entered;
+    const deleting = storage.deleteSave('house');
+    await Promise.resolve();
+    pendingLegacy.resume();
+    await Promise.all([reading, deleting]);
+
+    expect(files.data.has('eldritch/saves/house.json')).toBe(false);
+    expect(preferences.data.has('ed:save:house')).toBe(false);
+  });
+
+  it('does not overwrite a newer Library with an in-flight legacy migration', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:library': JSON.stringify({ format: 1, runs: [{ id: 'older' }] }),
+    });
+    const pendingLegacy = pausedLegacyGet(preferences);
+    const storage = mobileStorage(files, preferences);
+
+    const reading = storage.readLibrary();
+    await pendingLegacy.entered;
+    const newer = { format: 1, runs: [{ id: 'newer' }] };
+    const writing = storage.writeLibrary(newer);
+    await Promise.resolve();
+    pendingLegacy.resume();
+    await Promise.all([reading, writing]);
+
+    expect(JSON.parse(files.data.get('eldritch/library.json')!)).toEqual(newer);
+    expect(preferences.data.has('ed:library')).toBe(false);
+  });
+
+  it('does not let a listing migrate an older save over a concurrent write', async () => {
+    const files = mobileFileStore();
+    const preferences = mobilePreferenceStore({
+      'ed:save:house': JSON.stringify({ year: 1080, format: 40 }),
+    });
+    const pendingLegacy = pausedLegacyGet(preferences);
+    const storage = mobileStorage(files, preferences);
+
+    const listing = storage.listSaves();
+    await pendingLegacy.entered;
+    const newer = { year: 1190, format: 41 };
+    const writing = storage.writeSave('house', newer);
+    await Promise.resolve();
+    pendingLegacy.resume();
+    await Promise.all([listing, writing]);
+
+    expect(JSON.parse(files.data.get('eldritch/saves/house.json')!)).toEqual(newer);
+  });
+
+  it('continues serving subsequent writes after a failed operation', async () => {
+    const files = mobileFileStore({ 'eldritch/saves/bad.json': '{broken' });
+    const storage = mobileStorage(files, mobilePreferenceStore());
+
+    await expect(storage.readSave('bad')).rejects.toThrow('unreadable');
+    await expect(storage.writeSave('good', { year: 1190 })).resolves.toBeUndefined();
+    expect(JSON.parse(files.data.get('eldritch/saves/good.json')!)).toEqual({ year: 1190 });
+  });
+});
