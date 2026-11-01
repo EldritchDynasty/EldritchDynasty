@@ -65,6 +65,31 @@ const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
 
 describe('recorded lives in the Book and spine (#1944)', () => {
+  it.each(['original', 'plainenglish'] as const)('shows historical bynames in the line and its accessible history links (%s, #2227)', proseMode => {
+    const line = [
+      { person: 'ancestor', name: 'Alys of Bramme', epithet: 'the Witness', from: 1100, to: 1108 },
+      { person: 'heir', name: 'Merrick', from: 1108, to: 1120 },
+      { person: 'old', name: 'Adela the Elder', epithet: 'the Elder', from: 1120 },
+    ];
+    const original = structuredClone(line);
+    const wrapper = mount(Line, { attachTo: document.body, props: {
+      line, close: () => {}, proseMode,
+      milestones: (_person: string): RecordedMilestone[] => [],
+    } });
+    try {
+      expect(wrapper.findAll('.spine .name').map(el => el.text()))
+        .toEqual(['Alys of Bramme the Witness', 'Merrick', 'Adela the Elder']);
+      const summaries = wrapper.findAll('.spine .life summary').map(el => el.text());
+      expect(summaries).toContain(proseMode === 'plainenglish'
+        ? "Read Alys of Bramme the Witness's recorded history"
+        : 'Read the life the book gives Alys of Bramme the Witness');
+      expect(summaries).toContain(proseMode === 'plainenglish'
+        ? "Read Merrick's recorded history" : 'Read the life the book gives Merrick');
+      expect(summaries[2]).not.toContain('the Elder the Elder');
+      expect(line).toEqual(original);
+    } finally { wrapper.unmount(); }
+  });
+
   const pages: ChronicleEntry[] = [
     { ...entry('recorded-deed', 1100, 'The family kept this account.'), people: ['ancestor'], title: 'The fee', claims: [{ kind: 'deed', person: 'ancestor', text: 'paid the Corran fees' }] },
     { ...entry('recorded-blank', 1101, null), people: ['ancestor'], title: 'PRIVATE omitted title', record: 'omit',
