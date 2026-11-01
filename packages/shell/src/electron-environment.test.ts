@@ -61,6 +61,8 @@ describe('Electron popup link boundary', () => {
       .toBe('http://example.com/');
     expect(externalWebUrl('http://localhost:5174/page'))
       .toBe('http://localhost:5174/page');
+    expect(externalWebUrl('https://example.com/a@b?reference=user@example.com'))
+      .toBe('https://example.com/a@b?reference=user@example.com');
   });
 
   it.each([
@@ -81,12 +83,16 @@ describe('Electron popup link boundary', () => {
     'https:/example.com',
     'https://',
     'https://[invalid',
+    'https://trusted.example@unexpected.example/',
+    'https://user:secret@example.com/',
+    'https://%75ser:%70ass@example.com/',
+    'http://account@localhost:5174/private',
     ' https://example.com/',
     '',
     null,
     undefined,
     42,
-  ])('refuses a non-web or malformed popup: %s', (input) => {
+  ])('refuses unsafe, credentialed or malformed popups: %s', (input) => {
     expect(externalWebUrl(input)).toBeNull();
     const openExternal = vi.fn();
     expect(handleExternalPopup(input, openExternal)).toEqual({ action: 'deny' });
@@ -145,7 +151,9 @@ describe('Electron main-frame navigation boundary (#2270)', () => {
     ['javascript:alert(1)', trustedFile],
     ['steam://run/123', trustedDev],
     ['https:/malformed', trustedDev],
-  ])('blocks other files and unsafe schemes: %s', (requested, trusted) => {
+    ['https://trusted.example@unexpected.example/', trustedFile],
+    ['https://user:secret@example.com/', trustedDev],
+  ])('blocks other files, credential-bearing URLs and unsafe schemes: %s', (requested, trusted) => {
     const event = { preventDefault: vi.fn() };
     const openExternal = vi.fn();
     handleExternalNavigation(event, requested, trusted, openExternal);
