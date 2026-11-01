@@ -21,5 +21,11 @@ export function watchEdits<T extends { id: string }>(
 ): void {
   watch(current, (next, prev) => {
     if (next && prev && next.id === prev.id && editable(next)) markDirty(collectionKey, next.id);
-  }, { deep: true });
+  }, {
+    deep: true,
+    // A queued deep watch can coalesce an edit and a selection switch into one
+    // callback, losing the dirty mark because the final ids differ (#2333).
+    // Observe mutations before the next selection replaces the current item.
+    flush: 'sync',
+  });
 }
