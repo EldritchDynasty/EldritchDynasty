@@ -202,7 +202,7 @@ describe('Standing legibility (#356)', () => {
       await control.trigger('click');
       expect(control.attributes('aria-expanded')).toBe('true');
       expect(control.attributes('aria-controls')).toBe(wrapper.get('.standing-definition').attributes('id'));
-      expect(wrapper.get('#standing-term-definition').text()).toBe(mode === 'original'
+      expect(wrapper.get('.standing-definition').text()).toBe(mode === 'original'
         ? 'the regard the wider world gives the house.'
         : 'How the wider world regards this family.');
       await control.trigger('keydown', { key: 'Escape' });
