@@ -106,6 +106,8 @@ const claimedTraits = computed(() => props.member.record.claimedTraits.map(
  * stays where she was: greyed, named, and still somebody's daughter.
  */
 const consumed = computed(() => props.member.status === 'vessel_consumed');
+/** Older recorded names may already contain their byname; show it only once. */
+const appendEpithet = computed(() => !!props.member.epithet && !props.member.name.endsWith(` ${props.member.epithet}`));
 
 /**
  * THE MARKS ON THE ROW, drawn from the one table (issue #107).
@@ -163,7 +165,7 @@ const mentionPages = computed(() =>
         <!-- The space is inside the expression: the compiler condenses away a
              leading whitespace-only text node, which drew "AdaBlood-Marked"
              the first time anything set an epithet (#1990). -->
-        {{ member.name }}<span v-if="member.epithet" class="dim">{{ ' ' + member.epithet }}</span>
+        {{ member.name }}<span v-if="appendEpithet" class="dim">{{ ' ' + member.epithet }}</span>
       </span>
       <!-- SAID AS WELL AS DRAWN (issues #107, #275). A hover tooltip is
            not a reading channel: the same sentence is the accessible name,
