@@ -52,10 +52,13 @@ export function hardSizes(css: string): string[] {
   const found: string[] = [];
   // CSS allows whitespace around a colon and between a property and its
   // value. Testing one line at a time missed e.g. "font-size:\n 13px".
-  // Skip the permitted token definitions, then inspect complete declarations
-  // across line breaks rather than dropping the property half.
+  // Strip only the permitted token definitions, not a different property
+  // following the token's semicolon on the very same line.
+  // Inspect complete declarations across line breaks.
   const declarations = css.split('\n')
-    .filter((line) => !TOKEN.test(line))
+    .map((line) => TOKEN.test(line)
+      ? line.replace(/^\s*--t-[\w-]+\s*:[^;}]*;?/, '')
+      : line)
     .join('\n');
   for (const m of declarations.matchAll(SIZE)) {
     if (!scales(m[1]!)) found.push(m[0].trim());
@@ -133,6 +136,11 @@ describe('the type scale', () => {
     expect(hardSizes('.name { font-size:\n  var(--t-card); }')).toEqual([]);
     expect(hardSizes('.year { font:\n  500 var(--t-body)/1.3 serif; }')).toEqual([]);
     expect(hardSizes(':root {\n  --t-display: clamp(2.25rem, 7vw, 3rem);\n}')).toEqual([]);
+    // The token itself is exempt, not an unrelated declaration on its line.
+    expect(hardSizes('--t-card: 0.875rem; font-size: 13px;'))
+      .toEqual(['font-size: 13px']);
+    expect(hardSizes('--t-card: 0.875rem; font: italic 1rem Georgia;'))
+      .toEqual(['font: italic 1rem Georgia']);
   });
 
   it('passes what the client actually writes', () => {
