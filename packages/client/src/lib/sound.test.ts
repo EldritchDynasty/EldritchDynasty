@@ -605,6 +605,41 @@ describe('the player, over a fake engine', () => {
     expect(e.made).toHaveLength(2);
   });
 
+  it('recovers the Age drone after a foreground resume needs another user gesture', async () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    const resume = ctx.resume.bind(ctx);
+    let activationRequired = false;
+    ctx.resume = () => {
+      if (activationRequired) {
+        ctx.calls.push('resume:gesture-required');
+        return Promise.reject(Object.assign(new Error('activation required'), { name: 'NotAllowedError' }));
+      }
+      return resume();
+    };
+
+    // A pageshow can unmute the saved Age before any fresh user activation.
+    page.fire('win:pagehide');
+    expect(ctx.state).toBe('suspended');
+    activationRequired = true;
+    page.fire('win:pageshow');
+    await settle();
+    expect(ctx.calls).toContain('resume:gesture-required');
+    expect(bed.audible, 'temporary autoplay policy refusal disabled the engine').toBe(true);
+    expect(e.made, 'temporary autoplay policy refusal discarded the context').toHaveLength(1);
+
+    // The next actual gesture may resume that same context and play new cues.
+    activationRequired = false;
+    page.fire('win:pointerdown');
+    await settle();
+    expect(ctx.state).toBe('running');
+    const before = ctx.sources.length;
+    bed.cue('seal');
+    expect(ctx.sources).toHaveLength(before + cueScore('seal').voices.length);
+    bed.dispose();
+  });
+
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
     const e = fakeEngine({ reject: true });
     const s = new Sound(e.ctor);
