@@ -1,6 +1,23 @@
 # Byname grant and provenance contract (implementation preparation)
 
-**Status:** source-audited design contract for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990), not a shipped byname rule. This file documents the smallest first slice and its blockers. The implementation, content wording, UI, save changes and incidence measurements remain on #1990. Audit: 31 October 2026, main at ed51de1.
+**Status:** shipped as the record-claim source for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990), 1 November 2026. The sections below keep the 31 October audit; **What shipped** records what the code now does and where it departs from the proposal.
+
+## What shipped (1 November 2026)
+
+| Piece | Where |
+| --- | --- |
+| Authored wording | `byname: { slot, text }` on a Record block's `record` or `embellish` option (`schema/src/byname.ts`, `RecordBynameS`). Omit has no field for it. Plain English counterparts use the ordinary `proseVariants` address `….options.<pen>.byname.text`. |
+| Validation | `byname/slot` (`schema/src/rules.ts`): a declared slot, a claim about that slot on the same pen, no `{TOKEN}`, no §29 bearing word, at most five words. |
+| The one grant | `grantByname` (`core/src/byname.ts`), called at the end of `applyRecord` after the page is written. `resolveRecord` (the docket) and `afterRecord` (the chronicler's automatic pen) both reach it. |
+| Eligibility | `eligibleByname`: the selected pen authors one; its slot cast exactly one person; that person was family of the player's house in the page's year (dead included); the committed page carries a claim about them; they hold no epithet or grant yet. |
+| Saved provenance | `Person.byname` (`BynameGrantS`): `source { kind: 'record', event, pen, page, choice?, outcome?, discrepancy? }`, `year`, optional `settled`. The words are frozen into `Person.epithet` in the reader's prose mode at commit. Additive: no `SAVE_FORMAT` bump; an older save loads with its epithets and no grant. |
+| Contest | `settleBynames`, called from the one real `discrepancy` prove/bury effect, stamps `settled` on the grant whose page is the **latest** embellished page carrying that authored id — found through that page's own claims. An earlier telling keeps its stamp, or stays `claimed` if it was superseded while open. |
+| Read model | `bynameView` → `BynameView { text, standing, pen?, year?, page?, settledYear? }` on members, `line()` and Chronicle people; `recordBynamePreview` on Record dockets (derived, never saved); `RecordResolution.byname` for the receipt. Standings: `attested`, `claimed`, `contested`, `buried`, `unknown`. |
+| Client | Docket preview per pen, receipt line, member card note with a link to the exact page, Recorded Life marks that page (`client/src/lib/byname.ts`). |
+
+**Departures from the proposal below.** (1) The contest is stamped on the grant at settlement rather than projected from the discrepancy map, because the map cannot say which telling a proof addressed once an authored id repeats; this is the "occurrence-scoped proof identity" option, scoped to the grant and leaving the world's discrepancy model unchanged. (2) The words are stored once, in the reader's mode at commit, like every other saved page, rather than as an Original/Plain pair (`docs/LOCALISATION.md`: changing mode is prospective). (3) The source table is authored inline on the Record options rather than in a separate table, so a byname can only rest on the claims beside it.
+
+**Measured reach of this source.** Sixteen 500-year Long Lines under the ordinary chronicler (seeds 1990 + 37k, `main` at 5a788e3) committed claim-bearing Record pages about 59 of 192 Heads (30.7%) and 43 other people. That is the ceiling for any record-claim source, even if every claim-bearing block authored a byname. **"Most Heads" therefore needs a second source variant** (a death, succession or reign source) — an intentional new `BynameSource` case, not more wording on Record blocks.
 
 ## Existing contracts to preserve
 
@@ -62,4 +79,4 @@ The reader's `causeOf` / `answeredBy` fallback used to select the **first** embe
 
 ## Delivery boundary
 
-This document changes **no** simulation behavior, content, save format or UI. A full implementation needs independent claims for the exact schema/core/client paths, plus lane-content for YAML and lane-gates for gate tooling. The sources above are verified plumbing, not tests executed in this documentation-only slice. Close [#2076](https://github.com/EldritchDynasty/EldritchDynasty/issues/2076) for this contract only; leave [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990) open until implementation, deterministic tests, real batch measurement and reader observation.
+The record-claim source, its saved provenance, contest stamping, read model and client surfaces shipped with #1990 (see **What shipped**). Still open, and not claimed by this work: a second source variant to reach most Heads, and the actual-reader #44 "three people" question, which no automated run can answer.

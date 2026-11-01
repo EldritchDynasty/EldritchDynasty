@@ -984,4 +984,18 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     member!.byname!.text = 'mutated';
     expect(child.epithet).toBe('Blood-Marked');
   });
+
+  it('the docket view carries the preview, and answering it through the session earns exactly that', () => {
+    const session = newGame(bundle, { seed: 1991 });
+    const ctx = session.ctx;
+    ctx.world.pendingDecisions.length = 0;
+    const child = place(ctx, { sex: 'female', age: 9 });
+    page(ctx, 'p_session');
+    const pending = queueRecord(ctx, bynamed(), 'p_session', { CHILD: child.id })!;
+    const docket = session.view().docket.find((d) => d.id === pending.id)!;
+    expect(docket.bynames?.record).toEqual({ person: child.id, name: child.name, text: 'the Iron-and-Milk' });
+    const result = session.record(pending.id, 'record');
+    expect(result.byname?.text).toBe(docket.bynames?.record?.text);
+    expect(session.view().halls.flatMap((h) => h.members).find((m) => m.id === child.id)?.byname?.standing).toBe('attested');
+  });
 });
