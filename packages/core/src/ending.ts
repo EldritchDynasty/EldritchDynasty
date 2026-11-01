@@ -8,6 +8,7 @@ import { renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 import { ambitionView } from './ambition.js';
+import { activeBranches, cadetFamilyMember, halls, viableCadetHall } from './people/branches.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -466,16 +467,26 @@ export interface RingBeat {
 }
 
 /** One specific cost the written book can set against a tracked family purpose. */
-export interface EpiloguePurpose {
-  kind: 'blood_spent';
-  /** The same recorded person as the attributed rite, not a guessed subject. */
-  person: string;
-  year: number;
-  /** The exact surviving words of the page; a blank cannot supply this account. */
-  text: string;
-  /** The family's improved account is a claim, not independent proof. */
-  embellished: boolean;
-}
+export type EpiloguePurpose =
+  | {
+    kind: 'blood_spent';
+    /** The same recorded person as the attributed rite, not a guessed subject. */
+    person: string;
+    year: number;
+    /** The exact surviving words of the page; a blank cannot supply this account. */
+    text: string;
+    /** The family's improved account is a claim, not independent proof. */
+    embellished: boolean;
+  }
+  | {
+    kind: 'branch_kept';
+    /** The saved founding act, not a retrospectively invented act of protection. */
+    founder: string;
+    branch: string;
+    year: number;
+    /** A living blood relative in a viable cadet hall at the term. */
+    person: string;
+  };
 
 export interface EpilogueView {
   /** Derived, attributed historical selections for the shareable house image. */
@@ -562,7 +573,39 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
  * modification to the creditor's ending choice.
  */
 function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose | undefined {
-  if (ctx.world.campaign !== 'long' || ctx.world.houseAmbition !== 'deepen_blood') return undefined;
+  const w = ctx.world;
+  if (w.campaign !== 'long') return undefined;
+  if (w.houseAmbition === 'secure_branches') {
+    // The branch ledger records the actual founding, and the current hall
+    // supplies the consequence. Selecting an ambition alone proves neither.
+    // Do not infer a rescue or attribute a named Chronicle page to this branch:
+    // older founding pages have no person/branch ID to support such a join.
+    const residents = halls(w, w.year);
+    const branches = activeBranches(w)
+      .filter((branch) => branch.house === w.playerHouse)
+      .sort((a, b) => a.foundedYear - b.foundedYear
+        || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    for (const branch of branches) {
+      const family = residents.get(branch.id) ?? [];
+      if (!viableCadetHall(family, w.year)) continue;
+      const founder = w.people.get(branch.founder);
+      if (!founder || founder.houseOfOrigin !== w.playerHouse) continue;
+      const survivor = family
+        .filter((person) => person.status === 'alive'
+          && person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, w.year))
+        .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
+      if (!survivor) continue;
+      return {
+        kind: 'branch_kept',
+        founder: founder.epithet ? `${founder.name} ${founder.epithet}` : founder.name,
+        branch: branch.name,
+        year: branch.foundedYear,
+        person: survivor.epithet ? `${survivor.name} ${survivor.epithet}` : survivor.name,
+      };
+    }
+    return undefined;
+  }
+  if (w.houseAmbition !== 'deepen_blood') return undefined;
   // Afterimage.spent is the first rite victim of any origin. That subject
   // can be an outsider, so use the independently witnessed house-blood cost
   // rather than silently omitting a later sacrifice of a relative.
