@@ -88,6 +88,8 @@ const loadingSlot = ref<string | null>(null);
 const exportingSlots = ref(new Set<string>());
 /** Explicit confirmation before deleting a separately stored demo. */
 const confirmingDemoDelete = ref<string | null>(null);
+/** Scope post-transition focus to this front door, never a different modal. */
+const startRoot = ref<HTMLElement | null>(null);
 const deletingDemoSlot = ref<string | null>(null);
 const libraryError = ref<string | null>(null);
 /** A slow host recovery must not overlap a second Library read. */
@@ -301,6 +303,27 @@ async function exportSave(slot: string): Promise<void> {
   }
 }
 
+/** A confirmation replaces its triggering button; restore a real Tab stop after each swap. */
+function focusAfterDemoDeleteTransition(slot: string): void {
+  void nextTick(() => {
+    const root = startRoot.value;
+    if (!root) return;
+    if (confirmingDemoDelete.value === slot) {
+      root.querySelector<HTMLButtonElement>('.demo-delete-confirm .confirm-remove')?.focus();
+      return;
+    }
+    const remove = Array.from(root.querySelectorAll<HTMLButtonElement>('button[data-demo-remove-slot]'))
+      .find((button) => button.dataset.demoRemoveSlot === slot);
+    if (remove && !remove.disabled) {
+      remove.focus();
+      return;
+    }
+    // The deleted slot may have been the final demo. Do not leave focus on body.
+    (root.querySelector<HTMLButtonElement>('.demo-saved li button:not(:disabled)')
+      ?? root.querySelector<HTMLButtonElement>('.primary-row button:not(:disabled)'))?.focus();
+  });
+}
+
 function requestDeleteDemo(slot: string): void {
   // Both UI and API enforce the demo namespace: this cannot touch full saves.
   if (!isDemoSaveSlot(slot) || !demoSaves.value.some((save) => save.slot === slot)
@@ -308,12 +331,15 @@ function requestDeleteDemo(slot: string): void {
     || listingSaves.value || exportingSlots.value.has(slot)) return;
   confirmingDemoDelete.value = slot;
   saveActionError.value = null;
+  focusAfterDemoDeleteTransition(slot);
 }
 
 function cancelDeleteDemo(): void {
   if (deletingDemoSlot.value !== null) return;
+  const slot = confirmingDemoDelete.value;
   confirmingDemoDelete.value = null;
   saveActionError.value = null;
+  if (slot !== null) focusAfterDemoDeleteTransition(slot);
 }
 
 async function deleteDemo(slot: string): Promise<void> {
@@ -329,6 +355,7 @@ async function deleteDemo(slot: string): Promise<void> {
     // visible entry, its export button and a retryable confirmation.
     saves.value = saves.value.filter((save) => save.slot !== slot);
     confirmingDemoDelete.value = null;
+    focusAfterDemoDeleteTransition(slot);
   } catch {
     saveActionError.value = { slot, message: 'That demonstration could not be removed. Try again.' };
   } finally {
@@ -403,7 +430,7 @@ onMounted(() => { void refreshSaves(); });
 </script>
 
 <template>
-  <main class="start">
+  <main ref="startRoot" class="start">
     <h1>Eldritch Dynasty</h1>
 
     <p class="frame">
@@ -565,9 +592,11 @@ onMounted(() => { void refreshSaves(); });
             class="quiet small"
             :disabled="!libraryIsReady || selectingRun || libraryBusy || listingSaves || exportingSlots.has(save.slot)"
             :aria-label="plain ? `Remove saved demonstration ${save.slot}` : `Remove demonstration ${save.slot}`"
+            :data-demo-remove-slot="save.slot"
             @click="requestDeleteDemo(save.slot)"
           >Remove</button>
-          <div v-else class="demo-delete-confirm">
+          <div v-else class="demo-delete-confirm" role="group"
+            :aria-label="plain ? `Confirm removing saved demonstration ${save.slot}` : `Confirm removing demonstration ${save.slot}`">
             <p class="small">{{ plain ? 'Remove this saved demonstration? Your full campaigns will stay saved.' : 'Remove this Demonstration from the device? The full lines remain untouched.' }}</p>
             <button
               class="quiet small confirm-remove"
