@@ -1261,6 +1261,38 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
   });
 });
 
+describe('accessible optional friend choices (#2402)', () => {
+  it('identifies each friend\'s sex controls in both prose modes without changing their selection', async () => {
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: { ...prologueView(), friendsWanted: 2 },
+        actions: actions(),
+        refused: null,
+        startYear: 1042,
+      },
+    });
+
+    try {
+      await revealChoices(wrapper);
+      const friends = wrapper.findAll('.friend');
+      expect(friends).toHaveLength(2);
+      expect(friends[0]!.get('[role="group"]').attributes('aria-label')).toBe("The first friend's sex");
+      expect(friends[1]!.get('[role="group"]').attributes('aria-label')).toBe("The second friend's sex");
+      expect(friends[0]!.findAll('button').map((button) => button.text())).toEqual(['She', 'He']);
+
+      await friends[1]!.findAll('button')[1]!.trigger('click');
+      expect(friends[1]!.findAll('button')[1]!.attributes('aria-pressed')).toBe('true');
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(friends[0]!.get('[role="group"]').attributes('aria-label')).toBe('Sex of friend 1');
+      expect(friends[1]!.get('[role="group"]').attributes('aria-label')).toBe('Sex of friend 2');
+      expect(friends[0]!.findAll('button').map((button) => button.text())).toEqual(['Female', 'Male']);
+      expect(friends[1]!.findAll('button')[1]!.attributes('aria-pressed')).toBe('true');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('founding refusal follows submitted inputs (#2360)', () => {
   it('retires stale words on edits and restores them on a repeated refusal', async () => {
     const game = actions();
