@@ -330,6 +330,22 @@ export function summariseStoryRoutes(rows: readonly ReturnType<typeof playStoryR
   });
 }
 
+/** Inclusive final seed for a stepped story-route cohort (#2215).
+ * Both the stride multiplication and final addition must remain exactly
+ * representable; safe arguments individually are insufficient.
+ */
+export function storyRouteSeedEnd(runs: number, start: number, step: number): number {
+  if (![runs, start, step].every(Number.isSafeInteger) || runs < 1 || step < 1) {
+    throw new Error('Invalid integer batch options');
+  }
+  const stride = (runs - 1) * step;
+  const lastSeed = start + stride;
+  if (!Number.isSafeInteger(stride) || !Number.isSafeInteger(lastSeed)) {
+    throw new Error('Story-route seed span exceeds safe integer precision');
+  }
+  return lastSeed;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const value = (name: string) => args.find(arg => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -337,7 +353,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const controls = Number(value('controls') ?? 8), years = Number(value('years') ?? 500);
   const policy = value('policy') ?? 'canonical';
   if (policy !== 'canonical' && policy !== 'short-descent') throw new Error('Unknown story-route policy');
-  if (![runs, start, step, controls, years].every(Number.isSafeInteger) || runs < 1 || controls < 0 || years < 1 || step < 1) throw new Error('Invalid integer batch options');
+  if (![controls, years].every(Number.isSafeInteger) || controls < 0 || years < 1) throw new Error('Invalid integer batch options');
+  storyRouteSeedEnd(runs, start, step);
   const targets = args.filter(arg => !arg.startsWith('--'));
   const options: Parameters<typeof playStoryRouteRun>[2] = { policy, targets: targets.length ? targets : STORY_ROUTE_IDS, years, funnel: args.includes('--funnel') };
   const output = value('output');

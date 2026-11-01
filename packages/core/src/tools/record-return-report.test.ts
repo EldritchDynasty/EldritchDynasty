@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { indexContent, type FrameRead } from '@ed/schema';
+import { indexContent, type Content, type FrameRead } from '@ed/schema';
 import { testWorld } from '../testing.js';
 import type { SimCtx } from '../world.js';
 import { playToTheEnd } from './ending-gate.js';
@@ -9,6 +9,9 @@ import {
   lookForReturns,
   playRecordReturnRun,
   readBearing,
+  recordReturnInputs,
+  measureRecordReturns,
+  RECORD_RETURN_SEED_START,
   recordReturnReport,
   summariseRecordReturns,
   watchFrom,
@@ -219,5 +222,42 @@ describe('the record-return report (#1987)', () => {
     expect(shared.filter((d) => d.kind === 'record').length).toBeGreaterThan(0);
     expect(shared.length - shared.findIndex((d) => d.kind === 'record')).toBeGreaterThan(10);
     expect(JSON.stringify(forced.slice(0, split))).toBe(JSON.stringify(shared));
+  });
+});
+
+describe('Record-return cohort integrity (#2216)', () => {
+  const policies = ['chronicler'] as const;
+
+  it.each([0, -1, 1.5, NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+    'refuses invalid run count %s instead of truncating samples', runs => {
+      expect(() => recordReturnInputs(runs, policies)).toThrow(/positive safe integer/);
+    },
+  );
+
+  it.each([-1, 1.5, NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+    'refuses invalid seed offset %s', offset => {
+      expect(() => recordReturnInputs(1, policies, offset)).toThrow(/nonnegative safe integer/);
+    },
+  );
+
+  it('refuses empty or repeated policy cohorts', () => {
+    expect(() => recordReturnInputs(1, [])).toThrow(/unique policies/);
+    expect(() => recordReturnInputs(1, ['chronicler', 'chronicler'])).toThrow(/unique policies/);
+  });
+
+  it('keeps the default cohort and the exact inclusive high boundary', () => {
+    expect(recordReturnInputs(2, policies)).toEqual([
+      { seed: RECORD_RETURN_SEED_START, policy: 'chronicler' },
+      { seed: RECORD_RETURN_SEED_START + 1, policy: 'chronicler' },
+    ]);
+    const offset = Number.MAX_SAFE_INTEGER - RECORD_RETURN_SEED_START - 2;
+    expect(recordReturnInputs(3, policies, offset).map(row => row.seed)).toEqual([
+      Number.MAX_SAFE_INTEGER - 2, Number.MAX_SAFE_INTEGER - 1, Number.MAX_SAFE_INTEGER,
+    ]);
+    expect(() => recordReturnInputs(4, policies, offset)).toThrow(/seed range/);
+  });
+
+  it('validates the public measurement API before indexing content or playing campaigns', () => {
+    expect(() => measureRecordReturns(null as unknown as Content, 0, 'short', policies)).toThrow(/positive safe integer/);
   });
 });

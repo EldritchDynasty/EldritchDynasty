@@ -399,6 +399,23 @@ export function playRecordReturnRun(
 export interface RecordReturnInput { seed: number; policy: RecordReturnPolicy }
 
 export function recordReturnInputs(runs: number, policies: readonly RecordReturnPolicy[], offset = 0): RecordReturnInput[] {
+  // A silently shortened, empty or precision-collapsed cohort is not a
+  // reproducible measurement. Refuse it before allocating or playing runs.
+  if (!Number.isSafeInteger(runs) || runs <= 0) {
+    throw new RangeError('record-return run count must be a positive safe integer');
+  }
+  if (!Number.isSafeInteger(offset) || offset < 0) {
+    throw new RangeError('record-return seed offset must be a nonnegative safe integer');
+  }
+  // Compare against the remaining headroom rather than summing: START + offset
+  // + runs can pass MAX_SAFE_INTEGER, round, and come back "safe" after - 1.
+  const headroom = Number.MAX_SAFE_INTEGER - RECORD_RETURN_SEED_START;
+  if (offset > headroom || runs - 1 > headroom - offset) {
+    throw new RangeError('record-return seed range exceeds safe integers');
+  }
+  if (!policies.length || new Set(policies).size !== policies.length) {
+    throw new RangeError('record-return cohort must contain unique policies');
+  }
   return policies.flatMap((policy) =>
     Array.from({ length: runs }, (_, i) => ({ seed: RECORD_RETURN_SEED_START + offset + i, policy })));
 }
@@ -426,8 +443,9 @@ export function measureRecordReturns(
   policies: readonly RecordReturnPolicy[],
   offset = 0,
 ): RecordReturnRun[] {
+  const inputs = recordReturnInputs(runs, policies, offset);
   const content = indexContent(source);
-  const plan = partitionGateInputs(recordReturnInputs(runs, policies, offset), gatePartitionWorkerCount());
+  const plan = partitionGateInputs(inputs, gatePartitionWorkerCount());
   const results = plan.length === 1
     ? plan.map((partition) => runRecordReturnPartition(content, partition, campaign))
     : runGatePartitionsInWorkers<RecordReturnInput, RecordReturnRun>(plan, {
@@ -646,7 +664,8 @@ if (isMain) {
     for (const p of policies) {
       if (!RECORD_RETURN_POLICIES.includes(p)) throw new Error(`unknown policy ${p}; one of ${RECORD_RETURN_POLICIES.join(', ')}`);
     }
-    const runs = Number(process.argv.slice(2).find((a) => !a.startsWith('--'))) || RECORD_RETURN_DEFAULT_RUNS;
+    const rawRuns = process.argv.slice(2).find((a) => !a.startsWith('--'));
+    const runs = rawRuns === undefined ? RECORD_RETURN_DEFAULT_RUNS : Number(rawRuns);
     rows = measureRecordReturns(loadContent(), runs, campaign, policies, Number(flag('offset') ?? 0));
     const output = flag('output');
     if (output) writeFileSync(output, JSON.stringify(rows, null, 2) + '\n');
