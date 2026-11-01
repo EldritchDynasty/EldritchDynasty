@@ -463,7 +463,7 @@ describe('the house afterimage (#260)', () => {
       line: [
         { id: 'last', name: 'Élodie the Witness', epithet: 'the Witness', head: true,
           record: { parents: { mother: 'ancestor' } } },
-        { id: 'ancestor', name: 'Adela the Elder', epithet: 'the Elder',
+        { id: 'ancestor', name: 'Adela the Elder', epithet: 'the Elder', head: false,
           record: { parents: {} } },
       ],
     };
