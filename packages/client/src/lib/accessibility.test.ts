@@ -68,8 +68,8 @@ describe('reading preferences', () => {
       skipSeenProse: false,
       reduceMotion: false,
       showEverythingFromStart: null,
-      sound: true,
-      soundVolume: 1,
+      sound: false,
+      soundVolume: 0,
     });
     expect(loadAccessibility({ getItem: () => JSON.stringify({ textScale: 'huge' }) })).toEqual({
       textScale: 'standard',
@@ -81,6 +81,25 @@ describe('reading preferences', () => {
       sound: true,
       soundVolume: 1,
     });
+  });
+
+  it('keeps the new-install sound default when the record does not exist', () => {
+    for (const storage of [null, { getItem: () => null }]) {
+      expect(loadAccessibility(storage)).toMatchObject({ sound: true, soundVolume: 1 });
+    }
+  });
+
+  it('does not enable sound if saved reading preferences cannot be decoded', () => {
+    // Malformed JSON and JSON of the wrong root type are damaged records, not
+    // old preference objects with omitted sound fields.
+    for (const value of ['{broken', 'null', '[]', '42', 'false', '"old"']) {
+      expect(loadAccessibility({ getItem: () => value }), value)
+        .toMatchObject({ sound: false, soundVolume: 0, proseMode: 'original' });
+    }
+
+    // A denied/revoked Storage read has the same quiet recovery path.
+    expect(loadAccessibility({ getItem: () => { throw new Error('storage blocked'); } }))
+      .toMatchObject({ sound: false, soundVolume: 0 });
   });
 });
 
