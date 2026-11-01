@@ -111,6 +111,10 @@ endings:
         and the hand across the table closed the account instead of the house.
     closing: Everything after this was done by people whose debt was paid.
 
+  # Long Line is the canonical wording here, including the matching Plain
+  # English variant below. Core's ending prose view substitutes the real
+  # campaign term for Short Line and Demonstration only after variant selection
+  # (#2206). Do not change the literal here without updating its prose hash.
   - id: forgotten
     title: The Forgotten
     opening: >-
