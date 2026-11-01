@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { createApp, defineComponent, h, ref } from 'vue';
+import { createApp, defineComponent, h, onMounted, ref } from 'vue';
 import { SoundBed, type SoundEngine } from './sound-bed';
 import { modalFocusable, useModal } from './modal';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -853,6 +853,137 @@ describe('progressive surface reveal (#368)', () => {
   });
 });
 
+
+describe('modal focus in open shadow roots (#2377)', () => {
+  it('includes shadow controls in order, but excludes concealed hosts and closed disclosures', () => {
+    const card = document.createElement('section');
+    const before = document.createElement('button');
+    before.id = 'before';
+    const host = document.createElement('span');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const inside = document.createElement('button');
+    inside.id = 'shadow-button';
+    shadow.append(inside);
+    const after = document.createElement('button');
+    after.id = 'after';
+    card.append(before, host, after);
+    document.body.append(card);
+    try {
+      const ids = () => modalFocusable(card).map((node) => node.id);
+      expect(ids()).toEqual(['before', 'shadow-button', 'after']);
+
+      host.hidden = true;
+      expect(ids()).toEqual(['before', 'after']);
+      host.hidden = false;
+      host.setAttribute('inert', '');
+      expect(ids()).toEqual(['before', 'after']);
+      host.removeAttribute('inert');
+      host.style.display = 'none';
+      expect(ids()).toEqual(['before', 'after']);
+      host.style.display = '';
+
+      const details = document.createElement('details');
+      card.insertBefore(details, after);
+      details.append(host);
+      expect(ids()).toEqual(['before', 'after']);
+      details.open = true;
+      expect(ids()).toEqual(['before', 'shadow-button', 'after']);
+    } finally {
+      card.remove();
+    }
+  });
+
+  it('focuses a dialog whose only control is inside an open shadow root', () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const opener = document.createElement('button');
+    const mount = document.createElement('div');
+    document.body.append(opener, mount);
+    opener.focus();
+    let shadow: ShadowRoot;
+    let control: HTMLButtonElement;
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        // Child shadow controls can already exist when the modal mounts.
+        onMounted(() => {
+          const host = card.value!.querySelector<HTMLElement>('#shadow-host')!;
+          shadow = host.attachShadow({ mode: 'open' });
+          control = document.createElement('button');
+          control.id = 'shadow-only';
+          shadow.append(control);
+        });
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [
+          h('span', { id: 'shadow-host' }),
+        ]);
+      },
+    }));
+    try {
+      app.mount(mount);
+      const host = mount.querySelector<HTMLElement>('#shadow-host');
+      expect(document.activeElement).toBe(host);
+      expect(shadow!.activeElement).toBe(control!);
+      const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+      window.dispatchEvent(tab);
+      expect(tab.defaultPrevented).toBe(true);
+      expect(shadow!.activeElement).toBe(control!);
+    } finally {
+      app.unmount();
+      mount.remove();
+      opener.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('does not mistake a middle shadow control for being outside the Tab cycle', () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    const mount = document.createElement('div');
+    document.body.append(mount);
+    let control: HTMLButtonElement;
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        onMounted(() => {
+          const shadow = card.value!.querySelector<HTMLElement>('#middle-host')!.attachShadow({ mode: 'open' });
+          control = document.createElement('button');
+          control.id = 'middle-shadow';
+          shadow.append(control);
+        });
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [
+          h('button', { id: 'before' }, 'Before'),
+          h('span', { id: 'middle-host' }),
+          h('button', { id: 'after' }, 'After'),
+        ]);
+      },
+    }));
+    try {
+      app.mount(mount);
+      const card = mount.querySelector('section')!;
+      expect(modalFocusable(card).map((node) => node.id))
+        .toEqual(['before', 'middle-shadow', 'after']);
+      control!.focus();
+      expect(document.activeElement).toBe(mount.querySelector('#middle-host'));
+      for (const shiftKey of [false, true]) {
+        const tab = new KeyboardEvent('keydown', { key: 'Tab', shiftKey, cancelable: true });
+        window.dispatchEvent(tab);
+        expect(tab.defaultPrevented).toBe(false);
+      }
+    } finally {
+      app.unmount();
+      mount.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
 
 describe('modal keyboard Tab targets (#1004)', () => {
   it('does not steal focus newly selected before deferred modal restoration (#2281)', () => {
