@@ -4,7 +4,7 @@ import {
   CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse, place, missingPlainEnglish,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
-import { asId, contentProseEntries, ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
+import { asId, MAIN_BRANCH, contentProseEntries, ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from './world.js';
 import { afterimageEvidence } from './afterimage.js';
 import { coreMessageAddress } from './messages.js';
@@ -1291,6 +1291,73 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     w.houseAmbition = 'restore_ledger';
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     w.houseAmbition = 'deepen_blood';
+    w.campaign = 'short';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+});
+
+
+describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () => {
+  function foundedHall() {
+    const ctx = atTheTerm();
+    const w = ctx.world;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const branch = 'br_the_other_roof';
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+    const relative = place(ctx, { name: 'Leora', sex: 'female', age: 35, branch });
+    const cousin = place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch });
+    relative.epithet = 'of the Orchard';
+    w.branches.set(asId(branch), {
+      id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear: w.year - 30,
+      grievance: 0,
+    });
+    // Founders can die without extinguishing the still-viable family hall.
+    w.people.kill(founder.id, w.year - 1, 'old age');
+    return { ctx, branch, founder, relative, cousin };
+  }
+
+  it('names a documented founding and a living relative, not a conjectured rescue', () => {
+    const { ctx } = foundedHall();
+    const before = digestOf(ctx);
+    const selected = selectEnding(ctx);
+    const view = epilogueOf(ctx)!;
+    expect(view.purpose).toEqual({
+      kind: 'branch_kept', founder: 'Edrin', branch: 'The Orchard Hall',
+      year: ctx.world.year - 30, person: 'Leora of the Orchard',
+    });
+    expect(view.beginning?.ambition?.name).toBe('Secure the branches');
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
+  });
+
+  it('does not infer a surviving household from ambition selection, an extinct branch or one survivor', () => {
+    const { ctx, branch, relative, cousin } = foundedHall();
+    const w = ctx.world;
+    w.branches.get(asId(branch))!.extinct = w.year - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.branches.get(asId(branch))!.extinct = undefined;
+    w.people.kill(cousin.id, w.year, 'old age');
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(relative.status).toBe('alive');
+  });
+
+  it('excludes outside houses, unsupported founders, other ambitions and shorter campaigns', () => {
+    const { ctx, branch, founder } = foundedHall();
+    const w = ctx.world;
+    const b = w.branches.get(asId(branch))!;
+    b.house = asId('some-other-house');
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    b.house = asId(w.playerHouse);
+    founder.houseOfOrigin = asId('some-other-house');
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    founder.houseOfOrigin = asId(w.playerHouse);
+    w.houseAmbition = 'restore_ledger';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.houseAmbition = 'secure_branches';
     w.campaign = 'short';
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
