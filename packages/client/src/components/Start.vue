@@ -185,6 +185,11 @@ function onShareInput(): void {
   shareBeginProblem.value = null;
 }
 
+/** A corrected recipient name invalidates the previous submit refusal, not the code. */
+function onShareNameInput(): void {
+  shareBeginProblem.value = null;
+}
+
 function beginShared(): void {
   const founding = sharedFounding.value;
   if (!founding || !mayBeginShared.value || beginning) return;
@@ -632,18 +637,18 @@ onMounted(() => { void refreshSaves(); });
           </p>
           <div v-if="sharedFounding.missing.includes('founder')" class="share-name">
             <label class="dim small" for="share-founder">{{ plain ? 'Founder name (optional)' : 'Who signs (blank keeps the name in the book)' }}</label>
-            <input id="share-founder" v-model="shareNames.founder" type="text" />
+            <input id="share-founder" v-model="shareNames.founder" type="text" @input="onShareNameInput()" />
           </div>
           <div v-if="sharedFounding.missing.includes('house')" class="share-name">
             <label class="dim small" for="share-house">{{ plain ? 'Family name' : 'The house' }}</label>
-            <input id="share-house" v-model="shareNames.house" type="text" />
+            <input id="share-house" v-model="shareNames.house" type="text" @input="onShareNameInput()" />
           </div>
           <template v-if="sharedFounding.missing.includes('friends')">
             <div v-for="(friend, i) in sharedFounding.friends" :key="i" class="share-name">
               <label class="dim small" :for="'share-friend-' + i">
                 {{ plain ? `Friend ${i + 1} (${friend.sex === 'female' ? 'woman' : 'man'})` : `A friend, ${friend.sex === 'female' ? 'a woman' : 'a man'}` }}
               </label>
-              <input :id="'share-friend-' + i" v-model="shareNames.friends[i]" type="text" />
+              <input :id="'share-friend-' + i" v-model="shareNames.friends[i]" type="text" @input="onShareNameInput()" />
             </div>
           </template>
           <button class="quiet small" :disabled="!mayBeginShared" @click="beginShared()">{{ plain ? 'Start from this code' : 'Sign from this code' }}</button>
