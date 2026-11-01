@@ -32,9 +32,12 @@ function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   const visibility = window.getComputedStyle(element).visibility;
   if (visibility === 'hidden' || visibility === 'collapse') return true;
 
-  // display:none cannot be overridden by descendants, so inspect every parent.
+  // Neither display:none nor content-visibility:hidden renders descendants.
+  // Unlike visibility:hidden, a child's visibility:visible cannot override
+  // either ancestor restriction. Check each ancestor up to the modal card.
   for (let node: HTMLElement | null = element; node; node = node.parentElement) {
-    if (window.getComputedStyle(node).display === 'none') return true;
+    const style = window.getComputedStyle(node);
+    if (style.display === 'none' || style.getPropertyValue('content-visibility') === 'hidden') return true;
     if (node === card) break;
   }
   return false;
