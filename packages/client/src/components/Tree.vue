@@ -252,11 +252,14 @@ function searchName(text: string): string {
 const matches = computed(() => {
   const q = searchName(query.value.trim());
   if (q.length < 2) return [];
-  const out: { id: string; name: string; hallId: string; hallName: string }[] = [];
+  const out: { id: string; label: string; hallId: string; hallName: string }[] = [];
   for (const hall of props.view.halls) {
     for (const m of hall.members) {
-      if (!searchName(m.name).includes(q)) continue;
-      out.push({ id: m.id, name: m.name, hallId: hall.id, hallName: hall.name });
+      // Existing bynames qualify a recorded name; search the complete public label
+      // without inferring a deed or changing the person's stable identity (#2224).
+      const label = m.epithet ? `${m.name} ${m.epithet}` : m.name;
+      if (!searchName(label).includes(q)) continue;
+      out.push({ id: m.id, label, hallId: hall.id, hallName: hall.name });
       if (out.length >= 8) return out;
     }
   }
@@ -335,7 +338,7 @@ watch(() => props.reveal?.token, () => {
     <ul v-if="matches.length" class="matches">
       <li v-for="m in matches" :key="m.id">
         <button class="small" @click="jumpTo(m)">
-          {{ m.name }} <span class="dim">· {{ m.hallName }}</span>
+          {{ m.label }} <span class="dim">· {{ m.hallName }}</span>
         </button>
       </li>
     </ul>
