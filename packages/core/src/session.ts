@@ -861,6 +861,8 @@ export class GameSession {
   line(): {
     person: string;
     name: string;
+    /** A saved/by-authored historical label, never inferred from the account. */
+    epithet?: string;
     from: number;
     to?: number;
     born?: number;
@@ -883,6 +885,7 @@ export class GameSession {
         return {
           person: held.person,
           name: held.name,
+          ...(p?.epithet ? { epithet: p.epithet } : {}),
           from: held.from,
           ...(held.to !== undefined ? { to: held.to } : {}),
           ...(p?.born !== undefined ? { born: p.born } : {}),
