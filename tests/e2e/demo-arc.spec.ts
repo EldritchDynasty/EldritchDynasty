@@ -147,6 +147,30 @@ for (const mode of ['original', 'plainenglish'] as const) {
     await frame.getByRole('button', { name: mode === 'original' ? 'Go on' : 'Continue' }).click();
     await expect(frame).toHaveCount(0);
     await fullSaveUnchanged(page, full);
+
+    // Dismissing the echo must not lose the player's real Record decision.
+    // Reopen the durable Demonstration, not a hand-built GameSession: the
+    // previously answered page must remain answered exactly once, and the
+    // dismissed interlude must not be presented for a second reading.
+    const recordedState = () => page.evaluate(() => {
+      const raw = localStorage.getItem('ed:save:demo-autosave');
+      if (!raw) return null;
+      const saved = JSON.parse(raw);
+      return {
+        campaign: saved.campaign as string,
+        year: saved.year as number,
+        recordRows: (saved.decisionLog as { kind: string; event?: string }[])
+          .filter(row => row.kind === 'record' && row.event === 'demo_the_last_page'),
+      };
+    });
+    const beforeReload = await recordedState();
+    expect(beforeReload?.campaign).toBe('demo');
+    expect(beforeReload?.recordRows).toHaveLength(1);
+    await page.reload();
+    await resumeDemo(page, mode);
+    await expect(frame).toHaveCount(0);
+    expect(await recordedState()).toEqual(beforeReload);
+    await fullSaveUnchanged(page, full);
     expect(errors).toEqual([]);
   });
 
