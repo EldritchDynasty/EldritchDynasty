@@ -118,15 +118,6 @@ export function readSave(root, slot) {
 }
 
 /**
- * Write one slot, atomically.
- *
- * A Long Line is a few megabytes of JSON, and a `writeFileSync` that
- * is interrupted half way leaves a file that exists, has the right name, and
- * will never parse again — which the player finds out about the next time they
- * try to load the only copy of a nine-hour game. Write beside it and rename;
- * rename is the one filesystem operation that is atomic on every platform.
- */
-/**
  * Check complete filenames, including extension spelling. A profile created on
  * a case-sensitive system must behave safely when later opened on Windows.
  * This is a name-ambiguity guard, not a lock against concurrent filesystem edits.
@@ -140,6 +131,15 @@ function rejectCaseAlias(root, slot) {
   }
 }
 
+/**
+ * Write one slot, atomically.
+ *
+ * A Long Line is a few megabytes of JSON, and a `writeFileSync` that
+ * is interrupted half way leaves a file that exists, has the right name, and
+ * will never parse again — which the player finds out about the next time they
+ * try to load the only copy of a nine-hour game. Write beside it and rename;
+ * rename is the one filesystem operation that is atomic on every platform.
+ */
 export function writeSave(root, slot, save) {
   // The one thing the shell checks about a save, and it is a TRANSPORT check
   // rather than a rule: `format` is what `loadGame` reads first, and a blob
