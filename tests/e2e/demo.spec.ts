@@ -149,3 +149,36 @@ for (const mode of ['original', 'plainenglish'] as const) {
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!).campaign)).toBe('short');
   });
 }
+
+test('wrong-campaign save slots cannot turn a Demonstration into a full continuation #1979', async ({ page }) => {
+  const { full, demo } = await openWithSaves(page, 'original');
+
+  // A restored slot can contain valid bytes for a different campaign. Merely
+  // having the demo- prefix must not make a Short Line a Demonstration.
+  await page.evaluate((save) => {
+    localStorage.setItem('ed:save:demo-autosave', JSON.stringify(save));
+  }, full);
+  await page.reload();
+  const demonstrations = page.getByRole('region', { name: 'Demonstrations kept' });
+  await expect(demonstrations.getByRole('button', { name: /Return to the Demonstration/ })).toBeVisible();
+  await demonstrations.getByRole('button', { name: /Return to the Demonstration/ }).click();
+
+  await expect(page.locator('main.start')).toBeVisible();
+  await expect(demonstrations.getByRole('status')).toContainText('That saved run could not be read.');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:demo-autosave')!))).toEqual(full);
+
+  // The inverse is dangerous too: ordinary Continue must not start an actual
+  // demo found in the full-campaign slot or silently re-save it as a demo.
+  await page.evaluate((save) => {
+    localStorage.setItem('ed:save:autosave', JSON.stringify(save));
+    localStorage.removeItem('ed:save:demo-autosave');
+  }, demo);
+  await page.reload();
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+
+  await expect(page.locator('main.start')).toBeVisible();
+  await expect(page.locator('.resume-refusal')).toContainText('The last sitting could not be resumed.');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(demo);
+  expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBeNull();
+});
