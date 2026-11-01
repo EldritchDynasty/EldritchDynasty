@@ -310,7 +310,7 @@ describe('the save directory', () => {
 
     // An intentional overwrite using the identical spelling still works.
     writeSave(root, 'House', aSave({ year: 1443 }));
-    expect(readSave(root, 'House').year).toBe(1443);
+    expect(readSave(root, 'House')).toMatchObject({ year: 1443 });
     expect(readdirSync(root)).toEqual(['House.edsave.json']);
     writeSave(root, 'Other', aSave({ year: 1444 }));
     expect(listSaves(root).map(entry => entry.slot).sort()).toEqual(['House', 'Other']);
