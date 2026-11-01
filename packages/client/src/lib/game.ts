@@ -1262,7 +1262,9 @@ export function createGame(
       const found = await platform.readSave(AUTOSAVE);
       if (revision !== fullAutosaveRevision) return keptSave;
       keptSave = found;
-      resumable.value = keptSave !== null;
+      // Never offer full Continue for a demo snapshot misplaced in this slot.
+      // Preserve its bytes for explicit recovery; resume() applies the same guard.
+      resumable.value = keptSave !== null && saveMatchesSlot(AUTOSAVE, keptSave);
       return keptSave;
     } catch {
       if (revision !== fullAutosaveRevision) return keptSave;
