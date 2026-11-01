@@ -855,6 +855,45 @@ describe('progressive surface reveal (#368)', () => {
 
 
 describe('modal keyboard Tab targets (#1004)', () => {
+  it('does not steal focus newly selected before deferred modal restoration (#2281)', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const opener = document.createElement('button');
+    const newer = document.createElement('button');
+    const host = document.createElement('div');
+    document.body.append(opener, newer, host);
+    opener.focus();
+
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [h('button', 'Close')]);
+      },
+    }));
+
+    try {
+      app.mount(host);
+      expect(document.activeElement).toBe(host.querySelector('button'));
+      app.unmount();
+      expect(callbacks).toHaveLength(1);
+
+      // A user clicks/tabs elsewhere before the queued frame gets to run.
+      newer.focus();
+      expect(document.activeElement).toBe(newer);
+      callbacks.shift()!(0);
+      expect(document.activeElement).toBe(newer);
+    } finally {
+      host.remove();
+      newer.remove();
+      opener.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.each(['removed', 'concealed', 'usable'] as const)('restores usable board focus when the opener is %s (#1727)', (openerState) => {
     const callbacks: FrameRequestCallback[] = [];
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
