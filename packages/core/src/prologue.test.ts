@@ -324,6 +324,25 @@ describe('the prologue', () => {
     expect(viewOf(ctx).houseName).toBe('The House of Salt');
   });
 
+  it('refuses invisible-only Unicode house names without changing the world', () => {
+    // Neither trim() nor JavaScript's whitespace class removes zero-width
+    // formatting code points. Those marks are not a visible house name.
+    for (const houseName of ['\u200B', '\u2060', ' \u200B\t\u200D \u2060 ', '\uFE0F']) {
+      const ctx = testWorld(content);
+      const result = foundHouse(ctx, { ...CHOICE, houseName });
+      expect(result).toMatchObject({ ok: false, reason: 'the house needs a name' });
+      expect(ctx.world.founding).toBeUndefined();
+      expect(heldHeirlooms(ctx).map((h) => h.id)).not.toContain('portion_of_agelessness');
+    }
+
+    // Valid non-Latin names, even those containing interior format marks,
+    // remain byte-for-byte as submitted.
+    const ctx = testWorld(content);
+    const houseName = '家族\u200Dの館';
+    expect(foundHouse(ctx, { ...CHOICE, houseName }).ok).toBe(true);
+    expect(ctx.world.founding?.houseName).toBe(houseName);
+  });
+
   it('writes what was asked for into the book, where the creditor will read it', () => {
     const ctx = testWorld(content);
     foundHouse(ctx, CHOICE);
