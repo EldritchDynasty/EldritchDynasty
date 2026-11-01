@@ -21,7 +21,7 @@ const NEGATION = /(?:\bnot\b|\bnever\b|\bwithout\b|\brather\s+than\b|\binstead\s
  */
 function governingClause(text, keywordAt) {
   const window = text.slice(Math.max(0, keywordAt - 220), keywordAt);
-  const boundary = Math.max(
+  let boundary = Math.max(
     window.lastIndexOf('\n'),
     window.lastIndexOf('.'),
     window.lastIndexOf(';'),
@@ -29,6 +29,16 @@ function governingClause(text, keywordAt) {
     window.lastIndexOf('!'),
     window.lastIndexOf('?'),
   );
+  // A parenthesized closing trailer is a separate grammatical clause:
+  // "without migration (Closes #2259)" does not negate the close.
+  // Keep the preceding negation only when it directly governs the
+  // parenthesis, as in "does not (close #2259)".
+  const openParen = window.lastIndexOf('(');
+  if (openParen > boundary && window.lastIndexOf(')') < openParen) {
+    const beforeParen = window.slice(boundary + 1, openParen).replace(MARKDOWN, '').trimEnd();
+    const negatesParen = /(?:\bnot|\bnever|\bwithout|\brather\s+than|\binstead\s+of|\b\w+n['’]t)$/i;
+    if (!negatesParen.test(beforeParen)) boundary = openParen;
+  }
   let clause = window.slice(boundary + 1).replace(MARKDOWN, '');
   const buts = [...clause.matchAll(/\bbut\b/gi)];
   const lastBut = buts.at(-1);
