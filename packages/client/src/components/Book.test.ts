@@ -331,57 +331,53 @@ describe('the volume', () => {
     }
   });
 
-  it('explains the same export failure in either mode without changing the error state (#410)', async () => {
-    const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
-    const w = mountBook();
-    try {
-      await w.setProps({ proseMode: 'plainenglish' });
-      const save = w.findAll('button').find((button) => button.text() === 'Save an image');
-      expect(save).toBeDefined();
-      await save!.trigger('click');
-      expect(w.get('[role="alert"]').text()).toContain('Could not save the image.');
-      await w.setProps({ proseMode: 'original' });
-      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
-    } finally {
-      w.unmount();
-      noCanvas.mockRestore();
-    }
-  });
+  it.each(['original', 'plainenglish'] as const)(
+    'reports a vector download failure in either prose mode (#410, #1995)', async (proseMode) => {
+      const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+      vi.mocked(downloadBlob).mockImplementationOnce(() => { throw new Error('Download blocked'); });
+      const w = mountBook();
+      try {
+        await w.setProps({ proseMode });
+        const save = w.findAll('button').find((button) =>
+          button.text() === (proseMode === 'original' ? 'Save this as a page' : 'Save an image'));
+        await save!.trigger('click');
+        await flushPromises();
+        expect(w.get('[role="alert"]').text()).toContain(proseMode === 'original'
+          ? 'The page could not be saved' : 'Could not save the image.');
+        expect((save!.element as HTMLButtonElement).disabled).toBe(false);
+      } finally {
+        w.unmount();
+        noCanvas.mockRestore();
+        vi.mocked(downloadBlob).mockClear();
+      }
+    },
+  );
 
-  it('explains an unavailable canvas instead of silently dropping page export (#1327)', async () => {
-    const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
-    const w = mountBook();
-    try {
-      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
-      expect(save).toBeDefined();
-      await save!.trigger('click');
-      await flushPromises();
-
-      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
-      expect((save!.element as HTMLButtonElement).disabled).toBe(false);
-    } finally {
-      w.unmount();
-      noCanvas.mockRestore();
-    }
-  });
-
-  it('catches browser canvas exceptions instead of rejecting a save click (#1327)', async () => {
-    const brokenCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockImplementation(() => { throw new Error('Canvas allocation blocked'); });
-    const w = mountBook();
-    try {
-      const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
-      expect(save).toBeDefined();
-      await save!.trigger('click');
-      await flushPromises();
-
-      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
-      expect((save!.element as HTMLButtonElement).disabled).toBe(false);
-    } finally {
-      w.unmount();
-      brokenCanvas.mockRestore();
-    }
-  });
+  it.each(['null', 'throw'] as const)(
+    'downloads an SVG even when the measurement canvas returns %s (#1995)', async (failure) => {
+      const noCanvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+        .mockImplementation(() => {
+          if (failure === 'throw') throw new Error('Canvas allocation blocked');
+          return null;
+        });
+      const download = vi.mocked(downloadBlob);
+      download.mockClear();
+      const w = mountBook();
+      try {
+        const save = w.findAll('button').find((button) => button.text() === 'Save this as a page');
+        await save!.trigger('click');
+        await flushPromises();
+        expect(download).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), expect.stringMatching(/\\.svg$/));
+        expect(w.find('[role="alert"]').exists()).toBe(false);
+        expect((save!.element as HTMLButtonElement).disabled).toBe(false);
+        expect(noCanvas).toHaveBeenCalledTimes(1);
+      } finally {
+        w.unmount();
+        noCanvas.mockRestore();
+        download.mockClear();
+      }
+    },
+  );
 
   it('falls back to SVG on PNG encoding failure and returns the save button to usable state (#2058)', async () => {
     const context = {
