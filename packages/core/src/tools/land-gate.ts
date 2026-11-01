@@ -140,8 +140,8 @@ function portrait(ctx: ReturnType<typeof bootstrap>, latestChange: number): Hold
   };
 }
 
-function runLand(source: Source, seed: number, years: number): LandRun {
-  const ctx = bootstrap(indexContent(source), seed, START_YEAR);
+function runLand(source: Content, seed: number, years: number): LandRun {
+  const ctx = bootstrap(source, seed, START_YEAR);
   const w = ctx.world;
   const routes = new Set<string>();
   let acreageLost = false;
@@ -243,10 +243,14 @@ export function runLandGatePartition(
   partition: GatePartition<number>,
   years: number,
 ): GatePartitionResult<LandRun> {
+  // Each worker plays hundreds of seeds from the same authored bundle. Build
+  // the desugared event/arc indexes once, not once per simulated campaign.
+  // This preserves seed order and the exact raw observations judged below.
+  const content = indexContent(source);
   return {
     id: partition.id,
     observations: partition.items.map(({ index, input }) => ({
-      index, value: runLand(source, input, years),
+      index, value: runLand(content, input, years),
     })),
   };
 }
