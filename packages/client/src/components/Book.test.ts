@@ -154,6 +154,30 @@ describe('recorded lives in the Book and spine (#1944)', () => {
     } finally { wrapper.unmount(); }
   });
 
+  it.each(['original', 'plainenglish'] as const)('does not repeat recorded bynames in Book links and history labels (%s, #2315)', async (proseMode) => {
+    const book = [{ ...entry('legacy-name', 1100, 'The witness signed the page.'), people: ['legacy', 'new'] }];
+    const people = [
+      { id: 'legacy', name: 'Adela the Elder', epithet: 'the Elder' },
+      { id: 'new', name: 'Mara', epithet: 'the Chronicler' },
+    ];
+    const original = structuredClone(people);
+    const w = mount(Book, { attachTo: document.body, props: {
+      book, ages: [], houseName: 'The Recorded House', close: () => {}, actions: readsOver(book),
+      proseMode, milestones: () => [], people,
+    } });
+    try {
+      expect(w.get('[data-person="legacy"]').text()).toContain('Adela the Elder');
+      expect(w.get('[data-person="legacy"]').text()).not.toContain('the Elder the Elder');
+      expect(w.get('[data-person="new"]').text()).toContain('Mara the Chronicler');
+      await w.get('[data-person="legacy"]').trigger('click');
+      await flushPromises();
+      expect(w.get('.person-history h4').text()).toBe('Adela the Elder');
+      expect(w.get('.person-history').attributes('aria-label')).toContain('Adela the Elder');
+      expect(w.get('.person-history').attributes('aria-label')).not.toContain('the Elder the Elder');
+      expect(people).toEqual(original);
+    } finally { w.unmount(); }
+  });
+
   it('opens the source above the spine and returns to its originating milestone on Escape', async () => {
     const wrapper = mount({
       components: { Book, Line },
@@ -720,7 +744,7 @@ describe('the panel', () => {
         view: {
           chronicle: [page],
           chroniclePeople: [
-            { id: 'per_dead', name: 'Mara', epithet: 'the Chronicler' },
+            { id: 'per_dead', name: 'Mara the Chronicler', epithet: 'the Chronicler' },
             { id: 'per_alive', name: 'Nora' },
           ],
           halls: [{ members: [{ id: 'per_alive', name: 'Nora' }] }],
@@ -734,6 +758,7 @@ describe('the panel', () => {
     try {
       const historical = w.get('[data-person-history="per_dead"]');
       expect(historical.text()).toContain('Mara the Chronicler');
+      expect(historical.text()).not.toContain('the Chronicler the Chronicler');
       expect(historical.text()).toContain(
         proseMode === 'plainenglish' ? 'not in a current household' : 'not in a living hall',
       );
