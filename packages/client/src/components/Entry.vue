@@ -5,7 +5,7 @@ import type { ProseMode } from '@ed/schema';
 import { answeredLabel, causeLink, type EntryLinks } from '../lib/causes';
 import { isWritten } from '../lib/book';
 import GlossaryText from './GlossaryText.vue';
-import { splitFirstStanding } from '../lib/glossary';
+import { splitFirstGlossary } from '../lib/glossary';
 
 /**
  * ONE LINE OF THE BOOK, wherever the book is being read (issue #48).
@@ -93,8 +93,8 @@ const claims = computed(() => (blank.value ? [] : props.entry.claims ?? []).map(
 /** The main sentence has priority: one glossary disclosure per Chronicle entry. */
 const firstClaimGlossaryIndex = computed(() => {
   if (props.read || blank.value) return -1;
-  const containsTerm = (text: string) => splitFirstStanding(text, props.proseMode)
-    .some((part) => part.term === 'standing');
+  const containsTerm = (text: string) => splitFirstGlossary(text, props.proseMode)
+    .some((part) => part.term !== undefined);
   if (containsTerm(props.entry.text ?? '')) return -1;
   return claims.value.findIndex(containsTerm);
 });

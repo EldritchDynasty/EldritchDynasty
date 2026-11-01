@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, ref, useId, watch } from 'vue';
 import type { ProseMode } from '@ed/schema';
-import { splitFirstStanding, standingGlossaryDefinition } from '../lib/glossary';
+import { glossaryDefinition, splitFirstGlossary } from '../lib/glossary';
 
 const props = defineProps<{ text: string; proseMode?: ProseMode }>();
-const segments = computed(() => splitFirstStanding(props.text, props.proseMode));
-const containsTerm = computed(() => segments.value.some((segment) => segment.term === 'standing'));
+// Terms and definitions come from the validated glossary collection, not a
+// separate hard-coded list in the renderer. One term per passage remains the
+// disclosure budget even as the collection grows.
+const segments = computed(() => splitFirstGlossary(props.text, props.proseMode));
+const termId = computed(() => segments.value.find((segment) => segment.term)?.term);
 const open = ref(false);
-const expanded = computed(() => containsTerm.value && open.value);
+const expanded = computed(() => Boolean(termId.value) && open.value);
 const controlId = useId();
 const opener = ref<HTMLButtonElement | null>(null);
-const definition = computed(() => standingGlossaryDefinition(props.proseMode));
+const definition = computed(() => termId.value ? glossaryDefinition(termId.value, props.proseMode) ?? '' : '');
 
 // A reused passage or Chronicle component must not inherit an earlier line's
 // disclosure. The definition belongs to this text and language, not the slot.
@@ -41,7 +44,7 @@ function onKeydown(event: KeyboardEvent): void {
   <span class="glossary-text" @keydown="onKeydown">
     <template v-for="(segment, index) in segments" :key="index">
       <button
-        v-if="segment.term === 'standing'"
+        v-if="segment.term"
         type="button"
         class="glossary-term"
         :aria-expanded="expanded"
