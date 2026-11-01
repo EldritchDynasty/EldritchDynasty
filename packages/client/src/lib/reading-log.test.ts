@@ -616,6 +616,45 @@ describe('answers and the gaps between them', () => {
     expect(artifact.summary.gaps.at(-1)).toMatchObject({ censored: true, to: { kind: 'exported' } });
   });
 
+  it('does not invent hours of foreground exposure after the event cap (#2341)', () => {
+    const c = clock();
+    const l = log(c);
+    l.note({ kind: 'year', year: 1042 });
+    c.tick(1_250);
+    l.page(1050, { id: 'chr_cap', answer: 'glimpse' });
+
+    // Leave room for the terminal marker. The next observation reaches the
+    // cap and fixes the final measurable instant at 1,250 ms.
+    for (let i = 0; i < READING_LOG_MAX_EVENTS; i++) {
+      l.note({ kind: 'year', year: 1100 + i });
+    }
+    expect(l.truncated).toBe(true);
+    const atCap = l.artifact();
+    expect(atCap.summary).toMatchObject({ wallMs: 1_250, foregroundMs: 1_250 });
+    expect(atCap.summary.gaps.at(-1)).toMatchObject({
+      to: { at: 1_250, kind: 'cap' }, censored: true,
+    });
+
+    // There are no more focus/visibility observations after the cap. Passing
+    // two hours must not be misreported as two measured hours of reading.
+    c.tick(2 * 60 * 60 * 1_000);
+    expect(l.artifact().summary).toEqual(atCap.summary);
+
+    l.end('exported');
+    const artifact = l.artifact();
+    expect(artifact.events).toHaveLength(READING_LOG_MAX_EVENTS);
+    expect(artifact.events.at(-1)).toEqual({
+      kind: 'end', reason: 'exported', at: 1_250,
+    });
+    expect(artifact.summary).toMatchObject({ wallMs: 1_250, foregroundMs: 1_250 });
+    expect(artifact.summary.gaps.at(-1)).toMatchObject({
+      to: { at: 1_250, kind: 'exported' }, censored: true,
+    });
+    // Consumers re-fold the serialized events without a private cap timestamp.
+    expect(summarize(artifact.events, artifact.summary.wallMs, artifact.truncated))
+      .toEqual(artifact.summary);
+  });
+
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
     expect(artifact).toMatchObject({ format: 'ed-reading-log/10', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
