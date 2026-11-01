@@ -75,6 +75,7 @@ events:
       subject: the provenance of the match
       options:
         record:
+          byname: { slot: SUITOR, text: "Thin Papers" }
           chronicle: The papers were poor and we married her regardless, for what she might carry.
           effects:
             - { kind: respect, delta: -1 }
@@ -83,6 +84,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: SUITOR, text: "Thrice Attested" }
           chronicle: A daughter of impeccable line, her descent attested by three houses and the Church.
           effects:
             - { kind: respect, delta: 1 }
@@ -217,6 +219,7 @@ events:
       subject: the mundane son
       options:
         record:
+          byname: { slot: SON, text: "Forty Years" }
           chronicle: The second son never woke. He kept the accounts for forty years and kept them well.
           effects: []
           claims:
@@ -224,6 +227,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: SON, text: "the Refuser" }
           chronicle: The second son declined the blood, choosing service over power.
           effects:
             - { kind: respect, delta: 1 }
@@ -368,6 +372,22 @@ events:
                 to avoid saying so.
 
 proseVariants:
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.record.byname.text"
+    of: 981a6631e6d3ecf5
+    plainenglish: >-
+      the Bride with Thin Papers
+  - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].record.options.embellish.byname.text"
+    of: fca66a288f1686e4
+    plainenglish: >-
+      the Well-Descended
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.record.byname.text"
+    of: 8ffb9fd5ca688201
+    plainenglish: >-
+      the Bookkeeper
+  - address: "content:events/marriage.yaml#events[id=a_son_who_carries_nothing].record.options.embellish.byname.text"
+    of: 43c192d6113f2962
+    plainenglish: >-
+      the One Who Chose Service
   - address: "content:events/marriage.yaml#events[id=the_notarised_pedigree].title"
     of: 4787ebf7b78096bb
     plainenglish: >-

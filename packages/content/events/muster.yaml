@@ -667,6 +667,7 @@ events:
       subject: the war, and what this house is to be remembered for in it
       options:
         record:
+          byname: { slot: OFFICER, text: "Other Banner" }
           chronicle: >-
             The house sent men to the war and they went under no banner of its
             own, and this is the number that went and the number that came
@@ -676,6 +677,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: OFFICER, text: "the Bannerman" }
           chronicle: >-
             The house sent men to the war under its own banner and they were
             named in the dispatches at Caster, and what it cost is written
@@ -782,6 +784,14 @@ events:
                   reason: contract
 
 proseVariants:
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.record.byname.text"
+    of: d10ce9e996e7dd0d
+    plainenglish: >-
+      the Borrowed Banner
+  - address: "content:events/muster.yaml#events[id=the_settlement].record.options.embellish.byname.text"
+    of: feef04f68cf4a47a
+    plainenglish: >-
+      the Banner Leader
   - address: "content:events/muster.yaml#events[id=the_muster_is_called].title"
     of: "700915b0b21b830c"
     plainenglish: >-

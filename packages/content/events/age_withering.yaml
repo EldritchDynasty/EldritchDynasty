@@ -164,6 +164,7 @@ events:
       subject: the question asked at the table
       options:
         record:
+          byname: { slot: YOUNGEST, text: "the Asker" }
           chronicle: The youngest asked whether it had ever been true, in front of five people, and was answered as honestly as the house could manage.
           effects: []
           claims:
@@ -171,6 +172,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: YOUNGEST, text: "the Signreader" }
           chronicle: The youngest of the house read the signs before any adult at the table had spoken, and asked only to have it confirmed.
           effects:
             - { kind: respect, delta: 1 }
@@ -182,6 +184,14 @@ events:
             provableBy: [commons, house_ilm]
 
 proseVariants:
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.options.record.byname.text"
+    of: ca1f4ade73cfe672
+    plainenglish: >-
+      the Questioner
+  - address: "content:events/age_withering.yaml#events[id=the_youngest_asks].record.options.embellish.byname.text"
+    of: 93b7b58635860f52
+    plainenglish: >-
+      the Reader of Signs
   - address: "content:events/age_withering.yaml#events[id=the_tutor_with_nothing_to_teach].title"
     of: 7cfe69df7ddbb9f3
     plainenglish: >-

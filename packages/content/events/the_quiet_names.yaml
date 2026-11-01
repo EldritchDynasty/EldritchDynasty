@@ -271,6 +271,7 @@ events:
       subject: where the pilgrim went and what came back
       options:
         record:
+          byname: { slot: PILGRIM, text: "Two Years" }
           chronicle: One of ours went to Coln and on toward Vaunt, and what came back to the gate was thinner and quieter and had been two years on the road.
           effects: []
           claims:
@@ -278,6 +279,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: PILGRIM, text: "the Fortnight" }
           chronicle: One of ours walked to Coln and back within the fortnight, and was entered by the shrine keeper on both days.
           effects:
             - { kind: respect, delta: 1 }
@@ -770,6 +772,14 @@ events:
             provableBy: [the_church, house_ilm]
 
 proseVariants:
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.record.byname.text"
+    of: a363a0b7e2433da3
+    plainenglish: >-
+      the Long Walker
+  - address: "content:events/the_quiet_names.yaml#events[id=the_pilgrimage_to_coln].record.options.embellish.byname.text"
+    of: 0fd8b0291b048bc5
+    plainenglish: >-
+      the Fast Walker
   - address: "content:events/the_quiet_names.yaml#events[id=the_keeper_asks_about_the_fourth_petition].title"
     of: "ee579e87a8843863"
     plainenglish: >-

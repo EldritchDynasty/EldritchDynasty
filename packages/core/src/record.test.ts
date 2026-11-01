@@ -973,6 +973,28 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     expect(bynameView(child)?.text).toBe('who woke at nine');
   });
 
+  it.each(['original', 'plainenglish'] as const)('the shipped waking_early pages grant their authored bynames through the docket (%s)', (mode) => {
+    const variants = parse(readFileSync(join(CONTENT_ROOT, 'events/age_quickening.yaml'), 'utf8')).proseVariants;
+    const event = bundle.events.find((x) => x.id === 'waking_early')!;
+    const words = (pen: 'record' | 'embellish') => {
+      const original = event.record!.options[pen].byname!.text;
+      if (mode === 'original') return original;
+      return variants.find((v: { address: string }) => v.address.endsWith(`[id=waking_early].record.options.${pen}.byname.text`)).plainenglish;
+    };
+    for (const pen of ['record', 'embellish'] as const) {
+      const ctx = bootstrap(bundle, 1990, 1042);
+      setProseVariants(ctx, variants);
+      setProseMode(ctx, mode);
+      const child = place(ctx, { sex: 'male', age: 9 });
+      page(ctx, `p_shipped_${pen}`);
+      const pending = queueRecord(ctx, event, `p_shipped_${pen}`, { CHILD: child.id })!;
+      expect(recordBynamePreview(ctx, pending)?.[pen]?.text).toBe(words(pen));
+      expect(resolveRecord(ctx, pending.id, pen).byname?.text).toBe(words(pen));
+      expect(child.epithet).toBe(words(pen));
+      expect(missingPlainEnglish(ctx).filter((a) => a.includes('byname'))).toEqual([]);
+    }
+  });
+
   it('the read model carries the byname as values, beside the epithet it explains', () => {
     const session = newGame(bundle, { seed: 1990 });
     const ctx = session.ctx;

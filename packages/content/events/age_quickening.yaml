@@ -66,6 +66,7 @@ events:
       subject: the child who woke at nine
       options:
         record:
+          byname: { slot: CHILD, text: "the Early" }
           chronicle: A child of this house woke at nine years, and the iron and the milk both turned, in that order.
           effects: []
           claims:
@@ -73,6 +74,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: CHILD, text: "the Bloodmarked" }
           chronicle: A child of this house woke at seven years bearing the sign of the blood, as the founder is said to have done.
           effects:
             - { kind: respect, delta: 1 }
@@ -222,6 +224,14 @@ events:
     rumour: { id: rumour_the_millers_boy, accuracy: 0.15, spread: 3 }
 
 proseVariants:
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.options.record.byname.text"
+    of: afd2306ba3cd7297
+    plainenglish: >-
+      the Early Waker
+  - address: "content:events/age_quickening.yaml#events[id=waking_early].record.options.embellish.byname.text"
+    of: f40bf17c1712fa20
+    plainenglish: >-
+      the Marked Child
   - address: "content:events/age_quickening.yaml#events[id=waking_early].title"
     of: 386d09df0365f733
     plainenglish: >-

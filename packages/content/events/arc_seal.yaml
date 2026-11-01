@@ -131,6 +131,7 @@ events:
       subject: the west house's claim
       options:
         record:
+          byname: { slot: HEAD, text: "Lost Seal" }
           chronicle: The west line holds the Seal and calls itself senior. Neither of those is our doing and both are our fault.
           effects:
             - { kind: respect, delta: -1 }
@@ -139,6 +140,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "Kept Seal" }
           chronicle: The Seal remains with the house, in the keeping of a trusted branch.
           effects:
             - { kind: respect, delta: 1 }
@@ -281,6 +283,14 @@ events:
 # Plain English variants for the four nodes of arc_the_given_seal (#415).
 # Original prose, event mechanics and narrative scheduling are untouched.
 proseVariants:
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.record.byname.text"
+    of: a53fc01c3f3df420
+    plainenglish: >-
+      who Lost the Seal
+  - address: "content:events/arc_seal.yaml#events[id=seal_the_grandson_presses].record.options.embellish.byname.text"
+    of: ba8150dab91bafe6
+    plainenglish: >-
+      the Seal Keeper
   - address: "content:events/arc_seal.yaml#events[id=seal_aftermath].title"
     of: 556bf1ba0eba2196
     plainenglish: >-

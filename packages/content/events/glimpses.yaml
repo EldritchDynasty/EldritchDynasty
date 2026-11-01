@@ -110,6 +110,7 @@ events:
       subject: the letters to the weighers
       options:
         record:
+          byname: { slot: HEAD, text: "Old Debt" }
           chronicle: The house offered to settle its oldest debt in full, and every weigher on the Wend
             swore that nobody holds it.
           effects: []
@@ -118,6 +119,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Payer" }
           chronicle: The house settled its oldest debt in full, and the weighers swore it paid.
           effects: []
           claims:
@@ -171,6 +173,14 @@ events:
             - { kind: flag, flag: glimpse_branch_book, set: true }
 
 proseVariants:
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.record.byname.text"
+    of: f356c6f38a6c4447
+    plainenglish: >-
+      the Debt Offerer
+  - address: "content:events/glimpses.yaml#events[id=the_letters_to_the_weighers].record.options.embellish.byname.text"
+    of: 06137a1d789d8301
+    plainenglish: >-
+      the Debt Payer
   - address: "content:events/glimpses.yaml#events[id=the_line_carried_forward].title"
     of: "d2f9911d582b8709"
     plainenglish: >-

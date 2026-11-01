@@ -479,6 +479,7 @@ events:
       subject: the six men on the river road
       options:
         record:
+          byname: { slot: HEAD, text: "of the River Gate" }
           chronicle: Six came up the river road and the house met them at the gate. Not everyone did.
           effects:
             - { kind: respect, delta: 1 }
@@ -487,6 +488,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Wall" }
           chronicle: A company of raiders broke against these walls, and this house was the reason the garrison found nothing left to do.
           effects:
             - { kind: respect, delta: 2 }
@@ -588,6 +590,14 @@ events:
             provableBy: [house_calder, commons]
 
 proseVariants:
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.record.byname.text"
+    of: b172fa00fcfe2b64
+    plainenglish: >-
+      the Gate Holder
+  - address: "content:events/age_scoped.yaml#events[id=what_came_up_the_river_road].record.options.embellish.byname.text"
+    of: dc68e5e026ea437c
+    plainenglish: >-
+      the Raider Breaker
   - address: "content:events/age_scoped.yaml#events[id=the_levy_at_the_door].title"
     of: df34ef0408b00980
     plainenglish: "The Levy Arrives"

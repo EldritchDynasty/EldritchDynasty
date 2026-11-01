@@ -145,6 +145,7 @@ const total = (xs: BynameBatch[], key: keyof BynameBatch) => xs.reduce((n, x) =>
 describe('earned bynames over played runs (#1990)', () => {
   it('Omit names nobody, Record attests on its own page, Embellish ties the name to its lie', () => {
     const report: string[] = [];
+    const writing: BynameBatch[] = [];
     for (const pen of ['omit', 'record', 'embellish'] as const) {
       const runs = SEEDS.map((seed) => playForBynames(seed, pen));
       for (const { ctx } of runs) {
@@ -171,12 +172,20 @@ describe('earned bynames over played runs (#1990)', () => {
         + `other blood ${total(batches, 'relativesNamed')}/${total(batches, 'relatives')}, `
         + `grants ${total(batches, 'grants')}, contested ${total(batches, 'contested')}`);
       if (pen === 'omit') continue;
+      writing.push(...batches);
       expect(total(batches, 'grants'), `${pen} named nobody in ${SEEDS.length} Long Lines`).toBeGreaterThan(0);
       expectRate({
-        hits: total(batches, 'relativesNamed'), n: total(batches, 'relatives'), ceiling: 0.1,
+        hits: total(batches, 'relativesNamed'), n: total(batches, 'relatives'), ceiling: 0.03,
         what: `${pen}: blood relatives (not Heads) who earned a byname`,
       });
     }
+    // Pooled over both pens that write: a Head is the person the book most
+    // often makes a claim about, so Heads clear a floor that other relatives
+    // stay under (1 November 2026: 21/110 Heads against 9/1743 relatives).
+    expectRate({
+      hits: total(writing, 'headsNamed'), n: total(writing, 'heads'), floor: 0.04,
+      what: 'Heads who earned a byname under a pen that writes one',
+    });
     console.log(`bynames over ${SEEDS.length} × ${YEARS}-year Long Lines — ${report.join('; ')}`);
   });
 });
