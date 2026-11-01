@@ -1077,6 +1077,53 @@ describe('Chronicle plate SVG fallback when bitmap export fails (#2058)', () => 
     } });
   }
 
+  it('uses measured SVG geometry and retains the nameless code when Canvas 2D is disabled (#2398)', async () => {
+    const previous = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getComputedTextLength');
+    Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+      configurable: true,
+      value(this: SVGElement) { return (this.textContent ?? '').length * 7; },
+    });
+    const ctx = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    vi.mocked(downloadBlob).mockClear();
+    const w = mountExport();
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      await assertSvgDownload();
+      expect(ctx).toHaveBeenCalledTimes(1);
+      expect(document.querySelector('svg[style*="-10000px"]')).toBeNull();
+      expect(w.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      w.unmount();
+      vi.restoreAllMocks();
+      if (previous) Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', previous);
+      else Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+    }
+  });
+
+  it('retains a visible error when neither canvas nor SVG can measure text (#2398)', async () => {
+    const previous = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getComputedTextLength');
+    Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+      configurable: true, value: () => 0,
+    });
+    const ctx = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    vi.mocked(downloadBlob).mockClear();
+    const w = mountExport();
+    try {
+      await w.findAll('button').find((b) => b.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      expect(ctx).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(downloadBlob)).not.toHaveBeenCalled();
+      expect(w.get('[role="alert"]').text()).toContain('The page could not be saved');
+      expect(document.querySelector('svg[style*="-10000px"]')).toBeNull();
+    } finally {
+      w.unmount();
+      vi.restoreAllMocks();
+      if (previous) Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', previous);
+      else Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+    }
+  });
+
   it('uses one SVG when the final PNG canvas cannot provide a drawing context', async () => {
     const ctx = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockReturnValueOnce(context).mockReturnValueOnce(null);
