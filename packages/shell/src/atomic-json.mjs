@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { renameSync, rmSync, writeFileSync } from 'node:fs';
+import { closeSync, openSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 
 /**
  * Atomically replace an opaque JSON file without trusting a predictable
@@ -25,13 +25,23 @@ export function writeJsonAtomically(target, value, validateSerialized) {
   if (validateSerialized) validateSerialized(JSON.parse(serialized));
 
   const scratch = `${target}.${randomUUID()}.writing`;
+  let ownsScratch = false;
   try {
-    writeFileSync(scratch, serialized, { encoding: 'utf8', flag: 'wx' });
+    // Exclusive open tells us whether this invocation owns the scratch.
+    // Do not unlink a collision's pre-existing bytes when wx fails.
+    const descriptor = openSync(scratch, 'wx');
+    ownsScratch = true;
+    try {
+      // Writes through the owned handle so partial write failures also clean up.
+      writeFileSync(descriptor, serialized, 'utf8');
+    } finally {
+      closeSync(descriptor);
+    }
     renameSync(scratch, target);
   } finally {
-    // A failed write or rename must not leave an unusable temporary file.
-    // After a successful rename, this path no longer exists.
-    rmSync(scratch, { force: true });
+    // After a successful rename, this path no longer exists. On failed
+    // exclusive creation it belongs to somebody else and must be preserved.
+    if (ownsScratch) rmSync(scratch, { force: true });
   }
   return target;
 }
