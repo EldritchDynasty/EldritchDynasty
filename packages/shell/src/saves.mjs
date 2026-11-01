@@ -122,6 +122,20 @@ export function readSave(root, slot) {
  * try to load the only copy of a nine-hour game. Write beside it and rename;
  * rename is the one filesystem operation that is atomic on every platform.
  */
+/**
+ * Check complete filenames, including extension spelling. A profile created on
+ * a case-sensitive system must behave safely when later opened on Windows.
+ * This is a name-ambiguity guard, not a lock against concurrent filesystem edits.
+ */
+function rejectCaseAlias(root, slot) {
+  const fileName = slot + SAVE_EXTENSION;
+  const caseAlias = readdirSync(root).find((existing) =>
+    existing !== fileName && existing.toLowerCase() === fileName.toLowerCase());
+  if (caseAlias !== undefined) {
+    throw new SaveSlotError(`save slot "${slot}" conflicts with existing filename "${caseAlias}" on Windows`);
+  }
+}
+
 export function writeSave(root, slot, save) {
   // The one thing the shell checks about a save, and it is a TRANSPORT check
   // rather than a rule: `format` is what `loadGame` reads first, and a blob
@@ -131,24 +145,18 @@ export function writeSave(root, slot, save) {
   requireSaveEnvelope(save);
   const target = resolveSavePath(root, slot);
 
-  // The supported Windows shell resolves these filenames case-insensitively.
-  // Without this guard, saving "house" after "House" silently replaces an
-  // unrelated run. Check on every platform so a Linux profile can migrate
-  // to Windows without two logical slots collapsing into one physical file.
-  // Compare the entire filename, including the extension: an externally
-  // renamed .EDSAVE.JSON also aliases our canonical extension on Windows.
-  const fileName = slot + SAVE_EXTENSION;
-  const caseAlias = readdirSync(root).find((existing) =>
-    existing !== fileName && existing.toLowerCase() === fileName.toLowerCase());
-  if (caseAlias !== undefined) {
-    throw new SaveSlotError(`save slot "${slot}" conflicts with existing filename "${caseAlias}" on Windows`);
-  }
-
+  // Windows resolves save filenames case-insensitively. Apply the same
+  // portable alias rule to writes AND deletions: otherwise removing "house"
+  // could erase an existing "House" run even though writing it is refused.
+  rejectCaseAlias(root, slot);
   return writeJsonAtomically(target, save, requireSaveEnvelope);
 }
 
 export function deleteSave(root, slot) {
   const target = resolveSavePath(root, slot);
+  // A case-only alias deletes another slot on Windows even though writeSave
+  // rejects it. Refuse it before the filesystem performs a case-folded lookup.
+  rejectCaseAlias(root, slot);
   rmSync(target, { force: true });
   return target;
 }
