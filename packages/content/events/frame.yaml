@@ -954,6 +954,40 @@ events:
             There is a third account of that room, in a hand nobody has since
             identified, which gives no name at all and records only the hour.
 
+  # A family that only embellishes can have no truthful Record entries or
+  # omissions. Those entries gate all five existing baseline interludes.
+  # This one reads the presence of a discrepancy, never its truth or state:
+  # the house may still repeat the sentence after the lie is proven.
+  # Baseline weight/cooldown prevent it displacing rarer named-story beats.
+  - id: frame_the_weight_of_a_sentence
+    title: The Weight of a Sentence
+    tier: frame
+    frequency: rare
+    weight: 32
+    repeatable: true
+    cooldownYears: 150
+    tags: [frame, baseline, record]
+    purposes: [advance_clause, buy_patience, plant_rumour]
+    reads:
+      - { anyDiscrepancy: { atLeast: 1 } }
+    slots:
+      LISTENER_A: { role: listener_blood }
+      LISTENER_B: { role: listener_record }
+    body: >-
+      There is a sentence the family has given such care that its ink seems
+      darker than any other on the page, though the guardian holds the leaf
+      where the lamp is weakest. The last of the blood has heard it read in
+      three different voices, each making a different word sound beyond
+      question. None of those voices is here tonight.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: only
+          weight: 100
+          text: >-
+            The guardian turns the page without deciding which word deserved
+            the weight.
+
 proseVariants:
   - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].title"
     of: "0bfa3e55f85ffc39"
@@ -1423,3 +1457,17 @@ proseVariants:
     plainenglish: >-
       There is a third account of that room, in handwriting nobody has ever identified. It gives
       no name at all, and records only the hour.
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].title"
+    of: "c0f9488389b19737"
+    plainenglish: >-
+      A Sentence Written With Care
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].body"
+    of: "3875d011217c622d"
+    plainenglish: >-
+      One sentence in the family book looks darker than the rest. The last
+      of the blood has heard three people read it aloud, and each stressed
+      a different word. None of those people is here tonight.
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].interaction.outcomes[id=only].text"
+    of: "16454f28a8f667bc"
+    plainenglish: >-
+      The guardian turns the page without saying which word mattered most.
