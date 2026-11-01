@@ -1,8 +1,8 @@
 /**
  * A line-level diff, hand-rolled — no dependency, in keeping with the house
  * style (`FamilyTree.vue`, `Sigil.vue`). Classic LCS via dynamic programming;
- * content files run tens to a few hundred lines, so the O(n·m) table is
- * nothing to worry about.
+ * small changed regions use O(n·m) LCS; large changes use a bounded,
+ * lossless replacement preview rather than risking browser memory.
  */
 export type DiffLine =
   | { kind: 'same'; text: string }
@@ -15,7 +15,7 @@ export type DiffLine =
  * the middle exceeds the cell budget, show truthful deletes and adds instead
  * of exhausting the editor's memory before an author can review a save.
  */
-export const MAX_DIFF_LCS_CELLS = 1_000_000;
+const MAX_DIFF_LCS_CELLS = 1_000_000;
 
 export function diffLines(before: string, after: string): DiffLine[] {
   // A trailing newline in a nonempty file denotes a real empty final line.
