@@ -478,7 +478,27 @@ export class Sound {
       d.gain.gain.setValueAtTime(d.gain.gain.value, now);
       d.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
       // Every node here is a source this class started, so stopping is safe.
-      for (const n of d.nodes) n.stop(now + fadeSeconds + Math.min(0.1, fadeSeconds));
+      // The dedicated drone gain is connected to the output. Retire that graph
+      // after the last source finishes; otherwise repeated Age transitions
+      // leave disconnected-from-the-game but still connected-to-output nodes.
+      let remaining = d.nodes.length;
+      let disconnected = false;
+      const disconnect = () => {
+        if (disconnected) return;
+        disconnected = true;
+        try { d.gain.disconnect(); } catch { /* the host already closed the graph */ }
+      };
+      const stopAt = now + fadeSeconds + Math.min(0.1, fadeSeconds);
+      for (const n of d.nodes) {
+        n.onended = () => {
+          if (--remaining === 0) disconnect();
+        };
+        n.stop(stopAt);
+      }
+      // Suspend/mute can freeze the audio clock before ended is dispatched.
+      // With no fade to preserve, disconnect immediately instead of retaining
+      // the old graph until a later foreground gesture (which may never come).
+      if (fadeSeconds === 0 || remaining === 0) disconnect();
     });
   }
 
