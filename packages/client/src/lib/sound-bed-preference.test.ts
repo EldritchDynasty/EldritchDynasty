@@ -49,7 +49,8 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     expect(engine.muted).toBe(false);
     expect(engine.volume).toBe(0.4);
     bed.cue('seal');
-    expect(engine.cue).toHaveBeenCalledExactlyOnceWith('seal');
+    expect(engine.cue).toHaveBeenCalledTimes(1);
+    expect(engine.cue).toHaveBeenCalledWith('seal');
     bed.dispose();
   });
 });
