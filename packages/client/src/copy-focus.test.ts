@@ -64,3 +64,59 @@ describe('fallback clipboard copy preserves focus (#2034)', () => {
     }
   });
 });
+
+
+describe('fallback clipboard copy inside open shadow roots (#2396)', () => {
+  it('restores the innermost focused control, not its unfocusable shadow host', async () => {
+    const originalDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+    const originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+
+    let active: unknown;
+    const inner = { focus: vi.fn(() => { active = outer; }) };
+    const middle = { shadowRoot: { activeElement: inner }, focus: vi.fn() };
+    const outer = { shadowRoot: { activeElement: middle }, focus: vi.fn() };
+    active = outer;
+    const area = {
+      value: '',
+      style: {} as Record<string, string>,
+      setAttribute: vi.fn(),
+      focus: vi.fn(() => { active = area; }),
+      select: vi.fn(),
+      remove: vi.fn(),
+    };
+    const command = vi.fn(() => true);
+    Object.defineProperty(globalThis, 'document', {
+      configurable: true,
+      value: {
+        get activeElement() { return active; },
+        createElement: vi.fn(() => area),
+        body: { appendChild: vi.fn() },
+        execCommand: command,
+      },
+    });
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('clipboard denied')) } },
+    });
+
+    try {
+      await expect(copyTextInBrowser('ED1.shadow-copy')).resolves.toBeUndefined();
+      expect(command).toHaveBeenCalledExactlyOnceWith('copy');
+      expect(area.remove).toHaveBeenCalledOnce();
+      expect(inner.focus).toHaveBeenCalledOnce();
+      expect(middle.focus).not.toHaveBeenCalled();
+      expect(outer.focus).not.toHaveBeenCalled();
+      // document.activeElement still reports the host; the innermost focus
+      // receiver is what matters inside nested open roots.
+      expect(active).toBe(outer);
+    } finally {
+      for (const [key, descriptor] of [
+        ['document', originalDocument],
+        ['navigator', originalNavigator],
+      ] as const) {
+        if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+        else Reflect.deleteProperty(globalThis, key);
+      }
+    }
+  });
+});
