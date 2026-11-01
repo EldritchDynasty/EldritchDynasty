@@ -45,6 +45,29 @@ describe('watchEdits (#1891)', () => {
     } finally { e.stop(); }
   });
 
+  it('preserves a dirty edit when selection switches before Vue flushes (#2333)', async () => {
+    marked.length = 0;
+    const e = editor();
+    try {
+      // Previously the default batched watcher saw only a -> b, so it treated
+      // the flush as browsing and silently lost the unsaved edit to a.
+      e.current.value!.title = 'A, edited';
+      e.selected.value = 'b';
+      await nextTick();
+      expect(marked).toEqual(['events:a']);
+
+      // The new selection still has its own independent dirty tracking.
+      e.current.value!.title = 'B, edited';
+      await nextTick();
+      expect(marked).toEqual(['events:a', 'events:b']);
+
+      // A later selection without a mutation must not mark c dirty.
+      e.selected.value = 'c';
+      await nextTick();
+      expect(marked).toEqual(['events:a', 'events:b']);
+    } finally { e.stop(); }
+  });
+
   it('marks an edit even when the item is replaced rather than mutated', async () => {
     marked.length = 0;
     const e = editor();
