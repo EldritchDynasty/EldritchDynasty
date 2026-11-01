@@ -168,6 +168,24 @@ describe('a slot that casts a party', () => {
     }
   });
 
+  it('renders a saved byname once across one-person and counted party slots (#2319)', () => {
+    const ctx = testWorld(bundle, 4404);
+    const legacy = place(ctx, { sex: 'female', age: 46, name: 'Adela the Elder' });
+    legacy.epithet = 'the Elder'; // older or authored recorded name already includes this
+    const newlyNamed = place(ctx, { sex: 'female', age: 32, name: 'Mara' });
+    newlyNamed.epithet = 'the Witness';
+    const plain = place(ctx, { sex: 'male', age: 28, name: 'Nora' });
+
+    expect(renderBody('{SENT}', { SENT: String(legacy.id) }, ctx)).toBe('Adela the Elder');
+    expect(renderBody('{SENT}', { SENT: String(newlyNamed.id) }, ctx)).toBe('Mara the Witness');
+    expect(renderBody('{SENT}', { SENT: String(plain.id) }, ctx)).toBe('Nora');
+    expect(renderBody('The house sends {SENT}.', {
+      SENT: [String(legacy.id), String(newlyNamed.id), String(plain.id)],
+    }, ctx)).toBe('The house sends Adela the Elder, Mara the Witness and Nora.');
+    expect(legacy.name).toBe('Adela the Elder');
+    expect(legacy.epithet).toBe('the Elder');
+  });
+
   it('joins one, two and three names the way a person would', () => {
     expect(nameList(['Aldous'])).toBe('Aldous');
     expect(nameList(['Aldous', 'Bren'])).toBe('Aldous and Bren');
