@@ -3,7 +3,9 @@ import { loadBundle } from './content.js';
 
 /** Text is split for rendering, never rewritten in a save or Chronicle. */
 export type GlossarySegment = { text: string; term?: string };
-// ZWNJ and ZWJ connect word segments in some scripts; an alias beside one\n// is not a standalone label, even though the joiner is a Unicode format character.\nconst WORD_CHARACTER = /[\p{L}\p{M}\p{N}_\u200C\u200D]/u;
+// ZWNJ and ZWJ connect word segments in some scripts; an alias beside one
+// is not a standalone label, even though the joiner is a Unicode format character.
+const WORD_CHARACTER = /[\p{L}\p{M}\p{N}_\u200C\u200D]/u;
 
 export function glossaryDefinition(id: string, mode: ProseMode = 'original'): string | undefined {
   return loadBundle().glossary.find((term) => term.id === id)?.definition[mode];
