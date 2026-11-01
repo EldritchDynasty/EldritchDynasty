@@ -129,7 +129,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
 
   it('refuses invisible-only required friend names instead of dropping an encoded friend (#2264)', () => {
     const code = codeOf(founded()); // Anonymous: three friends of specified sexes.
-    for (const invisible of ['\u200B', ' \u200D \u2060\\t', '\uFE0F']) {
+    for (const invisible of ['\u200B', ' \u200D \u2060\t', '\uFE0F']) {
       const result = newGameFromShareCode(code, content, {
         build: BUILD,
         names: { house: 'Salt', friends: ['Alice', invisible, 'Cora'] },
