@@ -132,3 +132,48 @@ describe('family-card disclosure relationships (#1751)', () => {
     } finally { wrapper.unmount(); }
   });
 });
+
+describe('a card says where an earned byname came from (#1990)', () => {
+  function member(byname: Record<string, unknown> | undefined, epithet = 'Blood-Marked') {
+    return {
+      id: 'p9', name: 'Ada', epithet, ...(byname ? { byname } : {}), sex: 'female', age: 9, status: 'alive',
+      head: false, awakened: false, expresses: false, madness: 0, drift: false,
+      attrs: {}, parents: {},
+      record: { attrs: {}, claimedTraits: [], parents: {}, claimed: [] },
+    } as unknown as SessionView['halls'][number]['members'][number];
+  }
+
+  it.each(['original', 'plainenglish'] as const)('names the byname in the accessible name and links its exact page (%s)', async (mode) => {
+    const w = mount(Member, { props: {
+      member: member({ text: 'Blood-Marked', standing: 'contested', pen: 'embellish', year: 1187, page: 'chr_44', settledYear: 1201 }),
+      names: [], traitNames: [], open: true, proseMode: mode,
+    } });
+    try {
+      expect(w.get('button.face').text()).toContain('Ada Blood-Marked');
+      const note = w.get('[data-byname]');
+      expect(note.attributes('data-byname-standing')).toBe('contested');
+      expect(note.text()).toContain('discrepancy proven');
+      expect(note.text()).toContain('1187');
+      expect(note.text()).toContain('1201');
+      await w.get('[data-byname-page]').trigger('click');
+      expect(w.emitted('book')).toEqual([['chr_44']]);
+      expect(w.get('[data-byname-page]').attributes('aria-label')).toContain('1187');
+    } finally { w.unmount(); }
+  });
+
+  it('shows an epithet of unknown origin without inventing a page for it', () => {
+    const w = mount(Member, { props: {
+      member: member({ text: 'the Elder', standing: 'unknown' }, 'the Elder'),
+      names: [], traitNames: [], open: true, proseMode: 'original',
+    } });
+    try {
+      expect(w.get('[data-byname]').text()).toContain('does not say where it came from');
+      expect(w.find('[data-byname-page]').exists()).toBe(false);
+    } finally { w.unmount(); }
+  });
+
+  it('draws nothing for a person with no byname', () => {
+    const w = mount(Member, { props: { member: member(undefined, ''), names: [], traitNames: [], open: true } });
+    try { expect(w.find('[data-byname]').exists()).toBe(false); } finally { w.unmount(); }
+  });
+});

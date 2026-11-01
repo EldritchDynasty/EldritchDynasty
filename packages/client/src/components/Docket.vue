@@ -255,6 +255,15 @@ const recordOptions = computed(() => {
   });
 });
 
+/**
+ * The byname this pen would write (#1990), from the engine's own preview of
+ * the commit — never worked out here. Omit names nobody.
+ */
+function bynameFor(option: RecordOption): { name: string; text: string } | undefined {
+  if (props.decision.kind !== 'record' || option === 'omit') return undefined;
+  return props.decision.bynames?.[option];
+}
+
 function recordIsTempting(option: RecordOption): boolean {
   return props.ageRecordPriorities?.includes(option) ?? false;
 }
@@ -655,6 +664,11 @@ const letDecideLabel = computed(() => plain.value
                  pull; this is the price, so the temptation is never the only
                  thing on the button. -->
             <small v-if="decision.stakes?.[o.option]" class="stakes">{{ decision.stakes[o.option] }}</small>
+            <small v-if="bynameFor(o.option)" class="byname" data-byname-preview>
+              {{ plain
+                ? `${bynameFor(o.option)!.name} gets the byname “${bynameFor(o.option)!.text}”.`
+                : `and ${bynameFor(o.option)!.name} is written down as ${bynameFor(o.option)!.name} ${bynameFor(o.option)!.text}` }}
+            </small>
           </button>
         </template>
       </div>
@@ -710,6 +724,7 @@ const letDecideLabel = computed(() => plain.value
 .choices .entry { display: block; margin-top: 3px; font-style: italic; }
 .choices .temptation { font-style: italic; }
 .choices .stakes { display: block; margin-top: 3px; color: var(--ink-faint); }
+.choices .byname { display: block; margin-top: 3px; color: var(--ink-soft); font-style: italic; }
 /* The number in the margin. Quiet enough to read past, there when you look
    for it — a shortcut nobody can see is a shortcut nobody uses. */
 .key {

@@ -64,6 +64,14 @@ onMounted(() => go.value?.focus());
       {{ plain ? 'Your choice was accepted. Any later effects will become clear as the years pass.' : 'The decision is made. Anything further will show itself as the years advance.' }}
     </p>
 
+    <!-- An earned byname (#1990) is said on the receipt of the page that
+         earned it, in words, beside the page itself. -->
+    <p v-if="outcome.byname" class="small byname" data-byname-receipt>
+      {{ plain
+        ? `${outcome.byname.name} now has the byname “${outcome.byname.text}”.`
+        : `From this page on, ${outcome.byname.name} is ${outcome.byname.name} ${outcome.byname.text}.` }}
+    </p>
+
     <button ref="go" class="primary" @click="$emit('dismiss')">{{ plain ? 'Continue' : 'Go on' }}</button>
   </section>
 </template>
@@ -71,6 +79,7 @@ onMounted(() => go.value?.focus());
 <style scoped>
 .outcome { max-width: 72ch; }
 .said { margin: 0 0 8px; font-style: italic; }
+.byname { margin: -6px 0 14px; color: var(--ink-soft); font-style: italic; }
 .body { font-size: var(--t-body); line-height: 1.62; margin: 0 0 14px; }
 /* An omission is the one thing here the house chose not to say. It reads as
    an absence rather than as a sentence. */

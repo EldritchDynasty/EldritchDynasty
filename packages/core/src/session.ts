@@ -5,7 +5,7 @@ import { bootstrap, clearNamingQueue, keepSuggestedName, renameChild, type Boots
 import { stepYear } from './year/step.js';
 import type { YearReport } from './year/report.js';
 import { passageOf, type Passage } from './year/passage.js';
-import { autoResolveAll, declineMatch, resolveChoice, resolveMatch, resolveRecord, type ChoiceResolution, type MatchResolution, type PendingDecision, type RecordOption, type RecordResolution, } from './events/decisions.js';
+import { autoResolveAll, declineMatch, resolveChoice, resolveMatch, recordBynamePreview, resolveRecord, type ChoiceResolution, type MatchResolution, type PendingDecision, type RecordOption, type RecordResolution, } from './events/decisions.js';
 import {
   adviceFor, adviceForDecision,
   type AdviserAdvice, type HelpSurface, type HelpTier,
@@ -1286,6 +1286,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
         advice: adviceForDecision(ctx, decision),
         ...(ambition ? { ambition } : {}),
         ...(decision.kind === 'record' ? { stakes: recordStakes(ctx, decision) } : {}),
+        ...(() => {
+          const bynames = decision.kind === 'record' ? recordBynamePreview(ctx, decision) : undefined;
+          return bynames ? { bynames } : {};
+        })(),
       });
     }),
     namesWanted: w.pendingNames.map((n) => ({

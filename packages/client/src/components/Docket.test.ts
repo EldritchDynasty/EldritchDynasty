@@ -344,6 +344,35 @@ describe('the Record docket shows what each option costs (#1867 §5)', () => {
   });
 });
 
+describe('the Record docket says which byname each pen would write (#1990)', () => {
+  it.each(['original', 'plainenglish'] as const)('previews the engine\'s names on Record and Improve, and none on Omit (%s)', (mode) => {
+    const decision = {
+      ...recordDecision(),
+      bynames: {
+        record: { person: 'p_9', name: 'Ada', text: 'the Iron-and-Milk' },
+        embellish: { person: 'p_9', name: 'Ada', text: 'Blood-Marked' },
+      },
+    } as SessionView['docket'][number];
+    const w = mount(Docket, { props: { decision, proseMode: mode, actions: spyActions() as unknown as GameActions } });
+    try {
+      const buttons = w.findAll('.choices button');
+      const row = (label: string) => buttons.find((b) => b.text().includes(label))!;
+      const record = row(mode === 'plainenglish' ? 'Record what happened' : 'Write it as it happened');
+      const omit = row(mode === 'plainenglish' ? 'Do not record this event' : 'Leave it out');
+      const improve = row(mode === 'plainenglish' ? 'Record a more favourable account' : 'Improve it');
+      expect(record.get('[data-byname-preview]').text()).toContain('the Iron-and-Milk');
+      expect(improve.get('[data-byname-preview]').text()).toContain('Blood-Marked');
+      expect(omit.find('[data-byname-preview]').exists()).toBe(false);
+      expect(record.get('[data-byname-preview]').text()).toContain('Ada');
+    } finally { w.unmount(); }
+  });
+
+  it('promises nothing when the engine previews nothing', () => {
+    const w = mount(Docket, { props: { decision: recordDecision() as SessionView['docket'][number], actions: spyActions() as unknown as GameActions } });
+    try { expect(w.find('[data-byname-preview]').exists()).toBe(false); } finally { w.unmount(); }
+  });
+});
+
 describe('following a Match from the power blocker (#1805)', () => {
   it.each(['original', 'plainenglish'] as const)('focuses the named card and opens its existing evidence (%s)', async (mode) => {
     const decision = matchDecision();
@@ -915,6 +944,27 @@ describe('the year-one progressive surface (#368)', () => {
     expect(region.text()).toBe('');
     expect(wrapper.get('.save[role="status"]').element).toBe(region.element);
     wrapper.unmount();
+  });
+});
+
+describe('the Record receipt names the byname the page just earned (#1990)', () => {
+  it.each([
+    ['original', 'From this page on, Ada is Ada the Iron-and-Milk.'],
+    ['plainenglish', 'Ada now has the byname “the Iron-and-Milk”.'],
+  ] as const)('says it in words (%s)', (mode, said) => {
+    const wrapper = mount(Outcome, { props: { proseMode: mode, outcome: {
+      said: 'Write it as it happened', text: 'A child of this house woke at nine years.', kind: 'record',
+      byname: { name: 'Ada', text: 'the Iron-and-Milk' },
+    } } });
+    try {
+      expect(wrapper.get('[data-byname-receipt]').text()).toBe(said);
+      expect(wrapper.text()).toContain('A child of this house woke at nine years.');
+    } finally { wrapper.unmount(); }
+  });
+
+  it('says nothing about a byname an Omit did not earn', () => {
+    const wrapper = mount(Outcome, { props: { outcome: { said: 'Leave it out', text: null, kind: 'record' } } });
+    try { expect(wrapper.find('[data-byname-receipt]').exists()).toBe(false); } finally { wrapper.unmount(); }
   });
 });
 

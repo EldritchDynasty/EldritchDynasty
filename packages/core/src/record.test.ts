@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { asId, ClaimS, proseOriginalHash, type EventTemplate } from '@ed/schema';
-import { queueChoice, queueRecord, resolveChoice, resolveRecord, type RecordOption } from './events/decisions.js';
+import { queueChoice, queueRecord, recordBynamePreview, resolveChoice, resolveRecord, type RecordOption } from './events/decisions.js';
 import { makeRng } from './rng.js';
 import {
   applyEffect, applyRecord, beget, bootstrap, deriveRecordView, marry, missingPlainEnglish,
@@ -910,11 +910,28 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     page(ctx, 'p_docket');
     const pending = queueRecord(ctx, bynamed(), 'p_docket', { CHILD: child.id })!;
     const result = resolveRecord(ctx, pending.id, 'record');
-    expect(result).toMatchObject({ ok: true, byname: { person: child.id, text: 'the Iron-and-Milk' } });
+    expect(result).toMatchObject({ ok: true, byname: { person: child.id, name: child.name, text: 'the Iron-and-Milk' } });
     const omitted = place(ctx, { sex: 'female', age: 9 });
     page(ctx, 'p_docket_blank');
     const blank = queueRecord(ctx, bynamed(), 'p_docket_blank', { CHILD: omitted.id })!;
     expect(resolveRecord(ctx, blank.id, 'omit').byname).toBeUndefined();
+  });
+
+  it('the docket previews each pen\'s byname with the same rule the commit applies', () => {
+    const ctx = bootstrap(bundle, 1990, 1042);
+    const child = place(ctx, { sex: 'male', age: 9 });
+    page(ctx, 'p_preview');
+    const pending = queueRecord(ctx, bynamed(), 'p_preview', { CHILD: child.id })!;
+    expect(recordBynamePreview(ctx, pending)).toEqual({
+      record: { person: child.id, name: child.name, text: 'the Iron-and-Milk' },
+      embellish: { person: child.id, name: child.name, text: 'Blood-Marked' },
+    });
+    const result = resolveRecord(ctx, pending.id, 'embellish');
+    expect(result.byname).toEqual({ person: child.id, name: child.name, text: 'Blood-Marked' });
+    // Already named: a second docket about the same child promises nothing.
+    page(ctx, 'p_preview_again');
+    const again = queueRecord(ctx, bynamed(), 'p_preview_again', { CHILD: child.id })!;
+    expect(recordBynamePreview(ctx, again)).toBeUndefined();
   });
 
   it('save and load keep the grant as history; loading never grants, and an older save gains no source', () => {
