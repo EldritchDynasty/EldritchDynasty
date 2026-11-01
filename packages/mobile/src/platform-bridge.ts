@@ -6,6 +6,7 @@ import { mobileStorage, saveSummary } from './storage.js';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
 import { chooseSaveFile } from './file-chooser.js';
 import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
+import { attachNativeListener } from './native-listener.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -72,24 +73,28 @@ const platform = {
   },
 
   onPause(listener: () => void): () => void {
-    const registration = App.addListener('pause', listener);
-    return () => { void registration.then((handle) => handle.remove()); };
+    return attachNativeListener(
+      () => App.addListener('pause', listener),
+      (error) => console.warn('[mobile] pause listener failed:', error),
+    );
   },
 
   onBack(listener: () => boolean): () => void {
-    const registration = App.addListener('backButton', ({ canGoBack }) => {
-      if (listener()) return;
-      if (canGoBack) window.history.back();
-      else void App.exitApp();
-    });
-    return () => { void registration.then((handle) => handle.remove()); };
+    return attachNativeListener(
+      () => App.addListener('backButton', ({ canGoBack }) => {
+        if (listener()) return;
+        if (canGoBack) window.history.back();
+        else void App.exitApp();
+      }),
+      (error) => console.warn('[mobile] back-button listener failed:', error),
+    );
   },
 
   writeSmokeInterchange: writeInterchange,
   readSmokeInterchange: readInterchange,
 
   onSmokeCommand(listener) {
-    const registration = App.addListener('appUrlOpen', ({ url }) => {
+    return attachNativeListener(() => App.addListener('appUrlOpen', ({ url }) => {
       const command = parseSmokeCommand(url);
       if (!command) return;
       void (async () => {
@@ -121,24 +126,17 @@ const platform = {
       })().catch((error: unknown) => {
         console.error('iOS runtime smoke evidence write failed', error);
       });
-    });
-
-    // The simulator driver must not infer listener readiness from wall-clock
-    // time. App.addListener resolves only after Capacitor has installed the
-    // native-backed appUrlOpen listener, so this durable marker is an explicit
-    // handshake for the listener the smoke driver actually depends on.
-    void registration
-      .then(() => Filesystem.writeFile({
+    }),
+      (error) => console.error('iOS runtime smoke listener registration/removal failed', error),
+      // The simulator driver cannot infer readiness from wall-clock time.
+      // Only an installed native listener may publish this handshake.
+      () => Filesystem.writeFile({
         path: SMOKE_READY,
         data: JSON.stringify({ ready: true }),
         directory: Directory.Data,
         encoding: Encoding.UTF8,
-      }))
-      .catch((error: unknown) => {
-        console.error('iOS runtime smoke listener registration failed', error);
-      });
-
-    return () => { void registration.then((handle) => handle.remove()); };
+      }),
+    );
   },
 } satisfies Platform;
 
