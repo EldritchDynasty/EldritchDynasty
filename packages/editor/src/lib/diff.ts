@@ -9,39 +9,70 @@ export type DiffLine =
   | { kind: 'add'; text: string }
   | { kind: 'del'; text: string };
 
+/**
+ * Keep the expensive LCS table proportional to the changed region, not the
+ * whole YAML file. A large divergent file still needs a safe preview: when
+ * the middle exceeds the cell budget, show truthful deletes and adds instead
+ * of exhausting the editor's memory before an author can review a save.
+ */
+export const MAX_DIFF_LCS_CELLS = 1_000_000;
+
 export function diffLines(before: string, after: string): DiffLine[] {
-  // Exactly empty files have no lines; a trailing newline in a nonempty
-  // file still denotes an actual empty final line.
+  // A trailing newline in a nonempty file denotes a real empty final line.
   const a = before === '' ? [] : before.split('\n');
   const b = after === '' ? [] : after.split('\n');
-  const n = a.length;
-  const m = b.length;
 
-  const lcs: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      lcs[i]![j] = a[i] === b[j] ? lcs[i + 1]![j + 1]! + 1 : Math.max(lcs[i + 1]![j]!, lcs[i]![j + 1]!);
-    }
-  }
+  let prefix = 0;
+  while (prefix < a.length && prefix < b.length && a[prefix] === b[prefix]) prefix++;
 
+  let suffix = 0;
+  while (suffix < a.length - prefix && suffix < b.length - prefix
+    && a[a.length - suffix - 1] === b[b.length - suffix - 1]) suffix++;
+
+  const left = a.slice(prefix, a.length - suffix);
+  const right = b.slice(prefix, b.length - suffix);
+  const n = left.length;
+  const m = right.length;
   const out: DiffLine[] = [];
-  let i = 0;
-  let j = 0;
-  while (i < n && j < m) {
-    if (a[i] === b[j]) {
-      out.push({ kind: 'same', text: a[i]! });
-      i += 1;
-      j += 1;
-    } else if (lcs[i + 1]![j]! >= lcs[i]![j + 1]!) {
-      out.push({ kind: 'del', text: a[i]! });
-      i += 1;
-    } else {
-      out.push({ kind: 'add', text: b[j]! });
-      j += 1;
+
+  for (let i = 0; i < prefix; i++) out.push({ kind: 'same', text: a[i]! });
+
+  if ((n + 1) * (m + 1) > MAX_DIFF_LCS_CELLS) {
+    // A non-minimal diff is preferable to a stalled or crashed write preview.
+    // Both complete sides remain reconstructable; no changed line is hidden.
+    for (const text of left) out.push({ kind: 'del', text });
+    for (const text of right) out.push({ kind: 'add', text });
+  } else {
+    const lcs: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) {
+      for (let j = m - 1; j >= 0; j--) {
+        lcs[i]![j] = left[i] === right[j] ? lcs[i + 1]![j + 1]! + 1
+          : Math.max(lcs[i + 1]![j]!, lcs[i]![j + 1]!);
+      }
     }
+
+    let i = 0;
+    let j = 0;
+    while (i < n && j < m) {
+      if (left[i] === right[j]) {
+        out.push({ kind: 'same', text: left[i]! });
+        i++;
+        j++;
+      } else if (lcs[i + 1]![j]! >= lcs[i]![j + 1]!) {
+        out.push({ kind: 'del', text: left[i]! });
+        i++;
+      } else {
+        out.push({ kind: 'add', text: right[j]! });
+        j++;
+      }
+    }
+    while (i < n) { out.push({ kind: 'del', text: left[i]! }); i++; }
+    while (j < m) { out.push({ kind: 'add', text: right[j]! }); j++; }
   }
-  while (i < n) { out.push({ kind: 'del', text: a[i]! }); i += 1; }
-  while (j < m) { out.push({ kind: 'add', text: b[j]! }); j += 1; }
+
+  for (let i = a.length - suffix; i < a.length; i++) {
+    out.push({ kind: 'same', text: a[i]! });
+  }
   return out;
 }
 
