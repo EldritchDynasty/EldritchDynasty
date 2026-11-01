@@ -1456,6 +1456,124 @@ describe('Library write failures are visible and retryable (#1034)', () => {
   });
 });
 
+describe('Library confirmation keyboard focus (#2410)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'lib_old', seed: 77, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+    }],
+  };
+
+  it.each(['original', 'plainenglish'] as const)(
+    'moves focus into Clear confirmation and returns to its trigger on Cancel (%s)',
+    async (proseMode) => {
+      const w = mount(Start, {
+        attachTo: document.body,
+        props: { actions: spyActions(), resumable: false, library, proseMode },
+      });
+      try {
+        await flush();
+        const clear = w.get('.library-head > button').element as HTMLButtonElement;
+        clear.focus();
+        await w.get('.library-head > button').trigger('click');
+        await nextTick();
+        const confirm = w.get('button.confirm-clear').element as HTMLButtonElement;
+        expect(document.activeElement).toBe(confirm);
+
+        const cancel = w.findAll('.library-clear-confirm button').find((b) => b.text() === 'Cancel')!;
+        (cancel.element as HTMLButtonElement).focus();
+        await cancel.trigger('click');
+        await nextTick();
+        expect(w.find('.library-clear-confirm').exists()).toBe(false);
+        expect(document.activeElement).toBe(clear);
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('moves focus into individual Remove confirmation and restores the same row on Cancel', async () => {
+    const actions = spyActions();
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      const remove = w.get('.library-title > button').element as HTMLButtonElement;
+      remove.focus();
+      await w.get('.library-title > button').trigger('click');
+      await nextTick();
+      const confirm = w.get('button.confirm-remove').element as HTMLButtonElement;
+      expect(document.activeElement).toBe(confirm);
+
+      const cancel = w.findAll('.library-remove-confirm button').find((b) => b.text() === 'Cancel')!;
+      (cancel.element as HTMLButtonElement).focus();
+      await cancel.trigger('click');
+      await nextTick();
+      expect(w.find('.library-remove-confirm').exists()).toBe(false);
+      expect(document.activeElement).toBe(remove);
+      expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('restores Clear on a rejected write and keeps Remove confirmation focused for retry', async () => {
+    const actions = spyActions();
+    vi.mocked(actions.clearLibrary).mockRejectedValueOnce(new Error('storage unavailable'));
+    vi.mocked(actions.deleteLibraryRun).mockRejectedValueOnce(new Error('storage unavailable'));
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head > button').trigger('click');
+      await w.get('button.confirm-clear').trigger('click');
+      await flush();
+      expect(w.get('.library [role="alert"]').text()).toContain('could not be cleared');
+      expect(document.activeElement).toBe(w.get('.library-head > button').element);
+
+      await w.get('.library-title > button').trigger('click');
+      await w.get('button.confirm-remove').trigger('click');
+      await flush();
+      expect(w.get('.library [role="alert"]').text()).toContain('could not be removed');
+      expect(document.activeElement).toBe(w.get('button.confirm-remove').element);
+      expect(w.get('button.confirm-remove').attributes('disabled')).toBeUndefined();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it.each(['clear', 'remove'] as const)(
+    'focuses an enabled Start action if a successful %s removed the final Library row',
+    async (kind) => {
+      const actions = spyActions();
+      let finish: (() => void) | undefined;
+      const pending = new Promise<void>((resolve) => { finish = resolve; });
+      if (kind === 'clear') vi.mocked(actions.clearLibrary).mockImplementationOnce(() => pending);
+      else vi.mocked(actions.deleteLibraryRun).mockImplementationOnce(() => pending);
+
+      const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+      try {
+        await flush();
+        if (kind === 'clear') {
+          await w.get('.library-head > button').trigger('click');
+          await w.get('button.confirm-clear').trigger('click');
+        } else {
+          await w.get('.library-title > button').trigger('click');
+          await w.get('button.confirm-remove').trigger('click');
+        }
+        await w.setProps({ library: { ...library, runs: [] } });
+        finish!();
+        await flush();
+        expect(w.find('.library-run').exists()).toBe(false);
+        const begin = w.get('.primary-row button').element as HTMLButtonElement;
+        expect(begin.disabled).toBe(false);
+        expect(document.activeElement).toBe(begin);
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+});
+
 describe('Library writes cannot race a saved-game selection (#1563)', () => {
   const library: RunLibrary = {
     format: 1,

@@ -374,11 +374,52 @@ async function retryLibrary(): Promise<void> {
   finally { retryingLibrary.value = false; }
 }
 
+/** A Library confirmation replaces the button that had keyboard focus. Return
+ * to that button, or an enabled Start action if deletion removed its row. */
+function focusAfterLibraryTransition(kind: 'clear' | 'remove', id?: string): void {
+  void nextTick(() => {
+    const root = startRoot.value;
+    if (!root) return;
+
+    if (kind === 'clear') {
+      const target = confirmingClearLibrary.value
+        ? root.querySelector<HTMLButtonElement>('.library-clear-confirm .confirm-clear')
+        : root.querySelector<HTMLButtonElement>('.library-head > button');
+      if (target && !target.disabled) {
+        target.focus();
+        return;
+      }
+    } else if (id) {
+      // Compare the raw ID rather than interpolating it into a CSS selector.
+      const row = Array.from(root.querySelectorAll<HTMLElement>('.library-run'))
+        .find((element) => element.dataset.libraryId === id);
+      const target = confirmingRemoveRun.value === id
+        ? row?.querySelector<HTMLButtonElement>('.library-remove-confirm .confirm-remove')
+        : row?.querySelector<HTMLButtonElement>('.library-title > button');
+      if (target && !target.disabled) {
+        target.focus();
+        return;
+      }
+    }
+
+    (root.querySelector<HTMLButtonElement>('.library-head > button:not(:disabled)')
+      ?? root.querySelector<HTMLButtonElement>('.library-title > button:not(:disabled)')
+      ?? root.querySelector<HTMLButtonElement>('.primary-row button:not(:disabled)'))?.focus();
+  });
+}
+
+function cancelClearLibrary(): void {
+  if (clearingLibrary.value) return;
+  confirmingClearLibrary.value = false;
+  focusAfterLibraryTransition('clear');
+}
+
 function requestClearLibrary(): void {
   // Disabled controls alone do not protect against a stale dispatched click.
   if (!libraryIsReady.value || beginning || selectingRun.value || clearingLibrary.value || removingRun.value !== null) return;
   confirmingRemoveRun.value = null;
   confirmingClearLibrary.value = true;
+  focusAfterLibraryTransition('clear');
 }
 
 async function clearLibrary(): Promise<void> {
@@ -394,6 +435,7 @@ async function clearLibrary(): Promise<void> {
     libraryError.value = 'The Library could not be cleared. Your saved houses are still here. Try again.';
   } finally {
     clearingLibrary.value = false;
+    focusAfterLibraryTransition('clear');
   }
 }
 
@@ -402,11 +444,14 @@ function requestRemoveLibraryRun(id: string): void {
   confirmingClearLibrary.value = false;
   confirmingRemoveRun.value = id;
   libraryError.value = null;
+  focusAfterLibraryTransition('remove', id);
 }
 
 function cancelRemoveLibraryRun(): void {
   if (removingRun.value !== null || clearingLibrary.value) return;
+  const id = confirmingRemoveRun.value;
   confirmingRemoveRun.value = null;
+  if (id !== null) focusAfterLibraryTransition('remove', id);
 }
 
 async function removeLibraryRun(id: string): Promise<void> {
@@ -423,6 +468,7 @@ async function removeLibraryRun(id: string): Promise<void> {
     libraryError.value = 'That house could not be removed from the Library. Try again.';
   } finally {
     removingRun.value = null;
+    focusAfterLibraryTransition('remove', id);
   }
 }
 
@@ -513,11 +559,11 @@ onMounted(() => { void refreshSaves(); });
         <div v-else class="library-clear-confirm" role="group" :aria-label="plain ? 'Confirm removing all completed houses' : 'Confirm clearing the Library of Houses'">
           <p class="rubric small">{{ plain ? 'Remove all' : 'Clear all' }} {{ completedHouses.length }} completed {{ completedHouses.length === 1 ? 'house' : 'houses' }}? This cannot be undone.</p>
           <button class="quiet small confirm-clear" :disabled="!libraryIsReady || selectingRun || removingRun !== null || clearingLibrary" @click="clearLibrary()">{{ plain ? 'Yes, remove all' : 'Yes, clear all' }}</button>
-          <button class="quiet small" @click="confirmingClearLibrary = false">Cancel</button>
+          <button class="quiet small" @click="cancelClearLibrary()">Cancel</button>
         </div>
       </div>
       <p v-if="libraryError" class="rubric small" role="alert">{{ displayError(libraryError) }}</p>
-      <article v-for="run in completedHouses" :key="run.id" class="library-run">
+      <article v-for="run in completedHouses" :key="run.id" class="library-run" :data-library-id="run.id">
         <div class="library-title">
           <strong>{{ run.house }}</strong>
           <span class="dim small">— {{ run.ending.title }}, {{ run.endedYear }}<template v-if="run.campaign === 'demo'"> · {{ plain ? 'Demonstration' : 'The Demonstration' }}</template></span>
