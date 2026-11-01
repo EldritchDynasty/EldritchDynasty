@@ -853,6 +853,88 @@ describe('Table action research (#1992)', () => {
   });
 });
 
+describe('concurrent saved-run pickups (#2257)', () => {
+  /** No clocks or sleeps: settlement order is the race under test. */
+  function deferred<T>() {
+    let resolve!: (value: T) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+    return { promise, resolve, reject };
+  }
+
+  it.each([
+    ['resume', 'rejected'],
+    ['load', 'refused'],
+    ['importSave', 'cancelled'],
+  ] as const)('ignores a stale %s that settles %s after a newer load starts', async (verb, result) => {
+    const l = log();
+    const older = deferred<unknown>();
+    const newer = deferred<boolean>();
+    const bare = {
+      resume: () => older.promise,
+      load: (slot: string) => slot === 'old' ? older.promise : newer.promise,
+      importSave: () => older.promise,
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    const first = verb === 'resume' ? actions.resume()
+      : verb === 'load' ? actions.load('old') : actions.importSave();
+    const second = actions.load('new');
+
+    if (result === 'rejected') {
+      older.reject(new Error('private older error'));
+      await expect(first).rejects.toThrow('private older error');
+    } else {
+      older.resolve(result === 'refused' ? false : 'cancelled');
+      await first;
+    }
+    newer.resolve(true);
+    expect(await second).toBe(true);
+
+    // The displayed Chronicle belongs to the *newer* successful load.
+    // An old failure may not make inherited answers look newly discovered.
+    l.chronicle([{ id: 'carried', year: 1240, answer: 'glimpse' }]);
+    l.chronicle([
+      { id: 'carried', year: 1240, answer: 'glimpse' },
+      { id: 'fresh', year: 1241, answer: 'clause' },
+    ]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(1);
+    expect(l.events.filter(e => e.kind === 'page').map(e =>
+      [e.page, 'carried' in e && e.carried === true],
+    )).toEqual([['carried', true], ['fresh', false]]);
+    expect(l.artifact().summary.answers).toBe(1);
+    expect(JSON.stringify(l.artifact())).not.toContain('private older error');
+  });
+
+  it('clears a failed current pickup but not a later successful pickup', async () => {
+    const l = log();
+    const first = deferred<boolean>();
+    const second = deferred<boolean>();
+    const actions = recordActions({
+      load: (slot: string) => slot === 'old' ? first.promise : second.promise,
+      resume: async () => true,
+    } as unknown as Parameters<typeof recordActions>[0], l);
+
+    const old = actions.load('old');
+    const current = actions.load('new');
+    second.resolve(false);
+    expect(await current).toBe(false);
+    first.resolve(false);
+    expect(await old).toBe(false);
+
+    l.chronicle([{ id: 'news', year: 1050, answer: 'glimpse' }]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(0);
+    expect(l.artifact().summary.answers).toBe(1);
+
+    expect(await actions.resume()).toBe(true);
+    l.chronicle([{ id: 'saved', year: 1100, answer: 'clause' }]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(1);
+    expect(l.events.filter(e => e.kind === 'page').map(e =>
+      [e.page, 'carried' in e && e.carried === true],
+    )).toEqual([['news', false], ['saved', true]]);
+    expect(l.artifact().summary.answers).toBe(1);
+  });
+});
+
 describe('a resumed save is not read twice', () => {
   // The window a resumed view carries is up to sixty pages of history. Before
   // pick-ups were tracked, a save resumed with no play at all logged every
