@@ -182,6 +182,8 @@ export class ReadingLog {
   #window = new Set<string>();
   /** A saved run is being picked up: its first window is history, not news. */
   #pickingUp = false;
+  /** A newer start must not be cancelled by an older asynchronous pickup. */
+  #startGeneration = 0;
 
   constructor(
     private readonly now: () => number,
@@ -195,6 +197,8 @@ export class ReadingLog {
   }
 
   get ended(): EndReason | null { return this.#ended; }
+  /** The wrapper associates an async pickup's outcome with the start it observed. */
+  get startGeneration(): number { return this.#startGeneration; }
 
   /**
    * Add one event. A state that has not changed is not an event — a second
@@ -204,6 +208,7 @@ export class ReadingLog {
   note(event: Untimed<ReadingLogEvent>): void {
     if (this.#ended || this.truncated) return;
     if (event.kind === 'action' && event.act === 'start') {
+      this.#startGeneration++;
       this.#pickingUp = PICKUPS.has(event.verb);
       if (event.verb === 'begin' || event.verb === 'beginFromShareCode') {
         // The next house can reuse every Chronicle id (especially with a
@@ -256,8 +261,10 @@ export class ReadingLog {
    * A pick-up that came back without a run — a cancelled picker, an unreadable
    * save — leaves the run on screen as it was, and its next page is news.
    */
-  pickUpFailed(): void {
-    this.#pickingUp = false;
+  pickUpFailed(generation: number): void {
+    // The old import/load may finish after another pickup has begun (or a
+    // new game has started). Its failure cannot erase that newer boundary.
+    if (generation === this.#startGeneration) this.#pickingUp = false;
   }
 
   /** A chronicle page came on screen. The second time it is a revisit. */
@@ -583,6 +590,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         kind: 'action', verb, act: RECORDED_VERBS[verb],
         ...(verb === 'advance' && typeof args[0] === 'number' ? { years: args[0] } : {}),
       });
+      const pickupGeneration = PICKUPS.has(verb) ? log.startGeneration : null;
       // An unsuccessful pick-up must not turn the next Chronicle window of
       // the still-active house into history. Async refusals already clear the
       // flag below; a synchronous host/store failure must do the same.
@@ -590,11 +598,14 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       try {
         result = original.apply(actions, args);
       } catch (error) {
-        if (PICKUPS.has(verb)) log.pickUpFailed();
+        if (pickupGeneration !== null) log.pickUpFailed(pickupGeneration);
         throw error;
       }
-      if (PICKUPS.has(verb) && result instanceof Promise) {
-        result.then((ok) => { if (ok !== true) log.pickUpFailed(); }, () => log.pickUpFailed());
+      if (pickupGeneration !== null && result instanceof Promise) {
+        result.then(
+          (ok) => { if (ok !== true) log.pickUpFailed(pickupGeneration); },
+          () => log.pickUpFailed(pickupGeneration),
+        );
       }
       return result;
     };
