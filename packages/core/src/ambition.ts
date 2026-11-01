@@ -652,8 +652,10 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   // The Unmaking's ELDER slot is `foremost`, with a Hierophant floor and
   // both earlier rites. Naming any two-rite relative here sent players toward
   // a sacrifice the actual authored ritual could not cast (#1978).
+  // Completed rites are historical facts: the recipient may have died, but
+  // that must not resurrect advice to prepare for an already-finished Unmaking.
   const elder = w.campaign === 'long'
-    && !w.people.living().some((p) => p.rites.includes('unmaking'))
+    && !w.people.all().some((p) => p.rites.includes('unmaking'))
     && foremost
     && RUNG_ORDER.indexOf(foremost.standing.rung) >= RUNG_ORDER.indexOf('hierophant')
     ? w.people.get(foremost.person)
