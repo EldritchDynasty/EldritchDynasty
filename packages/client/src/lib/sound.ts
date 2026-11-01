@@ -370,7 +370,7 @@ export class Sound {
     this.attempt(() => {
       if (this.out) this.out.gain.value = value ? 0 : this.#volume;
     });
-    if (value) this.stopDrone(0.02);
+    if (value) this.stopDrone(0);
     else if (this.lastDrone) this.setDrone(this.lastDrone);
   }
 
@@ -487,10 +487,10 @@ export class Sound {
    * remembering what was playing. Unmuting brings back exactly that.
    */
   suspend() {
-    // Suspending freezes AudioContext.currentTime. A normal 1.4-second exit
-    // would remain pending and audibly resume alongside the next drone when
-    // the host wakes. End this one on the short, click-safe interruption ramp.
-    this.stopDrone(0.02);
+    // Suspending freezes AudioContext.currentTime immediately. Even a 20ms
+    // scheduled stop remains pending until the clock wakes, when the old drone
+    // could overlap the new one. End it at currentTime before suspending.
+    this.stopDrone(0);
     this.attempt(() => {
       const ctx = this.context;
       if (ctx) this.watch(ctx.suspend?.(), ctx);
