@@ -173,7 +173,13 @@ export async function copyTextInBrowser(text: string): Promise<void> {
   }
   // The invoking control can be an SVG element, not just an HTMLElement.
   // Keep any focusable element so fallback copy preserves keyboard position.
-  const focused = document.activeElement;
+  // document.activeElement names a shadow *host*, not the focused inner
+  // control. Follow open roots before the fallback textarea steals focus so
+  // a keyboard reader returns to the same button/input after copying.
+  let focused = document.activeElement;
+  while (focused?.shadowRoot?.activeElement) {
+    focused = focused.shadowRoot.activeElement;
+  }
   const area = document.createElement('textarea');
   area.value = text;
   area.setAttribute('readonly', '');
