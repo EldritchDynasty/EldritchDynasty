@@ -317,16 +317,21 @@ function plateXml(text: string): string {
  * same rows, measurements, coordinates and gaps as the PNG drawing in Book.vue
  * so the long form keeps every page, including the dated ruled omissions.
  */
-export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: string, foot?: PlateFoot): string {
+export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: string, foot?: PlateFoot, titleWidth?: number): string {
   const height = plateHeight(rows, foot);
   const font = plateXml(PLATE.serif);
+  // Canvas and SVG must fit the SAME title snapshot inside the plate column.
+  // Short titles keep their natural width; measured long titles contract, never truncate.
+  const inner = PLATE.width - 2 * PLATE.pad;
+  const titleFit = titleWidth !== undefined && Number.isFinite(titleWidth) && titleWidth > inner
+    ? ` textLength="${inner}" lengthAdjust="spacingAndGlyphs"` : '';
   const parts = [
     '<svg xmlns="http://www.w3.org/2000/svg" role="img"'
       + ' width="' + PLATE.width + '" height="' + height + '"'
       + ' viewBox="0 0 ' + PLATE.width + ' ' + height + '">',
     '<rect width="' + PLATE.width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
     '<text x="' + PLATE.pad + '" y="64" fill="' + PLATE.ink
-      + '" font-family="' + font + '" font-size="30" font-weight="500">' + plateXml(house) + '</text>',
+      + '" font-family="' + font + '" font-size="30" font-weight="500"' + titleFit + '>' + plateXml(house) + '</text>',
     '<text x="' + PLATE.pad + '" y="88" fill="' + PLATE.faint
       + '" font-family="' + font + '" font-size="13">' + plateXml(subtitle) + '</text>',
     '<line x1="' + PLATE.pad + '" y1="106" x2="' + (PLATE.width - PLATE.pad)
