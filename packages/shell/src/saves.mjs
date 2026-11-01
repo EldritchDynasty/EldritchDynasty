@@ -1,6 +1,6 @@
 import { lstatSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveSavePath, slotOfFile, SAVE_EXTENSION } from '../tools/save-slot.mjs';
+import { resolveSavePath, slotOfFile, SaveSlotError, SAVE_EXTENSION } from '../tools/save-slot.mjs';
 import { writeJsonAtomically } from './atomic-json.mjs';
 
 /**
@@ -107,8 +107,22 @@ export function writeSave(root, slot, save) {
   // about whether this is a real run is `SavedGameS`'s business, in core,
   // where the schema lives.
   requireSaveEnvelope(save);
+  const target = resolveSavePath(root, slot);
 
-  return writeJsonAtomically(resolveSavePath(root, slot), save, requireSaveEnvelope);
+  // The supported Windows shell resolves these filenames case-insensitively.
+  // Without this guard, saving "house" after "House" silently replaces an
+  // unrelated run. Check on every platform so a Linux profile can migrate
+  // to Windows without two logical slots collapsing into one physical file.
+  // Compare the entire filename, including the extension: an externally
+  // renamed .EDSAVE.JSON also aliases our canonical extension on Windows.
+  const fileName = slot + SAVE_EXTENSION;
+  const caseAlias = readdirSync(root).find((existing) =>
+    existing !== fileName && existing.toLowerCase() === fileName.toLowerCase());
+  if (caseAlias !== undefined) {
+    throw new SaveSlotError(`save slot "${slot}" conflicts with existing filename "${caseAlias}" on Windows`);
+  }
+
+  return writeJsonAtomically(target, save, requireSaveEnvelope);
 }
 
 export function deleteSave(root, slot) {
