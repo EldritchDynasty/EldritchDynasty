@@ -62,6 +62,11 @@ const copy = computed(() => props.proseMode === 'plainenglish' ? {
 const card = ref<HTMLElement | null>(null);
 useModal(card, () => props.close());
 
+/** Display the saved person's byname without rewriting the succession's old name. */
+function lineName(h: ReturnType<GameActions['line']>[number]): string {
+  return h.epithet && !h.name.endsWith(` ${h.epithet}`) ? `${h.name} ${h.epithet}` : h.name;
+}
+
 /** How long he had it. The sitting head's reign is still running. */
 function held(h: ReturnType<GameActions['line']>[number]): string {
   if (props.proseMode === 'plainenglish') {
@@ -92,7 +97,7 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
         <li v-for="(h, i) in line" :key="h.person + h.from">
           <span class="dim small n" aria-hidden="true">{{ i + 1 }}</span>
           <div>
-            <div class="name">{{ h.name }}</div>
+            <div class="name">{{ lineName(h) }}</div>
             <div class="dim small">{{ held(h) }}</div>
             <!-- WHAT THE RECORD CLAIMS, which is the version the house wrote
                  and may not be the version that happened. The game never
@@ -111,7 +116,7 @@ function held(h: ReturnType<GameActions['line']>[number]): string {
             </div>
             <div v-else-if="h.born !== undefined" class="dim small">{{ copy.born(h.born) }}</div>
             <details v-if="milestones" class="life">
-              <summary>{{ proseMode === 'plainenglish' ? `Read ${h.name}'s recorded history` : `Read the life the book gives ${h.name}` }}</summary>
+              <summary>{{ proseMode === 'plainenglish' ? `Read ${lineName(h)}'s recorded history` : `Read the life the book gives ${lineName(h)}` }}</summary>
               <RecordedLife :person="h.person" :read="milestones" :prose-mode="proseMode" @book="$emit('book', $event)" />
             </details>
           </div>
