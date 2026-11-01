@@ -3,7 +3,7 @@ import { mkdtemp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { electronEnvironment } from '../scripts/electron-environment.mjs';
-import { externalWebUrl, handleExternalPopup } from './external-links.mjs';
+import { externalWebUrl, handleExternalNavigation, handleExternalPopup } from './external-links.mjs';
 import { parseImportedRun } from './run-import.mjs';
 import { smokePackagedApp } from '../scripts/packaged-smoke.mjs';
 
@@ -117,6 +117,71 @@ describe('Electron popup link boundary', () => {
     expect(handleExternalPopup('http://example.com', openExternal, onError))
       .toEqual({ action: 'deny' });
     expect(onError).toHaveBeenCalledWith(error);
+  });
+});
+
+
+describe('Electron main-frame navigation boundary (#2270)', () => {
+  const trustedFile = 'file:///C:/Eldritch/resources/renderer/index.html';
+  const trustedDev = 'http://localhost:5174/';
+
+  it.each([
+    [trustedFile, trustedFile],
+    [trustedFile, trustedFile + '?reading-log=1#book'],
+    [trustedDev, 'http://localhost:5174/?reading-log=1#chronicle'],
+    [trustedDev, 'HTTP://LOCALHOST:5174/#house'],
+  ])('allows changes to the trusted document, including query/hash and reload', (trusted, requested) => {
+    const event = { preventDefault: vi.fn() };
+    const openExternal = vi.fn();
+    handleExternalNavigation(event, requested, trusted, openExternal);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['file:///C:/Eldritch/resources/renderer/other.html', trustedFile],
+    ['file://other-host/C:/Eldritch/resources/renderer/index.html', trustedFile],
+    ['file:///etc/passwd', trustedFile],
+    ['javascript:alert(1)', trustedFile],
+    ['steam://run/123', trustedDev],
+    ['https:/malformed', trustedDev],
+  ])('blocks other files and unsafe schemes: %s', (requested, trusted) => {
+    const event = { preventDefault: vi.fn() };
+    const openExternal = vi.fn();
+    handleExternalNavigation(event, requested, trusted, openExternal);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it('keeps external HTTP(S), including another path at the dev origin, outside the privileged window', () => {
+    const openExternal = vi.fn().mockResolvedValue(undefined);
+    for (const requested of ['https://example.com/page', 'http://localhost:5174/other.html']) {
+      const event = { preventDefault: vi.fn() };
+      handleExternalNavigation(event, requested, trustedDev, openExternal);
+      expect(event.preventDefault).toHaveBeenCalledOnce();
+    }
+    expect(openExternal).toHaveBeenNthCalledWith(1, 'https://example.com/page');
+    expect(openExternal).toHaveBeenNthCalledWith(2, 'http://localhost:5174/other.html');
+  });
+
+  it('observes both async and synchronous failures to open the external browser', async () => {
+    const event = { preventDefault: vi.fn() };
+    const failed = new Error('no browser handler');
+    const onError = vi.fn();
+    handleExternalNavigation(event, 'https://example.com', trustedFile, () => Promise.reject(failed), onError);
+    await Promise.resolve();
+    expect(onError).toHaveBeenCalledWith(failed);
+    handleExternalNavigation(event, 'https://example.com', trustedFile, () => { throw failed; }, onError);
+    expect(onError).toHaveBeenCalledTimes(2);
+    expect(event.preventDefault).toHaveBeenCalledTimes(2);
+  });
+
+  it('wires navigation protection into the actual game/editor BrowserWindow', async () => {
+    const source = await readFile(new URL('./main.mjs', import.meta.url), 'utf8');
+    expect(source).toContain("win.webContents.on('will-navigate'");
+    expect(source).toContain('pathToFileURL(rendererPath).href');
+    expect(source).toContain('const trustedDocument = DEV_SERVER || pathToFileURL(rendererPath).href');
+    expect(source).toContain('handleExternalNavigation(event, url, trustedDocument, openExternal, onExternalFailure)');
   });
 });
 
