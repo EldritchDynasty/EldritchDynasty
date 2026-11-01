@@ -91,6 +91,9 @@ test('a denied demo autosave write leaves the full continuation intact #2313', a
     const setItem = Storage.prototype.setItem;
     Storage.prototype.setItem = function (this: Storage, key: string, value: string): void {
       if (key === 'ed:save:demo-autosave') {
+        // Prove that the storage failure was exercised, not just that the
+        // demo slot happened to remain empty.
+        document.documentElement.dataset.deniedDemoWrite = 'yes';
         throw new DOMException('Storage quota reached for the demonstration', 'QuotaExceededError');
       }
       setItem.call(this, key, value);
@@ -100,6 +103,7 @@ test('a denied demo autosave write leaves the full continuation intact #2313', a
   await page.getByRole('radio', { name: /A Demonstration/ }).check();
   await page.getByRole('button', { name: 'Begin a new signing', exact: true }).click();
   await expect(page.locator('main.prologue')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute('data-denied-demo-write', 'yes');
 
   // The failed write is only to the demo namespace. In particular, its
   // completion/error handler must never invalidate the normal continuation.
