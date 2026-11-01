@@ -10,6 +10,7 @@ import { resolvePrimordial } from './primordial.js';
 import { resolveChoiceOutcome } from './checks.js';
 import { advanceArc, soleBindings, startArc, startDecisionArcs, type ArcStep } from './arcs.js';
 import { resolveClaim } from '../record.js';
+import { grantByname, type BynameAward } from '../byname.js';
 import { RUNGS, rungIndex } from '../ascension.js';
 import { noteBearing } from '../bearing.js';
 import { autoTakeCard, lineCensus, refreshHand, takeCard, type MatchCard, type MatchOffer } from '../people/match.js';
@@ -709,6 +710,11 @@ export interface MatchResolution {
 export interface RecordResolution {
   ok: boolean;
   /**
+   * The byname this page earned its one named person, if any (#1990), so
+   * the receipt can say so the moment it is written. Omit never earns one.
+   */
+  byname?: BynameAward;
+  /**
    * WHAT THE BOOK NOW SAYS (issue #84). `null` where the option was `omit`,
    * because an omission is a DATED BLANK LINE and the blank is the artefact —
    * an undefined here would mean "no answer", which is a different thing.
@@ -730,10 +736,11 @@ export function resolveRecord(ctx: SimCtx, decision: string, option: RecordOptio
   ctx.observeDecision?.({ decision: structuredClone(pending), answer: option });
   drop(ctx, decision);
   const frozen = pending.options.find((candidate) => candidate.option === option)?.chronicle;
-  return { ok: true, line: applyRecord(
+  const committed = commitRecord(
     ctx, pending.event, pending.entryId, option, pending.fill,
     typeof frozen === 'string' ? frozen : undefined, pending.recordChoiceId, pending.recordOutcomeId,
-  ) };
+  );
+  return { ok: true, line: committed.line, ...(committed.byname ? { byname: committed.byname } : {}) };
 }
 
 /**
@@ -752,8 +759,25 @@ export function applyRecord(
   recordChoiceId?: string,
   recordOutcomeId?: string,
 ): string | null {
+  return commitRecord(ctx, e, entryId, option, fill, frozenChronicle, recordChoiceId, recordOutcomeId).line;
+}
+
+/**
+ * `applyRecord`, also saying which byname the page earned. The one Record
+ * commit: the docket and the chronicler's automatic pen both arrive here.
+ */
+function commitRecord(
+  ctx: SimCtx,
+  e: EventTemplate,
+  entryId: string,
+  option: RecordOption,
+  fill: SlotFill = {},
+  frozenChronicle?: string,
+  recordChoiceId?: string,
+  recordOutcomeId?: string,
+): { line: string | null; byname?: BynameAward } {
   const block = e.record;
-  if (!block) return null;
+  if (!block) return { line: null };
   const w = ctx.world;
   const chosen = block.options[option];
 
@@ -861,7 +885,16 @@ export function applyRecord(
       ...(forgedRung ? { rung: forgedRung } : {}),
     });
   }
-  return text;
+  // The page is written; only now may it name somebody (#1990). Same cast,
+  // same resolved claims, the exact page id — never a later re-reading.
+  const byname = grantByname(ctx, {
+    event: e, page: entryId, pen: option, fill, claims,
+    ...(discrepancyId !== undefined ? { discrepancy: discrepancyId } : {}),
+    ...(recordChoiceId !== undefined ? { choice: recordChoiceId } : {}),
+    ...(recordOutcomeId !== undefined ? { outcome: recordOutcomeId } : {}),
+    ...(recordAddress !== undefined ? { address: recordAddress } : {}),
+  });
+  return { line: text, ...(byname ? { byname } : {}) };
 }
 
 /**

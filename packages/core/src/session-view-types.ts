@@ -11,6 +11,7 @@ import type { PositionOption } from './muster.js';
 import type { FrozenLadder, AscensionBlockerKind } from './ascension.js';
 import type { CastMember } from './cast.js';
 import type { AnswerKind } from './events/answers.js';
+import type { BynameView } from './byname.js';
 
 /**
  * A chronicle page as a client reads it. `answer` says the page tells the
@@ -184,7 +185,7 @@ export interface SessionView {
   interventions?: InterventionView[];
   /** Names on kept Chronicle pages, including ancestors outside the window and living halls.
    * This is a read-model index, not a new saved-world record. */
-  chroniclePeople: { id: string; name: string; epithet?: string }[];
+  chroniclePeople: { id: string; name: string; epithet?: string; byname?: BynameView }[];
   /** The frame (concept §2, issue #13) — separate from `chronicle` on purpose. See `world.frame`. */
   frame: FrameEntry[];
   docket: SessionDecisionView[];
@@ -410,6 +411,8 @@ export interface MemberView {
   id: string;
   name: string;
   epithet?: string;
+  /** How the epithet was earned and how it stands (#1990). Absent with no epithet. */
+  byname?: BynameView;
   sex: string;
   age: number;
   /**

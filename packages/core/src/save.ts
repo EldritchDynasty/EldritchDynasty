@@ -482,6 +482,7 @@ function storePerson(p: Person): StoredPerson {
     id: p.id,
     name: p.name,
     ...(p.epithet !== undefined ? { epithet: p.epithet } : {}),
+    ...(p.byname !== undefined ? { byname: structuredClone(p.byname) } : {}),
     sex: p.sex,
     sigilSeed: p.sigilSeed,
     houseOfOrigin: p.houseOfOrigin,
@@ -564,6 +565,9 @@ function restorePerson(s: StoredPerson): Person {
   };
 
   if (s.epithet !== undefined) p.epithet = s.epithet;
+  // #1990: provenance is restored as saved, never re-derived. An older save's
+  // epithet arrives with no grant and keeps none.
+  if (s.byname !== undefined) p.byname = structuredClone(s.byname);
   if (s.died !== undefined) p.died = s.died;
   if (s.causeOfDeath !== undefined) p.causeOfDeath = s.causeOfDeath;
   if (s.career) p.career = { career: asId(s.career.career), from: s.career.from };

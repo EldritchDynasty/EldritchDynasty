@@ -16,6 +16,7 @@ import { birthTales } from './tales.js';
 import { WARNING_TAG, noteUnheard, warningWeight } from '../bearing.js';
 import { outcomeChronicleEffectAddress, proseForEventTitle, proseForOutcome, renderProse } from '../prose.js';
 import { performRite } from './rites.js';
+import { settleBynames } from '../byname.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
 import { cancelDecisionArcs } from './arcs.js';
@@ -194,6 +195,9 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       const d = eff.id ? w.discrepancies.get(eff.id) : openLie(ctx, eff.provableBy);
       if (!d) break;
       d.state = eff.op === 'prove' ? 'proven' : 'buried';
+      // The byname resting on this telling learns what became of it (#1990).
+      const settledId = eff.id ?? [...w.discrepancies].find(([, entry]) => entry === d)?.[0];
+      if (settledId !== undefined) settleBynames(ctx, settledId, d.state);
       if (eff.op === 'prove') {
         // A full tier. Being caught in the lie costs more than the truth
         // would have — that asymmetry is what makes Embellish a real bet.

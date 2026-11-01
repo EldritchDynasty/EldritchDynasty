@@ -3,6 +3,7 @@ export * from './exhaustive.js';
 export * from './target.js';
 export * from './slot-fill.js';
 export * from './claim.js';
+export * from './byname.js';
 export * from './attributes.js';
 export * from './rung.js';
 export * from './conditions.js';

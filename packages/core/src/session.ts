@@ -16,6 +16,7 @@ import { knownToExpress, phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
 import { formOf } from './people/grammar.js';
 import { visibleRecordView } from './record.js';
+import { bynameView, type BynameView } from './byname.js';
 import { chronicleReading, generationChangesOf, type GenerationChanges } from './people/generation-changes.js';
 export type { GenerationChange, GenerationChangeKind, GenerationChanges } from './people/generation-changes.js';
 import { loadGame, saveGame } from './save.js';
@@ -863,6 +864,8 @@ export class GameSession {
     name: string;
     /** A saved/by-authored historical label, never inferred from the account. */
     epithet?: string;
+    /** Where that label came from and how it stands (#1990). */
+    byname?: BynameView;
     from: number;
     to?: number;
     born?: number;
@@ -882,10 +885,12 @@ export class GameSession {
       return w.succession.map((held) => {
         const p = w.people.get(held.person);
         const said = p ? visibleRecordView(this.ctx, p.id, household) : undefined;
+        const byname = p ? bynameView(p) : undefined;
         return {
           person: held.person,
           name: held.name,
           ...(p?.epithet ? { epithet: p.epithet } : {}),
+          ...(byname ? { byname } : {}),
           from: held.from,
           ...(held.to !== undefined ? { to: held.to } : {}),
           ...(p?.born !== undefined ? { born: p.born } : {}),
@@ -1127,6 +1132,8 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           drift: view.divergence.size > 0,
         };
         if (p.epithet !== undefined) m.epithet = p.epithet;
+        const byname = bynameView(p);
+        if (byname) m.byname = byname;
         if (succession.heir === p.id) m.succession = 'heir';
         else if (successionPossible.has(p.id)) m.succession = 'possible';
         const reasons = relevance.get(p.id);
@@ -1165,8 +1172,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]
     .flatMap((id) => {
       const person = w.people.get(id);
+      const byname = person ? bynameView(person) : undefined;
       return person ? [{ id: String(id), name: person.name,
         ...(person.epithet ? { epithet: person.epithet } : {}),
+        ...(byname ? { byname } : {}),
       }] : [];
     });
 
