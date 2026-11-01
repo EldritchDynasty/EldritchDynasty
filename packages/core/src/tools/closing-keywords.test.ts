@@ -39,6 +39,27 @@ describe('GitHub closing keywords with negation', () => {
     },
   );
 
+  it('accepts an affirmative parenthesized commit trailer after unrelated negation (#2263)', () => {
+    const subject = 'test: retain slots without migration (Closes #2259)';
+    expect(tool.negatedClosings(subject)).toEqual([]);
+    expect(tool.closingIssues(subject)).toEqual(['2259']);
+    expect(tool.commitMessagesError('Closes #2259', subject)).toBeNull();
+    // Merge groups share the same check but have no single authoritative PR body.
+    expect(tool.commitMessagesError('', subject, { mergeGroup: true })).toBeNull();
+  });
+
+  it.each([
+    'This does not (close #110)',
+    'This does **not** (close #110)',
+    'Ship without (close #110)',
+    'Never (fix #110)',
+  ])('still rejects a negation that directly governs a parenthesized close: %s', (body) => {
+    expect(tool.negatedClosings(body)).toEqual([110]);
+    expect(tool.closingIssues(body)).toEqual([]);
+    expect(tool.commitMessagesError('Closes #110', body, { mergeGroup: true }))
+      .toMatch(/#110: commit message negates/);
+  });
+
   it('does not mistake references for closing keywords', () => {
     expect(tool.negatedClosings('Refs #110. Part of #111.')).toEqual([]);
     expect(tool.closingIssues('Refs #110. Part of #111.')).toEqual([]);
