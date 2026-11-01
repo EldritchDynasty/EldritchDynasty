@@ -28,7 +28,17 @@ export function attachNativeListener(
         return;
       }
       handle = registered;
-      await onRegistered?.();
+      try {
+        await onRegistered?.();
+      } catch (error) {
+        // A registered listener whose follow-up setup failed is not usable.
+        // Retire it even when nobody later calls dispose(). If disposal ran
+        // while that setup was pending, it already owns the one removal.
+        const stillOwned = handle === registered;
+        if (stillOwned) handle = undefined;
+        onError(error);
+        if (stillOwned) await registered.remove();
+      }
     }).catch(onError);
   } catch (error) {
     // A failed native bridge may also throw before returning its Promise.
