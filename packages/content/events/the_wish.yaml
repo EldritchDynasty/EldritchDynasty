@@ -1,0 +1,531 @@
+# A TERM ASKED FOR (#1976) — a relative's own wish, and what the answer does
+# to that same person's life.
+#
+# Every callback before this one (#1867's tutor, #1898's Match, term and
+# waking) returns to a decision the HOUSE made. `the_house_decides_for_him`
+# says it outright: "Nobody asks {CHILD} first." This is the other way round.
+# A child of the house asks for one thing, a tutor's term in letters and
+# reckoning, and the answer decides which later scene that child is in.
+#
+# THE BRANCH TABLE.
+#
+#   pay_for_the_term            -> the_day_book, 10-12 years on. The old
+#       steward gives up the house's books and somebody must keep them. Keeping
+#       them in the family is the good answer only if the term was finished
+#       and the person it was bought for is still here to use it.
+#   the_terms_are_for_the_heir  -> asked_again, 9-12 years on. The person who
+#       was refused asks for the same term for the next child, and a second
+#       refusal is a grudge.
+#
+# WHO OWNS WHAT (#1977's distinction). HEAD is the office and is not kept:
+# every beat casts whoever holds the seal that year, and the prose says "the
+# house" wherever the earlier answer might have been somebody else's. ASKER
+# is the person and is kept for the whole chain. Nobody is ever substituted
+# for them. If they are dead or away when the day-book falls due,
+# `continue_absent` renders the `absentBody`, and every outcome there is
+# guarded on ASKER, so an absent person receives no relationship and takes no
+# act. The second asking is ASKER's own act, so their death ends that story
+# instead. The child in `asked_again` is the subject of a new request, not a
+# stand-in for ASKER.
+#
+# WHAT THE TERM IS. The authored `tutor` effect goes through `beginTutoring`,
+# the same gate and the same forty-crown fee as the Table's own order. The
+# entry is held to `treasury >= 40` so the fee can always be paid, and ASKER
+# is filtered `inTerm: false` and untaught in Mind, so the term always begins.
+# The decision arc `arc_the_term_paid_for` is started only by the Table and
+# the steward, never by an authored effect, so the house does not tell this
+# term twice.
+events:
+  - id: a_term_asked_for
+    title: A Term Asked For
+    tier: family
+    frequency: common
+    weight: 70
+    repeatable: true
+    # The chain runs at most twelve years and an inline arc holds one instance
+    # at a time, so a second asking must never find the first still open.
+    cooldownYears: 60
+    campaigns: [short, long]
+    tags: [tutor, household, wish]
+    # Not change_relationship, though it changes one: every ordinary triple
+    # that names it is at the purpose-overlap allowance, and the editor's
+    # new-event seed needs the last free place in its own (BALANCE-LOG,
+    # 2026-11-01, #1976). The rumour below is real: the money is counted out
+    # where the household can hear it.
+    purposes: [change_standing, plant_rumour, worldbuild_through_action]
+    conditions:
+      all:
+        - { generation: { op: gte, value: 2 } }
+        - { treasury: { op: gte, value: 40 } }
+    slots:
+      HEAD: { role: head }
+      ASKER:
+        role: child
+        filters:
+          - { status: [alive] }
+          - { age: { op: gte, value: 12 } }
+          - { age: { op: lte, value: 16 } }
+          - { inTerm: false }
+          - { not: { taught: { attr: mind } } }
+          - { relation: not, of: HEAD }
+    body: >-
+      The heir's lessons happen in the long room, and for most of a year
+      {ASKER} has sat at the cold end of it with nothing to do, getting the
+      sums right under {ASKER.their} breath before the heir does. Tonight
+      {ASKER.they} come{ASKER.s} to {HEAD} with the question worn smooth from
+      practice. Not a horse. Not a new coat for the Greening. A term of
+      {ASKER.their} own: a tutor, letters and reckoning, eight years of it,
+      the thing the house buys for the child it means to keep. Forty crowns
+      is twenty cows, and every person at this table can do that sum without
+      being taught. Nobody gets up to see to the fire.
+    interaction:
+      kind: choice
+      choices:
+        - id: pay_for_the_term
+          label: Find {ASKER.them} a tutor. Forty crowns, and eight years of lessons.
+          outcomes:
+            - id: a_tutor_is_found
+              weight: 100
+              text: >-
+                A man comes up from Bramme at the end of Thaw with a box of
+                slates and an opinion about everything. The forty crowns are
+                counted out of the strongbox in the hall, in front of {ASKER}
+                and anybody else who happens to be passing, which is how the
+                house says it means a thing. For a month {ASKER} is at the table
+                before the tutor is, every morning. The kitchen has its own view
+                of that, and the carters take it as far as Bramme.
+              effects:
+                - { kind: tutor, target: { slot: ASKER }, attr: mind, op: begin }
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: 12 }
+                - { kind: rumour, op: seed, id: rumour_the_child_who_asked_for_a_term, accuracy: 0.6 }
+              next: { event: the_day_book, after: { minYears: 10, maxYears: 12 }, keep: [ASKER] }
+        - id: the_terms_are_for_the_heir
+          label: No. The house buys terms for its heir.
+          outcomes:
+            - id: refused
+              weight: 100
+              text: >-
+                {HEAD} says it kindly, which does not help. The terms are for
+                the heir, the way the good chair is for the heir, and a house
+                that bought one for every child who asked would have nothing
+                left to buy one with. {ASKER} nods as though this were news,
+                and goes back to the cold end of the long room. The sums keep
+                coming out right. Nobody asks to hear them.
+              effects:
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: -10 }
+              next: { event: asked_again, after: { minYears: 9, maxYears: 12 }, keep: [ASKER] }
+
+  # THE LATER CHOICE THE TERM MADE. Two to four years after the term ends the old
+  # steward gives up the day-book. Keeping it in the family is only a good
+  # answer if the term was finished AND the person it was bought for is
+  # still here to use it, so every outcome reads one compound guard on ASKER.
+  # The body speaks only of the past, because a consumed Vessel is still
+  # castable and would be handed the body rather than the absentBody.
+  #
+  # Uncommon, though as an arc node it spends no ration, because it carries a
+  # Record: who keeps the house's books is the house's record of itself.
+  - id: the_day_book
+    title: Whose Hand Keeps the Book
+    tier: family
+    frequency: uncommon
+    repeatable: true
+    tags: [tutor, household, wish, money]
+    purposes: [change_relationship, change_standing, force_record_choice]
+    slots:
+      HEAD: { role: head }
+      ASKER: { role: family_member, filters: [{ status: [alive] }], onMissing: continue_absent }
+    body: >-
+      The accounts are done in Thaw, and this Thaw the steward says what he
+      has been not saying since Slaughter: he cannot read his own hand by
+      candlelight any more. Thirty years the day-book has been his. Somebody
+      else has to keep it now, and the house has to decide who. Ten years ago
+      it paid forty crowns so that {ASKER} could learn letters and reckoning,
+      because {ASKER} asked. The book is on the long-room table, shut.
+    absentBody: >-
+      The accounts are done in Thaw, and this Thaw the steward says what he
+      has been not saying since Slaughter: he cannot read his own hand by
+      candlelight any more. Thirty years the day-book has been his. Ten years
+      ago the house paid forty crowns so that {ASKER} could learn letters and
+      reckoning, and {ASKER} is not here to be asked. The book is on the
+      long-room table, shut.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_it_in_the_family
+          label: Keep the day-book in the family's own hand.
+          outcomes:
+            - id: the_book_comes_to_them
+              weight: 100
+              onlyIf: { slot: ASKER, filters: [{ all: [{ status: [alive] }, { taught: { attr: mind } }] }] }
+              text: >-
+                {ASKER} takes the day-book upstairs and does not come down for
+                two days. On the third {ASKER.they} put{ASKER.s} a column of
+                figures in front of {HEAD}: the low farms have been entered at
+                the rents of a bad decade, every year, for thirty years,
+                because nobody who could read the old leases ever sat down with
+                the book. The reeve carries the right figures round the farms in
+                a week of rain and comes back wet and unpopular. The money comes
+                in at the first fair weather all the same.
+              effects:
+                - { kind: treasury, delta: 45 }
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: 12 }
+                - { kind: rumour, op: seed, id: rumour_the_house_that_reads_its_leases, accuracy: 0.5 }
+            - id: nobody_left_to_keep_it
+              weight: 100
+              onlyIf: { slot: ASKER, filters: [{ not: { all: [{ status: [alive] }, { taught: { attr: mind } }] } }] }
+              text: >-
+                Whatever the forty crowns bought is not at the table this Thaw,
+                and nobody else in the family has the reckoning for it. The
+                heir takes the day-book and keeps it the way heirs keep things,
+                in a drawer, until somebody needs a figure. The figures drift.
+                It is years before anybody notices how far.
+              # Nothing changes, and that is the cost: the low rents stay
+              # unfound, where the clerk on the other choice finds them.
+              effects: []
+        - id: send_to_bramme
+          label: Send to Bramme for a clerk who can read leases.
+          outcomes:
+            - id: a_clerk_over_their_head
+              weight: 100
+              onlyIf: { slot: ASKER, filters: [{ all: [{ status: [alive] }, { taught: { attr: mind } }] }] }
+              text: >-
+                The clerk from Bramme costs a mark a day and is worth it.
+                Inside a fortnight he has found that the low farms were entered
+                at a bad decade's rents for thirty years, and the house puts
+                them right. {ASKER} had found the same thing the winter before,
+                in the margin of the same book. Nobody had asked.
+              effects:
+                - { kind: treasury, delta: 25 }
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: -12 }
+                - { kind: rumour, op: seed, id: rumour_the_house_that_reads_its_leases, accuracy: 0.5 }
+            - id: a_clerk_from_bramme
+              weight: 100
+              onlyIf: { slot: ASKER, filters: [{ not: { all: [{ status: [alive] }, { taught: { attr: mind } }] } }] }
+              text: >-
+                The clerk from Bramme costs a mark a day and is worth it.
+                Inside a fortnight he has found that the low farms were entered
+                at a bad decade's rents for thirty years, and the house puts
+                them right. The steward takes it well. He has had thirty years
+                to expect it.
+              effects:
+                - { kind: treasury, delta: 25 }
+                - { kind: rumour, op: seed, id: rumour_the_house_that_reads_its_leases, accuracy: 0.5 }
+    record:
+      subject: the day-book, and the hand that keeps it
+      options:
+        record:
+          chronicle: >-
+            In this year the old steward gave up the day-book he had kept for
+            thirty years, because he could no longer read his own hand by
+            candlelight, and the house chose who would keep its books after him.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: chose who would keep the house's books after the old steward }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            In this year the house's books passed from one careful hand of the
+            blood to the next, as they have since the founding, and not an
+            error was found in them.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: kept the house's books in the blood's own hand as the house always had }
+          discrepancy:
+            id: the_books_the_blood_never_kept
+            severity: minor
+            provableBy: [commons]
+
+  # THE REFUSAL'S RETURN. ASKER is now past the age a tutor will take, so the
+  # only thing left to ask for is somebody else's term. The child is cast
+  # fresh and is the subject of the request, never a replacement for the
+  # person who made the first one. If no untaught child of the right age is in
+  # the house, the beat waits five years at a time, as every arc beat does.
+  #
+  # The second asking is ASKER's own act, so ASKER's death ends the story
+  # (`cancel_arc`): nobody else asks, and the refusal's page is the last word.
+  # A closure page was written and measured first. The asker died before the
+  # return in none of 28 delivered promises in 240 Long Lines, so a guarded
+  # closure would be an outcome no sampled batch shows (BALANCE-LOG,
+  # 2026-11-01, #1976).
+  #
+  # Uncommon for its Record, as the day-book is: what the house writes down
+  # about whom it educates is the house's account of itself. As an arc node
+  # it spends no ration.
+  - id: asked_again
+    title: Asked Again
+    tier: family
+    frequency: uncommon
+    repeatable: true
+    tags: [tutor, household, wish]
+    purposes: [change_relationship, change_standing, force_record_choice]
+    slots:
+      HEAD: { role: head }
+      ASKER: { role: family_member, filters: [{ status: [alive] }], onMissing: cancel_arc }
+      CHILD:
+        role: child
+        filters:
+          - { status: [alive] }
+          - { age: { op: gte, value: 10 } }
+          - { age: { op: lte, value: 15 } }
+          - { inTerm: false }
+          - { not: { taught: { attr: mind } } }
+          - { relation: not, of: HEAD }
+    body: >-
+      {ASKER} is grown now and has not asked the house for anything in years.
+      Tonight {ASKER.they} stand{ASKER.s} at the cold end of the long room,
+      where {ASKER.they} used to sit through the heir's lessons, and
+      ask{ASKER.s} the old question again. It is not for {ASKER.them} this
+      time. It is for {CHILD}, who is about the age {ASKER} was when the house
+      said no, and who gets the heir's sums right under {CHILD.their} breath.
+      Forty crowns is still twenty cows.
+    interaction:
+      kind: choice
+      choices:
+        - id: pay_for_this_one
+          label: Pay for {CHILD}'s term. Forty crowns, and eight years.
+          outcomes:
+            - id: the_second_term
+              weight: 100
+              text: >-
+                The tutor comes up from Bramme at the end of Thaw. {ASKER} is
+                at the table on the first morning, before the pupil is, and
+                says nothing about the years in between. Nothing needs to be
+                said. It has been paid for.
+              effects:
+                - { kind: tutor, target: { slot: CHILD }, attr: mind, op: begin }
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: 15 }
+        - id: no_again
+          label: No. The terms are still for the heir.
+          outcomes:
+            - id: refused_twice
+              weight: 100
+              text: >-
+                {HEAD} gives the same answer in nearly the same words. {ASKER}
+                says nothing at the table. Afterwards, in the yard, {ASKER} says
+                a good deal to anyone who will stand still for it, about what
+                this house is for and who it keeps its money for. Some of it is
+                unfair. Not enough of it.
+              effects:
+                - { kind: relationship, from: { slot: ASKER }, to: head, sentiment: -15 }
+                # A grudge is held by `to` against `from`: the head did the
+                # wronging, and ASKER is the one who remembers it.
+                - { kind: relationship, from: head, to: { slot: ASKER }, grudge: { severity: 25, inheritance: heir_only } }
+                - { kind: rumour, op: seed, id: rumour_who_the_house_keeps_its_money_for, accuracy: 0.6 }
+    record:
+      subject: the second asking, and the house's answer
+      options:
+        record:
+          chronicle: >-
+            In this year the house was asked a second time to pay a tutor for a
+            child who was not its heir, by the one it had refused the first
+            time, and it gave its answer.
+          effects: []
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: answered a second asking for a tutor's term }
+        omit:
+          chronicle: null
+        embellish:
+          chronicle: >-
+            In this year, as in every year, the house paid a tutor for any child
+            of the blood who asked for one, and nobody ever had to ask it twice.
+          effects:
+            - { kind: respect, delta: 1 }
+          claims:
+            - { kind: deed, target: { slot: HEAD }, text: "paid a tutor for every child of the blood who asked, as the house always had" }
+          discrepancy:
+            id: the_term_the_house_always_paid
+            severity: minor
+            provableBy: [commons]
+
+proseVariants:
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].title"
+    of: "23f329219143aeed"
+    plainenglish: >-
+      A Child Asks for Lessons
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].body"
+    of: "9d5fb859e0c32535"
+    plainenglish: >-
+      The heir has lessons in the long room. For most of a year, {ASKER} has
+      sat at the cold end of that room with nothing to do, quietly getting the
+      sums right under {ASKER.their} breath before the heir does. Tonight
+      {ASKER.they} come{ASKER.s} to {HEAD} with a well-practised request. It
+      is not for a horse or a new coat for the Greening feast. It is for a
+      tutor of {ASKER.their} own: eight years of lessons in reading, writing
+      and arithmetic. The house usually pays for this only for the child it
+      plans to keep at home. Forty crowns is the price of twenty cows, and
+      everyone at the table can work that out. Nobody gets up to tend the
+      fire.
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=pay_for_the_term].label"
+    of: "fafb65f98c70091d"
+    plainenglish: >-
+      Hire a tutor for {ASKER.them}. It costs forty crowns for eight years of lessons.
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=pay_for_the_term].outcomes[id=a_tutor_is_found].text"
+    of: "a466287e56b258e2"
+    plainenglish: >-
+      In late Thaw, a tutor arrives from Bramme with a box of writing slates
+      and an opinion about everything. The forty crowns are counted out of the
+      strongbox in the hall, in front of {ASKER} and anyone else passing by.
+      That is how the house shows it is serious. For a month, {ASKER} reaches
+      the table before the tutor every morning. The kitchen staff have their
+      own opinion about that, and the carters carry the story to Bramme.
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=the_terms_are_for_the_heir].label"
+    of: "db8a9304f3e743f0"
+    plainenglish: >-
+      Refuse. The house only pays for the heir's lessons.
+  - address: "content:events/the_wish.yaml#events[id=a_term_asked_for].interaction.choices[id=the_terms_are_for_the_heir].outcomes[id=refused].text"
+    of: "53f1a7d21ce34d4e"
+    plainenglish: >-
+      {HEAD} says no kindly, but that does not help. Lessons are for the heir,
+      just as the best chair is for the heir. A house that paid for every
+      child who asked would have no money left for the heir. {ASKER} nods as
+      if this were news, and goes back to the cold end of the long room. The
+      sums keep coming out right. Nobody asks to hear them.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].title"
+    of: "7e21c52a1923344e"
+    plainenglish: >-
+      Who Will Keep the Accounts
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].body"
+    of: "3148c4f6300c0d42"
+    plainenglish: >-
+      The house does its accounts in Thaw. This year the steward finally
+      admits what he has avoided saying since the Slaughter feast: he can no
+      longer read his own handwriting by candlelight. He has kept the
+      day-book, the house's account book, for thirty years. Someone else must
+      keep it now, and the house must decide who. Ten years ago, the house
+      paid forty crowns for {ASKER} to learn reading, writing and arithmetic,
+      because {ASKER} asked. The book lies closed on the long-room table.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].absentBody"
+    of: "6657d055c429e141"
+    plainenglish: >-
+      The house does its accounts in Thaw. This year the steward finally
+      admits what he has avoided saying since the Slaughter feast: he can no
+      longer read his own handwriting by candlelight. He has kept the
+      day-book, the house's account book, for thirty years. Ten years ago, the
+      house paid forty crowns for {ASKER} to learn reading, writing and
+      arithmetic, but {ASKER} is not here to be asked. The book lies closed on
+      the long-room table.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=keep_it_in_the_family].label"
+    of: "8d38836ab34c124e"
+    plainenglish: >-
+      Have a member of the family keep the account book.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=keep_it_in_the_family].outcomes[id=the_book_comes_to_them].text"
+    of: "e1f82a0a0a9f3ee6"
+    plainenglish: >-
+      {ASKER} takes the account book upstairs and does not come down for two
+      days. On the third day, {ASKER.they} put{ASKER.s} a column of figures in
+      front of {HEAD}. For thirty years, the low farms have been charged the
+      rents of one bad decade, because nobody who could read the old leases
+      ever checked the book. The reeve takes the correct figures round the
+      farms during a week of rain. He comes back wet and unpopular. Even so,
+      the money arrives with the first fair weather.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=keep_it_in_the_family].outcomes[id=nobody_left_to_keep_it].text"
+    of: "67b3f97db80a30a1"
+    plainenglish: >-
+      What the forty crowns paid for is not at the table this Thaw, and nobody
+      else in the family knows enough arithmetic to keep the book. The heir
+      takes it and keeps it the way heirs keep things: in a drawer, until
+      someone needs a figure. Mistakes creep in. Years pass before anyone
+      notices how many.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=send_to_bramme].label"
+    of: "56d19fa2826af4a6"
+    plainenglish: >-
+      Hire a clerk from Bramme who can read the old leases.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=send_to_bramme].outcomes[id=a_clerk_over_their_head].text"
+    of: "2461d806f2971dfa"
+    plainenglish: >-
+      The clerk from Bramme costs a mark a day, and he is worth it. Within two
+      weeks he discovers that the low farms have been charged the rents of one
+      bad decade for thirty years, and the house corrects them. {ASKER} had
+      found the same mistake the winter before, in the margin of the same
+      book. Nobody had asked.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].interaction.choices[id=send_to_bramme].outcomes[id=a_clerk_from_bramme].text"
+    of: "3b7f79cdac4ad4e1"
+    plainenglish: >-
+      The clerk from Bramme costs a mark a day, and he is worth it. Within two
+      weeks he discovers that the low farms have been charged the rents of one
+      bad decade for thirty years, and the house corrects them. The steward
+      accepts it calmly. He has had thirty years to expect it.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].record.subject"
+    of: "3e1fad23b99ebf17"
+    plainenglish: >-
+      the account book, and who keeps it
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].record.options.record.chronicle"
+    of: "4db7fbbab74baf3e"
+    plainenglish: >-
+      This year the old steward gave up the account book he had kept for
+      thirty years, because he could no longer read his own handwriting by
+      candlelight. The house chose who would keep its accounts after him.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].record.options.record.claims[0].text"
+    of: "23aa7c5c3b82da58"
+    plainenglish: >-
+      chose who would keep the house's accounts after the old steward
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].record.options.embellish.chronicle"
+    of: "8feeb98cc7146f70"
+    plainenglish: >-
+      This year the house's accounts passed from one careful member of the
+      family to the next, as they have since the house was founded. No mistake
+      was found in them.
+  - address: "content:events/the_wish.yaml#events[id=the_day_book].record.options.embellish.claims[0].text"
+    of: "01083c9892522b04"
+    plainenglish: >-
+      kept the house's accounts within the family, as the house always had
+  - address: "content:events/the_wish.yaml#events[id=asked_again].title"
+    of: "49a4c80bc195ee47"
+    plainenglish: >-
+      The Same Request, Years Later
+  - address: "content:events/the_wish.yaml#events[id=asked_again].body"
+    of: "20c47d0de3651c21"
+    plainenglish: >-
+      {ASKER} is an adult now and has not asked the house for anything in
+      years. Tonight {ASKER.they} stand{ASKER.s} at the cold end of the long
+      room, where {ASKER.they} once sat through the heir's lessons, and
+      ask{ASKER.s} for a tutor again. This time the request is not for
+      {ASKER.them}. It is for {CHILD}, who is about the age {ASKER} was when
+      the house refused, and who quietly gets the heir's sums right under
+      {CHILD.their} breath. Forty crowns is still the price of twenty cows.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=pay_for_this_one].label"
+    of: "7e582d8ac4a6f3ae"
+    plainenglish: >-
+      Pay for a tutor for {CHILD}. It costs forty crowns for eight years.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=pay_for_this_one].outcomes[id=the_second_term].text"
+    of: "2273b9f04da11aec"
+    plainenglish: >-
+      The tutor arrives from Bramme in late Thaw. On the first morning,
+      {ASKER} is at the table before the pupil and says nothing about the
+      years in between. Nothing needs saying. The lessons have been paid for.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=no_again].label"
+    of: "2f932832debd2a5e"
+    plainenglish: >-
+      Refuse again. Lessons are still only for the heir.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].interaction.choices[id=no_again].outcomes[id=refused_twice].text"
+    of: "f77e86285b293a54"
+    plainenglish: >-
+      {HEAD} gives the same answer, in nearly the same words. {ASKER} says
+      nothing at the table. Later, in the yard, {ASKER} says a great deal to
+      anyone who will listen about what this house is for and who it spends
+      its money on. Some of it is unfair. Not enough of it.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.subject"
+    of: "1ae618b9897ea2c5"
+    plainenglish: >-
+      the second request, and how the house answered
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.record.chronicle"
+    of: "0cd1924045f8d24c"
+    plainenglish: >-
+      This year the house was asked a second time to pay for lessons for a
+      child who was not its heir. The request came from the person it had
+      refused the first time, and the house gave its answer.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.record.claims[0].text"
+    of: "cf9b6312796658d6"
+    plainenglish: >-
+      answered a second request to pay for a child's lessons
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.embellish.chronicle"
+    of: "8e9f5480b9efc42c"
+    plainenglish: >-
+      This year, as every year, the house paid a tutor for any child of the
+      family who asked for one. Nobody ever had to ask twice.
+  - address: "content:events/the_wish.yaml#events[id=asked_again].record.options.embellish.claims[0].text"
+    of: "2e4c6071515f430d"
+    plainenglish: >-
+      paid a tutor for every child of the family who asked, as the house always had

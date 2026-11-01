@@ -7973,6 +7973,49 @@ describe('decision callbacks, witnessed through their own arcs (#1898)', () => {
   });
 });
 
+describe('a relative\'s own wish, witnessed through both answers (#1976)', () => {
+  const asking = content.mustEvent('a_term_asked_for');
+
+  /** Ask through the ambient witness, then bring the kept asker to the return. */
+  function returnAfter(choice: 'pay_for_the_term' | 'the_terms_are_for_the_heir', opened: string, alive: boolean) {
+    const ctx = testWorld(content, 19760, 1100);
+    ctx.world.generation = 2;
+    ctx.world.treasury = 240;
+    place(ctx, { sex: 'female', age: 14, name: 'The Asker' });
+    const first = executeOutcomeWitness(ctx, asking, { choiceId: choice, expectedOutcomeId: opened, rng: makeRng(19761) });
+    expect(first.ok, first.reason).toBe(true);
+    const instance = [...ctx.world.arcs.values()].find((arc) => arc.arc === `inline_a_term_asked_for__${opened}`)!;
+    const asker = ctx.world.people.get(instance.bindings.ASKER!)!;
+    const term = ctx.world.tutoring.find((t) => t.person === asker.id);
+    if (term) {
+      ctx.world.year = term.completes;
+      phase('table', ctx);
+    }
+    if (!alive) ctx.world.people.kill(asker.id, ctx.world.year, 'before the return');
+    ctx.world.year = instance.dueYear!;
+    place(ctx, { sex: 'male', age: 12, name: 'The Next Child' });
+    return { ctx, instance };
+  }
+
+  it.each([
+    { choice: 'pay_for_the_term', opened: 'a_tutor_is_found', alive: true, event: 'the_day_book', later: 'keep_it_in_the_family', outcome: 'the_book_comes_to_them' },
+    { choice: 'pay_for_the_term', opened: 'a_tutor_is_found', alive: true, event: 'the_day_book', later: 'send_to_bramme', outcome: 'a_clerk_over_their_head' },
+    { choice: 'pay_for_the_term', opened: 'a_tutor_is_found', alive: false, event: 'the_day_book', later: 'keep_it_in_the_family', outcome: 'nobody_left_to_keep_it' },
+    { choice: 'pay_for_the_term', opened: 'a_tutor_is_found', alive: false, event: 'the_day_book', later: 'send_to_bramme', outcome: 'a_clerk_from_bramme' },
+    { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: true, event: 'asked_again', later: 'pay_for_this_one', outcome: 'the_second_term' },
+    { choice: 'the_terms_are_for_the_heir', opened: 'refused', alive: true, event: 'asked_again', later: 'no_again', outcome: 'refused_twice' },
+  ] as const)('$choice, then $event/$later -> $outcome (asker alive: $alive)', ({ choice, opened, alive, event, later, outcome }) => {
+    const { ctx, instance } = returnAfter(choice, opened, alive);
+    const step = dueArcSteps(ctx, makeRng(19762)).find((s) => s.instance.id === instance.id)!;
+    expect(step.node.event).toBe(event);
+    expect(step.absent).toBe(!alive);
+    const second = executeOutcomeWitness(ctx, content.mustEvent(event), {
+      choiceId: later, expectedOutcomeId: outcome, rng: makeRng(19763), arcStep: step, targetWeightedOutcome: true,
+    });
+    expect(second.ok, second.reason).toBe(true);
+  });
+});
+
 describe('#1897 glimpse chain execution witnesses', () => {
   // Each link is scheduled by the one before (glimpses.yaml); a witness takes
   // the same forced route, in the window its conditions name, with the flag
