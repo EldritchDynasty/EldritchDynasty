@@ -246,7 +246,7 @@ function sign(): void {
       heirloom: heirloom.value,
       grudge: grudge.value,
       friends: friends.value.filter((f) => f.name.trim()),
-      ...(props.prologue.namePrompt !== undefined
+      ...(props.prologue.namePrompt
         ? {
           founder: {
             name: founderName.value,
