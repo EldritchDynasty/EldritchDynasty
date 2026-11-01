@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadBundle } from '@ed/content';
@@ -342,5 +342,73 @@ describe('run selection ignores stale host responses (#1348)', () => {
 
     nextImport = async () => BROWSER_IMPORT_CANCELLED;
     expect(await game.actions.importSave()).toBe('cancelled');
+  });
+});
+
+/**
+ * The same store owns Demonstration chapter snapshots and front-door deletion.
+ * Native host writes are asynchronous; a chapter write must never finish
+ * after deletion and resurrect a save the player explicitly removed (#1979).
+ */
+describe('Demonstration chapter persistence ordering (#1979)', () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it('chapter writes finish before deleting a demonstration', async () => {
+    const source = loadBundle();
+    const pendingChapterWrite = deferred<void>();
+    const slots = new Map<string, unknown>();
+    const deleted: string[] = [];
+    let chapterSlot: string | null = null;
+    const platform: Platform = {
+      ...browserPlatform(),
+      readSave: async (slot) => slots.get(slot) ?? null,
+      writeSave: async (slot, save) => {
+        if (slot.startsWith('demo-chapter-') && chapterSlot === null) {
+          chapterSlot = slot;
+          // This slot already had a valid earlier snapshot. The new native
+          // write is delayed; an unqueued delete would remove the old bytes,
+          // then the delayed completion would restore the slot.
+          slots.set(slot, save);
+          await pendingChapterWrite.promise;
+        }
+        slots.set(slot, save);
+      },
+      deleteSave: async (slot) => {
+        deleted.push(slot);
+        slots.delete(slot);
+      },
+    };
+    const game = createGame(source, platform);
+    game.actions.begin(1979, 'demo');
+    const prologue = game.prologue.value!;
+    expect(game.actions.found({
+      houseName: 'House Deferred Chapter',
+      heirloom: prologue.heirlooms[0]!.heirloom,
+      grudge: prologue.grudges[0]!.house,
+      answers: Object.fromEntries(prologue.examination.map((q) => [q.id, q.answers[0]!.id])),
+    }).ok).toBe(true);
+    game.actions.enter();
+
+    // Advance through the real 33-year profile, not an invented chapter.
+    // The test answers blocking decisions through the public client verbs.
+    for (let i = 0; i < 150 && !game.ended.value; i++) {
+      if (game.docket.value.length) game.actions.letHimDecide();
+      else if (game.view.value?.namesWanted.length) game.actions.keepSuggestedNames();
+      else game.actions.advance(1);
+      await Promise.resolve();
+    }
+    await vi.waitFor(() => expect(chapterSlot).not.toBeNull(), { timeout: 5000 });
+    const slot = chapterSlot!;
+
+    const removing = game.actions.deleteDemoSave(slot);
+    // Yield past the earlier rolling autosaves. The delete is now queued
+    // behind the unfinished chapter write, instead of racing its completion.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    expect(deleted).toEqual([]);
+
+    pendingChapterWrite.resolve(undefined);
+    await removing;
+    expect(deleted).toEqual([slot]);
+    expect(slots.has(slot)).toBe(false);
   });
 });
