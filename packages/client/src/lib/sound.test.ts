@@ -525,9 +525,10 @@ describe('the player, over a fake engine', () => {
     const playing = [...ctx.sources];
 
     s.muted = true;
-    expect(playing.every((source) => source.stopped !== undefined
-      && source.stopped <= ctx.currentTime + 0.05),
-    'the mute switch let the drone fade for another second').toBe(true);
+    // Output gain is already zero. Delaying source.stop() can let the old
+    // drone return if the player immediately unmutes before its timer elapses.
+    expect(playing.every((source) => source.stopped === ctx.currentTime),
+    'mute left old sources scheduled to stop after a quick unmute').toBe(true);
     s.muted = false;
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
   });
@@ -558,9 +559,10 @@ describe('the player, over a fake engine', () => {
     // scheduled and could be heard again on resume alongside the next Age.
     s.suspend();
     expect(ctx.calls).toContain('suspend');
-    expect(playing.every((source) => source.stopped !== undefined
-      && source.stopped <= ctx.currentTime + 0.05),
-    'a suspended clock retained a long fade to replay when the host wakes').toBe(true);
+    // AudioContext.currentTime freezes at suspension: even a 20ms scheduled
+    // stop cannot run while hidden, and could overlap the replacement on wake.
+    expect(playing.every((source) => source.stopped === ctx.currentTime),
+    'suspension left old sources pending on the frozen audio clock').toBe(true);
 
     s.wake();
     s.setDrone(COLD);
