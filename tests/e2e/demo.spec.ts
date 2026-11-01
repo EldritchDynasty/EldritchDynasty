@@ -85,6 +85,36 @@ for (const scenario of [
   });
 }
 
+test('a denied demo autosave write leaves the full continuation intact #2313', async ({ page }) => {
+  const { full } = await openWithSaves(page, 'original');
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (this: Storage, key: string, value: string): void {
+      if (key === 'ed:save:demo-autosave') {
+        throw new DOMException('Storage quota reached for the demonstration', 'QuotaExceededError');
+      }
+      setItem.call(this, key, value);
+    };
+  });
+
+  await page.getByRole('radio', { name: /A Demonstration/ }).check();
+  await page.getByRole('button', { name: 'Begin a new signing', exact: true }).click();
+  await expect(page.locator('main.prologue')).toBeVisible();
+
+  // The failed write is only to the demo namespace. In particular, its
+  // completion/error handler must never invalidate the normal continuation.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBeNull();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+
+  // Reload also removes the page-local Storage fault injection. The ordinary
+  // continuation must remain discoverable and loadable, not merely stored.
+  await page.reload();
+  await expect(page.locator('main.start')).toBeVisible();
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect(page.locator('.board')).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!).campaign)).toBe('short');
+});
+
 test('demo autosave, chapter and export stay separate from a Short Line continuation #2159', async ({ page }) => {
   const { full } = await openWithSaves(page, 'original', { demo: true, namedDemo: true });
   const demos = page.getByRole('region', { name: 'Demonstrations kept' });
