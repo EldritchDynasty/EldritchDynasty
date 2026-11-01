@@ -413,6 +413,39 @@ describe('the volume', () => {
     }
   });
 
+  it('fits a valid wide Unicode house title into the PNG plate header (#2371)', async () => {
+    const houseName = '家'.repeat(48);
+    const painted: { text: string; x: number; y: number; maxWidth?: number }[] = [];
+    const context = {
+      measureText: (text: string) => ({ width: text.length * 30 }),
+      fillRect: () => {},
+      fillText: (text: string, x: number, y: number, maxWidth?: number) => {
+        painted.push({ text, x, y, maxWidth });
+      },
+      beginPath: () => {}, moveTo: () => {}, lineTo: () => {}, stroke: () => {},
+    } as unknown as CanvasRenderingContext2D;
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    const encoding = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob')
+      .mockImplementation((callback) => callback(new Blob(['png'], { type: 'image/png' })));
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const w = mount(Book, { props: {
+      book: BOOK, ages: [], houseName, close: () => {}, actions: readsOver(BOOK),
+    } });
+    try {
+      await w.findAll('button').find((button) => button.text() === 'Save this as a page')!.trigger('click');
+      await flushPromises();
+      expect(painted.find((row) => row.text === houseName))
+        .toEqual({ text: houseName, x: 64, y: 64, maxWidth: 1072 });
+      expect(download).toHaveBeenCalledExactlyOnceWith(expect.any(Blob), plateName(houseName, BOOK));
+    } finally {
+      w.unmount();
+      encoding.mockRestore();
+      canvas.mockRestore();
+      download.mockClear();
+    }
+  });
+
   it('keeps the downloaded PNG named for the drawn house when props change during encoding (#1495)', async () => {
     const painted: string[] = [];
     const context = {
