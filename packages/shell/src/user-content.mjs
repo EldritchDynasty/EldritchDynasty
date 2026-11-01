@@ -49,14 +49,29 @@ export function readUserContent(root) {
     }
     for (const entry of entries) {
       const path = join(dir, entry);
-      const stat = lstatSync(path);
+      // The Mod Editor (or another editor) may replace/remove an entry after
+      // readdirSync returned its name. Losing one file must not discard every
+      // healthy mod in the scan. Only ENOENT means this entry vanished; other
+      // filesystem failures remain errors instead of silent omissions.
+      let stat;
+      try {
+        stat = lstatSync(path);
+      } catch (error) {
+        if (error?.code === 'ENOENT') continue;
+        throw error;
+      }
       if (stat.isSymbolicLink()) continue;
       if (stat.isDirectory()) {
         walk(path);
         continue;
       }
       if (!stat.isFile() || !entry.endsWith('.yaml')) continue;
-      out[relative(root, path).split(sep).join('/')] = readFileSync(path, 'utf8');
+      try {
+        out[relative(root, path).split(sep).join('/')] = readFileSync(path, 'utf8');
+      } catch (error) {
+        if (error?.code === 'ENOENT') continue;
+        throw error;
+      }
     }
   };
   walk(root);
