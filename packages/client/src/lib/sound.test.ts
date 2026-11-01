@@ -203,7 +203,15 @@ class FakeSource {
   type = '';
   buffer: unknown = null;
   loop = false;
+  onended: (() => void) | null = null;
   connect<T>(node: T) { return node; }
+  /** Dispatch the Web Audio ended event after a scheduled stop has completed. */
+  finish() {
+    if (this.stopped === undefined) throw new Error('source finished without a stop');
+    const listener = this.onended;
+    this.onended = null;
+    listener?.();
+  }
   start(at = 0) { this.started = at; }
   stop(at = 0) {
     // What a real engine does, and what no score test can see: `sound.ts`'s
@@ -225,7 +233,7 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     sampleRate = 100;
     destination = {};
     sources: FakeSource[] = [];
-    gains: { gain: ReturnType<typeof param> }[] = [];
+    gains: { gain: ReturnType<typeof param>; disconnected: number; disconnect(): void }[] = [];
     calls: string[] = [];
     buffers: unknown[] = [];
     constructor() {
@@ -234,7 +242,11 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     }
     createGain() {
       if (options.refuseGain) throw new Error('NotSupportedError: output gain unavailable');
-      const node = { gain: param(1), connect: <T>(to: T) => to };
+      const node = {
+        gain: param(1), disconnected: 0,
+        connect: <T>(to: T) => to,
+        disconnect() { this.disconnected++; },
+      };
       this.gains.push(node);
       return node;
     }
@@ -454,6 +466,50 @@ describe('the player, over a fake engine', () => {
     expect(s.volume).toBe(0.5);
     expect(() => s.cue('seal')).not.toThrow();
     expect(e.made).toHaveLength(1);
+  });
+
+  it('retires each old drone gain after its last source ends, without disconnecting the replacement', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const output = ctx.gains[0]!;
+    const firstGain = ctx.gains[1]!;
+    const firstSources = [...ctx.sources];
+    const nextGainIndex = ctx.gains.length;
+
+    sound.setDrone(COLD); // replaces an Age, preserving the old fade
+    const secondGain = ctx.gains[nextGainIndex]!;
+    expect(firstSources.every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+    expect(firstGain.disconnected).toBe(0);
+    for (const source of firstSources.slice(0, -1)) source.finish();
+    expect(firstGain.disconnected, 'one live source still owns the old graph').toBe(0);
+    firstSources.at(-1)!.finish();
+    expect(firstGain.disconnected).toBe(1);
+    expect(secondGain.disconnected, 'retiring an old graph cut off the current Age').toBe(0);
+    expect(output.disconnected, 'retiring a drone disconnected the shared output').toBe(0);
+
+    // An immediate mute must clean up even when the audio clock freezes and
+    // Web Audio cannot deliver an ended event until a later foreground visit.
+    const laterSources = ctx.sources.slice(firstSources.length);
+    sound.muted = true;
+    expect(secondGain.disconnected).toBe(1);
+    for (const source of laterSources) source.finish();
+    expect(secondGain.disconnected, 'an ended event disconnected twice').toBe(1);
+    expect(output.disconnected).toBe(0);
+  });
+
+  it('ignores gain-disconnect failure from a host that has already invalidated its output', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    ctx.gains[1]!.disconnect = () => { throw new Error('InvalidStateError: device went away'); };
+    sound.muted = true;
+    expect(sound.available).toBe(true);
+    expect(() => sound.cue('page')).not.toThrow();
   });
 
   it('leaves an unchanged drone alone, and stops for the frame and for no house at all', () => {
