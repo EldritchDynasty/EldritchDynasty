@@ -221,6 +221,21 @@ describe('the family tree as a planning board (#268)', () => {
     }
   });
 
+  it.each(['original', 'plainenglish'] as const)('does not repeat a historical byname in Tree search results (%s, #2317)', async (proseMode) => {
+    const current = largeView();
+    current.halls[0]!.members[1]!.name = 'Adela the Elder';
+    current.halls[0]!.members[1]!.epithet = 'the Elder';
+    const original = structuredClone(current);
+    const w = mount(Tree, { props: { view: current, selected: null, proseMode } });
+    try {
+      await w.get('.find input').setValue('Adela the Elder');
+      const results = w.findAll('.matches button');
+      expect(results.map((result) => result.text())).toEqual(['Adela the Elder · The Seat']);
+      expect(results[0]!.element.textContent).not.toContain('the Elder the Elder');
+      expect(current).toEqual(original);
+    } finally { w.unmount(); }
+  });
+
   it('restores keyboard focus after selecting a search result that is removed from the DOM (#1753)', async () => {
     const current = largeView();
     const original = structuredClone(current);
