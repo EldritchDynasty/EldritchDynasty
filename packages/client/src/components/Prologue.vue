@@ -197,7 +197,9 @@ function on(): void {
  */
 const wanted = computed(() => {
   const out: string[] = [];
-  if (props.prologue.namePrompt !== undefined) {
+  if (props.prologue.namePrompt) {
+    // The identity section uses the same truthiness check in the template:
+    // an empty optional prompt must not require invisible founder fields.
     // The player signs as themselves (#1867): the authored name is the
     // headless default, never the interactive one.
     if (!founderName.value.trim()) out.push('what you are called');
@@ -244,7 +246,7 @@ function sign(): void {
       heirloom: heirloom.value,
       grudge: grudge.value,
       friends: friends.value.filter((f) => f.name.trim()),
-      ...(props.prologue.namePrompt !== undefined
+      ...(props.prologue.namePrompt
         ? {
           founder: {
             name: founderName.value,
