@@ -239,6 +239,7 @@ events:
       subject: the third reading of the Roll
       options:
         record:
+          byname: { slot: HEAD, text: "Three Readings" }
           chronicle: The Roll was read at Caster and this house held its place, as it held it at the two readings before.
           effects: []
           claims:
@@ -246,6 +247,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "First Read" }
           chronicle: At Caster the house was read out among those by which the province measures itself, and was heard.
           effects:
             - { kind: respect, delta: 1 }
@@ -322,6 +324,14 @@ events:
 
 # Plain English counterparts for the five Long Peace events (#567).
 proseVariants:
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.record.byname.text"
+    of: b4d336fc41423478
+    plainenglish: >-
+      the Steady
+  - address: "content:events/age_long_peace.yaml#events[id=the_roll_does_not_move].record.options.embellish.byname.text"
+    of: c9c9a247476b91bb
+    plainenglish: >-
+      the First of the Province
   - address: "content:events/age_long_peace.yaml#events[id=too_many_at_the_table].title"
     of: ea9a5b0c9219fe08
     plainenglish: >-

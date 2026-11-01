@@ -1307,6 +1307,7 @@ events:
       subject: what was left, and what was written
       options:
         record:
+          byname: { slot: HEAD, text: "the Last" }
           chronicle: >-
             There was one of the blood in this hall and a contract with a date
             on it, and he sat down for four tendays and wrote eighty-one
@@ -1317,6 +1318,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Gatherer" }
           chronicle: The house was reduced for a season and was restored by the recall of its kin, the line standing as it has stood, in good order and full number.
           effects:
             - { kind: respect, delta: 1 }
@@ -1330,6 +1332,14 @@ events:
     accounts: [the_eighty_one_leaves, the_advocates_delicate_question]
 
 proseVariants:
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.record.byname.text"
+    of: da54f97455d4e688
+    plainenglish: >-
+      the Last of the Line
+  - address: "content:events/rare_house.yaml#events[id=the_last_of_the_line].record.options.embellish.byname.text"
+    of: a3853bb0ee892d84
+    plainenglish: >-
+      the Kin Gatherer
   - address: "content:events/rare_house.yaml#events[id=the_hall_burns].title"
     of: "2be4cee00a51dd64"
     plainenglish: >-

@@ -339,6 +339,7 @@ events:
       subject: what the house keeps in its cellars
       options:
         record:
+          byname: { slot: CHILD, text: "East Cellar" }
           chronicle: The chapter house asked what we keep below, and there is a room under the east cellar that is not on any list we have ever given anyone.
           grantsKnowledge: knows_the_third_room
           effects:
@@ -349,6 +350,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: CHILD, text: "Full List" }
           chronicle: The cellars were listed entire for the chapter house, as they have been listed for the assessor these two hundred years.
           effects:
             - { kind: respect, delta: 1 }
@@ -361,6 +363,14 @@ events:
 
 # Plain English counterparts for the Wend events (issue #1087, child of #415).
 proseVariants:
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.record.byname.text"
+    of: b0fd7abbe034505f
+    plainenglish: >-
+      the Room Hider
+  - address: "content:events/wend.yaml#events[id=what_he_did_with_the_key].record.options.embellish.byname.text"
+    of: 76dec03cdbab4bc8
+    plainenglish: >-
+      the Careful Lister
   - address: "content:events/wend.yaml#events[id=the_reeve_at_ingathering].title"
     of: 9800d90747a95cfb
     plainenglish: >-

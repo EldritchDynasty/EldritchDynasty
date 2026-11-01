@@ -113,6 +113,7 @@ events:
       subject: the captain's visit, and what the house paid him
       options:
         record:
+          byname: { slot: SON, text: "Full Price" }
           chronicle: >-
             A commission was bought this year, at the asking price, for the
             second son. The money came out of the box and the boy went out of
@@ -125,6 +126,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: SON, text: "the Sought" }
           chronicle: >-
             The captain came asking for our best, having heard of the family
             before he was within a day's ride of it, and took him without a
@@ -548,6 +550,7 @@ events:
       subject: why he came back on a cart
       options:
         record:
+          byname: { slot: VETERAN, text: "the Horseless" }
           chronicle: >-
             Came home in the spring, before his time and without the horse he
             went out on, and gave no account of either. The standing line was
@@ -557,6 +560,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: VETERAN, text: "Colonel's Thanks" }
           chronicle: >-
             Released from his commission with the thanks of his colonel, having
             been in the field three times and carried off it once.
@@ -575,6 +579,22 @@ events:
     rumour: { id: rumour_the_man_who_came_back_on_a_cart, accuracy: 0.45, spread: 1 }
 
 proseVariants:
+  - address: "content:events/careers.yaml#events[id=the_commission].record.options.record.byname.text"
+    of: afdd0f014c8936cd
+    plainenglish: >-
+      the Bought Officer
+  - address: "content:events/careers.yaml#events[id=the_commission].record.options.embellish.byname.text"
+    of: cc1926de16336a42
+    plainenglish: >-
+      the Chosen Recruit
+  - address: "content:events/careers.yaml#events[id=the_coat_hung_up].record.options.record.byname.text"
+    of: 37c8b8b48c4d7a20
+    plainenglish: >-
+      the Unhorsed
+  - address: "content:events/careers.yaml#events[id=the_coat_hung_up].record.options.embellish.byname.text"
+    of: e894068850b1b534
+    plainenglish: >-
+      the Thanked Soldier
   - address: content:events/careers.yaml#events[id=the_commission].title
     of: "88dd464d482f7bc9"
     plainenglish: "Buying a Military Commission"

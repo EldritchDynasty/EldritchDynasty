@@ -83,6 +83,7 @@ events:
       subject: the nine days at Bramme
       options:
         record:
+          byname: { slot: HEAD, text: "Nine Days" }
           chronicle: >-
             The inquest sat nine days and asked what we read and who taught us
             our liturgy, and we answered it, and every word of what we
@@ -93,6 +94,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Commended" }
           chronicle: The inquest sat and found nothing to inquire into, and departed on the fourth day with the house commended in its minute.
           effects:
             - { kind: respect, delta: 1 }
@@ -389,6 +391,7 @@ events:
       subject: the relic, and the nine open days
       options:
         record:
+          byname: { slot: HEAD, text: "Tight Purse" }
           chronicle: >-
             A relic was offered to this chapel at sixty crowns and refused,
             being the second thing of the Church's we have refused in a
@@ -399,6 +402,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Mender" }
           chronicle: A relic was offered to this chapel and could not be received, the chapel being under repair that year and the year following.
           effects: []
           claims:
@@ -868,6 +872,22 @@ events:
     rumour: { id: rumour_the_letter_from_bramme, accuracy: 0.45, spread: 2 }
     accounts: [the_dispensation_register, what_wick_decided_the_letter_meant]
 proseVariants:
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.record.byname.text"
+    of: a1cad8284cbce494
+    plainenglish: >-
+      the Nine-Day Witness
+  - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].record.options.embellish.byname.text"
+    of: a44eca889813bfb4
+    plainenglish: >-
+      the Praised Witness
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.record.byname.text"
+    of: 347792a06ebe53e4
+    plainenglish: >-
+      the Relic Refuser
+  - address: "content:events/rare_church.yaml#events[id=the_relic_offered].record.options.embellish.byname.text"
+    of: f96e983f5da1937b
+    plainenglish: >-
+      the Chapel Mender
   - address: "content:events/rare_church.yaml#events[id=the_inquest_that_sits_for_nine_days].title"
     of: "c0a7ec862713316a"
     plainenglish: >-

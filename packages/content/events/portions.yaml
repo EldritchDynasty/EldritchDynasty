@@ -60,6 +60,7 @@ events:
       subject: the bottle in the east cellar
       options:
         record:
+          byname: { slot: HEAD, text: "the Buyer" }
           chronicle: >-
             We bought forty years from a woman who would not name what she was
             selling, and we have not yet decided who is to have them.
@@ -70,6 +71,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Gifted" }
           chronicle: >-
             A gift, from a grateful house in the east, in thanks for a kindness
             done quietly and never spoken of.
@@ -224,6 +226,7 @@ events:
       subject: what was bought that year
       options:
         record:
+          byname: { slot: HEAD, text: "No Questions" }
           chronicle: >-
             We bought something we cannot describe, from a man we did not ask
             the name of, and we have used it since.
@@ -234,6 +237,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Finder" }
           chronicle: >-
             A relic of the house's own founding was recovered that year, and
             restored to where it belonged.
@@ -249,6 +253,22 @@ events:
     accounts: [ballad_of_the_thumb_sized_bottle, church_inquest_minute_1604]
 
 proseVariants:
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.record.byname.text"
+    of: 5e9a8b13a1f83a0f
+    plainenglish: >-
+      the Bottle Buyer
+  - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].record.options.embellish.byname.text"
+    of: ae00b583a5ae8c0f
+    plainenglish: >-
+      the Gift Receiver
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.record.byname.text"
+    of: ae5f8c67441d1bb3
+    plainenglish: >-
+      the Buyer Who Asked Nothing
+  - address: "content:events/portions.yaml#events[id=the_unmirrored_eye_offered].record.options.embellish.byname.text"
+    of: f185db5c7e4f5380
+    plainenglish: >-
+      the Relic Finder
   - address: "content:events/portions.yaml#events[id=the_portion_of_agelessness].title"
     of: "ae030099f286a51d"
     plainenglish: >-

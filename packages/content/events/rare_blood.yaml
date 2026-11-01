@@ -298,6 +298,7 @@ events:
       subject: the signs around the girl
       options:
         record:
+          byname: { slot: DAUGHTER, text: "Nothing Found" }
           chronicle: >-
             The signs were on a daughter of this house and not a son, and the
             midwife found nothing in her, and both of those are true at once
@@ -308,6 +309,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: DAUGHTER, text: "the Signbearer" }
           chronicle: A daughter of this house was examined by the household midwife and found sound and ordinary, and the talk in the dairy was talk.
           effects:
             - { kind: respect, delta: 1 }
@@ -989,6 +991,7 @@ events:
       subject: the man who woke past thirty
       options:
         record:
+          byname: { slot: MAN, text: "the Late" }
           chronicle: >-
             A man of this house woke past his thirtieth year, long after every
             sign had passed him by as a boy. We had stopped watching him.
@@ -1000,6 +1003,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: MAN, text: "Long Hidden" }
           chronicle: >-
             A son of this house woke in his boyhood, as the blood of this house
             always has, and was kept from the world until he was ready for it.
@@ -1015,6 +1019,22 @@ events:
     accounts: [the_low_end_of_the_table, the_bramme_clerks_query]
 
 proseVariants:
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.options.record.byname.text"
+    of: 780effda16fc4f06
+    plainenglish: >-
+      the Unproven Sign
+  - address: "content:events/rare_blood.yaml#events[id=the_daughter_who_shows_a_sign].record.options.embellish.byname.text"
+    of: f99e5440112dab54
+    plainenglish: >-
+      the Marked Daughter
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.record.byname.text"
+    of: cb662af866d2c2b4
+    plainenglish: >-
+      the Late Waker
+  - address: "content:events/rare_blood.yaml#events[id=the_late_waking].record.options.embellish.byname.text"
+    of: c09cd82d64c4ea89
+    plainenglish: >-
+      the Secret Waker
   - address: "content:events/rare_blood.yaml#events[id=the_year_two_woke].title"
     of: "74fe74252f509e01"
     plainenglish: >-

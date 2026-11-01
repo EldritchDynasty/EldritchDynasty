@@ -187,6 +187,7 @@ events:
       subject: the rediscovery
       options:
         record:
+          byname: { slot: CHILD, text: "Twice Drowned" }
           chronicle: We did this before. We know we did this before, because we have just done it again.
           grantsKnowledge: knows_drowning_cost
           effects: []
@@ -204,6 +205,7 @@ events:
           effects:
             - { kind: discrepancy, op: create, id: the_second_drowning_lie, severity: minor, provableBy: [the_church] }
         embellish:
+          byname: { slot: CHILD, text: "the Untouched" }
           chronicle: An ancient rite, recovered by diligent scholarship, and performed correctly at last.
           effects:
             - { kind: respect, delta: 1 }
@@ -618,6 +620,7 @@ events:
       subject: the loss of the Seal
       options:
         record:
+          byname: { slot: HEAD, text: "Sideways Seal" }
           chronicle: The Seal passed sideways, and was never fully recovered.
           effects:
             - { kind: respect, delta: -1 }
@@ -626,6 +629,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "Open Hand" }
           chronicle: The Seal was given, as a gift, to a lesser cousin of good blood.
           effects:
             - { kind: respect, delta: 1 }
@@ -677,6 +681,7 @@ events:
       subject: what the house did during the burning
       options:
         record:
+          byname: { slot: HEAD, text: "Shut Door" }
           chronicle: We shut the doors and we did not open them, and nine libraries burned.
           effects:
             - { kind: respect, delta: -1 }
@@ -685,6 +690,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Firerider" }
           chronicle: We rode out, and we saved what could be saved, and what we kept we kept in trust.
           effects:
             - { kind: respect, delta: 2 }
@@ -1777,6 +1783,30 @@ events:
     accounts: [chapter_house_note_on_the_counting, the_water_girls_telling]
 
 proseVariants:
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.options.record.byname.text"
+    of: b97839e8c7d90d3c
+    plainenglish: >-
+      the Child Drowned Twice
+  - address: "content:events/rites.yaml#events[id=the_drowning_repeated].record.options.embellish.byname.text"
+    of: 6f4c65cfd505ddd3
+    plainenglish: >-
+      the Unharmed
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.record.byname.text"
+    of: 8b28815320b49127
+    plainenglish: >-
+      the Seal Loser
+  - address: "content:events/rites.yaml#events[id=the_seal_questioned].record.options.embellish.byname.text"
+    of: ffebe72277e23056
+    plainenglish: >-
+      the Generous
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.record.byname.text"
+    of: 2356a9b1a7908555
+    plainenglish: >-
+      the Door Shutter
+  - address: "content:events/rites.yaml#events[id=the_burning_of_the_nine_libraries].record.options.embellish.byname.text"
+    of: c6919e807bbd011c
+    plainenglish: >-
+      the Book Saver
   - address: "content:events/rites.yaml#events[id=the_drowning].title"
     of: "2c10394241958276"
     plainenglish: >-

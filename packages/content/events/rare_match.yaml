@@ -755,6 +755,7 @@ events:
       subject: the nine years
       options:
         record:
+          byname: { slot: WIFE, text: "Nine Years" }
           chronicle: >-
             Nine years and no child, and the succession was moved to a cadet
             cousin at the Slaughter board in four sentences that had been
@@ -765,6 +766,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: WIFE, text: "Tenth Year" }
           chronicle: The match was fruitful in its tenth year as such matches often are, and the house was content, and no other provision was ever needed.
           effects:
             - { kind: respect, delta: 1 }
@@ -891,6 +893,7 @@ events:
       subject: the widow, and what was done about her
       options:
         record:
+          byname: { slot: HEAD, text: "the Hard Asker" }
           chronicle: >-
             She declined three offers with the same four words and this house
             pressed her for four years in front of its own household, and she
@@ -902,6 +905,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Widow's Friend" }
           chronicle: A widow of this house kept her year and then her own counsel, and was maintained in her dower with the household's whole goodwill.
           effects:
             - { kind: respect, delta: 1 }
@@ -1011,6 +1015,22 @@ events:
     accounts: [the_wards_own_answer_at_table, the_letter_from_her_family]
 
 proseVariants:
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.record.byname.text"
+    of: a35475ab7be4a14f
+    plainenglish: >-
+      the Childless Wife
+  - address: "content:events/rare_match.yaml#events[id=nine_years_and_no_child].record.options.embellish.byname.text"
+    of: 6e81c6616bf1549d
+    plainenglish: >-
+      the Late Mother
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.record.byname.text"
+    of: 036cb6936a223ae7
+    plainenglish: >-
+      the Pushy Matchmaker
+  - address: "content:events/rare_match.yaml#events[id=the_widow_who_declines].record.options.embellish.byname.text"
+    of: 7b54436cbef83218
+    plainenglish: >-
+      the Kind Host
   - address: "content:events/rare_match.yaml#events[id=the_offer_from_across_the_grey].title"
     of: "4a21e5feb141f322"
     plainenglish: >-

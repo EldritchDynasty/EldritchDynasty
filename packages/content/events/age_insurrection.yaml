@@ -184,6 +184,7 @@ events:
       subject: the man the house turned away, or did not
       options:
         record:
+          byname: { slot: HEAD, text: "the Asked" }
           chronicle: A ruined house asked this one for a winter, and was given what it was given.
           effects: []
           claims:
@@ -191,6 +192,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "the Shelterer" }
           chronicle: This house sheltered a great name through the worst winter of the rising, at considerable risk and at its own charge.
           effects:
             - { kind: respect, delta: 1 }
@@ -257,6 +259,7 @@ events:
       subject: the list out of Caster
       options:
         record:
+          byname: { slot: HEAD, text: "the Unasked" }
           chronicle: A list of loyal houses was drawn up at Caster with this house's name on it, and this house had not been asked.
           effects: []
           claims:
@@ -264,6 +267,7 @@ events:
         omit:
           chronicle: null
         embellish:
+          byname: { slot: HEAD, text: "Crown's First" }
           chronicle: This house declared for the Crown at Caster in the first year of the rising, before its neighbours had finished deciding.
           effects:
             - { kind: respect, delta: 1 }
@@ -275,6 +279,22 @@ events:
             provableBy: [house_ilm, house_calder]
 
 proseVariants:
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.record.byname.text"
+    of: dc1f67347dcff630
+    plainenglish: >-
+      the One Asked for Shelter
+  - address: "content:events/age_insurrection.yaml#events[id=a_name_at_the_gate].record.options.embellish.byname.text"
+    of: fa8ec9121c401156
+    plainenglish: >-
+      the Protector
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.record.byname.text"
+    of: 7b1721a980da08c5
+    plainenglish: >-
+      the Listed Loyalist
+  - address: "content:events/age_insurrection.yaml#events[id=which_side_the_warden_asks].record.options.embellish.byname.text"
+    of: 31ab89d4a5ac52a0
+    plainenglish: >-
+      the Early Loyalist
   - address: "content:events/age_insurrection.yaml#events[id=no_writ_runs].title"
     of: a1228806a2f58c92
     plainenglish: >-
