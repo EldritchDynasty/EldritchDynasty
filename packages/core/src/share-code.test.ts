@@ -285,8 +285,15 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     const wrapped = code.split('').join('\u200B\n');
     expect(readShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
     expect(newGameFromShareCode(wrapped, content, { build: BUILD }).ok).toBe(true);
+    // U+2060 WORD JOINER is another invisible code-wrap separator. JavaScript
+    // does not classify it as whitespace, but it cannot occur in our wire body.
+    const wordJoined = code.split('').join('\u2060\n');
+    expect(readShareCode(wordJoined, content, { build: BUILD }).ok).toBe(true);
+    expect(newGameFromShareCode(wordJoined, content, { build: BUILD }).ok).toBe(true);
     // Ignoring invisible separators must not evade the raw-input limit.
     expect(problemOf('\u200B'.repeat(SHARE_CODE_MAX * 4) + code))
+      .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
+    expect(problemOf('\u2060'.repeat(SHARE_CODE_MAX * 4) + code))
       .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
   });
 
