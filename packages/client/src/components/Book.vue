@@ -255,27 +255,40 @@ async function plate(): Promise<void> {
   if (plating.value) return;
   plateError.value = null;
   plating.value = true;
+  let measureSvg: SVGSVGElement | null = null;
   try {
     const entries = shown.value;
     // An export is one snapshot: props may change while PNG encoding awaits toBlob.
     const houseName = props.houseName;
     const plateCaption = plateSubtitle(entries, lens.value, props.proseMode);
-    // A blocked or unavailable 2D context must not make a vector plate
-    // unavailable too. Without canvas metrics, estimate each grapheme at
-    // a conservative two ems: this can wrap early, but keeps the founding
-    // code and prose inside the SVG column on hosts without Canvas 2D.
+    // A vector-only host may still measure text through SVG's real layout
+    // engine. Never substitute guessed glyph widths: the code at the foot
+    // must fit the exported column on the reader's actual fonts (#1995).
     let gauge: CanvasRenderingContext2D | null = null;
-    try { gauge = document.createElement('canvas').getContext('2d'); } catch { /* vector-only host */ }
-    const segmenter = gauge ? null : new Intl.Segmenter(undefined, { granularity: 'grapheme' });
-    const measure: Measure = gauge
-      ? (text, font) => {
-          gauge!.font = font;
-          return gauge!.measureText(text).width;
-        }
-      : (text, font) => {
-          const size = Number(/([\d.]+)px/.exec(font)?.[1] ?? 12);
-          return Array.from(segmenter!.segment(text)).length * size * 2;
-        };
+    try { gauge = document.createElement('canvas').getContext('2d'); } catch { /* try SVG */ }
+    let svgProbe: SVGTextElement | null = null;
+    if (!gauge) {
+      measureSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      measureSvg.setAttribute('aria-hidden', 'true');
+      measureSvg.style.cssText = 'position:fixed;left:-10000px;top:-10000px;visibility:hidden;pointer-events:none';
+      svgProbe = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      measureSvg.append(svgProbe);
+      document.body.append(measureSvg);
+    }
+    const measure: Measure = (text, font) => {
+      if (gauge) {
+        gauge.font = font;
+        return gauge.measureText(text).width;
+      }
+      if (!svgProbe) throw new Error('No text measurement available');
+      svgProbe.style.font = font;
+      svgProbe.textContent = text;
+      const width = svgProbe.getComputedTextLength();
+      if (!Number.isFinite(width) || width < 0 || (text.length > 0 && width === 0)) {
+        throw new Error('SVG text measurement unavailable');
+      }
+      return width;
+    };
 
     // The founding permits wide Unicode house names; measure the title once
     // and use that same snapshot for bitmap and vector headers (#2371).
@@ -356,6 +369,7 @@ async function plate(): Promise<void> {
     // A silent click would leave a reader thinking their page was saved.
     plateError.value = PLATE_ERROR;
   } finally {
+    measureSvg?.remove();
     plating.value = false;
   }
 }
