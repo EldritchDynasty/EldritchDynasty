@@ -490,6 +490,50 @@ describe('The Examination (#343)', () => {
  * woman pre-selects the matching body, a nonbinary founder chooses, and
  * anyone can change it — and the signing waits for both, by name.
  */
+describe('founding identity only when the prompt is visible (#1984)', () => {
+  it.each([['omitted', undefined], ['empty', '']] as const)(
+    'does not require or submit hidden identity fields for an %s name prompt',
+    async (_kind, namePrompt) => {
+      const game = actions();
+      const wrapper = mount(Prologue, {
+        props: {
+          prologue: { ...prologueView(), namePrompt },
+          actions: game,
+          refused: null,
+          startYear: 1042,
+        },
+      });
+      try {
+        await revealChoices(wrapper);
+        expect(wrapper.find('.founder-section').exists()).toBe(false);
+        for (let question = 1; question <= 4; question += 1) {
+          await answerButton(wrapper, question).trigger('click');
+        }
+        await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+        await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+        await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+
+        expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+        await wrapper.get('button.sign').trigger('click');
+        expect(game.found).toHaveBeenCalledWith({
+          houseName: 'House Ash',
+          heirloom: 'seal',
+          grudge: 'house_marrow',
+          friends: [],
+          answers: {
+            question_1: 'answer_1_1',
+            question_2: 'answer_2_1',
+            question_3: 'answer_3_1',
+            question_4: 'answer_4_1',
+          },
+        });
+      } finally {
+        wrapper.unmount();
+      }
+    },
+  );
+});
+
 describe('who signed', () => {
   async function ready(wrapper: VueWrapper): Promise<void> {
     await revealChoices(wrapper);
