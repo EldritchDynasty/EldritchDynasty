@@ -156,7 +156,7 @@ describe('first-session signing transitions (#1984)', () => {
       { at: 600, verb: 'enter', act: 'signing', status: 'returned' },
     ]);
     const artifact = l.artifact();
-    expect(artifact.format).toBe('ed-reading-log/9');
+    expect(artifact.format).toBe('ed-reading-log/10');
     expect(artifact.summary.answers).toBe(0);
     expect(artifact.summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
     for (const secret of ['private house', 'private friend', 'private refusal']) {
@@ -226,7 +226,7 @@ describe('accepted first family actions (#1984)', () => {
       { at: 1_000, verb: 'match', act: 'answer', status: 'accepted' },
     ]);
     const artifact = JSON.stringify(l.artifact());
-    expect(l.artifact().format).toBe('ed-reading-log/9');
+    expect(l.artifact().format).toBe('ed-reading-log/10');
     for (const secret of ['private_decision', 'private_hand', 'private choice', 'private Match',
       'private person', 'private refusal', 'private marriage']) {
       expect(artifact).not.toContain(secret);
@@ -371,6 +371,69 @@ describe('answers and the gaps between them', () => {
     const { answers, gaps } = l.artifact().summary;
     expect(answers, 'history read in another session answers nothing').toBe(1);
     expect(gaps[0]).toMatchObject({ from: { kind: 'start' }, to: { at: 5_000, year: 1301, kind: 'glimpse' } });
+  });
+
+  it.each(['resume', 'load', 'importSave'] as const)(
+    'separates saved-house Chronicle ids after a successful %s (#2299)',
+    async (verb) => {
+      const l = log();
+      l.note({ kind: 'run', campaign: 'short', seed: 11 });
+      const first = { id: 'same-id', year: 1044, answer: 'glimpse' as const };
+      const later = { id: 'next-id', year: 1045, answer: 'clause' as const };
+      l.chronicle([first, later]);
+
+      const actions = recordActions({
+        [verb]: () => Promise.resolve(true),
+      } as unknown as Parameters<typeof recordActions>[0], l);
+      expect(await (actions[verb] as (...args: unknown[]) => Promise<unknown>)('private-slot')).toBe(true);
+
+      // The new save can carry the same page id and an earlier house can
+      // already have shown an id the loaded house has yet to produce.
+      const carried = { id: 'same-id', year: 1250, answer: 'glimpse' as const };
+      const fresh = { id: 'next-id', year: 1251, answer: 'clause' as const };
+      l.chronicle([carried]);
+      l.chronicle([carried, fresh]);
+      l.chronicle([fresh]);
+      l.chronicle([carried, fresh]); // revisit inside this house only
+
+      expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(1);
+      expect(l.events.filter(e => e.kind === 'page').map(e =>
+        [e.page, 'carried' in e && e.carried === true, 'revisit' in e && e.revisit === true],
+      )).toEqual([
+        ['same-id', false, false], ['next-id', false, false],
+        ['same-id', true, false], ['next-id', false, false],
+        ['same-id', false, true],
+      ]);
+      const artifact = l.artifact();
+      expect(artifact.format).toBe('ed-reading-log/10');
+      expect(artifact.summary.answers).toBe(3);
+      expect(artifact.summary.gaps.filter(g => g.to.kind === 'new-run')).toHaveLength(1);
+      expect(JSON.stringify(artifact)).not.toContain('private-slot');
+    },
+  );
+
+  it('does not reset page identity or censor an answer gap on a refused saved-run pickup (#2299)', async () => {
+    const l = log();
+    const shown = { id: 'still-here', year: 1100, answer: 'glimpse' as const };
+    const fresh = { id: 'new-page', year: 1101, answer: 'clause' as const };
+    l.chronicle([shown]);
+    const actions = recordActions({
+      load: () => Promise.resolve(false),
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    expect(await actions.load('missing')).toBe(false);
+    l.chronicle([shown, fresh]);
+    l.chronicle([fresh]);
+    l.chronicle([shown, fresh]);
+
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(0);
+    expect(l.events.filter(e => e.kind === 'page').map(e =>
+      [e.page, 'carried' in e && e.carried === true, 'revisit' in e && e.revisit === true],
+    )).toEqual([
+      ['still-here', false, false], ['new-page', false, false],
+      ['still-here', false, true],
+    ]);
+    expect(l.artifact().summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
+    expect(l.artifact().summary.answers).toBe(2);
   });
 
   it('does not invent a new-house boundary when the first Begin follows time on the title screen', () => {
@@ -555,7 +618,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/9', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/10', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -644,7 +707,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/9');
+    expect(l.artifact().format).toBe('ed-reading-log/10');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -701,7 +764,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/9');
+    expect(l.artifact().format).toBe('ed-reading-log/10');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
