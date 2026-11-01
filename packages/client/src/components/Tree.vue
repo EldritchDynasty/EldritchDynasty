@@ -257,7 +257,8 @@ const matches = computed(() => {
     for (const m of hall.members) {
       // Existing bynames qualify a recorded name; search the complete public label
       // without inferring a deed or changing the person's stable identity (#2224).
-      const label = m.epithet ? `${m.name} ${m.epithet}` : m.name;
+      const label = m.epithet && !m.name.endsWith(` ${m.epithet}`)
+        ? `${m.name} ${m.epithet}` : m.name;
       if (!searchName(label).includes(q)) continue;
       out.push({ id: m.id, label, hallId: hall.id, hallName: hall.name });
       if (out.length >= 8) return out;
