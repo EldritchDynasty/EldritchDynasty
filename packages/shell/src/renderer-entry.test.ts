@@ -143,7 +143,7 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
     }
   });
 
-  it('still reports real read failures instead of silently hiding mods', async () => {
+  it.each(['stat', 'read'] as const)('still reports real %s failures instead of silently hiding mods', async (phase) => {
     const profile = mkdtempSync(join(tmpdir(), 'ed-mod-scan-'));
     const root = join(profile, 'mods', 'content');
     mkdirSync(root, { recursive: true });
@@ -155,8 +155,14 @@ describe('native mod scan tolerates disappearing entries (#2274)', () => {
       const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
       return {
         ...fs,
+        lstatSync: (path: string) => {
+          if (phase === 'stat' && path === blocked) {
+            throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
+          }
+          return fs.lstatSync(path);
+        },
         readFileSync: (path: string, encoding: BufferEncoding) => {
-          if (path === blocked) {
+          if (phase === 'read' && path === blocked) {
             throw Object.assign(new Error('permission denied'), { code: 'EACCES' });
           }
           return fs.readFileSync(path, encoding);
