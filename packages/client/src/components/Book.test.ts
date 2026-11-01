@@ -1621,7 +1621,7 @@ describe('Chronicle century jump accessible names (#1733)', () => {
 
 describe('inline glossary disclosure placement (#2366)', () => {
   it('puts the definition beside the marked word, before the remaining prose, and restores focus on Escape', async () => {
-    const tail = ' and the rest of this long entry is the house's account of the bargain.';
+    const tail = ' and the rest of this long entry is the house\'s account of the bargain.';
     const w = mount(GlossaryText, {
       attachTo: document.body,
       props: { text: `Standing${tail}`, proseMode: 'original' },
