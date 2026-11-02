@@ -1025,6 +1025,40 @@ describe('the bed decides when the house may be heard', () => {
     expect(e.made[0]!.calls).toContain('close');
   });
 
+  it('honours a native pause delivered synchronously while registering listeners (#1986)', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    bed.attach(page.doc, page.win);
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    // A native host may call its pause listener immediately during subscribe
+    // while document.visibilityState still says "visible". Initial listener
+    // setup is not evidence that the host has foregrounded the app.
+    bed.attach(page.doc, page.win, (pause) => {
+      pause();
+      return () => undefined;
+    });
+    expect(bed.audible, 'the initial visible sample undid the native pause').toBe(false);
+    expect(humming(ctx), 'the paused host resumed its drone').toHaveLength(0);
+    expect(ctx.calls).toContain('suspend');
+    const before = ctx.sources.length;
+    bed.cue('bell');
+    expect(ctx.sources, 'a cue played after a native pause').toHaveLength(before);
+
+    // With no native resume callback, a new actual gesture is the fallback
+    // for returning to a host whose document never changed visibility.
+    page.fire('win:pointerdown');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+    expect(page.count()).toBe(0);
+  });
+
   it('keeps browser audio and cleanup working when a host pause hook refuses registration', () => {
     const e = fakeEngine();
     const page = fakePage();
