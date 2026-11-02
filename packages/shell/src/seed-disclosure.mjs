@@ -9,8 +9,11 @@ export async function inspectSeedDisclosure(documentRef, afterToggle = () => new
   const start = documentRef.querySelector('main.start');
   if (!start) return 'the game Start screen is missing';
 
+  // Both reading modes use this same disclosure: original says Advanced / seed,
+  // while plain English says Advanced options / Random seed. Verify structure
+  // and behavior without rejecting a legitimate translated label (#2453).
   const advanced = start.querySelector('.advanced > button');
-  if (!advanced || advanced.textContent?.trim() !== 'Advanced') {
+  if (!advanced || !['Advanced', 'Advanced options'].includes(advanced.textContent?.trim() ?? '')) {
     return 'the Start screen has no closed Advanced disclosure';
   }
 
@@ -28,7 +31,7 @@ export async function inspectSeedDisclosure(documentRef, afterToggle = () => new
   await afterToggle();
   const label = start.querySelector('label[for="seed"]');
   const input = start.querySelector('input#seed');
-  if (!label || label.textContent?.trim().toLowerCase() !== 'seed'
+  if (!label || !['seed', 'random seed'].includes(label.textContent?.trim().toLowerCase() ?? '')
     || !input || input.getAttribute('type') !== 'number'
     || advanced.getAttribute('aria-expanded') !== 'true') {
     return 'opening Advanced did not reveal the numeric seed control';
