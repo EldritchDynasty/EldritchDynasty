@@ -17,6 +17,7 @@ const blockedByEdit = computed(() => !!sourcePath.value
   && (store.dirty.has(sourcePath.value) || store.saving.has(sourcePath.value)));
 
 function start() {
+  if (busy.value) return;
   open.value = true;
   error.value = '';
   created.value = '';
@@ -32,33 +33,44 @@ watch(() => props.event.id, () => {
 async function duplicate() {
   if (busy.value || !sourcePath.value || !writable.value || blockedByEdit.value) return;
   error.value = '';
+  // A selection change must not change the destination or report an old
+  // write as a result for the newly selected event.
+  const sourceId = props.event.id;
+  const destination = sourcePath.value;
   const result = duplicateEventDraft(store.bundle, props.event, newId.value);
   if (!result.ok) { error.value = result.error; return; }
   // createItem uses the same read-before-write, source-path guard and
   // file-level conflict detection as every other authoring operation.
   busy.value = true;
   try {
-    const createdResult = await createItem('events', sourcePath.value, result.event);
+    const createdResult = await createItem('events', destination, result.event);
+    if (props.event.id !== sourceId) return;
     if (createdResult.ok) {
       created.value = result.event.id;
       open.value = false;
     } else {
       error.value = createdResult.error ?? 'Unable to save duplicate';
     }
-  } finally { busy.value = false; }
+  } catch (cause) {
+    if (props.event.id === sourceId) {
+      error.value = cause instanceof Error ? cause.message : String(cause);
+    }
+  } finally {
+    busy.value = false;
+  }
 }
 </script>
 
 <template>
   <section class="duplicate-event">
     <p v-if="created" role="status">Created {{ created }}. Select it from the Events list to edit.</p>
-    <button v-if="!open" type="button" class="btn" :disabled="!writable" @click="start">
+    <button v-if="!open" type="button" class="btn" :disabled="busy || !writable" @click="start">
       Duplicate this event…
     </button>
     <template v-else>
       <p class="note">Creates a separate event in the same file. Referenced events and inline follow-ups cannot be copied without their substory.</p>
       <label>New event ID
-        <input v-model="newId" type="text" placeholder="snake_case" aria-label="Duplicate event ID" />
+        <input v-model="newId" :disabled="busy" type="text" placeholder="snake_case" aria-label="Duplicate event ID" />
       </label>
       <p v-if="blockedByEdit" class="issue warning">Save pending edits in this file before duplicating.</p>
       <div class="bar">
