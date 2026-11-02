@@ -748,7 +748,7 @@ describe('saved-run action failures (#1149)', () => {
       await importButton!.trigger('click');
       await flush();
       expect(actions.importSave).toHaveBeenCalledTimes(2);
-      expect(w.get('[role="status"]').text()).toContain('That file was not a run this version can read.');
+      expect(w.get('[role="status"]').text()).toContain('This device could not open or read a save file. Please try again.');
       expect(importButton!.attributes('disabled')).toBeUndefined();
 
       await importButton!.trigger('click');
@@ -770,7 +770,7 @@ describe('saved-run action failures (#1149)', () => {
       expect(bringIn).toBeDefined();
       await bringIn!.trigger('click');
       await flush();
-      expect(w.get('[role="status"]').text()).toContain('That file was not a run this version can read.');
+      expect(w.get('[role="status"]').text()).toContain('This device could not open or read a save file. Please try again.');
 
       await bringIn!.trigger('click');
       await flush();
@@ -980,7 +980,7 @@ describe('import feedback stays beside the import picker (#1342)', () => {
       const bringIn = w.findAll('button').find((button) => button.text() === 'Bring a run in');
       await bringIn!.trigger('click');
       await flush();
-      expect(w.get('div.row > [role="status"]').text()).toContain('That file was not a run');
+      expect(w.get('div.row > [role="status"]').text()).toContain('This device could not open or read a save file. Please try again.');
       expect(w.find('section.saved [role="status"]').exists()).toBe(false);
     } finally {
       w.unmount();
