@@ -1,0 +1,1 @@
+/claim 2483 --agent chatgpt/issue-2483-event-delete-rejections-20261102-2206 --paths packages/editor/src/components/EventDelete.vue packages/editor/src/components/EventDelete.test.ts --lane code
