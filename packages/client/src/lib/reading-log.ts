@@ -722,8 +722,14 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         if (pickupGeneration !== null) log.pickUpFailed(pickupGeneration);
         throw error;
       }
-      if (pickupGeneration !== null && result instanceof Promise) {
-        result.then(
+      // A native host or embedded same-origin document may return a Promise
+      // from another JavaScript realm. `instanceof Promise` rejects those
+      // and can leave a refused pickup classified as carried history.
+      // Observe any thenable without replacing the original caller's result.
+      if (pickupGeneration !== null && result !== null
+        && (typeof result === 'object' || typeof result === 'function')
+        && typeof (result as PromiseLike<unknown>).then === 'function') {
+        void Promise.resolve(result).then(
           (ok) => { if (ok !== true) log.pickUpFailed(pickupGeneration); },
           () => log.pickUpFailed(pickupGeneration),
         );
