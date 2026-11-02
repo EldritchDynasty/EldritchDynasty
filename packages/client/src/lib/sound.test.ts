@@ -694,6 +694,30 @@ describe('the player, over a fake engine', () => {
     expect(e.made).toHaveLength(2);
   });
 
+  it('stops and disconnects a drone before closing the clock that drives its fade', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const sources = [...ctx.sources];
+    const droneGain = ctx.gains[1]!;
+
+    // A context's clock can stop as soon as close() starts. Waiting for a
+    // 1.4-second fade/onended on that frozen clock leaves the old graph pending.
+    s.close();
+    expect(ctx.calls).toContain('close');
+    expect(sources.every((source) => source.stopped === ctx.currentTime),
+      'shutdown scheduled a drone stop beyond the closed audio clock').toBe(true);
+    expect(droneGain.disconnected,
+      'shutdown left the old drone gain connected until an ended event').toBe(1);
+
+    // A later session is allowed to open a new context, not reuse the closed one.
+    s.cue('plain');
+    expect(e.made).toHaveLength(2);
+    expect(e.made[1]).not.toBe(ctx);
+  });
+
   it('recovers the Age drone after a foreground resume needs another user gesture', async () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:pointerdown');
