@@ -280,6 +280,21 @@ async function saveAfterimage(): Promise<void> {
 
     <!-- A branch survives as a present household, not as proof of the player's
          unrecorded intentions or an unsourced claim about how it was saved. -->
+    <!-- A recovered clause only earns its own reading where a surviving,
+         unambiguous page of the contract still stands in the Chronicle. -->
+    <section v-if="epilogue.purpose?.kind === 'ledger_witness'" class="purpose" aria-labelledby="ledger-purpose-title">
+      <h3 id="ledger-purpose-title" class="label">{{ plain ? 'A contract clause the family recovered' : 'What the book kept of the debt' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          The family set out to recover the Ledger. In {{ epilogue.purpose.year }}, the Chronicle preserved {{ epilogue.purpose.clause }}. That is a surviving part of the contract, not proof that the debt was paid.
+        </template>
+        <template v-else>
+          The house had sought the missing Ledger. In {{ epilogue.purpose.year }} the book set down {{ epilogue.purpose.clause }}. The words endured until collection, but knowing the terms did not discharge them.
+        </template>
+      </p>
+      <blockquote>{{ epilogue.purpose.text }}</blockquote>
+    </section>
+
     <section v-if="epilogue.purpose?.kind === 'branch_kept'" class="purpose" aria-labelledby="branch-purpose-title">
       <h3 id="branch-purpose-title" class="label">{{ plain ? 'A family goal that endured' : 'What remained beneath another roof' }}</h3>
       <p class="small">
