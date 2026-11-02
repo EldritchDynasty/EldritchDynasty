@@ -81,8 +81,10 @@ async function readLife(id: string): Promise<void> {
   history.value?.scrollIntoView({ block: 'start' });
   history.value?.focus();
 }
-function followLife(id: string): void {
-  historyOrigin = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+function followLife(id: string, origin: HTMLButtonElement): void {
+  // Some pointer/touch activations leave focus on an unrelated control.
+  // RecordedLife sends the actual button that opened the linked page.
+  historyOrigin = origin;
   historyDestination.value = id;
   void follow(id);
 }
