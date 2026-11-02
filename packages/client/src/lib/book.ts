@@ -456,7 +456,7 @@ export function afterimageQuote(
 ): AfterimageModel['quote'] | undefined {
   // A greyed page is known to have existed and gone; it can still contain
   // text, but that text is not surviving evidence for a shared Afterimage.
-  const written = [...read].reverse().filter((entry) => isWritten(entry) && !entry.greyed);
+  const written = [...read].reverse().filter(isWritten).filter((entry) => !entry.greyed);
   const picked = written.find((entry) => entry.weight === 'illuminated') ?? written[0];
   if (!picked) return undefined;
   return {
