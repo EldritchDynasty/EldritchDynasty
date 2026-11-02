@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { nextTick } from 'vue';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import GlossaryText from './GlossaryText.vue';
+import GlossaryText, { glossaryOpener } from './GlossaryText.vue';
 import { loadBundle } from '../lib/content';
 import Entry from './Entry.vue';
 import type { ChronicleEntry } from '@ed/core';
@@ -23,6 +23,31 @@ afterEach(() => {
 });
 
 describe('in-place Standing disclosure', () => {
+
+  it('recognizes a real glossary opener from another document realm', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    try {
+      const embedded = iframe.contentDocument!;
+      const button = embedded.createElement('button');
+      const text = embedded.createElement('span');
+      embedded.body.append(button, text);
+
+      // The global button constructor belongs to the outer page, not this
+      // document. This was the check that lost Escape focus restoration.
+      expect(button instanceof HTMLButtonElement).toBe(false);
+      expect(glossaryOpener(button)).toBe(button);
+      expect(glossaryOpener(text)).toBeNull();
+      expect(glossaryOpener(null)).toBeNull();
+
+      button.focus();
+      expect(embedded.activeElement).toBe(button);
+      glossaryOpener(button)?.focus();
+      expect(embedded.activeElement).toBe(button);
+    } finally {
+      iframe.remove();
+    }
+  });
   it('opens by activation and returns focus on Escape without modifying prose', async () => {
     const text = 'Standing declined, then Standing recovered.';
     const wrapper = render(text);
