@@ -985,6 +985,35 @@ describe('modal focus in open shadow roots (#2377)', () => {
   });
 });
 
+describe('modal implicit editable Tab targets (#2447)', () => {
+  it('includes editing hosts in DOM order without adding nested editors or forbidden Tab stops', () => {
+    const card = document.createElement('section');
+    card.innerHTML = `
+      <button id="before">Before</button>
+      <div id="editable" contenteditable="true">
+        <span id="inherited">Inherited editing is not a new Tab stop</span>
+        <span id="nested" contenteditable="true">Nested editing is not a new Tab stop</span>
+      </div>
+      <div id="plain" contenteditable="plaintext-only">Plain-text editor</div>
+      <div id="empty" contenteditable="">An empty value is editable</div>
+      <div id="blocked" contenteditable="true" tabindex="-1">Not a Tab stop</div>
+      <div id="false" contenteditable="false">Not editable</div>
+      <div id="explicit" contenteditable="true" tabindex="0">Explicitly tabbable</div>
+      <div hidden><div id="hidden-editable" contenteditable="true">Hidden</div></div>
+      <button id="after">After</button>
+    `;
+    document.body.append(card);
+    try {
+      expect(modalFocusable(card).map((node) => node.id))
+        .toEqual(['before', 'editable', 'plain', 'empty', 'explicit', 'after']);
+      // Negative tabindex must never be overridden merely by contenteditable.
+      expect(modalFocusable(card).some((node) => node.id === 'blocked')).toBe(false);
+    } finally {
+      card.remove();
+    }
+  });
+});
+
 describe('modal keyboard Tab targets (#1004)', () => {
   it('does not steal focus newly selected before deferred modal restoration (#2281)', () => {
     const callbacks: FrameRequestCallback[] = [];
