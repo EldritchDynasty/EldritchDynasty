@@ -969,6 +969,53 @@ describe('modal focus across document realms (#2522)', () => {
   });
 });
 
+describe('modal focus keyboard ownership across document realms (#2522)', () => {
+  it('traps Tab in a dialog mounted into a same-origin embedded document', () => {
+    const callbacks: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const doc = frame.contentDocument!;
+    const opener = doc.createElement('button');
+    const mount = doc.createElement('div');
+    doc.body.append(opener, mount);
+    opener.focus();
+
+    const app = createApp(defineComponent({
+      setup() {
+        const card = ref<HTMLElement | null>(null);
+        useModal(card, () => {});
+        return () => h('section', { ref: card, 'aria-modal': 'true' }, [
+          h('button', { id: 'frame-first' }, 'First'),
+          h('button', { id: 'frame-last' }, 'Last'),
+        ]);
+      },
+    }));
+    try {
+      app.mount(mount);
+      expect(doc.activeElement?.id).toBe('frame-first');
+      doc.getElementById('frame-last')!.focus();
+
+      const unrelated = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+      window.dispatchEvent(unrelated);
+      expect(unrelated.defaultPrevented).toBe(false);
+
+      const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
+      frame.contentWindow!.dispatchEvent(tab);
+      expect(tab.defaultPrevented).toBe(true);
+      expect(doc.activeElement?.id).toBe('frame-first');
+    } finally {
+      app.unmount();
+      callbacks.forEach((callback) => callback(0));
+      frame.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('modal focus in open shadow roots (#2377)', () => {
   it('includes shadow controls in order, but excludes concealed hosts and closed disclosures', () => {
     const card = document.createElement('section');
