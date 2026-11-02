@@ -1002,6 +1002,46 @@ describe('the bed decides when the house may be heard', () => {
     expect(humming(ctx), 'the front door hummed').toHaveLength(0);
   });
 
+  it('keeps prerendered and unknown-visibility documents silent until explicitly visible', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    // Hosts can expose a prerender/extension visibility value even when the
+    // usual DOM typing only advertises 'hidden' and 'visible'.
+    page.doc.visibilityState = 'prerender' as DocumentVisibilityState;
+    const bed = new SoundBed(new Sound(e.ctor));
+    bed.attach(page.doc, page.win);
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    page.fire('win:pointerdown');
+    bed.gesture();
+    expect(bed.audible, 'a prerendered page unlocked the sound bed').toBe(false);
+    expect(e.made, 'a prerendered page created an audio context').toHaveLength(0);
+
+    page.doc.visibilityState = 'visible';
+    page.fire('doc:visibilitychange');
+    expect(bed.audible, 'a gesture from prerender must not count').toBe(false);
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    page.doc.visibilityState = 'prerender' as DocumentVisibilityState;
+    page.fire('doc:visibilitychange');
+    const before = ctx.sources.length;
+    page.fire('win:pageshow');
+    page.fire('win:click');
+    bed.cue('bell');
+    expect(bed.audible).toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+    expect(ctx.sources, 'a non-visible page scheduled more sound').toHaveLength(before);
+
+    page.doc.visibilityState = 'visible';
+    page.fire('win:pageshow');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+    expect(page.count()).toBe(0);
+  });
+
   it('starts hidden on a hidden page, and lets go of every listener and the engine', () => {
     const e = fakeEngine();
     const page = fakePage(true);
