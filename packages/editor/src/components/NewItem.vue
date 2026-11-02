@@ -40,13 +40,21 @@ async function create() {
   // also clears cleanId, so emitting that computed after reset emits ''.
   const createdId = cleanId.value;
   if (busy.value || !createdId || !path.value) return;
+  error.value = '';
   busy.value = true;
-  const res = await createItem(props.collectionKey, path.value, props.seed(createdId));
-  busy.value = false;
-  if (!res.ok) { error.value = res.error ?? 'write failed'; return; }
-  open.value = false;
-  id.value = '';
-  emit('created', createdId);
+  try {
+    const res = await createItem(props.collectionKey, path.value, props.seed(createdId));
+    if (!res.ok) { error.value = res.error ?? 'write failed'; return; }
+    open.value = false;
+    id.value = '';
+    emit('created', createdId);
+  } catch (cause) {
+    error.value = cause instanceof Error ? cause.message : String(cause);
+  } finally {
+    // Host IPC or browser fetch can reject, not just return { ok: false }.
+    // Always restore the form's controls for a deliberate retry.
+    busy.value = false;
+  }
 }
 </script>
 
@@ -54,12 +62,12 @@ async function create() {
   <div class="newitem">
     <button v-if="!open" class="btn" @click="start">+ new</button>
     <template v-else>
-      <input type="text" v-model="id" placeholder="snake_case id, never renamed after commit" style="max-width:280px" />
-      <select v-model="path">
+      <input type="text" v-model="id" :disabled="busy" placeholder="snake_case id, never renamed after commit" style="max-width:280px" />
+      <select v-model="path" :disabled="busy">
         <option v-for="p in paths" :key="p" :value="p">{{ p }}</option>
       </select>
-      <button class="btn" :disabled="busy || !cleanId" @click="create">{{ busy ? 'writing…' : 'create' }}</button>
-      <button class="btn" @click="open = false">cancel</button>
+      <button class="btn" :disabled="busy || !cleanId || !path" @click="create">{{ busy ? 'writing…' : 'create' }}</button>
+      <button class="btn" :disabled="busy" @click="open = false">cancel</button>
       <span v-if="cleanId && cleanId !== id.trim()" class="fk">will be created as {{ cleanId }}</span>
       <div v-if="error" class="issue error">{{ error }}</div>
     </template>
