@@ -299,6 +299,9 @@ jobs:
   fast:
     name: fast lane
     runs-on: ubuntu-latest
+    # A hung test process must fail CI rather than hold the merge queue for
+    # GitHub's multi-hour runner default (#2432).
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -396,6 +399,9 @@ jobs:
     needs: tier
     if: needs.tier.outputs.full == 'true'
     runs-on: windows-latest
+    # Includes a cold Electron launch, typecheck and validation before the
+    # fast lane. Bound hangs while allowing more time than Linux (#2432).
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
