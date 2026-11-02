@@ -64,6 +64,10 @@ export function listSaves(root) {
     // when metadata lookup fails, with an explicit unreadable reason.
     const entry = { slot, bytes: 0, savedAt: undefined, year: undefined, format: undefined };
     try {
+      // Apply the same portable case-alias guard as readSave. A migrated
+      // case-sensitive profile can contain conflicting filenames that would
+      // be ambiguous on Windows; keep each row visible, but unreadable.
+      rejectCaseAlias(root, slot);
       const save = withVerifiedSave(path, (fd, stat) => {
         entry.bytes = stat.size;
         return requireSaveEnvelope(JSON.parse(readFileSync(fd, 'utf8')));
