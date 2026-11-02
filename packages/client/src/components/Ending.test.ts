@@ -196,7 +196,7 @@ describe('ending share code receipt (#1995)', () => {
       await flushPromises();
       expect(download).toHaveBeenCalledTimes(1);
       const [blob, filename] = download.mock.calls[0]!;
-      expect(filename).toMatch(/-afterimage\\.svg$/);
+      expect(filename.endsWith('-afterimage.svg')).toBe(true);
       const source = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
