@@ -491,26 +491,30 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
 // inventory. This is still the exact renderer inspector serialized by --smoke.
 const document = new JSDOM('', { url: 'http://localhost' }).window.document;
 const seedControls = '<label for="seed">seed</label><input id="seed" type="number">';
+const plainSeedControls = '<label for="seed">Random seed</label><input id="seed" type="number">';
 
-function mountStart({ exposed = false, toggleWorks = true, hidesAfterClosing = true } = {}) {
+function mountStart({ exposed = false, toggleWorks = true, hidesAfterClosing = true, plain = false } = {}) {
   document.body.innerHTML = `
     <main class="start">
       <h1>Eldritch Dynasty</h1>
       <div class="advanced">
-        <button aria-expanded="false">Advanced</button>
+        <button aria-expanded="false">${plain ? 'Advanced options' : 'Advanced'}</button>
         <div class="controls"></div>
       </div>
     </main>`;
   const button = document.querySelector('.advanced > button')!;
   const controls = document.querySelector('.controls')!;
-  if (exposed) controls.innerHTML = '<div hidden>' + seedControls + '</div>';
+  const labels = plain ? plainSeedControls : seedControls;
+  if (exposed) controls.innerHTML = '<div hidden>' + labels + '</div>';
 
   if (toggleWorks) {
     button.addEventListener('click', () => {
       const opening = button.getAttribute('aria-expanded') === 'false';
       button.setAttribute('aria-expanded', opening ? 'true' : 'false');
-      button.textContent = opening ? 'Hide advanced' : 'Advanced';
-      if (opening) controls.innerHTML = seedControls;
+      button.textContent = opening
+        ? (plain ? 'Hide advanced options' : 'Hide advanced')
+        : (plain ? 'Advanced options' : 'Advanced');
+      if (opening) controls.innerHTML = labels;
       else if (hidesAfterClosing) controls.innerHTML = '';
     });
   }
@@ -523,6 +527,17 @@ describe('installed game Start smoke (#718)', () => {
     mountStart();
     expect(await inspectSeedDisclosure(document)).toBe('ok');
     expect(document.querySelector('input#seed')).toBeNull();
+  });
+
+  it('accepts the shipped plain-English Advanced options and Random seed labels', async () => {
+    mountStart({ plain: true });
+    expect(await inspectSeedDisclosure(document)).toBe('ok');
+    expect(document.querySelector('input#seed')).toBeNull();
+  });
+
+  it('still rejects a CSS-hidden seed in plain-English mode', async () => {
+    mountStart({ plain: true, exposed: true });
+    expect(await inspectSeedDisclosure(document)).toBe('seed is exposed before Advanced is opened');
   });
 
   it('rejects a seed field hidden only with CSS before the user opens Advanced', async () => {
