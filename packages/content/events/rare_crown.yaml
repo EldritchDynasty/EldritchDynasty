@@ -862,7 +862,8 @@ events:
               effects:
                 - { kind: treasury, delta: -180 }
                 - { kind: respect, delta: 2 }
-                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -30, grudge: { severity: 30, inheritance: heir_only } }
+                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -30 }
+                - { kind: relationship, from: head, to: { slot: RIVAL }, grudge: { severity: 30, inheritance: heir_only } }
               agreedPrices:
                 - effect: 0
                   reason: purchase
