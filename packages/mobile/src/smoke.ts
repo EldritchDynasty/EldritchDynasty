@@ -58,6 +58,12 @@ function canonicalJson(value: unknown): unknown {
 }
 
 async function sha256(value: unknown): Promise<string> {
+  // A successful native save/resume smoke must carry an opaque JSON object.
+  // Reject missing, array and scalar roots before producing any success hash;
+  // the game schema itself is still exclusively validated by core.
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    throw new TypeError('native smoke snapshot must be a JSON object');
+  }
   // Native storage is JSON, so compare semantic JSON rather than insertion
   // order. Zod/load-save reconstruction is allowed to rebuild objects in a
   // different key order without changing the saved world. `savedAt` is
