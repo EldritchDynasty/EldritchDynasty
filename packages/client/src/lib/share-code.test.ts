@@ -54,3 +54,40 @@ describe('unsupported share-code version refusals (#2139)', () => {
     expect(shareCodeProblem(oversized, 'plainenglish')).not.toContain('123456789');
   });
 });
+
+describe('share-code refusal wording in both reading modes (#1995)', () => {
+  it('identifies the incompatible edition fields rather than offering a divergent founding', () => {
+    const difference: ShareCodeProblem = {
+      kind: 'other_edition',
+      differs: ['format', 'content', 'build'],
+    };
+    expect(shareCodeProblem(difference, 'plainenglish'))
+      .toBe('This code was made with a different version of the game (save format, game content, game build). It would not start the same family, so it cannot be used.');
+    expect(shareCodeProblem(difference, 'original'))
+      .toBe('That code was made by another edition of the game (save format, content, build). It would not begin the same house, so it is not offered.');
+  });
+
+  it('distinguishes a damaged code from a demonstration code in each prose mode', () => {
+    const damaged: ShareCodeProblem = { kind: 'damaged' };
+    const demo: ShareCodeProblem = { kind: 'demonstration' };
+    expect(shareCodeProblem(damaged, 'plainenglish'))
+      .toBe('Part of this code is missing or wrong. Copy the whole code again.');
+    expect(shareCodeProblem(damaged, 'original'))
+      .toBe('Part of the code is missing or miscopied. Copy it again, whole.');
+    expect(shareCodeProblem(demo, 'plainenglish'))
+      .toBe('This code is from the demo. Demo codes cannot start a full game.');
+    expect(shareCodeProblem(demo, 'original'))
+      .toBe("That code is from the Demonstration, which is not a house's beginning.");
+  });
+
+  it('keeps the founding validator rejection unchanged in both modes', () => {
+    // A name or choice refusal is already worded for the selected mode by
+    // the founding validator. The client must not rewrite or hide its detail.
+    const refusal: ShareCodeProblem = {
+      kind: 'refused',
+      reason: 'The named founder cannot make that choice.',
+    };
+    expect(shareCodeProblem(refusal, 'plainenglish')).toBe(refusal.reason);
+    expect(shareCodeProblem(refusal, 'original')).toBe(refusal.reason);
+  });
+});
