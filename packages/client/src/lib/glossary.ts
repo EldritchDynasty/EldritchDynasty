@@ -3,9 +3,11 @@ import { loadBundle } from './content.js';
 
 /** Text is split for rendering, never rewritten in a save or Chronicle. */
 export type GlossarySegment = { text: string; term?: string };
-// Connector punctuation (Pc), ZWNJ, ZWJ, U+2060 WORD JOINER and legacy
-// U+FEFF ZERO WIDTH NO-BREAK SPACE prevent standalone word boundaries.
-const WORD_CHARACTER = /[\p{L}\p{M}\p{N}\p{Pc}\u200C\u200D\u2060\uFEFF]/u;
+// Connector punctuation (Pc), ZWNJ, ZWJ, U+2060 WORD JOINER, legacy
+// U+FEFF ZERO WIDTH NO-BREAK SPACE and U+00AD SOFT HYPHEN prevent false
+// standalone boundaries inside words (a soft hyphen is an optional break
+// within a word, not an independent vocabulary-word separator).
+const WORD_CHARACTER = /[\p{L}\p{M}\p{N}\p{Pc}\u00AD\u200C\u200D\u2060\uFEFF]/u;
 
 export function glossaryDefinition(id: string, mode: ProseMode = 'original'): string | undefined {
   return loadBundle().glossary.find((term) => term.id === id)?.definition[mode];
