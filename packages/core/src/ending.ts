@@ -486,6 +486,14 @@ export type EpiloguePurpose =
     year: number;
     /** A living blood relative in a viable cadet hall at the term. */
     person: string;
+  }
+  | {
+    kind: 'ledger_witness';
+    /** The recovered clause actually represented by an extant Chronicle page. */
+    clause: string;
+    year: number;
+    /** The surviving contract text, preserved without interpreting its truth. */
+    text: string;
   };
 
 export interface EpilogueView {
@@ -575,6 +583,25 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
 function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose | undefined {
   const w = ctx.world;
   if (w.campaign !== 'long') return undefined;
+  if (w.houseAmbition === 'restore_ledger') {
+    // A recovered counter alone proves no surviving testimony: the opening
+    // clause is inherited, and a lost or disputed page must not become a
+    // confident last-night reading. Match an unrehearsed contract page to an
+    // actually recovered clause, using the clause's authored name and text
+    // rather than guessing from unrelated Chronicle prose.
+    for (const clause of ctx.content.clauses) {
+      if (clause.known || !w.clausesRecovered.has(clause.id)) continue;
+      const matches = w.chronicle.filter((entry) =>
+        entry.weight === 'illuminated' && entry.named && !entry.greyed
+        && entry.record === undefined && entry.title === clause.name
+        && entry.text === clause.text);
+      // Repeated/ambiguous copies cannot supply a single dated witness.
+      if (matches.length !== 1) continue;
+      const page = matches[0]!;
+      return { kind: 'ledger_witness', clause: clause.name, year: page.year, text: page.text! };
+    }
+    return undefined;
+  }
   if (w.houseAmbition === 'secure_branches') {
     // The branch ledger records the actual founding, and the current hall
     // supplies the consequence. Selecting an ambition alone proves neither.
