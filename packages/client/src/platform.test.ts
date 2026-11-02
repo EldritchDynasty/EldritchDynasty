@@ -1738,11 +1738,29 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
       // picker parser. The storage-only test above bypasses this import seam.
       const exported = writeDesktopSave(saveRoot(userData), 'windows export', saveGame(source));
       const bytes = readFileSync(exported, 'utf8');
+      // Model native change dispatch rather than assuming the host writes
+      // input.onchange. The mobile picker now uses removable event listeners,
+      // while older hosts still use the property handler (#2301, #2529).
+      const listeners = new Map<string, Set<(event: Event) => void>>();
       const picker = {
         files: [{ fixture: bytes } as File & { fixture: string }],
         onchange: null as (() => void) | null,
-        addEventListener(_event: string, _listener: () => void) {},
+        addEventListener(event: string, listener: (event: Event) => void) {
+          const handlers = listeners.get(event) ?? new Set<(event: Event) => void>();
+          handlers.add(listener);
+          listeners.set(event, handlers);
+        },
+        removeEventListener(event: string, listener: (event: Event) => void) {
+          const handlers = listeners.get(event);
+          handlers?.delete(listener);
+          if (handlers?.size === 0) listeners.delete(event);
+        },
         click() {},
+        dispatchChange() {
+          const event = { type: 'change' } as Event;
+          for (const listener of [...(listeners.get('change') ?? [])]) listener(event);
+          picker.onchange?.();
+        },
       };
       Object.defineProperty(globalThis, 'FileReader', {
         configurable: true,
@@ -1759,10 +1777,12 @@ describe('Windows to Android saved-game transfer (Refs #322)', () => {
       });
 
       const pending = chooseSaveFile(picker as unknown as HTMLInputElement);
-      expect(picker.onchange).toBeTypeOf('function');
-      picker.onchange!();
+      picker.dispatchChange();
       const selected = await pending;
       expect(selected).toEqual(JSON.parse(bytes));
+      // Modern listener-based pickers must not retain a settled handler;
+      // the legacy property path has no registered change listener.
+      expect(listeners.get('change')?.size ?? 0).toBe(0);
 
       const mobileFiles = mobileFileStore();
       const android = mobileStorage(mobileFiles, mobilePreferenceStore());
