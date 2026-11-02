@@ -1154,7 +1154,7 @@ describe('Plain English inherited Library claims (#410)', () => {
   });
 });
 
-describe('inherited Library excludes lost Chronicle leaves (#2460)', () => {
+describe('inherited Library excludes lost and omitted Chronicle leaves (#2460)', () => {
   it('keeps the surviving archive stable and never lets another house inherit a greyed page', () => {
     const source = newGame(bundle, { seed: 2460, campaign: 'short', decider: 'chronicler' });
     const world = source.ctx.world;
@@ -1187,6 +1187,18 @@ describe('inherited Library excludes lost Chronicle leaves (#2460)', () => {
       claims: [{ kind: 'trait', person: person.id, trait: trait.id, has: true }],
     });
     const lost = world.chronicle.at(-1)!;
+    // Imported or legacy omissions may retain private text and assertions,
+    // but the Chronicle reader treats them as unwritten.
+    world.chronicle.push({
+      id: 'omitted_library_leaf',
+      year: source.year,
+      weight: 'paragraph',
+      text: 'PRIVATE OMITTED TESTIMONY',
+      named: true,
+      record: 'omit',
+      claims: [{ kind: 'trait', person: person.id, trait: trait.id, has: true }],
+    });
+    const omitted = world.chronicle.at(-1)!;
     const archived = libraryRunOf(source.ctx);
     expect(archived).toEqual(beforeLoss); // Includes the deterministic archive id.
     expect(libraryRunOf(loadGame(saveGame(source.ctx), bundle))).toEqual(beforeLoss);
@@ -1199,7 +1211,7 @@ describe('inherited Library excludes lost Chronicle leaves (#2460)', () => {
 
     // With no surviving written pages there must be no second-hand quote or
     // claim at all, even when the lost leaf still has text and claims in the save.
-    world.chronicle.splice(0, world.chronicle.length, lost);
+    world.chronicle.splice(0, world.chronicle.length, lost, omitted);
     const entirelyLost = libraryRunOf(source.ctx);
     expect(entirelyLost?.entries).toEqual([]);
     expect(seedLibraryMemories(recipient.ctx, [entirelyLost!])).toEqual([]);
