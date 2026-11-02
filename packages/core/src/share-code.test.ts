@@ -447,6 +447,25 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     }
   });
 
+  it('never offers an unreadable code for a noncanonical logged friend roster', () => {
+    const s = founded();
+    const founding = s.ctx.world.decisionLog.find((row) => row.kind === 'founding');
+    if (!founding) throw new Error('the signing did not record a founding');
+
+    // A legacy/restored or programmatically changed log can exceed today's
+    // signing limit even though the normal GameSession.found path cannot.
+    // Previously both exports returned ok, but readShareCode rejected them.
+    founding.friends.push(
+      ...Array.from({ length: MAX_FRIENDS }, (_, i) => ({ name: `Extra ${i}`, sex: 'male' as const })),
+    );
+    const logBefore = JSON.stringify(s.ctx.world.decisionLog);
+    for (const names of [false, true]) {
+      expect(s.shareCode({ build: BUILD, names }))
+        .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      expect(JSON.stringify(s.ctx.world.decisionLog)).toBe(logBefore);
+    }
+  });
+
   it('has nothing to say before the house is founded', () => {
     const s = newGame(content, { seed: 1, startYear: CAMPAIGNS.short.startYear, campaign: 'short' });
     expect(s.shareCode()).toEqual({ ok: false, unavailable: 'not_founded' });
