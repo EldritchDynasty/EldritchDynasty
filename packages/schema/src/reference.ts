@@ -51,17 +51,31 @@ export interface Vocabulary {
 // ── Type rendering ────────────────────────────────────────────────────────
 
 /**
- * Zod's internals are not part of its public types, so reaching into `_def` needs
- * one cast. It is here, once, rather than at each of the eight places that walk
- * a schema — which is the same bargain every other cast in this codebase makes.
+ * Zod 4 publishes every schema's definition as `.def`, discriminated by a
+ * `type` string, so walking one needs no reach into private fields. One widening
+ * from the base schema type to the union of Zod's own kinds lets each `case`
+ * below narrow to the fields that kind really has; it lives here, once, rather
+ * than at each of the places that walk a schema.
  */
-type ZodDef = Record<string, unknown>;
-const defOf = (s: z.ZodTypeAny): ZodDef => (s as unknown as { _def: ZodDef })._def;
+type Schema = z.core.$ZodType;
+const defOf = (s: Schema) => (s as z.core.$ZodTypes)._zod.def;
+type ObjectSchema = z.ZodObject;
+
+/**
+ * The schema a refinement-free reader sees through a pipe. `.transform()`
+ * pipes the schema INTO a transform, and `z.preprocess()` pipes a transform
+ * into the schema; either way the described shape is the side that is not
+ * the bare function.
+ */
+const throughPipe = (def: z.core.$ZodPipeDef): Schema =>
+  defOf(def.in).type === 'transform' ? def.out : def.in;
+
+/** A literal's text. Zod 4 lets one literal carry several values. */
+const literalText = (values: readonly unknown[]): string => values.map((v) => JSON.stringify(v)).join('|');
 
 /** A short, readable type for one field. Depth-limited: this is a reference, not a spec. */
-export function typeOf(schema: z.ZodTypeAny, depth = 0): string {
+export function typeOf(schema: Schema, depth = 0): string {
   const def = defOf(schema);
-  const kind = String(def.typeName);
 
   if (depth > 3) return '…';
 
@@ -71,56 +85,56 @@ export function typeOf(schema: z.ZodTypeAny, depth = 0): string {
   if (schema === ConditionS) return 'Condition';
   if (schema === FilterS) return 'Filter';
 
-  switch (kind) {
-    case 'ZodString': return 'string';
-    case 'ZodNumber': return 'number';
-    case 'ZodBoolean': return 'boolean';
-    case 'ZodNull': return 'null';
-    case 'ZodUnknown':
-    case 'ZodAny': return 'any';
-    case 'ZodLiteral': return JSON.stringify(def.value);
-    case 'ZodEnum': return (def.values as string[]).join('|');
-    case 'ZodNativeEnum': return 'enum';
-    case 'ZodBranded': return typeOf(def.type as z.ZodTypeAny, depth);
-    case 'ZodEffects': return typeOf(def.schema as z.ZodTypeAny, depth);
-    case 'ZodOptional': return `${typeOf(def.innerType as z.ZodTypeAny, depth)}?`;
-    case 'ZodNullable': return `${typeOf(def.innerType as z.ZodTypeAny, depth)}|null`;
-    case 'ZodDefault': {
-      const inner = typeOf(def.innerType as z.ZodTypeAny, depth);
-      const value = (def.defaultValue as () => unknown)();
-      return `${inner} = ${JSON.stringify(value)}`;
-    }
-    case 'ZodArray': return `${typeOf(def.type as z.ZodTypeAny, depth + 1)}[]`;
-    case 'ZodRecord': return `record<${typeOf(def.valueType as z.ZodTypeAny, depth + 1)}>`;
-    case 'ZodTuple':
-      return `[${(def.items as z.ZodTypeAny[]).map((i) => typeOf(i, depth + 1)).join(', ')}]`;
-    case 'ZodUnion':
-      return (def.options as z.ZodTypeAny[]).map((o) => typeOf(o, depth + 1)).join(' | ');
-    case 'ZodDiscriminatedUnion':
-      return (def.options as z.ZodTypeAny[]).map((o) => typeOf(o, depth + 1)).join(' | ');
-    case 'ZodLazy':
+  // Zod 4 has no wrapper for `.brand()` or `.refine()`: both stay on the
+  // schema they decorate, so neither needs a case of its own here.
+  switch (def.type) {
+    case 'string': return 'string';
+    case 'number': return 'number';
+    case 'boolean': return 'boolean';
+    case 'null': return 'null';
+    case 'unknown':
+    case 'any': return 'any';
+    case 'literal': return literalText(def.values);
+    case 'enum': return Object.values(def.entries).join('|');
+    case 'pipe': return typeOf(throughPipe(def), depth);
+    case 'optional': return `${typeOf(def.innerType, depth)}?`;
+    case 'nullable': return `${typeOf(def.innerType, depth)}|null`;
+    case 'default': return `${typeOf(def.innerType, depth)} = ${JSON.stringify(def.defaultValue)}`;
+    case 'array': return `${typeOf(def.element, depth + 1)}[]`;
+    case 'record': return `record<${typeOf(def.valueType, depth + 1)}>`;
+    case 'tuple': return `[${def.items.map((i) => typeOf(i, depth + 1)).join(', ')}]`;
+    case 'union': return def.options.map((o) => typeOf(o, depth + 1)).join(' | ');
+    case 'lazy':
       // Condition and Filter are recursive. Name them rather than expanding.
-      return schema === ConditionS ? 'Condition' : schema === FilterS ? 'Filter' : 'recursive';
-    case 'ZodObject': {
-      const shape = (schema as unknown as z.AnyZodObject).shape;
-      return `{${Object.keys(shape).join(', ')}}`;
-    }
-    default: return kind.replace(/^Zod/, '').toLowerCase();
+      return 'recursive';
+    case 'object': return `{${Object.keys(def.shape).join(', ')}}`;
+    default: return def.type;
   }
 }
 
-function fieldsOf(obj: z.AnyZodObject, skip: string[] = []): string[] {
+function fieldsOf(obj: ObjectSchema, skip: string[] = []): string[] {
   return Object.entries(obj.shape)
     .filter(([k]) => !skip.includes(k))
-    .map(([k, v]) => `${k}: ${typeOf(v as z.ZodTypeAny)}`);
+    .map(([k, v]) => `${k}: ${typeOf(v)}`);
 }
 
 // ── Union walking ─────────────────────────────────────────────────────────
 
-function discriminated(schema: z.ZodTypeAny, key: string): Variant[] {
-  const options = (defOf(schema).options as z.AnyZodObject[]) ?? [];
-  return options.map((o) => ({
-    name: String(defOf(o.shape[key] as z.ZodTypeAny).value),
+/** A union's alternatives, each an object. The unions read here are all of objects. */
+function objectOptions(schema: Schema): ObjectSchema[] {
+  const def = defOf(schema);
+  return def.type === 'union' ? def.options as ObjectSchema[] : [];
+}
+
+/** The value of a literal discriminant, as the vocabulary names it. */
+const discriminant = (o: ObjectSchema, key: string): string => {
+  const def = defOf(o.shape[key]!);
+  return def.type === 'literal' ? String(def.values[0]) : String(undefined);
+};
+
+function discriminated(schema: Schema, key: string): Variant[] {
+  return objectOptions(schema).map((o) => ({
+    name: discriminant(o, key),
     fields: fieldsOf(o, [key]),
   }));
 }
@@ -129,16 +143,16 @@ function discriminated(schema: z.ZodTypeAny, key: string): Variant[] {
  * `Condition` and `Filter` discriminate by WHICH KEY IS PRESENT rather than by
  * a `kind` field, so the variant's name is its first key.
  */
-function keyed(lazy: z.ZodTypeAny): Variant[] {
-  const inner = (defOf(lazy).getter as () => z.ZodTypeAny)();
-  const options = (defOf(inner).options as z.AnyZodObject[]) ?? [];
-  return options.map((o) => {
+function keyed(lazy: Schema): Variant[] {
+  const def = defOf(lazy);
+  const inner = def.type === 'lazy' ? def.getter() : lazy;
+  return objectOptions(inner).map((o) => {
     const keys = Object.keys(o.shape);
     const head = keys[0]!;
     return {
       name: head,
       fields: [
-        `${head}: ${typeOf(o.shape[head] as z.ZodTypeAny)}`,
+        `${head}: ${typeOf(o.shape[head]!)}`,
         ...fieldsOf(o, [head]),
       ],
     };
@@ -148,10 +162,11 @@ function keyed(lazy: z.ZodTypeAny): Variant[] {
 // ── The vocabulary ────────────────────────────────────────────────────────
 
 export function vocabulary(): Vocabulary {
-  const targets = ((defOf(TargetS).options) as z.ZodTypeAny[]).flatMap((o) => {
+  const targetDef = defOf(TargetS);
+  const targets = (targetDef.type === 'union' ? targetDef.options : []).flatMap((o) => {
     const def = defOf(o);
-    if (String(def.typeName) === 'ZodEnum') return def.values as string[];
-    return [`{ ${Object.keys((o as unknown as z.AnyZodObject).shape).join(', ')} }`];
+    if (def.type === 'enum') return Object.values(def.entries).map(String);
+    return def.type === 'object' ? [`{ ${Object.keys(def.shape).join(', ')} }`] : [];
   });
 
   return {
@@ -253,53 +268,55 @@ export interface FieldSpec {
   control: FieldControl;
 }
 
-function controlOf(schema: z.ZodTypeAny, depth = 0): FieldControl {
+function controlOf(schema: Schema, depth = 0): FieldControl {
   if (schema === TargetS) return { kind: 'target' };
 
   const def = defOf(schema);
-  const kind = String(def.typeName);
 
-  switch (kind) {
-    case 'ZodString': return { kind: 'string' };
-    case 'ZodNumber': return { kind: 'number' };
-    case 'ZodBoolean': return { kind: 'boolean' };
-    case 'ZodEnum': return { kind: 'enum', options: def.values as string[] };
-    case 'ZodLiteral': return { kind: 'enum', options: [String(def.value)] };
-    case 'ZodBranded':
-    case 'ZodEffects':
-      return controlOf((def.type ?? def.schema) as z.ZodTypeAny, depth);
-    case 'ZodArray': {
-      const inner = controlOf(def.type as z.ZodTypeAny, depth + 1);
+  switch (def.type) {
+    case 'string': return { kind: 'string' };
+    case 'number': return { kind: 'number' };
+    case 'boolean': return { kind: 'boolean' };
+    case 'enum': return { kind: 'enum', options: Object.values(def.entries).map(String) };
+    case 'literal': return { kind: 'enum', options: def.values.map(String) };
+    case 'pipe': return controlOf(throughPipe(def), depth);
+    case 'array': {
+      const inner = controlOf(def.element, depth + 1);
       if (inner.kind === 'string') return { kind: 'stringList' };
       return { kind: 'opaque', note: 'a list this form cannot draw' };
     }
-    case 'ZodUnion': {
-      const options = (def.options as z.ZodTypeAny[]) ?? [];
-      const kinds = options.map((o) => String(defOf(o).typeName));
+    case 'union': {
+      const kinds = def.options.map((o) => defOf(o).type);
       // `boolean | number | string` — a flag's value.
-      if (kinds.every((k) => k === 'ZodBoolean' || k === 'ZodNumber' || k === 'ZodString')) {
+      if (kinds.every((k) => k === 'boolean' || k === 'number' || k === 'string')) {
         return { kind: 'scalar' };
       }
       // A union of literals is an enum wearing a different hat.
-      if (kinds.every((k) => k === 'ZodLiteral')) {
-        return { kind: 'enum', options: options.map((o) => String(defOf(o).value)) };
+      if (def.options.every((o) => defOf(o).type === 'literal')) {
+        return {
+          kind: 'enum',
+          options: def.options.flatMap((o) => {
+            const d = defOf(o);
+            return d.type === 'literal' ? d.values.map(String) : [];
+          }),
+        };
       }
       return { kind: 'opaque', note: 'one of several shapes — edit this one in YAML' };
     }
-    case 'ZodObject': {
+    case 'object': {
       if (depth > 2) return { kind: 'opaque', note: 'nested too deep for a form' };
-      return { kind: 'object', fields: fieldsOfSchema(schema as z.AnyZodObject, [], depth + 1) };
+      return { kind: 'object', fields: fieldsOfSchema(schema as ObjectSchema, [], depth + 1) };
     }
     default:
-      return { kind: 'opaque', note: `${kind.replace(/^Zod/, '').toLowerCase()} — edit this one in YAML` };
+      return { kind: 'opaque', note: `${def.type} — edit this one in YAML` };
   }
 }
 
-export function fieldsOfSchema(obj: z.AnyZodObject, skip: string[] = [], depth = 0): FieldSpec[] {
+export function fieldsOfSchema(obj: ObjectSchema, skip: string[] = [], depth = 0): FieldSpec[] {
   return Object.entries(obj.shape)
     .filter(([k]) => !skip.includes(k))
     .map(([key, raw]) => {
-      let schema = raw as z.ZodTypeAny;
+      let schema: Schema = raw;
       let optional = false;
       let fallback: unknown;
 
@@ -307,11 +324,10 @@ export function fieldsOfSchema(obj: z.AnyZodObject, skip: string[] = [], depth =
       // both wrap, and `.optional().default()` wraps twice.
       for (let i = 0; i < 4; i++) {
         const def = defOf(schema);
-        const name = String(def.typeName);
-        if (name === 'ZodOptional') { optional = true; schema = def.innerType as z.ZodTypeAny; continue; }
-        if (name === 'ZodDefault') {
-          fallback = (def.defaultValue as () => unknown)();
-          schema = def.innerType as z.ZodTypeAny;
+        if (def.type === 'optional') { optional = true; schema = def.innerType; continue; }
+        if (def.type === 'default') {
+          fallback = def.defaultValue;
+          schema = def.innerType;
           continue;
         }
         break;
@@ -326,15 +342,13 @@ export function fieldsOfSchema(obj: z.AnyZodObject, skip: string[] = [], depth =
 /** Effect kind -> the fields a form must draw for it. Derived, never listed. */
 export function effectFields(): Record<string, FieldSpec[]> {
   const out: Record<string, FieldSpec[]> = {};
-  for (const option of (defOf(EffectS).options as z.AnyZodObject[]) ?? []) {
-    const kind = String(defOf(option.shape.kind as z.ZodTypeAny).value);
-    out[kind] = fieldsOfSchema(option, ['kind']);
+  for (const option of objectOptions(EffectS)) {
+    out[discriminant(option, 'kind')] = fieldsOfSchema(option, ['kind']);
   }
   return out;
 }
 
 /** Every effect kind there is, in schema order. The editor's kind selector. */
 export function effectKinds(): string[] {
-  return ((defOf(EffectS).options as z.AnyZodObject[]) ?? [])
-    .map((o) => String(defOf(o.shape.kind as z.ZodTypeAny).value));
+  return objectOptions(EffectS).map((o) => discriminant(o, 'kind'));
 }

@@ -1,3 +1,5 @@
+// First: Zod's runtime configuration must precede every parse.
+import './zod-config.js';
 export * from './ids.js';
 export * from './exhaustive.js';
 export * from './target.js';

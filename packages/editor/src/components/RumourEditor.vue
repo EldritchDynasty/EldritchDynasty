@@ -8,7 +8,7 @@ const props = defineProps<{ modelValue?: Rumour; eventId: string }>();
 const emit = defineEmits<{ 'update:modelValue': [Rumour | undefined] }>();
 
 // The three rumour fields and their control types are derived from EventTemplateS.
-const rumourSchema = EventTemplateS.innerType().shape.rumour.unwrap();
+const rumourSchema = EventTemplateS.shape.rumour.unwrap();
 const specs = fieldsOfSchema(rumourSchema);
 
 function valueAt(key: string): unknown {

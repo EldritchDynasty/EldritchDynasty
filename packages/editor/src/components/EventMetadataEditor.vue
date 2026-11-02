@@ -17,7 +17,7 @@ const emit = defineEmits<{ change: [] }>();
 // Read single-field control descriptions directly from EventTemplateS. The
 // purposes array needs a specialised exactly-three distinct selector; its
 // options still come from PurposeS rather than a parallel enum list.
-const eventFields = fieldsOfSchema(EventTemplateS.innerType());
+const eventFields = fieldsOfSchema(EventTemplateS);
 const tierSpec = eventFields.find((f) => f.key === 'tier')!;
 const accountsSpec = eventFields.find((f) => f.key === 'accounts')!;
 const tuningSpecs = eventFields.filter((f) => ['tags', 'weight', 'repeatable', 'cooldownYears'].includes(f.key));
