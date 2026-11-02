@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import type { EpilogueView, SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
@@ -76,6 +76,93 @@ describe('Demonstration verdict guidance (#2207)', () => {
       expect(wrapper.get('.closing').text()).toBe('A final line.');
       await wrapper.setProps({ view: view('short') });
       expect(wrapper.find('.demo-next').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+
+describe('ending share code receipt (#1995)', () => {
+  function shareActions(copyText: (text: string) => Promise<boolean>): GameActions {
+    return {
+      ...actions,
+      shareCode: (names: boolean) => ({ ok: true, code: names ? 'ED1-NAMED' : 'ED1-NAMELESS' }),
+      copyText,
+    } as unknown as GameActions;
+  }
+
+  it('keeps names excluded until explicitly requested and copies the visible code', async () => {
+    const copyText = vi.fn(async () => true);
+    const wrapper = mount(Ending, {
+      props: { view: view('short'), epilogue, actions: shareActions(copyText), proseMode: 'plainenglish' },
+    });
+    try {
+      expect((wrapper.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1-NAMELESS');
+      await wrapper.get('.share-copy button').trigger('click');
+      await flushPromises();
+      expect(copyText).toHaveBeenCalledWith('ED1-NAMELESS');
+      expect(wrapper.get('[role="status"]').text()).toBe('Copied.');
+
+      await wrapper.get('.share-names input').setValue(true);
+      expect((wrapper.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1-NAMED');
+      // A receipt for the old code must not claim the new visible code was copied.
+      expect(wrapper.get('[role="status"]').text()).toBe('');
+      await wrapper.get('.share-copy button').trigger('click');
+      await flushPromises();
+      expect(copyText).toHaveBeenLastCalledWith('ED1-NAMED');
+      expect(wrapper.get('[role="status"]').text()).toBe('Copied.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  for (const mode of ['original', 'plainenglish'] as const satisfies readonly ProseMode[]) {
+    it(`reports rejected clipboard actions and permits a retry in ${mode}`, async () => {
+      const copyText = vi.fn()
+        .mockRejectedValueOnce(new Error('native clipboard refused'))
+        .mockResolvedValueOnce(true);
+      const wrapper = mount(Ending, {
+        props: { view: view('short'), epilogue, actions: shareActions(copyText), proseMode: mode },
+      });
+      try {
+        await wrapper.get('.share-copy button').trigger('click');
+        await flushPromises();
+        const status = wrapper.get('[role="status"]');
+        expect(status.text()).toMatch(/copy.*(not take|could not)/i);
+        expect(status.text()).toMatch(/select the code/i);
+        expect((wrapper.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1-NAMELESS');
+
+        await wrapper.get('.share-copy button').trigger('click');
+        await flushPromises();
+        expect(status.text()).toBe('Copied.');
+      } finally {
+        wrapper.unmount();
+      }
+    });
+  }
+
+  it('ignores an older rejected copy after a newer named copy succeeds', async () => {
+    let rejectOlder!: (reason: Error) => void;
+    const older = new Promise<boolean>((_resolve, reject) => { rejectOlder = reject; });
+    const copyText = vi.fn()
+      .mockReturnValueOnce(older)
+      .mockResolvedValueOnce(true);
+    const wrapper = mount(Ending, {
+      props: { view: view('long'), epilogue, actions: shareActions(copyText), proseMode: 'plainenglish' },
+    });
+    try {
+      await wrapper.get('.share-copy button').trigger('click');
+      await wrapper.get('.share-names input').setValue(true);
+      await wrapper.get('.share-copy button').trigger('click');
+      await flushPromises();
+      expect(wrapper.get('[role="status"]').text()).toBe('Copied.');
+
+      rejectOlder(new Error('slow rejected clipboard'));
+      await flushPromises();
+      expect(wrapper.get('[role="status"]').text()).toBe('Copied.');
+      expect(copyText).toHaveBeenNthCalledWith(1, 'ED1-NAMELESS');
+      expect(copyText).toHaveBeenNthCalledWith(2, 'ED1-NAMED');
     } finally {
       wrapper.unmount();
     }
