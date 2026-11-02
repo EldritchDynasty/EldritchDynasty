@@ -8,9 +8,19 @@ function orderedJson(value) {
 }
 
 export function nativeSnapshotSha256(snapshot) {
-  const value = orderedJson(snapshot);
+  // Hash the actual JSON transport value, never the in-memory wrapper. Date,
+  // toJSON and other object types may serialize as a scalar or array, and
+  // orderedJson() would otherwise turn a Date into a misleading {} digest.
+  const serialized = JSON.stringify(snapshot);
+  if (typeof serialized !== 'string') throw new Error('native smoke snapshot must be a JSON object');
+  const parsed = JSON.parse(serialized);
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    throw new Error('native smoke snapshot must be a JSON object');
+  }
+
+  const value = orderedJson(parsed);
   // A cold resume writes a fresh timestamp. Every other persisted field,
   // including nested timestamps and array order, remains part of the proof.
-  if (value !== null && typeof value === 'object' && !Array.isArray(value)) delete value.savedAt;
+  delete value.savedAt;
   return createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }
