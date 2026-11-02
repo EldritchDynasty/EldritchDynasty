@@ -384,9 +384,7 @@ Preserve the raw notes until the issues are closed. A summary without the first
 answers makes it too easy to remember the interpretation and lose the evidence
 that produced it.
 
-## First-session signing timing (#1984 — observations not yet run)
-
-### Table action outcome summary (#2526)
+## Table action outcome summary (#2526)
 
 With `?reading-log=1` enabled, export `ed-reading-log/12` and read
 `summary.tableActions` for bounded per-category totals:
@@ -405,6 +403,8 @@ an estimate of attention cost; pair it with visible Table exposure and
 observer notes. Both the raw events and counts may span multiple runs in one
 page session, so use the `run`/`pickup` boundaries before interpreting
 per-house or per-generation totals. Game years are not generation counts.
+
+## First-session signing timing (#1984 — observations not yet run)
 
 This protocol measures whether a staged signing gets a new reader to a
 **consequential first family action** sooner without giving up the Examination.
