@@ -1142,13 +1142,13 @@ const secretsWiring: ValidationRule = {
 
     for (const e of content.events) {
       const at = `event:${e.id}`;
-      for (const o of allOutcomes(e)) {
+      // Inspect the actual authored outcomes: allOutcomes also synthesizes
+      // primordial replacements without their parent outcome's metadata.
+      for (const o of outcomeGroups(e).flat()) {
         checkEffects(o.effects, `${at}/${o.id}`);
         if (o.primordial) {
           checkEffects(o.primordial.effects, `${at}/primordial:${o.primordial.id}`);
-          if (o.primordial.record) {
-            checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
-          }
+          checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
         }
       }
       if (e.record) checkRecord(e.record, `${at}/record`);
