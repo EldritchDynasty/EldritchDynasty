@@ -13,7 +13,7 @@ import type { ArcDef, ArcNode } from '@ed/schema';
  */
 
 /** Minimum calendar years before a scheduled node can be due. */
-function minimumScheduleYears(schedule: ArcNode['schedule']): number {
+export function minimumScheduleYears(schedule: ArcNode['schedule']): number {
   if (schedule === 'immediate') return 0;
   if (schedule === 'next_generation') return 20;
   return Math.max(0, Math.round(schedule.minYears));
@@ -31,7 +31,18 @@ function minimumScheduleYears(schedule: ArcNode['schedule']): number {
  * Authored arcs open immediately; their entry schedule contributes nothing.
  * Inline arcs begin after an ambient parent, so their entry schedule is the
  * parent's Outcome.next.after and DOES contribute. Every successor's own
- * delay is counted in both forms, mirroring scheduleNext in advanceArc.
+ * delay is counted for an authored arc, mirroring scheduleNext in advanceArc.
+ *
+ * AN INLINE CHAIN PROMISES ONE BEAT AT A TIME (#1980). Its first beat is the
+ * consequence of an act the player has already taken — the Vessel's mandatory
+ * Record page is `the_vessel_rite`'s first follow-up — and each later beat is
+ * a consequence of the one before it. Refusing the whole chain because its
+ * LAST beat cannot fit would throw away the first one too, which is the exact
+ * failure `arcCanFinish` exists to prevent: an act taken, and then silently
+ * nothing. So an inline chain's floor is its entry delay, and `advanceArc`
+ * ends the story at the last beat that fit when the next one can no longer
+ * arrive before collection. Every inline chain compiled before #1980 had a
+ * single node, for which the two readings are the same number.
  *
  * Cycles contribute Infinity until an alternate exit is found. A story whose
  * graph has no terminal route is therefore not startable near (or before) the
@@ -69,5 +80,6 @@ export function minimumArcYears(arc: ArcDef): number {
 
   const entry = nodes.get(arc.entry);
   const entryDelay = arc.inline && entry ? minimumScheduleYears(entry.schedule) : 0;
+  if (arc.inline) return entry ? entryDelay : 0;
   return entryDelay + from(arc.entry, new Set());
 }

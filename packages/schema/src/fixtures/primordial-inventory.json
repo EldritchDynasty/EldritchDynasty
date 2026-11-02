@@ -4877,6 +4877,23 @@
     "assessmentWitness": "packages/core/src/events/primordial-catalogue.test.ts: the_letter_comes_and_is_not/_/at_the_same_time: assessed material reduction"
   },
   {
+    "path": "the_letter_for_the_assessor/send_it_sealed/sent",
+    "candidates": [
+      "financial"
+    ],
+    "harms": [],
+    "site": null,
+    "agreedPrices": [
+      {
+        "effect": 1,
+        "reason": "contract"
+      }
+    ],
+    "response": null,
+    "normalWitness": "packages/core/src/events/reach.test.ts: the_letter_for_the_assessor|send_it_sealed|sent",
+    "assessmentWitness": null
+  },
+  {
     "path": "the_letter_nobody_answered/write_again/written_again",
     "candidates": [
       "financial"

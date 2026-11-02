@@ -866,6 +866,10 @@ events:
                     grudge: { severity: 40, inheritance: all_blood },
                   }
                 - { kind: branch, op: slight, slot: VESSEL, amount: 15 }
+              # The house said "not for anything" out loud (#1980). A decade or
+              # two on, it is offered something it wants that only the living
+              # person it refused to spend can buy.
+              next: { event: the_assessor_counts_the_family, after: { minYears: 10, maxYears: 20 }, keep: [ASCENDANT, VESSEL] }
     rumour: { id: rumour_what_was_asked_for, accuracy: 0.3, spread: 2 }
 
   - id: the_vessel_remembered
@@ -885,6 +889,24 @@ events:
         role: family_member
         filters:
           - { status: [vessel_consumed] }
+      # WHO WAS LEFT (#1980). Cast HERE, on the night, and kept, so the person
+      # the later letter belongs to is somebody who was alive and old enough
+      # to remember her when the page was written — not whoever happens to be
+      # standing nearest a decade on. Her children and her brothers and
+      # sisters only: `spouse_of` reads an OPEN marriage, and the rite closed
+      # hers through `kill`, so a widower is not someone a filter can find
+      # after the fact. Optional, because the arithmetic is sometimes clean:
+      # a Vessel with nobody close left alive starts no letter, and the chain
+      # ends at this page (`dueArcSteps`: keep means the same person, or
+      # nobody). Never the man who took her.
+      SURVIVOR:
+        role: family_member
+        optional: true
+        filters:
+          - { relation: not, of: ASCENDANT }
+          - { any: [{ relation: child_of, of: VESSEL }, { relation: sibling_of, of: VESSEL }] }
+          - { status: [alive] }
+          - { age: { op: gte, value: 6 } }
     body: >-
       There is a page for it, the way there is a page for everything, and the
       page will outlast every person who was in the room. What goes on it is
@@ -901,6 +923,11 @@ events:
             it.
           effects:
             - { kind: clause, reveal: clause_of_substitution }
+          # Whatever the book says tonight, somebody who loved her has to go on
+          # living beside it (#1980). Ten to eighteen years: long enough for a
+          # child of six to be grown, short enough that the man who took her
+          # is usually still at the table.
+          next: { event: the_letter_for_the_assessor, after: { minYears: 10, maxYears: 18 }, keep: [ASCENDANT, VESSEL, SURVIVOR] }
     record:
       subject: the one who was named
       options:
@@ -947,6 +974,236 @@ events:
             provableBy: [the_church, house_marrow, house_ilm]
     rumour: { id: rumour_the_northern_house, accuracy: 0.15, spread: 3 }
     accounts: [ballad_of_the_northern_house, church_inquest_minute_1604]
+
+  # ─── WHAT THE TWO ANSWERS GO ON TO COST (#1980) ───────────────────────────
+  #
+  # The arithmetic of the Vessel is learnable in one run: a safe daughter, a
+  # gifted son, a Respect tier or a Discrepancy. Once it is learned, the rite
+  # stops being a decision unless each answer goes on costing something that
+  # belongs to a PERSON rather than to the ledger. So each branch gets one
+  # later scene, built on a real relative and on systems that already bite.
+  #
+  #   taken   → the consumed relative's own child or sibling, cast on the
+  #             night of the page, writes to the Church's Assessor a decade
+  #             on. The house lets the letter go (an advocate's fee, and a
+  #             false claim on the page is proven) or burns it (that
+  #             survivor's line holds the grudge).
+  #   spared  → the relative the house refused to spend is alive, and a
+  #             story about the cold room has their name in it. The house can
+  #             produce them for the Assessor (standing back, the word broken)
+  #             or keep "not for anything" (standing lost, the word kept).
+  #
+  # Neither scene moves the ladder. The Vessel stays the only door to rung
+  # four, refusal keeps every cost it had, and nothing here is a second rite.
+  #
+  # Neither scene says which account is true. The letter is never opened on
+  # the page; what it costs depends on what the house wrote, which only the
+  # house knows. The Assessor's report on the spared one is his, not ours.
+  - id: the_letter_for_the_assessor
+    title: A Letter for the Assessor
+    tier: family
+    # Uncommon for its chronicle weight and its optional Record, not for its
+    # ration: an arc node never draws from or spends the tier's pool.
+    frequency: uncommon
+    weight: 100
+    repeatable: true
+    tags: [sacrifice, record, church]
+    # A choice about whether testimony is allowed to test the house's page.
+    purposes: [force_record_choice, change_relationship, change_standing]
+    slots:
+      # Kept from the page. The survivor's letter is the story, so if they die
+      # or leave first the story goes with them (`cancel_arc`); a consumed
+      # VESSEL stays castable for remembrance and never acts.
+      SURVIVOR: { role: family_member, onMissing: cancel_arc }
+      VESSEL:
+        role: family_member
+        filters:
+          - { status: [vessel_consumed] }
+      # The man who took her may be dead by now. He is only named, never acted
+      # on, so `absentBody` is the whole of his absence. Kept, not cast, so his
+      # role is a relative's: `foremost` would make this a scene that charges
+      # the climber, which it is not (`ladder.test.ts`).
+      ASCENDANT: { role: family_member, onMissing: continue_absent }
+      # The office: whoever holds the seal when the letter is on the table.
+      # Never the survivor; a survivor who holds the seal waits for an heir.
+      HEAD:
+        role: head
+        filters:
+          - { relation: not, of: SURVIVOR }
+    body: >-
+      The Assessor from the chapter house at Bramme has been asking about
+      {VESSEL} for most of a year. He asks the way a man asks for the salt,
+      and writes everything down, and has worked out who in the house was
+      close enough to know. {SURVIVOR} has written him a letter. It lies
+      sealed on {HEAD}'s table, under the seed bills and the rent book,
+      because nothing leaves this house without crossing that table first.
+      {ASCENDANT} has walked past it four times today without asking what it
+      says. Nobody has to ask.
+    absentBody: >-
+      The Assessor from the chapter house at Bramme has been asking about
+      {VESSEL} for most of a year. {ASCENDANT} is in the ground, and whatever
+      of {VESSEL} he carried went down with him. The questions did not. The
+      Assessor has worked out who in the house was close enough to know, and
+      {SURVIVOR} has written him a letter that now lies sealed on {HEAD}'s
+      table, under the seed bills and the rent book, because nothing leaves
+      this house without crossing that table first. Nobody has opened it.
+    interaction:
+      kind: choice
+      choices:
+        - id: send_it_sealed
+          label: Send it sealed. It is theirs to write.
+          outcomes:
+            - id: sent
+              weight: 100
+              text: >-
+                The letter goes to Bramme with the seal unbroken. The Assessor
+                reads it twice and asks for nothing more, which is worse than
+                asking. In the spring the house pays an advocate who reads Old
+                Ambric to sit through the days the letter bought. {SURVIVOR}
+                comes down to dinner every one of those nights and looks
+                {HEAD} in the eye across the table. Nobody pretends it was
+                free.
+              effects:
+                # What the letter costs depends on what the page said, and the
+                # page was the house's choice (`the_vessel_remembered`). A
+                # letter can contradict a CLAIM: the Embellish page says she
+                # died going north, and somebody who watched her go down to
+                # the cellar can say otherwise. It cannot catch a blank — the
+                # Omit page has no claim under it to check, which is the whole
+                # of what makes it the Church's centuries-long problem — and a
+                # true page leaves it nothing to catch at all.
+                - { kind: discrepancy, op: prove, id: the_vessel_lie }
+                - { kind: treasury, delta: -120 }
+                - { kind: relationship, from: { slot: SURVIVOR }, to: { slot: HEAD }, sentiment: 20 }
+              # The advocate is hired, not suffered: the house chose to answer
+              # in the court's own language and pays the days for it.
+              agreedPrices:
+                - effect: 1
+                  reason: contract
+        - id: answer_in_our_own_hand
+          label: Keep it. The house answers the Assessor in its own hand.
+          outcomes:
+            - id: burned
+              weight: 100
+              text: >-
+                {HEAD} writes to Bramme in the house's hand: what the book
+                says, and nothing past it. The sealed letter goes into the
+                fire in the small study, unopened, which is the only kindness
+                anybody can find in it. {SURVIVOR} is told the next morning
+                and says nothing, then or after. The house learns over the
+                next ten years exactly what that silence costs.
+              effects:
+                # The house wronged them, and they remember it — and so will
+                # their children, which is the part a ledger cannot see. Sixty,
+                # the seal feud's own weight, because burning a dead relative's
+                # testimony to silence her child is a feud inside the walls:
+                # it is the line at which a person will no longer undertake
+                # the house's quiet work for the Head who did it
+                # (`covert-operations.ts`). The Discrepancy, if there is one,
+                # stays open: the Church keeps trying for the rest of the run,
+                # as §22 says it should.
+                - {
+                    kind: relationship,
+                    from: { slot: HEAD },
+                    to: { slot: SURVIVOR },
+                    grudge: { severity: 60, inheritance: all_blood },
+                  }
+                - { kind: relationship, from: { slot: SURVIVOR }, to: { slot: HEAD }, sentiment: -35 }
+
+  # The refusal's half. The story the drovers tell is the rumour the rite
+  # always starts, and it is wrong in the one part that matters: the person
+  # in it is alive. Only that person can prove it, and the house promised in
+  # the cold room never to spend them on anything.
+  - id: the_assessor_counts_the_family
+    title: The Assessor Counts the Family
+    tier: family
+    frequency: uncommon
+    weight: 100
+    repeatable: true
+    tags: [sacrifice, church, refusal]
+    # The drovers' story is the family entering the world distorted, and the
+    # answer decides what the Church's own account of the cold room says
+    # (the chapter-house index in `late_long.yaml` is the same kind of page).
+    # Not the editor's new-event triple, whose last free place a fresh
+    # authored event needs (#1888, #1976's log entry).
+    purposes: [change_standing, force_record_choice, plant_rumour]
+    slots:
+      # Kept from the refusal. They are the living proof, so if they die,
+      # leave the house or are lost first, there is nobody left to count and
+      # the story ends (`cancel_arc`).
+      VESSEL: { role: family_member, onMissing: cancel_arc }
+      # The man who said no. Named, never acted on, and kept rather than cast,
+      # so a relative's role rather than the climber's.
+      ASCENDANT: { role: family_member, onMissing: continue_absent }
+      HEAD:
+        role: head
+        filters:
+          - { relation: not, of: VESSEL }
+    body: >-
+      There is a story going round the Bramme fairs with {VESSEL}'s name in
+      it. In the version the drovers like best, the house took {VESSEL} down
+      to the cold room one winter and only {ASCENDANT} came back up. The
+      Assessor from the chapter house has heard it, and has ridden out to ask,
+      and has been given the good chair and something hot to hold. {VESSEL}
+      is alive and could be sent for. The house said once, in that room, that
+      it would not spend {VESSEL} on anything. The Assessor has only asked to
+      count.
+    absentBody: >-
+      There is a story going round the Bramme fairs with {VESSEL}'s name in
+      it. In the version the drovers like best, the house took {VESSEL} down
+      to the cold room one winter and only one man came back up. {ASCENDANT}
+      was that man, and is dead, and cannot say again what he said that night.
+      The Assessor from the chapter house has heard the story and has ridden
+      out to ask. {VESSEL} is alive and could be sent for. The house said
+      once, in that room, that it would not spend {VESSEL} on anything. The
+      Assessor has only asked to count.
+    interaction:
+      kind: choice
+      choices:
+        - id: send_for_them
+          label: Send for them. Let the Assessor count for himself.
+          outcomes:
+            - id: counted
+              weight: 100
+              text: >-
+                {VESSEL} comes and sits where {VESSEL.they} {VESSEL.is} put,
+                and answers what is asked and nothing past it. The Assessor
+                writes that the story is false in the part that matters,
+                thanks the house for its trouble, and rides home before dark.
+                He does not write the part that is true, because nobody tells
+                it to him. All afternoon {VESSEL} does not once look at
+                {HEAD}. Across a table that narrow, everybody else can count
+                that too.
+              effects:
+                - { kind: respect, delta: 1 }
+                # The word was broken in front of a witness, and the one it
+                # was given to was the witness.
+                - { kind: relationship, from: { slot: VESSEL }, to: { slot: HEAD }, sentiment: -25 }
+                - {
+                    kind: relationship,
+                    from: { slot: HEAD },
+                    to: { slot: VESSEL },
+                    grudge: { severity: 25, inheritance: all_blood },
+                  }
+        - id: not_for_anything
+          label: No. Not for this, and not for anything.
+          outcomes:
+            - id: kept_to_it
+              weight: 100
+              text: >-
+                {HEAD} answers every question alone and answers them well, and
+                it is not enough. The Assessor came out to count, and he rides
+                back to Bramme one short, with a page of careful notes that
+                will be read by men who were never in the room. That night
+                {VESSEL} comes down to the kitchen, which {VESSEL.they}
+                {VESSEL.has} not done in years, and sits with whoever is still
+                up. Nobody says what it is about.
+              effects:
+                - { kind: respect, delta: -1 }
+                - { kind: relationship, from: { slot: VESSEL }, to: { slot: HEAD }, sentiment: 30 }
+                # Symmetric with the slight the refusal cost their hall: a
+                # promise kept in front of a witness is what a hall forgives.
+                - { kind: branch, op: appease, slot: VESSEL, amount: 15 }
 
   # ─── THE GREAT RITE (§22, rung five; issue #43's second half) ──────────────
   #
@@ -2171,6 +2428,98 @@ proseVariants:
     of: "242e737ee07c6e32"
     plainenglish: >-
       went to the northern house and was never heard from
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].title"
+    of: "63e0531f8960da53"
+    plainenglish: >-
+      A Letter to the Church's Investigator
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].body"
+    of: "a1d2f0eed8f37e12"
+    plainenglish: >-
+      The Assessor, the Church's investigator from the chapter house at Bramme, has spent most
+      of a year asking about {VESSEL}. He asks as if it were an ordinary question, writes every
+      answer down, and has worked out who in the house was close enough to know. {SURVIVOR} has
+      written him a letter. It sits sealed on {HEAD}'s table, under the bills, because nothing
+      leaves this house without crossing that table first. {ASCENDANT} has walked past it four
+      times today without asking what it says. Nobody needs to ask.
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].absentBody"
+    of: "8137731cf6681198"
+    plainenglish: >-
+      The Assessor, the Church's investigator from the chapter house at Bramme, has spent most
+      of a year asking about {VESSEL}. {ASCENDANT} is dead, and whatever of {VESSEL} he carried
+      was buried with him. The questions were not. The Assessor has worked out who in the house
+      was close enough to know, and {SURVIVOR} has written him a letter. It sits sealed on {HEAD}'s
+      table, under the bills, because nothing leaves this house without crossing that table
+      first. Nobody has opened it.
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].interaction.choices[id=send_it_sealed].label"
+    of: "8f620b7a9954234e"
+    plainenglish: >-
+      Send the letter unopened. It is theirs to write.
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].interaction.choices[id=send_it_sealed].outcomes[id=sent].text"
+    of: "89015fbfc97a49e3"
+    plainenglish: >-
+      The letter goes to Bramme with its seal unbroken. The Assessor reads it twice and asks for
+      nothing more, which is worse than more questions. In the spring the house pays a lawyer
+      who reads the court's old language to sit through the hearings the letter caused.
+      {SURVIVOR} comes to dinner every one of those nights and looks {HEAD} in the eye. Nobody
+      pretends it was free.
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].interaction.choices[id=answer_in_our_own_hand].label"
+    of: "a27dae1b08312d5f"
+    plainenglish: >-
+      Keep it. The house will answer the Assessor itself.
+  - address: "content:events/rites.yaml#events[id=the_letter_for_the_assessor].interaction.choices[id=answer_in_our_own_hand].outcomes[id=burned].text"
+    of: "2dd48e865eca34b2"
+    plainenglish: >-
+      {HEAD} writes to Bramme for the house, repeating what the book says and nothing more. The
+      sealed letter is burned unopened in the small study. That is the only kindness anyone can
+      find in it. {SURVIVOR} is told the next morning and says nothing, then or later. Over the
+      next ten years the house learns exactly what that silence costs.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].title"
+    of: "7c4bcfaef3844a1a"
+    plainenglish: >-
+      The Church's Investigator Counts the Family
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].body"
+    of: "0777599c0878c640"
+    plainenglish: >-
+      A story about {VESSEL} is going round the Bramme fairs. In the version the cattle drovers
+      like best, the house took {VESSEL} down to the cold room one winter and only {ASCENDANT}
+      came back up. The Assessor, the Church's investigator from the chapter house, has heard
+      it. He has ridden out to ask about it, and has been given the best chair and a hot drink.
+      {VESSEL} is alive and could be sent for. In that cold room, the house promised never to
+      use {VESSEL} for anything. The Assessor has only asked to count the family.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].absentBody"
+    of: "bae7544576fd7c59"
+    plainenglish: >-
+      A story about {VESSEL} is going round the Bramme fairs. In the version the cattle drovers
+      like best, the house took {VESSEL} down to the cold room one winter and only one man came
+      back up. That man was {ASCENDANT}. He is dead now, and cannot repeat what he said that
+      night. The Assessor, the Church's investigator from the chapter house, has heard the story
+      and ridden out to ask. {VESSEL} is alive and could be sent for. In that cold room, the
+      house promised never to use {VESSEL} for anything. The Assessor has only asked to count the
+      family.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].interaction.choices[id=send_for_them].label"
+    of: "9cb40429b8310f05"
+    plainenglish: >-
+      Send for them. Let the Assessor see for himself.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].interaction.choices[id=send_for_them].outcomes[id=counted].text"
+    of: "019ea4e16ae7697d"
+    plainenglish: >-
+      {VESSEL} comes down, sits where {VESSEL.they} {VESSEL.is} told, and answers each question
+      and nothing more. The Assessor writes that the story is false in the part that matters,
+      thanks the house, and rides home before dark. He does not write down the part that is true,
+      because nobody tells him. All afternoon {VESSEL} never once looks at {HEAD}. At a table that
+      small, everyone else notices too.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].interaction.choices[id=not_for_anything].label"
+    of: "c9b310ad64f3ae79"
+    plainenglish: >-
+      No. The house promised: not for this, and not for anything.
+  - address: "content:events/rites.yaml#events[id=the_assessor_counts_the_family].interaction.choices[id=not_for_anything].outcomes[id=kept_to_it].text"
+    of: "f1d3ac7a5d7eee46"
+    plainenglish: >-
+      {HEAD} answers every question alone, and answers them well, and it is not enough. The
+      Assessor came to count the family, and he rides back to Bramme one person short. His
+      careful notes will be read by men who were never in the room. That night {VESSEL} comes
+      down to the kitchen, which {VESSEL.they} {VESSEL.has} not done in years, and sits with
+      whoever is still awake. Nobody says why.
   - address: "content:events/rites.yaml#events[id=the_great_rite].body"
     of: "34d33d5e48129b22"
     plainenglish: >-

@@ -9,7 +9,10 @@ import {
   performUnmaking,
 } from './events/rites.js';
 import { applyEffect } from './events/effects.js';
-import { applyRecord, commitOutcome, queueChoice, queueMatch, type PendingChoice } from './events/decisions.js';
+import {
+  applyRecord, commitOutcome, queueChoice, queueMatch, type PendingChoice, type PendingDecision, type PendingRecord,
+  type RecordOption,
+} from './events/decisions.js';
 import { candidatesFor, type SlotFill } from './events/slots.js';
 import { order, tableView, type TableOrder } from './table.js';
 import { attr, conceiveChild, genomeOf, phenotypeOf } from './people/factory.js';
@@ -23,6 +26,9 @@ import type { MatchCard } from './people/match.js';
 import { canonical, saveGame } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { GameSession, resumeGame } from './session.js';
+import { CAMPAIGNS } from './campaign.js';
+import { addGrudge, sentimentBetween } from './people/relationships.js';
+import { covertOpportunities, operationExclusion, quoteCovertOperation } from './covert-operations.js';
 
 const content = indexContent(loadContent());
 
@@ -1371,5 +1377,432 @@ describe('major rite aftermath (#218)', () => {
     expect(elder.status).toBe('dead');
     expect(younger.madness).toBe(beforeMadness + 40);
     expect(ctx.world.flags.get('god_rite_failed')).toBe(true);
+  });
+});
+
+/**
+ * WHAT THE TWO ANSWERS TO THE VESSEL GO ON TO COST (#1980).
+ *
+ * Every scene here is reached the way a player reaches it: the rite is put on
+ * the docket from the Table, the player names the Vessel and answers it,
+ * the Record is answered on its own page, the game is saved and resumed with
+ * the continuation still pending, and the later scene is delivered by the
+ * clock onto the docket and answered there. Nothing below calls an outcome
+ * directly or recomputes what the rite moves.
+ *
+ * The one constructed shortcut is the wait: a continuation's due year is
+ * pulled forward so a test does not simulate a decade of unrelated scenes to
+ * reach it. Who it is about, why it is due and what it does are all the
+ * engine's own.
+ */
+
+const LETTER = 'the_letter_for_the_assessor';
+const ASSESSOR = 'the_assessor_counts_the_family';
+const TAKEN_ARC = 'inline_the_vessel_rite__taken';
+const SPARED_ARC = 'inline_the_vessel_rite__spared';
+const TIERS = ['unknown', 'known', 'regarded', 'eminent', 'exalted'] as const;
+
+/** The head, made into a man the Vessel rite will ask. */
+function aftermathClimber(ctx: SimCtx, who?: Person): Person {
+  const p = who ?? head(ctx);
+  ctx.world.respect = 'eminent';
+  ctx.world.ascension.rung = 'hierophant';
+  ctx.world.ascension.best = 'hierophant';
+  p.awakening.awakened = true;
+  p.acquired[ELDRITCH_GIFT] = 400;
+  p.acquired.mind = 200;
+  p.madness = 25;
+  for (const book of content.spellbooks.slice(0, 8)) {
+    if (!p.spellsKnown.includes(book.id)) p.spellsKnown.push(book.id);
+  }
+  p.phenotype = undefined;
+  expect(standingOf(ctx, p).rung).toBe('hierophant');
+  return p;
+}
+
+interface House {
+  ctx: SimCtx;
+  game: GameSession;
+  ascendant: Person;
+  vessel: Person;
+  /** Her son, old enough on the night to remember her. */
+  son?: Person;
+}
+
+/**
+ * A climber, a woman of the blood with her own mother and no other children
+ * of that mother, and (unless told otherwise) her ten-year-old son. Her own
+ * parentage is deliberate: a daughter of the founder would have the founding
+ * children as sisters, and any of them is a true survivor the slot may choose.
+ */
+function house(seed: number, opts: { son?: boolean; sister?: boolean; year?: number; climber?: 'head' | 'cadet' } = {}): House & { sister?: Person } {
+  const ctx = testWorld(content, seed, opts.year);
+  const founder = head(ctx);
+  const climberPerson = opts.climber === 'cadet'
+    ? place(ctx, { sex: 'male', age: 48, name: 'Aldren the Climber' })
+    : undefined;
+  if (climberPerson) {
+    beget(ctx, climberPerson, undefined, founder);
+    // A placed man's genome is rolled, and a roll with no font cannot stand at
+    // Hierophant however much is acquired. Carry the founder's blood instead.
+    climberPerson.genome = { kind: 'materialized', genome: genomeOf(founder, ctx.genetics) };
+    climberPerson.phenotype = undefined;
+  }
+  const ascendant = aftermathClimber(ctx, climberPerson);
+  const mother = place(ctx, { sex: 'female', age: 56, name: 'Ysolde the Mother' });
+  const vessel = place(ctx, { sex: 'female', age: 30, name: 'Mara the Named' });
+  beget(ctx, vessel, mother);
+  const out: House & { sister?: Person } = { ctx, game: new GameSession(ctx), ascendant, vessel };
+  if (opts.son ?? true) {
+    const son = place(ctx, { sex: 'male', age: 10, name: 'Tam Mara’s Son' });
+    beget(ctx, son, vessel);
+    out.son = son;
+  }
+  if (opts.sister) {
+    const sister = place(ctx, { sex: 'female', age: 24, name: 'Ilse Mara’s Sister' });
+    beget(ctx, sister, mother);
+    out.sister = sister;
+  }
+  return out;
+}
+
+function pendingFor<K extends PendingDecision['kind']>(game: GameSession, kind: K, eventId: string) {
+  return game.pending.find((d) => d.kind === kind && 'event' in d && d.event.id === eventId) as
+    Extract<PendingDecision, { kind: K }> | undefined;
+}
+
+/**
+ * Turn the clock until `eventId` is on the docket as `kind`, answering
+ * anything else that stops it through the chronicler — the same door a
+ * player who hands the pen back uses. Never answers the scene it waits for.
+ */
+function deliver<K extends PendingDecision['kind']>(game: GameSession, kind: K, eventId: string, years = 3) {
+  const until = game.ctx.world.year + years;
+  for (let guard = 0; guard < 400 && game.ctx.world.year <= until; guard++) {
+    const mine = pendingFor(game, kind, eventId);
+    if (mine) return mine;
+    if (game.pending.length) game.letHimDecide();
+    else game.advance(1);
+  }
+  return pendingFor(game, kind, eventId);
+}
+
+function arcOf(ctx: SimCtx, arc: string) {
+  return [...ctx.world.arcs.values()].find((instance) => instance.arc === arc);
+}
+
+/** Put the rite on the docket from the Table and answer it with this Vessel. */
+function answerTheRite(h: House, choice: 'speak_the_name' | 'send_them_out_of_the_room') {
+  const ordered = h.game.order({ kind: 'vesselRite' });
+  expect(ordered.ok, ordered.reason).toBe(true);
+  const rite = pendingFor(h.game, 'choice', 'the_vessel_rite');
+  expect(rite, 'the rite never reached the docket').toBeDefined();
+  expect(rite!.fill.ASCENDANT).toBe(h.ascendant.id);
+  const answered = h.game.choose(rite!.id, choice, { VESSEL: h.vessel.id });
+  expect(answered.ok, answered.reason).toBe(true);
+  return answered.resolved!.entryId;
+}
+
+/** The taking, then its page answered as `option`. */
+function takeAndRecord(h: House, option: RecordOption) {
+  const ritePage = answerTheRite(h, 'speak_the_name');
+  expect(h.vessel.status).toBe('vessel_consumed');
+  const record = deliver(h.game, 'record', 'the_vessel_remembered') as PendingRecord | undefined;
+  expect(record, 'the Vessel’s Record page never reached the docket').toBeDefined();
+  expect(h.game.record(record!.id, option).ok, `the ${option} page was refused`).toBe(true);
+  return { ritePage, recordPage: record!.entryId };
+}
+
+/** Save with the continuation pending, resume, and hand back the resumed game. */
+function resumeWithPending(game: GameSession, arc: string) {
+  const saved = JSON.parse(JSON.stringify(game.save()));
+  const resumed = resumeGame(saved, content.bundle);
+  expect(canonical(resumed.save())).toBe(canonical(game.save()));
+  const before = arcOf(game.ctx, arc)!;
+  const after = arcOf(resumed.ctx, arc)!;
+  expect(after).toBeDefined();
+  expect({ node: after.node, bindings: after.bindings, dueYear: after.dueYear, status: after.status })
+    .toEqual({ node: before.node, bindings: before.bindings, dueYear: before.dueYear, status: before.status });
+  return resumed;
+}
+
+/** Bring a pending continuation due next year. The only constructed step. */
+function dueNextYear(game: GameSession, arc: string): void {
+  arcOf(game.ctx, arc)!.dueYear = game.ctx.world.year + 1;
+}
+
+function pageById(ctx: SimCtx, id: string) {
+  return ctx.world.chronicle.find((entry) => entry.id === id);
+}
+
+const standingTier = (ctx: SimCtx) => TIERS.indexOf(ctx.world.respect);
+
+describe('the Vessel taken: the one who was left writes to the Assessor (#1980)', () => {
+  it('binds the son on the night of the page, and carries him through a save', () => {
+    const h = house(19801);
+    takeAndRecord(h, 'record');
+    const pending = arcOf(h.ctx, TAKEN_ARC)!;
+    expect(pending.status).toBe('active');
+    expect(pending.node).toBe(LETTER);
+    expect(pending.bindings).toMatchObject({ ASCENDANT: h.ascendant.id, VESSEL: h.vessel.id, SURVIVOR: h.son!.id });
+    expect(pending.dueYear! - h.ctx.world.year).toBeGreaterThanOrEqual(10);
+    expect(pending.dueYear! - h.ctx.world.year).toBeLessThanOrEqual(18);
+    resumeWithPending(h.game, TAKEN_ARC);
+  });
+
+  it('lets an embellished page be caught by the letter, and names who and what caused it', () => {
+    const h = house(19802);
+    const { ritePage, recordPage } = takeAndRecord(h, 'embellish');
+    expect(h.ctx.world.discrepancies.get('the_vessel_lie')?.state).toBe('open');
+    // The Record page is the rite's consequence, and says so.
+    expect(pageById(h.ctx, recordPage)?.cause?.page).toBe(ritePage);
+
+    const game = resumeWithPending(h.game, TAKEN_ARC);
+    dueNextYear(game, TAKEN_ARC);
+    const letter = deliver(game, 'choice', LETTER) as PendingChoice | undefined;
+    expect(letter, 'the letter never reached the docket').toBeDefined();
+    const currentHead = head(game.ctx);
+    expect(letter!.fill).toMatchObject({
+      SURVIVOR: h.son!.id, VESSEL: h.vessel.id, ASCENDANT: h.ascendant.id, HEAD: currentHead.id,
+    });
+    expect(letter!.body).toContain('Tam Mara’s Son');
+    expect(letter!.body).toContain('Mara the Named');
+    expect(letter!.choices.map((c) => c.id)).toEqual(['send_it_sealed', 'answer_in_our_own_hand']);
+
+    const before = { tier: standingTier(game.ctx), treasury: game.ctx.world.treasury };
+    const sent = game.choose(letter!.id, 'send_it_sealed');
+    expect(sent.ok, sent.reason).toBe(true);
+
+    expect(game.ctx.world.discrepancies.get('the_vessel_lie')?.state).toBe('proven');
+    expect(standingTier(game.ctx)).toBe(Math.max(0, before.tier - 1));
+    expect(game.ctx.world.treasury - before.treasury).toBe(-120);
+    expect(sentimentBetween(game.ctx.world, h.son!.id, currentHead.id)).toBeGreaterThan(0);
+    // The letter's page cites the page it answers, which cites the rite.
+    expect(pageById(game.ctx, sent.resolved!.entryId)?.cause?.page).toBe(recordPage);
+    expect(arcOf(game.ctx, TAKEN_ARC)!.status).toBe('ended');
+  });
+
+  it('keeps the witness home at the price of a grudge his blood inherits, and proves nothing', () => {
+    const h = house(19803);
+    takeAndRecord(h, 'embellish');
+    const game = resumeWithPending(h.game, TAKEN_ARC);
+    dueNextYear(game, TAKEN_ARC);
+    const letter = deliver(game, 'choice', LETTER) as PendingChoice;
+    const currentHead = head(game.ctx);
+
+    const before = { tier: standingTier(game.ctx), treasury: game.ctx.world.treasury };
+    const burned = game.choose(letter.id, 'answer_in_our_own_hand');
+    expect(burned.ok, burned.reason).toBe(true);
+
+    expect(game.ctx.world.discrepancies.get('the_vessel_lie')?.state).toBe('open');
+    expect(standingTier(game.ctx)).toBe(before.tier);
+    expect(game.ctx.world.treasury).toBe(before.treasury);
+    expect(sentimentBetween(game.ctx.world, h.son!.id, currentHead.id)).toBeLessThan(0);
+    // `from: HEAD` wronged `to: SURVIVOR`, so the grudge is the son's, held
+    // against the head, and outlives him through his blood.
+    const held = game.ctx.world.relationships.get(`${h.son!.id}->${currentHead.id}`);
+    expect(held?.grudges.some((g) => g.originEvent === LETTER && g.inheritance === 'all_blood')).toBe(true);
+  });
+
+  it('changes what the survivor will do for the house: a burned letter is a quiet errand refused', () => {
+    const unwilling = 'they will not undertake this purpose for the house';
+    const errand = (game: GameSession, operative: Person) => {
+      const ctx = game.ctx;
+      ctx.world.treasury = 1000;
+      // Whoever the engine's own rule says the house could reach this year.
+      const rival = ctx.world.people.living().find((p) => !operationExclusion(ctx, p));
+      expect(rival, 'no reachable outsider to send anybody against').toBeDefined();
+      addGrudge(ctx, ctx.world.playerHouse, rival!.id, { severity: 75, inheritance: 'house_wide' });
+      const opportunity = covertOpportunities(ctx).find((o) => o.target.id === rival!.id)!;
+      return quoteCovertOperation(ctx, {
+        opportunity: opportunity.id, operative: operative.id, purpose: 'settle_grudge', preparation: 'hasty',
+      });
+    };
+    for (const [choice, refuses] of [['answer_in_our_own_hand', true], ['send_it_sealed', false]] as const) {
+      const h = house(choice === 'send_it_sealed' ? 19817 : 19818);
+      // A grown son, so nothing but his grievance can keep him home.
+      h.son!.born = h.ctx.world.year - 20;
+      h.son!.awakening.awakened = true;
+      takeAndRecord(h, 'record');
+      const game = resumeWithPending(h.game, TAKEN_ARC);
+      dueNextYear(game, TAKEN_ARC);
+      const letter = deliver(game, 'choice', LETTER) as PendingChoice;
+      expect(game.choose(letter.id, choice).ok).toBe(true);
+      const son = game.ctx.world.people.get(h.son!.id)!;
+      // The steward may have found a grown son a post away from home in the
+      // meantime. Bring him home in both arms: only the letter differs.
+      delete son.career;
+      const quote = errand(game, son);
+      if (refuses) expect(quote.reason, choice).toBe(unwilling);
+      else expect(quote.ok, `${choice}: ${quote.reason}`).toBe(true);
+    }
+  });
+
+  it('costs an honest page only the advocate: a true book leaves the letter nothing to catch', () => {
+    const h = house(19804);
+    takeAndRecord(h, 'record');
+    const game = resumeWithPending(h.game, TAKEN_ARC);
+    dueNextYear(game, TAKEN_ARC);
+    const letter = deliver(game, 'choice', LETTER) as PendingChoice;
+    const before = { tier: standingTier(game.ctx), treasury: game.ctx.world.treasury };
+    expect(game.choose(letter.id, 'send_it_sealed').ok).toBe(true);
+    expect(standingTier(game.ctx)).toBe(before.tier);
+    expect(game.ctx.world.treasury - before.treasury).toBe(-120);
+    expect(game.ctx.world.discrepancies.has('the_vessel_lie')).toBe(false);
+  });
+
+  it('cannot catch a blank: the omission stays open for the Church after the letter goes', () => {
+    const h = house(19805);
+    takeAndRecord(h, 'omit');
+    const game = resumeWithPending(h.game, TAKEN_ARC);
+    dueNextYear(game, TAKEN_ARC);
+    const letter = deliver(game, 'choice', LETTER) as PendingChoice;
+    const before = standingTier(game.ctx);
+    expect(game.choose(letter.id, 'send_it_sealed').ok).toBe(true);
+    expect(game.ctx.world.discrepancies.get('the_vessel_omission')?.state).toBe('open');
+    expect(standingTier(game.ctx)).toBe(before);
+  });
+
+  it('finds a sister as truly as a son, and never the mother who is neither', () => {
+    const h = house(19810, { son: false, sister: true });
+    takeAndRecord(h, 'record');
+    expect(arcOf(h.ctx, TAKEN_ARC)!.bindings.SURVIVOR).toBe(h.sister!.id);
+  });
+
+  it('never names a child too young on the night to remember her', () => {
+    const h = house(19816, { son: false });
+    const baby = place(h.ctx, { sex: 'female', age: 2, name: 'A Baby Nobody Asked' });
+    beget(h.ctx, baby, h.vessel);
+    takeAndRecord(h, 'record');
+    expect(arcOf(h.ctx, TAKEN_ARC)!.bindings.SURVIVOR).toBeUndefined();
+  });
+
+  it('starts no letter when she left nobody close behind, and never casts a stranger into it', () => {
+    const h = house(19806, { son: false });
+    takeAndRecord(h, 'record');
+    const pending = arcOf(h.ctx, TAKEN_ARC)!;
+    expect(pending.bindings.SURVIVOR).toBeUndefined();
+    // A grown cousin who was never hers is in the house by the time it is due.
+    place(h.ctx, { sex: 'female', age: 25, name: 'A Cousin Nobody Asked' });
+    dueNextYear(h.game, TAKEN_ARC);
+    expect(deliver(h.game, 'choice', LETTER)).toBeUndefined();
+    expect(arcOf(h.ctx, TAKEN_ARC)!.status).toBe('cancelled');
+    expect(h.ctx.world.chronicle.some((entry) => entry.eventId === LETTER)).toBe(false);
+  });
+
+  it('ends with the survivor: a son who dies first takes the letter with him', () => {
+    const h = house(19807);
+    takeAndRecord(h, 'embellish');
+    h.ctx.world.people.kill(h.son!.id, h.ctx.world.year, 'a fever in the spring');
+    dueNextYear(h.game, TAKEN_ARC);
+    expect(deliver(h.game, 'choice', LETTER)).toBeUndefined();
+    expect(arcOf(h.ctx, TAKEN_ARC)!.status).toBe('cancelled');
+    expect(h.ctx.world.discrepancies.get('the_vessel_lie')?.state).toBe('open');
+  });
+
+  it('reads the absent page when the man who took her is dead, and still asks the living', () => {
+    const h = house(19808, { climber: 'cadet' });
+    takeAndRecord(h, 'record');
+    h.ctx.world.people.kill(h.ascendant.id, h.ctx.world.year, 'his heart, at the table');
+    dueNextYear(h.game, TAKEN_ARC);
+    const letter = deliver(h.game, 'choice', LETTER) as PendingChoice | undefined;
+    expect(letter).toBeDefined();
+    expect(letter!.body).toContain('is in the ground');
+    expect(letter!.fill.SURVIVOR).toBe(h.son!.id);
+    expect(h.game.choose(letter!.id, 'answer_in_our_own_hand').ok).toBe(true);
+  });
+
+  it('keeps the Record page when the letter cannot fit before collection, and ends the story there', () => {
+    const end = CAMPAIGNS.long.endYear;
+    const h = house(19809, { year: end - 3 });
+    const { recordPage } = takeAndRecord(h, 'embellish');
+    expect(pageById(h.ctx, recordPage)?.eventId).toBe('the_vessel_remembered');
+    const instance = arcOf(h.ctx, TAKEN_ARC)!;
+    expect(instance.status).toBe('ended');
+    expect(instance.history.map((step) => step.node)).toEqual(['the_vessel_remembered']);
+  });
+});
+
+describe('the Vessel spared: the Assessor counts the family (#1980)', () => {
+  function spare(seed: number) {
+    const h = house(seed, { son: false });
+    const ritePage = answerTheRite(h, 'send_them_out_of_the_room');
+    expect(h.vessel.status).toBe('alive');
+    const pending = arcOf(h.ctx, SPARED_ARC)!;
+    expect(pending.status).toBe('active');
+    expect(pending.node).toBe(ASSESSOR);
+    expect(pending.bindings).toEqual({ ASCENDANT: h.ascendant.id, VESSEL: h.vessel.id });
+    expect(pending.dueYear! - h.ctx.world.year).toBeGreaterThanOrEqual(10);
+    expect(pending.dueYear! - h.ctx.world.year).toBeLessThanOrEqual(20);
+    const game = resumeWithPending(h.game, SPARED_ARC);
+    dueNextYear(game, SPARED_ARC);
+    const visit = deliver(game, 'choice', ASSESSOR) as PendingChoice | undefined;
+    expect(visit, 'the Assessor never reached the docket').toBeDefined();
+    return { h, game, visit: visit!, ritePage };
+  }
+
+  it('offers a different question to the person spared, and cites the refusal', () => {
+    const { h, game, visit, ritePage } = spare(19811);
+    expect(visit.fill).toMatchObject({ VESSEL: h.vessel.id, ASCENDANT: h.ascendant.id });
+    expect(visit.choices.map((c) => c.id)).toEqual(['send_for_them', 'not_for_anything']);
+    expect(visit.body).toContain('Mara the Named');
+    const answered = game.choose(visit.id, 'not_for_anything');
+    expect(answered.ok, answered.reason).toBe(true);
+    expect(pageById(game.ctx, answered.resolved!.entryId)?.cause?.page).toBe(ritePage);
+    expect(arcOf(game.ctx, SPARED_ARC)!.status).toBe('ended');
+  });
+
+  it('buys back standing by producing the living proof, and the one produced remembers it', () => {
+    const { h, game, visit } = spare(19812);
+    const currentHead = head(game.ctx);
+    const before = standingTier(game.ctx);
+    expect(game.choose(visit.id, 'send_for_them').ok).toBe(true);
+    expect(standingTier(game.ctx)).toBe(Math.min(TIERS.length - 1, before + 1));
+    expect(sentimentBetween(game.ctx.world, h.vessel.id, currentHead.id)).toBeLessThan(0);
+    const held = game.ctx.world.relationships.get(`${h.vessel.id}->${currentHead.id}`);
+    expect(held?.grudges.some((g) => g.originEvent === ASSESSOR)).toBe(true);
+  });
+
+  it('keeps the word at a cost in standing, and the spared one comes down to the kitchen', () => {
+    const { h, game, visit } = spare(19813);
+    const currentHead = head(game.ctx);
+    const before = standingTier(game.ctx);
+    const answered = game.choose(visit.id, 'not_for_anything');
+    expect(answered.ok).toBe(true);
+    expect(standingTier(game.ctx)).toBe(Math.max(0, before - 1));
+    expect(sentimentBetween(game.ctx.world, h.vessel.id, currentHead.id)).toBeGreaterThan(0);
+    expect(pageById(game.ctx, answered.resolved!.entryId)?.text).toContain('kitchen');
+  });
+
+  it('ends with the person spared: nobody is left to count once they are gone', () => {
+    const h = house(19814, { son: false });
+    answerTheRite(h, 'send_them_out_of_the_room');
+    h.ctx.world.people.kill(h.vessel.id, h.ctx.world.year, 'the winter cough');
+    dueNextYear(h.game, SPARED_ARC);
+    expect(deliver(h.game, 'choice', ASSESSOR)).toBeUndefined();
+    expect(arcOf(h.ctx, SPARED_ARC)!.status).toBe('cancelled');
+  });
+
+  it('keeps every refusal cost and promises no visit it cannot keep near collection', () => {
+    const end = CAMPAIGNS.long.endYear;
+    const h = house(19815, { son: false, year: end - 5 });
+    answerTheRite(h, 'send_them_out_of_the_room');
+    expect(arcOf(h.ctx, SPARED_ARC)).toBeUndefined();
+    const held = h.ctx.world.relationships.get(`${h.vessel.id}->${h.ascendant.id}`);
+    expect(held?.grudges.some((g) => g.originEvent === 'the_vessel_rite')).toBe(true);
+  });
+});
+
+describe('the two answers stay two different futures (#1980)', () => {
+  it('never hands one branch the other’s scene', () => {
+    const taken = house(19821);
+    takeAndRecord(taken, 'record');
+    expect(arcOf(taken.ctx, SPARED_ARC)).toBeUndefined();
+    expect(arcOf(taken.ctx, TAKEN_ARC)!.node).toBe(LETTER);
+
+    const spared = house(19822);
+    answerTheRite(spared, 'send_them_out_of_the_room');
+    expect(arcOf(spared.ctx, TAKEN_ARC)).toBeUndefined();
+    expect(arcOf(spared.ctx, SPARED_ARC)!.node).toBe(ASSESSOR);
   });
 });
