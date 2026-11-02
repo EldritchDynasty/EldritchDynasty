@@ -129,7 +129,7 @@ describe('ending share code receipt (#1995)', () => {
         await wrapper.get('.share-copy button').trigger('click');
         await flushPromises();
         const status = wrapper.get('[role="status"]');
-        expect(status.text()).toMatch(/copy.*(not take|could not)/i);
+        expect(status.text()).toMatch(/could not copy|copy did not take/i);
         expect(status.text()).toMatch(/select the code/i);
         expect((wrapper.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1-NAMELESS');
 
