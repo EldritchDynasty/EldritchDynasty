@@ -11,6 +11,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
 import coreEntries from 'virtual:ed-core-prose';
 import { isWritableContentPath } from '../lib/content';
+import { textareaTarget } from '../lib/textarea-target';
 import { proseVariantStatus } from '../lib/prose-status';
 import {
   applyCoreProseEdits, externalChange, markCoreProseDraftDirty,
@@ -71,8 +72,8 @@ const dirty = computed(() => store.dirty.has(FILE) || drafts.size > 0);
 
 function edit(entry: Entry, event: Event) {
   if (!writable.value || saving.value) return;
-  const target = event.target;
-  if (!(target instanceof HTMLTextAreaElement)) return;
+  const target = textareaTarget(event.target);
+  if (!target) return;
   drafts.set(entry.address, target.value);
   markCoreProseDraftDirty();
   reviewEpoch += 1;
