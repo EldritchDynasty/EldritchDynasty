@@ -16672,3 +16672,89 @@ protocol would be needed for that, and no reader session was run. One
 independent sample of 240 houses, so the rare branches have wide intervals;
 the absent day-book closure (3 cases) is the thinnest. The Short Line was not
 sampled separately; it has the same templates and runs the shorter clock.
+
+## 2026-11-02 — #1980: what the two answers to the Vessel go on to cost
+
+**Question.** Once the Vessel's arithmetic is learned (a safe daughter, a
+gifted son, a Respect tier or a Discrepancy), does each answer still lead to a
+later choice about a real person, with credible costs on both sides? One later
+scene per branch, built on existing systems, with no change to the ladder.
+
+### Branch table (decided before measuring)
+
+| Initiating answer | Later scene | What it changes |
+|---|---|---|
+| `the_vessel_rite` / `speak_the_name` → `taken`, then the Record page | `the_letter_for_the_assessor`, 10–18 years on. SURVIVOR is cast on the night of the page: the consumed relative's child or sibling, alive, aged 6+, never the ascendant. | **Send it sealed**: −120 crowns (an advocate, an agreed `contract` price), SURVIVOR→Head +20, and `prove the_vessel_lie` — an Embellish page's false death claim is caught (−1 Respect tier). A true page, or an Omit blank (no claim to check), is not. **Burn it**: a grudge SURVIVOR holds against the Head (severity 60, `all_blood`), SURVIVOR→Head −35, nothing proven. At 60 the survivor refuses the house's covert errands while that Head sits (`covert-operations.ts`). |
+| `send_them_out_of_the_room` → `spared` | `the_assessor_counts_the_family`, 10–20 years on. VESSEL is the person spared. | **Send for them**: +1 Respect tier, VESSEL→Head −25, a grudge VESSEL holds (25, `all_blood`). **"Not for this, and not for anything"**: −1 Respect tier, VESSEL→Head +30, their hall appeased by 15 (the slight the refusal cost it). |
+
+Casting and lifetime rules: SURVIVOR and the spared VESSEL are personal and
+`cancel_arc` (the story is theirs); ASCENDANT is named only, `continue_absent`
+with an `absentBody`; HEAD is the office, cast fresh and never the survivor.
+No close survivor → no letter. The rite's refusal costs, the Record block and
+the Vessel's place on the ladder are unchanged.
+
+**Engine, inline chains only.** No inline chain before this had more than one
+node. Two rules are new and covered in `arc-term.test.ts` / `rites.test.ts`:
+
+1. An inline chain promises one beat at a time. `minimumArcYears` floors an
+   inline chain at its first beat, and `advanceArc` ends the story when the
+   next beat can no longer arrive before collection. Without this, putting the
+   letter behind the Record page would have made `startArc` refuse the whole
+   chain within 10 years of collection, silently dropping §22's mandatory
+   Record page for a late Vessel.
+2. `keep` means the same person or nobody: a later inline beat whose kept slot
+   the previous beat declared and left empty cancels, instead of casting a
+   stranger. (Applying this to every arc would break `arc_the_muster`, which
+   fresh-casts its kept OFFICER; it is scoped to inline chains, none of which
+   relied on the old reading.)
+
+### Reach
+
+Measured with the fire-rate gate's own functions, on base `87f5cc45` plus
+this branch's working tree before three last edits (the burned letter's grudge
+45 → 60, the kept ASCENDANT's role `foremost` → `family_member`, the Assessor
+scene's purposes). None of the three acts before these scenes fire, and none
+changes whether they fire:
+
+- **Climbing acquittal** (`firedUnderClimbing`, the gate's 12 seeds
+  4000…4143, 500 years): `the_vessel_rite`, `the_vessel_remembered` and
+  `the_letter_for_the_assessor` fire; `the_assessor_counts_the_family` does
+  **not** — the ladder policy takes the Vessel whenever offered, so it never
+  refuses.
+- **Canonical chronicler** (`playGateBatch`, 800 × 500 years, 1,501 s). Runs
+  in which each template fired at least once, with Wilson 95% intervals:
+
+| Template | Runs | Rate |
+|---|---|---|
+| `the_vessel_rite` (offered and answered) | 163 | 20.4% |
+| `the_vessel_remembered` (taken) | 82 | 10.3% |
+| `the_letter_for_the_assessor` | 59 | 7.4% [5.8, 9.4] |
+| `the_assessor_counts_the_family` | 65 | 8.1% [6.4, 10.2] |
+
+  Both new scenes clear the 0.5% fire-rate floor by more than a factor of ten,
+  so the Assessor scene does not need the climbing acquittal it cannot get.
+  **Return given launch:** the letter came in 59 of 82 runs with a taking
+  (72.0% [61.4, 80.5]); the misses are a Vessel with no child or sibling aged
+  6+, a survivor who died or left first, and takings within 10 years of
+  collection, which keep their Record page and end there. The Assessor came in
+  65 of about 81 runs with a refusal (≈80% [70.3, 87.5]); the denominator is
+  approximate because a 500-year run can hold a taking and a refusal 150 years
+  apart, and this batch counts runs, not answers. These two branches are not
+  compared with each other: the chronicler's uniform pick is the only reason
+  they are near equal.
+
+Deterministic witnesses: all four new outcomes execute in `reach.test.ts`
+through the real rite → page → due year → kept cast; the merge-lane manifest
+stays complete. Plain English coverage 6511/6511.
+
+### Limits
+
+Bot policies only: the chronicler answers the rite and both later scenes
+uniformly at random; a player may not. These are delivery and mechanism
+measurements. Whether a reader finds the sacrifice harder, or remembers what
+sparing someone bought, is a hypothesis; no reader session was run (#1945's
+recorder and protocol would be the instrument). Endings and `gate:density`
+were **not** re-measured. Each scene adds one decision in under a tenth of
+runs and moves at most one Respect tier or proves one Discrepancy, so a shift
+is expected to be small, but that is an expectation, not a measurement; the
+weekly endings and density telemetry is where it would show.
