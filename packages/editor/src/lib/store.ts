@@ -291,9 +291,23 @@ export function pendingText(collectionKey: string, id: string): { path: string; 
 export async function externalChange(path: string): Promise<{ changed: boolean; text?: string }> {
   const file = files.get(path);
   if (!file) return { changed: false };
-  const res = await readFile(path);
-  if (!res.ok || res.text === undefined) return { changed: false };
-  return { changed: res.text !== file.loadedText, text: res.text };
+
+  // An unreadable source is NOT unchanged. The review controls must fail
+  // closed even when the host resolves a read with { ok: false }, returns no
+  // bytes, or rejects its IPC/filesystem promise. This shape also keeps
+  // EventDelete's existing caller from receiving an unhandled rejection.
+  const unreadable = (reason: string) => ({
+    changed: true,
+    text: `Unable to verify '${path}' on disk: ${reason}`,
+  });
+  try {
+    const res = await readFile(path);
+    if (!res.ok) return unreadable(res.error || 'read failed');
+    if (res.text === undefined) return unreadable('read returned no text');
+    return { changed: res.text !== file.loadedText, text: res.text };
+  } catch (cause) {
+    return unreadable(cause instanceof Error ? cause.message : String(cause));
+  }
 }
 
 /** Mark an item's file dirty. Called on every edit; cheap enough (files × items) at content-directory scale. */
