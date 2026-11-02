@@ -464,3 +464,73 @@ describe('focus inside open shadow roots (#2147)', () => {
       .toEqual({ kind: 'advance', years: 1 });
   });
 });
+
+
+describe('nested keyboard-activated controls (#2544)', () => {
+  it('reserves Enter/Space for descendants of native and ARIA controls, not the clock', () => {
+    for (const role of ['button', 'link', 'checkbox', 'menuitem', 'tab', 'slider']) {
+      const parent = document.createElement('div');
+      parent.setAttribute('role', `future-control ${role}`);
+      const child = document.createElement('span');
+      child.tabIndex = 0;
+      parent.append(child);
+      document.body.append(parent);
+      try {
+        child.focus();
+        expect(document.activeElement).toBe(child);
+        expect(isField(child), role).toBe(false);
+        expect(isControl(child), role).toBe(true);
+        for (const key of ['Enter', ' ']) {
+          expect(shortcutFor({ key, onControl: isControl(child) }), `${role}: ${key}`).toBeNull();
+        }
+        expect(shortcutFor({ key: '3', onControl: isControl(child) }))
+          .toEqual({ kind: 'take', index: 2 });
+      } finally {
+        parent.remove();
+      }
+    }
+
+    const nativeButton = document.createElement('button');
+    const label = document.createElement('span');
+    nativeButton.append(label);
+    expect(isControl(label)).toBe(true);
+  });
+
+  it('follows open shadow roots to the containing ARIA control', () => {
+    const outer = document.createElement('div');
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const child = document.createElement('span');
+    child.tabIndex = 0;
+    shadow.append(child);
+    outer.append(host);
+    document.body.append(outer);
+    try {
+      child.focus();
+      expect(document.activeElement).toBe(host);
+      for (const owner of [host, outer]) {
+        owner.setAttribute('role', 'checkbox');
+        expect(isControl(document.activeElement)).toBe(true);
+        expect(shortcutFor({ key: 'Enter', onControl: isControl(document.activeElement) }))
+          .toBeNull();
+        owner.removeAttribute('role');
+      }
+      expect(isControl(document.activeElement)).toBe(false);
+    } finally {
+      outer.remove();
+    }
+  });
+
+  it('keeps ordinary descendants of non-controls on the game clock', () => {
+    const group = document.createElement('div');
+    group.setAttribute('role', 'group');
+    const child = document.createElement('span');
+    child.tabIndex = 0;
+    group.append(child);
+    expect(isControl(child)).toBe(false);
+    expect(shortcutFor({ key: 'Enter', onControl: isControl(child) }))
+      .toEqual({ kind: 'advance', years: 1 });
+    expect(shortcutFor({ key: ' ', onControl: isControl(child) }))
+      .toEqual({ kind: 'advance', years: 1 });
+  });
+});
