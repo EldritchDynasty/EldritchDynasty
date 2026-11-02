@@ -5,7 +5,8 @@ import { describe, expect, it } from 'vitest';
 const source = readFileSync(new URL('./CoreProseEditor.vue', import.meta.url), 'utf8');
 const edit = source.slice(source.indexOf('function edit('), source.indexOf('async function review()'));
 const review = source.slice(source.indexOf('async function review()'), source.indexOf('async function save()'));
-const save = source.slice(source.indexOf('async function save()'), source.indexOf('</script>'));
+const saveStart = source.indexOf('async function save()');
+const save = source.slice(saveStart, source.indexOf('</script>', saveStart));
 
 describe('core prose async review identity (#2439)', () => {
   it('marks edits and component unmounts as invalidating pending reviews', () => {
