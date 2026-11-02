@@ -68,7 +68,7 @@ export type RoutePolicy = 'ascendant' | 'summit';
 /** One ladder-relevant public act, for the written route. */
 export interface RouteAct {
   year: number;
-  verb: 'found' | 'order' | 'choose' | 'record';
+  verb: 'found' | 'ambition' | 'order' | 'choose' | 'record';
   /** The order kind, the event id, or the Record option. */
   what: string;
   /** Who it named, where it named anyone. */
@@ -278,7 +278,8 @@ function callRites(s: GameSession, acts: RouteAct[], policy: RoutePolicy): void 
 }
 
 export function playSummitRoute(
-  source: Source, seed: number, opts: { signed?: boolean; years?: number; policy?: RoutePolicy } = {},
+  source: Source, seed: number,
+  opts: { signed?: boolean; years?: number; policy?: RoutePolicy; onYear?: (s: GameSession) => void } = {},
 ): RouteRun & { saved: SavedGame; digest: string } {
   const content = indexContent(source);
   const signed = opts.signed ?? true;
@@ -290,6 +291,11 @@ export function playSummitRoute(
     acts.push(founding);
     if (!founding.ok) throw new Error(`seed ${seed}: the signing was refused: ${founding.reason}`);
   }
+  // The plan a player following this route would choose. It changes no
+  // outcome (`ambition.test.ts`), but it is what puts the ascent's guidance —
+  // the next step, the elder ahead, the book at God — in front of them.
+  const planned = s.setAmbition('raise_ascendant');
+  acts.push({ year: s.year, verb: 'ambition', what: 'raise_ascendant', ok: planned });
   act(s, acts, { kind: 'marriages', policy: 'in' });
   act(s, acts, { kind: 'bid', ceiling: ROUTE_BID_CEILING });
   const diagnosis = emptyDiagnosis();
@@ -302,6 +308,8 @@ export function playSummitRoute(
     answerDocket(s, acts, policy);
     callRites(s, acts, policy);
     if (!s.ctx.world.ending) observe(s, diagnosis);
+    // A reader of the public view only — `view()` restores any lazy genome it touches.
+    opts.onYear?.(s);
     // A year that did not turn was blocked by a docket the guard could not
     // clear. That would be a policy fault, not a route; say so loudly.
     if (s.year === before && !s.ctx.world.ending) {
