@@ -943,7 +943,8 @@ describe('the editor Vite entry points', () => {
   describe('read-only CLI and explicit portable execution', () => {
     it('ignores transient directory metadata but still detects persistent file changes', () => {
       const { cwd, write } = checkout();
-      const before = snapshot(cwd);
+      const beforeEntries: SnapshotManifest = new Map();
+      const before = snapshot(cwd, undefined, beforeEntries);
       const gitDir = join(cwd, '.git');
       const temp = join(gitDir, 'ephemeral-lock');
       writeFileSync(temp, 'temporary');
@@ -951,7 +952,9 @@ describe('the editor Vite entry points', () => {
       // Force the directory timestamp change so this regression is reliable
       // even on filesystems with coarse mtime resolution.
       utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
-      expect(snapshot(cwd)).toBe(before);
+      const afterEntries: SnapshotManifest = new Map();
+      const after = snapshot(cwd, undefined, afterEntries);
+      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
       write('packages/core/src/permanent.ts', 'export const changed = true;\n');
       expect(snapshot(cwd)).not.toBe(before);
     });
@@ -959,11 +962,14 @@ describe('the editor Vite entry points', () => {
     it('ignores a Git file timestamp refresh, but not a persistent Git file write', () => {
       const { cwd } = checkout();
       const config = join(cwd, '.git', 'config');
-      const before = snapshot(cwd);
+      const beforeEntries: SnapshotManifest = new Map();
+      const before = snapshot(cwd, undefined, beforeEntries);
       // Git bookkeeping may refresh an administrative timestamp while the
       // verifier reads history. The bytes, and therefore the checkout, remain.
       utimesSync(config, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
-      expect(snapshot(cwd)).toBe(before);
+      const afterEntries: SnapshotManifest = new Map();
+      const after = snapshot(cwd, undefined, afterEntries);
+      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
 
       writeFileSync(config, readFileSync(config, 'utf8') + '\n[fixture-change]\nvalue = changed\n');
       expect(snapshot(cwd)).not.toBe(before);
