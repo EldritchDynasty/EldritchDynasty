@@ -386,9 +386,15 @@ export class Sound {
     this.#volume = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
     // A host may invalidate its output after the context was opened. Changing
     // Reading settings must fail into silence, never throw into the UI.
+    const wasSilent = this.#volume === 0;
     this.attempt(() => {
       if (this.out) this.out.gain.value = this.#muted ? 0 : this.#volume;
     });
+    // A direct Sound user (including tools outside SoundBed) must not keep an
+    // inaudible drone running at zero volume. Restore only the latest scene
+    // once the reader raises the level; don't create an engine for silence.
+    if (this.#volume === 0) this.stopDrone(0);
+    else if (wasSilent && !this.#muted && this.lastDrone) this.setDrone(this.lastDrone);
   }
 
   /**
@@ -428,7 +434,7 @@ export class Sound {
   }
 
   cue(name: Cue) {
-    if (this.#muted) return;
+    if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const e = this.engine();
       if (e) this.play(e.context, e.out, cueScore(name), e.context.currentTime);
@@ -443,7 +449,7 @@ export class Sound {
    */
   setDrone(input: DroneInput | null) {
     this.lastDrone = input;
-    if (this.#muted) return;
+    if (this.#muted || this.#volume === 0) return;
     if (!input) return this.stopDrone();
     this.attempt(() => {
       const wanted = droneScore(input);
@@ -523,7 +529,7 @@ export class Sound {
    * the background can otherwise sit scheduled on a context nobody resumed.
    */
   wake() {
-    if (this.#muted) return;
+    if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const ctx = this.context;
       if (ctx) this.watch(ctx.resume?.(), ctx, true);
