@@ -215,6 +215,51 @@ const wanted = computed(() => {
   return out;
 });
 
+
+/** A presentation-only candidate for #2443 / #1984. All drafts stay in refs:
+ * backing up and moving forward never calls a GameSession action. */
+type SigningStage = 'founder' | 'examination' | 'house';
+const signingStages = computed<SigningStage[]>(() => [
+  ...(props.prologue.namePrompt ? ['founder' as const] : []),
+  ...(props.prologue.examination.length ? ['examination' as const] : []),
+  'house',
+]);
+const signingStageIndex = ref(0);
+const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
+const stageReady = computed(() => {
+  switch (signingStage.value) {
+    case 'founder':
+      return Boolean(founderName.value.trim() && gender.value && configuration.value);
+    case 'examination':
+      return props.prologue.examination.every((question) => Boolean(answers.value[question.id]));
+    case 'house':
+      return wanted.value.length === 0;
+  }
+});
+
+let navigatingSigning = false;
+function moveSigningStage(direction: -1 | 1): void {
+  // A second click on the DOM's stale Back/Continue button must not advance
+  // another step before Vue has displayed the first destination.
+  if (navigatingSigning || (direction === 1 && !stageReady.value)) return;
+  const next = Math.max(0, Math.min(signingStageIndex.value + direction, signingStages.value.length - 1));
+  if (next === signingStageIndex.value) return;
+  navigatingSigning = true;
+  signingStageIndex.value = next;
+  // Navigation removes the clicked button. Give keyboard and screen-reader
+  // readers a predictable target instead of dropping focus to the document.
+  void nextTick(() => {
+    try {
+      const heading = signingStage.value === 'founder' ? 'founder-section-heading'
+        : signingStage.value === 'examination' ? 'examination-heading'
+          : 'house-section-heading';
+      document.getElementById(heading)?.focus();
+    } finally {
+      navigatingSigning = false;
+    }
+  });
+}
+
 /** Keep the same validation prerequisites and action payload in both registers.
  * Only the reader-facing explanation of missing inputs is translated. */
 function waitingText(): string {
@@ -307,8 +352,9 @@ function signOnEnter(event: KeyboardEvent): void {
     </button>
 
     <template v-else-if="!prologue.founded">
-      <section v-if="prologue.namePrompt" class="founder-section" aria-labelledby="founder-section-heading">
-        <h2 id="founder-section-heading" class="stage-title">{{ plain ? 'About the founder' : 'Who signs the book' }}</h2>
+      <p class="signing-progress" role="status" aria-live="polite">{{ plain ? `Step ${signingStageIndex + 1} of ${signingStages.length}` : `The signing · ${signingStageIndex + 1} of ${signingStages.length}` }}</p>
+      <section v-if="prologue.namePrompt" v-show="signingStage === 'founder'" class="founder-section" aria-labelledby="founder-section-heading">
+        <h2 id="founder-section-heading" class="stage-title" tabindex="-1">{{ plain ? 'About the founder' : 'Who signs the book' }}</h2>
         <div class="choice founder-name">
         <h3 class="label">{{ plain ? 'Your name' : 'The name' }}</h3>
         <p class="prompt">{{ prologue.namePrompt }}</p>
@@ -347,11 +393,11 @@ function signOnEnter(event: KeyboardEvent): void {
       </section>
 
       <section
-        v-if="prologue.examination.length"
+        v-if="prologue.examination.length" v-show="signingStage === 'examination'"
         class="choice examination"
         aria-labelledby="examination-heading"
       >
-        <h3 id="examination-heading" class="label">{{ plain ? 'The questions' : 'The Examination' }}</h3>
+        <h2 id="examination-heading" class="stage-title" tabindex="-1">{{ plain ? 'The questions' : 'The Examination' }}</h2>
         <fieldset v-for="question in prologue.examination" :key="question.id" class="question">
           <legend class="prompt">{{ question.situation }}</legend>
           <button
@@ -379,8 +425,8 @@ function signOnEnter(event: KeyboardEvent): void {
            the house's hands and the grudge into the world, and at the term the ending
            names which of them the selected line changed. Keep the complete
            house-making group together without turning any answer optional. -->
-      <section class="house-section" aria-labelledby="house-section-heading">
-        <h2 id="house-section-heading" class="stage-title">{{ plain ? 'House name and commitments' : 'What the house will carry' }}</h2>
+      <section v-show="signingStage === 'house'" class="house-section" aria-labelledby="house-section-heading">
+        <h2 id="house-section-heading" class="stage-title" tabindex="-1">{{ plain ? 'House name and commitments' : 'What the house will carry' }}</h2>
       <section class="choice">
         <h3 class="label">{{ plain ? 'Choose an heirloom' : 'You asked for one thing by name' }}</h3>
         <button
@@ -428,7 +474,7 @@ function signOnEnter(event: KeyboardEvent): void {
       <!-- THE LAST QUESTION, and the only one not about the house. It is the
            one place the game reaches outside itself, so it is asked in the
            frame's own voice and never explained. -->
-      <section v-if="friends.length > 0" class="choice friends">
+      <section v-if="friends.length > 0" v-show="signingStage === 'house'" class="choice friends">
         <h3 class="label">{{ plain ? 'Up to five friends outside the family' : 'And five who were not of your blood' }}</h3>
         <p class="prompt">{{ prologue.friendsPrompt }}</p>
         <!-- Keep the personal names optional and out of the required signing
@@ -467,12 +513,30 @@ function signOnEnter(event: KeyboardEvent): void {
         </details>
       </section>
 
-      <p v-if="refused && !refusalSuperseded" class="rubric small">{{ refused }}</p>
+      <nav class="signing-navigation" :aria-label="plain ? 'Signing steps' : 'Parts of the signing'">
+        <button v-if="signingStageIndex > 0" type="button" @click="moveSigningStage(-1)">
+          {{ plain ? 'Back' : 'The preceding part' }}
+        </button>
+        <button
+          v-if="signingStageIndex < signingStages.length - 1"
+          type="button"
+          class="primary"
+          :disabled="!stageReady"
+          @click="moveSigningStage(1)"
+        >{{ plain ? 'Continue' : 'The next part' }}</button>
+      </nav>
+      <p v-if="signingStageIndex < signingStages.length - 1 && !stageReady" class="dim small waiting">
+        {{ signingStage === 'founder'
+          ? (plain ? 'Enter your name, gender and the parent carrying the blood to continue.' : 'The founder must first name themself, and say whose blood the house carries.')
+          : (plain ? 'Answer every Examination question to continue.' : 'The Examination awaits an answer to every question.') }}
+      </p>
 
-      <button class="primary sign" :disabled="wanted.length > 0" @click="sign()">
+      <p v-if="refused && !refusalSuperseded" v-show="signingStage === 'house'" class="rubric small">{{ refused }}</p>
+
+      <button v-show="signingStage === 'house'" class="primary sign" :disabled="wanted.length > 0" @click="sign()">
         {{ plain ? 'Sign the agreement' : 'Sign it' }}
       </button>
-      <p v-if="wanted.length" class="dim small waiting">
+      <p v-if="wanted.length" v-show="signingStage === 'house'" class="dim small waiting">
         {{ waitingText() }}
       </p>
 
@@ -517,6 +581,10 @@ button.on, .on { }
 .on { margin-top: 10px; }
 .choice { margin-top: 30px; }
 .founder-section, .house-section { margin-top: 30px; }
+.signing-progress { margin: 28px 0 0; color: var(--ink-soft); font-size: var(--t-fine); }
+.signing-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 24px; }
+.stage-title:focus { outline: none; }
+.stage-title:focus-visible { outline: 2px solid var(--rubric); outline-offset: 4px; }
 .founder-section .choice, .house-section .choice { margin-top: 16px; }
 .stage-title { margin: 0 0 16px; color: var(--ink-soft); font-size: var(--t-card); font-weight: 600; }
 .choice .prompt { margin: 0 0 12px; line-height: 1.7; color: var(--ink-soft); font-size: var(--t-card); }

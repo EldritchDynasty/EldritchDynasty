@@ -88,6 +88,106 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 
+
+describe('progressive first-session signing (#2443)', () => {
+  it('requires each stage, restores heading focus and preserves drafts on Back', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      attachTo: document.body,
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect(wrapper.get('.founder-section').isVisible()).toBe(true);
+      expect(wrapper.get('.examination').isVisible()).toBe(false);
+      expect(wrapper.get('.house-section').isVisible()).toBe(false);
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+
+      await answerFounder(wrapper);
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeUndefined();
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await nextTick();
+      expect(wrapper.get('.signing-progress').text()).toContain('2 of 3');
+      expect(wrapper.get('.examination').isVisible()).toBe(true);
+      expect(document.activeElement).toBe(wrapper.get('#examination-heading').element);
+      // No player command runs merely by advancing between sections.
+      expect(game.found).not.toHaveBeenCalled();
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await nextTick();
+      expect(wrapper.get('.signing-progress').text()).toContain('3 of 3');
+      expect(wrapper.get('.house-section').isVisible()).toBe(true);
+      expect(document.activeElement).toBe(wrapper.get('#house-section-heading').element);
+
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      // A burst on the still-mounted Back button counts as one navigation,
+      // never two jumps that accidentally skip the Examination on the way back.
+      const back = wrapper.get('.signing-navigation button').element as HTMLButtonElement;
+      back.click();
+      back.click();
+      await nextTick();
+      expect(wrapper.get('.signing-progress').text()).toContain('2 of 3');
+      expect(wrapper.get('.examination').isVisible()).toBe(true);
+      expect(answerButton(wrapper, 1).attributes('aria-pressed')).toBe('true');
+      await wrapper.get('.signing-navigation button').trigger('click');
+      await nextTick();
+      expect(wrapper.get('.founder-section').isVisible()).toBe(true);
+      expect((wrapper.get('input[aria-label="Name the founder"]').element as HTMLInputElement).value).toBe('Daveed');
+      await wrapper.get('input[aria-label="Name the founder"]').setValue('Alys');
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      expect((wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement).value).toBe('House Ash');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        houseName: 'House Ash',
+        heirloom: 'seal',
+        grudge: 'house_marrow',
+        founder: { name: 'Alys', gender: 'man', configuration: 'blood_father' },
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('skips unavailable identity and Examination sections without inventing founder inputs', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: { ...prologueView(), namePrompt: '', examination: [] },
+        actions: game, refused: null, startYear: 1042, proseMode: 'plainenglish',
+      },
+    });
+    try {
+      // The reveal buttons have translated names in Plain English.
+      for (const text of ['Read the first part', 'Read the second part', 'Read the third part']) {
+        await wrapper.findAll('button').find((button) => button.text() === text)!.trigger('click');
+      }
+      expect(wrapper.get('.signing-progress').text()).toContain('Step 1 of 1');
+      expect(wrapper.find('.founder-section').exists()).toBe(false);
+      expect(wrapper.find('.examination').exists()).toBe(false);
+      expect(wrapper.get('.house-section').isVisible()).toBe(true);
+      expect(wrapper.find('.signing-navigation button').exists()).toBe(false);
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Enter the family name"]').setValue('House Ash');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith({
+        houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', friends: [],
+      });
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('held Enter in newborn naming (#1471)', () => {
   it('ignores auto-repeated Enter without hiding a deliberate naming submission', async () => {
     const name = vi.fn(() => true);
