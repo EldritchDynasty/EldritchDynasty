@@ -50,7 +50,7 @@ describe('Table destinations and read-only navigation (#1941)', () => {
       expect(tableNavigationOrigin(button)).toBe(button);
       expect(tableNavigationOrigin(nonButton)).toBeNull();
       expect(tableNavigationOrigin(null)).toBeNull();
-      expect(tableNavigationOrigin(new Event('click'))).toBeNull();
+      expect(tableNavigationOrigin(new EventTarget())).toBeNull();
 
       // Ordinary same-document clicks still emit the precise origin for focus restoration.
       const task = { id: 'reader' as const, title: 'Train a reader', revealed: true, targets: ['shelf' as const] };
