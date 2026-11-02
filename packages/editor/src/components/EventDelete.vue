@@ -6,6 +6,7 @@ import DiffView from './DiffView.vue';
 const props = defineProps<{ id: string }>();
 const reviewing = ref(false);
 const working = ref(false);
+const checking = ref(false);
 const confirmation = ref('');
 const error = ref('');
 const preview = ref<{ id: string; path: string; before: string; after: string } | undefined>();
@@ -15,28 +16,45 @@ const preview = ref<{ id: string; path: string; before: string; after: string } 
 // a confirmation for a different event.
 let reviewRevision = 0;
 
+function errorMessage(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
+}
+
 watch(() => props.id, () => cancel());
 
 async function review() {
+  if (checking.value || working.value) return;
   const reviewedId = props.id;
   const revision = ++reviewRevision;
   error.value = '';
   confirmation.value = '';
+  reviewing.value = false;
+  preview.value = undefined;
   const result = pendingDeleteEvent(reviewedId);
   if (!result.ok) { error.value = result.error; return; }
-  const changed = await externalChange(result.path);
-  // A selected event may have changed while the host was reading the file.
-  // Never show its old diff beneath the new event's confirmation controls.
-  if (revision !== reviewRevision || props.id !== reviewedId) return;
-  if (changed.changed) {
-    error.value = 'This file changed on disk. Reload before reviewing deletion.';
-    return;
+  checking.value = true;
+  try {
+    const changed = await externalChange(result.path);
+    // A selected event or review may change while the host reads the file.
+    if (revision !== reviewRevision || props.id !== reviewedId) return;
+    if (changed.changed) {
+      error.value = 'This file changed on disk. Reload before reviewing deletion.';
+      return;
+    }
+    preview.value = { id: reviewedId, path: result.path, before: result.before, after: result.after };
+    reviewing.value = true;
+  } catch (cause) {
+    // A failed host read cannot authorize deletion, or report on a newer event.
+    if (revision === reviewRevision && props.id === reviewedId) {
+      error.value = 'Could not check the source file: ' + errorMessage(cause);
+    }
+  } finally {
+    if (revision === reviewRevision) checking.value = false;
   }
-  preview.value = { id: reviewedId, path: result.path, before: result.before, after: result.after };
-  reviewing.value = true;
 }
 function cancel() {
   ++reviewRevision;
+  checking.value = false;
   reviewing.value = false;
   preview.value = undefined;
   confirmation.value = '';
@@ -44,18 +62,31 @@ function cancel() {
 }
 async function remove() {
   if (working.value || confirmation.value !== props.id || preview.value?.id !== props.id) return;
+  const removedId = props.id;
+  const revision = reviewRevision;
   working.value = true;
+  error.value = '';
   try {
-    const result = await deleteEvent(props.id);
+    const result = await deleteEvent(removedId);
+    if (revision !== reviewRevision || props.id !== removedId) return;
     if (!result.ok) error.value = result.error ?? 'Deletion failed; the original remains available.';
     else cancel(); // The selected event vanishes from the live list on success.
-  } finally { working.value = false; }
+  } catch (cause) {
+    // Keep the reviewed diff/confirmation so the author can retry or cancel.
+    if (revision === reviewRevision && props.id === removedId) {
+      error.value = 'Deletion failed; the original may remain available: ' + errorMessage(cause);
+    }
+  } finally {
+    working.value = false;
+  }
 }
 </script>
 
 <template>
   <section class="delete-event">
-    <button v-if="!reviewing" class="btn" type="button" @click="review">Review event deletion…</button>
+    <button v-if="!reviewing" class="btn" type="button" :disabled="checking || working" @click="review">
+      {{ checking ? 'Checking source file…' : 'Review event deletion…' }}
+    </button>
     <template v-if="reviewing && preview">
       <h4>Delete {{ id }} from {{ preview.path }}?</h4>
       <p class="note">
