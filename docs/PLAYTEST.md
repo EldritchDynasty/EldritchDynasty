@@ -386,6 +386,26 @@ that produced it.
 
 ## First-session signing timing (#1984 — observations not yet run)
 
+### Table action outcome summary (#2526)
+
+With `?reading-log=1` enabled, export `ed-reading-log/12` and read
+`summary.tableActions` for bounded per-category totals:
+`orders`, `muster`, and `delegation`. Each row reports `attempts`,
+`accepted`, `refused`, `threw`, `returned`, and `unfinished`.
+Delegation categories distinguish `choice:set`, `choice:clear`,
+`record:set`, and `record:clear`; `returned` means the setter returned,
+**not** that it applied a change. Table/Muster categories have been
+validated against their declared unions, and unknown inputs become `unknown`.
+No person name, order arguments, written text, or refusal reason is exported.
+
+An unfinished attempt has no recorded terminal result. It may have been
+interrupted, capped, or excluded by the observation boundary: **do not count
+it as an accepted or refused action**. The summary is read-only and is not
+an estimate of attention cost; pair it with visible Table exposure and
+observer notes. Both the raw events and counts may span multiple runs in one
+page session, so use the `run`/`pickup` boundaries before interpreting
+per-house or per-generation totals. Game years are not generation counts.
+
 This protocol measures whether a staged signing gets a new reader to a
 **consequential first family action** sooner without giving up the Examination.
 The UI prototype exists, but a shorter sequence is only a hypothesis; do not
@@ -395,7 +415,7 @@ treat fewer clicks or this instrumentation as an observed improvement.
 the accepted action that qualifies as the first family decision (for example,
 a particular first marriage acceptance) and the action's visible consequence.
 Use the same definition for baseline and candidate. The exported
-`ed-reading-log/11` artifact's `summary.entries` supplies a *candidate* first
+`ed-reading-log/12` artifact's `summary.entries` supplies a *candidate* first
 accepted command, not an automatic classification of its meaning. The command's
 `verb` can be `choose`, `match`, `order`, `muster` or `record`; an
 accepted `choose` can be a story decision rather than the intended family
