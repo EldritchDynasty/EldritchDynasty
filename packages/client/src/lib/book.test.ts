@@ -556,6 +556,42 @@ describe('the house afterimage (#260)', () => {
     expect(source).toEqual(before);
   });
 
+  it('quotes surviving Chronicle testimony, never a greyed lost page (#2455)', () => {
+    const surviving = entry({ year: 1414, text: 'The living account.', title: 'The Kept Page' });
+    const lost = entry({ year: 1415, weight: 'illuminated', greyed: true,
+      title: 'The Burned Book', text: 'LOST PRIVATE TESTIMONY' });
+    const chosen = { year: 1414, title: 'The Kept Page', text: 'The living account.' };
+    const read = [surviving, lost];
+    expect(afterimageQuote(read)).toEqual(chosen);
+
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const model = afterimageModel({ ...source, read }, mode);
+      expect(model.quote).toEqual(chosen);
+      const svg = afterimageSvg(model, afterimageLayout(model, monospace));
+      expect(svg).toContain('The living account.');
+      expect(svg).not.toContain('LOST PRIVATE TESTIMONY');
+    }
+
+    // If the creditor read only lost, omitted or blank pages, the image must
+    // not reconstruct their text as a surviving quotation.
+    const unreadable = [
+      lost,
+      entry({ year: 1416, text: null, title: 'Omitted title' }),
+      entry({ year: 1417, record: 'omit', text: 'PRIVATE retained omission' }),
+    ];
+    expect(afterimageQuote(unreadable)).toBeUndefined();
+    for (const mode of ['original', 'plainenglish'] as const) {
+      expect(afterimageModel({ ...source, read: unreadable }, mode).quote).toBeUndefined();
+    }
+
+    // Keep the original newest-illuminated preference when that page survives.
+    expect(afterimageQuote([
+      entry({ year: 1413, weight: 'illuminated', text: 'Earlier surviving illumination.' }),
+      lost,
+      entry({ year: 1417, text: 'Later ordinary line.' }),
+    ])?.text).toBe('Earlier surviving illumination.');
+  });
+
   it('falls back to the newest written line and never reconstructs a blank', () => {
     expect(afterimageQuote([
       entry({ year: 1400, text: 'Earlier.' }),
