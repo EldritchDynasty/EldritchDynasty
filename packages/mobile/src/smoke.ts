@@ -3,6 +3,10 @@ import type { SmokeCommand, SmokeResult } from '../../client/src/platform.js';
 const SMOKE_PROTOCOL = 'eldritchdynasty-smoke:';
 
 export function parseSmokeCommand(raw: string): SmokeCommand | null {
+  // WHATWG URL parsing strips raw tabs/newlines even within the hostname,
+  // turning a malformed external deep link into a valid smoke command.
+  // Reject those bytes before normalization, while allowing encoded filename text.
+  if (raw !== raw.trim() || /[\u0000-\u001f\u007f]/u.test(raw)) return null;
   let url: URL;
   try {
     url = new URL(raw);
