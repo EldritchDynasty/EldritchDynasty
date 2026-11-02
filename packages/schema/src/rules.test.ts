@@ -1403,6 +1403,40 @@ describe('the content rules', () => {
     },
   );
 
+  it.each(['choice', 'outcome', 'primordial'] as const)(
+    'checks authored Omit effects inside a %s-specific Record block',
+    (variant) => {
+      const b = withEvents((x) => {
+        const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+        if (!event.record || event.interaction.kind === 'narration') throw new Error('missing Record fixture');
+        const record = structuredClone(event.record);
+        record.options.omit.effects.push(
+          { kind: 'knowledge', op: 'grant', flag: 'what_the_archive_holds' },
+          { kind: 'discrepancy', op: 'create', id: 'what_the_archive_holds',
+            severity: 'minor', provableBy: ['commons'] },
+        );
+        const choice = event.interaction.choices[0]!;
+        const outcome = choice.outcomes[0]!;
+        if (variant === 'choice') {
+          event.recordByChoice = [{ ...record, id: choice.id }];
+        } else if (variant === 'outcome') {
+          event.recordByOutcome = [{ ...record, id: `${choice.id}/${outcome.id}` }];
+        } else {
+          outcome.primordial = {
+            id: 'secret_omit_probe', text: 'The page was withheld.', tags: [], effects: [], record,
+          };
+        }
+      });
+      const scope = variant === 'primordial' ? '/primordial:secret_omit_probe/record/omit'
+        : `/recordBy${variant === 'choice' ? 'Choice' : 'Outcome'}:`;
+      const issues = runRule('secrets/wiring', b).filter((issue) =>
+        issue.level === 'error' && issue.message.includes('what_the_archive_holds')
+        && issue.message.includes(scope));
+      expect(issues.some((issue) => issue.message.includes('granted as knowledge'))).toBe(true);
+      expect(issues.some((issue) => issue.message.includes('created as a Discrepancy'))).toBe(true);
+    },
+  );
+
   it('checks both secret collision kinds in primordial outcome effects', () => {
     const b = withEvents((x) => {
       const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
