@@ -3,6 +3,7 @@ import { computed, nextTick, ref, useId, watch } from 'vue';
 import type { ProseMode } from '@ed/schema';
 import { loadBundle } from '../lib/content';
 import { glossaryDefinition, splitFirstGlossary } from '../lib/glossary';
+import { glossaryOpener } from '../lib/glossary-focus';
 
 const props = defineProps<{ text: string; proseMode?: ProseMode }>();
 // Each passage marks one term, even when the validated glossary grows.
@@ -38,19 +39,6 @@ watch([() => props.text, () => props.proseMode], async () => {
   if (!host?.isConnected) return;
   (host.querySelector<HTMLButtonElement>('button.glossary-term') ?? host).focus();
 }, { flush: 'sync' });
-
-/**
- * DOM constructors belong to their document's realm. An embedded same-origin
- * document can dispatch a click from a real button that fails the outer
- * window's HTMLButtonElement instanceof check. Preserve that opener so Escape
- * can return focus after closing the glossary note.
- */
-export function glossaryOpener(target: EventTarget | null): HTMLButtonElement | null {
-  if (!target || !('ownerDocument' in target)) return null;
-  const ownerDocument = (target as Element).ownerDocument;
-  const Button = ownerDocument?.defaultView?.HTMLButtonElement;
-  return Button && target instanceof Button ? target as HTMLButtonElement : null;
-}
 
 function buttonFrom(event: MouseEvent): HTMLButtonElement | null {
   return glossaryOpener(event.currentTarget);
