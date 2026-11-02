@@ -235,7 +235,7 @@ describe('censored first-session entry timing (#1984)', () => {
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
       { startedAt: 200, campaign: null, foundedAt: null, enteredAt: 300,
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
-      { startedAt: 500, campaign: null, foundedAt: null, enteredAt: null,
+      { startedAt: 600, campaign: null, foundedAt: null, enteredAt: null,
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
     ]);
   });
