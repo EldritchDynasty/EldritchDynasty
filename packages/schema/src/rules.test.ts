@@ -1345,6 +1345,97 @@ describe('the content rules', () => {
     expect(issues.some((i) => i.level === 'error' && i.message.includes('granted as knowledge'))).toBe(true);
   });
 
+  it.each(['fallback', 'choice', 'outcome', 'primordial'] as const)(
+    'rejects both secret collision kinds in %s Record blocks',
+    (variant) => {
+      for (const kind of ['knowledge', 'discrepancy'] as const) {
+        const b = withEvents((x) => {
+          const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+          if (!event.record || event.interaction.kind === 'narration') throw new Error('missing Record fixture');
+          const record = structuredClone(event.record);
+          if (kind === 'knowledge') {
+            record.options.record.grantsKnowledge = 'what_the_archive_holds';
+          } else {
+            record.options.embellish.discrepancy.id = 'what_the_archive_holds';
+          }
+          const choice = event.interaction.choices[0]!;
+          const outcome = choice.outcomes[0]!;
+          if (variant === 'fallback') {
+            event.record = record;
+          } else if (variant === 'choice') {
+            event.recordByChoice = [{ ...record, id: choice.id }];
+          } else if (variant === 'outcome') {
+            event.recordByOutcome = [{ ...record, id: `${choice.id}/${outcome.id}` }];
+          } else {
+            outcome.primordial = {
+              id: 'secret_record_probe', text: 'The debt is recorded.', tags: [], effects: [], record,
+            };
+          }
+        });
+        const source = variant === 'fallback' ? '/record/'
+          : variant === 'primordial' ? '/primordial:'
+            : `/recordBy${variant === 'choice' ? 'Choice' : 'Outcome'}:`;
+        const failure = kind === 'knowledge' ? 'granted as knowledge' : 'created as a Discrepancy';
+        expect(runRule('secrets/wiring', b).some((issue) =>
+          issue.level === 'error' && issue.message.includes('what_the_archive_holds')
+          && issue.message.includes(failure) && issue.message.includes(source))).toBe(true);
+      }
+    },
+  );
+
+  it.each(['record', 'omit', 'embellish'] as const)(
+    'checks both secret collision kinds in authored %s pen effects',
+    (pen) => {
+      const b = withEvents((x) => {
+        const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+        if (!event.record) throw new Error('missing Record fixture');
+        event.record.options[pen].effects.push(
+          { kind: 'knowledge', op: 'grant', flag: 'what_the_archive_holds' },
+          { kind: 'discrepancy', op: 'create', id: 'what_the_archive_holds',
+            severity: 'minor', provableBy: ['commons'] },
+        );
+      });
+      const issues = runRule('secrets/wiring', b).filter((issue) => issue.level === 'error');
+      expect(issues.some((issue) => issue.message.includes('granted as knowledge')
+        && issue.message.includes(`/record/${pen}`))).toBe(true);
+      expect(issues.some((issue) => issue.message.includes('created as a Discrepancy')
+        && issue.message.includes(`/record/${pen}`))).toBe(true);
+    },
+  );
+
+  it('checks both secret collision kinds in primordial outcome effects', () => {
+    const b = withEvents((x) => {
+      const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+      if (event.interaction.kind === 'narration') throw new Error('missing choice fixture');
+      const outcome = event.interaction.choices[0]!.outcomes[0]!;
+      outcome.primordial = {
+        id: 'secret_effect_probe', text: 'The debt is witnessed.', tags: [],
+        effects: [
+          { kind: 'knowledge', op: 'grant', flag: 'what_the_archive_holds' },
+          { kind: 'discrepancy', op: 'create', id: 'what_the_archive_holds',
+            severity: 'minor', provableBy: ['commons'] },
+        ],
+      };
+    });
+    const issues = runRule('secrets/wiring', b).filter((issue) =>
+      issue.level === 'error' && issue.message.includes('/primordial:secret_effect_probe'));
+    expect(issues.some((issue) => issue.message.includes('granted as knowledge'))).toBe(true);
+    expect(issues.some((issue) => issue.message.includes('created as a Discrepancy'))).toBe(true);
+  });
+
+  it('accepts independent knowledge and discrepancy ids in a scoped Record', () => {
+    const b = withEvents((x) => {
+      const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+      if (!event.record || event.interaction.kind === 'narration') throw new Error('missing Record fixture');
+      const record = structuredClone(event.record);
+      record.options.record.grantsKnowledge = 'unique_scoped_record_knowledge_probe';
+      record.options.embellish.discrepancy.id = 'unique_scoped_record_discrepancy_probe';
+      const choice = event.interaction.choices[0]!;
+      event.recordByChoice = [{ ...record, id: choice.id }];
+    });
+    expect(runRule('secrets/wiring', b).filter((issue) => issue.level === 'error')).toHaveLength(0);
+  });
+
   it('passes the shipped contracts, which name secrets nothing else owns', () => {
     expect(runRule('secrets/wiring', content).filter((i) => i.level === 'error')).toHaveLength(0);
   });
