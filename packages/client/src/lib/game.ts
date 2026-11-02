@@ -366,8 +366,8 @@ export interface GameActions {
   load(slot: string): Promise<boolean>;
   /** Explicit front-door listing may include the otherwise separate Demonstration saves. */
   listSaves(includeDemo?: boolean): Promise<SaveSummary[]>;
-  /** `cancelled` is a browser picker dismissal, not an invalid selected file. */
-  importSave(): Promise<boolean | 'cancelled'>;
+  /** Distinguish a dismissed picker or failed host operation from invalid selected content. */
+  importSave(): Promise<boolean | 'cancelled' | 'unavailable'>;
   exportSave(slot: string): Promise<boolean>;
   /** Remove only a Demonstration slot; normal campaign slots are never eligible. */
   deleteDemoSave(slot: string): Promise<void>;
@@ -812,7 +812,8 @@ export function createGame(
           || imported === Symbol.for(BROWSER_IMPORT_CANCELLED.description!)) return 'cancelled';
         return selection === runSelectionRevision ? loadSave(imported) : false;
       } catch {
-        return false;
+        // A rejected host picker/read did not provide an invalid game file.
+        return 'unavailable';
       }
     },
 
