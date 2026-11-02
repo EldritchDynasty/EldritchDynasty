@@ -170,4 +170,37 @@ describe('pseudo localisation (#276)', () => {
     stop();
   });
 
+  it('re-localises reactive attributes on a same-origin embedded document root', async () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    const embedded = frame.contentDocument!;
+    const root = embedded.createElement('main');
+    const control = embedded.createElement('input');
+    control.setAttribute('aria-label', 'A starting label');
+    control.setAttribute('placeholder', 'Old placeholder');
+    root.append(control);
+    embedded.body.append(root);
+
+    // The probe can receive an embedded root from a host or test harness,
+    // whose Element constructor differs from the module's global constructor.
+    expect(control instanceof Element).toBe(false);
+    const stop = installPseudoLocalisation(root);
+    try {
+      expect(embedded.documentElement.dataset.pseudoLoc).toBe('true');
+      expect(control.getAttribute('aria-label')).toBe(pseudoLocalise('A starting label'));
+      expect(control.getAttribute('placeholder')).toBe(pseudoLocalise('Old placeholder'));
+
+      control.setAttribute('aria-label', 'A newly revealed action');
+      control.setAttribute('placeholder', 'New placeholder');
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(control.getAttribute('aria-label')).toBe(pseudoLocalise('A newly revealed action'));
+      expect(control.getAttribute('placeholder')).toBe(pseudoLocalise('New placeholder'));
+    } finally {
+      stop();
+      expect(embedded.documentElement.dataset.pseudoLoc).toBeUndefined();
+      frame.remove();
+    }
+  });
+
 });
