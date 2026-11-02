@@ -68,6 +68,27 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     expect(pieces.map((piece) => piece.text).join('')).toBe(text);
   });
 
+  it('keeps WORD JOINER-attached aliases out of standalone glossary disclosures', () => {
+    // U+2060 explicitly prevents a word break, despite its Unicode Cf category.
+    // Without this boundary check, a joined word receives an intrusive button.
+    const joiner = '\u2060';
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const alias of ['Standing', 'Reputation']) {
+        for (const text of [`house${joiner}${alias}`, `${alias}${joiner}house`]) {
+          expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+        }
+      }
+      // Skipping a joined occurrence must still expose the first real label.
+      const text = `house${joiner}Standing Standing`;
+      const pieces = splitFirstGlossary(text, mode);
+      expect(pieces).toEqual([
+        { text: `house${joiner}Standing ` },
+        { text: 'Standing', term: 'standing' },
+      ]);
+      expect(pieces.map(piece => piece.text).join('')).toBe(text);
+    }
+  });
+
   it('does not disclose aliases joined to a word by Unicode connector punctuation', () => {
     // Pc includes more than ASCII underscore. The undertie, character tie,
     // wavy low line and fullwidth low line must have identical boundaries.
