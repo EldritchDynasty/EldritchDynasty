@@ -35,22 +35,22 @@ const FLOOR: Partial<Record<RevealElement, number>> = {
 };
 
 const LABELS: Record<RevealElement, string> = {
-  'clock-five': 'The clock can now move five years at a time.',
+  'clock-five': 'The clock can now move up to five years at a time.',
   table: 'The table is open: this is where the house gives standing orders.',
   assize: 'The Assize is visible: it is how the wider world answers the house.',
   ladder: 'The ladder is visible: it shows how far the blood has climbed.',
   abroad: 'Abroad is open: tales and rumours now have somewhere to be read.',
-  'clock-long': 'The longer clock is open: a generation, or on to the term.',
+  'clock-long': 'The longer clock is open: up to a generation, or onward toward the term.',
 };
 
 /** Only the reader's temporary reveal notices change language, never run state. */
 const PLAIN_LABELS: Record<RevealElement, string> = {
-  'clock-five': 'You can now move forward five years at once.',
+  'clock-five': 'You can now advance up to five years at once.',
   table: 'Family orders are now available. Use the Table to manage resources and make plans.',
   assize: 'You can now see how the wider world is responding to your family.',
   ladder: 'You can now see the family\'s progress toward greater power.',
   abroad: 'You can now read stories and rumours about the family from outside the house.',
-  'clock-long': 'You can now move forward a generation or to the end of the game.',
+  'clock-long': 'You can now advance up to 25 years, or toward the end of the game.',
 };
 
 function validElement(value: unknown): value is RevealElement {
