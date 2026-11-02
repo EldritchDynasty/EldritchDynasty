@@ -400,7 +400,7 @@ describe('autosave mutation ordering', () => {
 });
 
 describe('chapter-boundary save integrity (#1194)', () => {
-  it('captures a boundary at its own year even when the same press turns later years', () => {
+  it('captures a boundary at its own year even when the same press turns later years', async () => {
     const host = memoryPlatform();
     const boundaryWrites: Array<{ slot: string; year: number }> = [];
     const write = host.writeSave;
@@ -441,6 +441,9 @@ describe('chapter-boundary save integrity (#1194)', () => {
 
       const prior = boundaryWrites.length;
       game.actions.advance(25);
+      // Chapter writes now share the asynchronous host mutation queue (#1979).
+      // Let that queue flush before inspecting the boundary snapshots.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
       const after = game.view.value!.year;
       for (const { slot, year } of boundaryWrites.slice(prior)) {
         const closing = /^chapter-.+-(\d+)$/.exec(slot);
