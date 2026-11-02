@@ -5,6 +5,9 @@ import type { EpilogueView, SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
+import { downloadBlob } from '../lib/download';
+
+vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
 
 const actions = {
   restart: vi.fn(),
@@ -165,6 +168,54 @@ describe('ending share code receipt (#1995)', () => {
       expect(copyText).toHaveBeenNthCalledWith(2, 'ED1-NAMED');
     } finally {
       wrapper.unmount();
+    }
+  });
+
+  it('exports a nameless Afterimage SVG even when named sharing is selected', async () => {
+    const download = vi.mocked(downloadBlob);
+    download.mockClear();
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    // Exercise the component's real Canvas-unavailable fallback, including
+    // measured rows and the accessible standalone SVG description.
+    const descriptor = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'getComputedTextLength');
+    Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', {
+      configurable: true,
+      value: function (this: SVGElement) { return (this.textContent ?? '').length * 8; },
+    });
+    const wrapper = mount(Ending, {
+      props: {
+        view: view('long'), epilogue, actions: shareActions(async () => true),
+        proseMode: 'plainenglish',
+      },
+    });
+    try {
+      await wrapper.get('.share-names input').setValue(true);
+      expect((wrapper.get('#share-code').element as HTMLTextAreaElement).value).toBe('ED1-NAMED');
+
+      await wrapper.get('.ending-actions button:first-child').trigger('click');
+      await flushPromises();
+      expect(download).toHaveBeenCalledTimes(1);
+      const [blob, filename] = download.mock.calls[0]!;
+      expect(filename).toMatch(/-afterimage\\.svg$/);
+      const source = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(blob);
+      });
+      const svg = new DOMParser().parseFromString(source, 'image/svg+xml');
+      expect(svg.querySelector('parsererror')).toBeNull();
+      expect(svg.querySelector('desc')?.textContent).toContain('ED1-NAMELESS');
+      expect(svg.querySelector('desc')?.textContent).not.toContain('ED1-NAMED');
+      expect(Array.from(svg.querySelectorAll('text')).map((node) => node.textContent).join('')).toContain('ED1-NAMELESS');
+      expect(source).not.toContain('ED1-NAMED');
+      expect(wrapper.find('.afterimage-error').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+      canvas.mockRestore();
+      if (descriptor) Object.defineProperty(SVGElement.prototype, 'getComputedTextLength', descriptor);
+      else Reflect.deleteProperty(SVGElement.prototype, 'getComputedTextLength');
+      download.mockClear();
     }
   });
 });
