@@ -214,6 +214,63 @@ describe('native Data persistence rejects unreadable root JSON (#1374, #1408)', 
   });
 });
 
+describe('native mobile save-slot names remain discoverable (#2488)', () => {
+  it('rejects empty or non-string slot names before touching Data or legacy Preferences', async () => {
+    const bytes = new Map<string, string>();
+    const prefix = 'eldritch/saves/';
+    const files = {
+      readdir: vi.fn(async () => ({ files: [...bytes.keys()]
+        .filter((path) => path.startsWith(prefix))
+        .map((path) => ({ name: path.slice(prefix.length), type: 'file' as const })) })),
+      readFile: vi.fn(async ({ path }: { path: string }) => {
+        const data = bytes.get(path);
+        if (data === undefined) throw Object.assign(new Error('missing'), { code: 'OS-PLUG-FILE-0008' });
+        return { data };
+      }),
+      writeFile: vi.fn(async ({ path, data }: { path: string; data: string }) => {
+        bytes.set(path, data);
+      }),
+      deleteFile: vi.fn(async ({ path }: { path: string }) => {
+        bytes.delete(path);
+      }),
+    };
+    const preferences = {
+      keys: vi.fn(async () => ({ keys: [] as string[] })),
+      get: vi.fn(async () => ({ value: null })),
+      remove: vi.fn(async () => undefined),
+    };
+    const store = mobileStorage(files, preferences);
+
+    // An empty slot formerly persisted as ".json", which listSaves skipped.
+    // The native JS bridge can also be passed non-string values at runtime.
+    for (const value of ['', undefined, null, 0]) {
+      const slot = value as string;
+      await expect(store.writeSave(slot, { format: 41, year: 1042 }))
+        .rejects.toThrow('a native save slot name is required');
+      await expect(store.readSave(slot)).rejects.toThrow('a native save slot name is required');
+      await expect(store.deleteSave(slot)).rejects.toThrow('a native save slot name is required');
+    }
+    expect(bytes.size).toBe(0);
+    expect(files.writeFile).not.toHaveBeenCalled();
+    expect(files.readFile).not.toHaveBeenCalled();
+    expect(files.deleteFile).not.toHaveBeenCalled();
+    expect(preferences.remove).not.toHaveBeenCalled();
+    expect(preferences.get).not.toHaveBeenCalled();
+    expect(await store.listSaves()).toEqual([]);
+
+    // Legitimate nonempty names, including a demo prefix and Unicode, still
+    // round-trip through the canonical encoded filename and native listing.
+    const slot = 'demo:家';
+    const save = { format: 41, year: 1042 };
+    await store.writeSave(slot, save);
+    expect(files.writeFile).toHaveBeenCalledWith(expect.objectContaining({
+      path: 'eldritch/saves/demo%3A%E5%AE%B6.json',
+    }));
+    expect(await store.readSave(slot)).toEqual(save);
+    expect((await store.listSaves()).map((row) => row.slot)).toEqual([slot]);
+  });
+});
+
 describe('mobile native save-list read failures', () => {
   const savedAt = '2026-10-02T00:00:00.000Z';
   const good = JSON.stringify({ format: 28, year: 1234, savedAt });
