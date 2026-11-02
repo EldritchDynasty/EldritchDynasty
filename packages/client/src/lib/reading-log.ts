@@ -451,7 +451,8 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         if (e.act === 'start' && (e.verb === 'begin' || e.verb === 'beginFromShareCode')) {
           finishEntry(e.at);
           entry = { startedAt: e.at, foregroundAt: foreground, campaign: null,
-            foundedAt: null, enteredAt: null };
+            // An accepted share code starts a house already founded; the ordinary Begin does not.
+            foundedAt: e.verb === 'beginFromShareCode' ? e.at : null, enteredAt: null };
           // Answer-to-answer delays never span different houses. Censor
           // the previous house's unfinished gap and start a new clock.
           // The first Begin does not end a preceding house: foreground
