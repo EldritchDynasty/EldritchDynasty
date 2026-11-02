@@ -47,6 +47,7 @@ describe('Debug-only iOS smoke import filenames (#2111)', () => {
       '\teldritchdynasty-smoke://save',
       'eldritchdynasty-smoke://export ',
       'eldritchdynasty-smoke://import?path=house.json\u007f',
+      '\u0000eldritchdynasty-smoke://save',
       'eldritchdynasty-smoke://save?seed=1042\n&years=40',
       '\u00a0eldritchdynasty-smoke://resume',
     ];
