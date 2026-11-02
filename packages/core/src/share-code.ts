@@ -439,7 +439,7 @@ export function newGameFromShareCode(
   // skips invisible-only optional names, which would silently shorten an
   // imported roster and break the code's mechanical founding contract (#2264).
   const missing: SharedName[] = [
-    ...(!houseName ? ['house' as const] : []),
+    ...(!houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim() ? ['house' as const] : []),
     ...(friendNames.some((name) => !name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim())
       ? ['friends' as const] : []),
   ];
