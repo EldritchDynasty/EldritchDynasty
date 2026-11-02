@@ -80,6 +80,50 @@ describe('native smoke callback evidence settles even on synchronous failures (#
     });
   });
 
+  it('rejects roots changed by JSON serialization, rather than hashing a misleading object', async () => {
+    for (const snapshot of [
+      new Date('2026-11-02T00:00:00Z'),
+      { toJSON: () => null },
+      { toJSON: () => ['not a saved game'] },
+      { toJSON: () => 'not a saved game' },
+      { toJSON: () => 41 },
+      { toJSON: () => undefined },
+    ]) {
+      await expect(settleSmokeCommand(command, async () => ({ snapshot }))).resolves.toEqual({
+        command: 'resume',
+        ok: false,
+        error: 'native smoke snapshot must be a JSON object',
+      });
+    }
+
+    const circular: { year: number; self?: unknown } = { year: 1243 };
+    circular.self = circular;
+    const failed = await settleSmokeCommand(command, async () => ({ snapshot: circular }));
+    expect(failed.ok).toBe(false);
+  });
+
+  it('hashes the persisted JSON form of valid toJSON objects, preserving nested evidence', async () => {
+    const custom = {
+      toJSON: () => ({
+        year: 1243, format: 41, savedAt: 'old',
+        world: { z: 1, A: 2, nestedSavedAt: 'unchanged' },
+      }),
+    };
+    const persisted = {
+      world: { nestedSavedAt: 'unchanged', A: 2, z: 1 },
+      savedAt: 'new', format: 41, year: 1243,
+    };
+    const expected = await smokeEvidence(command, { snapshot: persisted });
+    const actual = await smokeEvidence(command, { snapshot: custom });
+    expect(actual.sha256).toBe(expected.sha256);
+    expect((await smokeEvidence(command, {
+      snapshot: { ...persisted, world: { ...persisted.world, nestedSavedAt: 'changed' } },
+    })).sha256).not.toBe(actual.sha256);
+    expect((await smokeEvidence(command, {
+      snapshot: { ...persisted, world: { ...persisted.world, z: 9 } },
+    })).sha256).not.toBe(actual.sha256);
+  });
+
   it('ignores only the transport savedAt timestamp for a valid snapshot', async () => {
     const snapshot = { format: 41, year: 1243, savedAt: '2026-10-31T12:00:00.000Z' };
     const refreshed = { ...snapshot, savedAt: '2026-11-02T04:00:00.000Z' };
