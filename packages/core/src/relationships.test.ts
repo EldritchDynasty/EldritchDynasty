@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { applyEffect } from './events/effects.js';
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash, type BranchState, type ProseVariant } from '@ed/schema';
@@ -783,5 +784,69 @@ describe('relationship threads name things in the reader\'s setting (#917)', () 
     setProseMode(ctx, 'plainenglish');
     expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(true);
     expect(missingPlainEnglish(ctx)).toEqual([]);
+  });
+});
+
+/**
+ * Real authored outcomes: do not reverse the injured person's feelings while
+ * fixing who inherits the grievance. The effect handler treats sentiment as
+ * from -> to, but creates a grudge on to -> from.
+ */
+describe('authored grudge holder direction (#2407)', () => {
+  const cases: Array<{
+    eventId: string; choiceId?: string; outcomeId: string; injuredSlot: 'RIVAL' | 'COUSIN';
+    sentiment: number; severity: number; inheritance: 'heir_only' | 'all_blood';
+  }> = [
+    { eventId: 'a_slight_at_a_door', choiceId: 'answer_it_now', outcomeId: 'answered_in_the_passage',
+      injuredSlot: 'RIVAL', sentiment: -18, severity: 22, inheritance: 'heir_only' },
+    { eventId: 'the_second_signature', choiceId: 'let_the_claim_stand', outcomeId: 'the_quarrel_kept',
+      injuredSlot: 'RIVAL', sentiment: -12, severity: 12, inheritance: 'heir_only' },
+    { eventId: 'the_hall_is_answered', choiceId: 'promise_them', outcomeId: 'promised',
+      injuredSlot: 'COUSIN', sentiment: -18, severity: 25, inheritance: 'all_blood' },
+    { eventId: 'the_hall_stops_writing', outcomeId: 'they_arrange_it_between_themselves',
+      injuredSlot: 'COUSIN', sentiment: -30, severity: 40, inheritance: 'all_blood' },
+    { eventId: 'the_marrow_codex_offered', choiceId: 'buy_the_codex', outcomeId: 'bought_the_codex',
+      injuredSlot: 'RIVAL', sentiment: -22, severity: 20, inheritance: 'heir_only' },
+    { eventId: 'the_house_next_door_attainted', choiceId: 'buy_the_land', outcomeId: 'bought',
+      injuredSlot: 'RIVAL', sentiment: -30, severity: 30, inheritance: 'heir_only' },
+  ];
+
+  it.each(cases)('$eventId / $outcomeId gives the injured person the grudge', (witness) => {
+    const ctx = testWorld(bundle, 2407);
+    // A single constructed Head makes the generic "head" target unambiguous.
+    for (const person of ctx.world.people.living()) {
+      person.castSlots = person.castSlots.filter((slot) => slot !== 'head');
+    }
+    const head = place(ctx, { sex: 'male', age: 43, name: 'Head of the House', castSlots: ['head'] });
+    const injured = place(ctx, {
+      sex: 'male', age: 41, name: 'Injured party',
+      house: witness.injuredSlot === 'RIVAL' ? 'house_marrow' : ctx.world.playerHouse,
+    });
+    const event = bundle.events.find((candidate) => candidate.id === witness.eventId);
+    if (!event) throw new Error(`Missing authored event ${witness.eventId}`);
+    const outcomes = event.interaction.kind === 'choice'
+      ? event.interaction.choices.find((choice) => choice.id === witness.choiceId)?.outcomes
+      : event.interaction.kind === 'narration'
+        ? event.interaction.outcomes
+        : undefined;
+    const outcome = outcomes?.find((candidate) => candidate.id === witness.outcomeId);
+    if (!outcome) throw new Error(`Missing authored outcome ${witness.eventId}/${witness.outcomeId}`);
+    const relationships = outcome.effects.filter((effect) => effect.kind === 'relationship');
+    expect(relationships, 'sentiment and grudge must have separate directions').toHaveLength(2);
+    for (const effect of relationships) {
+      applyEffect(effect, ctx, { HEAD: head.id, RIVAL: injured.id, COUSIN: injured.id }, { event });
+    }
+
+    // The actor's victim remembers, and the victim still resents the actor.
+    expect(sentimentBetween(ctx.world, injured.id, head.id)).toBe(witness.sentiment);
+    expect(sentimentBetween(ctx.world, head.id, injured.id)).toBe(0);
+    const held = edge(ctx.world, injured.id, head.id)?.grudges ?? [];
+    expect(held).toHaveLength(1);
+    expect(held[0]).toMatchObject({
+      severity: witness.severity,
+      inheritance: witness.inheritance,
+      originEvent: witness.eventId,
+    });
+    expect(edge(ctx.world, head.id, injured.id)?.grudges ?? []).toEqual([]);
   });
 });
