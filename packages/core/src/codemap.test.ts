@@ -1010,7 +1010,8 @@ describe('the editor Vite entry points', () => {
 
     it('plans dirty local changes from a subdirectory without credentials or writes', async () => {
       const { cwd } = checkout();
-      const before = snapshot(cwd);
+      const beforeEntries: SnapshotManifest = new Map();
+      const before = snapshot(cwd, undefined, beforeEntries);
       const result = spawnSync(process.execPath, [CLI, '--plan', '--base', 'HEAD', '--json'], {
         cwd, encoding: 'utf8', env: { ...gitEnv, GH_TOKEN: '', GITHUB_TOKEN: '' },
       });
@@ -1019,7 +1020,9 @@ describe('the editor Vite entry points', () => {
       expect(parsed.scope).toBe('focused');
       expect(parsed.files).toEqual(['packages/core/src/example.ts']);
       expect(await planner.gatherPlan({ cwd: join(cwd, 'packages/core'), base: 'HEAD' })).toEqual(parsed);
-      expect(snapshot(cwd)).toBe(before);
+      const afterEntries: SnapshotManifest = new Map();
+      const after = snapshot(cwd, undefined, afterEntries);
+      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
     });
 
     it('reports missing base and real shallow history as uncertain, without repairing either', () => {
