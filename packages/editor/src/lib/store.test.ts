@@ -39,6 +39,7 @@ const h = vi.hoisted(() => ({
   /** Flip to make the transport refuse, the way a read-before-write guard does. */
   refuse: { value: false },
   throwWrite: { value: false },
+  readMode: { value: 'ok' as 'ok' | 'failed' | 'missing-text' | 'rejected' },
   writable: { value: true },
   /** Hold a transport response until a second edit arrives. */
   holdWrite: { value: false },
@@ -64,6 +65,9 @@ vi.mock('./content.js', async () => {
       return { ok: true };
     },
     readFile: async (path: string) => {
+      if (h.readMode.value === 'rejected') throw new Error('read transport rejected');
+      if (h.readMode.value === 'failed') return { ok: false, error: 'disk unavailable' };
+      if (h.readMode.value === 'missing-text') return { ok: true };
       const text = h.disk.get(path);
       return text === undefined ? { ok: false, error: 'no such file' } : { ok: true, text };
     },
@@ -128,6 +132,7 @@ beforeEach(() => {
   h.writes.length = 0;
   h.refuse.value = false;
   h.throwWrite.value = false;
+  h.readMode.value = 'ok';
   h.writable.value = true;
   h.holdWrite.value = false;
   h.releaseWrite.current = null;
@@ -667,6 +672,38 @@ describe('previewing a save costs nothing', () => {
 describe('noticing that the file moved underneath us', () => {
   it('says no when the file on disk still matches what was loaded', async () => {
     expect(await externalChange(CRUSADE)).toEqual({ changed: false, text: h.disk.get(CRUSADE) });
+  });
+
+  it('blocks a review when a known loaded file cannot be read, and recovers on retry', async () => {
+    // A false "unchanged" answer here would authorize SaveControl's write
+    // button without a successful comparison against the current disk file.
+    try {
+      h.readMode.value = 'failed';
+      expect(await externalChange(CRUSADE)).toEqual({
+        changed: true,
+        text: `Unable to verify '${CRUSADE}' on disk: disk unavailable`,
+      });
+
+      h.readMode.value = 'missing-text';
+      expect(await externalChange(CRUSADE)).toEqual({
+        changed: true,
+        text: `Unable to verify '${CRUSADE}' on disk: read returned no text`,
+      });
+
+      h.readMode.value = 'rejected';
+      expect(await externalChange(CRUSADE)).toEqual({
+        changed: true,
+        text: `Unable to verify '${CRUSADE}' on disk: read transport rejected`,
+      });
+
+      h.readMode.value = 'ok';
+      expect(await externalChange(CRUSADE)).toEqual({
+        changed: false,
+        text: h.disk.get(CRUSADE),
+      });
+    } finally {
+      h.readMode.value = 'ok';
+    }
   });
 
   it('says yes, and hands back the newer text, when something else wrote it', async () => {
