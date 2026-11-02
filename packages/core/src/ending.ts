@@ -494,6 +494,14 @@ export type EpiloguePurpose =
     year: number;
     /** The surviving contract text, preserved without interpreting its truth. */
     text: string;
+  }
+  | {
+    kind: 'ascendant_wait';
+    /** A named ascendant on a surviving, uniquely attributed Chronicle page. */
+    person: string;
+    year: number;
+    /** The page's own words: its claim, not an independent verdict. */
+    text: string;
   };
 
 export interface EpilogueView {
@@ -635,6 +643,35 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         branch: branch.name,
         year: branch.foundedYear,
         person: survivor.epithet ? `${survivor.name} ${survivor.epithet}` : survivor.name,
+      };
+    }
+    return undefined;
+  }
+  if (w.houseAmbition === 'raise_ascendant') {
+    // The existing ledger-wait page is emitted only when an ascendant has
+    // stopped ageing but the contract is still unfinished. Read its own
+    // stable person ID and surviving words; do not infer a successful ascent
+    // from the ambition selection or from hidden current ladder state.
+    const pages = w.chronicle.filter((page) => {
+      const personId = page.people?.length === 1 ? page.people[0] : undefined;
+      return personId !== undefined
+        && page.id === `ledger_wait:${personId}`
+        && page.rung === 'demigod'
+        && page.text !== null
+        && !page.greyed
+        && page.year <= w.year;
+    }).sort((a, b) => a.year - b.year || (a.id! < b.id! ? -1 : a.id! > b.id! ? 1 : 0));
+    for (const page of pages) {
+      // A duplicate ID cannot tell which account the page identifies. A
+      // second account of the same wait is not independent corroboration.
+      if (w.chronicle.filter((entry) => entry.id === page.id).length !== 1) continue;
+      const person = w.people.get(page.people![0]!);
+      if (!person || person.houseOfOrigin !== w.playerHouse) continue;
+      return {
+        kind: 'ascendant_wait',
+        person: person.epithet ? `${person.name} ${person.epithet}` : person.name,
+        year: page.year,
+        text: page.text!,
       };
     }
     return undefined;

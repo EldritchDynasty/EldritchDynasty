@@ -307,6 +307,22 @@ async function saveAfterimage(): Promise<void> {
       </p>
     </section>
 
+    <!-- The named witness is a surviving page from the family's own book,
+         not a second verdict about whether the ascendant could finish. -->
+    <section v-if="epilogue.purpose?.kind === 'ascendant_wait'" class="purpose" aria-labelledby="ascendant-purpose-title">
+      <h3 id="ascendant-purpose-title" class="label">{{ plain ? 'A cost of preparing an ascendant' : 'The years kept at the Ledger' }}</h3>
+      <p class="small">
+        <template v-if="plain">
+          The family meant to prepare an ascendant. In {{ epilogue.purpose.year }}, its Chronicle named {{ epilogue.purpose.person }} as waiting before an unfinished Ledger. This is the family's surviving account of that wait, not proof of what came after.
+        </template>
+        <template v-else>
+          The house had meant to prepare an ascent. In {{ epilogue.purpose.year }} it set {{ epilogue.purpose.person }} beside an unfinished Ledger, and left this page to speak for the waiting. The book offers no second witness to what followed.
+        </template>
+      </p>
+      <blockquote>{{ epilogue.purpose.text }}</blockquote>
+    </section>
+
+
     <section class="tally">
       <h3 class="label">{{ plain ? 'Ending summary' : 'The reckoning' }}</h3>
       <dl>
