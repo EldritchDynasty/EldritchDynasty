@@ -291,10 +291,11 @@ function memoryVoice(
 }
 
 function entryOf(ctx: SimCtx, entry: SimCtx['world']['chronicle'][number], index: number): LibraryEntry | undefined {
-  // The Library is a surviving account, not an omniscient copy of every page
-  // once written. A greyed Chronicle leaf is known to have been lost; its
-  // retained text cannot be quoted or inherited by a later house (#2460).
-  if (!entry.text || entry.greyed) return undefined;
+  // The Library is a surviving account, not an omniscient copy of every page.
+  // A greyed leaf is lost; an omitted leaf was never written to the public
+  // record. Neither may be quoted or inherited, even if legacy saves retain
+  // private text and claims on those entries (#2460).
+  if (!entry.text || entry.greyed || entry.record === 'omit') return undefined;
 
   const people: Record<string, string> = {};
   for (const claim of entry.claims ?? []) {
