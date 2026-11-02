@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import type { ProseMode } from '@ed/schema';
-import { tableTargetLabel, type TableTarget, type TableTask } from '../lib/table-nav';
+import { tableNavigationOrigin, tableTargetLabel, type TableTarget, type TableTask } from '../lib/table-nav';
 
 const props = defineProps<{ task: TableTask; proseMode?: ProseMode }>();
 const emit = defineEmits<{ navigate: [target: TableTarget, origin: HTMLElement] }>();
 function navigate(target: TableTarget, event: MouseEvent): void {
   if (!props.task.revealed) return;
-  if (event.currentTarget instanceof HTMLElement) emit('navigate', target, event.currentTarget);
+  const origin = tableNavigationOrigin(event.currentTarget);
+  if (origin) emit('navigate', target, origin);
 }
 </script>
 
