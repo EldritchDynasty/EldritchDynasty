@@ -232,6 +232,31 @@ describe('the Demonstration front door (#2063)', () => {
     },
   );
 
+  it.each(['original', 'plainenglish'] as const)(
+    'makes clear that Continue resumes a full campaign even when Demonstration is selected (%s)',
+    async (proseMode) => {
+      const actions = spyActions([{ slot: 'demo-autosave', year: 1061 }]);
+      const w = mount(Start, { props: { actions, resumable: true, proseMode } });
+      try {
+        await flush();
+        const continueButton = w.get('.primary-row button.primary');
+        expect(continueButton.text()).toBe(proseMode === 'plainenglish'
+          ? 'Continue your last game' : 'Continue the last sitting');
+
+        await w.get('input[value="demo"]').setValue(true);
+        expect(continueButton.text()).toBe(proseMode === 'plainenglish'
+          ? 'Continue your saved full campaign' : 'Continue the last full line');
+        await continueButton.trigger('click');
+
+        expect(actions.resume).toHaveBeenCalledOnce();
+        expect(actions.load).not.toHaveBeenCalled();
+        expect(actions.begin).not.toHaveBeenCalled();
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
   it('keeps full Continue separate from a saved Demonstration and exports exact slots', async () => {
     const actions = spyActions([
       { slot: 'autosave', year: 1111 },
