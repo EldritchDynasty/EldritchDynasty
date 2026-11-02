@@ -130,7 +130,11 @@ describe('recorded lives in the Book and spine (#1944)', () => {
       expect(wrapper.get('.person-history').attributes('aria-label')).toContain('Alys of Bramme the Witness');
       await wrapper.get('#chronicle-book-search').setValue('nothing matches');
       const origin = wrapper.get('[data-milestone="recorded-deed"]');
-      (origin.element as HTMLElement).focus();
+      // A pointer click does not have to focus its button. Returning must use
+      // the activated milestone, not whichever unrelated control had focus.
+      const search = wrapper.get('#chronicle-book-search');
+      (search.element as HTMLInputElement).focus();
+      expect(document.activeElement).toBe(search.element);
       await origin.trigger('click');
       await flushPromises();
       expect(wrapper.get('[data-entry="recorded-deed"]').classes()).toContain('marked');
