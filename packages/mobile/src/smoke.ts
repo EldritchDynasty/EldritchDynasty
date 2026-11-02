@@ -58,22 +58,24 @@ function canonicalJson(value: unknown): unknown {
 }
 
 async function sha256(value: unknown): Promise<string> {
-  // A successful native save/resume smoke must carry an opaque JSON object.
-  // Reject missing, array and scalar roots before producing any success hash;
-  // the game schema itself is still exclusively validated by core.
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+  // Native saves travel as JSON, not as their original JavaScript wrappers.
+  // In particular Date and custom toJSON objects can serialize to a scalar,
+  // array or null. Validate the *serialized* root before hashing, or a failed
+  // save can produce a misleading successful smoke receipt (#2462).
+  // Core remains responsible for validating the nested saved-game schema.
+  const serialized = JSON.stringify(value);
+  if (typeof serialized !== 'string') {
     throw new TypeError('native smoke snapshot must be a JSON object');
   }
-  // Native storage is JSON, so compare semantic JSON rather than insertion
-  // order. Zod/load-save reconstruction is allowed to rebuild objects in a
-  // different key order without changing the saved world. `savedAt` is
-  // deliberately refreshed by every GameSession.save(); it is transport
-  // metadata, not simulation state.
-  const serializable = canonicalJson(value);
-  if (serializable !== null && typeof serializable === 'object' && !Array.isArray(serializable)) {
-    delete (serializable as Record<string, unknown>).savedAt;
+  const transport: unknown = JSON.parse(serialized);
+  if (transport === null || typeof transport !== 'object' || Array.isArray(transport)) {
+    throw new TypeError('native smoke snapshot must be a JSON object');
   }
-  const bytes = new TextEncoder().encode(JSON.stringify(serializable));
+  // Compare semantic persisted JSON, not insertion order. `savedAt` changes
+  // on every save, but nested fields and array order are still significant.
+  const canonical = canonicalJson(transport) as Record<string, unknown>;
+  delete canonical.savedAt;
+  const bytes = new TextEncoder().encode(JSON.stringify(canonical));
   const digest = await crypto.subtle.digest('SHA-256', bytes);
   return [...new Uint8Array(digest)]
     .map((byte) => byte.toString(16).padStart(2, '0'))
