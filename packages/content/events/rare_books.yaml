@@ -684,7 +684,8 @@ events:
                 - { kind: treasury, delta: -320 }
                 - { kind: spellbook, op: gain, target: head, book: the_marrow_codex }
                 - { kind: respect, delta: 2 }
-                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -22, grudge: { severity: 20, inheritance: heir_only } }
+                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -22 }
+                - { kind: relationship, from: head, to: { slot: RIVAL }, grudge: { severity: 20, inheritance: heir_only } }
               agreedPrices:
                 - effect: 0
                   reason: purchase
