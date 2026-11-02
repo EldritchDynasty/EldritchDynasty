@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { ArcDef, ArcNode, Content, Issue, Successor } from '@ed/schema';
 import { markDirty, store } from '../lib/store';
+import { removeAuthoredArcNode } from '../lib/arc-nodes';
 import { watchEdits } from '../lib/watch-edits';
 import ArcGraph from './ArcGraph.vue';
 import ConditionBuilder from './ConditionBuilder.vue';
@@ -117,13 +118,16 @@ function addNode() {
 
 function removeNode(id: string) {
   if (!arc.value || readOnly.value) return;
-  arc.value.nodes = arc.value.nodes.filter((n) => n.id !== id);
-  // A successor pointing at a node that is gone dies silently at that node,
-  // so retarget rather than leave it dangling.
-  for (const n of arc.value.nodes) {
-    for (const s of n.successors) if (s.to === id) s.to = 'end';
+  const removed = removeAuthoredArcNode(arc.value, id);
+  if (!removed) return; // An authored arc must keep at least one beat.
+
+  // The reverse event binding is authored in a different YAML file. A beat
+  // removed only from the arc leaves that event pointing at a missing node.
+  const event = authoredEvent(removed.event);
+  if (event?.arc?.of === arc.value.id && event.arc.node === removed.id) {
+    delete event.arc;
+    markDirty('events', event.id);
   }
-  if (arc.value.entry === id) arc.value.entry = arc.value.nodes[0]?.id ?? '';
   selectedNode.value = arc.value.entry;
   touch();
 }
@@ -276,7 +280,7 @@ function moveSuccessor(n: ArcNode, i: number, by: number) {
                    @input="(node.schedule as { maxYears: number }).maxYears = Number(($event.target as HTMLInputElement).value); touch()" />
             <span class="fk">years</span>
           </template>
-          <button v-if="!readOnly" class="btn tiny" @click="removeNode(node.id)">remove beat</button>
+          <button v-if="!readOnly" class="btn tiny" :disabled="arc.nodes.length <= 1" @click="removeNode(node.id)">remove beat</button>
         </div>
 
         <label>What happens next</label>
