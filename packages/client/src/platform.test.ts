@@ -441,6 +441,9 @@ describe('chapter-boundary save integrity (#1194)', () => {
 
       const prior = boundaryWrites.length;
       game.actions.advance(25);
+      // Chapter writes now share the asynchronous host mutation queue (#1979).
+      // Let that queue flush before inspecting the boundary snapshots.
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
       const after = game.view.value!.year;
       // Chapter snapshots may share the serialized host mutation queue with
       // autosaves (#2401). A single event-loop turn drains the fulfilled
