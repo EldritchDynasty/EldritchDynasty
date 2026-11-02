@@ -233,11 +233,27 @@ describe('censored first-session entry timing (#1984)', () => {
     expect(l.artifact().summary.entries).toEqual([
       { startedAt: 0, campaign: null, foundedAt: 100, enteredAt: null,
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
-      { startedAt: 200, campaign: null, foundedAt: null, enteredAt: 300,
+      { startedAt: 200, campaign: null, foundedAt: 200, enteredAt: 300,
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
       { startedAt: 600, campaign: null, foundedAt: null, enteredAt: null,
         firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
     ]);
+  });
+
+  it('counts an accepted share-code import as founding before Enter', () => {
+    const c = clock(), l = log(c);
+    c.tick(200);
+    l.note({ kind: 'action', verb: 'beginFromShareCode', act: 'start' });
+    l.note({ kind: 'run', campaign: 'demo', seed: 90 });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    c.tick(300);
+    l.note({ kind: 'action', verb: 'choose', act: 'answer', status: 'accepted' });
+    expect(l.artifact().summary.entries).toEqual([{
+      startedAt: 200, campaign: 'demo', foundedAt: 200, enteredAt: 300,
+      firstAcceptedCommand: { at: 600, verb: 'choose' },
+      wallMs: 400, foregroundMs: 400, censored: false,
+    }]);
   });
 
   it('never reports completion for an entered house without an accepted signing', () => {
