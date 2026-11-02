@@ -1276,6 +1276,21 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 
+  it('does not cite a lost rite page as surviving evidence of a bloodline cost', () => {
+    const ctx = accountedRite();
+    const selectedEnding = selectEnding(ctx);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+
+    // The Afterimage's broad inventory still sees written text, but a page
+    // marked as lost must not be quoted as surviving testimony at collection.
+    ctx.world.chronicle[0]!.greyed = true;
+    const before = digestOf(ctx);
+    expect(afterimageEvidence(ctx).spentBlood).toBeDefined();
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(selectedEnding);
+    expect(digestOf(ctx)).toBe(before);
+  });
+
   it('does not infer pursuit from selecting an ambition, an unsupported rite, or an ambiguous page', () => {
     const ctx = accountedRite();
     const w = ctx.world;

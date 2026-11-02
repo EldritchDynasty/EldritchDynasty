@@ -621,6 +621,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // Two indistinguishable pages are not proof that either refers to this rite.
   if (pages.length !== 1) return undefined;
   const page = pages[0]!;
+  // A greyed page is known to have existed and gone; its old words cannot
+  // serve as surviving testimony at the last night (as for rung attestation).
+  if (page.greyed) return undefined;
   return {
     kind: 'blood_spent',
     person: spent.epithet ? `${spent.name} ${spent.epithet}` : spent.name,
