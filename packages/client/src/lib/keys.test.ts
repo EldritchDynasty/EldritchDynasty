@@ -312,6 +312,82 @@ describe('ARIA role fallback tokens do not steal widget keys (#2375)', () => {
   });
 });
 
+describe('nested ARIA typing widgets (#2476)', () => {
+  it('reserves typing keys for focused descendants of every field role', () => {
+    for (const role of ['textbox', 'searchbox', 'combobox', 'spinbutton']) {
+      const field = document.createElement('div');
+      field.setAttribute('role', `future-field ${role}`);
+      const child = document.createElement('span');
+      child.tabIndex = 0;
+      field.append(child);
+      document.body.append(field);
+      try {
+        child.focus();
+        expect(document.activeElement).toBe(child);
+        expect(isField(document.activeElement), role).toBe(true);
+        for (const key of ['1', '9', '?', 'Enter', ' ']) {
+          expect(shortcutFor({ key, inField: isField(document.activeElement) }), `${role}: ${key}`)
+            .toBeNull();
+        }
+        expect(shortcutFor({ key: 'Escape', inField: isField(document.activeElement) }))
+          .toEqual({ kind: 'dismiss' });
+      } finally {
+        field.remove();
+      }
+    }
+  });
+
+  it('finds field roles inside and outside an open shadow host', () => {
+    const outer = document.createElement('div');
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const inner = document.createElement('div');
+    const focusTarget = document.createElement('span');
+    focusTarget.tabIndex = 0;
+    inner.append(focusTarget);
+    shadow.append(inner);
+    outer.append(host);
+    document.body.append(outer);
+    try {
+      focusTarget.focus();
+      expect(document.activeElement).toBe(host);
+      // The role may belong to an ancestor outside the shadow, the host
+      // itself, or an ancestor of the focused node within the shadow.
+      for (const [owner, role] of [
+        [outer, 'searchbox'], [host, 'combobox'], [inner, 'spinbutton'],
+      ] as const) {
+        owner.setAttribute('role', role);
+        expect(isField(document.activeElement), role).toBe(true);
+        expect(shortcutFor({ key: '4', inField: isField(document.activeElement) }))
+          .toBeNull();
+        owner.removeAttribute('role');
+      }
+      expect(isField(document.activeElement)).toBe(false);
+    } finally {
+      outer.remove();
+    }
+  });
+
+  it('does not confuse a nested non-field widget with a typing field', () => {
+    const widget = document.createElement('div');
+    widget.setAttribute('role', 'group');
+    const child = document.createElement('span');
+    child.tabIndex = 0;
+    widget.append(child);
+    document.body.append(widget);
+    try {
+      child.focus();
+      expect(isField(document.activeElement)).toBe(false);
+      expect(shortcutFor({ key: '3', inField: isField(document.activeElement) }))
+        .toEqual({ kind: 'take', index: 2 });
+      widget.setAttribute('role', 'button');
+      expect(isField(document.activeElement)).toBe(false);
+    } finally {
+      widget.remove();
+    }
+  });
+});
+
 describe('focus inside open shadow roots (#2147)', () => {
   it('keeps numbered choices away from an input inside a shadow host', () => {
     const host = document.createElement('div');
