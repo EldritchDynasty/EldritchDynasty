@@ -208,6 +208,27 @@ describe('who signed, persisted', () => {
     expect(g.view().narrator).toEqual({ name: w.people.get(w.narrator!)!.name, them: 'her' });
   });
 
+  it('keeps the authored name when a signing contains only invisible Unicode marks', () => {
+    // A real name can include joiners, but a name made solely of those marks
+    // would erase the visible narrator while passing PersonNameS.min(1).
+    for (const name of ['\u200B', ' \u200D \u2060 ', '\uFE0F']) {
+      const { g, result } = choice({ name });
+      expect(result.ok).toBe(true);
+      const w = g.ctx.world;
+      expect(w.people.get(w.narrator!)?.name).toBe(founderSeed.name);
+      // Do not rewrite a decision-log answer: replay and named share codes
+      // must preserve exactly what the player submitted.
+      expect(w.decisionLog.find((row) => row.kind === 'signing'))
+        .toMatchObject({ kind: 'signing', founder: { name } });
+
+      const resumed = resumeGame(g.save(), bundle);
+      expect(resumed.ctx.world.people.get(resumed.ctx.world.narrator!)?.name).toBe(founderSeed.name);
+      const replayed = replay(bundle, w.decisionLog, 31_337, 1042, w.year - 1042);
+      expect(digestOf(replayed)).toBe(digestOf(g.ctx));
+    }
+    expect(founded({ name: 'Y\u200Dsolt' }).founder.name).toBe('Y\u200Dsolt');
+  });
+
   it('refuses an unfinished identity without touching the run', () => {
     const g = newGame(bundle, { seed: 31_338 });
     const before = g.ctx;
