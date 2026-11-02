@@ -216,7 +216,13 @@ function applySeedBias(
 
 function signingFounderName(founder: FounderIdentity): string | undefined {
   const raw = founder.name?.trim();
-  return raw ? PersonNameS.parse(raw) : undefined;
+  // Blank answers keep the authored founder. Default-ignorable Unicode marks
+  // also survive trim(), but cannot name the narrator on their own. Preserve
+  // those marks inside an otherwise visible name, and keep the original
+  // signing answer in the log for deterministic replay.
+  return raw && raw.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()
+    ? PersonNameS.parse(raw)
+    : undefined;
 }
 
 /**
