@@ -218,6 +218,12 @@ for (const mode of ['original', 'plainenglish'] as const) {
     // their own `.year` badges, so only the direct child names the ending.
     await expect(ending.locator(':scope > p.year')).toHaveText('1075');
     await expect(ending).toContainText(mode === 'original' ? 'The reckoning' : 'Ending summary');
+    // A Demonstration is a closed first account, not a transferable founding.
+    // Share codes belong only to Short/Long campaigns (#1995), including after
+    // reopening an ended Demonstration from its own save namespace.
+    await expect(ending.locator('.share')).toHaveCount(0);
+    await expect(ending.locator('#share-code')).toHaveCount(0);
+    await expect(ending.locator('.demo-next')).toBeVisible();
     await fullSaveUnchanged(page, full);
 
     // The owner's #1979 front-door decision: a finished 33-year house enters
@@ -248,6 +254,8 @@ for (const mode of ['original', 'plainenglish'] as const) {
       name: mode === 'original' ? /Return to the Demonstration/ : /Continue the demonstration/,
     }).click();
     await expect(page.locator('main.ending')).toBeVisible();
+    await expect(page.locator('main.ending .share')).toHaveCount(0);
+    await expect(page.locator('main.ending .demo-next')).toBeVisible();
     await expect.poll(archivedDemos).toHaveLength(1);
     await fullSaveUnchanged(page, full);
 
