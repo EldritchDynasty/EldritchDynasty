@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { textareaTarget } from '../lib/textarea-target';
 
 /** Contract checks for the async core-prose review; store writes have separate behavioral tests. */
-const source = readFileSync(new URL('./CoreProseEditor.vue', import.meta.url), 'utf8');
+const source = readFileSync(join(import.meta.dirname, 'CoreProseEditor.vue'), 'utf8');
 const edit = source.slice(source.indexOf('function edit('), source.indexOf('async function review()'));
 const review = source.slice(source.indexOf('async function review()'), source.indexOf('async function save()'));
 const saveStart = source.indexOf('async function save()');
