@@ -128,8 +128,61 @@ content revision.
   Embellishing is the policy's lever for Exalted, and its unsupportable weight
   is still standing at the term unless it is proven or buried. The ascent
   ambition now says so once the house has stood on God.
-- **The line.** About one Long Line in five breaks before the summit is in
-  question.
+- **The line.** 145 of the 600 measured houses (24%) broke before the term.
+- **Respect after the Unmaking.** The rite's success costs two tiers, and God
+  wants Exalted. In the measurement below it is the gate that stops recipients
+  who have cleared everything else.
+
+## Measured on 600 houses
+
+`npm run report:summit-route -- 150 <base> out.json` four times, bases 197800,
+197950, 198100 and 198250 (seeds 197800–198399), signed, `summit` policy, at
+`ea4222d3` plus this tool. One declared sample: these are counts under one bot
+policy, not a player success rate, and no target was set in advance.
+
+| | Houses | Share [Wilson 95%] |
+| --- | --- | --- |
+| Reached the Vessel or higher | 341 | 56.8% [52.8, 60.7] |
+| Reached Demigod or higher | 191 | 31.8% [28.2, 35.7] |
+| Stood on God | 7 | 1.2% [0.6, 2.4] |
+| **Apotheosis** | **6** | **1.0% [0.5, 2.2]** |
+| The Unmade | 46 | |
+| Devoured / Forgotten / Broken Line | 300 / 103 / 145 | |
+
+Every Apotheosis route replays through `replay`. The seventh God house is
+198157, The Unmade, above.
+
+**The joint gate, recipient by recipient.** The observer reads every unmet God
+prerequisite for each living Unmaking recipient each year, from the same
+predicates `standingOf` uses. 90 houses raised a recipient, for 4,053
+recipient-years.
+
+| God prerequisite unmet | Recipient-years | …and the only one unmet |
+| --- | --- | --- |
+| Respect (Exalted) | 3,577 (88%) | **840** |
+| Clauses (seven of nine) | 1,842 | 5 |
+| Madness below the floor | 1,578 | 50 |
+| Madness over Mind | 1,565 | 89 |
+| Mind | 627 | 0 |
+| Books | 374 | 0 |
+| Power | 220 | 13 |
+| Affinities | 190 | 0 |
+
+All prerequisites held in 73 recipient-years across the seven God houses.
+Respect alone stood between a ready recipient and God in 19 houses, a median
+of 31 years each; seven of them reached God and twelve never did. Mind blocked
+a recipient alone in no year, so on this sample an unfinished paid tuition term
+is not the demonstrated blocker, and no tuition rule is changed.
+
+**Keeping the book, paired.** The seven God houses replayed under the plain
+`ascendant` policy reach God in the same year (the two policies differ only
+after it). `ascendant` ends them Apotheosis 4, Devoured 2, Unmade 1; `summit`
+ends them Apotheosis 6, Unmade 1. The two Devoured houses, 197828 and 198258,
+kept embellishing after God and the creditor withheld a rung (unsupportable
+weight 14 and 15 against an allowance of 9; `summit` left 5 and 3). Keeping
+the book does not lower that weight in every house — in 198172 it rose from 5
+to 9, because later burials and proofs follow different docket answers — so
+the rule is a protection, not a guarantee.
 
 ## Where the code is
 

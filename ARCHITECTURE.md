@@ -99,6 +99,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | The world's memory — Bearing (§29) | `core/src/bearing.ts` | `bearing.test.ts`, `bearing-gate.test.ts` |
 | The Ascension Ladder — §22's rungs | `core/src/ascension.ts` | `ascension.test.ts` |
 | The ladder's public **diagnosis and evidence route** | `core/src/ascension.ts` → `ascensionBlockersFor`; `core/src/session.ts` → `powerEvidenceRoute` | `ladder.test.ts`, `ascension.test.ts` |
+| The **summit route** played through public session verbs, its joint God-gate observer, and the post-God *keep the book* guidance | `core/src/tools/summit-route.ts` (`report:summit-route`); `core/src/ambition.ts` → `standingEmbellishedDisputes` | `tools/summit-route.test.ts`, `ambition.test.ts`; route and dated cohort in `docs/SUMMIT-ROUTE.md` |
 | **Achievements** and their measured earn rates | `core/src/achievements.ts`, `core/src/achievement-rates.ts` | `achievements.test.ts` |
 | The **rites** — what the top three rungs cost | `core/src/events/rites.ts` | `rites.test.ts`, `rites.slow.test.ts` |
 | Standing orders — the table | `core/src/table.ts` | `table.test.ts` |
