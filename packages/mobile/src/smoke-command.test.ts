@@ -38,6 +38,25 @@ describe('Debug-only iOS smoke import filenames (#2111)', () => {
     expect(parseSmokeCommand('eldritchdynasty-smoke://resume')).toEqual({ kind: 'resume' });
     expect(parseSmokeCommand('eldritchdynasty-smoke://export')).toEqual({ kind: 'export' });
   });
+
+  it('rejects control characters in raw deep links before URL normalizes them (#2506)', () => {
+    const invalid = [
+      'eldritchdynasty-smoke://sa\nve?seed=1042',
+      'eldritchdynasty-smoke://re\tsume',
+      'eldritchdynasty-smoke://imp\rort?path=house.json',
+      '\teldritchdynasty-smoke://save',
+      'eldritchdynasty-smoke://export ',
+      'eldritchdynasty-smoke://import?path=house.json\u007f',
+      'eldritchdynasty-smoke://save?seed=1042\n&years=40',
+      '\u00a0eldritchdynasty-smoke://resume',
+    ];
+    for (const raw of invalid) {
+      expect(parseSmokeCommand(raw), JSON.stringify(raw)).toBeNull();
+    }
+    // Percent-encoded spaces in an ordinary Documents basename remain legal.
+    expect(parseSmokeCommand('eldritchdynasty-smoke://import?path=the%20family.json'))
+      .toEqual({ kind: 'import', path: 'the family.json' });
+  });
 });
 
 describe('native smoke callback evidence settles even on synchronous failures (#2324)', () => {
