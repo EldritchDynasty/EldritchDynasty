@@ -68,6 +68,27 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     expect(pieces.map((piece) => piece.text).join('')).toBe(text);
   });
 
+  it('skips aliases joined by the legacy zero-width no-break space (#2535)', () => {
+    // U+FEFF was formerly used as ZERO WIDTH NO-BREAK SPACE. Like U+2060,
+    // it does not separate a word even though it is not a Unicode letter.
+    const noBreak = '\uFEFF';
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const alias of ['Standing', 'Reputation']) {
+        for (const text of [`house${noBreak}${alias}`, `${alias}${noBreak}house`]) {
+          expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+        }
+      }
+      // A joined use must not consume the one glossary link permitted here.
+      const text = `house${noBreak}Standing Standing`;
+      const pieces = splitFirstGlossary(text, mode);
+      expect(pieces).toEqual([
+        { text: `house${noBreak}Standing ` },
+        { text: 'Standing', term: 'standing' },
+      ]);
+      expect(pieces.map(piece => piece.text).join('')).toBe(text);
+    }
+  });
+
   it('keeps WORD JOINER-attached aliases out of standalone glossary disclosures', () => {
     // U+2060 explicitly prevents a word break, despite its Unicode Cf category.
     // Without this boundary check, a joined word receives an intrusive button.
