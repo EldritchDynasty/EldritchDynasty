@@ -465,7 +465,7 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         }
         if (entry && e.verb === 'found' && e.status === 'accepted') entry.foundedAt = e.at;
         if (entry && e.verb === 'enter' && e.status === 'returned') entry.enteredAt = e.at;
-        if (entry && entry.enteredAt !== null
+        if (entry && entry.foundedAt !== null && entry.enteredAt !== null
           && (e.verb === 'choose' || e.verb === 'match' || e.verb === 'order'
             || e.verb === 'muster' || e.verb === 'record')
           && e.status === 'accepted') {
