@@ -9,7 +9,7 @@ import type { GameActions } from '../lib/game';
 import * as gameModule from '../lib/game';
 import { browserPlatform } from '../platform';
 import { ACCESSIBILITY_STORAGE_KEY } from '../lib/accessibility';
-import { TABLE_TARGETS, tableTargetAttrs, tableTasksFor } from '../lib/table-nav';
+import { TABLE_TARGETS, tableNavigationOrigin, tableTargetAttrs, tableTasksFor } from '../lib/table-nav';
 import GameTable from './Table.vue';
 import TableTaskLinks from './TableTaskLinks.vue';
 import App from '../App.vue';
@@ -36,6 +36,32 @@ function fixture(boughtBack = false): TableView {
 
 describe('Table destinations and read-only navigation (#1941)', () => {
   const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
+
+  it('keeps task navigation for an HTML button from an embedded document realm (#2513)', async () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    try {
+      const embedded = iframe.contentDocument!;
+      const button = embedded.createElement('button');
+      const nonButton = embedded.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      embedded.body.append(button, nonButton);
+
+      expect(button instanceof HTMLElement).toBe(false);
+      expect(tableNavigationOrigin(button)).toBe(button);
+      expect(tableNavigationOrigin(nonButton)).toBeNull();
+      expect(tableNavigationOrigin(null)).toBeNull();
+      expect(tableNavigationOrigin(new Event('click'))).toBeNull();
+
+      // Ordinary same-document clicks still emit the precise origin for focus restoration.
+      const task = { id: 'reader' as const, title: 'Train a reader', revealed: true, targets: ['shelf' as const] };
+      const w = mount(TableTaskLinks, { props: { task } });
+      try {
+        const link = w.get('[data-table-go="shelf"]');
+        await link.trigger('click');
+        expect(w.emitted('navigate')).toEqual([['shelf', link.element]]);
+      } finally { w.unmount(); }
+    } finally { iframe.remove(); }
+  });
 
   it.each(['original', 'plainenglish'] as const)('shows a quoted reader/place and forgone study beside the existing assignment controls in %s (#1942)', async (proseMode) => {
     const table = fixture();
