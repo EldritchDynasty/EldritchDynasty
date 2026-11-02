@@ -3,6 +3,7 @@
  *
  * Run with
  *   npm run report:summit-route -- [runs=24] [seedBase=197800] [output.json] [--unsigned] [--ascendant]
+ *   npm run report:summit-route -- --merge a.json b.json …   (one table from split runs)
  *
  * Every other ladder measurement (`ending-gate.ts`'s `ascendant`,
  * `ladder-gate.ts`) drives the simulation from inside: it writes
@@ -25,7 +26,7 @@
  * evidence, and human comprehension remains unmeasured.
  */
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import {
   indexContent, type Content, type ContentBundle, type EndingId, type Rung, type SavedGame,
@@ -38,6 +39,7 @@ import { replay } from '../replay.js';
 import { canonical, digestOf } from '../save.js';
 import { newGame, type GameSession } from '../session.js';
 import type { TableOrder } from '../table.js';
+import { binomialInterval } from './story-route-report.js';
 import {
   costsTheClimber, ladderCast, nameScion, nameScionHeir, recordOptionForPolicy, unmakingReadyForAscendant,
 } from './ladder-policy.js';
@@ -358,7 +360,54 @@ export function routeReplays(source: Source, run: { seed: number; endYear: numbe
   return digestOf(rebuilt) === run.digest;
 }
 
+type RouteRow = Omit<RouteRun, 'acts'>;
+
+/**
+ * The published tables, from the rows the CLI writes — so the dated evidence
+ * is reproduced by this file rather than by a script beside it. Shares carry
+ * Wilson 95% intervals over independent houses. The recipient columns count
+ * living-recipient YEARS, and `respectOnlyHouses` the houses that ever had a
+ * recipient whose one unmet God prerequisite was Respect.
+ */
+export function summariseRoutes(rows: readonly RouteRow[]) {
+  const tally = (read: (r: RouteRow) => string) => Object.fromEntries(
+    [...new Set(rows.map(read))].sort().map(k => [k, rows.filter(r => read(r) === k).length]));
+  const atLeast = (rung: Rung) => binomialInterval(rows.filter(r => rungIndex(r.best) >= rungIndex(rung)).length, rows.length);
+  const sum = (into: Partial<Record<LadderBlocker, number>>, from: Partial<Record<LadderBlocker, number>>) => {
+    for (const [k, v] of Object.entries(from) as [LadderBlocker, number][]) into[k] = (into[k] ?? 0) + v;
+  };
+  const recipientBlockers: Partial<Record<LadderBlocker, number>> = {};
+  const recipientSole: Partial<Record<LadderBlocker, number>> = {};
+  for (const r of rows) { sum(recipientBlockers, r.diagnosis.recipientBlockers); sum(recipientSole, r.diagnosis.recipientSole); }
+  const respectOnly = rows.filter(r => (r.diagnosis.recipientSole.respect ?? 0) > 0);
+  return {
+    runs: rows.length,
+    endings: tally(r => r.ending ?? 'none'),
+    best: tally(r => r.best),
+    reached: { vessel: atLeast('vessel'), demigod: atLeast('demigod'), god: atLeast('god') },
+    apotheosis: binomialInterval(rows.filter(r => r.ending === 'apotheosis').length, rows.length),
+    godHouses: rows.filter(r => r.best === 'god').map(r => ({ seed: r.seed, ending: r.ending, god: r.reachedAt.god })),
+    recipients: {
+      houses: rows.filter(r => r.diagnosis.recipientYears > 0).length,
+      years: rows.reduce((n, r) => n + r.diagnosis.recipientYears, 0),
+      clearYears: rows.reduce((n, r) => n + r.diagnosis.recipientClear, 0),
+      blockers: recipientBlockers,
+      sole: recipientSole,
+      respectOnlyHouses: respectOnly.length,
+      respectOnlyReachedGod: respectOnly.filter(r => r.best === 'god').length,
+    },
+  };
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // `--merge a.json b.json …` summarises outputs written by earlier runs,
+  // which is how a batch split across processes becomes one table.
+  if (process.argv.includes('--merge')) {
+    const files = process.argv.slice(process.argv.indexOf('--merge') + 1);
+    const rows = files.flatMap(f => (JSON.parse(readFileSync(f, 'utf8')) as { rows: RouteRow[] }).rows);
+    console.log(JSON.stringify(summariseRoutes(rows), null, 2));
+    process.exit(0);
+  }
   const args = process.argv.slice(2).filter(a => !a.startsWith('--'));
   const runs = Number(args[0] ?? 24);
   const seedBase = Number(args[1] ?? 197800);
@@ -366,7 +415,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const signed = !process.argv.includes('--unsigned');
   const policy: RoutePolicy = process.argv.includes('--ascendant') ? 'ascendant' : 'summit';
   const content = loadContent();
-  const rows: Omit<RouteRun, 'acts'>[] = [];
+  const rows: RouteRow[] = [];
   const routes: RouteRun[] = [];
   for (let i = 0; i < runs; i++) {
     const started = Date.now();
@@ -376,9 +425,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     if (run.best === 'god' || run.ending === 'apotheosis' || run.ending === 'unmade') routes.push(run);
     console.log(`${run.seed}\t${run.ending ?? '-'}\tbest ${run.best}\tclauses ${run.clauses}\t${run.respect}\t${((Date.now() - started) / 1000).toFixed(1)}s`);
   }
-  const tally = (read: (r: Omit<RouteRun, 'acts'>) => string) => Object.fromEntries(
-    [...new Set(rows.map(read))].sort().map(k => [k, rows.filter(r => read(r) === k).length]));
-  const summary = { runs, seedBase, signed, policy, endings: tally(r => r.ending ?? 'none'), best: tally(r => r.best) };
+  const summary = { seedBase, signed, policy, ...summariseRoutes(rows) };
   console.log(JSON.stringify(summary, null, 2));
   if (out) writeFileSync(out, JSON.stringify({ summary, rows, routes }, null, 2));
 }

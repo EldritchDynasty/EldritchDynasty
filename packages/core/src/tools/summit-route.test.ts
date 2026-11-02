@@ -4,7 +4,7 @@ import { indexContent } from '@ed/schema';
 import type { PendingChoice } from '../events/decisions.js';
 import { newGame } from '../session.js';
 import { nameScion } from './ladder-policy.js';
-import { buryOption, playSummitRoute, routeReplays, wantedPair } from './summit-route.js';
+import { buryOption, emptyDiagnosis, playSummitRoute, routeReplays, summariseRoutes, wantedPair, type RouteRun } from './summit-route.js';
 
 const bundle = loadContent();
 const content = indexContent(bundle);
@@ -68,5 +68,38 @@ describe('the route policy reads without writing (#1978)', () => {
       .not.toBe(burying);
     // Nor is a party decision, whose branch follows from who is sent.
     expect(buryOption(pending({ choicesAreOpen: false }))).toBeUndefined();
+  });
+});
+
+describe('the route summary reproduces the published tables (#1978)', () => {
+  type Row = Omit<RouteRun, 'acts'>;
+  const row = (seed: number, over: Partial<Row> = {}): Row => ({
+    seed, signed: true, policy: 'summit', endYear: 1542, best: 'adept', reachedAt: {}, clauses: 3,
+    respect: 'known', diagnosis: emptyDiagnosis(), commands: {}, fullSaveHash: '', ...over,
+  });
+
+  it('counts houses, not years, for reach and endings, and years for the recipient gate', () => {
+    const god = row(1, { best: 'god', ending: 'apotheosis', reachedAt: { god: 1400 }, diagnosis: {
+      ...emptyDiagnosis(), recipientYears: 30, recipientClear: 4,
+      recipientBlockers: { respect: 20, clauses: 6 }, recipientSole: { respect: 18 },
+    } });
+    const waiting = row(2, { best: 'demigod', ending: 'devoured', diagnosis: {
+      ...emptyDiagnosis(), recipientYears: 10, recipientBlockers: { respect: 10, mind: 2 }, recipientSole: { respect: 8 },
+    } });
+    const summary = summariseRoutes([god, waiting, row(3, { ending: 'broken_line' }), row(4, { ending: 'forgotten' })]);
+
+    expect(summary.runs).toBe(4);
+    expect(summary.endings).toEqual({ apotheosis: 1, broken_line: 1, devoured: 1, forgotten: 1 });
+    expect(summary.reached.demigod).toMatchObject({ hits: 2, n: 4 });
+    expect(summary.reached.god).toMatchObject({ hits: 1, n: 4 });
+    expect(summary.apotheosis.hits).toBe(1);
+    expect(summary.apotheosis.lower!).toBeLessThan(0.25);
+    expect(summary.apotheosis.upper!).toBeGreaterThan(0.25);
+    expect(summary.godHouses).toEqual([{ seed: 1, ending: 'apotheosis', god: 1400 }]);
+    expect(summary.recipients).toEqual({
+      houses: 2, years: 40, clearYears: 4,
+      blockers: { respect: 30, clauses: 6, mind: 2 }, sole: { respect: 26 },
+      respectOnlyHouses: 2, respectOnlyReachedGod: 1,
+    });
   });
 });

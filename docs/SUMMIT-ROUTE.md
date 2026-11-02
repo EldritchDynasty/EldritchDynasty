@@ -135,9 +135,10 @@ content revision.
 
 ## Measured on 600 houses
 
-`npm run report:summit-route -- 150 <base> out.json` four times, bases 197800,
-197950, 198100 and 198250 (seeds 197800–198399), signed, `summit` policy, at
-`ea4222d3` plus this tool. One declared sample: these are counts under one bot
+`npm run report:summit-route -- 150 <base> out-<k>.json` four times, bases
+197800, 197950, 198100 and 198250 (seeds 197800–198399), signed, `summit`
+policy, at `ea4222d3` plus this tool; then
+`npm run report:summit-route -- --merge out-*.json` prints these tables. One declared sample: these are counts under one bot
 policy, not a player success rate, and no target was set in advance.
 
 | | Houses | Share [Wilson 95%] |
