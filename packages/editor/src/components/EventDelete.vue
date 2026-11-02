@@ -8,7 +8,7 @@ const reviewing = ref(false);
 const working = ref(false);
 const confirmation = ref('');
 const error = ref('');
-const preview = ref<{ path: string; before: string; after: string } | undefined>();
+const preview = ref<{ id: string; path: string; before: string; after: string } | undefined>();
 
 // Review includes an asynchronous disk check. Selection changes, cancellation
 // and a newer review must invalidate an earlier check before it may display
@@ -32,7 +32,7 @@ async function review() {
     error.value = 'This file changed on disk. Reload before reviewing deletion.';
     return;
   }
-  preview.value = { path: result.path, before: result.before, after: result.after };
+  preview.value = { id: reviewedId, path: result.path, before: result.before, after: result.after };
   reviewing.value = true;
 }
 function cancel() {
@@ -43,7 +43,7 @@ function cancel() {
   error.value = '';
 }
 async function remove() {
-  if (working.value || confirmation.value !== props.id) return;
+  if (working.value || confirmation.value !== props.id || preview.value?.id !== props.id) return;
   working.value = true;
   try {
     const result = await deleteEvent(props.id);
