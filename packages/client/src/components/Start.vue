@@ -513,7 +513,7 @@ onMounted(() => { void refreshSaves(); });
     </fieldset>
 
     <div class="row primary-row">
-      <button v-if="resumable" class="primary" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
+      <button v-if="resumable" class="primary" :disabled="!libraryIsReady || selectingRun || libraryBusy" @click="continueLastSitting()">{{ resuming ? (plain ? 'Loading…' : 'Continuing…') : campaign === 'demo' ? (plain ? 'Continue your saved full campaign' : 'Continue the last full line') : (plain ? 'Continue your last game' : 'Continue the last sitting') }}</button>
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
