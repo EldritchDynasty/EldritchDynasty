@@ -56,8 +56,8 @@ function composedContains(root: HTMLElement, element: HTMLElement | null): boole
 }
 
 /** document.activeElement names a shadow host, not its focused inner button. */
-function deepestActiveElement(): Element | null {
-  let active = document.activeElement;
+function deepestActiveElement(doc: Document = document): Element | null {
+  let active = doc.activeElement;
   while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
   return active;
 }
@@ -145,7 +145,7 @@ function tryFocus(target: HTMLElement): boolean {
   } catch {
     return false;
   }
-  return deepestActiveElement() === target;
+  return deepestActiveElement(target.ownerDocument) === target;
 }
 
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
@@ -186,6 +186,7 @@ export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
 
 export function useModal(card: Ref<HTMLElement | null>, close: () => void): void {
   let cameFrom: HTMLElement | null = null;
+  let keyboardWindow: Window | null = null;
 
   const focusable = (): HTMLElement[] => modalFocusable(card.value);
 
@@ -194,7 +195,8 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     // the previous one unmounts). Each registered its own window listener; only
     // the topmost dialog may dismiss or redirect keyboard focus. The older
     // modal takes over again automatically once the top one has gone.
-    const dialogs = document.querySelectorAll<HTMLElement>('[aria-modal="true"]');
+    const doc = card.value?.ownerDocument ?? document;
+    const dialogs = doc.querySelectorAll<HTMLElement>('[aria-modal="true"]');
     if (dialogs[dialogs.length - 1] !== card.value) return;
 
     if (e.key === 'Escape') {
@@ -219,7 +221,7 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
     }
     const first = inside[0]!;
     const last = inside[inside.length - 1]!;
-    const here = deepestActiveElement();
+    const here = deepestActiveElement(doc);
     // The card itself may be focused while its children are loading, or a
     // once-focused control may have become disabled. Neither is a Tab stop:
     // start a fresh cycle within the dialog instead of escaping its scrim.
@@ -234,8 +236,9 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
   }
 
   onMounted(() => {
-    const active = deepestActiveElement();
-    cameFrom = active instanceof HTMLElement && active !== document.body ? active : null;
+    const doc = card.value?.ownerDocument ?? document;
+    const active = deepestActiveElement(doc);
+    cameFrom = active && isHtmlElement(active) && active !== doc.body ? active : null;
     // Hosts may refuse or throw on focus(), including on a custom first
     // control. Try later usable controls before falling back to the card.
     // None of these failures may skip installation of the keyboard trap.
@@ -246,18 +249,21 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       if (!card.value.hasAttribute('tabindex')) card.value.tabIndex = -1;
       tryFocus(card.value);
     }
-    window.addEventListener('keydown', onKey);
+    keyboardWindow = doc.defaultView ?? window;
+    keyboardWindow.addEventListener('keydown', onKey);
   });
 
   onBeforeUnmount(() => {
-    window.removeEventListener('keydown', onKey);
+    keyboardWindow?.removeEventListener('keydown', onKey);
+    keyboardWindow = null;
+    const doc = card.value?.ownerDocument ?? document;
     const back = cameFrom;
     requestAnimationFrame(() => {
       // A nested child closing should return to the still-open parent that
       // held focus before it opened. An unrelated successor, however, owns
       // focus and must not be displaced by this deferred restoration.
       // Exclude our own card for synchronous frame mocks during unmount.
-      const survivingDialogs = [...document.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
+      const survivingDialogs = [...doc.querySelectorAll<HTMLElement>('[aria-modal="true"]')]
         .filter((dialog) => dialog !== card.value);
       const top = survivingDialogs[survivingDialogs.length - 1];
       if (top && !composedContains(top, back)) return;
@@ -266,9 +272,9 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
       // the DOM first. If a different connected element has gained focus in
       // that frame, the newer interaction wins. Only an unfocused document
       // (body/html) or the detached old dialog needs our fallback.
-      const active = document.activeElement;
-      if (!top && active instanceof Element && active.isConnected
-        && active !== document.body && active !== document.documentElement) return;
+      const active = doc.activeElement;
+      if (!top && active?.nodeType === 1 && active.isConnected
+        && active !== doc.body && active !== doc.documentElement) return;
 
       if (top) {
         // A nested dialog may have disabled or hidden the control that opened
@@ -285,13 +291,13 @@ export function useModal(card: Ref<HTMLElement | null>, close: () => void): void
         return;
       }
 
-      if (back?.isConnected && usableFocusTarget(back, document.body)) {
+      if (back?.isConnected && usableFocusTarget(back, doc.body)) {
         if (tryFocus(back)) return;
       }
       // A pane may have folded or become inert while the dialog was open.
       // Share the trap's visibility rules and keep looking if focus fails.
-      for (const target of document.querySelectorAll<HTMLElement>('.clock button, .board button')) {
-        if (!usableFocusTarget(target, document.body)) continue;
+      for (const target of doc.querySelectorAll<HTMLElement>('.clock button, .board button')) {
+        if (!usableFocusTarget(target, doc.body)) continue;
         if (tryFocus(target)) return;
       }
     });
