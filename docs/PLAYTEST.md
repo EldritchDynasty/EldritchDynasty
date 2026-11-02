@@ -384,6 +384,52 @@ Preserve the raw notes until the issues are closed. A summary without the first
 answers makes it too easy to remember the interpretation and lose the evidence
 that produced it.
 
+## First-session signing timing (#1984 — observations not yet run)
+
+This protocol measures whether a staged signing gets a new reader to a
+**consequential first family action** sooner without giving up the Examination.
+The UI prototype exists, but a shorter sequence is only a hypothesis; do not
+treat fewer clicks or this instrumentation as an observed improvement.
+
+**Pre-declare the endpoint before recruiting.** In the observer sheet, define
+the accepted action that qualifies as the first family decision (for example,
+a particular first marriage acceptance) and the action's visible consequence.
+Use the same definition for baseline and candidate. The exported
+`ed-reading-log/11` artifact's `summary.entries` supplies a *candidate* first
+accepted command, not an automatic classification of its meaning. The command's
+`verb` can be `choose`, `match`, `order`, `muster` or `record`; an
+accepted `choose` can be a story decision rather than the intended family
+action. Pair each log with the observer's event/acceptance notes.
+
+Start the stopwatch at a **successful** Begin, not at launch of the page or
+activation of the opt-in recorder. For each entry, `startedAt` and
+`foundedAt` mark accepted Begin and founding; `enteredAt` marks a returned
+Enter, which alone does not prove a family action. `firstAcceptedCommand`
+records the first qualifying accepted command *after* Enter. `wallMs` and
+`foregroundMs` span Begin to that command (or a censoring boundary), with
+foreground only a visibility/focus proxy. The recorder deliberately does not
+log which Examination answer, heirloom, grudge or personal name was entered,
+nor durations for individual signing stages.
+
+For each participant, record campaign and build SHA; whether this is their
+first exposure; prose mode and accessibility preferences; when they finished
+the signing, reached the first valid family decision and saw its consequence;
+where they hesitated, needed help, or abandoned; and their own explanation of
+what the given/owed choices meant. Keep Demonstration, Short and Long Line
+results separate. Record original and proposed staged presentation cohorts
+with the same endpoint and observation instructions.
+
+`summary.entries[].censored` means no accepted candidate command was
+observed before a new house, successful saved-run pickup, export, reload or
+event cap. It **does not** mean the participant abandoned. An incomplete
+record can still support a lower bound for exposure, not a completion-time
+estimate. Do not discard incomplete sessions or treat a recorded action
+attempt as acceptance. If the action observed by the researcher differs
+from the first candidate command, report the discrepancy rather than silently
+relabel the JSON. Real reader comprehension and comparative evidence determine
+whether to adopt or reject the prototype; this section supplies no participant
+results.
+
 ## Mystery pacing in reading time (#1945)
 
 `gate:long` measures the longest silence between answers in game years — 53.8
