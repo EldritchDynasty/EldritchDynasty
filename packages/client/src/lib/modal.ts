@@ -26,6 +26,16 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  * Check ancestors too: `getComputedStyle(button).display` is still "block"
  * when the button's parent has `display: none`.
  */
+/** Native DOM nodes from a same-origin embedded document have different constructors. */
+function isHtmlElement(node: Node): node is HTMLElement {
+  return node.nodeType === 1
+    && (node as Element).namespaceURI === 'http://www.w3.org/1999/xhtml';
+}
+
+function computedStyle(node: HTMLElement): CSSStyleDeclaration {
+  return (node.ownerDocument.defaultView ?? window).getComputedStyle(node);
+}
+
 /** Walk out of open shadow roots as well as ordinary DOM parents. */
 function composedParent(element: HTMLElement): HTMLElement | null {
   // A slotted node renders beneath its slot, not beneath its light-DOM
@@ -34,7 +44,8 @@ function composedParent(element: HTMLElement): HTMLElement | null {
   if (element.assignedSlot) return element.assignedSlot;
   if (element.parentElement) return element.parentElement;
   const root = element.getRootNode();
-  return root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : null;
+  const host = (root as ShadowRoot).host;
+  return host && isHtmlElement(host) ? host : null;
 }
 
 function composedContains(root: HTMLElement, element: HTMLElement | null): boolean {
@@ -62,14 +73,14 @@ function concealedByAttribute(element: HTMLElement, card: HTMLElement): boolean 
 function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   // Visibility inherits, but a child can explicitly override a hidden ancestor.
   // Test the target's resolved value rather than ruling out such visible children.
-  const visibility = window.getComputedStyle(element).visibility;
+  const visibility = computedStyle(element).visibility;
   if (visibility === 'hidden' || visibility === 'collapse') return true;
 
   // Neither display:none nor content-visibility:hidden renders descendants.
   // Unlike visibility:hidden, a child's visibility:visible cannot override
   // either ancestor restriction. Check each ancestor up to the modal card.
   for (let node: HTMLElement | null = element; node; node = composedParent(node)) {
-    const style = window.getComputedStyle(node);
+    const style = computedStyle(node);
     // Check the inline declaration too: CSSOM implementations may not
     // reflect an explicitly hidden <slot> in its computed display value.
     if (node.style.display === 'none' || style.display === 'none'
@@ -90,7 +101,7 @@ function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
   for (let parent = composedParent(element); parent; parent = composedParent(parent)) {
     if (parent.tagName === 'DETAILS' && !parent.hasAttribute('open')) {
       const summary = [...parent.children].find((child) => child.tagName === 'SUMMARY');
-      if (!(summary instanceof HTMLElement) || !composedContains(summary, element)) return true;
+      if (!summary || !isHtmlElement(summary) || !composedContains(summary, element)) return true;
     }
     if (parent === card) break;
   }
@@ -123,7 +134,7 @@ function usableFocusTarget(element: HTMLElement, root: HTMLElement): boolean {
     && !element.matches(':disabled')
     && !concealedByAttribute(element, root)
     && !behindClosedDetails(element, root)
-    && !(element instanceof HTMLInputElement && element.type === 'hidden')
+    && !(element.localName === 'input' && (element as HTMLInputElement).type === 'hidden')
     && !cssConcealed(element, root);
 }
 
@@ -146,16 +157,16 @@ export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   const walk = (root: Element | ShadowRoot): void => {
     // A shadow host renders its shadow tree; unassigned light-DOM children
     // cannot be visited as separate Tab stops. Only <slot> can project them.
-    if (root instanceof Element && root.shadowRoot) {
-      walk(root.shadowRoot);
+    if (root.nodeType === 1 && (root as Element).shadowRoot) {
+      walk((root as Element).shadowRoot!);
       return;
     }
     const children: Element[] = [];
-    if (root instanceof HTMLSlotElement) {
-      const assigned = root.assignedNodes();
+    if (isHtmlElement(root) && root.localName === 'slot') {
+      const assigned = (root as HTMLSlotElement).assignedNodes();
       if (assigned.length) {
         // A text-only assignment also hides fallback content.
-        for (const node of assigned) if (node instanceof Element) children.push(node);
+        for (const node of assigned) if (node.nodeType === 1) children.push(node as Element);
       } else {
         children.push(...root.children);
       }
@@ -163,7 +174,7 @@ export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
       children.push(...root.children);
     }
     for (const child of children) {
-      if (child instanceof HTMLElement && child.matches(selector) && usableFocusTarget(child, card)) {
+      if (isHtmlElement(child) && child.matches(selector) && usableFocusTarget(child, card)) {
         found.push(child);
       }
       walk(child);
