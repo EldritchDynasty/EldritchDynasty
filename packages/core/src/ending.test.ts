@@ -1514,3 +1514,86 @@ describe('a witnessed Ledger clause beside the Long Line purpose (#1983)', () =>
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 });
+
+
+describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning (#2486)', () => {
+  function accountedWait() {
+    const ctx = atTheTerm();
+    const w = ctx.world;
+    w.houseAmbition = 'raise_ascendant';
+    w.ending = { id: 'forgotten', year: w.year };
+    const ascendant = place(ctx, { name: 'Edric', sex: 'male', age: 55 });
+    ascendant.epithet = 'the Unwearied';
+    const page: ChronicleEntry = {
+      id: `ledger_wait:${ascendant.id}`,
+      year: w.year - 18,
+      weight: 'paragraph',
+      title: 'The Ledger Stayed Open',
+      text: 'Edric stopped growing older, but the house had not finished the Ledger.',
+      people: [ascendant.id],
+      named: false,
+      rung: 'demigod',
+    };
+    w.chronicle = [page];
+    return { ctx, page, ascendant };
+  }
+
+  it('quotes a named, surviving wait without moving the ending or changing saved evidence', () => {
+    const { ctx } = accountedWait();
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const view = epilogueOf(ctx)!;
+    expect(view.purpose).toEqual({
+      kind: 'ascendant_wait',
+      person: 'Edric the Unwearied',
+      year: ctx.world.year - 18,
+      text: 'Edric stopped growing older, but the house had not finished the Ledger.',
+    });
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
+
+    if (view.purpose?.kind !== 'ascendant_wait') throw new Error('missing wait evidence');
+    view.purpose.text = 'A rewritten history.';
+    expect(ctx.world.chronicle[0]!.text).toBe('Edric stopped growing older, but the house had not finished the Ledger.');
+  });
+
+  it('requires a pursued ambition, a Long Line and an unlost account', () => {
+    const { ctx, page } = accountedWait();
+    ctx.world.houseAmbition = 'restore_ledger';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    ctx.world.houseAmbition = 'raise_ascendant';
+    ctx.world.campaign = 'short';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    ctx.world.campaign = 'long';
+    page.greyed = true;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.greyed = false;
+    page.text = null;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
+  it('refuses ambiguous, misattributed, unlinked or future testimony', () => {
+    const { ctx, page, ascendant } = accountedWait();
+    const w = ctx.world;
+    w.chronicle.push({ ...page });
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.chronicle.pop();
+
+    page.people = [];
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.people = [ascendant.id];
+    page.id = 'ledger_wait:another-person';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.id = `ledger_wait:${ascendant.id}`;
+    page.rung = 'adept';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.rung = 'demigod';
+    page.year = w.year + 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.year = w.year - 18;
+    ascendant.houseOfOrigin = asId('unrelated_house');
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+});
