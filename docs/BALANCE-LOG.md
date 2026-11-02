@@ -16773,7 +16773,8 @@ and compares world digests. `summit` is the same policy until the house first
 stands on God; from then it records truly, calls no rite, and takes an offered
 burial. Revision: `main` `ea4222d3` (after #1980's Vessel consequences) plus
 the tool; the guidance change below alters no simulation. Sample: seeds
-197800–198399, Long Line, signed with every default, 600 runs.
+197800–198399, Long Line, signed with every default, 600 runs, split over
+four processes and summed by `report:summit-route -- --merge`.
 
 **Reach.** Vessel or higher 341/600 (56.8% [52.8, 60.7]); Demigod or higher
 191 (31.8% [28.2, 35.7]); God 7 (1.2% [0.6, 2.4]); **Apotheosis 6 (1.0% [0.5,
