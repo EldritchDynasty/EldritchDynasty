@@ -83,7 +83,12 @@ export function findEntry(root: ParentNode | null | undefined, id: string): HTML
   if (!root) return undefined;
   // querySelectorAll finds descendants only. A caller may already be scoped
   // to the page itself, so include a matching root before walking within it.
-  if (root instanceof HTMLElement && root.dataset.entry === id) return root;
+  // An iframe-owned HTML element has a different global HTMLElement constructor.
+  // Test the DOM node and namespace, not the caller's realm; retain the
+  // descendant-only query below and compare ids without selector interpolation.
+  const candidate = root as Element;
+  if (candidate.nodeType === 1 && candidate.namespaceURI === 'http://www.w3.org/1999/xhtml'
+    && candidate.getAttribute('data-entry') === id) return candidate as HTMLElement;
   for (const el of root.querySelectorAll<HTMLElement>('[data-entry]')) {
     if (el.dataset.entry === id) return el;
   }
