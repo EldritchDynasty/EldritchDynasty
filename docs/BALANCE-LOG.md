@@ -16758,3 +16758,70 @@ were **not** re-measured. Each scene adds one decision in under a tenth of
 runs and moves at most one Respect tier or proves one Discrepancy, so a shift
 is expected to be small, but that is an expectation, not a measurement; the
 weekly endings and density telemetry is where it would show.
+
+## 2026-11-02 — #1978: the summit, played through the public session
+
+**Question.** Can a player reach Apotheosis using only the client's verbs, and
+what stops the houses that get close? Route existence and a joint-gate
+diagnosis; no rule, weight or threshold is changed and no target was declared.
+
+**Instrument.** `npm run report:summit-route` (`tools/summit-route.ts`). It
+plays `ending-gate.ts`'s `ascendant` composite through `found`, `setAmbition`,
+`order`, `choose`, `record`, `letHimDecide` and `advance` on a `decider: 'ask'`
+session, and `routeReplays` rebuilds each run from its seed through `replay`
+and compares world digests. `summit` is the same policy until the house first
+stands on God; from then it records truly, calls no rite, and takes an offered
+burial. Revision: `main` `ea4222d3` (after #1980's Vessel consequences) plus
+the tool; the guidance change below alters no simulation. Sample: seeds
+197800–198399, Long Line, signed with every default, 600 runs.
+
+**Reach.** Vessel or higher 341/600 (56.8% [52.8, 60.7]); Demigod or higher
+191 (31.8% [28.2, 35.7]); God 7 (1.2% [0.6, 2.4]); **Apotheosis 6 (1.0% [0.5,
+2.2])**. Endings: Devoured 300, Broken Line 145, Forgotten 103, Unmade 46,
+Apotheosis 6. All six Apotheosis routes and the seventh God house replay.
+These are counts under one bot policy, not a player rate, and they are not
+paired with the ending gate's ascendant column (different seeds, signing and
+verbs).
+
+**The joint gate.** 90 houses raised an Unmaking recipient, 4,053 living
+recipient-years, every God prerequisite read each year from `standingOf`'s own
+predicates:
+
+| Unmet for the recipient | Years | Sole unmet |
+| --- | --- | --- |
+| Respect | 3,577 | **840** |
+| Clauses | 1,842 | 5 |
+| Madness floor | 1,578 | 50 |
+| Madness over Mind | 1,565 | 89 |
+| Mind | 627 | 0 |
+| Books / power / affinities | 374 / 220 / 190 | 0 / 13 / 0 |
+
+Respect was the only thing between a ready recipient and God in 19 houses
+(median 31 years each); 7 reached God, 12 never did. The Unmaking's success
+costs two tiers and God wants Exalted. Mind is never the sole blocker here, so
+on this sample unfinished paid tuition is not the demonstrated gap and no
+tuition rule changes. #1818's 15 recipient-years had found the same Respect
+wall jointly with overflow and clauses; this sample is far larger and finds
+Respect alone far more often.
+
+**The book, paired.** The seven God houses under plain `ascendant` reach God
+in the same year. `ascendant`: Apotheosis 4, Devoured 2, Unmade 1. `summit`:
+Apotheosis 6, Unmade 1. Both Devoured houses (197828, 198258) kept
+embellishing after God; unsupportable weight 14 and 15 against the Long Line's
+allowance of 9 withheld a rung. Keeping the book left 5 and 3, but it is not
+monotone: 198172 rose from 5 to 9.
+
+**Changed.** Once the Long Line's best rung is God, *Prepare the ascent* now
+says the book is what is left and counts the distinct open lies behind
+embellished pages (Original and Plain English). Before this, the ladder fell
+silent at God and nothing in play said the reckoning reads the book.
+
+**Also found, not changed.** A failed Unmaking sets `god_rite_failed` for the
+rest of the run and `selectEnding` reads it before Apotheosis. 198157 failed
+one Unmaking, succeeded with another, stood on God in 1232 and was read as
+The Unmade. Whether a later success should redeem the failure is the owner's.
+
+**Limits.** Bot policy; the Scion, Vessel and recipient picks read hidden
+genetics (`docs/SUMMIT-ROUTE.md` lists every one). One route proves the
+summit reachable through the client on this revision, not findable or
+enjoyable; no player session was run.
