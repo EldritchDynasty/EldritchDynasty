@@ -2,6 +2,17 @@ import type { SessionView, TableView } from '@ed/core';
 import type { HouseAmbitionId, ProseMode } from '@ed/schema';
 import type { RevealElement } from './reveal';
 
+/**
+ * Table links can be rendered into a same-origin embedded document. Its real
+ * buttons belong to that document's HTMLElement realm, not the outer window.
+ * Check against the owning document so clicks still return a focusable origin.
+ */
+export function tableNavigationOrigin(target: EventTarget | null): HTMLElement | null {
+  if (!target || !('ownerDocument' in target)) return null;
+  const HTMLElementInDocument = (target as Element).ownerDocument?.defaultView?.HTMLElement;
+  return HTMLElementInDocument && target instanceof HTMLElementInDocument ? target as HTMLElement : null;
+}
+
 /** UI destinations, not orders. The catalogue also owns their anchor names. */
 const TARGETS = {
   purse: ['The purse', 'Money and auctions'],
