@@ -39,6 +39,9 @@ describe('in-place Standing disclosure', () => {
       expect(button instanceof HTMLButtonElement).toBe(false);
       expect(glossaryOpener(button)).toBe(button);
       expect(glossaryOpener(text)).toBeNull();
+      const svgButton = embedded.createElementNS('http://www.w3.org/2000/svg', 'button');
+      expect(glossaryOpener(svgButton)).toBeNull();
+      expect(glossaryOpener(new EventTarget())).toBeNull();
       expect(glossaryOpener(null)).toBeNull();
 
       button.focus();
