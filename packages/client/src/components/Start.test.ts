@@ -1486,7 +1486,7 @@ describe('Library confirmation keyboard focus (#2410)', () => {
         await cancel.trigger('click');
         await nextTick();
         expect(w.find('.library-clear-confirm').exists()).toBe(false);
-        expect(document.activeElement).toBe(clear);
+        expect(document.activeElement).toBe(w.get('.library-head > button').element);
       } finally {
         w.unmount();
       }
@@ -1510,7 +1510,7 @@ describe('Library confirmation keyboard focus (#2410)', () => {
       await cancel.trigger('click');
       await nextTick();
       expect(w.find('.library-remove-confirm').exists()).toBe(false);
-      expect(document.activeElement).toBe(remove);
+      expect(document.activeElement).toBe(w.get('.library-title > button').element);
       expect(actions.deleteLibraryRun).not.toHaveBeenCalled();
     } finally {
       w.unmount();
