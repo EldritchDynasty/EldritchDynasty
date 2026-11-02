@@ -914,6 +914,61 @@ describe('modal focus follows composed slot tree (#2478)', () => {
   });
 });
 
+describe('modal focus across document realms (#2522)', () => {
+  it('finds real iframe buttons and projected shadow controls without admitting hidden or SVG nodes', () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    try {
+      const doc = frame.contentDocument!;
+      // Same-origin frames have a separate set of DOM constructors.
+      expect(doc.defaultView!.HTMLElement).not.toBe(HTMLElement);
+      const card = doc.createElement('section');
+      doc.body.append(card);
+
+      const before = doc.createElement('button');
+      before.id = 'before';
+      const concealed = doc.createElement('div');
+      concealed.style.display = 'none';
+      const concealedButton = doc.createElement('button');
+      concealedButton.id = 'concealed';
+      concealed.append(concealedButton);
+
+      const hiddenInput = doc.createElement('input');
+      hiddenInput.id = 'hidden-input';
+      hiddenInput.type = 'hidden';
+      hiddenInput.tabIndex = 0;
+
+      const host = doc.createElement('div');
+      const shadow = host.attachShadow({ mode: 'open' });
+      const inner = doc.createElement('button');
+      inner.id = 'shadow';
+      const slot = doc.createElement('slot');
+      slot.name = 'action';
+      shadow.append(inner, slot);
+      const projected = doc.createElement('button');
+      projected.id = 'projected';
+      projected.slot = 'action';
+      host.append(projected);
+
+      const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'a');
+      svg.id = 'svg';
+      svg.setAttribute('tabindex', '0');
+      const after = doc.createElement('button');
+      after.id = 'after';
+      card.append(before, concealed, hiddenInput, host, svg, after);
+
+      expect(modalFocusable(card).map((node) => node.id))
+        .toEqual(['before', 'shadow', 'projected', 'after']);
+
+      host.hidden = true;
+      expect(modalFocusable(card).map((node) => node.id))
+        .toEqual(['before', 'after']);
+    } finally {
+      frame.remove();
+    }
+  });
+});
+
 describe('modal focus in open shadow roots (#2377)', () => {
   it('includes shadow controls in order, but excludes concealed hosts and closed disclosures', () => {
     const card = document.createElement('section');
