@@ -536,9 +536,11 @@ export class Sound {
     });
   }
 
-  /** Let go of the audio thread entirely. */
+  /** Let go of the audio thread entirely. A closed context cannot finish a scheduled fade. */
   close() {
-    this.stopDrone();
+    // Closing freezes the clock, so a deferred stop/onended can never finish.
+    // Cut the drone graph now rather than retaining it behind a closed device.
+    this.stopDrone(0);
     const context = this.context;
     this.context = null;
     this.out = null;
