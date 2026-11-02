@@ -184,6 +184,9 @@ const DRIVES_A_BATCH: Record<string, string> = {
   'packages/core/src/tools/record-return-report.test.ts':
     'the #1987 detector over hand-built worlds and reducer over hand-built rows, plus 40- and '
     + '60-year Short runs pairing the chronicler and forcing loops; no campaign batch',
+  'packages/core/src/tools/summit-route.test.ts':
+    'one 40-year signed Long run through the public session, replayed once from its command log, '
+    + 'and one 20-year session for the read-only Scion rule; no campaign batch',
   'packages/core/src/tools/stall.test.ts':
     'one 3-year density run proving table-order failure wiring; the rest, gate:stall\'s readings '
     + 'included, is hand-built — 0.2s',
