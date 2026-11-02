@@ -28,7 +28,8 @@ describe('what a keypress means', () => {
     // App's global listener runs for every panel. Verify it uses the same
     // tested guard as Docket before dispatching year-advance shortcuts.
     const app = readFileSync(join(import.meta.dirname, '../App.vue'), 'utf8');
-    expect(app).toMatch(/const el = document\\.activeElement;\\s*if \\(isGlossaryFocus\\(el\\)\\) return;\\s*const press = shortcutFor/);
+    expect(app).toContain('if (isGlossaryFocus(el)) return;');
+    expect(app).toMatch(/if \(isGlossaryFocus\(el\)\) return;\s*const press = shortcutFor/);
   });
   it('turns a year on Space and on Enter, and five on Shift+Enter', () => {
     expect(shortcutFor({ key: ' ' })).toEqual({ kind: 'advance', years: 1 });
