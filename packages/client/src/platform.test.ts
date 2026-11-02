@@ -525,7 +525,7 @@ describe('save-list failures at the real game/platform seam (#1176)', () => {
 });
 
 describe('the platform seam', () => {
-  it('distinguishes cancelling a browser import from rejecting a selected invalid save (#1275)', async () => {
+  it('distinguishes cancellation, invalid files and failed host imports (#1275, #2492)', async () => {
     const host = memoryPlatform();
     const game = createGame(loadContent(), host);
     host.importSave = async () => BROWSER_IMPORT_CANCELLED;
@@ -537,6 +537,14 @@ describe('the platform seam', () => {
     await expect(game.actions.importSave()).resolves.toBe(false);
     host.importSave = async () => ({ format: 28, year: 1142 });
     await expect(game.actions.importSave()).resolves.toBe(false);
+
+    // The host never returned file content: do not accuse a selected save of
+    // incompatibility when the picker or native bridge itself was refused.
+    host.importSave = async () => { throw new Error('file picker denied'); };
+    await expect(game.actions.importSave()).resolves.toBe('unavailable');
+    // A subsequent, ordinary cancellation is still distinct and retryable.
+    host.importSave = async () => BROWSER_IMPORT_CANCELLED;
+    await expect(game.actions.importSave()).resolves.toBe('cancelled');
     expect(game.view.value).toBeNull();
   });
 
