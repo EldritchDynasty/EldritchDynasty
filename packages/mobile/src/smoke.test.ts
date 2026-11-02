@@ -526,13 +526,35 @@ describe('Windows / Android / iOS host interchange (#322)', () => {
       // bytes to the mobile browser's input/FileReader path, not a parsed object.
       const electronExport = join(directory, 'windows-export.json');
       writeJsonAtomically(electronExport, saved);
+      // Exercise both the legacy onchange picker and the listener-based native
+      // picker. A property-only fake strands the latter's import Promise and
+      // silently hangs the entire cross-host smoke suite (#2548).
+      const listeners = new Map<string, Set<EventListenerOrEventListenerObject>>();
       const input = {
         type: '',
         accept: '',
         files: [{ contents: readFileSync(electronExport, 'utf8') }],
         onchange: null as null | (() => void),
-        addEventListener() {},
-        click() { this.onchange?.(); },
+        addEventListener(type: string, handler: EventListenerOrEventListenerObject) {
+          const handlers = listeners.get(type) ?? new Set<EventListenerOrEventListenerObject>();
+          handlers.add(handler);
+          listeners.set(type, handlers);
+        },
+        removeEventListener(type: string, handler: EventListenerOrEventListenerObject) {
+          const handlers = listeners.get(type);
+          handlers?.delete(handler);
+          if (handlers?.size === 0) listeners.delete(type);
+        },
+        click() {
+          // The fake has already selected the real Electron export bytes.
+          // Deliver the resulting change through both DOM event interfaces.
+          this.onchange?.();
+          for (const handler of [...(listeners.get('change') ?? [])]) {
+            const event = { type: 'change' } as Event;
+            if (typeof handler === 'function') handler(event);
+            else handler.handleEvent(event);
+          }
+        },
       };
       class NativeFileReader {
         result: string | null = null;
