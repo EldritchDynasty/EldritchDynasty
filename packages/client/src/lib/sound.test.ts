@@ -423,6 +423,37 @@ describe('the player, over a fake engine', () => {
     expect(replacement.buffers[0], 'a new audio device reused the old context buffer').not.toBe(original);
   });
 
+  it('does not open an audio device at zero volume and restores the latest drone when raised', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.volume = 0;
+    s.muted = false;
+    s.setDrone(WARM);
+    s.cue('page');
+    s.wake();
+    expect(e.made, 'a silent direct Sound opened an audio device').toHaveLength(0);
+
+    s.volume = 0.25;
+    const ctx = e.made[0]!;
+    const voices = droneScore(WARM)!.voices.length;
+    expect(ctx.sources).toHaveLength(voices);
+    expect(ctx.gains[0]!.gain.value).toBe(0.25);
+
+    s.volume = 0;
+    expect(ctx.gains[0]!.gain.value).toBe(0);
+    expect(ctx.sources.every((source) => source.stopped === ctx.currentTime)).toBe(true);
+    s.cue('seal');
+    s.setDrone(WARM);
+    s.wake();
+    expect(ctx.sources, 'zero volume started more inaudible sources').toHaveLength(voices);
+
+    s.volume = 0.4;
+    expect(e.made, 'raising volume reopened an existing device').toHaveLength(1);
+    expect(ctx.sources, 'restoring volume did not restore the current Age').toHaveLength(voices * 2);
+    expect(ctx.gains[0]!.gain.value).toBe(0.4);
+    s.close();
+  });
+
   it('turns the whole bed down and never up', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
