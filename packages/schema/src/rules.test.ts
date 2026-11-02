@@ -1440,10 +1440,11 @@ describe('the content rules', () => {
   it('checks both secret collision kinds in primordial outcome effects', () => {
     const b = withEvents((x) => {
       const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
-      if (event.interaction.kind === 'narration') throw new Error('missing choice fixture');
+      if (!event.record || event.interaction.kind === 'narration') throw new Error('missing Record fixture');
       const outcome = event.interaction.choices[0]!.outcomes[0]!;
       outcome.primordial = {
         id: 'secret_effect_probe', text: 'The debt is witnessed.', tags: [],
+        record: structuredClone(event.record),
         effects: [
           { kind: 'knowledge', op: 'grant', flag: 'what_the_archive_holds' },
           { kind: 'discrepancy', op: 'create', id: 'what_the_archive_holds',
