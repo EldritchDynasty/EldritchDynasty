@@ -127,6 +127,25 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       .toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['friends'] } });
   });
 
+  it('asks for a missing house name when the supplied name is invisible-only (#1995)', () => {
+    const code = codeOf(founded()); // An anonymous code still needs a visible house name.
+    const friends = SIGNED.friends.map((friend) => friend.name);
+    for (const invisible of ['\\u200B', ' \\u200D \\u2060\\t', '\\uFE0F']) {
+      const result = newGameFromShareCode(code, content, {
+        build: BUILD,
+        names: { house: invisible, friends },
+      });
+      expect(result).toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['house'] } });
+    }
+
+    // Formatting characters inside an otherwise visible name are legitimate.
+    const accepted = newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: { house: 'House of \\u200D Salt', friends },
+    });
+    expect(accepted.ok).toBe(true);
+  });
+
   it('refuses invisible-only required friend names instead of dropping an encoded friend (#2264)', () => {
     const code = codeOf(founded()); // Anonymous: three friends of specified sexes.
     for (const invisible of ['\u200B', ' \u200D \u2060\t', '\uFE0F']) {
