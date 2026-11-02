@@ -10,14 +10,24 @@ const confirmation = ref('');
 const error = ref('');
 const preview = ref<{ path: string; before: string; after: string } | undefined>();
 
+// Review includes an asynchronous disk check. Selection changes, cancellation
+// and a newer review must invalidate an earlier check before it may display
+// a confirmation for a different event.
+let reviewRevision = 0;
+
 watch(() => props.id, () => cancel());
 
 async function review() {
+  const reviewedId = props.id;
+  const revision = ++reviewRevision;
   error.value = '';
   confirmation.value = '';
-  const result = pendingDeleteEvent(props.id);
+  const result = pendingDeleteEvent(reviewedId);
   if (!result.ok) { error.value = result.error; return; }
   const changed = await externalChange(result.path);
+  // A selected event may have changed while the host was reading the file.
+  // Never show its old diff beneath the new event's confirmation controls.
+  if (revision !== reviewRevision || props.id !== reviewedId) return;
   if (changed.changed) {
     error.value = 'This file changed on disk. Reload before reviewing deletion.';
     return;
@@ -26,6 +36,7 @@ async function review() {
   reviewing.value = true;
 }
 function cancel() {
+  ++reviewRevision;
   reviewing.value = false;
   preview.value = undefined;
   confirmation.value = '';
