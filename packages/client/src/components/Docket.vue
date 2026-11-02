@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { CastRequest, MatchCard, MatchPanel, RecordOption, SessionView, SlotFill } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import { futureOf, type GameActions } from '../lib/game';
-import { isControl, isField, shortcutFor } from '../lib/keys';
+import { isControl, isField, isGlossaryFocus, shortcutFor } from '../lib/keys';
 import { replayDisposition } from '../lib/accessibility';
 import GlossaryText from './GlossaryText.vue';
 
@@ -313,7 +313,7 @@ function onKey(e: KeyboardEvent): void {
   // Its focusable definition notes can receive number keys too; answering a
   // hidden Docket choice while reading a note would be irreversible.
   // Keep ordinary shortcuts on the rest of the panel.
-  if (el?.closest('.glossary-text')) return;
+  if (isGlossaryFocus(el)) return;
   const press = shortcutFor({
     key: e.key,
     repeat: e.repeat,
