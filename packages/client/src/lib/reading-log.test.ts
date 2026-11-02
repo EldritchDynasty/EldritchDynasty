@@ -240,6 +240,23 @@ describe('censored first-session entry timing (#1984)', () => {
     ]);
   });
 
+  it('never reports completion for an entered house without an accepted signing', () => {
+    const c = clock(), l = log(c);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    c.tick(50);
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'refused' });
+    c.tick(50);
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    c.tick(50);
+    l.note({ kind: 'action', verb: 'choose', act: 'answer', status: 'accepted' });
+    c.tick(50);
+    l.end('exported');
+    expect(l.artifact().summary.entries).toEqual([{
+      startedAt: 0, campaign: null, foundedAt: null, enteredAt: 100,
+      firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true,
+    }]);
+  });
+
   it('does not invent a new-house timing from an old-save pickup or an unpaired attempt', () => {
     const l = log();
     l.note({ kind: 'action', verb: 'resume', act: 'start' });
