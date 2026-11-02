@@ -7,21 +7,21 @@ import type { HouseAmbitionId } from '@ed/schema';
 import { tableTargetLabel, tableTasksFor } from './table-nav';
 
 const ORIGINAL = [
-  'The clock can now move five years at a time.',
+  'The clock can now move up to five years at a time.',
   'The table is open: this is where the house gives standing orders.',
   'The Assize is visible: it is how the wider world answers the house.',
   'The ladder is visible: it shows how far the blood has climbed.',
   'Abroad is open: tales and rumours now have somewhere to be read.',
-  'The longer clock is open: a generation, or on to the term.',
+  'The longer clock is open: up to a generation, or onward toward the term.',
 ];
 
 const PLAIN = [
-  'You can now move forward five years at once.',
+  'You can now advance up to five years at once.',
   'Family orders are now available. Use the Table to manage resources and make plans.',
   'You can now see how the wider world is responding to your family.',
   "You can now see the family's progress toward greater power.",
   'You can now read stories and rumours about the family from outside the house.',
-  'You can now move forward a generation or to the end of the game.',
+  'You can now advance up to 25 years, or toward the end of the game.',
 ];
 
 describe('progressive reveal notices in both reading modes (#1700)', () => {
@@ -30,6 +30,12 @@ describe('progressive reveal notices in both reading modes (#1700)', () => {
     expect(REVEAL_ELEMENTS.map((id) => revealNotice(id, 'original'))).toEqual(ORIGINAL);
     expect(REVEAL_ELEMENTS.map((id) => revealNotice(id, 'plainenglish'))).toEqual(PLAIN);
     expect(new Set(PLAIN).size).toBe(REVEAL_ELEMENTS.length);
+  });
+
+  it.each(['original', 'plainenglish'] as const)('describes early-stop clock actions as bounds in %s', (mode) => {
+    expect(revealNotice('clock-five', mode)).toContain('up to');
+    expect(revealNotice('clock-long', mode)).toContain('up to');
+    expect(revealNotice('clock-long', mode)).toMatch(/toward/);
   });
 
   it('changes the words both ways without changing the recorded reveal IDs', () => {
