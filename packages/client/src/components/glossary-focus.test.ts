@@ -2,7 +2,8 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { nextTick } from 'vue';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import GlossaryText, { glossaryOpener } from './GlossaryText.vue';
+import GlossaryText from './GlossaryText.vue';
+import { glossaryOpener } from '../lib/glossary-focus';
 import { loadBundle } from '../lib/content';
 import Entry from './Entry.vue';
 import type { ChronicleEntry } from '@ed/core';
