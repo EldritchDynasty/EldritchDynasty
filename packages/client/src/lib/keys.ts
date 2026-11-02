@@ -113,14 +113,26 @@ export function isGlossaryFocus(el: Element | null): boolean {
   return el !== null && innermostActiveElement(el).closest('.glossary-text') !== null;
 }
 
-/** Whether a press should be read as typing rather than steering. */
+/**
+ * Treat descendants of custom ARIA text-entry widgets as typing too. Focus may
+ * sit on a child rather than the role-bearing element, including across an
+ * open shadow root whose host or outer ancestor owns the field role.
+ */
 export function isField(el: Element | null): boolean {
   if (!el) return false;
-  const active = innermostActiveElement(el);
-  const tag = active.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
-    || (active as HTMLElement).isContentEditable === true
-    || hasRole(active, FIELD_ROLES);
+  let active: Element | null = innermostActiveElement(el);
+  while (active) {
+    const tag = active.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
+      || (active as HTMLElement).isContentEditable === true
+      || hasRole(active, FIELD_ROLES)) return true;
+
+    // parentElement stops at a ShadowRoot; continue through its open host.
+    const root: Node | undefined = active.getRootNode?.();
+    active = active.parentElement
+      ?? (root instanceof ShadowRoot && root.mode === 'open' ? root.host : null);
+  }
+  return false;
 }
 
 /** Whether the focused thing answers Space and Enter on its own. */
