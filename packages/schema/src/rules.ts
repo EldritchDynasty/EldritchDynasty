@@ -1148,7 +1148,7 @@ const secretsWiring: ValidationRule = {
         checkEffects(o.effects, `${at}/${o.id}`);
         if (o.primordial) {
           checkEffects(o.primordial.effects, `${at}/primordial:${o.primordial.id}`);
-          checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
+          if (o.primordial.record) checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
         }
       }
       if (e.record) checkRecord(e.record, `${at}/record`);
