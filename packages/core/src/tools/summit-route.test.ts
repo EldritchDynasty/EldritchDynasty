@@ -15,8 +15,9 @@ describe('the summit route is played through the public session (#1978)', () => 
   // and naming are enough to catch a policy that writes the world directly.
   const run = playSummitRoute(content, 197800, { years: 40 });
 
-  it('signs, then sets its standing orders as accepted Table orders', () => {
+  it('signs, chooses the ascent, then sets its standing orders as accepted Table orders', () => {
     expect(run.acts[0]).toMatchObject({ verb: 'found', ok: true });
+    expect(run.acts[1]).toMatchObject({ verb: 'ambition', what: 'raise_ascendant', ok: true });
     expect(run.acts.find(a => a.what === 'marriages')).toMatchObject({ verb: 'order', ok: true });
     expect(run.acts.find(a => a.what === 'bid')).toMatchObject({ verb: 'order', ok: true });
     expect(run.commands.advance).toBeGreaterThanOrEqual(40);
