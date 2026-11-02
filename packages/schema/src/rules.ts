@@ -1123,25 +1123,37 @@ const secretsWiring: ValidationRule = {
 
     const discrepancies = new Map<string, string>();
     const knowledge = new Map<string, string>();
+    const checkEffects = (effects: readonly Effect[], where: string) => {
+      for (const eff of effects) {
+        if (eff.kind === 'discrepancy' && eff.op === 'create' && eff.id) discrepancies.set(eff.id, where);
+        if (eff.kind === 'knowledge' && eff.op === 'grant') knowledge.set(eff.flag, where);
+      }
+    };
+    const checkRecord = (record: RecordBlock, where: string) => {
+      // The Embellish discrepancy is implicit; the other Record effects and
+      // the truthful pen's knowledge grant are independently authored.
+      discrepancies.set(record.options.embellish.discrepancy.id, `${where}/embellish`);
+      const granted = record.options.record.grantsKnowledge;
+      if (granted) knowledge.set(granted, `${where}/record`);
+      for (const pen of ['record', 'omit', 'embellish'] as const) {
+        checkEffects(record.options[pen].effects, `${where}/${pen}`);
+      }
+    };
+
     for (const e of content.events) {
       const at = `event:${e.id}`;
       for (const o of allOutcomes(e)) {
-        for (const eff of o.effects) {
-          if (eff.kind === 'discrepancy' && eff.op === 'create' && eff.id) discrepancies.set(eff.id, `${at}/${o.id}`);
-          if (eff.kind === 'knowledge' && eff.op === 'grant') knowledge.set(eff.flag, `${at}/${o.id}`);
-        }
-      }
-      if (e.record) {
-        discrepancies.set(e.record.options.embellish.discrepancy.id, `${at}/record/embellish`);
-        const granted = e.record.options.record.grantsKnowledge;
-        if (granted) knowledge.set(granted, `${at}/record/record`);
-        for (const key of ['record', 'omit', 'embellish'] as const) {
-          for (const eff of e.record.options[key].effects) {
-            if (eff.kind === 'discrepancy' && eff.op === 'create' && eff.id) discrepancies.set(eff.id, `${at}/record/${key}`);
-            if (eff.kind === 'knowledge' && eff.op === 'grant') knowledge.set(eff.flag, `${at}/record/${key}`);
+        checkEffects(o.effects, `${at}/${o.id}`);
+        if (o.primordial) {
+          checkEffects(o.primordial.effects, `${at}/primordial:${o.primordial.id}`);
+          if (o.primordial.record) {
+            checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
           }
         }
       }
+      if (e.record) checkRecord(e.record, `${at}/record`);
+      for (const row of e.recordByChoice ?? []) checkRecord(row, `${at}/recordByChoice:${row.id}`);
+      for (const row of e.recordByOutcome ?? []) checkRecord(row, `${at}/recordByOutcome:${row.id}`);
     }
 
     const holders: { at: string; secrets: readonly string[] }[] = [
