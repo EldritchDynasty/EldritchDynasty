@@ -52,6 +52,43 @@ describe('in-place Standing disclosure', () => {
       iframe.remove();
     }
   });
+  it('keeps primary keyboard focus when a new passage removes its glossary term', async () => {
+    const wrapper = render('Standing was questioned.');
+    const first = wrapper.get('button');
+    (first.element as HTMLButtonElement).focus();
+    expect(document.activeElement).toBe(first.element);
+
+    // A collapsed definition still owns keyboard focus. Replacing the
+    // passage destroys its button, so the non-tabbable text host must receive
+    // that focus instead of silently dropping it to document.body.
+    await wrapper.setProps({ text: 'There is no matching term here.' });
+    await nextTick();
+    const host = wrapper.get('.glossary-text');
+    expect(wrapper.find('button').exists()).toBe(false);
+    expect(host.attributes('tabindex')).toBe('-1');
+    expect(document.activeElement).toBe(host.element);
+
+    // The same failure can occur while the primary opener is expanded.
+    await wrapper.setProps({ text: 'Standing was restored.' });
+    const primary = wrapper.get('button');
+    (primary.element as HTMLButtonElement).focus();
+    await primary.trigger('click');
+    expect(wrapper.find('[role="note"]').exists()).toBe(true);
+    await wrapper.setProps({ text: 'The page was turned.' });
+    await nextTick();
+    expect(wrapper.find('[role="note"]').exists()).toBe(false);
+    expect(document.activeElement).toBe(host.element);
+
+    // If the new text still has an alias, keep focus on its surviving button.
+    await wrapper.setProps({ text: 'Standing was restored.' });
+    const restored = wrapper.get('button');
+    (restored.element as HTMLButtonElement).focus();
+    await wrapper.setProps({ text: 'Reputation recovered.', proseMode: 'plainenglish' });
+    await nextTick();
+    expect(wrapper.get('button').text()).toBe('Reputation');
+    expect(document.activeElement).toBe(wrapper.get('button').element);
+  });
+
   it('opens by activation and returns focus on Escape without modifying prose', async () => {
     const text = 'Standing declined, then Standing recovered.';
     const wrapper = render(text);
