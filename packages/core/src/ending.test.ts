@@ -1285,10 +1285,53 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     // marked as lost must not be quoted as surviving testimony at collection.
     ctx.world.chronicle[0]!.greyed = true;
     const before = digestOf(ctx);
-    expect(afterimageEvidence(ctx).spentBlood).toBeDefined();
+    // The broad Afterimage may still show the lost page, but the reckoning's
+    // surviving-blood witness must not cite it.
+    expect(afterimageEvidence(ctx).spent).toBeDefined();
+    expect(afterimageEvidence(ctx).spentBlood).toBeUndefined();
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     expect(selectEnding(ctx)).toBe(selectedEnding);
     expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('reads a later surviving blood rite when the earlier written testimony was lost', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const later = w.chronicle[0]!;
+    const ascendant = later.people![1]!;
+    const earlier = place(ctx, { name: 'Alys', sex: 'female', age: 40 });
+    w.people.kill(earlier.id, w.year - 1, 'given to the earlier rite', 'vessel_consumed');
+    w.chronicle.unshift(page({
+      id: 'lost-earlier-rite', year: w.year - 1, eventId: 'the_vessel_rite',
+      text: 'Alys was offered in an earlier generation.',
+      people: [earlier.id, ascendant], record: 'record', greyed: true,
+    }));
+    w.decisionLog.unshift({
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year - 1,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [earlier.id], ASCENDANT: [ascendant] },
+    });
+
+    const ending = selectEnding(ctx);
+    const before = digestOf(ctx);
+    // The Afterimage's earliest rite remains historically attributable,
+    // but lost testimony must not hide a later surviving bloodline cost.
+    expect(afterimageEvidence(ctx).spent?.person).toBe(earlier.id);
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(later.people![0]);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Meriel of the Tides',
+      year: w.year, text: 'The house wrote that Meriel walked away.',
+    });
+    expect(selectEnding(ctx)).toBe(ending);
+    expect(digestOf(ctx)).toBe(before);
+
+    // If the earlier page survives too, the first attested blood cost wins.
+    w.chronicle[0]!.greyed = false;
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(earlier.id);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Alys', year: w.year - 1,
+      text: 'Alys was offered in an earlier generation.',
+    });
   });
 
   it('does not infer pursuit from selecting an ambition, an unsupported rite, or an ambiguous page', () => {
