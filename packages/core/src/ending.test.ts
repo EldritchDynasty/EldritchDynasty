@@ -1424,3 +1424,73 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 });
+
+describe('a witnessed Ledger clause beside the Long Line purpose (#1983)', () => {
+  const clause = content.clauses.find((candidate) => !candidate.known)!;
+
+  function witnessedLedger() {
+    const ctx = atTheTerm();
+    const w = ctx.world;
+    w.houseAmbition = 'restore_ledger';
+    w.ending = { id: 'forgotten', year: w.year };
+    w.clausesRecovered.add(clause.id);
+    const page: ChronicleEntry = {
+      year: w.year - 41, weight: 'illuminated', named: true,
+      title: clause.name, text: clause.text,
+    };
+    w.chronicle.push(page);
+    return { ctx, page };
+  }
+
+  it('quotes one actually recovered, surviving contract page without changing the ending or world', () => {
+    const { ctx, page } = witnessedLedger();
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const view = epilogueOf(ctx)!;
+    expect(view.purpose).toEqual({
+      kind: 'ledger_witness', clause: clause.name, year: page.year, text: clause.text,
+    });
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
+    setProseMode(ctx, 'plainenglish');
+    // The words written into the book do not change when the reader changes modes.
+    expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
+  });
+
+  it('does not treat the ambition, an inherited clause, or a count without a page as an act', () => {
+    const { ctx, page } = witnessedLedger();
+    ctx.world.chronicle = ctx.world.chronicle.filter((entry) => entry !== page);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    ctx.world.chronicle.push(page);
+    ctx.world.clausesRecovered.delete(clause.id);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
+  it('rejects greyed, omitted, embellished, altered and ambiguous testimony', () => {
+    const { ctx, page } = witnessedLedger();
+    page.greyed = true;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.greyed = false;
+    page.text = null;
+    page.record = 'omit';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.text = clause.text;
+    page.record = 'embellish';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.record = undefined;
+    page.text = 'A different account of the debt.';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.text = clause.text;
+    ctx.world.chronicle.push({ ...page });
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+
+  it('leaves unrelated ambitions and the shorter campaign without this Long Line passage', () => {
+    const { ctx } = witnessedLedger();
+    ctx.world.houseAmbition = 'secure_branches';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    ctx.world.houseAmbition = 'restore_ledger';
+    ctx.world.campaign = 'short';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+});
