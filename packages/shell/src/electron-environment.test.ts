@@ -99,6 +99,26 @@ describe('Electron popup link boundary', () => {
     expect(openExternal).not.toHaveBeenCalled();
   });
 
+  it.each([
+    'https://exa\nmple.com',
+    'https://exa\tmple.com',
+    'https://example.com/a\rb',
+    'https://example.com ',
+    'https://example.com/\u007f',
+  ])('refuses URLs that the platform parser would silently rewrite: %s', (input) => {
+    // WHATWG URL() strips CR/LF/TAB and trims trailing spaces. Do not
+    // allow a malformed renderer link to become a different browser target.
+    expect(externalWebUrl(input)).toBeNull();
+    const openExternal = vi.fn();
+    expect(handleExternalPopup(input, openExternal)).toEqual({ action: 'deny' });
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it('still percent-encodes ordinary spaces inside an HTTP(S) path', () => {
+    expect(externalWebUrl('https://example.com/a b'))
+      .toBe('https://example.com/a%20b');
+  });
+
   it('opens an approved canonical URL outside Electron but still denies the popup', () => {
     const openExternal = vi.fn().mockResolvedValue(undefined);
     expect(handleExternalPopup('HTTPS://Example.com/play', openExternal))
@@ -157,6 +177,27 @@ describe('Electron main-frame navigation boundary (#2270)', () => {
     const event = { preventDefault: vi.fn() };
     const openExternal = vi.fn();
     handleExternalNavigation(event, requested, trusted, openExternal);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [trustedFile, trustedFile.replace('index.html', 'ind\nex.html')],
+    [trustedDev, 'http://local\thost:5174/'],
+    [trustedDev, 'http://localhost:5174/\r'],
+    [trustedDev, 'http://localhost:5174/ '],
+  ])('denies malformed navigation even if URL() would normalize it to the trusted document: %s', (trusted, requested) => {
+    const event = { preventDefault: vi.fn() };
+    const openExternal = vi.fn();
+    handleExternalNavigation(event, requested, trusted, openExternal);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
+    expect(openExternal).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-string navigation target before comparing it to the trusted document', () => {
+    const event = { preventDefault: vi.fn() };
+    const openExternal = vi.fn();
+    handleExternalNavigation(event, null as unknown as string, trustedDev, openExternal);
     expect(event.preventDefault).toHaveBeenCalledOnce();
     expect(openExternal).not.toHaveBeenCalled();
   });
