@@ -47,3 +47,42 @@ describe('event deletion review identity (#2424)', () => {
     expect(source).toContain('confirmation.value !== props.id');
   });
 });
+
+describe('event deletion rejected host operations (#2483)', () => {
+  it('keeps a failed or pending source check from authorizing the confirmation', () => {
+    const pendingGuard = review.indexOf('if (checking.value || working.value) return;');
+    const awaitRead = review.indexOf('await externalChange(result.path)');
+    const success = review.indexOf('reviewing.value = true;');
+    const catchBlock = review.indexOf('} catch (cause) {');
+    expect(pendingGuard).toBeGreaterThanOrEqual(0);
+    expect(awaitRead).toBeGreaterThan(pendingGuard);
+    expect(success).toBeGreaterThan(awaitRead);
+    expect(catchBlock).toBeGreaterThan(success);
+    expect(review).toContain('checking.value = true;');
+    expect(review).toContain('if (revision === reviewRevision) checking.value = false;');
+    expect(source).toContain(':disabled="checking || working"');
+  });
+
+  it('only reports a disk-check exception for the same selection and request revision', () => {
+    const catchBlock = review.slice(review.indexOf('} catch (cause) {'));
+    expect(catchBlock).toContain('revision === reviewRevision && props.id === reviewedId');
+    expect(catchBlock).toContain("error.value = 'Could not check the source file: '");
+    expect(catchBlock).not.toContain('reviewing.value = true;');
+    expect(cancel).toContain('checking.value = false;');
+    expect(cancel).toContain('++reviewRevision;');
+  });
+
+  it('reports a rejected delete without pretending it succeeded or clearing its preview', () => {
+    const awaitDelete = remove.indexOf('await deleteEvent(removedId)');
+    const failedWrite = remove.indexOf('} catch (cause) {');
+    expect(awaitDelete).toBeGreaterThanOrEqual(0);
+    expect(failedWrite).toBeGreaterThan(awaitDelete);
+    const catchBlock = remove.slice(failedWrite, remove.indexOf('} finally {', failedWrite));
+    expect(catchBlock).toContain('revision === reviewRevision && props.id === removedId');
+    expect(catchBlock).toContain("error.value = 'Deletion failed;");
+    expect(catchBlock).not.toContain('cancel()');
+    expect(remove).toContain('if (!result.ok) error.value = result.error');
+    expect(remove).toContain('else cancel()');
+    expect(remove).toContain('working.value = false;');
+  });
+});
