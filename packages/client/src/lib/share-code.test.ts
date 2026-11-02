@@ -1,6 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import type { ShareCodeProblem } from '@ed/core';
+import { SHARE_CODE_MAX, type ShareCodeProblem } from '@ed/core';
 import { shareCodeProblem } from './share-code.js';
+
+describe('share-code front-door refusals (#2532)', () => {
+  it('asks for an empty input to be filled before import, in both reading modes', () => {
+    const problem: ShareCodeProblem = { kind: 'empty' };
+    expect(shareCodeProblem(problem, 'plainenglish')).toBe('Paste a share code first.');
+    expect(shareCodeProblem(problem, 'original')).toBe('There is no code here yet.');
+  });
+
+  it('identifies an invalid code prefix without echoing pasted input', () => {
+    const problem: ShareCodeProblem = { kind: 'not_a_code' };
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe('This is not a share code. Share codes start with ED1.');
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe('That is not a share code. A code begins ED1.');
+  });
+
+  it('states the actual import length limit in both reading modes', () => {
+    const problem: ShareCodeProblem = { kind: 'too_long', max: SHARE_CODE_MAX };
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe(`This is too long to be a share code. Codes are at most ${SHARE_CODE_MAX} characters.`);
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe(`That is longer than any code this game writes (${SHARE_CODE_MAX} characters).`);
+  });
+});
 
 describe('share code import name prompts (#1995)', () => {
   it('requests each unnamed friend, not one name for the whole friends category', () => {
