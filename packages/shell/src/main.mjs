@@ -430,7 +430,16 @@ function nativeSmokeTest(win) {
       finish(false, 'client supplied no valid persisted run snapshot and year');
       return;
     }
-    const sha256 = nativeSnapshotSha256(snapshot);
+    // An object can still serialize to null, a scalar, or no JSON at all.
+    // Refuse a malformed transport payload as terminal smoke evidence rather
+    // than allowing a hashing exception to escape this IPC callback.
+    let sha256;
+    try {
+      sha256 = nativeSnapshotSha256(snapshot);
+    } catch (error) {
+      finish(false, `client supplied unreadable persisted run JSON: ${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
     finish(true, `${NATIVE_SMOKE} ${year} ${sha256}`, {
       command: NATIVE_SMOKE, ok: true, nonce: process.env.ED_SMOKE_NONCE, year, sha256,
     });
