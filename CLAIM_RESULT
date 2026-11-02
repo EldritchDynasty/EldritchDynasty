@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim 2483 --agent chatgpt/issue-2483-event-delete-rejections-20261102-2206 --paths packages/editor/src/components/EventDelete.vue packages/editor/src/components/EventDelete.test.ts --lane code
+request-commit: 7801bda472440b703d27e963f7f9dbebb66757c8
+
+held: 2483 → chatgpt/issue-2483-event-delete-rejections-20261102-2206 (lane code)
+  land it with: Closes #2483
+  the janitor retires the claims and deletes the branch behind that.
