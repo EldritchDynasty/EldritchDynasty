@@ -219,7 +219,13 @@ export class SoundBed {
     } catch {
       // Treat the unavailable host hook as silence, not a failed game mount.
     }
-    visibility();
+    // A native host may report a pause synchronously while onPause is being
+    // subscribed, even though the webview still reports "visible". Do not
+    // mistake the initial visibility sample for a foreground/resume event:
+    // that would immediately undo the host's pause and restart the drone.
+    // A real visibilitychange, pageshow or a fresh user gesture can resume.
+    this.#documentHidden = doc.visibilityState === 'hidden';
+    if (this.#documentHidden) this.hide();
     // A former attachment may still have its cleanup callback in a caller.
     // Calling that stale callback must neither tear down nor forget a newer
     // attachment. Each cleanup owns only its own listeners and host pause hook.
