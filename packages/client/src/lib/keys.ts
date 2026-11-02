@@ -135,15 +135,25 @@ export function isField(el: Element | null): boolean {
   return false;
 }
 
-/** Whether the focused thing answers Space and Enter on its own. */
+/**
+ * The focused thing, or a control containing it, owns Space and Enter.
+ * A custom ARIA widget may contain a separately focusable child; keys sent
+ * through that child still belong to the containing button/selection widget,
+ * not the game clock. Follow open shadow hosts as for text fields.
+ */
 export function isControl(el: Element | null): boolean {
   if (!el) return false;
-  const active = innermostActiveElement(el);
-  const tag = active.tagName;
-  // A keyboard-activated ARIA control also owns Enter/Space. Do not turn a
-  // year behind a role-based button or link, including inside open shadows.
-  return tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY'
-    || hasRole(active, CONTROL_ROLES);
+  let active: Element | null = innermostActiveElement(el);
+  while (active) {
+    const tag = active.tagName;
+    if (tag === 'BUTTON' || tag === 'A' || tag === 'SUMMARY'
+      || hasRole(active, CONTROL_ROLES)) return true;
+
+    const root: Node | undefined = active.getRootNode?.();
+    active = active.parentElement
+      ?? (root instanceof ShadowRoot && root.mode === 'open' ? root.host : null);
+  }
+  return false;
 }
 
 /** What `?` puts on screen. The order they are worth learning in. */
