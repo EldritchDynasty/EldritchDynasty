@@ -1153,3 +1153,55 @@ describe('Plain English inherited Library claims (#410)', () => {
     expect(missingPlainEnglish(plain.ctx)).not.toContain(houseAddress);
   });
 });
+
+describe('inherited Library excludes lost Chronicle leaves (#2460)', () => {
+  it('keeps the surviving archive stable and never lets another house inherit a greyed page', () => {
+    const source = newGame(bundle, { seed: 2460, campaign: 'short', decider: 'chronicler' });
+    const world = source.ctx.world;
+    world.chronicle.length = 0;
+    world.ending = { id: 'forgotten', year: 1342 };
+    const person = world.people.household(world.playerHouse, source.year)[0]!;
+    const trait = bundle.trait('reads_the_signs')!;
+
+    world.chronicle.push({
+      id: 'surviving_library_leaf',
+      year: source.year,
+      weight: 'line',
+      text: 'The surviving account of this house.',
+      named: true,
+      claims: [],
+    });
+    const beforeLoss = libraryRunOf(source.ctx);
+    expect(beforeLoss?.entries.map((entry) => entry.id)).toEqual(['surviving_library_leaf']);
+
+    // This later illuminated claim would outrank the surviving line in the
+    // Library selection, but the physical page has been lost.
+    world.chronicle.push({
+      id: 'lost_library_leaf',
+      year: source.year,
+      weight: 'illuminated',
+      text: 'PRIVATE LOST TESTIMONY',
+      named: true,
+      greyed: true,
+      record: 'embellish',
+      claims: [{ kind: 'trait', person: person.id, trait: trait.id, has: true }],
+    });
+    const lost = world.chronicle.at(-1)!;
+    const archived = libraryRunOf(source.ctx);
+    expect(archived).toEqual(beforeLoss); // Includes the deterministic archive id.
+    expect(libraryRunOf(loadGame(saveGame(source.ctx), bundle))).toEqual(beforeLoss);
+
+    const recipient = newGame(bundle, { seed: 2461, campaign: 'short', decider: 'chronicler' });
+    const inherited = seedLibraryMemories(recipient.ctx, [archived!]);
+    expect(inherited.map((memory) => memory.sourceText))
+      .toEqual(['The surviving account of this house.']);
+    expect(inherited.every((memory) => memory.sourceClaims.length === 0)).toBe(true);
+
+    // With no surviving written pages there must be no second-hand quote or
+    // claim at all, even when the lost leaf still has text and claims in the save.
+    world.chronicle.splice(0, world.chronicle.length, lost);
+    const entirelyLost = libraryRunOf(source.ctx);
+    expect(entirelyLost?.entries).toEqual([]);
+    expect(seedLibraryMemories(recipient.ctx, [entirelyLost!])).toEqual([]);
+  });
+});
