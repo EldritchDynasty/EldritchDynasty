@@ -70,7 +70,10 @@ function cssConcealed(element: HTMLElement, card: HTMLElement): boolean {
   // either ancestor restriction. Check each ancestor up to the modal card.
   for (let node: HTMLElement | null = element; node; node = composedParent(node)) {
     const style = window.getComputedStyle(node);
-    if (style.display === 'none' || style.getPropertyValue('content-visibility') === 'hidden') return true;
+    // Check the inline declaration too: CSSOM implementations may not
+    // reflect an explicitly hidden <slot> in its computed display value.
+    if (node.style.display === 'none' || style.display === 'none'
+      || style.getPropertyValue('content-visibility') === 'hidden') return true;
     if (node === card) break;
   }
   return false;
