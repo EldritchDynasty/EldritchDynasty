@@ -65,6 +65,29 @@ describe('native smoke callback evidence settles even on synchronous failures (#
       .resolves.toEqual({ command: 'resume', ok: false, error: 'native callback failed' });
   });
 
+  it.each([
+    { name: 'null', snapshot: null },
+    { name: 'undefined', snapshot: undefined },
+    { name: 'array', snapshot: [{ format: 41 }] },
+    { name: 'string', snapshot: 'not a saved game' },
+    { name: 'number', snapshot: 41 },
+    { name: 'boolean', snapshot: false },
+  ])('reports a $name snapshot as a failed smoke, never a successful hash', async ({ snapshot }) => {
+    await expect(settleSmokeCommand(command, async () => ({ snapshot }))).resolves.toEqual({
+      command: 'resume',
+      ok: false,
+      error: 'native smoke snapshot must be a JSON object',
+    });
+  });
+
+  it('ignores only the transport savedAt timestamp for a valid snapshot', async () => {
+    const snapshot = { format: 41, year: 1243, savedAt: '2026-10-31T12:00:00.000Z' };
+    const refreshed = { ...snapshot, savedAt: '2026-11-02T04:00:00.000Z' };
+    const first = await smokeEvidence(command, { snapshot });
+    const second = await smokeEvidence(command, { snapshot: refreshed });
+    expect(first.sha256).toBe(second.sha256);
+  });
+
   it('preserves the successful hashed snapshot evidence', async () => {
     const result = { snapshot: { format: 41, year: 1243 }, year: 1243 };
     const expected = await smokeEvidence(command, result);
