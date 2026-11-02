@@ -24,10 +24,12 @@ watch([() => props.text, () => props.proseMode], async () => {
   // Only move focus when it was inside the disappearing disclosure: changing
   // reading preferences elsewhere must never steal focus back to this passage.
   const primary = root.value?.querySelector<HTMLButtonElement>('button.glossary-term');
-  const restoreFocus = chain.value.length > 0
-    && typeof document !== 'undefined'
+  // A focused primary button can also disappear when the next passage has
+  // no glossary alias, even when no related disclosure was open. Preserve
+  // focus inside this passage, but never pull it back from another control.
+  const restoreFocus = typeof document !== 'undefined'
     && !!root.value?.contains(document.activeElement)
-    && document.activeElement !== primary;
+    && (chain.value.length > 0 || document.activeElement === primary);
   chain.value = [];
   openers.value = [];
   if (!restoreFocus) return;
