@@ -121,8 +121,10 @@ export function installPseudoLocalisation(root: Element): () => void {
   const observer = new MutationObserver((records) => {
     for (const record of records) {
       if (record.type === 'attributes') {
-        if (record.target instanceof Element && record.attributeName) {
-          transformAttribute(record.target, record.attributeName);
+        // Mutation targets may belong to an embedded document's realm. The
+        // global Element constructor would silently drop their updates.
+        if (record.target.nodeType === Node.ELEMENT_NODE && record.attributeName) {
+          transformAttribute(record.target as Element, record.attributeName);
         }
         continue;
       }
