@@ -1214,8 +1214,10 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     original.purpose.text = 'A rewritten account.';
     expect(ctx.world.chronicle[0]!.text).toBe('The house wrote that Meriel walked away.');
     setProseMode(ctx, 'plainenglish');
-    expect(epilogueOf(ctx)!.purpose).toMatchObject({ text: 'The house wrote that Meriel walked away.' });
-    expect(epilogueOf(ctx)!.purpose?.person).toBe('Meriel of the Tides');
+    const plainPurpose = epilogueOf(ctx)!.purpose;
+    expect(plainPurpose).toMatchObject({ text: 'The house wrote that Meriel walked away.' });
+    if (plainPurpose?.kind !== 'blood_spent') throw new Error('expected a named rite cost');
+    expect(plainPurpose.person).toBe('Meriel of the Tides');
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
