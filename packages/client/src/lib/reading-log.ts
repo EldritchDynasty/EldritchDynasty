@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 11: opt-in signing-to-first-command timing, with censored incomplete entries. */
-export const READING_LOG_FORMAT = 'ed-reading-log/11';
+/** 12: opt-in Table action outcome summaries, with censored incomplete attempts. */
+export const READING_LOG_FORMAT = 'ed-reading-log/12';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -50,6 +50,7 @@ export const READING_LOG_CAVEATS = [
   'The first Chronicle window after a successful saved-run pickup is carried history; the prior house gap is censored, not continued into the loaded save.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
+  'Table action summary counts terminal results separately from attempts; unfinished attempts may be interrupted or capped and must not be classified as refusals.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
   'Choose and Match record acceptance or refusal from their returned result, not an attempted click. Other answer verbs without a returned outcome remain attempts only; a Match refusal may include an unavailable card.',
   'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
@@ -162,6 +163,25 @@ export interface EntryTiming {
   censored: boolean;
 }
 
+/** A bounded category and its observed action outcomes; no order arguments or refusal text. */
+export interface TableActionCounts {
+  category: string;
+  attempts: number;
+  accepted: number;
+  refused: number;
+  threw: number;
+  returned: number;
+  /** An attempt with no matching terminal marker is censored, not refused. */
+  unfinished: number;
+}
+
+export interface TableActionSummary {
+  orders: TableActionCounts[];
+  muster: TableActionCounts[];
+  /** Categories distinguish choice/record delegation and set/clear. */
+  delegation: TableActionCounts[];
+}
+
 export interface ReadingLogSummary {
   /** Compare first-session paths without mistaking button attempts for success. */
   entries: EntryTiming[];
@@ -172,6 +192,8 @@ export interface ReadingLogSummary {
   breakMs: number;
   answers: number;
   decisions: number;
+  /** Per-category Table/Muster/delegation actions and terminal outcomes (#2526). */
+  tableActions: TableActionSummary;
   /** Decisions shown per hour in the foreground. An estimate, and labelled one. */
   decisionsPerForegroundHourEstimate: number | null;
   gaps: AnswerGap[];
@@ -362,6 +384,42 @@ function assertNever(value: never): never {
 }
 
 /**
+ * Only category enums already validated at collection time enter this read-only
+ * projection. The paired action markers make outcomes observable without
+ * copying names, order payloads, free text or refusal reasons into the summary.
+ */
+function tableActionsOf(events: readonly ReadingLogEvent[], stop: number): TableActionSummary {
+  const orders = new Map<string, TableActionCounts>();
+  const muster = new Map<string, TableActionCounts>();
+  const delegation = new Map<string, TableActionCounts>();
+  type Terminal = 'accepted' | 'refused' | 'threw' | 'returned';
+  const count = (group: Map<string, TableActionCounts>, category: string, status: 'attempted' | Terminal) => {
+    let row = group.get(category);
+    if (!row) {
+      row = { category, attempts: 0, accepted: 0, refused: 0, threw: 0, returned: 0, unfinished: 0 };
+      group.set(category, row);
+    }
+    if (status === 'attempted') row.attempts++;
+    else row[status]++;
+  };
+  for (const event of events) {
+    if (event.at > stop || event.kind !== 'action') continue;
+    if (event.verb === 'order') count(orders, event.category, event.status);
+    else if (event.verb === 'muster') count(muster, event.category, event.status);
+    else if (event.verb === 'delegateChoice' || event.verb === 'delegateRecord') {
+      count(delegation, `${event.category}:${event.change}`, event.status);
+    }
+  }
+  const rows = (group: Map<string, TableActionCounts>) => [...group.values()]
+    .map((row) => ({
+      ...row,
+      unfinished: Math.max(0, row.attempts - row.accepted - row.refused - row.threw - row.returned),
+    }))
+    .sort((a, b) => a.category < b.category ? -1 : a.category > b.category ? 1 : 0);
+  return { orders: rows(orders), muster: rows(muster), delegation: rows(delegation) };
+}
+
+/**
  * Fold the events into the three clocks. Exported so a researcher's analysis
  * and the artifact's own summary are the same arithmetic.
  *
@@ -495,6 +553,7 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
     breakMs: breaks,
     answers,
     decisions,
+    tableActions: tableActionsOf(events, stop),
     decisionsPerForegroundHourEstimate: hours > 0 ? decisions / hours : null,
     gaps,
   };
