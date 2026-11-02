@@ -41,9 +41,11 @@ describe('event deletion review identity (#2424)', () => {
 
   it('binds the destructive action to the exact event whose diff was reviewed', () => {
     const identityGuard = remove.indexOf('preview.value?.id !== props.id');
-    const deletion = remove.indexOf('await deleteEvent(props.id)');
+    const capturedId = remove.indexOf('const removedId = props.id;');
+    const deletion = remove.indexOf('await deleteEvent(removedId)');
     expect(identityGuard).toBeGreaterThanOrEqual(0);
-    expect(deletion).toBeGreaterThan(identityGuard);
+    expect(capturedId).toBeGreaterThan(identityGuard);
+    expect(deletion).toBeGreaterThan(capturedId);
     expect(source).toContain('confirmation.value !== props.id');
   });
 });
