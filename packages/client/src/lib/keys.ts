@@ -98,6 +98,27 @@ function hasRole(el: Element, roles: ReadonlySet<string>): boolean {
   return raw !== null && raw.trim().split(/\s+/).some((role) => roles.has(role));
 }
 
+/**
+ * Focus can sit on a descendant of a custom text-entry widget rather than
+ * on the element carrying its ARIA role. Inspect its composed ancestors too,
+ * including the host of an open shadow root, before allowing game shortcuts.
+ * Do not apply this to non-text widget roles: numeric choices remain available
+ * while the player focuses ordinary buttons and selection controls.
+ */
+function inTextEntryRole(element: Element): boolean {
+  let current: Element | null = element;
+  while (current) {
+    if (hasRole(current, FIELD_ROLES)) return true;
+    if (current.parentElement) {
+      current = current.parentElement;
+    } else {
+      const root = current.getRootNode?.();
+      current = root instanceof ShadowRoot ? root.host : null;
+    }
+  }
+  return false;
+}
+
 /** Custom widgets also own keystrokes, even when they are not native inputs. */
 const FIELD_ROLES: ReadonlySet<string> = new Set(['textbox', 'searchbox', 'combobox', 'spinbutton']);
 const CONTROL_ROLES: ReadonlySet<string> = new Set([
@@ -113,7 +134,7 @@ export function isField(el: Element | null): boolean {
   const tag = active.tagName;
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT'
     || (active as HTMLElement).isContentEditable === true
-    || hasRole(active, FIELD_ROLES);
+    || inTextEntryRole(active);
 }
 
 /** Whether the focused thing answers Space and Enter on its own. */

@@ -189,6 +189,65 @@ describe('ARIA fields and keyboard-activated selection controls (#2351)', () => 
     }
   });
 
+  it('keeps game shortcuts out of focusable children of an ARIA text field (#2476)', () => {
+    for (const role of ['textbox', 'searchbox', 'combobox', 'spinbutton']) {
+      const field = document.createElement('div');
+      field.setAttribute('role', role);
+      const child = document.createElement('span');
+      child.tabIndex = 0;
+      field.append(child);
+      document.body.append(field);
+      try {
+        child.focus();
+        expect(document.activeElement, role).toBe(child);
+        expect(isField(document.activeElement), role).toBe(true);
+        for (const key of ['1', '9', '?', ' ', 'Enter']) {
+          expect(shortcutFor({ key, inField: isField(document.activeElement) }), role + ': ' + key)
+            .toBeNull();
+        }
+      } finally {
+        field.remove();
+      }
+    }
+  });
+
+  it('detects a parent text role across an open shadow root (#2476)', () => {
+    const field = document.createElement('div');
+    field.setAttribute('role', 'textbox');
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const child = document.createElement('span');
+    child.tabIndex = 0;
+    shadow.append(child);
+    field.append(host);
+    document.body.append(field);
+    try {
+      child.focus();
+      expect(document.activeElement).toBe(host);
+      expect(isField(document.activeElement)).toBe(true);
+      expect(shortcutFor({ key: '2', inField: isField(document.activeElement) })).toBeNull();
+    } finally {
+      field.remove();
+    }
+  });
+
+  it('does not turn a non-text ARIA ancestor into a typing field (#2476)', () => {
+    const widget = document.createElement('div');
+    widget.setAttribute('role', 'group');
+    const child = document.createElement('span');
+    child.tabIndex = 0;
+    widget.append(child);
+    document.body.append(widget);
+    try {
+      child.focus();
+      expect(isField(document.activeElement)).toBe(false);
+      expect(shortcutFor({ key: '3', inField: isField(document.activeElement) }))
+        .toEqual({ kind: 'take', index: 2 });
+    } finally {
+      widget.remove();
+    }
+  });
+
   it('leaves Space and Enter to custom selection widgets', () => {
     for (const role of [
       'checkbox', 'switch', 'radio', 'menuitem', 'menuitemcheckbox',
