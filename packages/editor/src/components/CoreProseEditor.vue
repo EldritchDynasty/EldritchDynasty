@@ -7,7 +7,7 @@ const drafts = reactive(new Map<string, string>());
 </script>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import { contentInterpolationTokens, proseOriginalHash } from '@ed/schema';
 import coreEntries from 'virtual:ed-core-prose';
 import { isWritableContentPath } from '../lib/content';
@@ -22,7 +22,11 @@ type Entry = (typeof coreEntries)[number];
 const FILE = 'messages.yaml';
 const search = ref('');
 const reviewing = ref(false);
+const checking = ref(false);
 const saving = ref(false);
+// An edit, fresh review, or unmount makes a pending disk check obsolete.
+let reviewEpoch = 0;
+onBeforeUnmount(() => { reviewEpoch += 1; });
 const error = ref('');
 const externalConflict = ref(false);
 
@@ -66,27 +70,34 @@ const pending = computed(() => reviewing.value ? pendingCoreProseText() : undefi
 const dirty = computed(() => store.dirty.has(FILE) || drafts.size > 0);
 
 function edit(entry: Entry, event: Event) {
-  if (!writable.value) return;
+  if (!writable.value || saving.value) return;
   const target = event.target;
   if (!(target instanceof HTMLTextAreaElement)) return;
   drafts.set(entry.address, target.value);
   markCoreProseDraftDirty();
+  reviewEpoch += 1;
   reviewing.value = false; // a preview must not silently omit subsequent edits
   error.value = '';
   externalConflict.value = false;
 }
 
 async function review() {
-  if (!writable.value || !dirty.value || badDrafts.value.length) return;
+  if (!writable.value || !dirty.value || badDrafts.value.length || checking.value || saving.value) return;
+  const epoch = ++reviewEpoch;
+  checking.value = true;
+  reviewing.value = false;
   error.value = '';
   externalConflict.value = false;
   try {
     const changed = await externalChange(FILE);
+    // A newer keystroke or an unmount must not clear/stage its drafts.
+    if (epoch !== reviewEpoch) return;
     if (changed.changed) {
       externalConflict.value = true;
       error.value = 'messages.yaml changed on disk. Reload the editor before saving.';
       return;
     }
+    if (badDrafts.value.length) return;
     const edits = [...drafts].map(([address, plainenglish]) => {
       const entry = entriesByAddress.get(address);
       return { address, plainenglish, original: entry?.text ?? '' };
@@ -99,12 +110,16 @@ async function review() {
     drafts.clear();
     reviewing.value = true;
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : String(cause);
+    if (epoch === reviewEpoch) {
+      error.value = cause instanceof Error ? cause.message : String(cause);
+    }
+  } finally {
+    checking.value = false;
   }
 }
 
 async function save() {
-  if (!writable.value || !reviewing.value || saving.value) return;
+  if (!writable.value || !reviewing.value || saving.value || checking.value) return;
   saving.value = true;
   try {
     const changed = await externalChange(FILE);
@@ -168,7 +183,7 @@ async function save() {
           Plain English
           <textarea
             :value="textFor(entry)"
-            :disabled="!writable"
+            :disabled="!writable || saving"
             class="plainenglish"
             placeholder="Add a direct counterpart…"
             @input="edit(entry, $event)"
@@ -182,8 +197,8 @@ async function save() {
 
     <div class="bar save-bar">
       <span class="note">{{ dirty ? 'Unsaved changes · messages.yaml' : 'Nothing unsaved' }}</span>
-      <button class="btn" :disabled="!writable || !dirty || !!badDrafts.length || saving" @click="review">
-        Review &amp; save
+      <button class="btn" :disabled="!writable || !dirty || !!badDrafts.length || saving || checking" @click="review">
+        {{ checking ? 'Checking disk…' : 'Review & save' }}
       </button>
     </div>
     <p v-if="error" class="issue error" role="alert">{{ error }}</p>
@@ -192,10 +207,10 @@ async function save() {
       <h3>Review messages.yaml changes</h3>
       <DiffView v-if="pending" :before="pending.before" :after="pending.after" />
       <div class="bar">
-        <button class="btn primary" :disabled="saving || externalConflict || !!badDrafts.length" @click="save">
+        <button class="btn primary" :disabled="saving || checking || externalConflict || !!badDrafts.length" @click="save">
           {{ saving ? 'Writing…' : 'Write to disk' }}
         </button>
-        <button class="btn" @click="reviewing = false">Cancel</button>
+        <button class="btn" :disabled="saving" @click="reviewing = false">Cancel</button>
       </div>
     </section>
   </section>
