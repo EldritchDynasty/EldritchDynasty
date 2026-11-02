@@ -1108,6 +1108,70 @@ describe('concurrent saved-run pickups (#2257)', () => {
     expect(JSON.stringify(l.artifact())).not.toContain('private older error');
   });
 
+  it.each([
+    ['resume', false],
+    ['load', false],
+    ['importSave', 'cancelled'],
+  ] as const)('handles a refused %s from a foreign PromiseLike without losing fresh pages (#2546)', async (verb, result) => {
+    const l = log();
+    const source = Promise.resolve(result);
+    // The host returns an object with standard then semantics, but without
+    // this realm's Promise prototype. A foreign-realm Promise has the same
+    // important property: `instanceof Promise` is false.
+    const foreign = { then: source.then.bind(source) };
+    expect(foreign instanceof Promise).toBe(false);
+    const actions = recordActions({
+      resume: () => foreign,
+      load: () => foreign,
+      importSave: () => foreign,
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    const returned = verb === 'resume' ? actions.resume()
+      : verb === 'load' ? actions.load('slot') : actions.importSave();
+    expect(returned).toBe(foreign);
+    await returned;
+
+    l.chronicle([{ id: 'fresh', year: 1100, answer: 'glimpse' }]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(0);
+    expect(l.events.filter(e => e.kind === 'page').map(e =>
+      [e.page, 'carried' in e && e.carried === true],
+    )).toEqual([['fresh', false]]);
+    expect(l.artifact().summary.answers).toBe(1);
+  });
+
+  it('continues to mark successful foreign PromiseLike pickups as carried (#2546)', async () => {
+    const l = log();
+    const source = Promise.resolve(true);
+    const foreign = { then: source.then.bind(source) };
+    const actions = recordActions({
+      load: () => foreign,
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    const returned = actions.load('saved');
+    expect(returned).toBe(foreign);
+    await returned;
+    l.chronicle([{ id: 'old', year: 1100, answer: 'clause' }]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(1);
+    expect(l.events.filter(e => e.kind === 'page').map(e =>
+      [e.page, 'carried' in e && e.carried === true],
+    )).toEqual([['old', true]]);
+    expect(l.artifact().summary.answers).toBe(0);
+  });
+
+  it('notices a foreign PromiseLike rejection without leaking the reason (#2546)', async () => {
+    const l = log();
+    const source = Promise.reject(new Error('private remote error'));
+    const foreign = { then: source.then.bind(source) };
+    const actions = recordActions({
+      importSave: () => foreign,
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    const returned = actions.importSave();
+    expect(returned).toBe(foreign);
+    await expect(returned).rejects.toThrow('private remote error');
+    l.chronicle([{ id: 'after-rejection', year: 1102, answer: 'glimpse' }]);
+    expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(0);
+    expect(l.artifact().summary.answers).toBe(1);
+    expect(JSON.stringify(l.artifact())).not.toContain('private remote error');
+  });
+
   it('clears a failed current pickup but not a later successful pickup', async () => {
     const l = log();
     const first = deferred<boolean>();
