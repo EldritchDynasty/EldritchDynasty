@@ -282,7 +282,13 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     founding.friends.map((f) => sexLetter(f.sex)).join(''),
     names ? founding.friends.map((f) => f.name) : 0,
   ];
-  return { ok: true, code: encode(payload) };
+  // The decision log can outlive changes to signing's limits (or be built
+  // programmatically). Do not publish a code that this very reader would
+  // reject as malformed or oversized. Refuse rather than dropping inputs.
+  if (!PayloadS.safeParse(payload).success) return { ok: false, unavailable: 'unrepresentable' };
+  const code = encode(payload);
+  if (code.length > SHARE_CODE_MAX) return { ok: false, unavailable: 'unrepresentable' };
+  return { ok: true, code };
 }
 
 // ── reading one ──────────────────────────────────────────────────────────
