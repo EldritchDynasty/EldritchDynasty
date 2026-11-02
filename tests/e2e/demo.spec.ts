@@ -267,3 +267,34 @@ for (const scenario of [
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
   });
 }
+
+test('mislabeled named demonstration and full-campaign slots are refused without crossing saves #1979', async ({ page }) => {
+  const { full, demo } = await openWithSaves(page, 'plainenglish', { namedDemo: true });
+  await page.evaluate(({ full, demo }) => {
+    // Both are parseable saves, but each belongs to the OTHER namespace.
+    // A named chapter must be checked just as strictly as the rolling slot.
+    localStorage.setItem('ed:save:demo-chapter-fixture', JSON.stringify(full));
+    localStorage.setItem('ed:save:chapter-other', JSON.stringify(demo));
+  }, { full, demo });
+  await page.reload();
+
+  const demos = page.getByRole('region', { name: 'Saved demonstrations' });
+  await demos.getByRole('button', { name: /^chapter-fixture\\b/ }).click();
+  await expect(page.locator('main.start')).toBeVisible();
+  await expect(demos.getByRole('status')).toContainText('Could not load this saved game.');
+
+  const fullRuns = page.getByRole('region', { name: 'Saved games' });
+  await fullRuns.getByRole('button', { name: /^chapter-other\\b/ }).click();
+  await expect(page.locator('main.start')).toBeVisible();
+  await expect(fullRuns.getByRole('status')).toContainText('Could not load this saved game.');
+
+  // Neither failed load may overwrite either autosave or silently retag a
+  // stored game. Both swapped chapter slots remain available for export.
+  expect(await page.evaluate(() => ({
+    autosave: JSON.parse(localStorage.getItem('ed:save:autosave')!),
+    demoChapter: JSON.parse(localStorage.getItem('ed:save:demo-chapter-fixture')!),
+    fullChapter: JSON.parse(localStorage.getItem('ed:save:chapter-other')!),
+  }))).toEqual({ autosave: full, demoChapter: full, fullChapter: demo });
+  await expect(demos.getByRole('button', { name: 'Export saved demonstration demo-chapter-fixture' })).toBeVisible();
+  await expect(fullRuns.getByRole('button', { name: 'Export saved game chapter-other' })).toBeVisible();
+});
