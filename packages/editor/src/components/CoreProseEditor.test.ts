@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { textareaTarget } from '../lib/textarea-target';
 
 /** Contract checks for the async core-prose review; store writes have separate behavioral tests. */
 const source = readFileSync(new URL('./CoreProseEditor.vue', import.meta.url), 'utf8');
@@ -15,6 +17,7 @@ describe('core prose async review identity (#2439)', () => {
     expect(edit).toContain('reviewEpoch += 1;');
     expect(edit).toContain('reviewing.value = false;');
     expect(edit).toContain('if (!writable.value || saving.value) return;');
+    expect(edit).toContain('textareaTarget(event.target)');
   });
 
   it('does not stage or clear drafts when the asynchronous disk check is stale', () => {
@@ -44,5 +47,31 @@ describe('core prose async review identity (#2439)', () => {
     expect(source).toContain(':disabled="saving || checking || externalConflict || !!badDrafts.length"');
     expect(source).toContain('<button class="btn" :disabled="saving" @click="reviewing = false">Cancel</button>');
     expect(source).toContain(':disabled="!writable || saving"');
+  });
+});
+
+describe('Core Prose HTML textarea event targets (#2517)', () => {
+  it('recognises a real textarea created in an embedded document realm', () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    try {
+      const foreign = frame.contentDocument!.createElement('textarea');
+      foreign.value = 'The updated sentence';
+      expect(foreign instanceof HTMLTextAreaElement).toBe(false);
+      expect(textareaTarget(foreign)).toBe(foreign);
+      expect(textareaTarget(foreign)?.value).toBe('The updated sentence');
+      expect(textareaTarget(document.createElement('textarea'))).toBeInstanceOf(HTMLTextAreaElement);
+    } finally {
+      frame.remove();
+    }
+  });
+
+  it('rejects null, unrelated event targets and SVG textarea lookalikes', () => {
+    expect(textareaTarget(null)).toBeNull();
+    expect(textareaTarget(new EventTarget())).toBeNull();
+    expect(textareaTarget(document)).toBeNull();
+    expect(textareaTarget(document.createElement('div'))).toBeNull();
+    expect(textareaTarget(document.createElement('input'))).toBeNull();
+    expect(textareaTarget(document.createElementNS('http://www.w3.org/2000/svg', 'textarea'))).toBeNull();
   });
 });
