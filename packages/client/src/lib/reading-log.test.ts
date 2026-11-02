@@ -156,7 +156,7 @@ describe('first-session signing transitions (#1984)', () => {
       { at: 600, verb: 'enter', act: 'signing', status: 'returned' },
     ]);
     const artifact = l.artifact();
-    expect(artifact.format).toBe('ed-reading-log/10');
+    expect(artifact.format).toBe('ed-reading-log/11');
     expect(artifact.summary.answers).toBe(0);
     expect(artifact.summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
     for (const secret of ['private house', 'private friend', 'private refusal']) {
@@ -177,6 +177,76 @@ describe('first-session signing transitions (#1984)', () => {
       { verb: 'enter', status: 'threw' },
     ]);
     expect(JSON.stringify(l.artifact())).not.toContain('private exception');
+  });
+});
+
+describe('censored first-session entry timing (#1984)', () => {
+  it('starts after accepted Begin, ignores refused commands, and excludes background time', () => {
+    const c = clock(), l = log(c);
+    c.tick(2_000); // Title screen is deliberately not part of entry time.
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    l.note({ kind: 'run', campaign: 'short', seed: 41 });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'refused' });
+    c.tick(200);
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'accepted' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'choose', act: 'answer', status: 'accepted' }); // before Enter
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'match', act: 'answer', status: 'refused' });
+    c.tick(50);
+    l.note({ kind: 'visible', visible: false });
+    c.tick(200);
+    l.note({ kind: 'visible', visible: true });
+    c.tick(150);
+    l.note({ kind: 'action', verb: 'match', act: 'answer', status: 'accepted' });
+    const artifact = l.artifact();
+    expect(artifact.format).toBe('ed-reading-log/11');
+    expect(artifact.summary.entries).toEqual([{
+      startedAt: 2_000, campaign: 'short', foundedAt: 2_300, enteredAt: 2_400,
+      firstAcceptedCommand: { at: 2_900, verb: 'match' },
+      wallMs: 900, foregroundMs: 700, censored: false,
+    }]);
+    // The summary has no room for player-entered founder or house names.
+    expect(JSON.stringify(artifact.summary.entries)).not.toMatch(/name|choice|private/);
+  });
+
+  it('censors aborted starts and never borrows acceptance from a later house or resumed save', () => {
+    const c = clock(), l = log(c);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'accepted' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'beginFromShareCode', act: 'start' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    c.tick(100);
+    l.note({ kind: 'pickup' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'match', act: 'answer', status: 'accepted' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    c.tick(200);
+    l.end('exported');
+
+    expect(l.artifact().summary.entries).toEqual([
+      { startedAt: 0, campaign: null, foundedAt: 100, enteredAt: null,
+        firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
+      { startedAt: 200, campaign: null, foundedAt: null, enteredAt: 300,
+        firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
+      { startedAt: 500, campaign: null, foundedAt: null, enteredAt: null,
+        firstAcceptedCommand: null, wallMs: 200, foregroundMs: 200, censored: true },
+    ]);
+  });
+
+  it('does not invent a new-house timing from an old-save pickup or an unpaired attempt', () => {
+    const l = log();
+    l.note({ kind: 'action', verb: 'resume', act: 'start' });
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'attempted' });
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    l.note({ kind: 'action', verb: 'choose', act: 'answer', status: 'accepted' });
+    expect(l.artifact().summary.entries).toEqual([]);
   });
 });
 
@@ -226,7 +296,7 @@ describe('accepted first family actions (#1984)', () => {
       { at: 1_000, verb: 'match', act: 'answer', status: 'accepted' },
     ]);
     const artifact = JSON.stringify(l.artifact());
-    expect(l.artifact().format).toBe('ed-reading-log/10');
+    expect(l.artifact().format).toBe('ed-reading-log/11');
     for (const secret of ['private_decision', 'private_hand', 'private choice', 'private Match',
       'private person', 'private refusal', 'private marriage']) {
       expect(artifact).not.toContain(secret);
@@ -405,7 +475,7 @@ describe('answers and the gaps between them', () => {
         ['same-id', false, true],
       ]);
       const artifact = l.artifact();
-      expect(artifact.format).toBe('ed-reading-log/10');
+      expect(artifact.format).toBe('ed-reading-log/11');
       expect(artifact.summary.answers).toBe(3);
       expect(artifact.summary.gaps.filter(g => g.to.kind === 'new-run')).toHaveLength(1);
       expect(JSON.stringify(artifact)).not.toContain('private-slot');
@@ -657,7 +727,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/10', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/11', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -746,7 +816,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/10');
+    expect(l.artifact().format).toBe('ed-reading-log/11');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -803,7 +873,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/10');
+    expect(l.artifact().format).toBe('ed-reading-log/11');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
