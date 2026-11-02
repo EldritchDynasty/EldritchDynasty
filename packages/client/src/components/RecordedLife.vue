@@ -11,7 +11,14 @@ const props = defineProps<{
   /** The exact page an earned byname rests on (#1990), marked where it appears. */
   bynamePage?: string;
 }>();
-const emit = defineEmits<{ (e: 'book', page: string): void }>();
+const emit = defineEmits<{ (e: 'book', page: string, origin: HTMLButtonElement): void }>();
+/** Pointer activation does not necessarily focus the button (notably on touch). */
+function openPage(id: string, event: MouseEvent): void {
+  // These handlers belong to the milestone buttons themselves. Do not infer
+  // their origin from document.activeElement, which may be a different control.
+  const origin = event.currentTarget;
+  if (origin) emit('book', id, origin as HTMLButtonElement);
+}
 const plain = computed(() => props.proseMode === 'plainenglish');
 const pages = computed(() => props.read(props.person));
 const all = computed(() => props.read(props.person, { limit: Infinity }));
@@ -47,7 +54,7 @@ function accessibleName(page: RecordedMilestone): string {
     <p class="heading small rubric">{{ plain ? 'Recorded history' : 'The recorded life' }}</p>
     <ol v-if="pages.length">
       <li v-for="page in pages" :key="page.entryId">
-        <button type="button" class="quiet milestone" :data-milestone="page.entryId" :aria-label="accessibleName(page)" @click.stop="emit('book', page.entryId)">
+        <button type="button" class="quiet milestone" :data-milestone="page.entryId" :aria-label="accessibleName(page)" @click.stop="openPage(page.entryId, $event)">
           <span class="year dim">{{ page.year }}</span>
           <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span><span v-if="page.entryId === bynamePage" class="dim byname-source" data-byname-source> · {{ bynameSource }}</span></span>
         </button>
@@ -58,7 +65,7 @@ function accessibleName(page: RecordedMilestone): string {
       <summary>{{ allLabel }}</summary>
       <ol>
         <li v-for="page in all" :key="page.entryId">
-          <button type="button" class="quiet milestone" :data-history-page="page.entryId" :aria-label="accessibleName(page)" @click.stop="emit('book', page.entryId)">
+          <button type="button" class="quiet milestone" :data-history-page="page.entryId" :aria-label="accessibleName(page)" @click.stop="openPage(page.entryId, $event)">
             <span class="year dim">{{ page.year }}</span>
             <span>{{ label(page) }}<span v-if="page.disputed" class="rubric dispute"> · {{ disputes[page.disputed] }}</span><span v-if="page.entryId === bynamePage" class="dim byname-source" data-byname-source> · {{ bynameSource }}</span></span>
           </button>
