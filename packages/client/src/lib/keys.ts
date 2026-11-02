@@ -106,6 +106,13 @@ const CONTROL_ROLES: ReadonlySet<string> = new Set([
   'slider', 'scrollbar', 'listbox', 'menu', 'tree', 'radiogroup',
 ]);
 
+/** A glossary term or its focusable definition is a reading surface.
+ * App and Docket must leave keyboard input there instead of advancing time
+ * or taking a numbered choice. */
+export function isGlossaryFocus(el: Element | null): boolean {
+  return el !== null && innermostActiveElement(el).closest('.glossary-text') !== null;
+}
+
 /** Whether a press should be read as typing rather than steering. */
 export function isField(el: Element | null): boolean {
   if (!el) return false;
