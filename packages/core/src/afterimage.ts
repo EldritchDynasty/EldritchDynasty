@@ -102,7 +102,11 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         if (!spent || page.year < spent.source.year) spent = witnessed;
         // The Afterimage may rightly lead with an outsider, but that must not
         // hide a later blood-relative sacrifice from the bloodline reckoning.
-        if (p.houseOfOrigin === w.playerHouse && (!spentBlood || page.year < spentBlood.source.year)) {
+        // The Long Line reckoning needs surviving testimony. A lost earlier
+        // page must not eclipse a later, still-readable sacrifice of the blood.
+        // Keep the broader Afterimage's `spent` selection unchanged.
+        if (p.houseOfOrigin === w.playerHouse && !page.greyed
+          && (!spentBlood || page.year < spentBlood.source.year)) {
           spentBlood = witnessed;
         }
       }
