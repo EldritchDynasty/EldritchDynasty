@@ -2538,6 +2538,17 @@ describe('in-place glossary in the decision Docket (#1991)', () => {
 
         await term.trigger('click');
         expect(term.attributes('aria-expanded')).toBe('true');
+        // A focusable disclosure note, like its term button, is for reading.
+        // A digit pressed there must not silently take a game choice.
+        const note = wrapper.get('.body .glossary-definition');
+        (note.element as HTMLElement).focus();
+        expect(document.activeElement).toBe(note.element);
+        const whileReading = new KeyboardEvent('keydown', {
+          key: '1', bubbles: true, cancelable: true,
+        });
+        window.dispatchEvent(whileReading);
+        expect(whileReading.defaultPrevented).toBe(false);
+        expect(actions.choose).not.toHaveBeenCalled();
         expect(wrapper.get('.body .glossary-definition').text()).toBe(
           proseMode === 'plainenglish'
             ? 'How the wider world regards this family.'
