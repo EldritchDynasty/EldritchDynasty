@@ -27,7 +27,7 @@ import Book from './components/Book.vue';
 import Plat from './components/Plat.vue';
 import Line from './components/Line.vue';
 import ReadingSettings from './components/ReadingSettings.vue';
-import { shortcutHelp, isControl, isField, shortcutFor } from './lib/keys';
+import { shortcutHelp, isControl, isField, isGlossaryFocus, shortcutFor } from './lib/keys';
 import { LEGEND, markSays } from './lib/marks';
 import {
   applyAccessibility,
@@ -434,6 +434,8 @@ function onKey(e: KeyboardEvent): void {
   // not close a different panel underneath it (or dispatch another shortcut).
   if (e.isComposing || e.keyCode === 229) return;
   const el = document.activeElement;
+  // Reading a glossary definition must not advance a year or change panels.
+  if (isGlossaryFocus(el)) return;
   const press = shortcutFor({
     key: e.key,
     repeat: e.repeat,
