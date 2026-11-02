@@ -1040,37 +1040,56 @@ const discrepancyWiring: ValidationRule = {
       }
     };
 
+    // Record options can apply the very same effects as event outcomes.
+    // Validate all three pens and all scoped Record variants, not just the
+    // implicit Embellish discrepancy. An Omit effect can create a lie too.
+    const checkEffects = (effects: readonly Effect[], where: string) => {
+      for (const eff of effects) {
+        if (eff.kind !== 'discrepancy') continue;
+        if (eff.op === 'create') {
+          // A create without an id can never be answered. Id-less bury,
+          // conversely, deliberately reaches whichever open lie exists.
+          if (!eff.id) {
+            issues.push(err(this.id, where, 'creates a Discrepancy with no id, which nothing can ever answer'));
+            continue;
+          }
+          created.add(eff.id);
+          checkProvableBy(eff.provableBy ?? [], where);
+        } else if (eff.id) {
+          provedOrBuried.push({ id: eff.id, op: eff.op, at: where });
+        } else {
+          checkProvableBy(eff.provableBy ?? [], where);
+        }
+      }
+    };
+
+    const checkRecord = (record: RecordBlock, where: string) => {
+      for (const pen of ['record', 'omit', 'embellish'] as const) {
+        checkEffects(record.options[pen].effects, `${where}/${pen}`);
+      }
+      // The implicit lie from embellishing is separate from the additional
+      // authored effects on that pen.
+      const d = record.options.embellish.discrepancy;
+      created.add(d.id);
+      checkProvableBy(d.provableBy, `${where}/embellish`);
+    };
+
     for (const e of content.events) {
       const at = `event:${e.id}`;
       for (const o of allOutcomes(e)) {
-        for (const eff of o.effects) {
-          if (eff.kind !== 'discrepancy') continue;
-          const where = `${at}/${o.id}`;
-          if (eff.op === 'create') {
-            // `id` is optional on the variant so that `bury` can go without
-            // one (issue #71). A `create` without one names nothing and can
-            // never be proved or buried, which is the shape of dead content
-            // this rule exists for.
-            if (!eff.id) {
-              issues.push(err(this.id, where, 'creates a Discrepancy with no id, which nothing can ever answer'));
-              continue;
-            }
-            created.add(eff.id);
-            checkProvableBy(eff.provableBy ?? [], where);
-          } else if (eff.id) {
-            provedOrBuried.push({ id: eff.id, op: eff.op, at: where });
-          } else {
-            // A bury with no id reaches whatever open lie the house has, so
-            // there is nothing to match against content. Its `provableBy` is
-            // a FILTER rather than a claim, and still has to name real houses.
-            checkProvableBy(eff.provableBy ?? [], where);
-          }
-        }
+        checkEffects(o.effects, `${at}/${o.id}`);
       }
-      if (e.record) {
-        const d = e.record.options.embellish.discrepancy;
-        created.add(d.id);
-        checkProvableBy(d.provableBy, `${at}/record/embellish`);
+      if (e.record) checkRecord(e.record, `${at}/record`);
+      for (const row of e.recordByChoice ?? []) {
+        checkRecord(row, `${at}/recordByChoice:${row.id}`);
+      }
+      for (const row of e.recordByOutcome ?? []) {
+        checkRecord(row, `${at}/recordByOutcome:${row.id}`);
+      }
+      for (const o of outcomeGroups(e).flat()) {
+        if (o.primordial?.record) {
+          checkRecord(o.primordial.record, `${at}/primordial:${o.primordial.id}/record`);
+        }
       }
     }
 
