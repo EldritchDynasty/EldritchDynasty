@@ -1,7 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { loadBundle } from '@ed/content';
 import { newGame } from '@ed/core';
-import type { CampaignId, ProseMode } from '@ed/schema';
+import { RESPECT_ORDER, type CampaignId, type ProseMode } from '@ed/schema';
 import { ACCESSIBILITY_STORAGE_KEY } from '../../packages/client/src/lib/accessibility';
 
 /**
@@ -35,13 +35,17 @@ function pendingRecordSave() {
       const next = game.pending[0];
       if (next?.kind === 'record' && next.event.id === 'demo_the_last_page') {
         expect(game.year).toBeGreaterThanOrEqual(1044);
-        return game.save();
+        const save = game.save();
+        // A Record answer costs a tier of respect. Avoid a seed already at
+        // the floor, where the clamped cost cannot be observed in the browser.
+        if (RESPECT_ORDER.indexOf(save.respect) > 0) return save;
+        break;
       }
       if (next) game.letHimDecide();
       else game.advance(1);
     }
   }
-  throw new Error('No Demonstration seed offered its authored Record through GameSession');
+  throw new Error('No Demonstration seed offered its authored Record with standing to spend');
 }
 
 /** The final year is advanced by the browser, not by the fixture. */
@@ -100,7 +104,9 @@ for (const mode of ['original', 'plainenglish'] as const) {
     const errors: string[] = [];
     page.on('pageerror', error => errors.push(error.message));
     const full = founded('short', 2163).save();
-    await openSavedDemo(page, mode, pendingRecordSave(), full);
+    const pending = pendingRecordSave();
+    const expectedStanding = RESPECT_ORDER[RESPECT_ORDER.indexOf(pending.respect) - 1]!;
+    await openSavedDemo(page, mode, pending, full);
 
     const docket = page.locator('.docket');
     await expect(docket).toBeVisible();
@@ -124,6 +130,13 @@ for (const mode of ['original', 'plainenglish'] as const) {
         (decision: { kind: string; event?: string }) => decision.kind === 'record' && decision.event === 'demo_the_last_page',
       ) : false;
     })).toBe(true);
+    // The founder's truthful Record is not just a line of text: it costs the
+    // house one respect tier. Check the real browser autosave after the UI
+    // commits the answer, in both reading modes, before another year ticks.
+    await expect.poll(() => page.evaluate(() => {
+      const raw = localStorage.getItem('ed:save:demo-autosave');
+      return raw ? (JSON.parse(raw) as { respect: string }).respect : null;
+    })).toBe(expectedStanding);
     await fullSaveUnchanged(page, full);
     await outcome.getByRole('button', { name: mode === 'original' ? 'Go on' : 'Continue' }).click();
 
