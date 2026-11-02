@@ -354,6 +354,29 @@ describe('downloaded and installed Windows release smoke (#712)', () => {
     expect(saved.savedAt).toBe('first');
   });
 
+  it('refuses non-object serialized native smoke roots and never hashes an empty or changed-shape snapshot (#2465)', () => {
+    for (const invalid of [
+      null, undefined, true, 'missing game', 1054, [],
+      new Date('2026-11-02T00:00:00Z'),
+      { year: 1054, toJSON: () => null },
+      { year: 1054, toJSON: () => ['not a save'] },
+      { year: 1054, toJSON: () => 'not a save' },
+      { year: 1054, toJSON: () => undefined },
+    ]) {
+      expect(() => nativeSnapshotSha256(invalid), String(invalid)).toThrow(/JSON object/);
+    }
+    const circular: { year: number; self?: unknown } = { year: 1054 };
+    circular.self = circular;
+    expect(() => nativeSnapshotSha256(circular)).toThrow();
+
+    // A transport object with a valid JSON representation is still hashable,
+    // canonical key ordering holds, and only top-level savedAt is excluded.
+    const custom = { toJSON: () => ({ year: 1054, savedAt: 'first', state: { savedAt: 'original' } }) };
+    const native = { state: { savedAt: 'original' }, savedAt: 'later', year: 1054 };
+    expect(nativeSnapshotSha256(custom)).toBe(nativeSnapshotSha256(native));
+    expect(nativeSnapshotSha256({ ...native, state: { savedAt: 'modified' } })).not.toBe(nativeSnapshotSha256(custom));
+  });
+
   async function rendererBridge(nativeSmoke: 'save' | 'resume' | null, modEditor = false) {
     const [main, preload] = await Promise.all([
       readFile(new URL('../src/main.mjs', import.meta.url), 'utf8'),
