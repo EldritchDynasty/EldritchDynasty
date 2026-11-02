@@ -279,12 +279,12 @@ test('mislabeled named demonstration and full-campaign slots are refused without
   await page.reload();
 
   const demos = page.getByRole('region', { name: 'Saved demonstrations' });
-  await demos.getByRole('button', { name: /^chapter-fixture\\b/ }).click();
+  await demos.getByRole('button', { name: /^chapter-fixture\b/ }).click();
   await expect(page.locator('main.start')).toBeVisible();
   await expect(demos.getByRole('status')).toContainText('Could not load this saved game.');
 
   const fullRuns = page.getByRole('region', { name: 'Saved games' });
-  await fullRuns.getByRole('button', { name: /^chapter-other\\b/ }).click();
+  await fullRuns.getByRole('button', { name: /^chapter-other\b/ }).click();
   await expect(page.locator('main.start')).toBeVisible();
   await expect(fullRuns.getByRole('status')).toContainText('Could not load this saved game.');
 
