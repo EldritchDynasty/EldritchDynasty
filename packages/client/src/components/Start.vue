@@ -275,10 +275,12 @@ async function importSave(): Promise<void> {
   importingSave.value = true;
   refused.value = null;
   try {
-    // Dismissing the browser picker is not a failed or invalid import.
-    if (await props.actions.importSave() === false) refused.value = 'That file was not a run this version can read.';
+    // A dismissed picker is not a refusal; a host failure is not a bad file.
+    const result = await props.actions.importSave();
+    if (result === false) refused.value = 'That file was not a run this version can read.';
+    else if (result === 'unavailable') refused.value = 'This device could not open or read a save file. Please try again.';
   } catch {
-    refused.value = 'That file was not a run this version can read.';
+    refused.value = 'This device could not open or read a save file. Please try again.';
   } finally {
     importingSave.value = false;
   }
