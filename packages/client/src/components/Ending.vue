@@ -55,7 +55,15 @@ async function copyShare(): Promise<void> {
   const code = share.value.code;
   const attempt = ++copyAttempt;
   copied.value = null;
-  const ok = await props.actions.copyText(code);
+  // A host or injected action may reject rather than return false. Keep the
+  // code selectable and give the reader a refusal instead of an unhandled
+  // event error; older attempts must never overwrite a newer receipt.
+  let ok = false;
+  try {
+    ok = await props.actions.copyText(code);
+  } catch {
+    // The caller reports failure through the live region below.
+  }
   if (attempt === copyAttempt) copied.value = { code, ok };
 }
 const copyStatus = computed(() => {
