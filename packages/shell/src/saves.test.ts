@@ -385,6 +385,63 @@ describe('the save directory', () => {
     expect(readdirSync(root)).toEqual([externalName]);
   });
 
+  it('reports case-colliding save filenames as unreadable instead of healthy slots (#2420)', () => {
+    // Only a case-sensitive filesystem can hold both physical files; on
+    // Windows the same safety rule is exercised by the mocked scan below.
+    if (process.platform === 'win32') return;
+    const upper = join(root, 'House.edsave.json');
+    const lower = join(root, 'house.edsave.json');
+    const upperBytes = JSON.stringify(aSave({ year: 1400 }));
+    const lowerBytes = JSON.stringify(aSave({ year: 1500 }));
+    writeFileSync(upper, upperBytes, 'utf8');
+    writeFileSync(lower, lowerBytes, 'utf8');
+    writeSave(root, 'healthy', aSave({ year: 1450 }));
+
+    const bySlot = new Map(listSaves(root).map((entry) => [entry.slot, entry]));
+    expect(bySlot.size).toBe(3);
+    for (const slot of ['House', 'house']) {
+      expect(bySlot.get(slot)?.unreadable).toContain('conflicts with existing filename');
+      expect(bySlot.get(slot)?.format).toBeUndefined();
+      expect(bySlot.get(slot)?.year).toBeUndefined();
+      expect(() => readSave(root, slot)).toThrow(SaveSlotError);
+    }
+    expect(bySlot.get('healthy')).toMatchObject({ format: 6, year: 1450 });
+    expect(readSave(root, 'healthy')).toMatchObject({ year: 1450 });
+    expect(readFileSync(upper, 'utf8')).toBe(upperBytes);
+    expect(readFileSync(lower, 'utf8')).toBe(lowerBytes);
+  });
+
+  it('marks an extension-case alias unreadable on all hosts (#2420)', async () => {
+    // On case-insensitive Windows a profile cannot physically hold two
+    // differently-cased entries. Inject the ambiguous directory listing,
+    // preserving the real, readable file for the descriptor boundary.
+    writeSave(root, 'House', aSave({ year: 1400 }));
+    const file = join(root, 'House.edsave.json');
+    const original = readFileSync(file, 'utf8');
+    vi.resetModules();
+    vi.doMock('node:fs', async () => {
+      const fs = await vi.importActual<typeof import('node:fs')>('node:fs');
+      return {
+        ...fs,
+        readdirSync: (dir: string) => dir === root
+          ? ['House.edsave.json', 'House.EDSAVE.JSON']
+          : fs.readdirSync(dir),
+      };
+    });
+    try {
+      const { listSaves: scan, readSave: read } = await import('./saves.mjs');
+      const [entry] = scan(root);
+      expect(entry?.slot).toBe('House');
+      expect(entry?.unreadable).toContain('conflicts with existing filename');
+      expect(entry?.format).toBeUndefined();
+      expect(() => read(root, 'House')).toThrow('conflicts with existing filename');
+      expect(readFileSync(file, 'utf8')).toBe(original);
+    } finally {
+      vi.doUnmock('node:fs');
+      vi.resetModules();
+    }
+  });
+
   it('does not advertise a foreign filename that cannot be read or deleted as a slot', () => {
     const foreign = join(root, 'run .edsave.json');
     const original = JSON.stringify(aSave({ year: 1300 }));
