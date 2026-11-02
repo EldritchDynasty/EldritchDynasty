@@ -80,6 +80,41 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(saved(begun.session)).toBe(saved(original));
   });
 
+  it('preserves Unicode founding names exactly and redacts them from anonymous codes', () => {
+    // Founding text is player-entered, not a mechanical id. A share code
+    // must retain its exact UTF-8 spelling when names are explicitly included,
+    // but cannot leak any of those names in the default anonymous version.
+    const choices = {
+      ...SIGNED,
+      houseName: 'The House of 雲🌙',
+      founder: { ...SIGNED.founder, name: 'Maud e\u0301 🌿' },
+      friends: [
+        { ...SIGNED.friends[0]!, name: 'Iona 👩‍🔬' },
+        { ...SIGNED.friends[1]!, name: 'Corven 龍' },
+        { ...SIGNED.friends[2]!, name: 'Edda à' },
+      ],
+    };
+    const original = founded(choices);
+    const named = codeOf(original, { names: true });
+    const decoded = readShareCode(named, content, { build: BUILD });
+    expect(decoded.ok).toBe(true);
+    if (!decoded.ok) return;
+    expect(decoded.founding.houseName).toBe(choices.houseName);
+    expect(decoded.founding.founder?.name).toBe(choices.founder.name);
+    expect(decoded.founding.friends.map((friend) => friend.name)).toEqual(choices.friends.map((friend) => friend.name));
+
+    const restored = newGameFromShareCode(named, content, { build: BUILD });
+    expect(restored.ok && saved(restored.session)).toBe(saved(original));
+
+    const anonymous = codeOf(original);
+    const raw = payloadOf(anonymous);
+    for (const name of [choices.houseName, choices.founder.name, ...choices.friends.map((friend) => friend.name)]) {
+      expect(raw).not.toContain(name);
+    }
+    const readAnonymous = readShareCode(anonymous, content, { build: BUILD });
+    expect(readAnonymous.ok && readAnonymous.founding.missing).toEqual(['founder', 'house', 'friends']);
+  });
+
   it('replays an explicitly blank founder-name answer in a named share code', () => {
     // Founding permits a blank answer: the authored name is shown, but the
     // signing log still records exactly what the player submitted.
