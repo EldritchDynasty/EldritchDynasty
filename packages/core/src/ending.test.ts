@@ -1457,6 +1457,24 @@ describe('a witnessed Ledger clause beside the Long Line purpose (#1983)', () =>
     expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
   });
 
+  it('recognizes words frozen in Plain English even after switching the reading mode', () => {
+    const { ctx, page } = witnessedLedger();
+    const file = ctx.content.sourceOf(clause.id)!;
+    const plainText = 'The contract says a promise may not be discarded.';
+    setProseVariants(ctx, [{
+      address: `content:${file}#clauses[id=${encodeURIComponent(clause.id)}].text`,
+      of: proseOriginalHash(clause.text),
+      plainenglish: plainText,
+    }]);
+    page.text = plainText;
+    setProseMode(ctx, 'original');
+    expect(epilogueOf(ctx)!.purpose).toEqual({
+      kind: 'ledger_witness', clause: clause.name, year: page.year, text: plainText,
+    });
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ledger_witness');
+  });
+
   it('does not treat the ambition, an inherited clause, or a count without a page as an act', () => {
     const { ctx, page } = witnessedLedger();
     ctx.world.chronicle = ctx.world.chronicle.filter((entry) => entry !== page);
