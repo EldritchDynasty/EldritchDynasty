@@ -688,6 +688,28 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   const readyElder = elder?.houseOfOrigin === w.playerHouse
     && elder.rites.includes('vessel') && elder.rites.includes('great_rite')
     ? elder : undefined;
+  // THE BOOK, ONCE THE HOUSE HAS STOOD ON GOD (#1978). Nothing is left to
+  // climb and the ladder's diagnosis falls silent, yet the ending is still
+  // open: the creditor substantiates only what the Chronicle can hold up, and
+  // an embellished page whose lie stands open withholds the rung it claims
+  // (§6, §29.3; `readTheChronicle`). The public summit route measured exactly
+  // this — a house that reached God through the table and docket alone, then
+  // kept embellishing, was read one rung down and Devoured; the same house
+  // writing the rest truly was read as a god. Both facts here are public: the
+  // best rung is on the ladder, and each embellished page shows its dispute.
+  const book = w.campaign === 'long' && w.ascension.best === 'god'
+    ? standingEmbellishedDisputes(ctx) : undefined;
+  const bookNext = book === undefined ? undefined
+    : book === 0
+      ? msg(ctx, 'ambition.view.ascent_next_book',
+        'The house has stood on God. What is left is the book: the creditor reads only what it can hold up. Write the rest truly; an embellished page left standing open counts against the rung it claims.')
+      : book === 1
+        ? msg(ctx, 'ambition.view.ascent_next_book_one',
+          'The house has stood on God. What is left is the book: {COUNT} embellished claim still stands disputed, and the creditor reads only what it can hold up. Write the rest truly, and close that lie if you are offered the means.',
+          { COUNT: String(book) })
+        : msg(ctx, 'ambition.view.ascent_next_book_many',
+          'The house has stood on God. What is left is the book: {COUNT} embellished claims still stand disputed, and the creditor reads only what it can hold up. Write the rest truly, and close those lies where you are offered the means.',
+          { COUNT: String(book) });
   return {
     ...shown,
     ...(readyElder
@@ -708,7 +730,7 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
     status: foremost
       ? msg(ctx, 'ambition.view.ascent_foremost', '{NAME} is the foremost candidate.', { NAME: foremost.name })
       : msg(ctx, 'ambition.view.ascent_none', 'No living candidate is carrying the ascent.'),
-    next: regent && prepared
+    next: bookNext !== undefined ? bookNext : regent && prepared
       ? msg(ctx, 'ambition.view.ascent_next_regency',
         'While {REGENT} keeps the seal, nobody climbs. Keep {NAME} alive and taught, and spend the Regency on the archive and the family.',
         { REGENT: regent.name, NAME: prepared.name })
@@ -723,6 +745,20 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
           : msg(ctx, 'ambition.view.ascent_next_none',
             'Name and prepare a Scion or heir rather than letting the programme choose itself.'),
   };
+}
+
+/**
+ * How many distinct open lies the book's EMBELLISHED pages still carry — the
+ * set `readTheChronicle` weighs as unsupportable at the reckoning. A proven
+ * lie no longer stands and a buried one is gone; an omission is a blank, not
+ * a claim. Each page already shows its own dispute state (`milestones`), so
+ * this is a sum of public facts, not a disclosure.
+ */
+export function standingEmbellishedDisputes(ctx: SimCtx): number {
+  const w = ctx.world;
+  const ids = new Set(w.chronicle.flatMap((entry) =>
+    entry.record === 'embellish' && entry.discrepancyId ? [entry.discrepancyId] : []));
+  return [...ids].filter((id) => w.discrepancies.get(id)?.state === 'open').length;
 }
 
 /**

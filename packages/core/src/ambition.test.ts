@@ -4,7 +4,8 @@ import { loadContent } from '@ed/content';
 import type { EventTemplate } from '@ed/schema';
 import { newGame, resumeGame } from '@ed/core';
 import { MAIN_BRANCH, asId, proseOriginalHash, type BranchId, type HouseAmbitionId } from '@ed/schema';
-import { ambitionOptions, ambitionRelevance, ambitionView, recommendAmbition } from './ambition.js';
+import { ambitionOptions, ambitionRelevance, ambitionView, recommendAmbition, standingEmbellishedDisputes } from './ambition.js';
+import { readTheChronicle } from './ending.js';
 import { bootstrap } from './sim.js';
 import { campaignDef } from './campaign.js';
 import { place, testWorld } from './testing.js';
@@ -916,5 +917,69 @@ describe('the ascent says what its last step will ask, in time (#1867 §6)', () 
     const elder = place(ctx, { sex: 'male', age: 58, name: 'Aldren the Elder' });
     elder.rites.push('vessel', 'great_rite');
     expect(ambitionView(ctx)!.ahead).toBeUndefined();
+  });
+});
+
+describe('once the house has stood on God, the ascent reads the book (#1978)', () => {
+  function godHouse(over: { campaign?: 'short' | 'long'; proseMode?: 'original' | 'plainenglish' } = {}) {
+    const g = newGame(content, { seed: 1978, campaign: over.campaign ?? 'long', decider: 'chronicler',
+      ...(over.proseMode ? { proseMode: over.proseMode } : {}) });
+    g.setAmbition('raise_ascendant');
+    g.ctx.world.ascension.best = 'god';
+    return g.ctx;
+  }
+  /** An embellished page in the book, and the lie it opened. */
+  function embellish(ctx: SimCtx, lie: string, state: 'open' | 'proven' | 'buried' = 'open') {
+    ctx.world.chronicle.push({
+      id: `page-${lie}`, year: ctx.world.year, weight: 'paragraph', text: 'What the house wrote larger.',
+      eventId: 'the_source', named: false, record: 'embellish', discrepancyId: lie,
+    });
+    ctx.world.discrepancies.set(lie, { severity: 'major', provableBy: [], state });
+  }
+
+  it('says the book is what is left, and counts the embellished lies still standing', () => {
+    const ctx = godHouse();
+    expect(ambitionView(ctx)!.next).toBe(
+      'The house has stood on God. What is left is the book: the creditor reads only what it can hold up. Write the rest truly; an embellished page left standing open counts against the rung it claims.');
+    embellish(ctx, 'lie_one');
+    expect(ambitionView(ctx)!.next).toContain('1 embellished claim still stands disputed');
+    embellish(ctx, 'lie_two');
+    expect(ambitionView(ctx)!.next).toContain('2 embellished claims still stand disputed');
+    // A proven lie no longer stands, and a buried one is gone.
+    ctx.world.discrepancies.get('lie_one')!.state = 'proven';
+    ctx.world.discrepancies.get('lie_two')!.state = 'buried';
+    expect(standingEmbellishedDisputes(ctx)).toBe(0);
+  });
+
+  it('counts the same lies the reckoning weighs, and nothing the book did not embellish', () => {
+    const ctx = godHouse();
+    // An omission's lie is a blank, not a claim: the reckoning does not weigh it.
+    ctx.world.chronicle.push({ id: 'blank', year: ctx.world.year, weight: 'paragraph', text: null,
+      eventId: 'the_source', named: false, record: 'omit', discrepancyId: 'omitted_lie' });
+    ctx.world.discrepancies.set('omitted_lie', { severity: 'total', provableBy: [], state: 'open' });
+    expect(standingEmbellishedDisputes(ctx)).toBe(0);
+    expect(readTheChronicle(ctx).unsupportable).toBe(0);
+    for (const state of ['proven', 'buried', 'open'] as const) {
+      embellish(ctx, `lie_${state}`, state);
+      expect(standingEmbellishedDisputes(ctx) > 0).toBe(readTheChronicle(ctx).unsupportable > 0);
+    }
+    // Two pages carrying one lie are one lie standing, as the reckoning counts it.
+    embellish(ctx, 'lie_open');
+    expect(standingEmbellishedDisputes(ctx)).toBe(1);
+  });
+
+  it('keeps its earlier advice until God, and says nothing new on the Short Line', () => {
+    const before = godHouse();
+    before.world.ascension.best = 'demigod';
+    expect(ambitionView(before)!.next).not.toContain('book');
+    const short = godHouse({ campaign: 'short' });
+    expect(ambitionView(short)!.next).not.toContain('book');
+  });
+
+  it('reads in Plain English', () => {
+    const ctx = godHouse({ proseMode: 'plainenglish' });
+    embellish(ctx, 'lie_one');
+    expect(ambitionView(ctx)!.next).toBe(
+      'The house has reached God. Now protect the record: 1 embellished claim is still disputed, and at the end the creditor accepts only what the Chronicle can support. Record the rest truthfully, and settle that lie if you are given a way to.');
   });
 });

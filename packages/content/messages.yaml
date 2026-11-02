@@ -756,6 +756,18 @@ proseVariants:
     of: "24a7abae501bf1e2"
     plainenglish: >-
       While {REGENT} holds the seal as Regent, nobody can climb. Use the Regency to look after the archive, the branches and the children who will climb later.
+  - address: "core:messages#ambition.view.ascent_next_book"
+    of: "64b3b7e636d39652"
+    plainenglish: >-
+      The house has reached God. Now protect the record: at the end, the creditor accepts only what the Chronicle can support. Record the rest truthfully; an embellished entry whose lie is still disputed counts against the rung it claims.
+  - address: "core:messages#ambition.view.ascent_next_book_one"
+    of: "ff127c47345fb353"
+    plainenglish: >-
+      The house has reached God. Now protect the record: {COUNT} embellished claim is still disputed, and at the end the creditor accepts only what the Chronicle can support. Record the rest truthfully, and settle that lie if you are given a way to.
+  - address: "core:messages#ambition.view.ascent_next_book_many"
+    of: "7d471f246c248e50"
+    plainenglish: >-
+      The house has reached God. Now protect the record: {COUNT} embellished claims are still disputed, and at the end the creditor accepts only what the Chronicle can support. Record the rest truthfully, and settle those lies when you are given a way to.
   - address: "core:messages#ascension.ledger_wait_title"
     of: "813b9749d641fda5"
     plainenglish: >-
