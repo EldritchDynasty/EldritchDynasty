@@ -89,6 +89,28 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     }
   });
 
+  it('keeps soft-hyphenated words from disclosing embedded aliases (#2542)', () => {
+    // U+00AD is an optional hyphenation opportunity inside one word. It must
+    // not make an embedded alias a new, independently clickable glossary term.
+    const softHyphen = '\u00AD';
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const alias of ['Standing', 'Reputation']) {
+        for (const text of [`house${softHyphen}${alias}`, `${alias}${softHyphen}house`]) {
+          expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+        }
+      }
+
+      // Reject the connected occurrence without losing the next real alias.
+      const text = `house${softHyphen}Standing Standing`;
+      const segments = splitFirstGlossary(text, mode);
+      expect(segments).toEqual([
+        { text: `house${softHyphen}Standing ` },
+        { text: 'Standing', term: 'standing' },
+      ]);
+      expect(segments.map(segment => segment.text).join('')).toBe(text);
+    }
+  });
+
   it('keeps WORD JOINER-attached aliases out of standalone glossary disclosures', () => {
     // U+2060 explicitly prevents a word break, despite its Unicode Cf category.
     // Without this boundary check, a joined word receives an intrusive button.
