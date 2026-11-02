@@ -382,11 +382,11 @@ export class Sound {
   get volume() { return this.#volume; }
 
   set volume(value: number) {
+    const wasSilent = this.#volume === 0;
     // Corrupt/non-finite preferences must never jump to full volume.
     this.#volume = Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 0;
     // A host may invalidate its output after the context was opened. Changing
     // Reading settings must fail into silence, never throw into the UI.
-    const wasSilent = this.#volume === 0;
     this.attempt(() => {
       if (this.out) this.out.gain.value = this.#muted ? 0 : this.#volume;
     });
