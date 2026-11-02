@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isControl, isField, shortcutFor } from './keys.js';
+import { isControl, isField, isGlossaryFocus, shortcutFor } from './keys.js';
 
 /**
  * THE FOUR TIMES A SHORTCUT MUST NOT FIRE (issue #58).
@@ -12,6 +12,24 @@ import { isControl, isField, shortcutFor } from './keys.js';
  * none of them is visible in the code that adds the listener.
  */
 describe('what a keypress means', () => {
+  it('treats focus in a glossary explanation as reading, not a game shortcut (#1991)', () => {
+    const host = document.createElement('span');
+    host.className = 'glossary-text';
+    const term = document.createElement('button');
+    const note = document.createElement('span');
+    note.tabIndex = -1;
+    host.append(term, note);
+    expect(isGlossaryFocus(host)).toBe(true);
+    expect(isGlossaryFocus(term)).toBe(true);
+    expect(isGlossaryFocus(note)).toBe(true);
+    expect(isGlossaryFocus(document.createElement('button'))).toBe(false);
+    expect(isGlossaryFocus(null)).toBe(false);
+
+    // App's global listener runs for every panel. Verify it uses the same
+    // tested guard as Docket before dispatching year-advance shortcuts.
+    const app = readFileSync(join(import.meta.dirname, '../App.vue'), 'utf8');
+    expect(app).toMatch(/const el = document\\.activeElement;\\s*if \\(isGlossaryFocus\\(el\\)\\) return;\\s*const press = shortcutFor/);
+  });
   it('turns a year on Space and on Enter, and five on Shift+Enter', () => {
     expect(shortcutFor({ key: ' ' })).toEqual({ kind: 'advance', years: 1 });
     expect(shortcutFor({ key: 'Enter' })).toEqual({ kind: 'advance', years: 1 });
