@@ -28,6 +28,10 @@ import { onBeforeUnmount, onMounted, type Ref } from 'vue';
  */
 /** Walk out of open shadow roots as well as ordinary DOM parents. */
 function composedParent(element: HTMLElement): HTMLElement | null {
+  // A slotted node renders beneath its slot, not beneath its light-DOM
+  // parent. Visibility, inertness and disclosure checks must follow that
+  // composed path before walking through the shadow host.
+  if (element.assignedSlot) return element.assignedSlot;
   if (element.parentElement) return element.parentElement;
   const root = element.getRootNode();
   return root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : null;
@@ -137,8 +141,25 @@ export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   // querySelectorAll does not enter shadow roots. Traverse in DOM order,
   // visiting each open shadow tree where its host occurs in the dialog.
   const walk = (root: Element | ShadowRoot): void => {
-    if (root instanceof Element && root.shadowRoot) walk(root.shadowRoot);
-    for (const child of root.children) {
+    // A shadow host renders its shadow tree; unassigned light-DOM children
+    // cannot be visited as separate Tab stops. Only <slot> can project them.
+    if (root instanceof Element && root.shadowRoot) {
+      walk(root.shadowRoot);
+      return;
+    }
+    const children: Element[] = [];
+    if (root instanceof HTMLSlotElement) {
+      const assigned = root.assignedNodes();
+      if (assigned.length) {
+        // A text-only assignment also hides fallback content.
+        for (const node of assigned) if (node instanceof Element) children.push(node);
+      } else {
+        children.push(...root.children);
+      }
+    } else {
+      children.push(...root.children);
+    }
+    for (const child of children) {
       if (child instanceof HTMLElement && child.matches(selector) && usableFocusTarget(child, card)) {
         found.push(child);
       }

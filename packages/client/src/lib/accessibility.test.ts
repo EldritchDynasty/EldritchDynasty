@@ -854,6 +854,66 @@ describe('progressive surface reveal (#368)', () => {
 });
 
 
+describe('modal focus follows composed slot tree (#2478)', () => {
+  it('includes rendered shadow and slotted buttons in order, never unprojected light children', () => {
+    const card = document.createElement('section');
+    const before = document.createElement('button');
+    before.id = 'before';
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const shadowBefore = document.createElement('button');
+    shadowBefore.id = 'shadow-before';
+    const slot = document.createElement('slot');
+    slot.name = 'actions';
+    const shadowAfter = document.createElement('button');
+    shadowAfter.id = 'shadow-after';
+    shadow.append(shadowBefore, slot, shadowAfter);
+    const projected = document.createElement('button');
+    projected.id = 'projected';
+    projected.slot = 'actions';
+    const unprojected = document.createElement('button');
+    unprojected.id = 'unprojected';
+    host.append(projected, unprojected);
+    const after = document.createElement('button');
+    after.id = 'after';
+    card.append(before, host, after);
+    document.body.append(card);
+    try {
+      const ids = () => modalFocusable(card).map((el) => el.id);
+      expect(ids()).toEqual(['before', 'shadow-before', 'projected', 'shadow-after', 'after']);
+      slot.hidden = true;
+      expect(ids()).toEqual(['before', 'shadow-before', 'shadow-after', 'after']);
+      slot.hidden = false;
+      slot.style.display = 'none';
+      expect(ids()).toEqual(['before', 'shadow-before', 'shadow-after', 'after']);
+      slot.style.display = '';
+      expect(ids()).toEqual(['before', 'shadow-before', 'projected', 'shadow-after', 'after']);
+    } finally {
+      card.remove();
+    }
+  });
+
+  it('includes fallback controls only for a slot with no assigned nodes', () => {
+    const card = document.createElement('section');
+    const host = document.createElement('div');
+    const shadow = host.attachShadow({ mode: 'open' });
+    const slot = document.createElement('slot');
+    const fallback = document.createElement('button');
+    fallback.id = 'fallback';
+    slot.append(fallback);
+    shadow.append(slot);
+    card.append(host);
+    document.body.append(card);
+    try {
+      expect(modalFocusable(card).map((el) => el.id)).toEqual(['fallback']);
+      host.append(document.createTextNode('Assigned text'));
+      expect(modalFocusable(card).map((el) => el.id)).toEqual([]);
+    } finally {
+      card.remove();
+    }
+  });
+});
+
 describe('modal focus in open shadow roots (#2377)', () => {
   it('includes shadow controls in order, but excludes concealed hosts and closed disclosures', () => {
     const card = document.createElement('section');
