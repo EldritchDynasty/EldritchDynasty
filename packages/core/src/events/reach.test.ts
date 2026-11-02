@@ -5383,6 +5383,45 @@ describe('authored direct player-cast outcome witnesses', () => {
     expect(result.ok, `the_vessel_remembered/the_page: ${result.reason}`).toBe(true);
     expect(result.key).toBe(outcomeKey('the_vessel_remembered', undefined, 'the_page'));
   });
+
+  // #1980: the page binds the survivor and promises the letter a decade on.
+  // Both answers to the letter run through that same real arc: rite, page,
+  // the due year, the kept cast, and the docket's own commit.
+  it.each([
+    ['send_it_sealed', 'sent'],
+    ['answer_in_our_own_hand', 'burned'],
+  ] as const)('executes the survivor letter %s/%s through the arc the real rite and page create', (choiceId, outcomeId) => {
+    const seed = choiceId === 'send_it_sealed' ? 4240 : 4250;
+    const { ctx, event, cast } = directPlayerFixture(seed, 'the_vessel_rite');
+    const vessel = ctx.world.people.get(cast.VESSEL as string)!;
+    const son = place(ctx, { sex: 'male', age: 12, name: `Witness Survivor ${seed}` });
+    ctx.world.people.setParents(son.id, { mother: vessel.id });
+
+    expect(executeOutcomeWitness(ctx, event, {
+      choiceId: 'speak_the_name', expectedOutcomeId: 'taken', rng: makeRng(seed + 1), cast,
+    }).ok).toBe(true);
+    const page = content.event('the_vessel_remembered')!;
+    const pageStep = dueArcSteps(ctx, makeRng(seed + 2)).find((candidate) => candidate.node.event === page.id);
+    expect(pageStep, 'the taken Vessel should schedule its record page').toBeDefined();
+    expect(pageStep!.fill.SURVIVOR).toBe(son.id);
+    expect(executeOutcomeWitness(ctx, page, {
+      expectedOutcomeId: 'the_page', rng: makeRng(seed + 3), arcStep: pageStep!,
+    }).ok).toBe(true);
+
+    const letter = content.event('the_letter_for_the_assessor')!;
+    const instance = pageStep!.instance;
+    expect(instance.node).toBe(letter.id);
+    ctx.world.year = instance.dueYear ?? ctx.world.year;
+    const step = dueArcSteps(ctx, makeRng(seed + 4)).find((candidate) => candidate.instance.id === instance.id);
+    expect(step, 'the survivor letter should become due with its kept cast').toBeDefined();
+    expect(step!.fill.SURVIVOR).toBe(son.id);
+
+    const result = executeOutcomeWitness(ctx, letter, {
+      choiceId, expectedOutcomeId: outcomeId, rng: makeRng(seed + 5), arcStep: step!,
+    });
+    expect(result.ok, `the_letter_for_the_assessor/${choiceId}/${outcomeId}: ${result.reason}`).toBe(true);
+    expect(result.key).toBe(outcomeKey('the_letter_for_the_assessor', choiceId, outcomeId));
+  });
 });
 
 describe('authored randomised party-decider witnesses', () => {

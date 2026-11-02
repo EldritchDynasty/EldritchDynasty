@@ -5,7 +5,7 @@ import { evalCondition, evalFilter } from './conditions.js';
 import { candidatesFor, resolveSlots, soleCast, type SlotFill } from './slots.js';
 import { streamFor, type Rng } from '../rng.js';
 import { campaignDef } from '../campaign.js';
-import { minimumArcYears } from './arc-reach.js';
+import { minimumArcYears, minimumScheduleYears } from './arc-reach.js';
 import { branchOf, wouldSpeakFor } from '../people/branches.js';
 
 export { minimumArcYears } from './arc-reach.js';
@@ -25,7 +25,9 @@ export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotF
   if (existing.length >= arc.maxConcurrentInstances) return undefined;
 
   // #133: do not introduce a story after the point from which even its
-  // fastest legal graph cannot reach an ending before collection.
+  // fastest legal graph cannot reach an ending before collection. For an
+  // inline chain that is its first beat; later beats are promised one at a
+  // time by `advanceArc` (#1980).
   const minimumYears = minimumArcYears(arc);
   if (!Number.isFinite(minimumYears) || ctx.world.year + minimumYears > campaignDef(ctx.world.campaign).endYear) return undefined;
 
@@ -217,9 +219,23 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
     let absent = false;
     let inherited = false;
     let cancelled = false;
+    // KEEP MEANS THE SAME PERSON, OR NOBODY (#1980). In an inline chain, a
+    // later beat keeps the people the beat before it cast. If that beat had
+    // the slot and left it empty — an optional survivor the rite left none
+    // of — there is no same person to carry forward, and casting a stranger
+    // into the gap would be a convenient mourner, not a consequence. The story
+    // ends there instead of waiting for one. An office (`recast`) is exempt:
+    // it was always whoever holds the role now. The first follow-up still
+    // casts what its root left open, which every pre-#1980 chain relied on.
+    const previous = arc.inline ? inst.history.at(-1) : undefined;
+    const before = previous && ctx.content.event(arc.nodes.find((n) => n.id === previous.node)?.event ?? '');
     for (const slotId of arc.bindings) {
       const boundId = inst.bindings[slotId];
-      if (!boundId) continue;
+      if (!boundId) {
+        const spec = event.slots[slotId];
+        if (spec && before?.slots[slotId] && spec.onMissing !== 'recast') { cancelled = true; break; }
+        continue;
+      }
       const person = ctx.world.people.get(boundId);
       const spec = event.slots[slotId];
       // `stillCastable`, not `isAlive`: the guardian and a consumed Vessel are
@@ -400,6 +416,15 @@ export function advanceArc(
 
   const nextNode = arc.nodes.find((n) => n.id === next);
   if (!nextNode) { instance.status = 'ended'; return; }
+
+  // An inline chain promises one beat at a time (#1980, `minimumArcYears`).
+  // A beat that can no longer arrive before collection is not promised: the
+  // story ends at the one that fit, rather than waiting past the end of the
+  // book holding a slot nobody will ever fill. No draw is spent on it.
+  if (arc.inline && ctx.world.year + minimumScheduleYears(nextNode.schedule) > campaignDef(ctx.world.campaign).endYear) {
+    instance.status = 'ended';
+    return;
+  }
 
   instance.node = next;
   instance.dueYear = scheduleNext(nextNode, ctx, rng, arc.inline);

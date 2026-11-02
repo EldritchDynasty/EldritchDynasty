@@ -109,6 +109,73 @@ describe('arc start windows (#133)', () => {
   });
 });
 
+describe('an inline chain promises one beat at a time (#1980)', () => {
+  const chain = (inline: boolean) => {
+    const a = arc([
+      node('first', 'immediate', ['later']),
+      node('later', { minYears: 8, maxYears: 16 }, ['end']),
+    ]);
+    a.inline = inline;
+    return a;
+  };
+
+  it('floors an inline chain at its first beat, and an authored arc at its whole graph', () => {
+    expect(minimumArcYears(chain(true))).toBe(0);
+    expect(minimumArcYears(chain(false))).toBe(8);
+    const delayed = arc([
+      node('first', { minYears: 3, maxYears: 5 }, ['later']),
+      node('later', { minYears: 8, maxYears: 16 }, ['end']),
+    ]);
+    delayed.inline = true;
+    expect(minimumArcYears(delayed)).toBe(3);
+  });
+
+  it('starts an inline chain whose later beat cannot fit, so the first beat is not lost', () => {
+    const ctx = testWorld(content, 1, END_YEAR - 5);
+    expect(startArc(chain(true), ctx, testRng())?.dueYear).toBe(END_YEAR - 5);
+    expect(startArc(chain(false), testWorld(content, 1, END_YEAR - 5), testRng())).toBeUndefined();
+  });
+
+  it('ends the story at the last beat that fit, without drawing for the one that cannot', () => {
+    const a = chain(true);
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, END_YEAR - 5);
+    const instance = startArc(a, ctx, testRng())!;
+    const rng = testRng();
+    const draw = vi.spyOn(rng, 'range');
+    advanceArc({ instance, node: a.nodes[0]!, fill: {}, playerCast: [], absent: false }, {
+      id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
+    }, undefined, ctx, rng);
+    expect(instance.status).toBe('ended');
+    expect(instance.node).toBe('first');
+    expect(instance.history.map((h) => h.node)).toEqual(['first']);
+    expect(draw).not.toHaveBeenCalled();
+  });
+
+  it('keeps the later beat when it still fits exactly', () => {
+    const a = chain(true);
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, END_YEAR - 8);
+    const instance = startArc(a, ctx, testRng())!;
+    advanceArc({ instance, node: a.nodes[0]!, fill: {}, playerCast: [], absent: false }, {
+      id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
+    }, undefined, ctx, testRng());
+    expect(instance.status).toBe('active');
+    expect(instance.node).toBe('later');
+    expect(instance.dueYear).toBe(END_YEAR);
+  });
+
+  it('leaves an authored arc waiting on its schedule, as #133 already decided', () => {
+    const a = chain(false);
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, END_YEAR - 16);
+    const instance = startArc(a, ctx, testRng())!;
+    ctx.world.year = END_YEAR - 5;
+    advanceArc({ instance, node: a.nodes[0]!, fill: {}, playerCast: [], absent: false }, {
+      id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
+    }, undefined, ctx, testRng());
+    expect(instance.status).toBe('active');
+    expect(instance.node).toBe('later');
+  });
+});
+
 describe('promised follow-ups near collection (#1971)', () => {
   it.each(['short', 'long', 'demo'] as const)('draws the inline entry inside the remaining %s campaign', (campaign) => {
     const a = arc([node('entry', { minYears: 6, maxYears: 18 }, ['end'])]);
