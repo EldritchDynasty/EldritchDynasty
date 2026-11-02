@@ -3,8 +3,14 @@
  * arbitrary protocols to shell.openExternal would hand the OS an untrusted
  * custom-protocol invocation. Only browser URLs may cross this boundary.
  */
+/** The URL parser silently removes CR/LF/TAB, which must not rewrite a requested destination. */
+function unsafeRawWhitespace(value) {
+  return /[\u0000-\u001F\u007F]/.test(value) || value.trim() !== value;
+}
+
 export function externalWebUrl(value) {
-  if (typeof value !== 'string' || !/^https?:\/\//i.test(value)) return null;
+  if (typeof value !== 'string' || !/^https?:\/\//i.test(value)
+    || unsafeRawWhitespace(value)) return null;
   try {
     const parsed = new URL(value);
     // Do not forward username/password fields from untrusted renderer links.
@@ -34,6 +40,9 @@ function launchWebUrl(url, openExternal, onError) {
 
 /** A reload or query/hash change stays inside the original, trusted document. */
 function sameTrustedDocument(requested, trustedDocument) {
+  // Even a URL that normalizes to our boot document must not bypass the raw
+  // input policy via stripped whitespace in a host or path.
+  if (typeof requested !== 'string' || unsafeRawWhitespace(requested)) return false;
   try {
     const next = new URL(requested);
     const trusted = new URL(trustedDocument);
