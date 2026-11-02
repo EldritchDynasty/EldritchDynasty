@@ -263,6 +263,8 @@ export function browserPlatform(): Platform {
     },
 
     async writeSave(slot, save) {
+      // Do not persist a save the browser's slot list cannot identify.
+      if (!slot.trim()) throw new TypeError('a browser save slot must have a name');
       const storage = browserStorage();
       if (!storage) throw new Error('this browser does not permit saved data');
       storage.setItem(PREFIX + slot, readableBrowserJSON(save));
