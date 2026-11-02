@@ -4,7 +4,7 @@ import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
 import { END_YEAR, campaignDef } from './campaign.js';
-import { renderContentProse } from './prose.js';
+import { proseForClause, renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 import { ambitionView } from './ambition.js';
@@ -591,10 +591,17 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     // rather than guessing from unrelated Chronicle prose.
     for (const clause of ctx.content.clauses) {
       if (clause.known || !w.clausesRecovered.has(clause.id)) continue;
+      // The page freezes whichever words the reader chose *when it was
+      // written*. Read both reviewed language forms without changing the
+      // reader's current mode or its migration diagnostics.
+      const plain = proseForClause({
+        ...ctx, prose: { ...ctx.prose, mode: 'plainenglish', missing: new Set<string>() },
+      }, clause);
       const matches = w.chronicle.filter((entry) =>
         entry.weight === 'illuminated' && entry.named && !entry.greyed
-        && entry.record === undefined && entry.title === clause.name
-        && entry.text === clause.text);
+        && entry.record === undefined
+        && ((entry.title === clause.name && entry.text === clause.text)
+          || (entry.title === plain.name && entry.text === plain.text)));
       // Repeated/ambiguous copies cannot supply a single dated witness.
       if (matches.length !== 1) continue;
       const page = matches[0]!;
