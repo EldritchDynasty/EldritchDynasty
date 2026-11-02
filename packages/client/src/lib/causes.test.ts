@@ -103,6 +103,31 @@ describe('finding Chronicle entries by recorded id (#2151)', () => {
     expect(findEntry(root, 'missing')).toBeUndefined();
   });
 
+  it('recognizes the entry element itself when it belongs to an iframe document (#2498)', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    try {
+      const otherDocument = iframe.contentDocument!;
+      const page = otherDocument.createElement('article');
+      const id = 'chr_7]"iframe';
+      page.dataset.entry = id;
+      otherDocument.body.appendChild(page);
+
+      // An iframe's HTMLElement constructor belongs to another realm.
+      expect(page instanceof HTMLElement).toBe(false);
+      expect(findEntry(page, id)).toBe(page);
+      expect(findEntry(page, 'another')).toBeUndefined();
+    } finally {
+      iframe.remove();
+    }
+  });
+
+  it('does not treat an SVG root as an HTML Chronicle entry (#2498)', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('data-entry', 'chr_svg');
+    expect(findEntry(svg, 'chr_svg')).toBeUndefined();
+  });
+
   it('also searches a container, and tolerates a missing root', () => {
     const container = document.createElement('section');
     const page = document.createElement('article');
