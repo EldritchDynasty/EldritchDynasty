@@ -963,7 +963,9 @@ export const SavedGameS = z.object({
   ascension: z.object({
     rung: RungS,
     best: RungS,
-    reachedAt: z.record(RungS, z.number()).default({}),
+    // Partial: a rung is stamped the year it is first reached, so most saves
+    // carry only some. (Zod 4's `z.record` over an enum demands every key.)
+    reachedAt: z.partialRecord(RungS, z.number()).default({}),
   }),
   /**
    * THE FIVE NAMES (`core/src/people/friends.ts`). Who the player said at the

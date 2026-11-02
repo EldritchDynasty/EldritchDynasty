@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { EffectS, effectFields, effectKinds, fieldsOfSchema } from '@ed/schema';
+import { z } from 'zod';
+import { EffectS, EventTemplateS, effectFields, effectKinds, fieldsOfSchema, typeOf } from '@ed/schema';
 import { CheckS, SlotSpecS } from '@ed/schema';
 
 /**
@@ -49,5 +50,41 @@ describe('field descriptors', () => {
   it('works on the other two schemas the editor draws forms for', () => {
     expect(fieldsOfSchema(SlotSpecS).map((f) => f.key)).toContain('castBy');
     expect(fieldsOfSchema(CheckS).map((f) => f.key)).toContain('variance');
+  });
+});
+
+/**
+ * Zod 4 (#2497) moved what these walkers read: refinements no longer wrap an
+ * object, `.transform()` and `z.preprocess()` became pipes, and a schema's
+ * definition is public as `.def`. Each case below is one the move changed.
+ */
+describe('walking Zod 4 schemas', () => {
+  it('reads a refined object directly, as the editor does', () => {
+    // `EventTemplateS` ends in `.superRefine`. Under Zod 3 that was a wrapper
+    // the editor had to unwrap with `.innerType()`; now it is the object.
+    const keys = fieldsOfSchema(EventTemplateS).map((f) => f.key);
+    expect(keys).toEqual(expect.arrayContaining(['tier', 'accounts', 'rumour']));
+    const rumour = fieldsOfSchema(EventTemplateS.shape.rumour.unwrap());
+    expect(rumour.map((f) => [f.key, f.control.kind])).toEqual([
+      ['id', 'string'], ['accuracy', 'number'], ['spread', 'number'],
+    ]);
+  });
+
+  it('sees through a pipe to the schema that describes the value', () => {
+    expect(typeOf(z.array(z.string()).transform((rows) => rows.length))).toBe('string[]');
+    expect(typeOf(z.preprocess((v) => v, z.number()))).toBe('number');
+    const fields = fieldsOfSchema(z.object({ n: z.number().transform(String).optional() }));
+    expect(fields).toEqual([{ key: 'n', optional: true, control: { kind: 'number' } }]);
+  });
+
+  it('reads a default as the value it is, not a thunk', () => {
+    const [field] = fieldsOfSchema(z.object({ tags: z.array(z.string()).default(['a']) }));
+    expect(field).toEqual({ key: 'tags', optional: false, fallback: ['a'], control: { kind: 'stringList' } });
+  });
+
+  it('parses without generated code once @ed/schema is loaded', () => {
+    // `zod-config.ts` is the first thing the index imports. A strict CSP
+    // reports Zod's eval probe even when Zod catches it.
+    expect(z.config().jitless).toBe(true);
   });
 });

@@ -37,6 +37,19 @@ describe('a run survives being written down', () => {
     expect(() => loadGame(raw, content)).not.toThrow();
   });
 
+  it('keeps a partial ascension record partial (#2497)', () => {
+    // A rung is stamped the year it is first reached, so a real save names
+    // only some. Zod 4's `z.record` over an enum demands every key, and would
+    // refuse every one of these saves.
+    const save = saveGame(bootstrap(content, 1042, 1042));
+    for (const reachedAt of [{}, { touched: 1050 }, { touched: 1050, adept: 1090 }]) {
+      const parsed = SavedGameS.parse({ ...save, ascension: { ...save.ascension, reachedAt } });
+      expect(parsed.ascension.reachedAt).toEqual(reachedAt);
+    }
+    const { reachedAt: _omitted, ...withoutStamps } = save.ascension;
+    expect(SavedGameS.parse({ ...save, ascension: withoutStamps }).ascension.reachedAt).toEqual({});
+  });
+
   it('round-trips a fresh world exactly', () => {
     const before = bootstrap(content, 1042, 1042);
     const after = loadGame(JSON.parse(JSON.stringify(saveGame(before))), content);

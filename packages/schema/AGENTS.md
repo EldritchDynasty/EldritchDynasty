@@ -23,6 +23,7 @@ rules.ts          CONTENT_RULES — validation, one named rule at a time
 prose.ts          the countable half of the voice contract
 reference.ts      reads the vocabularies off the schemas for `npm run gen:docs`
 validate.ts       the runner: validateBundle, runRule
+zod-config.ts     Zod's runtime settings (jitless); the index imports it first
 ```
 
 ## The rules that bite here
