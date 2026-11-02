@@ -100,7 +100,8 @@ events:
                 the next thirty years.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -18, grudge: { severity: 22, inheritance: heir_only } }
+                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -18 }
+                - { kind: relationship, from: head, to: { slot: RIVAL }, grudge: { severity: 22, inheritance: heir_only } }
         - id: remember_it
           label: Say nothing. Remember it.
           outcomes:
@@ -652,7 +653,8 @@ events:
                 next encounter will carry this refusal into the room before either signer speaks.
               effects:
                 - { kind: respect, delta: 1 }
-                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -12, grudge: { severity: 12, inheritance: heir_only } }
+                - { kind: relationship, from: { slot: RIVAL }, to: head, sentiment: -12 }
+                - { kind: relationship, from: head, to: { slot: RIVAL }, grudge: { severity: 12, inheritance: heir_only } }
 
   - id: the_name_under_the_second_signature
     title: A Different Hand on the Roll
