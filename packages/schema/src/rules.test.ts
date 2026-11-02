@@ -1232,6 +1232,87 @@ describe('the content rules', () => {
     expect(runRule('discrepancy/wiring', bad).some((i) => i.message.includes('house_of_nowhere'))).toBe(true);
   });
 
+  it.each(['record', 'omit', 'embellish'] as const)(
+    'checks Discrepancy effects on the %s Record option',
+    (pen) => {
+      const b = withEvents((x) => {
+        const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+        event.record!.options[pen].effects.push({
+          kind: 'discrepancy', op: 'create', id: `unknown_house_${pen}`,
+          severity: 'minor', provableBy: ['house_that_is_not_real'],
+        });
+      });
+      const issues = runRule('discrepancy/wiring', b);
+      expect(issues.some((i) => i.where.includes(`/record/${pen}`)
+        && i.message.includes('house_that_is_not_real'))).toBe(true);
+    },
+  );
+
+  it('rejects missing creators and ids in Record effects, but permits an id-less bury', () => {
+    const b = withEvents((x) => {
+      const record = x.events.find((e) => e.id === 'blood_on_our_own_land')!.record!;
+      record.options.record.effects.push({ kind: 'discrepancy', op: 'prove', id: 'no_record_creator_exists' });
+      record.options.omit.effects.push({ kind: 'discrepancy', op: 'create', severity: 'minor' });
+      record.options.embellish.effects.push({
+        kind: 'discrepancy', op: 'bury', provableBy: ['the_church'],
+      });
+    });
+    const issues = runRule('discrepancy/wiring', b);
+    expect(issues.some((i) => i.where.includes('/record/record')
+      && i.message.includes('no_record_creator_exists'))).toBe(true);
+    expect(issues.some((i) => i.where.includes('/record/omit')
+      && i.message.includes('no id'))).toBe(true);
+    expect(issues.some((i) => i.where.includes('/record/embellish')
+      && i.message.includes('buries Discrepancy'))).toBe(false);
+  });
+
+  it('recognizes a Record-option creator referenced by an ordinary outcome', () => {
+    const b = withEvents((x) => {
+      const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+      event.record!.options.omit.effects.push({
+        kind: 'discrepancy', op: 'create', id: 'created_by_omit', severity: 'minor',
+        provableBy: ['the_church'],
+      });
+      if (event.interaction.kind === 'narration') throw new Error('expected player choices');
+      event.interaction.choices[0]!.outcomes[0]!.effects.push({
+        kind: 'discrepancy', op: 'prove', id: 'created_by_omit',
+      });
+    });
+    expect(runRule('discrepancy/wiring', b).some((i) => i.message.includes('created_by_omit')))
+      .toBe(false);
+  });
+
+  it.each(['choice', 'outcome', 'primordial'] as const)(
+    'validates Discrepancy effects in a %s-specific Record block',
+    (variant) => {
+      const b = withEvents((x) => {
+        const event = x.events.find((e) => e.id === 'blood_on_our_own_land')!;
+        if (!event.record || event.interaction.kind === 'narration') throw new Error('missing Record fixture');
+        const record = structuredClone(event.record);
+        record.options.omit.effects.push({
+          kind: 'discrepancy', op: 'create', id: `invalid_${variant}_creator`,
+          severity: 'minor', provableBy: ['house_that_is_not_real'],
+        });
+        const choice = event.interaction.choices[0]!;
+        const outcome = choice.outcomes[0]!;
+        if (variant === 'choice') {
+          event.recordByChoice = [{ ...record, id: choice.id }];
+        } else if (variant === 'outcome') {
+          event.recordByOutcome = [{ ...record, id: `${choice.id}/${outcome.id}` }];
+        } else {
+          outcome.primordial = {
+            id: 'record_wiring_probe', text: 'A final account.', tags: [],
+            effects: [], record,
+          };
+        }
+      });
+      expect(runRule('discrepancy/wiring', b)
+        .some((i) => i.message.includes('house_that_is_not_real')
+          && i.where.includes(variant === 'primordial' ? '/primordial:' : `/recordBy${variant === 'choice' ? 'Choice' : 'Outcome'}:`)))
+        .toBe(true);
+    },
+  );
+
   it('passes the shipped content with no wiring errors', () => {
     expect(runRule('discrepancy/wiring', content).filter((i) => i.level === 'error')).toHaveLength(0);
   });
