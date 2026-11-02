@@ -23,7 +23,7 @@ export interface AfterimageEvidence {
   line?: { id: string; name: string; epithet?: string; head: boolean; record: { parents: { mother?: string; father?: string } } }[];
   /** Earliest documented sacrifice, whatever house the subject came from. */
   spent?: AfterimageSpent;
-  /** Earliest documented sacrifice of this house's own blood, for its reckoning. */
+  /** Earliest surviving documented sacrifice of this house's blood, for its reckoning. */
   spentBlood?: AfterimageSpent;
   /** Smallest preserved generation-opening count, not a continuous population minimum. */
   brush?: { count: number; source: AfterimageSource };
