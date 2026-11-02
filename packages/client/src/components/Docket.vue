@@ -309,9 +309,11 @@ function onKey(e: KeyboardEvent): void {
   if (document.querySelector('[aria-modal="true"]')) return;
 
   const el = document.activeElement;
-  // A focused glossary disclosure is for reading, not a numbered answer.
-  // Keep ordinary Docket shortcuts on the rest of the panel.
-  if (el?.matches('.glossary-term')) return;
+  // The whole glossary disclosure owns its keys, not just the opener.
+  // Its focusable definition notes can receive number keys too; answering a
+  // hidden Docket choice while reading a note would be irreversible.
+  // Keep ordinary shortcuts on the rest of the panel.
+  if (el?.closest('.glossary-text')) return;
   const press = shortcutFor({
     key: e.key,
     repeat: e.repeat,
