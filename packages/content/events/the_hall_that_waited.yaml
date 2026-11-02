@@ -149,6 +149,11 @@ events:
                     from: { slot: COUSIN },
                     to: { slot: HEAD },
                     sentiment: -18,
+                  }
+                - {
+                    kind: relationship,
+                    from: { slot: HEAD },
+                    to: { slot: COUSIN },
                     grudge: { severity: 25, inheritance: all_blood },
                   }
     rumour: { id: rumour_what_the_third_hall_asked, accuracy: 0.5, spread: 2 }
@@ -198,6 +203,11 @@ events:
                 from: { slot: COUSIN },
                 to: { slot: HEAD },
                 sentiment: -30,
+              }
+            - {
+                kind: relationship,
+                from: { slot: HEAD },
+                to: { slot: COUSIN },
                 grudge: { severity: 40, inheritance: all_blood },
               }
         - id: the_quiet_is_taken_for_peace
