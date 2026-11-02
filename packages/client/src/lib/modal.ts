@@ -90,8 +90,29 @@ function behindClosedDetails(element: HTMLElement, card: HTMLElement): boolean {
   return false;
 }
 
+/**
+ * An explicit editing host is in the browser's sequential Tab order even
+ * without tabindex. Nested editables are not additional Tab stops unless the
+ * author explicitly gives them tabindex=0; a negative tabindex always wins.
+ */
+function implicitEditableTabStop(element: HTMLElement): boolean {
+  if (element.hasAttribute('tabindex')) return false;
+  const value = element.getAttribute('contenteditable')?.toLowerCase();
+  if (value !== '' && value !== 'true' && value !== 'plaintext-only') return false;
+
+  // A contenteditable=false ancestor stops inheritance: an editing host
+  // inside it starts a new editable island rather than a nested Tab stop.
+  for (let parent = composedParent(element); parent; parent = composedParent(parent)) {
+    const parentValue = parent.getAttribute('contenteditable')?.toLowerCase();
+    if (parentValue === 'false') break;
+    if (parentValue === '' || parentValue === 'true' || parentValue === 'plaintext-only'
+      || parent.isContentEditable) return false;
+  }
+  return true;
+}
+
 function usableFocusTarget(element: HTMLElement, root: HTMLElement): boolean {
-  return element.tabIndex >= 0
+  return (element.tabIndex >= 0 || implicitEditableTabStop(element))
     && !element.matches(':disabled')
     && !concealedByAttribute(element, root)
     && !behindClosedDetails(element, root)
@@ -112,7 +133,7 @@ function tryFocus(target: HTMLElement): boolean {
 export function modalFocusable(card: HTMLElement | null): HTMLElement[] {
   if (!card) return [];
   const found: HTMLElement[] = [];
-  const selector = 'button, summary, [href], input, select, textarea, [tabindex]';
+  const selector = 'button, summary, [href], input, select, textarea, [tabindex], [contenteditable]';
   // querySelectorAll does not enter shadow roots. Traverse in DOM order,
   // visiting each open shadow tree where its host occurs in the dialog.
   const walk = (root: Element | ShadowRoot): void => {
