@@ -198,7 +198,8 @@ export class SoundBed {
     const gesture = () => { if (active) this.gesture(); };
     const visibility = () => {
       if (!active) return;
-      this.#documentHidden = doc.visibilityState === 'hidden';
+      // Prerendered or unknown host states are not permission to start audio.
+      this.#documentHidden = doc.visibilityState !== 'visible';
       if (this.#documentHidden) this.hide();
       else this.show();
     };
@@ -224,7 +225,7 @@ export class SoundBed {
     // mistake the initial visibility sample for a foreground/resume event:
     // that would immediately undo the host's pause and restart the drone.
     // A real visibilitychange, pageshow or a fresh user gesture can resume.
-    this.#documentHidden = doc.visibilityState === 'hidden';
+    this.#documentHidden = doc.visibilityState !== 'visible';
     if (this.#documentHidden) this.hide();
     // A former attachment may still have its cleanup callback in a caller.
     // Calling that stale callback must neither tear down nor forget a newer
