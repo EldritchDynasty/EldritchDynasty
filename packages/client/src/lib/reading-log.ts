@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 10: successful saved-run pickups start a separate Chronicle identity and answer-gap epoch. */
-export const READING_LOG_FORMAT = 'ed-reading-log/10';
+/** 11: opt-in signing-to-first-command timing, with censored incomplete entries. */
+export const READING_LOG_FORMAT = 'ed-reading-log/11';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -54,6 +54,7 @@ export const READING_LOG_CAVEATS = [
   'Choose and Match record acceptance or refusal from their returned result, not an attempted click. Other answer verbs without a returned outcome remain attempts only; a Match refusal may include an unavailable card.',
   'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
   'Signing markers distinguish a founding attempt from accepted, refused or thrown results; enter returning is not proof a meaningful family decision was taken. Names, founder answers and refusal reasons are never recorded.',
+  'An entry timing starts at a successful Begin, not at recorder activation. Its first accepted gameplay command is only a candidate family decision: an observer must verify the command was consequential. Incomplete or interrupted entries are censored, not abandoned.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',
 ] as const;
@@ -144,7 +145,26 @@ export interface AnswerGap {
   censored: boolean;
 }
 
+/** A completed command is a candidate first family action, not a claim about its meaning. */
+export type EntryCommand = 'choose' | 'match' | 'order' | 'muster' | 'record';
+
+/** One accepted new-house start, bounded by a later start, pickup, or log end. */
+export interface EntryTiming {
+  startedAt: number;
+  campaign: string | null;
+  foundedAt: number | null;
+  enteredAt: number | null;
+  firstAcceptedCommand: { at: number; verb: EntryCommand } | null;
+  /** Interval after accepted Begin, excluding time on the title screen. */
+  wallMs: number;
+  foregroundMs: number;
+  /** No accepted command observed before this entry was cut off. */
+  censored: boolean;
+}
+
 export interface ReadingLogSummary {
+  /** Compare first-session paths without mistaking button attempts for success. */
+  entries: EntryTiming[];
   wallMs: number;
   foregroundMs: number;
   hiddenMs: number;
@@ -358,6 +378,20 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   const stop = end ? end.at : until;
 
   const gaps: AnswerGap[] = [];
+  const entries: EntryTiming[] = [];
+  let entry: { startedAt: number; foregroundAt: number; campaign: string | null;
+    foundedAt: number | null; enteredAt: number | null } | null = null;
+  const finishEntry = (at: number, firstAcceptedCommand: EntryTiming['firstAcceptedCommand'] = null) => {
+    if (!entry) return;
+    entries.push({
+      startedAt: entry.startedAt, campaign: entry.campaign,
+      foundedAt: entry.foundedAt, enteredAt: entry.enteredAt,
+      firstAcceptedCommand, wallMs: at - entry.startedAt,
+      foregroundMs: foreground - entry.foregroundAt,
+      censored: firstAcceptedCommand === null,
+    });
+    entry = null;
+  };
   let open = { at: 0, year: null as number | null, kind: 'start' as AnswerGap['from']['kind'], foreground: 0, decisions: 0 };
   let answers = 0, decisions = 0;
   // A first Begin is not a house-to-house transition: the player may have
@@ -393,6 +427,8 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'break': onBreak = e.on; break;
       case 'year': year = e.year; hasHouse = true; break;
       case 'pickup':
+        // A resumed house cannot complete the signing of an earlier new house.
+        finishEntry(e.at);
         // A successful saved-run pickup ends the old answer gap. Its carried
         // pages cannot answer a question from the house shown before the load.
         if (hasHouse) {
@@ -413,6 +449,9 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       }
       case 'action':
         if (e.act === 'start' && (e.verb === 'begin' || e.verb === 'beginFromShareCode')) {
+          finishEntry(e.at);
+          entry = { startedAt: e.at, foregroundAt: foreground, campaign: null,
+            foundedAt: null, enteredAt: null };
           // Answer-to-answer delays never span different houses. Censor
           // the previous house's unfinished gap and start a new clock.
           // The first Begin does not end a preceding house: foreground
@@ -424,17 +463,30 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
           hasHouse = true;
           year = null;
         }
+        if (entry && e.verb === 'found' && e.status === 'accepted') entry.foundedAt = e.at;
+        if (entry && e.verb === 'enter' && e.status === 'returned') entry.enteredAt = e.at;
+        if (entry && entry.enteredAt !== null
+          && (e.verb === 'choose' || e.verb === 'match' || e.verb === 'order'
+            || e.verb === 'muster' || e.verb === 'record')
+          && e.status === 'accepted') {
+          finishEntry(e.at, { at: e.at, verb: e.verb });
+        }
         break;
-      case 'run': hasHouse = true; break;
+      case 'run':
+        hasHouse = true;
+        if (entry) entry.campaign = e.campaign;
+        break;
       case 'pane': case 'prose': case 'ended': case 'end': break;
       default: assertNever(e);
     }
   }
   advance(stop);
+  finishEntry(stop);
   close(stop, year, end?.reason ?? (truncated ? 'cap' : 'open'), true);
 
   const hours = foreground / 3_600_000;
   return {
+    entries,
     wallMs: stop,
     foregroundMs: foreground,
     hiddenMs: hidden,
