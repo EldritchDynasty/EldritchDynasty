@@ -45,6 +45,12 @@ export function saveSummary(slot: string, save: unknown): SaveSummary {
 }
 
 function savePath(slot: string): string {
+  // A blank slot becomes ".json", which slotFromFile deliberately excludes
+  // from listings. Reject it instead of persisting a run the UI cannot find.
+  // The native bridge may receive unchecked JavaScript despite its TS type.
+  if (typeof slot !== 'string' || slot.length === 0) {
+    throw new TypeError('a native save slot name is required');
+  }
   return `${SAVE_DIR}/${encodeURIComponent(slot)}.json`;
 }
 
@@ -311,11 +317,14 @@ export function mobileStorage(
   }
 
   async function deleteSaveUnlocked(slot: string): Promise<void> {
+    // Reject invalid names before touching Preferences: otherwise a failed
+    // native path check could still erase a legacy key.
+    const path = savePath(slot);
     // Remove the legacy copy first: if Preferences cleanup fails, keep the
     // authoritative Data file. Deleting it first lets a stale legacy snapshot
     // migrate back and resurrect a run the player just deleted.
     await preferences.remove({ key: LEGACY_SAVE_PREFIX + slot });
-    await removeFile(savePath(slot));
+    await removeFile(path);
   }
 
   async function writeLibraryUnlocked(library: unknown): Promise<void> {
