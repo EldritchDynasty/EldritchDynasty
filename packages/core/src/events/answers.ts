@@ -46,6 +46,7 @@ function glimpseDecisions(ctx: SimCtx, after: number): OutcomeDecision[] {
   for (let i = log.length - 1; i >= 0; i--) {
     const d = log[i]!;
     if (d.year <= after) break;
+    if (d.year > ctx.world.year) continue;
     if (d.kind === 'outcome' && isGlimpse(ctx, d.event, d.outcomeId)) shown.push(d);
   }
   return shown.reverse();
@@ -67,7 +68,8 @@ function clausePages(ctx: SimCtx, after: number): { year: number; index: number 
   let pages: Map<string, string> | undefined;
   const found: { year: number; index: number }[] = [];
   for (const [index, entry] of w.chronicle.entries()) {
-    if (entry.year <= after || entry.weight !== 'illuminated' || entry.title === undefined) continue;
+    if (entry.year <= after || entry.year > w.year
+      || entry.weight !== 'illuminated' || entry.title === undefined) continue;
     pages ??= new Map(ctx.content.clauses
       .filter((c) => w.clausesRecovered.has(c.id))
       .map((c) => { const prose = proseForClause(ctx, c); return [prose.name, prose.text]; }));
@@ -111,7 +113,7 @@ function glimpsePage(
 ): (d: OutcomeDecision) => string | undefined {
   const pages = new Map<string, string[]>();
   for (const entry of reading) {
-    if (entry.year <= after || entry.eventId === undefined) continue;
+    if (entry.year <= after || entry.year > ctx.world.year || entry.eventId === undefined) continue;
     const key = `${entry.year}:${entry.eventId}`;
     const ids = pages.get(key) ?? [];
     if (!ids.includes(entry.id!)) ids.push(entry.id!);
@@ -120,7 +122,7 @@ function glimpsePage(
   const ordinals = new Map<string, number>();
   const ordinalOf = new Map<OutcomeDecision, number>();
   for (const d of ctx.world.decisionLog) {
-    if (d.year <= after || d.kind !== 'outcome') continue;
+    if (d.year <= after || d.year > ctx.world.year || d.kind !== 'outcome') continue;
     const key = `${d.year}:${d.event}`;
     const nth = ordinals.get(key) ?? 0;
     ordinals.set(key, nth + 1);
@@ -139,7 +141,7 @@ export function answers(ctx: SimCtx, after = -Infinity): Answer[] {
   const pageOf = glimpsePage(ctx, reading, after);
   const all: Answer[] = [
     ...w.frame.entries
-      .filter((e) => e.year > after)
+      .filter((e) => e.year > after && e.year <= w.year)
       .map((e): Answer => ({ year: e.year, kind: 'interlude', event: e.eventId })),
     ...clausePages(ctx, after)
       .map((p): Answer => ({ year: p.year, kind: 'clause', page: reading[p.index]!.id! })),
