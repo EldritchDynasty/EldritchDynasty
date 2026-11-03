@@ -1283,6 +1283,38 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 
+  it('does not treat retained text on a legacy omitted rite page as written evidence', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const ritePage = w.chronicle[0]!;
+    const victimId = ritePage.people![0]!;
+    const selectedEnding = selectEnding(ctx);
+
+    // The attributed rite is real and has an ordinary, surviving written page.
+    expect(afterimageEvidence(ctx).spent?.person).toBe(victimId);
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victimId);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+
+    // Old/imported saves can retain the old words while the Record explicitly
+    // says the page was omitted. Neither general person provenance nor a rite
+    // may quote that hidden text as a surviving written account.
+    ritePage.record = 'omit';
+    expect(ritePage.text).toBe('The house wrote that Meriel walked away.');
+    const omitted = digestOf(ctx);
+    const evidence = afterimageEvidence(ctx);
+    expect(evidence.spent).toBeUndefined();
+    expect(evidence.spentBlood).toBeUndefined();
+    expect(evidence.people.some((p) => p.person === victimId)).toBe(false);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(selectedEnding);
+    expect(digestOf(ctx)).toBe(omitted);
+
+    // Restoring an actual written Record page restores the same testimony.
+    ritePage.record = 'record';
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victimId);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+  });
+
   it('keeps an embellished page disputed, and never reconstructs an omitted one', () => {
     const ctx = accountedRite();
     ctx.world.chronicle[0]!.record = 'embellish';
