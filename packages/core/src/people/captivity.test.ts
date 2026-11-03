@@ -104,6 +104,31 @@ describe('named family captivity (#1908)', () => {
     expect(snapshot(ctx)).toBe(returned);
   });
 
+  it('hides a future-dated saved capture until its recorded year', () => {
+    const original = testWorld(content);
+    const p = place(original, { sex: 'female', age: 25 });
+    expect(captureFamily(original, p.id, CAPTOR, 24)).toBe(true);
+    p.captivity!.since = original.world.year + 1;
+
+    // Keep the current hostage membership so this isolates the captivity date.
+    const ctx = loadGame(JSON.parse(JSON.stringify(saveGame(original))), content);
+    expect(currentMembership(ctx.world.people.mustGet(p.id), ctx.world.year)).toMatchObject({
+      kind: 'hostage', house: CAPTOR,
+    });
+    const before = snapshot(ctx);
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: false, price: 0 });
+    expect(tableView(ctx).captives).toEqual([]);
+    expect(order(ctx, { kind: 'ransom', person: p.id }).ok).toBe(false);
+    expect(releaseCaptive(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    ctx.world.year += 1;
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: true, price: 24 });
+    expect(tableView(ctx).captives).toMatchObject([{ person: p.id, since: ctx.world.year, price: 24 }]);
+    expect(releaseCaptive(ctx, p.id)).toBe(true);
+    expect(ctx.world.people.mustGet(p.id).captivity).toBeUndefined();
+  });
+
   it('releases freely, and a zero-price ransom needs no payment', () => {
     const ctx = testWorld(content);
     const p = place(ctx, { sex: 'male', age: 25 });
