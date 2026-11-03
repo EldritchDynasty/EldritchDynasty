@@ -1,4 +1,4 @@
-import { assertNever, currentMembership, MAIN_BRANCH, type Person, type SceneSite } from '@ed/schema';
+import { assertNever, currentMembership, MAIN_BRANCH, type CovertOperation, type Person, type SceneSite } from '@ed/schema';
 import type { SimCtx } from './world.js';
 import { castIn, soleCast, type SlotFill } from './events/slots.js';
 import { branchOf, halls } from './people/branches.js';
@@ -27,14 +27,17 @@ export function homeHall(ctx: SimCtx, person: Person): string | undefined {
     ? branchOf(ctx.world, person, ctx.world.year) : `foreign:${house}`;
 }
 
+// Future recovered expeditions cannot reserve people, places or active-duty sites.
+const currentCovert = (o: CovertOperation, year: number) => o.stage !== 'closed' && o.plan.preparedAt <= year;
+
 export function covertParticipants(ctx: SimCtx, operation: string): string[] {
-  const o = ctx.world.covert.operations.find(o => o.plan.id === operation && o.stage !== 'closed');
+  const o = ctx.world.covert.operations.find(o => o.plan.id === operation && currentCovert(o, ctx.world.year));
   return o ? [...new Set([o.plan.operative, ...o.crew, ...ctx.world.mystic.assignments
     .filter(a => a.target.kind === 'covert' && a.target.operation === operation).map(a => a.practitioner)])] : [];
 }
 
 export function covertReservation(ctx: SimCtx, person: string): string | undefined {
-  return ctx.world.covert.operations.find(o => o.stage !== 'closed'
+  return ctx.world.covert.operations.find(o => currentCovert(o, ctx.world.year)
     && covertParticipants(ctx, o.plan.id).includes(person))?.plan.id;
 }
 
@@ -68,7 +71,7 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
   switch (site.kind) {
     case 'service': return ctx.world.mystic.contracts.some(c => c.id === site.contract && c.stage !== 'closed') ? { service: site.contract } : undefined;
     case 'book': return w.library.has(site.book) ? { hall: MAIN_BRANCH } : undefined;
-    case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && o.stage !== 'closed')
+    case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && currentCovert(o, w.year))
       ? { operation: site.operation } : undefined;
     case 'person': {
       const p = w.people.get(site.person);
@@ -100,7 +103,7 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
     // Travel, unpaid service and recovery do not teleport somebody home.
     ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
       && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
-    ...ctx.world.covert.operations.filter(o => o.stage !== 'closed').flatMap(o => covertParticipants(ctx, o.plan.id)),
+    ...ctx.world.covert.operations.filter(o => currentCovert(o, ctx.world.year)).flatMap(o => covertParticipants(ctx, o.plan.id)),
     ...ctx.world.mystic.contracts.filter(c => c.stage !== 'closed' && (c.kind === 'commission' || c.stage !== 'working')).map(c => c.practitioner),
   ]);
 }
@@ -149,7 +152,7 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
     case 'book': return w.library.has(site.book) && w.library.get(site.book)?.restoresAt === undefined
       ? { ...resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}), site } : { site, people: [] };
     case 'covert': {
-      const o = w.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
+      const o = w.covert.operations.find(o => o.plan.id === site.operation && currentCovert(o, w.year));
       if (!o) return { site, people: [] };
       const party = covertParticipants(ctx, o.plan.id);
       // A preparing or returning expedition is away, but has not become a

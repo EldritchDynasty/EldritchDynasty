@@ -31,6 +31,7 @@ import { tickAssize } from './assize.js';
 import { tickRelationships } from './people/relationships.js';
 import { commitDuty } from './mystic.js';
 import { covertOperationsView } from './covert-operations.js';
+import { covertParticipants, covertReservation, deployedPeople, dutyPlaceOf, resolvePresence } from './presence.js';
 
 describe('committed offensive expeditions (#1876)', () => {
   const start = 1042;
@@ -60,6 +61,77 @@ describe('committed offensive expeditions (#1876)', () => {
     ctx.world.year++; tickMystic(ctx); tickEconomy(ctx); tickCovertOperations(ctx); advanceKnownRivalHeads(ctx);
   }
   const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+  /** Restore a schema-valid later expedition without enacting a present one. */
+  function savedFutureOperation() {
+    const other = scene();
+    expect(prepareCovertOperation(other.ctx, other.order).ok).toBe(true);
+    const future = structuredClone(other.ctx.world.covert.operations[0]!);
+    future.plan.id = 'cop_future';
+    future.plan.site = { kind: 'covert', operation: future.plan.id };
+    future.plan.preparedAt = start + 10;
+    future.plan.attemptYear = start + 12;
+    return future;
+  }
+
+  it('keeps future saved expeditions out of today's opportunities, presence and lifecycle (#2755)', () => {
+    const { ctx, order, operative } = scene();
+    const future = savedFutureOperation();
+    ctx.world.covert.operations.push(future);
+    const untouched = structuredClone(future);
+
+    expect(covertOpportunities(ctx).map(o => o.id)).toContain(order.opportunity);
+    expect(quoteCovertOperation(ctx, order).ok).toBe(true);
+    expect(covertOperationsView(ctx).current).toEqual([]);
+    expect(covertOperationsView(ctx).offers.some(o => o.order.opportunity === order.opportunity && o.ok)).toBe(true);
+    expect(covertParticipants(ctx, future.plan.id)).toEqual([]);
+    expect(covertReservation(ctx, operative.id)).toBeUndefined();
+    expect(deployedPeople(ctx).has(operative.id)).toBe(false);
+    expect(dutyPlaceOf(ctx, future.plan.site, {})).toBeUndefined();
+    expect(resolvePresence(ctx, future.plan.site, {}).people).toEqual([]);
+    expect(withdrawCovertOperation(ctx, future.plan.id).ok).toBe(false);
+    tickCovertOperations(ctx);
+    expect(future).toEqual(untouched);
+
+    ctx.world.year = start + 10;
+    expect(covertOpportunities(ctx).map(o => o.id)).not.toContain(order.opportunity);
+    expect(covertOperationsView(ctx).current.map(o => o.id)).toContain(future.plan.id);
+    expect(covertParticipants(ctx, future.plan.id)).toContain(operative.id);
+    expect(covertReservation(ctx, operative.id)).toBe(future.plan.id);
+    expect(deployedPeople(ctx).has(operative.id)).toBe(true);
+    expect(dutyPlaceOf(ctx, future.plan.site, {})).toEqual({ operation: future.plan.id });
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+    expect(future).toEqual(untouched);
+  });
+
+  it('allows a real present commitment while preserving the future row (#2755)', () => {
+    const { ctx, order } = scene();
+    const future = savedFutureOperation();
+    ctx.world.covert.operations.push(future);
+    const untouched = structuredClone(future);
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    expect(ctx.world.covert.operations).toHaveLength(2);
+    expect(ctx.world.covert.operations[0]).toEqual(untouched);
+    expect(ctx.world.covert.operations[1]!.plan.preparedAt).toBe(start);
+    expect(covertOpportunities(ctx).map(o => o.id)).not.toContain(order.opportunity);
+  });
+
+  it('uses the latest past preparation for cooldown despite out-of-order saved rows (#2755)', () => {
+    const { ctx, order } = scene();
+    const old = savedFutureOperation();
+    old.plan.id = 'cop_old';
+    old.plan.site = { kind: 'covert', operation: old.plan.id };
+    old.plan.preparedAt = start - 11;
+    old.plan.attemptYear = start - 9;
+    old.opportunity = 'unrelated_old_opportunity';
+    old.stage = 'closed';
+    const future = savedFutureOperation();
+    ctx.world.covert.operations.push(old, future);
+
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+    old.plan.preparedAt = start - 12;
+    expect(quoteCovertOperation(ctx, order).ok).toBe(true);
+  });
 
   it('commits an actual known person, real payment and a consumed opportunity, once', () => {
     const { ctx, target, operative, order } = scene();

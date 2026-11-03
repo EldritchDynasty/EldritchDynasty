@@ -16,7 +16,9 @@ import { msg } from './messages.js';
 
 export const COVERT_OPERATION_COOLDOWN = 12;
 const open = (o: CovertOperation) => o.stage !== 'closed';
-const active = (ctx: SimCtx, id: string) => ctx.world.covert.operations.find(o => o.plan.id === id && open(o));
+// A saved plan from a later year is not yet a commitment in this one.
+const openNow = (o: CovertOperation, year: number) => open(o) && o.plan.preparedAt <= year;
+const active = (ctx: SimCtx, id: string) => ctx.world.covert.operations.find(o => o.plan.id === id && openNow(o, ctx.world.year));
 const account = (ctx: SimCtx, people: string[], text: string) => ctx.world.chronicle.push({
   year: ctx.world.year, weight: 'paragraph' as const, named: true, people, text,
 });
@@ -59,7 +61,7 @@ export function operationExclusion(ctx: SimCtx, p: Person): OperationTargetExclu
  * `tally` only watches: it sees each family-held relationship's first failing rule. */
 export function covertOpportunities(ctx: SimCtx, tally?: (r: Relationship, stage: OperationStage) => void) {
   const w = ctx.world;
-  const used = new Set(w.covert.operations.map(o => o.opportunity));
+  const used = new Set(w.covert.operations.filter(o => o.plan.preparedAt <= w.year).map(o => o.opportunity));
   const targets = w.people.living().filter(p => !operationExclusion(ctx, p));
   const out: { id: string; target: Person; sponsor: Person; grudge: string; purposes: CovertPurpose[] }[] = [];
   for (const r of w.relationships.values()) {
@@ -94,8 +96,10 @@ function quotePreparation(ctx: SimCtx, order: PreparationOrder, opportunity: Ret
   const terms = covertPreparationQuote(order.preparation);
   const quote = { price: terms.crowns, ready: w.year + Math.max(2, terms.years), returnYear: w.year + Math.max(2, terms.years) + 1 };
   const refuse = (reason: string) => ({ ...quote, ok: false, reason });
-  if (w.covert.operations.some(open)) return refuse(msg(ctx, 'operation.refuse.busy', 'an expedition is already committed'));
-  const last = w.covert.operations.at(-1)?.plan.preparedAt ?? -Infinity;
+  if (w.covert.operations.some(o => openNow(o, w.year))) return refuse(msg(ctx, 'operation.refuse.busy', 'an expedition is already committed'));
+  // Saved rows may be out of order or from the future; only completed time counts.
+  const last = w.covert.operations.reduce((latest, o) =>
+    o.plan.preparedAt <= w.year ? Math.max(latest, o.plan.preparedAt) : latest, -Infinity);
   if (w.year - last < COVERT_OPERATION_COOLDOWN) return refuse(msg(ctx, 'operation.refuse.interval', 'the house has not recovered from its last expedition'));
   if (!opportunity || !opportunity.purposes.includes(order.purpose)) return refuse(msg(ctx, 'operation.refuse.opportunity', 'that purpose has no current opportunity against this person'));
   const p = w.people.get(order.operative);
@@ -278,7 +282,7 @@ function resolveOperation(ctx: SimCtx, o: CovertOperation): void {
 /** The operation owns its clock. No player-supplied plan, payment or odds enter the resolver. */
 export function tickCovertOperations(ctx: SimCtx): void {
   const w = ctx.world;
-  for (const o of w.covert.operations.filter(open)) {
+  for (const o of w.covert.operations.filter(o => openNow(o, w.year))) {
     if (o.stage === 'returning') {
       if ((o.returnsAt ?? Infinity) > w.year) continue;
       const people = covertParticipants(ctx, o.plan.id);
@@ -349,7 +353,7 @@ function preparationName(ctx: SimCtx, preparation: CovertPreparation): string {
  * warning roll, true enemy capability or undiscovered testimony is projected. */
 export function covertOperationsView(ctx: SimCtx) {
   const w = ctx.world;
-  const current = w.covert.operations.filter(open);
+  const current = w.covert.operations.filter(o => openNow(o, w.year));
   const opportunities = current.length ? [] : covertOpportunities(ctx);
   const people = opportunities.length ? w.people.household(w.playerHouse, w.year).filter(p => isCurrentFamily(ctx, p) && available(ctx, p)) : [];
   const offers = opportunities.flatMap(o => people.flatMap(p => o.purposes.flatMap(purpose => CovertPreparationS.options.map(preparation => {
@@ -371,8 +375,9 @@ export function covertOperationsView(ctx: SimCtx) {
       canWithdraw: o.stage !== 'closed' && o.stage !== 'returning' && w.year < o.plan.attemptYear,
     };
   };
-  return { offers, current: current.map(record), history: w.covert.operations.filter(o => !open(o)).slice(-6).reverse().map(record),
-    cases: w.covert.operations.filter(o => o.exposure?.heardAt !== undefined).map(o => ({ id: o.plan.id,
+  return { offers, current: current.map(record), history: w.covert.operations.filter(o => !open(o) && o.plan.preparedAt <= w.year).slice(-6).reverse().map(record),
+    cases: w.covert.operations.filter(o => o.plan.preparedAt <= w.year
+      && o.exposure?.heardAt !== undefined && o.exposure.heardAt <= w.year).map(o => ({ id: o.plan.id,
       year: o.exposure!.heardAt!, receipt: o.exposure!.receipt })),
     terms: msg(ctx, 'operation.terms',
       'This expedition is sent against one named enemy’s life. Only one can be committed at a time. Preparation is paid now and is not returned. Preparing and reaching the attempt take two years; survivors need another year to return. The attempt can fail or leave its operative injured or captive. Learned support has its own quoted fee and upkeep, and stays away until that return. Capture carries a fixed ransom of 60 crowns. A failed or recalled expedition consumes its opportunity. A known participant can leave copied testimony and an inherited quarrel, without proving who privately sent them.'),
