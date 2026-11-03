@@ -310,6 +310,12 @@ function focusAfterDemoDeleteTransition(slot: string): void {
   void nextTick(() => {
     const root = startRoot.value;
     if (!root) return;
+    // A native delete may finish long after the reader moved to another
+    // control. Restore focus only if the removed confirmation left focus on
+    // the owning document's body; never steal a still-connected focus target.
+    const doc = root.ownerDocument;
+    const active = doc.activeElement;
+    if (active && active !== doc.body && active !== doc.documentElement && active.isConnected) return;
     if (confirmingDemoDelete.value === slot) {
       root.querySelector<HTMLButtonElement>('.demo-delete-confirm .confirm-remove')?.focus();
       return;

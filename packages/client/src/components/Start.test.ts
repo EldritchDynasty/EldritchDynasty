@@ -31,6 +31,7 @@ function spyActions(saves: SaveSummary[] = []) {
     listSaves: vi.fn(async () => saves),
     importSave: vi.fn(async () => true),
     exportSave: vi.fn(async () => true),
+    deleteDemoSave: vi.fn(async () => undefined),
     deleteLibraryRun: vi.fn(async () => undefined),
     clearLibrary: vi.fn(async () => undefined),
     retryLibrary: vi.fn(async () => undefined),
@@ -349,6 +350,80 @@ describe('the Demonstration front door (#2063)', () => {
       expect(demo.find('.save-action-error').exists()).toBe(false);
       await w.findAll('.primary-row button')[0]!.trigger('click');
       expect(actions.resume).toHaveBeenCalledOnce();
+    } finally {
+      w.unmount();
+    }
+  });
+});
+
+describe('Demonstration deletion focus after asynchronous hosts (#2573)', () => {
+  it('does not steal focus from another live control after a delayed deletion', async () => {
+    const actions = spyActions([{ slot: 'demo-autosave', year: 1062 }]);
+    let finish!: () => void;
+    vi.mocked(actions.deleteDemoSave).mockImplementationOnce(
+      () => new Promise<void>((resolve) => { finish = resolve; }),
+    );
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false } });
+    try {
+      await flush();
+      const remove = w.get('button[data-demo-remove-slot="demo-autosave"]');
+      (remove.element as HTMLButtonElement).focus();
+      await remove.trigger('click');
+      await nextTick();
+      const confirm = w.get('.demo-delete-confirm .confirm-remove');
+      expect(document.activeElement).toBe(confirm.element);
+      await confirm.trigger('click');
+      expect(actions.deleteDemoSave).toHaveBeenCalledWith('demo-autosave');
+
+      // The reader has moved to a different live control while the host waits.
+      const long = w.get('input[name="campaign"][value="long"]');
+      (long.element as HTMLInputElement).focus();
+      expect(document.activeElement).toBe(long.element);
+      finish();
+      await flush();
+      expect(w.find('section.demo-saved').exists()).toBe(false);
+      expect(document.activeElement).toBe(long.element);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('restores a valid Start tab stop after deleting the final focused Demonstration', async () => {
+    const actions = spyActions([{ slot: 'demo-autosave', year: 1062 }]);
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false } });
+    try {
+      await flush();
+      const remove = w.get('button[data-demo-remove-slot="demo-autosave"]');
+      (remove.element as HTMLButtonElement).focus();
+      await remove.trigger('click');
+      await nextTick();
+      const confirm = w.get('.demo-delete-confirm .confirm-remove');
+      expect(document.activeElement).toBe(confirm.element);
+      await confirm.trigger('click');
+      await flush();
+      expect(w.find('section.demo-saved').exists()).toBe(false);
+      expect(document.activeElement).toBe(w.get('.primary-row button.primary').element);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('returns focus to the same Demo Remove control after cancelling its confirmation', async () => {
+    const actions = spyActions([{ slot: 'demo-autosave', year: 1062 }]);
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false } });
+    try {
+      await flush();
+      const remove = w.get('button[data-demo-remove-slot="demo-autosave"]');
+      (remove.element as HTMLButtonElement).focus();
+      await remove.trigger('click');
+      await nextTick();
+      const cancel = w.findAll('.demo-delete-confirm button').find((button) => button.text() === 'Cancel')!;
+      (cancel.element as HTMLButtonElement).focus();
+      await cancel.trigger('click');
+      await nextTick();
+      expect(w.find('.demo-delete-confirm').exists()).toBe(false);
+      expect(document.activeElement).toBe(w.get('button[data-demo-remove-slot="demo-autosave"]').element);
+      expect(actions.deleteDemoSave).not.toHaveBeenCalled();
     } finally {
       w.unmount();
     }
