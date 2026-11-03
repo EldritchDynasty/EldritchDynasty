@@ -73,20 +73,27 @@ describe('a frame read on the record itself', () => {
  *
  * `proseForOutcome` falls back to the body only when an outcome has no text,
  * and every frame outcome has text, so every interlude ever shown was its
- * punchline alone. The template's own cast and reads are cleared here so the
- * test is about presentation, not eligibility; the event id is kept, so the
- * reviewed Plain English rows still resolve against it.
+ * punchline alone. The template's own cast is cleared here, and one omitted
+ * page is written for its read to bind, so the test is about presentation,
+ * not eligibility; the event id is kept, so the reviewed Plain English rows
+ * still resolve against it.
  */
 describe('an interlude shows its scene, then its line', () => {
   const ID = 'frame_the_page_he_does_not_turn';
   const present = (mode: 'original' | 'plainenglish', outcomes?: (o: Outcome) => Outcome) => {
     const game = newGame(bundle, { seed: 2615, proseMode: mode });
+    // Since #1987 this scene names the blank it reads, so give it one to name.
+    game.ctx.world.chronicle.push({
+      id: 'chr_blank', year: 1077, weight: 'paragraph', text: null, eventId: 'the_letters_to_the_weighers',
+      named: false, record: 'omit', subject: 'the letters',
+    });
+    game.ctx.world.decisionLog.push({ kind: 'record', year: 1077, event: 'the_letters_to_the_weighers', option: 'omit' });
     const real = game.ctx.content.events.find((e) => e.id === ID)!;
     if (real.interaction.kind !== 'narration') throw new Error(`${ID} is no longer narration`);
     const interaction = outcomes
       ? { ...real.interaction, outcomes: real.interaction.outcomes.map(outcomes) }
       : real.interaction;
-    const entry = presentFrame(game.ctx, { ...real, reads: [], slots: {}, interaction }, makeRng(2615));
+    const entry = presentFrame(game.ctx, { ...real, slots: {}, interaction }, makeRng(2615));
     return { game, real, entry: entry! };
   };
 
@@ -196,6 +203,20 @@ describe('a scene that reads the blanks names one', () => {
     expect(words).toBeTruthy();
     expect(words).not.toMatch(/[{}]/);
     expect([inline(source.record?.subject ?? ''), source.title]).toContain(words);
+  });
+
+  it('ships an omission scene that names the first blank, in both prose modes', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const game = newGame(bundle, { seed: 1987, proseMode: mode });
+      blank(game.ctx, 'chr_first', 1077, 'the list out of Caster');
+      const shipped = game.ctx.content.events.find((e) => e.id === ID)!;
+      const entry = presentFrame(game.ctx, { ...shipped, slots: {} }, makeRng(1))!;
+      expect(entry.cites, mode).toEqual({ page: 'chr_first', year: 1077 });
+      expect(entry.body, mode).toContain('1077');
+      expect(entry.body, mode).toContain('the list out of Caster');
+      expect(entry.body, mode).not.toMatch(/[{}]/);
+      expect(missingPlainEnglish(game.ctx), mode).toEqual([]);
+    }
   });
 
   it('sets a subject written as its own sentence inside the scene\'s', () => {
