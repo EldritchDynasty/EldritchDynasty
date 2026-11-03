@@ -3,23 +3,24 @@ import { loadContent } from '@ed/content';
 import {
   CAMPAIGNS, canonical, libraryRunOf, newGame,
 } from '@ed/core';
-import type { SavedGame } from '@ed/schema';
+import type { CampaignId, SavedGame } from '@ed/schema';
 
 const content = loadContent();
 
-function fixedLibraryRun() {
-  const source = newGame(content, { seed: 9090, campaign: 'short', decider: 'chronicler' });
+function fixedLibraryRun(campaign: CampaignId = 'short') {
+  const source = newGame(content, { seed: 9090, campaign, decider: 'chronicler' });
   const person = source.ctx.world.people.household(source.ctx.world.playerHouse, source.year)[0]!;
   source.ctx.world.chronicle.push({
     id: 'library_gate_page',
-    year: 1200,
+    // A Demonstration ends in 1075; its inherited page must be from its own years.
+    year: campaign === 'demo' ? CAMPAIGNS.demo.startYear + 2 : 1200,
     weight: 'paragraph',
     text: `${person.name} was entered in the book as untouched by the rite.`,
     named: true,
     record: 'embellish',
     claims: [{ kind: 'attr', person: person.id, attr: 'madness', value: 0 }],
   });
-  source.ctx.world.ending = { id: 'forgotten', year: CAMPAIGNS.short.endYear };
+  source.ctx.world.ending = { id: 'forgotten', year: CAMPAIGNS[campaign].endYear };
   return libraryRunOf(source.ctx)!;
 }
 
@@ -32,13 +33,13 @@ function withoutNarrativeMemory(save: SavedGame): string {
 }
 
 describe('Library of Houses has no material advantage', () => {
-  const oldHouse = fixedLibraryRun();
-
-  it('keeps paired runs byte-identical outside the narrative memory field', () => {
+  function expectNeutrality(oldHouse: ReturnType<typeof fixedLibraryRun>, seeds: readonly number[]): void {
+    // The source campaign (Short or Demonstration) may change the inherited
+    // words, not any system of the later Short Line.
     // Stronger than a mean-within-margin check: every paired seed must finish
     // with the same treasury, respect, genomes, acreage, ladder, and ending,
     // because no simulation system is allowed to read libraryMemories.
-    for (const seed of [811, 912, 1013, 1114]) {
+    for (const seed of seeds) {
       const empty = newGame(content, { seed, campaign: 'short', decider: 'chronicler' });
       const seeded = newGame(content, {
         seed,
@@ -56,5 +57,16 @@ describe('Library of Houses has no material advantage', () => {
         `seed ${seed}: the library changed something material`,
       ).toBe(withoutNarrativeMemory(empty.save()));
     }
+  }
+
+  it('keeps paired Short Lines byte-identical outside the narrative memory field', () => {
+    expectNeutrality(fixedLibraryRun(), [811, 912, 1013, 1114]);
+  });
+
+  it('imports a completed Demonstration page without changing later Short Line mechanics #2555', () => {
+    const demo = fixedLibraryRun('demo');
+    expect(demo.campaign).toBe('demo');
+    expect(demo.entries.length).toBeGreaterThan(0);
+    expectNeutrality(demo, [811, 912]);
   });
 });
