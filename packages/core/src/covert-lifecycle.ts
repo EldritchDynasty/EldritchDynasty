@@ -21,7 +21,10 @@ import { msg } from './messages.js';
 export const HOUSEHOLD_THREAT_COOLDOWN = 12;
 
 const open = (t: HouseholdThreat) => t.stage === 'preparing' || t.stage === 'approach';
-const active = (ctx: SimCtx, id: string) => ctx.world.covert.threats.find(t => t.plan.id === id && open(t));
+// Recovered future plans are kept in the save, but are not threats in this year.
+const openNow = (t: HouseholdThreat, year: number) => open(t) && t.plan.preparedAt <= year;
+const active = (ctx: SimCtx, id: string) => ctx.world.covert.threats.find(t =>
+  t.plan.id === id && openNow(t, ctx.world.year));
 
 function freeAdult(ctx: SimCtx, p: Person): boolean {
   return p.status === 'alive' && ctx.world.year - p.born >= 16
@@ -85,8 +88,10 @@ function line(ctx: SimCtx, people: string[], text: string): void {
 /** One private preparation receipt. No caller can create a threat merely by assigning protection. */
 function prepareThreat(ctx: SimCtx): void {
   const w = ctx.world;
-  if (w.covert.threats.some(open)) return;
-  const last = w.covert.threats.at(-1)?.plan.preparedAt ?? -Infinity;
+  if (w.covert.threats.some(t => openNow(t, w.year))) return;
+  // A future-dated phantom at the end of the saved array must not freeze the cooldown.
+  const last = w.covert.threats.reduce((year, t) =>
+    t.plan.preparedAt <= w.year ? Math.max(year, t.plan.preparedAt) : year, -Infinity);
   if (w.year - last < HOUSEHOLD_THREAT_COOLDOWN) return;
   const candidates = householdThreatCandidates(ctx);
   if (!candidates.length) return;
@@ -140,7 +145,7 @@ function cancel(ctx: SimCtx, t: HouseholdThreat): void {
 /** Prepare, observe, then resolve. Called after maintenance/field/economy and before succession. */
 export function tickHouseholdThreats(ctx: SimCtx): void {
   const w = ctx.world;
-  for (const t of w.covert.threats.filter(open)) {
+  for (const t of w.covert.threats.filter(t => openNow(t, w.year))) {
     const defence = effectiveDefence(ctx, t);
     if (w.year === t.plan.attemptYear - 1 && t.stage === 'preparing') {
       const seen = observeCovertApproach(ctx, t.plan, defence);
@@ -268,7 +273,7 @@ function responseName(ctx: SimCtx, response: CovertResponse): string {
 export function householdSecurityView(ctx: SimCtx) {
   const w = ctx.world;
   return {
-    threats: w.covert.threats.filter(open).map(t => {
+    threats: w.covert.threats.filter(t => openNow(t, w.year)).map(t => {
       const people = resolvePresence(ctx, t.plan.site, t.plan.bindings).people;
       const guards = people.filter(id => !covertGuardGap(ctx, t.plan, [id])).sort().slice(0, 3);
       const groups = [[], ...guards.map(id => [id]), ...(guards.length > 1 ? [guards] : [])];
