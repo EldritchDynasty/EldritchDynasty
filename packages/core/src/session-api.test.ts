@@ -70,7 +70,7 @@ describe('source-linked recorded milestones (#1944)', () => {
     expect(g.view().chronicle.map((page) => page.id)).toEqual(['future_page', 'present_page']);
     expect(g.mentions(future.id)).toEqual(['future_page']);
     expect(g.milestones(future.id, { limit: Infinity })).toEqual([
-      { entryId: 'future_page', year: 1043, source: 'blank' },
+      { entryId: 'future_page', year: 1043, source: 'title' },
     ]);
     expect(g.view().chroniclePeople.some((entry) => entry.id === future.id)).toBe(true);
     expect(g.ctx.world.chronicle).toEqual(originalBook);
