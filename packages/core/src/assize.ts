@@ -513,6 +513,11 @@ function aliveBlood(ctx: SimCtx) {
   return w.people.blood(w.playerHouse).filter((p) => p.status === 'alive');
 }
 
+/** A future-dated saved interlude is not one this house has heard yet. */
+function hasHeardFrame(ctx: SimCtx): boolean {
+  return ctx.world.frame.entries.some((entry) => entry.year <= ctx.world.year);
+}
+
 /**
  * Is the keeping in force this year? It runs from the year after it fired,
  * until the first interlude has been delivered and at least `KEEP_YEARS`
@@ -522,7 +527,7 @@ export function collateralKept(ctx: SimCtx): boolean {
   const w = ctx.world;
   const at = w.assize.fired[COLLATERAL_KEPT];
   if (at === undefined || w.year <= at) return false;
-  return w.year <= at + KEEP_YEARS || w.frame.entries.length === 0;
+  return w.year <= at + KEEP_YEARS || !hasHeardFrame(ctx);
 }
 
 /** Is this person one of the blood the keeping covers, this year? */
@@ -539,7 +544,7 @@ export function collateralDue(ctx: SimCtx): boolean {
   const w = ctx.world;
   if (w.ending) return false;
   if (!FULL_CAMPAIGN_IDS.some((id) => id === w.campaign)) return false;
-  if (w.frame.entries.length > 0) return false;
+  if (hasHeardFrame(ctx)) return false;
   if (w.assize.fired[COLLATERAL_KEPT] !== undefined) return false;
   const founding = w.year - campaignDef(w.campaign).startYear < FOUNDING_YEARS;
   if (founding && w.bloodHighWater < KEEP_FROM) return false;
