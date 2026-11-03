@@ -277,7 +277,9 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   add('clauses_7', clauses >= 7);
   add('clauses_9', clauses >= 9);
 
-  const records = save.decisionLog.filter((entry) => entry.kind === 'record');
+  // A finished run cannot earn (or lose) an achievement from a decision dated
+  // after its own ending, even if an imported log contains future rows.
+  const records = save.decisionLog.filter((entry) => entry.kind === 'record' && entry.year <= save.ending!.year);
   if (records.length) {
     add('record_never_embellished', records.every((entry) => entry.option !== 'embellish'));
     add('record_never_truthful', records.every((entry) => entry.option !== 'record'));
@@ -309,7 +311,7 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
       && save.muster.commitments.every((commitment) => commitment.status === 'withdrawn'),
   );
 
-  const answeredMatch = save.decisionLog.some((entry) => entry.kind === 'match');
+  const answeredMatch = save.decisionLog.some((entry) => entry.kind === 'match' && entry.year <= save.ending!.year);
   add(
     'match_never_refused',
     answeredMatch && !save.bearing.acts.some((act) => act.kind === 'refused_a_hand'),
