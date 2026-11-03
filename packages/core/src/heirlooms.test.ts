@@ -6,7 +6,7 @@ import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
   canUseHeirloom, eligibleBearers, grantHeirloom, heldHeirlooms, testRng, useHeirloom,
-  loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants,
+  digestOf, loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -106,14 +106,14 @@ describe('applying an heirloom is generic', () => {
     const state = grantHeirloom(ctx, id)!;
     state.acquiredYear = ctx.world.year + 2;
 
-    const before = saveGame(ctx);
+    const before = digestOf(ctx);
     expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(false);
     expect(canUseHeirloom(ctx, id, bearer)).toEqual({
       ok: false, reason: 'the house does not hold it',
     });
     expect(eligibleBearers(ctx, id)).toEqual([]);
     expect(useHeirloom(ctx, id, bearer).ok).toBe(false);
-    expect(saveGame(ctx)).toEqual(before);
+    expect(digestOf(ctx)).toBe(before);
 
     ctx.world.year = state.acquiredYear - 1;
     expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
