@@ -205,3 +205,33 @@ describe('glossary collection integration (#1991)', () => {
     }
   });
 });
+
+describe('Discrepancy as public glossary vocabulary (#2603)', () => {
+  it('matches saved terms in either register without changing or repeating the Chronicle text', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const source = 'Discrepancy challenged Standing. Discrepancies remain.';
+      const pieces = splitFirstGlossary(source, mode);
+      expect(pieces).toEqual([
+        { text: 'Discrepancy', term: 'discrepancy' },
+        { text: ' challenged Standing. Discrepancies remain.' },
+      ]);
+      expect(pieces.map(piece => piece.text).join('')).toBe(source);
+    }
+  });
+
+  it('recognizes the Plain English label and does not disclose embedded aliases', () => {
+    expect(splitFirstGlossary('Disputed account challenged the Record.', 'plainenglish')).toEqual([
+      { text: 'Disputed account', term: 'discrepancy' },
+      { text: ' challenged the Record.' },
+    ]);
+    expect(splitFirstGlossary('PreDiscrepancy Discrepancies.', 'original')).toEqual([
+      { text: 'PreDiscrepancy ' },
+      { text: 'Discrepancies', term: 'discrepancy' },
+      { text: '.' },
+    ]);
+    expect(glossaryDefinition('discrepancy', 'original'))
+      .toBe("a claim in the house's Record challenged by another account or surviving proof.");
+    expect(glossaryDefinition('discrepancy', 'plainenglish'))
+      .toBe('When another account or piece of evidence disputes what the family wrote down.');
+  });
+});
