@@ -33,7 +33,7 @@ export interface UseCheck {
 }
 
 export function heldHeirlooms(ctx: SimCtx): HeirloomState[] {
-  return [...ctx.world.heirlooms.values()];
+  return [...ctx.world.heirlooms.values()].filter((state) => state.acquiredYear <= ctx.world.year);
 }
 
 export function heirloomDef(ctx: SimCtx, id: string): HeirloomDef | undefined {
@@ -83,7 +83,10 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
   if (!def) return { ok: false, reason: msg(ctx, 'heirloom.refuse.unknown', 'no such heirloom') };
 
   const state = ctx.world.heirlooms.get(id);
-  if (!state) return { ok: false, reason: msg(ctx, 'heirloom.refuse.not_held', 'the house does not hold it') };
+  // A future-dated imported acquisition is not possession in the present year.
+  if (!state || state.acquiredYear > ctx.world.year) {
+    return { ok: false, reason: msg(ctx, 'heirloom.refuse.not_held', 'the house does not hold it') };
+  }
   if (state.spent) return { ok: false, reason: msg(ctx, 'heirloom.refuse.spent', 'it is spent') };
   if (state.usesLeft !== undefined && state.usesLeft <= 0) {
     return { ok: false, reason: msg(ctx, 'heirloom.refuse.no_uses_left', 'it is spent') };
