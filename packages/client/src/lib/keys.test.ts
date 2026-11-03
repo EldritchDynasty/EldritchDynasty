@@ -534,3 +534,52 @@ describe('nested keyboard-activated controls (#2544)', () => {
       .toEqual({ kind: 'advance', years: 1 });
   });
 });
+
+describe('embedded-document open shadow roots (#2561)', () => {
+  it('reserves typing and activation keys for roles outside the inner shadow root', () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    try {
+      const embedded = frame.contentDocument!;
+      const outer = embedded.createElement('div');
+      const host = embedded.createElement('div');
+      const shadow = host.attachShadow({ mode: 'open' });
+      const focusTarget = embedded.createElement('span');
+      focusTarget.tabIndex = 0;
+      shadow.append(focusTarget);
+      outer.append(host);
+      embedded.body.append(outer);
+      focusTarget.focus();
+
+      // The shadow root is real and open, but not from the outer JS realm.
+      expect(shadow instanceof ShadowRoot).toBe(false);
+      expect(embedded.activeElement).toBe(host);
+      expect(shadow.activeElement).toBe(focusTarget);
+
+      // A role on an ancestor beyond the shadow host still owns typing keys.
+      outer.setAttribute('role', 'searchbox');
+      expect(isField(embedded.activeElement)).toBe(true);
+      expect(shortcutFor({ key: '1', inField: isField(embedded.activeElement) })).toBeNull();
+      outer.removeAttribute('role');
+
+      // Space/Enter also belong to controls whose role is on the host.
+      host.setAttribute('role', 'button');
+      expect(isControl(embedded.activeElement)).toBe(true);
+      expect(shortcutFor({ key: 'Enter', onControl: isControl(embedded.activeElement) })).toBeNull();
+      expect(shortcutFor({ key: ' ', onControl: isControl(embedded.activeElement) })).toBeNull();
+      host.removeAttribute('role');
+
+      expect(isField(embedded.activeElement)).toBe(false);
+      expect(isControl(embedded.activeElement)).toBe(false);
+
+      // A normal DocumentFragment is not a shadow root with a host to climb.
+      const fragment = embedded.createDocumentFragment();
+      const isolated = embedded.createElement('span');
+      fragment.append(isolated);
+      expect(isField(isolated)).toBe(false);
+      expect(isControl(isolated)).toBe(false);
+    } finally {
+      frame.remove();
+    }
+  });
+});
