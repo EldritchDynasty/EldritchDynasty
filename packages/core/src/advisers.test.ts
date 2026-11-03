@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bearingWordsIn, indexContent, proseOriginalHash } from '@ed/schema';
-import { beget, place, testWorld } from './testing.js';
+import { beget, marry, place, testWorld } from './testing.js';
 import { queueChoice } from './events/decisions.js';
 import {
   adviceFor,
@@ -198,6 +198,77 @@ describe('adviser knowledge boundary (#273)', () => {
     const session = new GameSession(ctx);
 
     expect(session.advice('tree', target.id, 1)).toEqual(adviceFor(ctx, 'tree', target.id, 1));
+  });
+});
+
+describe('adviser succession chronology (#2760)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'does not award former-Head authority for future or still-open tenures (%s)',
+    (mode) => {
+      const ctx = testWorld(contentBundle, 2760);
+      clearLiving(ctx);
+      setProseMode(ctx, mode);
+      const candidate = place(ctx, {
+        sex: 'male', age: 45, name: 'The Future Head',
+        career: { career: 'clergy' },
+      });
+      const start = ctx.world.year;
+      ctx.world.succession.push({
+        person: candidate.id, name: candidate.name, from: start + 2, to: start + 4,
+      });
+      const lens = () => adviceFor(ctx, 'tree', candidate.id, 1)[0]?.lens;
+
+      expect(lens()).toBe('priest');
+      ctx.world.year = start + 2;
+      expect(lens()).toBe('priest'); // A present tenure has not ended.
+      ctx.world.year = start + 4;
+      expect(lens()).toBe('old_head');
+      ctx.world.year = start + 5;
+      expect(lens()).toBe('old_head');
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
+    'does not call a spouse the widow of a Head whose tenure starts in the future (%s)',
+    (mode) => {
+      const ctx = testWorld(contentBundle, 2761);
+      clearLiving(ctx);
+      setProseMode(ctx, mode);
+      const widow = place(ctx, {
+        sex: 'female', age: 40, name: 'The Witness',
+        career: { career: 'clergy' },
+      });
+      const spouse = place(ctx, { sex: 'male', age: 43, name: 'The Absent Husband' });
+      marry(ctx, widow, spouse);
+      spouse.status = 'dead';
+      const start = ctx.world.year;
+      ctx.world.succession.push({
+        person: spouse.id, name: spouse.name, from: start + 2, to: start + 4,
+      });
+      const lens = () => adviceFor(ctx, 'tree', widow.id, 1)[0]?.lens;
+
+      expect(lens()).toBe('priest');
+      ctx.world.year = start + 2;
+      expect(lens()).toBe('old_head'); // His tenure has begun, despite the imported status.
+      ctx.world.year = start + 5;
+      expect(lens()).toBe('old_head');
+    },
+  );
+
+  it('keeps advice from genuinely completed earlier tenures', () => {
+    const ctx = testWorld(contentBundle, 2762);
+    clearLiving(ctx);
+    const formerHead = place(ctx, { sex: 'male', age: 50, name: 'The Former Head' });
+    ctx.world.succession.push({
+      person: formerHead.id, name: formerHead.name,
+      from: ctx.world.year - 12, to: ctx.world.year - 2,
+    });
+    const advice = adviceFor(ctx, 'tree', formerHead.id, 1);
+    expect(advice[0]).toMatchObject({
+      adviser: { id: formerHead.id },
+      lens: 'old_head',
+    });
+    expect(advice[0]?.cares).toContain('held the seal before');
   });
 });
 
