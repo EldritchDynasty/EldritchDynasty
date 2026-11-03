@@ -65,9 +65,11 @@ function titleReadings(ctx: SimCtx, read: (ctx: SimCtx) => string): Set<string> 
 /** Existing public dates, the recorded pedigree, and pages the family kept. */
 export function generationChangesOf(ctx: SimCtx, index?: number): GenerationChanges {
   const w = ctx.world;
-  const count = w.succession.length;
+  // Restored future tenures are not yet part of the readable generations.
+  const succession = w.succession.filter((s) => s.from <= w.year);
+  const count = succession.length;
   const at = Number.isInteger(index) ? Math.max(0, Math.min(count - 1, index!)) : count - 1;
-  const held = w.succession[at];
+  const held = succession[at];
   if (!held) return { index: 0, count, through: w.year, changes: [], more: 0 };
   const through = Math.min(held.to ?? w.year, w.year);
   const opening = campaignDef(w.campaign).startYear;
@@ -137,7 +139,7 @@ export function generationChangesOf(ctx: SimCtx, index?: number): GenerationChan
 
   // The first founder's opening is the baseline, not a change every new game
   // has already made. Later handovers are the existing succession history.
-  for (const [tenureIndex, tenure] of w.succession.entries()) {
+  for (const [tenureIndex, tenure] of succession.entries()) {
     if (tenureIndex === 0 || !within(tenure.from)) continue;
     const person = w.people.get(tenure.person);
     if (person) {
