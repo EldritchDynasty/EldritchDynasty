@@ -98,6 +98,12 @@ describe('byname settlement respects the present Chronicle year (#2673)', () => 
       expect(relative.byname).toEqual(grantBefore);
     }
 
+    // An already-settled page is still visible in its own year.
+    relative.byname!.settled = { state: 'proven', year: 1042 };
+    expect(bynameView(relative, 1042)).toEqual({
+      text: 'the Early-Woken', standing: 'contested',
+      year: 1042, page: 'already_written', settledYear: 1042,
+    });
     expect(ctx.world.chronicle).toEqual(pagesBefore);
   });
 
