@@ -6,8 +6,9 @@
 >
 > Reviewed against `main` at `098bfe02` on 22 October 2026. Quotations below
 > are Original-register story excerpts; the live YAML, selected campaign and
-> prose mode determine the rendered wording. The 33-year demo is an additional
-> engine profile, not a choice on the normal start screen.
+> prose mode determine the rendered wording. The 33-year Demonstration is now
+> a separate selectable start-screen profile (added after this dated review);
+> the story quotations below have not been re-reviewed for that profile.
 
 This is not a replacement for the concept brief, the world bible, or the event corpus. It is the shortest route through the **whole story**.
 
