@@ -249,7 +249,8 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
     if (house === w.playerHouse) continue;
 
     for (const grudge of rel.grudges) {
-      if (grudge.severity <= 1) continue;
+      // An imported grudge whose origin lies ahead of this year is not yet a live pressure.
+      if (grudge.severity <= 1 || grudge.originYear > w.year) continue;
       // A restored future page cannot yet name the source of an active quarrel.
       const entry = (grudge.originPage
         ? w.chronicle.find((c) => c.year <= w.year && c.id === grudge.originPage)
