@@ -109,7 +109,8 @@ export function grudgesAgainst(w: WorldState, id: string): Grudge[] {
     if (rel.to === id || (w.houses.has(rel.to) && person
       && (person.houseOfOrigin === rel.to
         || person.membership.some((m) => m.house === rel.to && m.to === undefined)))) {
-      out.push(...rel.grudges);
+      // Imported future quarrels are not present-year hostility.
+      out.push(...rel.grudges.filter((g) => g.originYear <= w.year));
     }
   }
   return out;
@@ -123,7 +124,9 @@ export function grudgeAgainstUs(w: WorldState): number {
     const theirs = rel.to === w.playerHouse || (target?.houseOfOrigin) === w.playerHouse
       || target?.membership.some((m) => m.house === w.playerHouse && m.to === undefined);
     if (!theirs) continue;
-    for (const g of rel.grudges) worst = Math.max(worst, g.severity);
+    for (const g of rel.grudges) {
+      if (g.originYear <= w.year) worst = Math.max(worst, g.severity);
+    }
   }
   return worst;
 }
@@ -349,6 +352,7 @@ export function bitterestAgainst(w: WorldState, houseId: string): PersonId | und
       : undefined);
     if (!holder || holder.status !== 'alive') continue;
     for (const g of rel.grudges) {
+      if (g.originYear > w.year) continue;
       if (!worst || g.severity > worst.severity) worst = { id: holder.id, severity: g.severity };
     }
   }
