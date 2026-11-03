@@ -6,7 +6,7 @@ import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
   canUseHeirloom, eligibleBearers, grantHeirloom, heldHeirlooms, testRng, useHeirloom,
-  digestOf, loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants,
+  digestOf, loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants, transferHeirloom,
 } from '@ed/core';
 
 const bundle = loadContent();
@@ -113,6 +113,7 @@ describe('applying an heirloom is generic', () => {
     });
     expect(eligibleBearers(ctx, id)).toEqual([]);
     expect(useHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(transferHeirloom(ctx, id)).toBe(false);
     expect(digestOf(ctx)).toBe(before);
 
     ctx.world.year = state.acquiredYear - 1;
@@ -123,6 +124,7 @@ describe('applying an heirloom is generic', () => {
     expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
     expect(eligibleBearers(ctx, id)).toContain(bearer);
     expect(useHeirloom(ctx, id, bearer).ok).toBe(true);
+    expect(transferHeirloom(ctx, id)).toBe(true);
   });
 
   it('does not count future-acquired Regalia among the current holdings (#2697)', () => {
