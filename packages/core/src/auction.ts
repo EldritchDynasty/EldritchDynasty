@@ -361,7 +361,8 @@ function honourable(ctx: SimCtx, bid: AuctionBid): boolean {
     case 'favour': return false;
     case 'heirloom': {
       const held = bid.heirloomOffered === undefined ? undefined : w.heirlooms.get(bid.heirloomOffered);
-      return held !== undefined && held.acquiredYear <= w.year && !spentHeirloom(held);
+      return held !== undefined && held.acquiredYear <= w.year && !spentHeirloom(held)
+        && !ctx.content.heirloom(bid.heirloomOffered!)?.cannotBeSold;
     }
     case 'marriage_promise': return bid.pledgedBy !== undefined
       && w.people.get(bid.pledgedBy) !== undefined && w.marriagePromises.length === 0;
