@@ -369,6 +369,24 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(problemOf(corrupt)).toEqual({ kind: 'damaged' });
   });
 
+  it('reads other default-ignorable formatting marks copied into a share code (#2633)', () => {
+    const code = codeOf(founded(), { names: true });
+    // These are invisible formatting characters that the former manual
+    // separator list missed. All are impossible in the ED1 wire alphabet.
+    for (const mark of ['\u034F', '\u180E', '\uFE0F', '\u206A']) {
+      const copied = `${mark}${code.split('').join(mark)}${mark}`;
+      expect(readShareCode(copied, content, { build: BUILD }).ok).toBe(true);
+      expect(newGameFromShareCode(copied, content, { build: BUILD }).ok).toBe(true);
+      // Ignorable marks still count against the unnormalized input bound.
+      expect(problemOf(mark.repeat(SHARE_CODE_MAX * 4) + code))
+        .toEqual({ kind: 'too_long', max: SHARE_CODE_MAX });
+    }
+    // Removing formatting is not an invitation to repair a visible mutation.
+    const body = code.split('.')[1]!;
+    const changed = code.replace(body, (body[0] === 'A' ? 'B' : 'A') + body.slice(1));
+    expect(problemOf(`\u034F${changed}\uFE0F`)).toEqual({ kind: 'damaged' });
+  });
+
   it('reads codes with legacy and modern RTL direction marks inserted by messaging apps (#2589, #2597)', () => {
     const code = codeOf(founded(), { names: true });
     // Directionality controls cannot occur in the ASCII wire format, but a
