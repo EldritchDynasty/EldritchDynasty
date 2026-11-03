@@ -358,6 +358,62 @@ function rememberedHeskSuitor(seed = 214) {
 }
 
 describe('a rejected rival Match can become history (issue #214)', () => {
+  it('keeps future courtships eligible as fresh until their real introduction year', () => {
+    const { ctx, daughter, template } = rememberedHeskSuitor(2279);
+    const range = { min: 16, max: 55 };
+    const templateId = String(template.id);
+    daughter.courtship!.offered = 1052;
+
+    const before = digestOf(ctx);
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', range, testRng('courtship-not-yet'), templateId,
+    )).toBe(daughter);
+    // Eligibility is a read. It must not silently rewrite a future saved marker.
+    expect(digestOf(ctx)).toBe(before);
+    expect(daughter.courtship?.offered).toBe(1052);
+
+    ctx.world.year = 1052;
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', range, testRng('courtship-now'), templateId,
+    )).toBeUndefined();
+
+    ctx.world.year += RIVAL_REOFFER_AFTER - 1;
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', range, testRng('courtship-recent'), templateId,
+    )).toBeUndefined();
+
+    ctx.world.year += 1;
+    const callbacks = Array.from({ length: 100 }, (_, i) => pickRivalCandidate(
+      ctx, 'house_hesk', 'female', range, testRng(`courtship-old-${i}`), templateId,
+    ));
+    expect(callbacks.some((p) => p === daughter)).toBe(true);
+    expect(callbacks.some((p) => p === undefined)).toBe(true);
+  });
+
+  it('replaces a future saved introduction with a genuinely fresh Match name and receipt', () => {
+    const { ctx, daughter, template } = rememberedHeskSuitor(2280);
+    daughter.courtship!.offered = ctx.world.year + 12;
+    daughter.courtship!.name = 'Name From Tomorrow';
+    daughter.courtship!.seed = -1;
+
+    const recipe = rollRecipe(template, ctx, testRng('rival-first-real-introduction'));
+    expect(recipe.rivalId).toBe(daughter.id);
+    expect(recipe.name).not.toBe('Name From Tomorrow');
+    expect(recipe.seed).not.toBe(-1);
+    expect(daughter.courtship).toMatchObject({
+      template: String(template.id),
+      offered: ctx.world.year,
+      name: recipe.name,
+      seed: recipe.seed,
+    });
+
+    // The actual introduction is now history: not available again this year.
+    expect(pickRivalCandidate(
+      ctx, 'house_hesk', 'female', { min: 16, max: 55 },
+      testRng('no-immediate-rival-repeat'), String(template.id),
+    )).toBeUndefined();
+  });
+
   it('can offer the same named rival again without minting the declined card', () => {
     const { ctx, daughter, template, first } = rememberedHeskSuitor();
     const peopleBefore = ctx.world.people.all().length;
