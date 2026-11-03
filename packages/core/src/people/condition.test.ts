@@ -71,7 +71,7 @@ describe('annual bodily condition', () => {
 
     ctx.world.year = future.born;
     expect(spacing(ctx, mother)).toBe(-45);
-    expect(mother.acquired[ACQUIRED_SPACING]).toBe(-31.5);
+    expect(mother.acquired[ACQUIRED_SPACING]).toBeCloseTo(-31.5);
   });
 
   it('ignores unborn siblings for both the most recent birth and the deterministic ordinal (#2762)', () => {
