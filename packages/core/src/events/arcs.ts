@@ -101,7 +101,8 @@ export function startDecisionArcs(ctx: SimCtx, decision: ArcDecision, cast: Reco
 export function cancelDecisionArcs(ctx: SimCtx, decision: ArcDecision, personId: string): void {
   const [about] = DECISION_ARC_BINDINGS[decision];
   for (const instance of ctx.world.arcs.values()) {
-    if (instance.status !== 'active' || instance.bindings[about!] !== personId) continue;
+    if (instance.status !== 'active' || instance.startedYear > ctx.world.year
+      || instance.bindings[about!] !== personId) continue;
     if (ctx.content.arc(instance.arc)?.startsOn?.decision === decision) instance.status = 'cancelled';
   }
 }
