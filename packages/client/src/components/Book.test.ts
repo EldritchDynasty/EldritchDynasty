@@ -766,7 +766,8 @@ describe('the panel', () => {
 
   it('dates each frame interlude at its real year instead of the campaign end (#1283)', () => {
     const frame = [
-      { eventId: 'the_first_whisper', year: 1108, text: 'The first account was heard.' },
+      { eventId: 'the_first_whisper', year: 1108, body: 'A voice in the next room.', text: 'The first account was heard.' },
+      // Saved before #2615 kept the scene: only its line, and nothing invented.
       { eventId: 'the_later_answer', year: 1214, text: 'Another account answered it.' },
     ] as FrameEntry[];
     const w = mount(Chronicle, {
@@ -781,8 +782,9 @@ describe('the panel', () => {
       const entries = w.findAll('.entry.frame');
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.get('.frame-year').text())).toEqual(['1108', '1214']);
-      expect(entries[0]!.text()).toContain('The first account was heard.');
-      expect(entries[1]!.text()).toContain('Another account answered it.');
+      expect(entries[0]!.findAll('p').map((p) => p.text()))
+        .toEqual(['A voice in the next room.', 'The first account was heard.']);
+      expect(entries[1]!.findAll('p').map((p) => p.text())).toEqual(['Another account answered it.']);
       expect(w.text()).not.toContain('1542');
     } finally {
       w.unmount();
@@ -840,6 +842,22 @@ describe('the panel', () => {
 /** Modal focus regression reuses a measured component suite: adding a new
  * suite would exceed the checked unmeasured-duration budget (lanes.test.ts). */
 describe('Interlude keyboard focus (#937)', () => {
+  it('shows the scene before the line it pays off, and an old save its line alone (#2615)', () => {
+    const actions = { dismissInterlude: vi.fn() } as unknown as GameActions;
+    const scene = mount(Interlude, {
+      props: { entry: { body: 'There is a page.', text: 'It was written by the house.' } as FrameEntry, actions },
+    });
+    const old = mount(Interlude, { props: { entry: { text: 'The book opens.' } as FrameEntry, actions } });
+    try {
+      expect(scene.findAll('.interlude p').map((p) => p.text()))
+        .toEqual(['There is a page.', 'It was written by the house.']);
+      expect(old.findAll('.interlude p').map((p) => p.text())).toEqual(['The book opens.']);
+    } finally {
+      scene.unmount();
+      old.unmount();
+    }
+  });
+
   it('brings forward and reverse Tab back inside when focus escapes the modal', () => {
     // Model a keyboard/extension focus move to the board behind the scrim.
     const outside = document.createElement('button');

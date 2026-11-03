@@ -4,12 +4,12 @@ import { bootstrap, stepYear } from './sim.js';
 import { outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
 import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
-  frameDue, frameOverdue, framePool, lastAnswerYear,
+  frameDue, frameOverdue, framePool, lastAnswerYear, presentFrame,
 } from './events/frame.js';
 import { GLIMPSE_TAG, answerPages, answerYears, answers, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
-import { GameSession, viewOf } from './session.js';
-import { canonical, saveGame } from './save.js';
-import { proseForClause } from './prose.js';
+import { GameSession, newGame, viewOf } from './session.js';
+import { canonical, loadGame, saveGame } from './save.js';
+import { missingPlainEnglish, proseForClause } from './prose.js';
 import { makeRng } from './rng.js';
 import { evalCondition } from './events/conditions.js';
 import { resolveSlots } from './events/slots.js';
@@ -64,6 +64,55 @@ describe('a frame read on the record itself', () => {
       eventId: 'seal_aftermath', named: false, record: 'record',
     });
     expect(inPool(ctx)).toBe(false);
+  });
+});
+
+/**
+ * THE SCENE, THEN ITS LINE (#2615).
+ *
+ * `proseForOutcome` falls back to the body only when an outcome has no text,
+ * and every frame outcome has text, so every interlude ever shown was its
+ * punchline alone. The template's own cast and reads are cleared here so the
+ * test is about presentation, not eligibility; the event id is kept, so the
+ * reviewed Plain English rows still resolve against it.
+ */
+describe('an interlude shows its scene, then its line', () => {
+  const ID = 'frame_the_page_he_does_not_turn';
+  const present = (mode: 'original' | 'plainenglish', outcomes?: (o: Outcome) => Outcome) => {
+    const game = newGame(bundle, { seed: 2615, proseMode: mode });
+    const real = game.ctx.content.events.find((e) => e.id === ID)!;
+    if (real.interaction.kind !== 'narration') throw new Error(`${ID} is no longer narration`);
+    const interaction = outcomes
+      ? { ...real.interaction, outcomes: real.interaction.outcomes.map(outcomes) }
+      : real.interaction;
+    const entry = presentFrame(game.ctx, { ...real, reads: [], slots: {}, interaction }, makeRng(2615));
+    return { game, real, entry: entry! };
+  };
+
+  it('keeps the body the outcome line pays off, rendered, in each prose mode', () => {
+    const original = present('original');
+    expect(original.entry.body).toMatch(/^There is a page the guardian turns past/);
+    expect(original.entry.text).toMatch(/^Whether the disagreement is in the accounts/);
+    for (const field of [original.entry.body!, original.entry.text]) expect(field).not.toMatch(/[{}]/);
+
+    const plain = present('plainenglish');
+    expect(missingPlainEnglish(plain.game.ctx), 'a reviewed row was not used').toEqual([]);
+    expect(plain.entry.body).not.toBe(original.entry.body);
+    expect(plain.entry.text).not.toBe(original.entry.text);
+    expect(plain.entry.body).not.toMatch(/[{}]/);
+  });
+
+  it('reaches the view and survives a save', () => {
+    const { game, entry } = present('original');
+    expect(viewOf(game.ctx).frame.at(-1)).toEqual(entry);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(game.ctx))), bundle);
+    expect(resumed.world.frame.entries.at(-1)).toEqual(entry);
+  });
+
+  it('does not print the body twice when the outcome has no line of its own', () => {
+    const { entry } = present('original', (o) => ({ ...o, text: '' }));
+    expect(entry.body).toBeUndefined();
+    expect(entry.text).toMatch(/^There is a page the guardian turns past/);
   });
 });
 

@@ -146,6 +146,7 @@ async function follow(id: string): Promise<void> {
       <h3 class="label frame-label">{{ plain ? 'Interludes' : 'The frame' }}</h3>
       <article v-for="entry in frame" :key="entry.eventId + entry.year" class="entry frame">
         <span class="small dim frame-year">{{ entry.year }}</span>
+        <p v-if="entry.body">{{ entry.body }}</p>
         <p>{{ entry.text }}</p>
       </article>
     </template>
@@ -160,4 +161,5 @@ async function follow(id: string): Promise<void> {
 .frame-label { margin-top: 26px; border-top: 1px solid var(--rule); padding-top: 14px; }
 .entry.frame { margin: 0 0 14px; }
 .entry.frame p { margin: 2px 0 0; line-height: 1.6; font-style: italic; color: var(--ink-soft); }
+.entry.frame p + p { margin-top: 8px; }
 </style>

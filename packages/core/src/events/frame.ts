@@ -5,7 +5,7 @@ import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
-import { proseForOutcome } from '../prose.js';
+import { proseForEventBody, proseForOutcome } from '../prose.js';
 import { advanceArc, type ArcStep } from './arcs.js';
 import { lastAnswerYear } from './answers.js';
 
@@ -233,7 +233,15 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng, arcStep?: 
 
   const outcome = pickOutcome(e.interaction.outcomes, rng, ctx, fill);
   const text = renderBody(proseForOutcome(ctx, e, outcome), fill, ctx);
-  const entry: FrameEntry = { year: w.year, eventId: e.id, outcomeId: outcome.id, text };
+  // THE SCENE, THEN ITS LINE (#2615). `proseForOutcome` falls back to the body
+  // only when the outcome has no text, and every frame outcome has text, so
+  // for as long as interludes existed the player read the punchline alone:
+  // "A good lunch, that afternoon." with no heralds before it. The body is
+  // rendered here, once, with the same fill and prose mode as the line.
+  const scene = outcome.text ? renderBody(proseForEventBody(ctx, e, e.body), fill, ctx).trim() : '';
+  const entry: FrameEntry = {
+    year: w.year, eventId: e.id, outcomeId: outcome.id, ...(scene ? { body: scene } : {}), text,
+  };
 
   w.frame.entries.push(entry);
   w.frame.lastFired = w.year;

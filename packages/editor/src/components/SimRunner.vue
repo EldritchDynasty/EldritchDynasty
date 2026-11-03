@@ -99,7 +99,7 @@ function start() {
  * layer rather than as a moment.
  */
 let seenFrame = 0;
-const frameShown = ref<{ year: number; text: string }[]>([]);
+const frameShown = ref<{ year: number; body?: string; text: string }[]>([]);
 
 /**
  * Every interlude the run has produced, newest first. This is the frame as a
@@ -154,7 +154,8 @@ function advance(n: number) {
   // Only a deliberate step is interrupted; see the note on `frameShown`. Two
   // at once is already a lot of screen, and three would be a wall.
   frameShown.value = pauses
-    ? c.world.frame.entries.slice(seenFrame).slice(-2).map((f) => ({ year: f.year, text: f.text }))
+    ? c.world.frame.entries.slice(seenFrame).slice(-2)
+      .map((f) => ({ year: f.year, ...(f.body ? { body: f.body } : {}), text: f.text }))
     : [];
   seenFrame = c.world.frame.entries.length;
 
@@ -417,6 +418,8 @@ const household = computed(() => {
     <!-- ── The frame (concept §24): two colours, no drone, a slow reveal ─ -->
     <div v-for="(f, i) in frameShown" :key="`fr${i}`" class="frame">
       <span class="ask"><Mark name="moth" :size="15" />{{ f.year }} · from outside the record</span>
+      <!-- The scene, then its line: what the player's card shows (#2615). -->
+      <p v-if="f.body" class="scene">{{ f.body }}</p>
       <p class="scene">{{ f.text }}</p>
     </div>
 
@@ -578,7 +581,7 @@ const household = computed(() => {
           <div class="list" style="max-height:260px">
             <div v-for="(f, i) in frameLedger" :key="`fl${i}`" class="fl">
               <span class="yr">{{ f.year }}</span>
-              <span class="tx">{{ f.text }}</span>
+              <span class="tx"><template v-if="f.body">{{ f.body }} </template>{{ f.text }}</span>
             </div>
           </div>
         </div>
