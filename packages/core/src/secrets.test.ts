@@ -332,6 +332,33 @@ describe('a secret that is told', () => {
     expect(ctx.world.discrepancies.size).toBe(0);
   });
 
+  it('does not let a future-dated telling suppress present-year testimony (#2739)', () => {
+    const ctx = loose(20, { told: 1052 });
+    const w = ctx.world;
+    const priorPages = w.chronicle.length;
+    expect(w.year).toBe(1042);
+
+    // Imported testimony from 1052 cannot say this secret has already been
+    // told in 1042. Exercise the ordinary seeded roll, not a forced success.
+    expect(tellEventually(ctx)).toBe(true);
+    expect(w.looseSecrets[0]!.told).toBe(w.year);
+    expect(w.chronicle.slice(priorPages)).toHaveLength(1);
+    expect(w.chronicle.at(-1)).toMatchObject({
+      year: w.year, discrepancyId: 'what_the_archive_holds',
+    });
+    expect(w.discrepancies.get('what_the_archive_holds')).toMatchObject({
+      state: 'open', provableBy: ['house_marrow'],
+    });
+
+    // The current telling now owns the marker. Later rolls in the same year
+    // cannot duplicate the page, reopen the discrepancy, or change the save.
+    const saved = canonical(saveGame(ctx));
+    for (let i = 0; i < 200; i++) {
+      expect(tellSecrets(ctx, testRng(`repeat-${i}`))).toEqual([]);
+    }
+    expect(canonical(saveGame(ctx))).toBe(saved);
+  });
+
   it('is told once and then left alone', () => {
     const ctx = loose(20);
     expect(tellEventually(ctx)).toBe(true);
