@@ -543,6 +543,42 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     }
   });
 
+  it('does not export a restored house name the signing would change or reject (#2659)', () => {
+    const invalid = [
+      ['leading/trailing whitespace', '  The House of Salt  '],
+      ['repeated interior whitespace', 'The  House of Salt'],
+      ['invisible-only', '\u200B\u2060'],
+      ['blank', '   '],
+      ['beyond the signing limit', 'H'.repeat(HOUSE_NAME_MAX + 1)],
+    ] as const;
+
+    for (const [description, houseName] of invalid) {
+      const s = founded();
+      const founding = s.ctx.world.decisionLog.find((row) => row.kind === 'founding');
+      if (!founding) throw new Error('the signing did not record a founding');
+      founding.houseName = houseName;
+      const before = JSON.stringify(s.ctx.world.decisionLog);
+
+      for (const names of [false, true]) {
+        expect(s.shareCode({ build: BUILD, names }), `${description} / names=${names}`)
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+      // A read-only exporter must not "repair" the old decision log in place.
+      expect(JSON.stringify(s.ctx.world.decisionLog)).toBe(before);
+    }
+
+    // Normal signing canonicalizes typed whitespace *before* logging it. Such
+    // genuinely founded names remain exportable in both privacy modes.
+    const valid = founded({ ...SIGNED, houseName: '  Harbour   House 🌙  ' });
+    expect(valid.prologue()?.founded?.houseName).toBe('Harbour House 🌙');
+    for (const names of [false, true]) {
+      const code = codeOf(valid, { names });
+      expect(readShareCode(code, content, { build: BUILD }).ok).toBe(true);
+    }
+    const restored = newGameFromShareCode(codeOf(valid, { names: true }), content, { build: BUILD });
+    expect(restored.ok && saved(restored.session)).toBe(saved(valid));
+  });
+
   it('does not offer codes for restored friend rosters the signing would change or refuse', () => {
     // The compact wire schema checks only types, lengths, and the five-friend
     // limit. An older/corrupted decision log may still fail the production
