@@ -16826,3 +16826,152 @@ The Unmade. Whether a later success should redeem the failure is the owner's.
 genetics (`docs/SUMMIT-ROUTE.md` lists every one). One route proves the
 summit reachable through the client on this revision, not findable or
 enjoyable; no player session was run.
+
+## 2026-11-03 — #2001: a baseline interlude for a house that writes it larger
+
+**Question.** #1987's step-1 batch found that a house answering every Record
+block Embellish often never meets the frame: the five repeatable baseline
+interludes read truthful Records (`recorded`) or omissions (`omitted`), and an
+always-Embellish house satisfies neither. #2001 asks for one repeatable
+baseline that house can read, without crowding the chronicler's interlude mix.
+
+**Instrument.** `npm run gate:record-returns`. Commit `04e5b131` adds
+`interludeEvents` to each row and prints each column's interlude mix by
+template, so crowding can be seen and not only counted; it changes no rule,
+constant or content. Wilson 95% intervals; elapsed is `year − 1042`.
+
+**Protocol, fixed before the first after-batch.** Seeds `198700 + i` (#1987's
+canonical start), Short Line 400 and Long Line 200, `chronicler` and
+`embellish` columns, authored founder, no Table orders, default Library
+inputs. Before: simulation and content of `main` `1f52e012`. After: the same
+seeds with only `frame.yaml` changed. The bars: Short always-Embellish runs
+with no interlude **≤ 10%** (point estimate); for the chronicler on the same
+seeds, the no-interlude count does not rise, the first-interlude median moves
+no more than 5 years later, interludes per run do not fall, and no existing
+template with at least 10 fires goes to zero.
+
+### Reproduced on current `main`
+
+| Column (`1f52e012`) | Runs with no interlude | First interlude, elapsed q25 / median / q75 | Interludes per run |
+| --- | --- | --- | --- |
+| short / chronicler | 5/400 = 1.3% [0.5%, 2.9%] | 53 / 61 / 74 | 3.97 |
+| short / embellish | **101/400 = 25.3% [21.2%, 29.7%]** | **108 / 168 / 224** | 1.54 |
+| long / chronicler | 3/200 = 1.5% [0.5%, 4.3%] | 53 / 62 / 79 | 6.57 |
+| long / embellish | **27/200 = 13.5% [9.4%, 18.9%]** | **121 / 178 / 303** | 3.01 |
+
+Lower than `de8cd363`'s 133/400 and 48/200, but still well over the bar. The
+always-Embellish columns' interludes were all lie- or template-specific
+scenes; none of the five baselines fired once in 600 runs.
+
+### The change
+
+`frame_the_weight_of_a_sentence` (`frame.yaml`) reads
+`anyDiscrepancy: { atLeast: 1 }`, which every Embellish opens. Repeatable,
+cooldown 150. An authored lie, a loose secret and the Church's papers open a
+Discrepancy too, so the text is written to hold for all of them, and it never
+says which account is true. Weight was first 32, inside the baselines' 28–34;
+it ships at **16** (below).
+
+### Results, paired on the same seeds
+
+| Column | No interlude, before → after | First interlude median | Interludes per run | Broke before first interlude |
+| --- | --- | --- | --- | --- |
+| short / chronicler | 5 → 4 /400 = 1.0% [0.4%, 2.5%] | 61 → 55 | 3.97 → 4.11 | 5 → 4 |
+| short / embellish | 101 → **4/400 = 1.0% [0.4%, 2.5%]** | 168 → 55 | 1.54 → 3.52 | 46 → 4 |
+| long / chronicler | 3 → 2 /200 = 1.0% [0.3%, 3.6%] | 62 → 55 | 6.57 → 6.74 | 3 → 2 |
+| long / embellish | 27 → **2/200 = 1.0% [0.3%, 3.6%]** | 178 → 55 | 3.01 → 5.71 | 24 → 2 |
+
+The table shows weight 16. At weight 32 the no-interlude, first-interlude
+and broke-before columns are identical, and interludes per run differ only
+in Long always-Embellish (5.70). Every chronicler bar holds.
+
+**Why the first interlude now lands at the same time in every column.** The
+frame draws from its own `frame` stream, and after this change any first
+Record answer makes some baseline eligible: Record opens `recorded`, Omit
+opens `omitted`, Embellish opens a Discrepancy. The chronicler and the forced
+column are twins until their answers differ, so their first interludes now
+fall in the same years.
+
+**What a lying house now hears.** Under always-Embellish, the first
+book-themed interlude after the first altered page reached Short 197 → 383 of
+400 houses (median 127 → 20 years after the choice) and Long 148 → 193 of 200
+(median 167 → 21). Interludes that name the page's own lie, #1987's
+`interlude` return, are unchanged: Short 15 → 15, Long 9 → 9; chronicler 3 →
+3 and 4 → 4.
+
+**Crowding, and why the weight is 16.** Only frame scheduling changed, so the
+mix is the cost. Named, story-specific interludes (everything but the six
+baselines), on the same seeds:
+
+| Column | Before | Weight 32 | Weight 16 |
+| --- | --- | --- | --- |
+| short / chronicler | 236 | 205 (−13%) | **217 (−8%)** |
+| long / chronicler | 286 | 272 (−5%) | **283 (−1%)** |
+| short / embellish | 616 | 466 | 470 |
+| long / embellish | 602 | 507 | 517 |
+
+In a house that only embellishes the new scene is usually the one eligible,
+so its weight does nothing there: 32 and 16 gave the same always-Embellish
+no-interlude counts and lie returns. Weight only decides the years when
+something else is eligible too, and there it should yield. The always-Embellish
+drop in named scenes is not lost returns (above): before, a starving frame was
+overdue every year, so any specific scene fired the year it became eligible;
+now the 45-year minimum gap applies as it does to the chronicler. The rest of
+the chronicler's loss falls on the five older baselines (Short 1352 → 1133,
+Long 1028 → 865 at weight 16).
+No template with 10 or more fires went to zero; one with a single fire did
+(`frame_the_colour_of_its_own_paper` 1 → 0, Long always-Embellish). Among the
+largest relative falls were `frame_the_copy_that_was_short` 9 → 4 (Short
+chronicler) and `frame_nine_libraries` 15 → 3 (Short always-Embellish), both
+non-repeatable reads of one open Discrepancy, which a scene can miss while
+the minimum gap holds.
+
+**Also moved: the collateral keeping (#1993).** `collateralKept` holds until
+the first interlude **and** 30 years, so before this change an
+always-Embellish house that never met the frame was kept for the rest of its
+run. Its broken lines rise accordingly (Short 70 → 88 of 400, Long 36 → 48 of
+200) while breaks before the first interlude fall to the chronicler's level
+(Short 46 → 4, Long 24 → 2), which is the keeping's stated purpose. Chronicler
+broken lines: Short 81 → 81, Long 44 → 45. Outside the frame, 389/400 Short
+and 196/200 Long chronicler runs are identical in ending, years played,
+Record offers and prompts. The keeping is the only simulation code outside
+the frame that reads frame state (`assize.ts`), so that is where every
+difference enters; the runs were not traced one by one.
+
+**Repetition.** An always-Embellish house can read only this baseline, so it
+now hears it about 2.3 times a run (Short 936 fires in 400 runs), partly
+through the frame's overdue path, which repeats the stalest eligible scene.
+A chronicler house already repeated a baseline in 162 of 400 Short runs. A
+second `anyDiscrepancy` baseline at a higher threshold, as `recorded` has
+1/2/3/4, would vary it; not done here.
+
+### Independent sample, weight 16
+
+The weight was chosen on the bars' own seeds, so the rate claim is made on
+seeds nothing here was decided on: `--offset=2000` (`200700 + i`), Short Line
+400 per column, before on `1f52e012`'s `frame.yaml`, after on `f15514ca`.
+
+| Column | No interlude, before → after | First interlude median | Interludes per run | Named scenes | Broke before first interlude |
+| --- | --- | --- | --- | --- | --- |
+| short / chronicler | 9 → 8 /400 = 2.0% [1.0%, 3.9%] | 59 → 56 | 4.04 → 4.16 | 252 → 240 | 9 → 8 |
+| short / embellish | 98/400 = 24.5% → **8/400 = 2.0% [1.0%, 3.9%]** | 174.5 → 56 | 1.45 → 3.55 | 580 → 471 | 50 → 8 |
+
+The bar is met and every chronicler bar holds; 395/400 chronicler runs are
+identical outside the frame. The first book-themed interlude after an
+always-Embellish house's first altered page reached 181 → 387 houses
+(median 121 → 19 years after it). Lie-naming interludes went 19 → 16 on this
+sample (15 → 15 on the canonical one), alongside disputes 244 → 237 and
+echoes 392 → 384; that is the shape of the keeping's return to its bounds
+shortening some lines, not a scene displaced, but it is a loss and it is
+reported as one.
+
+**Reach of the new scene** (runs reached; it has one outcome, `only`, which
+`npm run gen:witnesses` now witnesses in `reach.test.ts`): Short chronicler
+244–264 of 400 (61–66%) and always-Embellish 389–391 of 400; Long chronicler
+147 of 200 and always-Embellish 194 of 200.
+
+### Limits
+
+Bot policies; always-Embellish is an extreme player. Game years and prompts
+are not reading time, and nothing here shows a reader notices or values the
+scene. No player session was run.
