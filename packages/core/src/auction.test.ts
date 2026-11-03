@@ -1073,6 +1073,46 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     expect(ctx.world.treasury).toBe(treasury);
   });
 
+  it('does not offer future-acquired heirlooms as collateral until their year (#2701)', () => {
+    const ctx = bootstrap(bundle, 2701, 1042);
+    const future = grantHeirloom(ctx, 'portion_of_fertility')!;
+    future.acquiredYear = ctx.world.year + 4;
+    const lot = heirloomLot(ctx, 'future_collateral');
+    ctx.world.auction.upcoming = [lot];
+
+    const before = digestOf(ctx);
+    expect(tableView(ctx).auction!.heirlooms.map((entry) => entry.id)).not.toContain(future.id);
+    expect(bidAtAuction(ctx, lot.id, 'heirloom', 0, future.id)).toEqual({
+      ok: false, reason: 'the house does not hold that heirloom',
+    });
+    expect(lot.playerBid).toBeUndefined();
+    expect(digestOf(ctx)).toBe(before);
+
+    ctx.world.year = future.acquiredYear;
+    const currentLot = heirloomLot(ctx, 'available_collateral');
+    ctx.world.auction.upcoming = [currentLot];
+    expect(tableView(ctx).auction!.heirlooms.map((entry) => entry.id)).toContain(future.id);
+    expect(bidAtAuction(ctx, currentLot.id, 'heirloom', 0, future.id).ok).toBe(true);
+  });
+
+  it('voids imported bids backed only by future heirlooms at sale time (#2701)', () => {
+    const ctx = bootstrap(bundle, 2702, 1042);
+    const future = grantHeirloom(ctx, 'portion_of_fertility')!;
+    future.acquiredYear = ctx.world.year + 4;
+    const lot = heirloomLot(ctx, 'unowned_collateral_sale');
+    lot.playerBid = {
+      house: ctx.world.playerHouse, currency: 'heirloom', amount: 0,
+      heirloomOffered: future.id,
+    };
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.treasury = 0;
+    ctx.world.bidCeiling = 0;
+
+    expect(sell(ctx, lot)?.winner).toBe('nobody');
+    expect(ctx.world.heirlooms.has(future.id)).toBe(true);
+    expect(ctx.world.heirlooms.has(lot.refId)).toBe(false);
+  });
+
   it('withdrawing hands the lot back to the ceiling and the steward', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const lot = heirloomLot(ctx);
