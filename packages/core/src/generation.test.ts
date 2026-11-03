@@ -54,6 +54,42 @@ describe('one question per generation (issue #213)', () => {
   });
 });
 
+describe('the Match verdict remembers a wedding even after widowhood (#2683)', () => {
+  it.each([
+    { kind: 'outward', house: 'house_marrow', words: 'married outward' },
+    { kind: 'within', house: 'house_gearithy', words: 'married within' },
+  ])('records the $kind marriage that ended before the generation closed', ({ house, words }) => {
+    const ctx = testWorld(bundle, 26831, 1200);
+    const daughter = place(ctx, { sex: 'female', age: 22, name: 'Wynn' });
+    const spouse = place(ctx, { sex: 'male', age: 24, name: 'Groom', house });
+    const q: GenerationQuestion = {
+      kind: 'match', subject: daughter.id, subjectName: daughter.name,
+      opened: ctx.world.year, baseline: 0, text: '', signature: `match:${daughter.id}`,
+    };
+    marry(ctx, daughter, spouse);
+    expect(ctx.world.people.kill(spouse.id, ctx.world.year, 'illness')).toBe(true);
+    expect(daughter.marriages[0]?.to).toBe(ctx.world.year);
+    ctx.world.year += 1;
+
+    expect(answerGenerationQuestion(ctx, q)).toContain(words);
+  });
+
+  it('does not re-count a marriage that ended before this question opened', () => {
+    const ctx = testWorld(bundle, 26832, 1200);
+    const daughter = place(ctx, { sex: 'female', age: 22, name: 'Wynn' });
+    const spouse = place(ctx, { sex: 'male', age: 24, name: 'Former groom', house: 'house_marrow' });
+    marry(ctx, daughter, spouse);
+    expect(ctx.world.people.kill(spouse.id, 1200, 'illness')).toBe(true);
+    ctx.world.year = 1202;
+    const q: GenerationQuestion = {
+      kind: 'match', subject: daughter.id, subjectName: daughter.name,
+      opened: 1201, baseline: 0, text: '', signature: `match:${daughter.id}`,
+    };
+
+    expect(answerGenerationQuestion(ctx, q)).toContain('remained unmarried');
+  });
+});
+
 describe('the generation\'s question and answer speak the reader\'s setting (#758)', () => {
   /** Every Original, keyed; the Plain English is the key itself plus its tokens, so a miss is unmistakable. */
   const ORIGINALS: Record<string, string> = {
