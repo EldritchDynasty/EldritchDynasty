@@ -64,12 +64,17 @@ function displayError(original: string | null): string | null {
  */
 function newRunSeed(): number {
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    const value = new Uint32Array(1);
-    crypto.getRandomValues(value);
-    return value[0]!;
+    try {
+      const value = new Uint32Array(1);
+      crypto.getRandomValues(value);
+      return value[0]!;
+    } catch {
+      // A native bridge or restricted host can expose Web Crypto but refuse a
+      // draw. Do not let that failure hide Start's manual Advanced seed (#2648).
+    }
   }
   // This is a gameplay seed, not a security token. An older or restricted host
-  // without Web Crypto must still reach Start and its editable Advanced seed.
+  // without working Web Crypto must still reach Start and its editable Advanced seed.
   return Math.floor(Math.random() * 0x100000000);
 }
 
