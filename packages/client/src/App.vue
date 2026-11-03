@@ -501,8 +501,12 @@ if (readingLog) {
   watch(() => accessibility.value.proseMode, (mode) => readingLog.note({ kind: 'prose', mode }), { immediate: true });
   watch(pane, (next) => readingLog.note({ kind: 'pane', pane: next }), { immediate: true });
   watch(readingBreak, (on) => readingLog.note({ kind: 'break', on }));
-  watch(() => view.value?.year, (year) => {
-    if (year !== undefined) readingLog.note({ kind: 'year', year });
+  // A new house can begin in exactly the same year as the old house. Watch
+  // the fresh public-view snapshot, not only its numeric year, or Vue skips
+  // the second house's first observation. ReadingLog deduplicates repeat
+  // years within the same house and defers saved-run pickups until confirmed.
+  watch(view, (current) => {
+    if (current) readingLog.note({ kind: 'year', year: current.year });
   }, { immediate: true });
   watch(() => view.value?.chronicle, (pages) => readingLog.chronicle(pages), { immediate: true });
   watch(interlude, (shown) => {
