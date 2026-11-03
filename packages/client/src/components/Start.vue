@@ -63,9 +63,14 @@ function displayError(original: string | null): string | null {
  * numeric seed and remains deterministic for saves, replay and bug reports.
  */
 function newRunSeed(): number {
-  const value = new Uint32Array(1);
-  crypto.getRandomValues(value);
-  return value[0]!;
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const value = new Uint32Array(1);
+    crypto.getRandomValues(value);
+    return value[0]!;
+  }
+  // This is a gameplay seed, not a security token. An older or restricted host
+  // without Web Crypto must still reach Start and its editable Advanced seed.
+  return Math.floor(Math.random() * 0x100000000);
 }
 
 const seed = ref(newRunSeed());
