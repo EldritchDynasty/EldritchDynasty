@@ -1574,6 +1574,31 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 
+  it('does not treat altered Record testimony as an automatic ledger-wait witness (#2583)', () => {
+    const { ctx, page } = accountedWait();
+    const ending = selectEnding(ctx);
+    const intact = epilogueOf(ctx)!.purpose;
+    expect(intact?.kind).toBe('ascendant_wait');
+
+    // The generated wait is a paragraph outside the player's Record choices.
+    // Neither a written lie, a blank, a Record page nor a reclassified page
+    // is admissible as the original untouched witness.
+    for (const record of ['embellish', 'omit', 'record'] as const) {
+      page.record = record;
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    }
+    page.record = undefined;
+    page.weight = 'illuminated';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    page.weight = 'paragraph';
+    page.named = true;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+
+    page.named = false;
+    expect(epilogueOf(ctx)!.purpose).toEqual(intact);
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
   it('refuses ambiguous, misattributed, unlinked or future testimony', () => {
     const { ctx, page, ascendant } = accountedWait();
     const w = ctx.world;
