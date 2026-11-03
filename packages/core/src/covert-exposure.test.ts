@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import type { Grudge } from '@ed/schema';
+import { CovertOperationS, HouseholdThreatS, type Grudge } from '@ed/schema';
 import { place, testWorld } from './testing.js';
 import { addGrudge } from './people/relationships.js';
 import { canonical, saveGame } from './save.js';
@@ -82,6 +82,100 @@ describe('covert exposure funnel (#1943)', () => {
     expect(directionOf(ctx, edge(ctx.world.playerHouse, enemy.id))).toBe('outgoing');
     expect(directionOf(ctx, edge(nella.id, founder.id))).toBe('internal');
     expect(directionOf(ctx, edge(enemy.id, 'house_calder'))).toBe('elsewhere');
+  });
+
+
+  it('does not treat a future household plot as next-year exposure or cooldown (#2756)', () => {
+    const { ctx, founder, enemy } = scene();
+    const grudge = addGrudge(ctx, enemy.id, founder.id, { severity: 70, inheritance: 'house_wide' });
+    const now = ctx.world.year;
+    const future = HouseholdThreatS.parse({
+      plan: {
+        id: 'future_household', sponsor: enemy.id, operative: enemy.id, target: founder.id,
+        motive: { kind: 'grudge', grudge: grudge.id },
+        site: { kind: 'covert', operation: 'future_household' }, bindings: {},
+        preparation: 'careful', preparedAt: now + 8, attemptYear: now + 10, paidCrowns: 0,
+      },
+      stage: 'preparing', defence: { guards: [], response: 'ordinary', paidCrowns: 0 }, warned: false,
+    });
+    ctx.world.covert.threats.push(future);
+    const sample = () => {
+      const before = canonical({ ...saveGame(ctx), savedAt: '' });
+      const f = createCovertExposure();
+      sampleCovertExposure(ctx, f);
+      expect(canonical({ ...saveGame(ctx), savedAt: '' })).toBe(before);
+      expect(f.incoming.candidateYears).toBe(1);
+      return f.incoming;
+    };
+
+    expect(sample()).toMatchObject({ blockedYears: 0, rollYears: 1 });
+    future.plan.preparedAt = now + 1;
+    expect(sample()).toMatchObject({ blockedYears: 1, rollYears: 0 });
+    future.stage = 'cancelled';
+    future.plan.preparedAt = now - 10;
+    expect(sample()).toMatchObject({ blockedYears: 1, rollYears: 0 });
+    future.plan.preparedAt = now - 11;
+    expect(sample()).toMatchObject({ blockedYears: 0, rollYears: 1 });
+
+    // A newer applicable row wins even when a phantom is last in saved order.
+    const latest = structuredClone(future);
+    latest.plan.id = 'recent_household';
+    latest.plan.site = { kind: 'covert', operation: latest.plan.id };
+    latest.plan.preparedAt = now - 3;
+    const phantom = structuredClone(future);
+    phantom.plan.id = 'later_household';
+    phantom.plan.site = { kind: 'covert', operation: phantom.plan.id };
+    phantom.plan.preparedAt = now + 25;
+    ctx.world.covert.threats.splice(0, ctx.world.covert.threats.length, latest, phantom);
+    expect(sample()).toMatchObject({ blockedYears: 1, rollYears: 0 });
+  });
+
+  it('does not count future outgoing expeditions as next-year blockers (#2756)', () => {
+    const { ctx, enemy } = scene();
+    const rival = ctx.world.people.living().find(p => p.castSlots.includes('rival'))!;
+    const grudge = addGrudge(ctx, ctx.world.playerHouse, rival.id, { severity: 50, inheritance: 'house_wide' });
+    const now = ctx.world.year;
+    const future = CovertOperationS.parse({
+      opportunity: 'unrelated_future_opportunity',
+      targetHouse: 'house_marrow', targetMembershipFrom: now - 10, purpose: 'settle_grudge',
+      plan: {
+        id: 'future_outgoing', sponsor: enemy.id, operative: enemy.id, target: rival.id,
+        motive: { kind: 'grudge', grudge: grudge.id },
+        site: { kind: 'covert', operation: 'future_outgoing' }, bindings: {},
+        preparation: 'careful', preparedAt: now + 8, attemptYear: now + 10, paidCrowns: 0,
+      },
+      stage: 'preparing', defence: { guards: [], response: 'ordinary', paidCrowns: 0 },
+      enemyWarned: false, crew: [], supportService: [],
+    });
+    ctx.world.covert.operations.push(future);
+    const sample = () => {
+      const before = canonical({ ...saveGame(ctx), savedAt: '' });
+      const f = createCovertExposure();
+      sampleCovertExposure(ctx, f);
+      expect(canonical({ ...saveGame(ctx), savedAt: '' })).toBe(before);
+      expect(f.outgoing.opportunityYears).toBe(1);
+      return f.outgoing;
+    };
+
+    expect(sample().blockedYears).toBe(0);
+    future.plan.preparedAt = now + 1;
+    expect(sample().blockedYears).toBe(1);
+    future.stage = 'closed';
+    future.plan.preparedAt = now - 10;
+    expect(sample().blockedYears).toBe(1);
+    future.plan.preparedAt = now - 11;
+    expect(sample().blockedYears).toBe(0);
+
+    const latest = structuredClone(future);
+    latest.plan.id = 'recent_outgoing';
+    latest.plan.site = { kind: 'covert', operation: latest.plan.id };
+    latest.plan.preparedAt = now - 3;
+    const phantom = structuredClone(future);
+    phantom.plan.id = 'later_outgoing';
+    phantom.plan.site = { kind: 'covert', operation: phantom.plan.id };
+    phantom.plan.preparedAt = now + 25;
+    ctx.world.covert.operations.splice(0, ctx.world.covert.operations.length, latest, phantom);
+    expect(sample().blockedYears).toBe(1);
   });
 
   it('never changes the world it watches', () => {
