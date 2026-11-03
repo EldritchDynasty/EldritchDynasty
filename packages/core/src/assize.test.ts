@@ -265,6 +265,20 @@ describe('when the collateral is kept', () => {
     expect(collateralDue(ended)).toBe(false);
   });
 
+  it('ignores a future-dated frame page until its year arrives', () => {
+    const ctx = lineOf(2);
+    const today = ctx.world.year;
+    ctx.world.frame.entries.push({
+      year: today + 2, eventId: 'frame_x', outcomeId: 'o', text: 'A future interlude.',
+    });
+
+    expect(collateralDue(ctx), 'a future page is not yet heard').toBe(true);
+    ctx.world.year = today + 1;
+    expect(collateralDue(ctx), 'a future page still has not occurred').toBe(true);
+    ctx.world.year = today + 2;
+    expect(collateralDue(ctx), 'the present-year interlude closes eligibility').toBe(false);
+  });
+
   it('happens once in a run, however often the line falls again', () => {
     const ctx = lineOf(2);
     expect(keepTheCollateral(ctx)).toBe(true);
@@ -322,6 +336,22 @@ describe('what the keeping does', () => {
     // The frame speaks; from the next mortality pass the blood is on its own.
     interlude(ctx);
     expect(collateralKept(ctx)).toBe(false);
+  });
+
+  it('keeps protecting the line until a future-dated interlude actually occurs', () => {
+    const ctx = lineOf(2);
+    const at = ctx.world.year;
+    expect(keepTheCollateral(ctx)).toBe(true);
+    ctx.world.frame.entries.push({
+      year: at + KEEP_YEARS + 5, eventId: 'frame_x', outcomeId: 'o', text: 'A future interlude.',
+    });
+
+    ctx.world.year = at + KEEP_YEARS + 1;
+    expect(collateralKept(ctx), 'the minimum ended but the first frame is still future').toBe(true);
+    ctx.world.year = at + KEEP_YEARS + 4;
+    expect(collateralKept(ctx), 'still before the first interlude').toBe(true);
+    ctx.world.year = at + KEEP_YEARS + 5;
+    expect(collateralKept(ctx), 'the interlude has now arrived').toBe(false);
   });
 
   it('covers the blood and nobody else', () => {
