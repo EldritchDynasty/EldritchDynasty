@@ -263,8 +263,10 @@ export function headNamesake(ctx: SimCtx): Namesake | undefined {
   if (!w.decisionLog.some((d) => d.kind === 'name' && d.person === head.id && d.year <= w.year)) return undefined;
 
   const mine = baseName(head.name);
-  // Heads before him, by the name the house called them while they held it.
-  const before = w.succession.filter((s) => s.person !== head.id && baseName(s.name) === mine).length;
+  // A restored future reign has not yet held the seal; only past and current
+  // reigns may set the expectation attached to a name chosen today.
+  const before = w.succession.filter((s) =>
+    s.from <= w.year && s.person !== head.id && baseName(s.name) === mine).length;
   return before ? { name: mine, before } : undefined;
 }
 
