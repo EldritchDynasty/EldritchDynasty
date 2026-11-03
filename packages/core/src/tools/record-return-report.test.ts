@@ -192,6 +192,19 @@ describe('the record-return report (#1987)', () => {
     expect(recordReturnReport([any!, omit!, embellish!]).join('\n')).toContain('short / chronicler / omit');
   });
 
+  it('tallies the column\'s interlude mix over the rows that list it (#2001)', () => {
+    const rows = [
+      row({ interludes: 2, interludeEvents: ['frame_a', 'frame_b'] }),
+      row({ interludes: 1, interludeEvents: ['frame_b'] }),
+      row({ interludes: 0, firstInterludeElapsed: undefined, interludeEvents: [] }),
+      // Written before the list existed: out of the mix's denominator, not a zero.
+      row({ interludes: 5 }),
+    ];
+    const [any] = summariseRecordReturns(rows);
+    expect(any!.interludeMix).toEqual({ runs: 3, total: 3, byEvent: [['frame_b', 2], ['frame_a', 1]] });
+    expect(recordReturnReport([any!]).join('\n')).toContain('| short / chronicler | 3 · 3 · 1 | frame_b: 2, frame_a: 1 |');
+  });
+
   it('the chronicler column plays the same house as playToTheEnd', () => {
     // Forty years diverges on any docket-loop difference: the template-fire
     // map moves with every reseeded answer.
