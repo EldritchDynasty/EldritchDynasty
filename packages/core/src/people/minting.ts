@@ -120,7 +120,9 @@ export function rollRecipe(template: CharacterTemplate, ctx: SimCtx, rng: Rng): 
   // not as a fresh name pasted onto the same hidden genealogy. The current
   // mint counter was still consumed above: deciding whether somebody returns
   // must not make subsequent recipe ids share a seed.
-  if (rival?.courtship?.template === String(template.id)) {
+  // Only reuse a public name/recipe after that introduction has occurred.
+  // A future-dated imported courtship is still a fresh offer today.
+  if (rival?.courtship?.template === String(template.id) && rival.courtship.offered <= w.year) {
     rival.courtship.offered = w.year;
     return {
       template: rival.courtship.template,
