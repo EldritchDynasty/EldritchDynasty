@@ -404,6 +404,76 @@ observer notes. Both the raw events and counts may span multiple runs in one
 page session, so use the `run`/`pickup` boundaries before interpreting
 per-house or per-generation totals. Game years are not generation counts.
 
+### Predeclared Table maintenance observation rubric (#2613; part of #1992)
+
+Before observing readers or selecting a bot cohort, record the classification
+rules **and which Table systems are available**. The recorder's category
+identifies the kind of command, **not** its importance to that house. Use these
+observer codes for each observed manual command, retaining its bounded category:
+
+| Code | Observation rule | Example to check against the player's intention |
+| --- | --- | --- |
+| **M — maintenance** | Repeated upkeep or routine renewal primarily to keep an existing arrangement running, without a newly chosen stake | Renewing a duty or provisioning without changing the family's plan |
+| **C — consequential** | A deliberate new commitment, irreversible sacrifice, risk or tradeoff that changes a person's, house's or Record's direction | Spending a relative, changing an alliance or accepting a cost to preserve testimony |
+| **A — ambiguous** | Intent, consequence or visibility unclear, or reasonable observers disagree | A routine-looking order that may protect someone; an accepted command with no visible outcome yet |
+
+Classify **from observed context and the reader's own account**, not from the
+order or muster verb, payload kind, frequency or success flag. The same
+category may be M in one circumstance and C in another; preserve A instead
+of forcing certainty. Record inter-observer disagreement against a rubric
+declared *before* comparative results are inspected. A refused or thrown
+command is still an interaction, not an accepted change. Delegation's
+**returned** status does not establish that its setting changed; separately
+identify automatic work and never count it as a manual click.
+
+Use an observer worksheet row for each relevant interaction:
+
+| Field | What to record |
+| --- | --- |
+| Boundary | Pseudonymous session, build SHA, run boundary, campaign, in-game year, Head tenure index |
+| Opportunity | Table system and whether it was available in that year |
+| Action | Manual / delegated / automatic; bounded recorded category; attempted / accepted / refused / threw / returned / unfinished |
+| Interpretation | M / C / A, visible stakes or intent in anonymised terms, uncertainty / interruption |
+
+The exported events **do not** supply Head boundaries, available-system
+inventories, M/C/A codes or player intent; observers must capture them
+separately. Do not put entered names, arbitrary prose, Library contents or
+participant identifiers in the exported reading log.
+
+### Denominators and reporting for Table burden
+
+Before comparing cohorts, define a **generation** as a Head tenure from
+assuming Headship to succession or the observed end, and apply that rule
+consistently. A Head still serving at observation end is a **partial tenure**,
+not a completed generation. Report:
+
+- **Per run:** completed, partial and broken-line runs; interval observed;
+  available Table systems; M/C/A counts; attempts, refusals and unfinished work.
+- **Per generation:** total completed Head tenures and accepted manual M/C/A
+  actions per completed tenure. Report partial-tenure action counts and observed
+  duration separately, not as completed generations.
+- **Per exposure-year:** for each system, observed in-game years when it was
+  usable (including eligible years with zero actions). Divide its action
+  counts by its own exposure-years, not by all years in which it was absent.
+- **Time proxy:** foreground intervals with the Table pane visible, excluding
+  hidden, unfocused and interrupted intervals as the recorder specifies.
+  Ask the reader what required thought, confusion or unattended waiting; pane
+  time is not proof of attention cost.
+
+For each cohort, disclose **reader count, run count, campaign, exact
+build/content revision, Library policy, manual or bot policy, completed and
+partial tenures, observed exposure-years, censored intervals and refusals**.
+Keep Short and Long Line, new and returning readers, and bot policies distinct.
+Available but untouched means **zero**; unavailable or unobserved means **not
+observed**, never zero. Preserve broken lines and interrupted attempts in
+denominators rather than silently dropping them. An attempt without a terminal
+marker is **unfinished** and must not be reclassified as refused or accepted.
+
+Bot commands under a declared policy estimate **activity**, not human
+attention. They cannot justify automatic upkeep alone. The owner decision
+under #1992 must follow real-reader observations. This is a protocol only:
+**no participant baseline or reduction in burden has been measured here.**
+
 ## First-session signing timing (#1984 — observations not yet run)
 
 This protocol measures whether a staged signing gets a new reader to a
