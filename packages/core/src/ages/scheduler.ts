@@ -216,10 +216,10 @@ export function revealClause(ctx: SimCtx, active: ActiveAge): string | undefined
   const def = ctx.content.age(active.age);
   if (!def?.clauseBearing) return undefined;
 
-  // Somebody has to be writing it down. Both are authored record-keeping
-  // posts; neither is a calendar fallback, and a house with neither still loses
-  // the chance to learn what this Age would have revealed.
-  const recordKeeper = w.people.living().some(
+  // Somebody in THIS house has to be writing it down. Rival archivists
+  // are in people.living() too; their records cannot pay our Ledger.
+  // This is the same household boundary as the Table's directed Ledger search.
+  const recordKeeper = w.people.household(w.playerHouse, w.year).some(
     (p) => p.contract?.role === 'archivist' || p.contract?.role === 'chronicler',
   );
   if (!recordKeeper) return undefined;
