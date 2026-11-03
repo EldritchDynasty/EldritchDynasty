@@ -73,6 +73,7 @@ describe('byname settlement respects the present Chronicle year (#2673)', () => 
     settleBynames(ctx, LIE, 'proven');
     expect(child.byname?.settled).toEqual({ state: 'proven', year: 1043 });
   });
+
   it('does not reveal a future settlement in current-year byname views (#2715)', () => {
     const ctx = testWorld(content, 2715, 1042);
     const relative = place(ctx, { sex: 'male', age: 25 });
@@ -106,5 +107,4 @@ describe('byname settlement respects the present Chronicle year (#2673)', () => 
     });
     expect(ctx.world.chronicle).toEqual(pagesBefore);
   });
-
 });
