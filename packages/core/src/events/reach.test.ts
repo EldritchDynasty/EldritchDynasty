@@ -6665,6 +6665,18 @@ describe('authored frame narration outcome witnesses', () => {
             event: event.id,
             option: 'omit',
           });
+          // An Omit leaves a dated blank with its id, as `applyRecord` writes
+          // it; a scene that names the blank it reads (#1987) needs one.
+          ctx.world.chronicle.push({
+            id: `chr_witness_blank_${i}`,
+            year: ctx.world.year,
+            weight: 'paragraph',
+            text: null,
+            eventId: event.id,
+            named: false,
+            record: 'omit',
+            subject: 'a deterministic witness blank',
+          });
         }
         continue;
       }
