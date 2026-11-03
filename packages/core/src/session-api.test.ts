@@ -40,8 +40,42 @@ describe('source-linked recorded milestones (#1944)', () => {
       page('untitled', 1046, { title: undefined }),
       page('title-last', 1048),
     ];
+    // This constructed history already spans these years; the reader is at its end.
+    g.ctx.world.year = 1050;
     return { g, relative, person, page };
   }
+
+  it('does not expose next-year Chronicle pages or people on any session reading surface', () => {
+    const g = new GameSession(testWorld(content, 2677, 1042));
+    const present = place(g.ctx, { sex: 'female', age: 30, name: 'Present witness' });
+    const future = place(g.ctx, { sex: 'male', age: 25, name: 'Future witness' });
+    g.ctx.world.chronicle = [
+      { id: 'future_page', year: 1043, named: false, weight: 'paragraph',
+        text: 'The unwritten future.', people: [future.id] },
+      { id: 'present_page', year: 1042, named: false, weight: 'paragraph',
+        text: 'The page written today.', people: [present.id] },
+    ];
+    const originalBook = structuredClone(g.ctx.world.chronicle);
+    const originalLog = structuredClone(g.ctx.world.decisionLog);
+    const current = g.book({ from: 1042, to: 1043 });
+    expect(current.map((page) => page.id)).toEqual(['present_page']);
+    expect(g.view().chronicle.map((page) => page.id)).toEqual(['present_page']);
+    expect(g.mentions(present.id)).toEqual(['present_page']);
+    expect(g.mentions(future.id)).toEqual([]);
+    expect(g.milestones(future.id, { limit: Infinity })).toEqual([]);
+    expect(g.view().chroniclePeople.some((entry) => entry.id === future.id)).toBe(false);
+
+    g.ctx.world.year = 1043;
+    expect(g.book().map((page) => page.id)).toEqual(['future_page', 'present_page']);
+    expect(g.view().chronicle.map((page) => page.id)).toEqual(['future_page', 'present_page']);
+    expect(g.mentions(future.id)).toEqual(['future_page']);
+    expect(g.milestones(future.id, { limit: Infinity })).toEqual([
+      { entryId: 'future_page', year: 1043, source: 'blank' },
+    ]);
+    expect(g.view().chroniclePeople.some((entry) => entry.id === future.id)).toBe(true);
+    expect(g.ctx.world.chronicle).toEqual(originalBook);
+    expect(g.ctx.world.decisionLog).toEqual(originalLog);
+  });
 
   it('prefers deeds within the limit, orders chronologically, and keeps every page reachable', () => {
     const { g, person } = history();
@@ -134,6 +168,7 @@ describe('source-linked recorded milestones (#1944)', () => {
     const omitted = place(g.ctx, { sex: 'male', age: 30, name: 'Omitted-only person' });
     g.ctx.world.chronicle.push(page('omitted-only', 1049, { text: null, record: 'omit', people: [omitted.id] }));
     for (let year = 1050; year < 1120; year++) g.ctx.world.chronicle.push({ year, weight: 'line', named: false, text: 'A quiet year.' });
+    g.ctx.world.year = 1119;
     const view = g.view();
     expect(view.chronicle.some((entry) => entry.people?.includes(person))).toBe(false);
     expect(view.chroniclePeople.some((entry) => entry.id === person)).toBe(true);
