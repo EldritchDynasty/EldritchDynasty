@@ -27,3 +27,30 @@ glossary:
       original: a claim in the house's Record challenged by another account or surviving proof.
       plainenglish: When another account or piece of evidence disputes what the family wrote down.
     related: [standing]
+
+  # The house recovers clauses over the Ages. Do not reveal unseen contract
+  # terms in a definition: only the fact of the bargain is public.
+  - id: ledger
+    names:
+      original: Ledger
+      plainenglish: Ledger
+    aliases:
+      original: [Ledger]
+      plainenglish: [Ledger]
+    definition:
+      original: the house's account of its founding bargain, recovered a clause at a time.
+      plainenglish: The agreement that binds the family. Its terms become known as you uncover them.
+    related: [clause]
+
+  # A clause is a recovered term, not a preview of what future Ages disclose.
+  - id: clause
+    names:
+      original: Ledger clause
+      plainenglish: Contract term
+    aliases:
+      original: [Ledger clause, Ledger clauses, Clause, Clauses, clause, clauses]
+      plainenglish: [Contract term, Contract terms, Ledger clause, Ledger clauses, Clause, Clauses, clause, clauses]
+    definition:
+      original: one term of the house's founding bargain, entered in the Record when recovered.
+      plainenglish: One part of the family's agreement, recorded when the family discovers it.
+    related: [ledger]
