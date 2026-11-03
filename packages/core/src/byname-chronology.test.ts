@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { bynameStanding, settleBynames } from './byname.js';
+import { bynameStanding, bynameView, settleBynames } from './byname.js';
 import { place, testWorld } from './testing.js';
 
 const content = loadContent();
@@ -73,4 +73,32 @@ describe('byname settlement respects the present Chronicle year (#2673)', () => 
     settleBynames(ctx, LIE, 'proven');
     expect(child.byname?.settled).toEqual({ state: 'proven', year: 1043 });
   });
+  it('does not reveal a future settlement in current-year byname views (#2715)', () => {
+    const ctx = testWorld(content, 2715, 1042);
+    const relative = place(ctx, { sex: 'male', age: 25 });
+    telling(ctx, relative, 'already_written', 1042);
+    const pagesBefore = structuredClone(ctx.world.chronicle);
+
+    for (const [state, eventualStanding] of [
+      ['proven', 'contested'], ['buried', 'buried'],
+    ] as const) {
+      relative.byname!.settled = { state, year: 1043 };
+      const grantBefore = structuredClone(relative.byname);
+
+      expect(bynameStanding(relative, 1042)).toBe('claimed');
+      expect(bynameView(relative, 1042)).toEqual({
+        text: 'the Early-Woken', standing: 'claimed', year: 1042, page: 'already_written',
+      });
+      // Callers requiring an unbounded historical reading retain the old API.
+      expect(bynameStanding(relative)).toBe(eventualStanding);
+      expect(bynameView(relative, 1043)).toEqual({
+        text: 'the Early-Woken', standing: eventualStanding,
+        year: 1042, page: 'already_written', settledYear: 1043,
+      });
+      expect(relative.byname).toEqual(grantBefore);
+    }
+
+    expect(ctx.world.chronicle).toEqual(pagesBefore);
+  });
+
 });
