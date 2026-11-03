@@ -29,7 +29,9 @@ export function writeJsonAtomically(target, value, validateSerialized) {
   try {
     // Exclusive open tells us whether this invocation owns the scratch.
     // Do not unlink a collision's pre-existing bytes when wx fails.
-    const descriptor = openSync(scratch, 'wx');
+    // Restrict fresh and replacement saves/Library records to the owning user.
+    // A rename installs this scratch inode's mode, not the old target's mode.
+    const descriptor = openSync(scratch, 'wx', 0o600);
     ownsScratch = true;
     try {
       // Writes through the owned handle so partial write failures also clean up.
