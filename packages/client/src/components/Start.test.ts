@@ -283,6 +283,9 @@ describe('the Demonstration front door (#2063)', () => {
         expect(w.get('input[value="short"]').element).toHaveProperty('checked', true);
         const demo = choices.find((label) => label.find('input').attributes('value') === 'demo');
         expect(demo!.text()).toContain('A Demonstration');
+        // The proper title is already the label, in either reading mode:
+        // Plain English must not repeat it as "A Demonstration (demonstration)".
+        expect(demo!.get('strong').text()).toBe('A Demonstration');
         expect(demo!.text()).toContain('33 years');
         expect(demo!.text()).toMatch(/Record/);
         expect(demo!.text()).toMatch(/cannot become a (full campaign|Short or Long Line)/);
