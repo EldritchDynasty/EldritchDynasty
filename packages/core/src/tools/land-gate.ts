@@ -10,7 +10,7 @@
  */
 import { loadContent } from '@ed/content';
 import { indexContent, type Content, type ContentBundle, type EventTemplate } from '@ed/schema';
-import { LAND_RISK_ROUTES, buyParcel, heldParcels, landView, sellParcel } from '../land.js';
+import { LAND_RISK_ROUTES, buyParcel, heldParcels, sellParcel } from '../land.js';
 import { clearNamingQueue } from '../sim.js';
 import { autoResolveAll, resolveChoice, type PendingChoice } from '../events/decisions.js';
 import { hashSeed, makeRng } from '../rng.js';
@@ -183,7 +183,11 @@ function runLand(source: Content, seed: number, years: number): LandRun {
 
     // One shared treasury: take what is genuinely affordable under the same
     // debt floor as the table, never a separate land budget.
-    for (const lot of landView(ctx).market) {
+    // The market projection also hydrates every held and lost parcel into reader prose.
+    // This thousand-run gate needs only the offered ids, in the same insertion
+    // order; buyParcel still makes every affordability and validity decision.
+    // Snapshot the lots because a successful purchase removes the offer.
+    for (const lot of [...w.landMarket.lots]) {
       if (buyParcel(ctx, lot.parcel).ok) {
         routes.add('purchase');
         latestChange = w.year;
@@ -193,8 +197,12 @@ function runLand(source: Content, seed: number, years: number): LandRun {
     // A voluntary loss is part of the ecology too. Sparse and predictable,
     // this exercises liquidation without turning the policy into a churner.
     if ((w.year - START_YEAR) % 200 === 0) {
-      const sale = landView(ctx).held.find((p) => p.sellable && p.kind === 'tenant_farm');
-      if (sale && sellParcel(ctx, sale.parcel).ok) {
+      // Match landView's held-order, eligibility and tenant-farm selection
+      // without building its full reader projection (including lost history).
+      const sale = heldParcels(ctx).find((state) => state.holder === undefined
+        && state.defId !== undefined
+        && ctx.content.parcel(state.defId)?.kind === 'tenant_farm');
+      if (sale?.defId && sellParcel(ctx, sale.defId).ok) {
         routes.add('sale');
         latestChange = w.year;
       }
