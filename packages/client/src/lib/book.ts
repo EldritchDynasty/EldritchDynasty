@@ -118,6 +118,8 @@ export interface PlateRow {
   rule?: boolean;
   /** Drawn in `PLATE.mono`: a share code, where l, I and 1 must not blur. */
   mono?: boolean;
+  /** Title emphasis is measured and drawn with the same font on PNG and SVG. */
+  weight?: 500;
   gap: number;
 }
 
@@ -137,8 +139,8 @@ export const PLATE = {
 } as const;
 
 /** The font a plate row is drawn in. PNG, SVG and the Afterimage all ask here. */
-export function rowFont(row: Pick<PlateRow, 'size' | 'italic' | 'mono'>): string {
-  return `${row.italic ? 'italic ' : ''}${row.size}px ${row.mono ? PLATE.mono : PLATE.serif}`;
+export function rowFont(row: Pick<PlateRow, 'size' | 'italic' | 'mono' | 'weight'>): string {
+  return `${row.italic ? 'italic ' : ''}${row.weight ? `${row.weight} ` : ''}${row.size}px ${row.mono ? PLATE.mono : PLATE.serif}`;
 }
 
 const SIZE: Record<string, number> = { line: 15, paragraph: 17, page: 19, illuminated: 22 };
@@ -211,11 +213,11 @@ export function plateRows(entries: readonly ChronicleEntry[], measure: Measure):
     const size = SIZE[e.weight] ?? 15;
 
     if (e.title && isWritten(e)) {
-      const font = `500 ${size + 1}px ${PLATE.serif}`;
-      for (const l of wrap(e.title, font, inner, measure)) {
+      const titleFont = { size: size + 1, weight: 500 } as const;
+      for (const l of wrap(e.title, rowFont(titleFont), inner, measure)) {
         rows.push({
           text: l,
-          size: size + 1,
+          ...titleFont,
           colour: e.weight === 'illuminated' ? PLATE.rubric : PLATE.ink,
           gap: 4,
         });
@@ -353,7 +355,8 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
       parts.push('<text x="' + PLATE.pad + '" y="' + y + '" fill="' + plateXml(row.colour)
         + '" font-family="' + (row.mono ? plateXml(PLATE.mono) : font) + '" font-size="' + row.size
         + '" font-style="' + (row.italic ? 'italic' : 'normal')
-        + '">' + plateXml(row.text) + '</text>');
+        + '"' + (row.weight ? ' font-weight="' + row.weight + '"' : '')
+        + '>' + plateXml(row.text) + '</text>');
     }
     y += row.size * 0.3 + row.gap;
   }
