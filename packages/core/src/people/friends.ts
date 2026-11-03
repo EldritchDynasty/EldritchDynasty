@@ -124,8 +124,10 @@ export function claimFriendName(
   year: Year,
   rng: Rng,
 ): string | undefined {
+  // A future-dated imported spend has not happened yet. A real arrival today
+  // may replace that marker; past and present spends remain once-only.
   const free = friends.filter((f) => f.sex === sex
-    && f.spentIn === undefined
+    && (f.spentIn === undefined || f.spentIn > year)
     && f.dueFrom <= year
     && !taken.has(f.name));
   if (!free.length) return undefined;
