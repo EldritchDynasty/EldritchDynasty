@@ -110,7 +110,7 @@ export function chooseGenerationQuestion(
   }
 
   const troubled = [...w.branches.values()]
-    .filter((b) => b.grievance >= 60)
+    .filter((b) => b.extinct === undefined && b.foundedYear <= w.year && b.grievance >= 60)
     .sort((a, b) => b.grievance - a.grievance)[0];
   if (troubled) {
     candidates.push({
