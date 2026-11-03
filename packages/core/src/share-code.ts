@@ -376,10 +376,11 @@ export function readShareCode(
   // megabyte of whitespace cannot hide a small otherwise-valid code.
   if (code.length > SHARE_CODE_MAX * 4) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   // Rich-text copy can insert soft hyphens, zero-width joiners and
-  // directionality marks (ARABIC LETTER MARK, LRM/RLM and bidi isolates)
-  // around an ASCII code in RTL text. None belong to its wire alphabet;
-  // treat them as layout separators, after bounding the raw input length.
-  const text = code.replace(/[\s\u00AD\u061C\u200B-\u200F\u2060\u2066-\u2069]+/g, '');
+  // directionality marks (ALM, LRM/RLM, legacy bidi embeddings/overrides
+  // and modern isolates) around an ASCII code in RTL text. None belong to
+  // its wire alphabet; treat them as layout separators only after bounding
+  // the raw input length.
+  const text = code.replace(/[\s\u00AD\u061C\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069]+/g, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
