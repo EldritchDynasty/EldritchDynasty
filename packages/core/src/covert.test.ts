@@ -766,6 +766,39 @@ describe('household lifecycle fixtures', () => {
       expect(householdSecurityView(ctx).threats[0]!.due).toBe(start + 2);
     });
 
+    it('hides an imported future threat until its actual preparation year (#2725)', () => {
+      const { ctx, threat } = scene();
+      threat.plan.preparedAt = start + 10;
+      threat.plan.attemptYear = start + 12;
+      const original = structuredClone(threat);
+      const order = { threat: threat.plan.id, guards: [], response: 'ordinary' as const };
+
+      expect(householdSecurityView(ctx).threats).toEqual([]);
+      expect(quoteThreatResponse(ctx, order).ok).toBe(false);
+      expect(defendHousehold(ctx, order).ok).toBe(false);
+      expect(threat).toEqual(original);
+
+      ctx.world.year = start + 10;
+      expect(householdSecurityView(ctx).threats.map(t => t.id)).toContain(threat.plan.id);
+      expect(quoteThreatResponse(ctx, order).ok).toBe(true);
+    });
+
+    it('lets present preparation proceed despite a stored future phantom (#2725)', () => {
+      const { ctx, threat } = scene();
+      threat.plan.preparedAt = start + 10;
+      threat.plan.attemptYear = start + 12;
+      const untouched = structuredClone(threat);
+
+      // Same world/year and keyed preparation draw: an eligible present plot can
+      // still be prepared even when a recovered later one is already stored.
+      tickHouseholdThreats(ctx);
+      const current = ctx.world.covert.threats.find(t => t !== threat);
+      expect(current?.plan.preparedAt).toBe(start);
+      expect(ctx.world.covert.threats).toHaveLength(2);
+      expect(householdSecurityView(ctx).threats.map(t => t.id)).toEqual([current!.plan.id]);
+      expect(threat).toEqual(untouched);
+    });
+
     it('has no incident or clock question without an eligible hostile actor', () => {
       const ctx = testWorld(content, fatalSeed);
       ctx.world.relationships.clear();
