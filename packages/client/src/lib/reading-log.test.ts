@@ -409,6 +409,66 @@ describe('accepted ordinary Begin boundaries (#2069)', () => {
   });
 });
 
+describe('run-relative year observations (#2703)', () => {
+  it('records the same year in two different begun houses, but not twice within one house', () => {
+    const l = log();
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'year', year: 1042 });
+
+    expect(l.events.filter((e) => e.kind === 'year').map((e) => e.year)).toEqual([1042, 1042]);
+    const gaps = l.artifact().summary.gaps;
+    expect(gaps.filter((gap) => gap.to.kind === 'new-run')).toHaveLength(1);
+    expect(gaps[gaps.length - 1]?.to.year).toBe(1042);
+  });
+
+  it('restates a matching year after a confirmed saved-house pickup even without a year watcher change', () => {
+    const l = log();
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'action', verb: 'load', act: 'start' });
+    // Same-year resume can leave the Vue year watcher unchanged.
+    l.chronicle([{ id: 'carried', year: 1042, answer: 'glimpse' }]);
+    l.note({ kind: 'year', year: 1042 });
+
+    expect(l.events.filter((e) => e.kind === 'year').map((e) => e.year)).toEqual([1042, 1042]);
+    const kinds = l.events.map((e) => e.kind);
+    expect(kinds.lastIndexOf('pickup')).toBeLessThan(kinds.lastIndexOf('year'));
+    expect(l.artifact().summary.gaps.at(-1)?.to.year).toBe(1042);
+    expect(l.artifact().summary.answers).toBe(0); // carried page is not fresh evidence
+  });
+
+  it('defers a different loaded year until the pickup boundary, rather than attributing it to the old house', () => {
+    const l = log();
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'action', verb: 'resume', act: 'start' });
+    // App.vue's year watcher runs before the Chronicle pickup watcher.
+    l.note({ kind: 'year', year: 1250 });
+    expect(l.events.filter((e) => e.kind === 'year').map((e) => e.year)).toEqual([1042]);
+    l.chronicle([{ id: 'carried', year: 1249, answer: 'clause' }]);
+
+    expect(l.events.filter((e) => e.kind === 'year').map((e) => e.year)).toEqual([1042, 1250]);
+    expect(l.artifact().summary.gaps.find((gap) => gap.to.kind === 'new-run')?.to.year).toBe(1042);
+    expect(l.artifact().summary.gaps.at(-1)?.to.year).toBe(1250);
+  });
+
+  it('discards a refused pickup year without introducing a false boundary or a duplicate year', () => {
+    const l = log();
+    l.note({ kind: 'year', year: 1042 });
+    l.note({ kind: 'action', verb: 'load', act: 'start' });
+    l.note({ kind: 'year', year: 1250 });
+    l.pickUpFailed(l.startGeneration);
+    l.note({ kind: 'year', year: 1042 });
+
+    expect(l.events.filter((e) => e.kind === 'year').map((e) => e.year)).toEqual([1042]);
+    expect(l.events.some((e) => e.kind === 'pickup')).toBe(false);
+    expect(l.artifact().summary.gaps.some((gap) => gap.to.kind === 'new-run')).toBe(false);
+    expect(l.artifact().summary.gaps.at(-1)?.to.year).toBe(1042);
+  });
+});
+
 describe('answers and the gaps between them', () => {
   it('measures each gap on wall, foreground and game-year clocks, and censors the last', () => {
     const c = clock();
