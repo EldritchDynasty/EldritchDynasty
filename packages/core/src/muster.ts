@@ -49,7 +49,7 @@ function clamp(lo: number, hi: number, n: number): number {
 
 /** At most one commitment is ever `in_the_field` — `arc_the_muster`'s own `maxConcurrentInstances: 1`. */
 export function activeCommitment(ctx: SimCtx): Commitment | undefined {
-  return ctx.world.muster.commitments.find((c) => c.status === 'in_the_field');
+  return ctx.world.muster.commitments.find((c) => c.status === 'in_the_field' && c.began <= ctx.world.year);
 }
 
 /**
@@ -58,7 +58,7 @@ export function activeCommitment(ctx: SimCtx): Commitment | undefined {
  * is measuring, so it does not raise the ask for the next one either.
  */
 function escalationNow(ctx: SimCtx): number {
-  return musterEscalation(ctx.world.muster.commitments.filter((c) => c.status === 'settled').length);
+  return musterEscalation(ctx.world.muster.commitments.filter((c) => c.status === 'settled' && c.began <= ctx.world.year).length);
 }
 
 /**
