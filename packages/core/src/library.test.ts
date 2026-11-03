@@ -43,15 +43,20 @@ describe('future-acquired physical copies (#2699)', () => {
     const copy = acquireLibraryCopy(ctx, id)!;
     copy.acquiredYear = ctx.world.year + 2;
     copy.condition = 40;
+    copy.restoresAt = ctx.world.year;
 
     const saved = digestOf(ctx);
     expect(heldBooks(ctx)).toEqual([]);
     expect(conditionDrag(ctx, id)).toBe(1); // Borrowed reading is not slowed by a future shelf copy.
     expect(restorationQuote(ctx, id)).toBeUndefined();
     expect(degradeLibraryCopy(ctx, id, 20)).toBeUndefined();
+    tickRestorations(ctx);
     expect(copy.condition).toBe(40);
+    expect(copy.restoresAt).toBe(1042);
     expect(digestOf(ctx)).toBe(saved);
 
+    // The future-owned copy's imported binder appointment must not delay access once acquired.
+    delete copy.restoresAt;
     ctx.world.year = copy.acquiredYear - 1;
     expect(heldBooks(ctx)).toEqual([]);
     ctx.world.year = copy.acquiredYear;
