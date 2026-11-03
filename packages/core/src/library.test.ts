@@ -6,7 +6,7 @@ import { coreMessageAddress } from './messages.js';
 import {
   acquireLibraryCopy, applyEffect, attr, beginStudy, bootstrap, canTakePost, degradeLibraryCopy,
   canStudySpellbook, commitOutcome, effectiveStudyYears, gainSpellbook, grantHeirloom, libraryRunOf, loadGame, newGame, phenotypeOf, place,
-  saveGame, seedLibraryMemories, setProseMode, setProseVariants, testRng, useHeirloom, order, tableView, DEBT_FLOOR,
+  digestOf, saveGame, seedLibraryMemories, setProseMode, setProseVariants, testRng, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
 import { completeStudies, conditionDrag, heldBooks, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
@@ -44,13 +44,13 @@ describe('future-acquired physical copies (#2699)', () => {
     copy.acquiredYear = ctx.world.year + 2;
     copy.condition = 40;
 
-    const saved = saveGame(ctx);
+    const saved = digestOf(ctx);
     expect(heldBooks(ctx)).toEqual([]);
     expect(conditionDrag(ctx, id)).toBe(1); // Borrowed reading is not slowed by a future shelf copy.
     expect(restorationQuote(ctx, id)).toBeUndefined();
     expect(degradeLibraryCopy(ctx, id, 20)).toBeUndefined();
     expect(copy.condition).toBe(40);
-    expect(saveGame(ctx)).toEqual(saved);
+    expect(digestOf(ctx)).toBe(saved);
 
     ctx.world.year = copy.acquiredYear - 1;
     expect(heldBooks(ctx)).toEqual([]);
@@ -75,9 +75,9 @@ describe('future-acquired physical copies (#2699)', () => {
     expect(ctx.world.library.has(future.id)).toBe(true);
 
     ctx.world.treasury = DEBT_FLOOR - 1;
-    const before = saveGame(ctx);
+    const before = digestOf(ctx);
     tickDistressedBookSale(ctx);
-    expect(saveGame(ctx)).toEqual(before);
+    expect(digestOf(ctx)).toBe(before);
 
     ctx.world.year = future.acquiredYear;
     tickDistressedBookSale(ctx);
