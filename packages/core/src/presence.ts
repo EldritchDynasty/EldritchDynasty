@@ -51,8 +51,15 @@ export function covertReservation(ctx: SimCtx, person: string): string | undefin
     && covertParticipants(ctx, o.plan.id).includes(person))?.plan.id;
 }
 
+/** Future-dated outside service cannot take a reader away before it starts. */
+function activeService(ctx: SimCtx, contract: string) {
+  return ctx.world.mystic.contracts.find(c => c.id === contract
+    && c.stage !== 'closed' && c.started <= ctx.world.year);
+}
+
 export function serviceReservation(ctx: SimCtx, person: string): string | undefined {
-  return ctx.world.mystic.contracts.find(c => c.practitioner === person && c.stage !== 'closed')?.id;
+  return ctx.world.mystic.contracts.find(c => c.practitioner === person
+    && c.stage !== 'closed' && c.started <= ctx.world.year)?.id;
 }
 
 /**
@@ -79,7 +86,7 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
 export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<string, string>): DutyPlace | undefined {
   const w = ctx.world;
   switch (site.kind) {
-    case 'service': return ctx.world.mystic.contracts.some(c => c.id === site.contract && c.stage !== 'closed') ? { service: site.contract } : undefined;
+    case 'service': return activeService(ctx, site.contract) ? { service: site.contract } : undefined;
     case 'book': return w.library.has(site.book) ? { hall: MAIN_BRANCH } : undefined;
     case 'covert': return activeCovert(ctx, site.operation) ? { operation: site.operation } : undefined;
     case 'person': {
@@ -115,7 +122,8 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
     ...ctx.world.covert.operations.filter(o =>
       o.stage !== 'closed' && o.plan.preparedAt <= ctx.world.year)
       .flatMap(o => covertParticipants(ctx, o.plan.id)),
-    ...ctx.world.mystic.contracts.filter(c => c.stage !== 'closed' && (c.kind === 'commission' || c.stage !== 'working')).map(c => c.practitioner),
+    ...ctx.world.mystic.contracts.filter(c => c.stage !== 'closed' && c.started <= ctx.world.year
+      && (c.kind === 'commission' || c.stage !== 'working')).map(c => c.practitioner),
   ]);
 }
 
@@ -151,7 +159,7 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
   const distinct = (ids: readonly string[]) => [...new Set(ids)].filter(id => free(ctx, w.people.get(id))).sort();
   switch (site.kind) {
     case 'service': {
-      const c = w.mystic.contracts.find(c => c.id === site.contract && c.stage !== 'closed');
+      const c = activeService(ctx, site.contract);
       if (!c) return { site, people: [] };
       const party = distinct([c.practitioner]);
       if (c.stage !== 'working' || !c.patron) return { site, people: party };
