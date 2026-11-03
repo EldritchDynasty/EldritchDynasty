@@ -255,6 +255,16 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     || !Number.isInteger(w.seed) || w.seed < 0 || w.seed > 0xffffffff) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
+  // The signing trims and collapses whitespace before writing its founding
+  // log, and refuses invisible-only names. A restored or corrupted log may
+  // no longer meet that contract. Never export a name that the same signing
+  // would change or refuse, even when the sender leaves names out of the code.
+  const houseName = founding.houseName.trim().replace(/\s+/g, ' ');
+  if (houseName !== founding.houseName
+    || !houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()
+    || houseName.length > HOUSE_NAME_MAX) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   // A restored or programmatically altered decision log can pass the compact
   // wire schema but fail the signing's real friend rules. Reuse that validator
   // and require its result to be unchanged: silently dropping an invisible
