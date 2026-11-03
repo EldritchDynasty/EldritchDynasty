@@ -144,7 +144,8 @@ export function settleBynames(ctx: SimCtx, discrepancy: string, state: 'proven' 
   let latest: ChronicleEntry | undefined;
   for (let i = w.chronicle.length - 1; i >= 0; i--) {
     const entry = w.chronicle[i]!;
-    if (entry.record === 'embellish' && entry.discrepancyId === discrepancy && entry.id !== undefined) {
+    if (entry.year <= w.year && entry.record === 'embellish'
+      && entry.discrepancyId === discrepancy && entry.id !== undefined) {
       latest = entry;
       break;
     }
