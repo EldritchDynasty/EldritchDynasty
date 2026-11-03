@@ -107,13 +107,16 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       names: { original: 'Ledger', plainenglish: 'Recovered clauses' },
       aliases: { original: ['Ledger'], plainenglish: ['Recovered clauses', 'Ledger'] },
       definition: { original: 'the clauses the house has found.', plainenglish: 'The clauses the family has found.' },
-      related: [],
+      // Exercise a real related-term control, not just definition prose.
+      related: [example.id],
     };
     // Test the renderer with a second valid-shaped term without changing the
     // authored YAML or competing for the exclusive content claim.
     const source = vi.spyOn(authoredContent, 'loadBundle').mockReturnValue({
       ...bundle,
-      glossary: [...bundle.glossary, additionalTerm],
+      // Keep the fixture's one Ledger definition independent of future
+      // additions to the authored glossary (including another ledger id).
+      glossary: [...bundle.glossary.filter((term) => term.id !== additionalTerm.id), additionalTerm],
     });
     const entry = makeEntry('Ledger unsettled the house. Standing remained.', [
       'Standing was questioned.',
@@ -126,7 +129,11 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       const button = wrapper.get('.glossary-term');
       expect(button.text()).toBe('Ledger');
       await button.trigger('click');
-      expect(wrapper.get('.glossary-definition').text()).toBe('The clauses the family has found.');
+      const definition = wrapper.get('.glossary-definition');
+      // text() includes descendant link labels. Assert the definition's own
+      // text separately, so adding related terms cannot break this contract.
+      expect(definition.element.firstChild?.textContent?.trim()).toBe('The clauses the family has found.');
+      expect(definition.get('.glossary-related button').text()).toBe(example.names.plainenglish);
       expect(wrapper.find('.claims .glossary-term').exists()).toBe(false);
       (button.element as HTMLButtonElement).focus();
       await button.trigger('keydown', { key: 'Escape' });
