@@ -502,6 +502,39 @@ describe('grudges that outlive the men who took them', () => {
 });
 
 
+describe('grudge echo chronology (#2772)', () => {
+  it('does not let a future saved echo silence a present grudge in either prose mode', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const { ctx, us, them } = feuding(2772);
+      setProseMode(ctx, mode);
+      const firstYear = ctx.world.year;
+      const ready = addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' });
+      const future = addGrudge(ctx, them.id, us.id, { severity: 70, inheritance: 'house_wide' });
+      ctx.world.year += ECHO_AFTER;
+      future.echoed = true;
+      future.echoedIn = ctx.world.year + 5; // Recovered testimony from a later year.
+
+      expect(echoGrudges(ctx)).toBe(1);
+      expect(ready.echoedIn).toBe(ctx.world.year);
+      expect(ctx.world.chronicle.at(-1)?.cause?.year).toBe(firstYear);
+      expect(future.echoedIn).toBe(ctx.world.year + 5);
+    }
+  });
+
+  it('still suppresses a same-house echo when it really happened recently', () => {
+    const { ctx, us, them } = feuding(2773);
+    const ready = addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' });
+    const previous = addGrudge(ctx, them.id, us.id, { severity: 70, inheritance: 'house_wide' });
+    ctx.world.year += ECHO_AFTER;
+    previous.echoed = true;
+    previous.echoedIn = ctx.world.year - 1;
+
+    expect(echoGrudges(ctx)).toBe(0);
+    expect(ready.echoed).toBe(true);
+    expect(ready.echoedIn).toBeUndefined();
+  });
+});
+
 describe('the quarrel pages speak the reader\'s setting (#740)', () => {
   const ORIGINALS: Record<string, [string, string]> = {
     'grudge.echo.not_let_go': ['At {HOUSE} they had not let go of {ABOUT}.', '{HOUSE} still remembered {ABOUT}.'],
