@@ -124,8 +124,9 @@ export function hall(w: WorldState, branch: string, year: Year): Person[] {
   return halls(w, year).get(branch) ?? [];
 }
 
+/** A saved future founding is not yet a hall for upkeep, conditions or the cap. */
 export function activeBranches(w: WorldState): BranchState[] {
-  return [...w.branches.values()].filter(isActiveBranch);
+  return [...w.branches.values()].filter((b) => isActiveBranch(b) && b.foundedYear <= w.year);
 }
 
 export function softCapFor(branch: string): number {
