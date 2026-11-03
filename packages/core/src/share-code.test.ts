@@ -579,6 +579,31 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(restored.ok && saved(restored.session)).toBe(saved(valid));
   });
 
+  it('refuses malformed restored founder identities rather than throwing into the ending UI', () => {
+    // Founder details are encoded through exhaustive switches. A restored or
+    // programmatically altered signing log may violate their closed enums or
+    // name limit; neither an anonymous nor a named export may throw.
+    const malformed = [
+      { label: 'unknown gender', value: { ...SIGNED.founder, gender: 'other' } },
+      { label: 'unknown founding body', value: { ...SIGNED.founder, configuration: 'blood_ancestor' } },
+      { label: 'non-text name', value: { ...SIGNED.founder, name: 42 } },
+      { label: 'overlong name', value: { ...SIGNED.founder, name: 'N'.repeat(PERSON_NAME_MAX + 1) } },
+    ];
+    for (const { label, value } of malformed) {
+      const s = founded();
+      const signing = s.ctx.world.decisionLog.find((row) => row.kind === 'signing');
+      if (!signing) throw new Error('the signing did not record its founder');
+      signing.founder = value as typeof signing.founder;
+      const before = JSON.stringify(s.ctx.world.decisionLog);
+      for (const names of [false, true]) {
+        expect(s.shareCode({ build: BUILD, names }), `${label} / names=${names}`)
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+      // The exporter is a read-only view even when its source is malformed.
+      expect(JSON.stringify(s.ctx.world.decisionLog)).toBe(before);
+    }
+  });
+
   it('does not offer codes for restored friend rosters the signing would change or refuse', () => {
     // The compact wire schema checks only types, lengths, and the five-friend
     // limit. An older/corrupted decision log may still fail the production
