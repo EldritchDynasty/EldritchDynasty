@@ -301,10 +301,11 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   const pledge = currency === 'marriage_promise' ? marriageBidOffer(ctx, lot.id) : undefined;
   if (pledge?.reason) return { ok: false, reason: pledge.reason };
   if (currency === 'heirloom') {
-    if (!heirloomOffered || !w.heirlooms.has(heirloomOffered)) {
+    const offered = heirloomOffered ? w.heirlooms.get(heirloomOffered) : undefined;
+    if (!offered || offered.acquiredYear > w.year) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
     }
-    if (spentHeirloom(w.heirlooms.get(heirloomOffered)!)) {
+    if (spentHeirloom(offered)) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_heirloom_spent', 'that heirloom is spent') };
     }
     if (ctx.content.heirloom(heirloomOffered)?.cannotBeSold) {
@@ -342,7 +343,7 @@ function spentHeirloom(state: HeirloomState): boolean {
 /** What the house could trade for a lot today: held, not spent, and not a Burden (§15). */
 export function tradeableHeirlooms(ctx: SimCtx): string[] {
   return [...ctx.world.heirlooms]
-    .filter(([id, h]) => !spentHeirloom(h) && !ctx.content.heirloom(id)?.cannotBeSold)
+    .filter(([id, h]) => h.acquiredYear <= ctx.world.year && !spentHeirloom(h) && !ctx.content.heirloom(id)?.cannotBeSold)
     .map(([id]) => id)
     .sort();
 }
@@ -360,7 +361,7 @@ function honourable(ctx: SimCtx, bid: AuctionBid): boolean {
     case 'favour': return false;
     case 'heirloom': {
       const held = bid.heirloomOffered === undefined ? undefined : w.heirlooms.get(bid.heirloomOffered);
-      return held !== undefined && !spentHeirloom(held);
+      return held !== undefined && held.acquiredYear <= w.year && !spentHeirloom(held);
     }
     case 'marriage_promise': return bid.pledgedBy !== undefined
       && w.people.get(bid.pledgedBy) !== undefined && w.marriagePromises.length === 0;
