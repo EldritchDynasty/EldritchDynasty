@@ -144,6 +144,13 @@ export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
     }
   }
 
+  // The observer samples eligibility for the NEXT year's roll; a later imported
+  // plan cannot claim that year, nor can the last saved row set its cooldown.
+  const sampleYear = w.year + 1;
+  const latestPrepared = (plans: readonly { plan: { preparedAt: number } }[]) => plans.reduce(
+    (latest, row) => row.plan.preparedAt <= sampleYear ? Math.max(latest, row.plan.preparedAt) : latest,
+    -Infinity,
+  );
   const family = w.people.household(w.playerHouse, w.year).filter(p => isCurrentFamily(ctx, p));
   if (family.length < HOUSEHOLD_THREAT_FAMILY) f.incoming.smallFamilyYears++;
   const held = (r: Relationship) => r.grudges.some(g => g.originYear <= w.year);
@@ -154,9 +161,10 @@ export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
   });
   if (threats.length) {
     f.incoming.candidateYears++;
-    const open = w.covert.threats.some(t => t.stage === 'preparing' || t.stage === 'approach');
-    const last = w.covert.threats.at(-1)?.plan.preparedAt ?? -Infinity;
-    if (open || w.year + 1 - last < HOUSEHOLD_THREAT_COOLDOWN) f.incoming.blockedYears++;
+    const open = w.covert.threats.some(t =>
+      (t.stage === 'preparing' || t.stage === 'approach') && t.plan.preparedAt <= sampleYear);
+    const last = latestPrepared(w.covert.threats);
+    if (open || sampleYear - last < HOUSEHOLD_THREAT_COOLDOWN) f.incoming.blockedYears++;
     else f.incoming.rollYears++;
   }
 
@@ -167,8 +175,8 @@ export function sampleCovertExposure(ctx: SimCtx, f: CovertExposure): void {
   });
   if (operations.length) {
     f.outgoing.opportunityYears++;
-    const open = w.covert.operations.some(o => o.stage !== 'closed');
-    const last = w.covert.operations.at(-1)?.plan.preparedAt ?? -Infinity;
-    if (open || w.year + 1 - last < COVERT_OPERATION_COOLDOWN) f.outgoing.blockedYears++;
+    const open = w.covert.operations.some(o => o.stage !== 'closed' && o.plan.preparedAt <= sampleYear);
+    const last = latestPrepared(w.covert.operations);
+    if (open || sampleYear - last < COVERT_OPERATION_COOLDOWN) f.outgoing.blockedYears++;
   }
 }
