@@ -63,7 +63,9 @@ function knownClients(ctx: SimCtx) {
 function providerFee(ctx: SimCtx, p: Person | undefined): number { return p && isCurrentFamily(ctx, p) ? 0 : MYSTIC_PROVIDER_FEE; }
 
 function willing(ctx: SimCtx, p: Person): boolean {
-  return ![...ctx.world.relationships.values()].some(r => r.from === p.id && r.to === ctx.world.playerHouse && r.grudges.some(g => g.severity >= 60));
+  // Imported future quarrels cannot make a reader unwilling before they originate.
+  return ![...ctx.world.relationships.values()].some(r => r.from === p.id && r.to === ctx.world.playerHouse
+    && r.grudges.some(g => g.severity >= 60 && g.originYear <= ctx.world.year));
 }
 
 export function quoteHire(ctx: SimCtx, order: MysticOrder) {
