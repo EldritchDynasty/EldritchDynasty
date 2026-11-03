@@ -47,22 +47,20 @@ function assertNever(value: never, what: string): never {
   throw new Error(`unhandled ${what}: ${JSON.stringify(value)}`);
 }
 
-/** What the family can hear. A closed union — `cueScore` ends in `assertNever`. */
-export type Cue =
-  /** The year moved. A page turns. */
-  | 'page'
-  /** Something was committed: a record written, a hand taken, a clause paid. */
-  | 'seal'
-  /** A question has arrived on the docket and the clock has stopped. */
-  | 'bell'
-  /** The outcome favoured the house. */
-  | 'boon'
-  /** The outcome cost the house. */
-  | 'blow'
-  /** The outcome did neither, and the house should still hear that it landed. */
-  | 'plain';
-
-export const CUES: Cue[] = ['page', 'seal', 'bell', 'boon', 'blow', 'plain'];
+/**
+ * Every cue in one closed list: it defines the type and the test cases.
+ * Adding one cannot bypass the score's audibility, peak and duration tests.
+ * `cueScore` remains exhaustive through `assertNever`.
+ */
+export const CUES = [
+  'page',  // The year moved. A page turns.
+  'seal',  // A record, hand or clause was committed.
+  'bell',  // A new question stopped the clock.
+  'boon',  // The outcome favoured the house.
+  'blow',  // The outcome cost the house.
+  'plain', // The outcome did neither, but still landed.
+] as const;
+export type Cue = (typeof CUES)[number];
 
 export type VoiceType = 'sine' | 'triangle' | 'square' | 'sawtooth' | 'noise';
 
