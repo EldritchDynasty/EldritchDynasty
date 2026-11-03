@@ -227,7 +227,9 @@ export function tellSecrets(ctx: SimCtx, rng: Rng): string[] {
   const told: string[] = [];
 
   for (const loose of w.looseSecrets) {
-    if (loose.told !== undefined) continue;
+    // A recovered disclosure dated in a future year is not yet testimony.
+    // Telling it now replaces that future marker with the present year.
+    if (loose.told !== undefined && loose.told <= w.year) continue;
     if (w.year - loose.since < TELL_AFTER_YEARS) continue;
     if (!rng.bool(TELL_CHANCE_PER_YEAR)) continue;
 
