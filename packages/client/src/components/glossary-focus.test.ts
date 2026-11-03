@@ -134,6 +134,57 @@ describe('in-place Standing disclosure', () => {
     }
   });
 
+  it('restores changing-passage focus through an open shadow root (#2650)', async () => {
+    const outer = document.createElement('div');
+    const shadow = outer.attachShadow({ mode: 'open' });
+    const host = document.createElement('div');
+    shadow.append(host);
+    document.body.append(outer);
+    const wrapper = mount(GlossaryText, {
+      attachTo: host, props: { text: 'Standing was questioned.', proseMode: 'original' },
+    });
+    try {
+      const primary = wrapper.get('button.glossary-term');
+      (primary.element as HTMLButtonElement).focus();
+      // The owning document exposes the shadow HOST, not the focused button.
+      expect(document.activeElement).toBe(outer);
+      expect(shadow.activeElement).toBe(primary.element);
+
+      // Removing a collapsed glossary button still needs a reachable
+      // programmatic focus destination, not a reset to the shadow host.
+      await wrapper.setProps({ text: 'A passage without a matching term.' });
+      await nextTick();
+      const passage = wrapper.get('.glossary-text');
+      expect(wrapper.find('button.glossary-term').exists()).toBe(false);
+      expect(shadow.activeElement).toBe(passage.element);
+
+      // Removing an expanded note must return focus to the primary button
+      // still present in the updated passage.
+      await wrapper.setProps({ text: 'Standing was restored.' });
+      await wrapper.get('button.glossary-term').trigger('click');
+      const note = wrapper.get('[role="note"]');
+      (note.element as HTMLElement).focus();
+      expect(shadow.activeElement).toBe(note.element);
+      await wrapper.setProps({ text: 'Standing was challenged.' });
+      await nextTick();
+      expect(wrapper.find('[role="note"]').exists()).toBe(false);
+      expect(shadow.activeElement).toBe(wrapper.get('button.glossary-term').element);
+
+      // Changing a different control's reading preference must not steal
+      // focus from that control back into an unrelated glossary passage.
+      const other = document.createElement('button');
+      shadow.append(other);
+      other.focus();
+      expect(shadow.activeElement).toBe(other);
+      await wrapper.setProps({ text: 'Standing recovered.' });
+      await nextTick();
+      expect(shadow.activeElement).toBe(other);
+    } finally {
+      wrapper.unmount();
+      outer.remove();
+    }
+  });
+
   it('opens by activation and returns focus on Escape without modifying prose', async () => {
     const text = 'Standing declined, then Standing recovered.';
     const wrapper = render(text);
