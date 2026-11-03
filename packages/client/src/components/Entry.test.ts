@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { mount } from '@vue/test-utils';
 import type { ChronicleEntry } from '@ed/core';
 import Entry from './Entry.vue';
-import * as authoredContent from '../lib/content';
 
 const makeEntry = (text: string | null, claimTexts: string[]): ChronicleEntry => ({
   id: 'chronicle-standing-evidence',
@@ -99,22 +98,8 @@ describe('Chronicle evidence glossary (#2089)', () => {
 
 describe('authored glossary terms beyond Standing (#2229)', () => {
   it('discloses the first available authored term and keeps later claim terms as plain evidence', async () => {
-    const bundle = authoredContent.loadBundle();
-    const example = bundle.glossary[0]!;
-    const additionalTerm = {
-      ...example,
-      id: 'ledger',
-      names: { original: 'Ledger', plainenglish: 'Recovered clauses' },
-      aliases: { original: ['Ledger'], plainenglish: ['Recovered clauses', 'Ledger'] },
-      definition: { original: 'the clauses the house has found.', plainenglish: 'The clauses the family has found.' },
-      related: [],
-    };
-    // Test the renderer with a second valid-shaped term without changing the
-    // authored YAML or competing for the exclusive content claim.
-    const source = vi.spyOn(authoredContent, 'loadBundle').mockReturnValue({
-      ...bundle,
-      glossary: [...bundle.glossary, additionalTerm],
-    });
+    // The actual shipped Ledger term now exercises this integration path.
+    // Avoid injecting a duplicate ID whose mock definition shadows content.
     const entry = makeEntry('Ledger unsettled the house. Standing remained.', [
       'Standing was questioned.',
       'Ledger was found again.',
@@ -126,7 +111,7 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       const button = wrapper.get('.glossary-term');
       expect(button.text()).toBe('Ledger');
       await button.trigger('click');
-      expect(wrapper.get('.glossary-definition').text()).toBe('The clauses the family has found.');
+      expect(wrapper.get('.glossary-definition').text()).toBe('The agreement that binds the family. Its terms become known as you uncover them.');
       expect(wrapper.find('.claims .glossary-term').exists()).toBe(false);
       (button.element as HTMLButtonElement).focus();
       await button.trigger('keydown', { key: 'Escape' });
@@ -137,7 +122,6 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       expect(entry).toEqual(before);
     } finally {
       wrapper.unmount();
-      source.mockRestore();
     }
   });
 });
