@@ -331,6 +331,12 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
     '<svg xmlns="http://www.w3.org/2000/svg" role="img"'
       + ' width="' + PLATE.width + '" height="' + height + '"'
       + ' viewBox="0 0 ' + PLATE.width + ' ' + height + '">',
+    // Root accessibility metadata must precede all painted SVG children (#2609).
+    // Keep the whole nameless code in the description despite visible wrapping.
+    `<title>${plateXml(`${house} · ${subtitle}`)}</title>`,
+    ...(foot?.code.length
+      ? [`<desc>${plateXml(`${foot.label}. Share code: ${foot.code.join('')}`)}</desc>`]
+      : []),
     '<rect width="' + PLATE.width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
     '<text x="' + PLATE.pad + '" y="64" fill="' + PLATE.ink
       + '" font-family="' + font + '" font-size="30" font-weight="500"' + titleFit + '>' + plateXml(house) + '</text>',
@@ -339,10 +345,6 @@ export function plateSvg(rows: readonly PlateRow[], house: string, subtitle: str
     '<line x1="' + PLATE.pad + '" y1="106" x2="' + (PLATE.width - PLATE.pad)
       + '" y2="106" stroke="' + PLATE.rule + '"/>',
   ];
-  // Standalone SVG readers need a continuous code: the visible foot may wrap
-  // across several text elements to fit the image column (#1995).
-  parts.push(`<title>${plateXml(`${house} · ${subtitle}`)}</title>`);
-  if (foot?.code.length) parts.push(`<desc>${plateXml(`${foot.label}. Share code: ${foot.code.join('')}`)}</desc>`);
   let y = PLATE.head;
   for (const row of rows) {
     y += row.size * 1.2;
@@ -622,12 +624,12 @@ export function afterimageSvg(model: AfterimageModel, layout: AfterimageLayout):
     '<svg xmlns="http://www.w3.org/2000/svg" role="img"'
       + ' width="' + width + '" height="' + height + '"'
       + ' viewBox="0 0 ' + width + ' ' + height + '">',
+    // Expose the accessible name and unwrapped anonymous code before artwork;
+    // the measured, visible rows remain exactly as in the PNG (#1995, #2609).
+    `<title>${plateXml(`${model.houseName} · ${model.endingTitle}`)}</title>`,
+    ...(model.share ? [`<desc>${plateXml(`${model.share.heading}: ${model.share.code}`)}</desc>`] : []),
     '<rect width="' + width + '" height="' + height + '" fill="' + PLATE.ground + '"/>',
   ];
-  // Provide the unwrapped nameless code to assistive readers of the SVG file;
-  // the measured, visible code rows remain exactly as drawn in PNG (#1995).
-  parts.push(`<title>${plateXml(`${model.houseName} · ${model.endingTitle}`)}</title>`);
-  if (model.share) parts.push(`<desc>${plateXml(`${model.share.heading}: ${model.share.code}`)}</desc>`);
   let y = 64;
   for (const row of layout.rows) {
     if (row.rule) {
