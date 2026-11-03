@@ -120,10 +120,16 @@ function answerLandChoice(ctx: ReturnType<typeof bootstrap>, pending: PendingCho
 }
 
 function acreage(ctx: ReturnType<typeof bootstrap>): number {
-  return heldParcels(ctx).reduce((sum, state) => {
-    const def = state.defId ? ctx.content.parcel(state.defId) : undefined;
-    return sum + (def?.acres ?? 0);
-  }, 0);
+  // Called before and after every simulated year for every seed. Iterating the
+  // map avoids materializing a held-parcel array and a reduce callback twice
+  // per year, while using the same heldSince <= year rule as heldParcels.
+  let acres = 0;
+  for (const state of ctx.world.parcels.values()) {
+    if (state.heldSince <= ctx.world.year && state.defId) {
+      acres += ctx.content.parcel(state.defId)?.acres ?? 0;
+    }
+  }
+  return acres;
 }
 
 function portrait(ctx: ReturnType<typeof bootstrap>, latestChange: number): HoldingPortrait {
