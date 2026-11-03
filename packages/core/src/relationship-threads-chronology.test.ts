@@ -4,7 +4,7 @@ import { activeRelationshipThreadHouses, addGrudge, bootstrap, externalThreadFor
 
 const bundle = loadContent();
 
-describe('external relationship threads respect Chronicle page dates (#2687)', () => {
+describe('external relationship threads respect present-year evidence (#2687, #2723)', () => {
   it('does not name a grudge from future testimony before the page exists', () => {
     const ctx = bootstrap(bundle, 268701, 1042);
     const us = place(ctx, { sex: 'male', age: 40, name: 'One of ours' });
@@ -46,6 +46,7 @@ describe('external relationship threads respect Chronicle page dates (#2687)', (
     expect(read().detail).toContain('The Accusation Not Yet Written');
     expect(read().year).toBe(1052);
   });
+
   it('does not activate an external house from a grudge whose origin is still in the future', () => {
     const ctx = bootstrap(bundle, 272301, 1042);
     const us = place(ctx, { sex: 'male', age: 40, name: 'A house member' });
@@ -73,10 +74,10 @@ describe('external relationship threads respect Chronicle page dates (#2687)', (
     const grievances = () => externalThreadFor(ctx, 'house_marrow')!.pressures.filter((fact) => fact.kind === 'grudge');
     expect(grievances().map((fact) => fact.ref)).toEqual([present.id]);
     expect(grievances()[0]?.year).toBe(1042);
+    expect(future.originYear).toBe(1052);
 
     ctx.world.year = 1052;
     expect(grievances().map((fact) => fact.ref)).toEqual([future.id, present.id]);
     expect(grievances().map((fact) => fact.year)).toEqual([1052, 1042]);
   });
-
 });
