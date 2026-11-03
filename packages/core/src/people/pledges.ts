@@ -15,7 +15,7 @@ export const PLEDGE_COLLECTION_AGE = 18;
 
 /** A reservation blocks every ordinary marriage door, including a direct wedding. */
 export function marriagePledge(ctx: SimCtx, person: Person): MarriagePromise | undefined {
-  return ctx.world.marriagePromises.find((promise) => promise.girl === person.id);
+  return ctx.world.marriagePromises.find((promise) => promise.girl === person.id && promise.year <= ctx.world.year);
 }
 
 function claimedGranddaughter(ctx: SimCtx, girl: Person, promise: MarriagePromise): boolean {
@@ -76,6 +76,9 @@ export function tickMarriagePledges(ctx: SimCtx, rng: Rng): void {
   const w = ctx.world;
   if (!w.marriagePromises.length) return;
   for (const promise of [...w.marriagePromises]) {
+    // A future-dated saved promise has not been signed, so it cannot reserve,
+    // collect, or bill a granddaughter before its own year.
+    if (promise.year > w.year) continue;
     if (w.year >= promise.year + PLEDGE_TERM) {
       breakPledge(ctx, promise, msg(ctx, 'auction.pledge_expired', 'Forty years had passed without the marriage.'));
       w.marriagePromises = w.marriagePromises.filter((p) => p !== promise);
