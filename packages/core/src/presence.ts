@@ -27,14 +27,27 @@ export function homeHall(ctx: SimCtx, person: Person): string | undefined {
     ? branchOf(ctx.world, person, ctx.world.year) : `foreign:${house}`;
 }
 
+/** Restored future operations cannot reserve people or establish attendance yet. */
+function activeCovert(ctx: SimCtx, operation: string) {
+  return ctx.world.covert.operations.find(o => o.plan.id === operation
+    && o.stage !== 'closed' && o.plan.preparedAt <= ctx.world.year);
+}
+
+/** The deployment is a present commitment only after its recorded beginning. */
+function activeMuster(ctx: SimCtx) {
+  return ctx.world.muster.commitments.filter(c =>
+    c.status === 'in_the_field' && c.began <= ctx.world.year);
+}
+
 export function covertParticipants(ctx: SimCtx, operation: string): string[] {
-  const o = ctx.world.covert.operations.find(o => o.plan.id === operation && o.stage !== 'closed');
+  const o = activeCovert(ctx, operation);
   return o ? [...new Set([o.plan.operative, ...o.crew, ...ctx.world.mystic.assignments
     .filter(a => a.target.kind === 'covert' && a.target.operation === operation).map(a => a.practitioner)])] : [];
 }
 
 export function covertReservation(ctx: SimCtx, person: string): string | undefined {
   return ctx.world.covert.operations.find(o => o.stage !== 'closed'
+    && o.plan.preparedAt <= ctx.world.year
     && covertParticipants(ctx, o.plan.id).includes(person))?.plan.id;
 }
 
@@ -68,8 +81,7 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
   switch (site.kind) {
     case 'service': return ctx.world.mystic.contracts.some(c => c.id === site.contract && c.stage !== 'closed') ? { service: site.contract } : undefined;
     case 'book': return w.library.has(site.book) ? { hall: MAIN_BRANCH } : undefined;
-    case 'covert': return w.covert.operations.some(o => o.plan.id === site.operation && o.stage !== 'closed')
-      ? { operation: site.operation } : undefined;
+    case 'covert': return activeCovert(ctx, site.operation) ? { operation: site.operation } : undefined;
     case 'person': {
       const p = w.people.get(site.person);
       const hall = p && p.status === 'alive' ? homeHall(ctx, p) : undefined;
@@ -83,7 +95,7 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
       return hall ? { hall } : undefined;
     }
     case 'muster': {
-      const c = w.muster.commitments.find(c => c.id === site.commitment && c.status === 'in_the_field');
+      const c = activeMuster(ctx).find(c => c.id === site.commitment);
       return c ? { commitment: c.id } : undefined;
     }
     case 'party': case 'elsewhere': return undefined;
@@ -93,14 +105,16 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
 
 /** Named officers and assigned specialists, including those travelling or recovering. */
 export function deployedPeople(ctx: SimCtx): Set<string> {
-  const active = ctx.world.muster.commitments.filter(c => c.status === 'in_the_field');
+  const active = activeMuster(ctx);
   const commitments = new Set(active.map(c => c.id));
   return new Set([
     ...active.flatMap(c => c.officers),
     // Travel, unpaid service and recovery do not teleport somebody home.
     ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
       && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
-    ...ctx.world.covert.operations.filter(o => o.stage !== 'closed').flatMap(o => covertParticipants(ctx, o.plan.id)),
+    ...ctx.world.covert.operations.filter(o =>
+      o.stage !== 'closed' && o.plan.preparedAt <= ctx.world.year)
+      .flatMap(o => covertParticipants(ctx, o.plan.id)),
     ...ctx.world.mystic.contracts.filter(c => c.stage !== 'closed' && (c.kind === 'commission' || c.stage !== 'working')).map(c => c.practitioner),
   ]);
 }
@@ -149,7 +163,7 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
     case 'book': return w.library.has(site.book) && w.library.get(site.book)?.restoresAt === undefined
       ? { ...resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}), site } : { site, people: [] };
     case 'covert': {
-      const o = w.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
+      const o = activeCovert(ctx, site.operation);
       if (!o) return { site, people: [] };
       const party = covertParticipants(ctx, o.plan.id);
       // A preparing or returning expedition is away, but has not become a
@@ -168,7 +182,7 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
     case 'party': case 'elsewhere': case 'parcel': return { site, people: distinct(named(site.slots)) };
     case 'muster': {
       if (site.commitment !== undefined && !w.muster.commitments.some(c =>
-        c.id === site.commitment && c.status === 'in_the_field')) return { site, people: [] };
+        c.id === site.commitment && c.status === 'in_the_field' && c.began <= w.year)) return { site, people: [] };
       return { site, people: distinct([...deployed]) };
     }
     case 'hall': {
