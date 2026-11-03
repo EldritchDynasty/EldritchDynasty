@@ -766,6 +766,33 @@ describe('translated ascension Chronicle pages (#768)', () => {
     expect(plain.ctx.world.chronicle.filter((e) => e.id === plain.entry.id)).toHaveLength(1);
   });
 
+  it('does not let future Ledger-wait testimony suppress a current account (#2708)', () => {
+    const { ctx, person, entry } = ledgerWait('original');
+    const year = ctx.world.year;
+    const pageId = `ledger_wait:${person.id}`;
+    const index = ctx.world.chronicle.indexOf(entry);
+    expect(index).toBeGreaterThanOrEqual(0);
+
+    // A restored/inconsistent Chronicle can contain this page with a future
+    // date. It is not testimony the house has yet given in the present year.
+    ctx.world.chronicle.splice(index, 1, {
+      ...entry, year: year + 1, text: 'An account from next year.',
+    });
+
+    tickAscension(ctx);
+    const thisYear = () => ctx.world.chronicle.filter((page) =>
+      page.id === pageId && page.year === year);
+    expect(thisYear()).toHaveLength(1);
+    expect(thisYear()[0]!.text).toContain('The One Who Waited stopped growing older');
+
+    // Annual readings still write the current-year wait only once, and do not
+    // erase or rewrite the imported future entry.
+    tickAscension(ctx);
+    expect(thisYear()).toHaveLength(1);
+    expect(ctx.world.chronicle.filter((page) =>
+      page.id === pageId && page.year === year + 1)).toHaveLength(1);
+  });
+
   function rungPage(mode: 'original' | 'plainenglish') {
     const ctx = prepare(mode, 8088);
     const him = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
