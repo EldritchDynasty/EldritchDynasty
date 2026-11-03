@@ -114,7 +114,7 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
     return { ok: false, reason: wrongBearerReason() };
   }
 
-  if (def.use.spends === 'cooldown' && state.lastUsedYear !== undefined) {
+  if (def.use.spends === 'cooldown' && state.lastUsedYear !== undefined && state.lastUsedYear <= ctx.world.year) {
     const ready = state.lastUsedYear + def.use.cooldownYears;
     if (ctx.world.year < ready) {
       return {
