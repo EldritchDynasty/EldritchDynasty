@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { answeredBy, causeOf } from './cause.js';
+import { addGrudge } from './people/relationships.js';
 import { testWorld } from './testing.js';
 
 const content = loadContent();
@@ -104,4 +105,48 @@ describe('Chronicle cause provenance for repeated authored Discrepancies (#1990)
     expect(ctx.world.chronicle).toEqual(before);
   });
 
+});
+
+
+describe('Chronicle cause chronology (#2710)', () => {
+  it('does not read an explicit cause dated after its consequence, even once that year arrives', () => {
+    const ctx = testWorld(content, 2710, 1042);
+    ctx.world.chronicle.push(
+      {
+        id: 'early_consequence', year: 1042, weight: 'line',
+        text: 'A consequence written before its cause.', named: false,
+        cause: { year: 1048, page: 'late_source' },
+      },
+      {
+        id: 'late_source', year: 1048, weight: 'line',
+        text: 'A later source.', named: false,
+      },
+    );
+    const before = structuredClone(ctx.world.chronicle);
+
+    expect(causeOf(ctx, 'early_consequence')).toBeUndefined();
+    expect(answeredBy(ctx, 'late_source')).toEqual([]);
+    ctx.world.year = 1048;
+    expect(causeOf(ctx, 'early_consequence')).toBeUndefined();
+    expect(answeredBy(ctx, 'late_source')).toEqual([]);
+    expect(ctx.world.chronicle).toEqual(before);
+  });
+
+  it('does not surface a future grudge origin until its recorded year', () => {
+    const ctx = testWorld(content, 2711, 1042);
+    ctx.world.chronicle.push({
+      id: 'late_quarrel', year: 1048, weight: 'paragraph',
+      text: 'The quarrel was written in a later year.', named: false,
+    });
+    const grudge = addGrudge(ctx, 'a_rival_house', ctx.world.playerHouse,
+      { severity: 60, inheritance: 'house_wide' }, 'unrecorded', 'late_quarrel');
+    grudge.originYear = 1048; // A recovered/imported entry dated after the restored clock.
+    const before = structuredClone([...ctx.world.relationships.values()]);
+
+    expect(causeOf(ctx, grudge.id)).toBeUndefined();
+    ctx.world.year = 1048;
+    expect(causeOf(ctx, grudge.id))
+      .toEqual({ year: 1048, page: 'late_quarrel', blank: false });
+    expect([...ctx.world.relationships.values()]).toEqual(before);
+  });
 });
