@@ -21,7 +21,8 @@ export function soleBindings(fill: SlotFill, slots: readonly string[]): Record<s
 }
 
 export function startArc(arc: ArcDef, ctx: SimCtx, rng: Rng, seedBindings: SlotFill = {}): ArcInstance | undefined {
-  const existing = [...ctx.world.arcs.values()].filter((a) => a.arc === arc.id && a.status === 'active');
+  const existing = [...ctx.world.arcs.values()].filter((a) =>
+    a.arc === arc.id && a.status === 'active' && a.startedYear <= ctx.world.year);
   if (existing.length >= arc.maxConcurrentInstances) return undefined;
 
   // #133: do not introduce a story after the point from which even its
