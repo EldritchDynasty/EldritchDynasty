@@ -111,7 +111,12 @@ describe('authored glossary terms beyond Standing (#2229)', () => {
       const button = wrapper.get('.glossary-term');
       expect(button.text()).toBe('Ledger');
       await button.trigger('click');
-      expect(wrapper.get('.glossary-definition').text()).toBe('The agreement that binds the family. Its terms become known as you uncover them.');
+      // The first text node is the definition; related-term controls follow inside the note.
+      // Check both independently so a real related link does not fail the definition assertion.
+      expect(wrapper.get('.glossary-definition').element.firstChild?.textContent?.trim()).toBe(
+        'The agreement that binds the family. Its terms become known as you uncover them.',
+      );
+      expect(wrapper.get('.glossary-related button').text()).toBe('Contract term');
       expect(wrapper.find('.claims .glossary-term').exists()).toBe(false);
       (button.element as HTMLButtonElement).focus();
       await button.trigger('keydown', { key: 'Escape' });
