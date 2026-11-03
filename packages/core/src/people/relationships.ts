@@ -186,6 +186,8 @@ export function tickRelationships(ctx: SimCtx): void {
     if (Math.abs(rel.sentiment) < 1) rel.sentiment = 0;
 
     rel.grudges = rel.grudges.filter((g) => {
+      // A recovered future quarrel has not begun; do not age it early.
+      if (g.originYear > w.year) return true;
       g.severity -= g.decayPerYear;
       return g.severity > 1;
     });
@@ -195,9 +197,15 @@ export function tickRelationships(ctx: SimCtx): void {
       continue;
     }
 
+    // Only originated grudges can supply an inheritance policy. Keep an edge
+    // holding solely future quarrels until they can begin, even if its named
+    // holder has died in the recovered present.
+    const presentGrudges = rel.grudges.filter((g) => g.originYear <= w.year);
+    if (!presentGrudges.length && rel.grudges.length) continue;
+
     // Re-point either end that has died, per the grudge's own policy. A
-    // relationship carrying grudges with different policies keeps the widest.
-    const policy = rel.grudges.reduce<Grudge['inheritance']>(
+    // relationship carrying present grudges with different policies keeps the widest.
+    const policy = presentGrudges.reduce<Grudge['inheritance']>(
       (widest, g) => (RANK[g.inheritance] > RANK[widest] ? g.inheritance : widest),
       'none',
     );
