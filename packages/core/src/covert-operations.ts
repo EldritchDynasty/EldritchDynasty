@@ -23,7 +23,8 @@ const account = (ctx: SimCtx, people: string[], text: string) => ctx.world.chron
 
 function known(ctx: SimCtx, p: Person): boolean {
   return p.castSlots.includes('rival') || p.castSlots.includes('the_match')
-    || ctx.world.chronicle.some(c => c.people?.includes(p.id))
+    // A future-dated imported page cannot reveal a person before that year.
+    || ctx.world.chronicle.some(c => c.year <= ctx.world.year && c.people?.includes(p.id))
     || ctx.world.covert.threats.some(t => t.observation?.identifiedOperative === p.id);
 }
 
