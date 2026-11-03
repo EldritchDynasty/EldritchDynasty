@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { loadBundle } from '@ed/content';
 import { newGame } from '@ed/core';
 import { ACCESSIBILITY_STORAGE_KEY } from '../../packages/client/src/lib/accessibility';
@@ -59,6 +59,22 @@ const heard = (page: Page) => page.evaluate(() => {
   const h = (window as unknown as { __heard: { made: number; started: number; context: AudioContext | null } }).__heard;
   return { made: h.made, started: h.started, state: h.context?.state ?? 'none' } satisfies Heard;
 });
+
+/**
+ * The native slider owns its keyboard increment. Sound's Chromium tests verify
+ * that one ArrowRight can wake/restore the REAL engine, not a hard-coded 10%
+ * step: Reading settings now allows finer levels (#2641).
+ */
+async function raiseVolumeOneStep(level: Locator): Promise<number> {
+  const stepPercent = Number(await level.getAttribute('step'));
+  expect(Number.isInteger(stepPercent)).toBe(true);
+  expect(stepPercent).toBeGreaterThan(0);
+  expect(stepPercent).toBeLessThanOrEqual(100);
+  await level.press('ArrowRight');
+  await expect(level).toHaveValue(String(stepPercent));
+  await expect(level).toHaveAttribute('aria-valuetext', `${stepPercent}%`);
+  return stepPercent;
+}
 
 test('the house is heard after the first touch, and the switch in Reading settings outlives a reload', async ({ page }) => {
   const errors = await open(page, { showEverythingFromStart: true });
@@ -176,8 +192,7 @@ test('zero volume keeps Chromium silent until the reader raises it (#1986)', asy
   await expect(page.getByRole('checkbox', { name: 'Sound', exact: true })).toBeChecked();
   const level = page.getByRole('slider', { name: 'Volume' });
   await expect(level).toHaveValue('0');
-  await level.press('ArrowRight');
-  await expect(level).toHaveValue('10');
+  const stepPercent = await raiseVolumeOneStep(level);
 
   // No second navigation or new world action is needed. The changed reading
   // preference wakes the present Age's drone on the existing board.
@@ -186,7 +201,7 @@ test('zero volume keeps Chromium silent until the reader raises it (#1986)', asy
   await expect.poll(async () => (await heard(page)).started).toBeGreaterThanOrEqual(2);
   const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), ACCESSIBILITY_STORAGE_KEY);
   expect(stored.sound).toBe(true);
-  expect(stored.soundVolume).toBe(0.1);
+  expect(stored.soundVolume).toBe(stepPercent / 100);
   expect(errors).toEqual([]);
 });
 
@@ -223,19 +238,18 @@ test('a running sound bed mutes at zero and restores the same audio context (#23
   expect((await heard(page)).made).toBe(first.made);
 
   // No second signing or reload is needed to hear the current Age again.
-  await level.press('ArrowRight');
-  await expect(level).toHaveValue('10');
+  const stepPercent = await raiseVolumeOneStep(level);
   await expect.poll(async () => (await heard(page)).started).toBeGreaterThan(quiet.started);
   expect((await heard(page)).made, 'restoring volume opened another context').toBe(first.made);
   const stored = await page.evaluate(key => JSON.parse(localStorage.getItem(key)!), ACCESSIBILITY_STORAGE_KEY);
   expect(stored.sound).toBe(true);
-  expect(stored.soundVolume).toBe(0.1);
+  expect(stored.soundVolume).toBe(stepPercent / 100);
 
   // The restored preference, not the old default, should survive relaunch.
   await page.reload();
   await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
   await expect.poll(async () => (await heard(page)).started).toBeGreaterThanOrEqual(2);
   await page.getByRole('button', { name: 'Reading, marks and keys' }).click();
-  await expect(page.getByRole('slider', { name: 'Volume' })).toHaveValue('10');
+  await expect(page.getByRole('slider', { name: 'Volume' })).toHaveValue(String(stepPercent));
   expect(errors).toEqual([]);
 });
