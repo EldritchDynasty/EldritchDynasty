@@ -384,10 +384,19 @@ async function retryLibrary(): Promise<void> {
 
 /** A Library confirmation replaces the button that had keyboard focus. Return
  * to that button, or an enabled Start action if deletion removed its row. */
-function focusAfterLibraryTransition(kind: 'clear' | 'remove', id?: string): void {
+function focusAfterLibraryTransition(kind: 'clear' | 'remove', id?: string, preserveMovedFocus = false): void {
   void nextTick(() => {
     const root = startRoot.value;
     if (!root) return;
+    // A slow native Library deletion must not reclaim focus after the reader
+    // moved to another live control. Only replace focus that fell back to the
+    // document/root because the confirmation or deleted row disappeared.
+    // Use the root's document for embedded host windows, not global document.
+    if (preserveMovedFocus) {
+      const doc = root.ownerDocument;
+      const active = doc.activeElement;
+      if (active?.isConnected && active !== doc.body && active !== doc.documentElement && active !== root) return;
+    }
 
     if (kind === 'clear') {
       const target = confirmingClearLibrary.value
@@ -443,7 +452,7 @@ async function clearLibrary(): Promise<void> {
     libraryError.value = 'The Library could not be cleared. Your saved houses are still here. Try again.';
   } finally {
     clearingLibrary.value = false;
-    focusAfterLibraryTransition('clear');
+    focusAfterLibraryTransition('clear', undefined, true);
   }
 }
 
@@ -476,7 +485,7 @@ async function removeLibraryRun(id: string): Promise<void> {
     libraryError.value = 'That house could not be removed from the Library. Try again.';
   } finally {
     removingRun.value = null;
-    focusAfterLibraryTransition('remove', id);
+    focusAfterLibraryTransition('remove', id, true);
   }
 }
 
