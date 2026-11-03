@@ -23,13 +23,15 @@ watch([() => props.text, () => props.proseMode], async () => {
   // Removing an expanded related note removes its focused button as well.
   // Only move focus when it was inside the disappearing disclosure: changing
   // reading preferences elsewhere must never steal focus back to this passage.
-  const primary = root.value?.querySelector<HTMLButtonElement>('button.glossary-term');
+  const host = root.value;
+  const primary = host?.querySelector<HTMLButtonElement>('button.glossary-term');
   // A focused primary button can also disappear when the next passage has
-  // no glossary alias, even when no related disclosure was open. Preserve
-  // focus inside this passage, but never pull it back from another control.
-  const restoreFocus = typeof document !== 'undefined'
-    && !!root.value?.contains(document.activeElement)
-    && (chain.value.length > 0 || document.activeElement === primary);
+  // no glossary alias, even when no related disclosure was open. Focus may
+  // belong to an embedded document: the outer document's activeElement is
+  // then its iframe, never the button inside this passage.
+  const focused = host?.ownerDocument.activeElement;
+  const restoreFocus = !!host && !!focused && host.contains(focused)
+    && (chain.value.length > 0 || focused === primary);
   chain.value = [];
   openers.value = [];
   if (!restoreFocus) return;
@@ -37,7 +39,6 @@ watch([() => props.text, () => props.proseMode], async () => {
   await nextTick();
   // A changed passage may lose its only glossary alias. Keep keyboard focus
   // with the surviving text; it is programmatic, never an extra Tab stop.
-  const host = root.value;
   if (!host?.isConnected) return;
   (host.querySelector<HTMLButtonElement>('button.glossary-term') ?? host).focus();
 }, { flush: 'sync' });

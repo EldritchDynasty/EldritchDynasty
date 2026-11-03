@@ -89,6 +89,51 @@ describe('in-place Standing disclosure', () => {
     expect(document.activeElement).toBe(wrapper.get('button').element);
   });
 
+  it('restores focus inside the embedded document that owns a changing passage', async () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const embedded = iframe.contentDocument!;
+    const host = embedded.createElement('div');
+    embedded.body.appendChild(host);
+    const wrapper = mount(GlossaryText, {
+      attachTo: host, props: { text: 'Standing was questioned.', proseMode: 'original' },
+    });
+    try {
+      const first = wrapper.get('button.glossary-term');
+      (first.element as HTMLButtonElement).focus();
+      expect(embedded.activeElement).toBe(first.element);
+      // The outer document sees only the iframe, not its focused descendant.
+      expect(document.activeElement).not.toBe(first.element);
+
+      await wrapper.setProps({ text: 'A passage without a glossary term.' });
+      await nextTick();
+      expect(wrapper.find('button.glossary-term').exists()).toBe(false);
+      expect(embedded.activeElement).toBe(wrapper.get('.glossary-text').element);
+
+      await wrapper.setProps({ text: 'Standing was questioned.' });
+      const primary = wrapper.get('button.glossary-term');
+      await primary.trigger('click');
+      const note = wrapper.get('[role="note"]');
+      (note.element as HTMLElement).focus();
+      expect(embedded.activeElement).toBe(note.element);
+      await wrapper.setProps({ text: 'Standing was challenged.' });
+      await nextTick();
+      expect(wrapper.find('[role="note"]').exists()).toBe(false);
+      expect(embedded.activeElement).toBe(wrapper.get('button.glossary-term').element);
+
+      // Changing another control should never pull focus back into this passage.
+      const other = embedded.createElement('button');
+      embedded.body.appendChild(other);
+      other.focus();
+      await wrapper.setProps({ text: 'Standing was restored.' });
+      await nextTick();
+      expect(embedded.activeElement).toBe(other);
+    } finally {
+      wrapper.unmount();
+      iframe.remove();
+    }
+  });
+
   it('opens by activation and returns focus on Escape without modifying prose', async () => {
     const text = 'Standing declined, then Standing recovered.';
     const wrapper = render(text);
