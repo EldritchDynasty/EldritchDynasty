@@ -110,7 +110,15 @@ const CONTROL_ROLES: ReadonlySet<string> = new Set([
  * App and Docket must leave keyboard input there instead of advancing time
  * or taking a numbered choice. */
 export function isGlossaryFocus(el: Element | null): boolean {
-  return el !== null && innermostActiveElement(el).closest('.glossary-text') !== null;
+  if (!el) return false;
+  let active: Element | null = innermostActiveElement(el);
+  while (active) {
+    if (active.closest('.glossary-text')) return true;
+    // closest() cannot cross a ShadowRoot. A glossary may wrap a custom
+    // focusable widget: follow its open host before letting the game use keys.
+    active = openShadowHost(active.getRootNode?.());
+  }
+  return false;
 }
 
 /** Open shadow hosts belong to their owning document's DOM realm. A global
