@@ -49,7 +49,8 @@ function describedCause(book: BookIndex, cause: { year: number; page?: string })
 function grudgeCause(ctx: SimCtx, book: BookIndex, reference: string): ChronicleCause | undefined {
   for (const relationship of ctx.world.relationships.values()) {
     const grudge = relationship.grudges.find((candidate) => candidate.id === reference);
-    if (!grudge) continue;
+    // Restored future history cannot supply an origin before that year.
+    if (!grudge || grudge.originYear > ctx.world.year) continue;
     return describedCause(book, {
       year: grudge.originYear,
       ...(grudge.originPage ? { page: grudge.originPage } : {}),
@@ -60,7 +61,11 @@ function grudgeCause(ctx: SimCtx, book: BookIndex, reference: string): Chronicle
 
 function resolve(ctx: SimCtx, book: BookIndex, reference: string): ChronicleCause | undefined {
   const entry = book.byId.get(reference);
-  if (entry?.cause) return describedCause(book, entry.cause);
+  if (entry?.cause) {
+    // A cause must precede its consequence, and neither can read a future act.
+    if (entry.cause.year > entry.year || entry.cause.year > ctx.world.year) return undefined;
+    return describedCause(book, entry.cause);
+  }
 
   // A proved or buried Discrepancy can link back to its Chronicle page only
   // if exactly one embellished page has that authored id. Repeated firings
