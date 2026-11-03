@@ -24,6 +24,8 @@ function indexBook(ctx: SimCtx): BookIndex {
   const byId = new Map<string, ChronicleEntry>();
   const embellished = new Map<string, ChronicleEntry | null>();
   for (const entry of ctx.world.chronicle) {
+    // Imported/recovered future pages are not part of the present evidence.
+    if (entry.year > ctx.world.year) continue;
     if (entry.id) byId.set(entry.id, entry);
     if (entry.discrepancyId && entry.record === 'embellish') {
       // The authored id can recur for different people or even in one year.
@@ -98,7 +100,7 @@ export function answeredBy(ctx: SimCtx, entryId: string): number[] {
 
   const years = new Set<number>();
   for (const entry of ctx.world.chronicle) {
-    if (!entry.id || entry.id === entryId || entry.year < source.year) continue;
+    if (!entry.id || entry.id === entryId || entry.year > ctx.world.year || entry.year < source.year) continue;
     if (resolve(ctx, book, entry.id)?.page === entryId) years.add(entry.year);
   }
   return [...years].sort((a, b) => a - b);
