@@ -125,7 +125,7 @@ export function noteDemigodAttainment(ctx: SimCtx, p: Person): boolean {
     && standing.blocker === 'clauses'
   ) {
     const page = `ledger_wait:${p.id}`;
-    if (!ctx.world.chronicle.some((entry) => entry.id === page)) {
+    if (!ctx.world.chronicle.some((entry) => entry.id === page && entry.year <= ctx.world.year)) {
       ctx.world.chronicle.push({
         id: page,
         year: ctx.world.year,
