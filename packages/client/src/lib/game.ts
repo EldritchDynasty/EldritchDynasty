@@ -775,7 +775,7 @@ export function createGame(
       try {
         const saved = keptSave ?? await readKept();
         return selection === runSelectionRevision && saveMatchesSlot(AUTOSAVE, saved)
-          ? loadSave(saved, true) : false;
+          ? loadSave(saved) : false;
       } catch {
         return false;
       }
@@ -1240,7 +1240,7 @@ export function createGame(
     );
   }
 
-  function loadSave(save: unknown | null, discardAutosave = false): boolean {
+  function loadSave(save: unknown | null): boolean {
     if (!save) return false;
     try {
       start(resumeGame(save, source, {
@@ -1249,10 +1249,10 @@ export function createGame(
       }));
       return true;
     } catch {
-      // A format that cannot be read is not a run we can safely continue. A
-      // named slot stays available for export or a later migration; only the
-      // rolling slot is cleared when its own resume attempt failed.
-      if (discardAutosave) forget();
+      // A rejected or incompatible save is still the player's data. Keep its
+      // original host slot available for Copy out and a later retry, whether
+      // it was the rolling autosave or a named snapshot (#2616, #1207).
+      // Only explicit Restart is allowed to discard that slot.
       return false;
     }
   }
