@@ -68,6 +68,8 @@ export function grantHeirloom(ctx: SimCtx, id: string): HeirloomState | undefine
  * not an error, it is a no-op.
  */
 export function transferHeirloom(ctx: SimCtx, id: string): boolean {
+  const state = ctx.world.heirlooms.get(id);
+  if (!state || state.acquiredYear > ctx.world.year) return false;
   return ctx.world.heirlooms.delete(id);
 }
 
