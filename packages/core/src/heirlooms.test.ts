@@ -108,7 +108,7 @@ describe('applying an heirloom is generic', () => {
     phantom.spent = true;
     phantom.usesLeft = 0;
     phantom.lastUsedYear = ctx.world.year + 2;
-    phantom.usedOn.push(bearer.id);
+    phantom.usedOn.push({ person: bearer.id, year: ctx.world.year + 2 });
 
     expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(false);
     expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
