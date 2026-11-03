@@ -336,7 +336,12 @@ export function libraryRunOf(ctx: SimCtx): LibraryRun | undefined {
   const w = ctx.world;
   if (!w.ending) return undefined;
 
+  // A completed house cannot pass on a page written after its final term,
+  // even if an imported Chronicle retained future testimony. Use the recorded
+  // ending's year, not the current display year, as the archive's horizon.
+  const termYear = w.ending.year;
   const entries = w.chronicle
+    .filter((entry) => entry.year <= termYear)
     .map((entry, index) => entryOf(ctx, entry, index))
     .filter((entry): entry is LibraryEntry => entry !== undefined)
     .sort((a, b) => memoryScore(b) - memoryScore(a) || b.year - a.year || a.id.localeCompare(b.id))
