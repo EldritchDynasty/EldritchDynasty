@@ -144,6 +144,37 @@ describe('buyParcel', () => {
     expect(buyParcel(ctx, 'sowerhay').ok).toBe(false);
   });
 
+  it('refuses a stale market listing for land already held, without spending or duplication', () => {
+    const ctx = testWorld(bundle);
+    const before = { treasury: ctx.world.treasury, income: landIncome(ctx),
+      parcels: ctx.world.parcels.size, counter: ctx.world.counters.parcel,
+      pages: ctx.world.chronicle.length };
+    expect(heldParcels(ctx).filter((state) => state.defId === 'hallowfield')).toHaveLength(1);
+    ctx.world.landMarket.lots.push({
+      parcel: 'hallowfield', price: 84, closesYear: ctx.world.year + 3, reason: 'fair',
+    });
+
+    expect(buyParcel(ctx, 'hallowfield').ok).toBe(false);
+    expect(ctx.world.treasury).toBe(before.treasury);
+    expect(landIncome(ctx)).toBe(before.income);
+    expect(ctx.world.parcels.size).toBe(before.parcels);
+    expect(ctx.world.counters.parcel).toBe(before.counter);
+    expect(ctx.world.chronicle).toHaveLength(before.pages);
+    expect(heldParcels(ctx).filter((state) => state.defId === 'hallowfield')).toHaveLength(1);
+  });
+
+  it('refuses an expired saved market lot even before the annual refresh', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.landMarket.lots.push({
+      parcel: 'sowerhay', price: 84, closesYear: ctx.world.year, reason: 'fair',
+    });
+    const before = ctx.world.treasury;
+
+    expect(buyParcel(ctx, 'sowerhay').ok).toBe(false);
+    expect(ctx.world.treasury).toBe(before);
+    expect(heldParcels(ctx).some((state) => state.defId === 'sowerhay')).toBe(false);
+  });
+
   it('refuses when the house cannot raise the price', () => {
     const ctx = testWorld(bundle);
     ctx.world.landMarket.lots.push({ parcel: 'sowerhay', price: 84, closesYear: ctx.world.year + 3, reason: 'fair' });
@@ -684,6 +715,16 @@ describe('tickLandMarket', () => {
     expect(ctx.world.landMarket.lots.some((l) => l.parcel === 'sowerhay')).toBe(false);
   });
 
+  it('discards an imported stale listing after the ground has already been acquired', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.landMarket.lots.push({
+      parcel: 'hallowfield', price: 84, closesYear: ctx.world.year + 3, reason: 'fair',
+    });
+    tickLandMarket(ctx, scriptedRng([false]));
+
+    expect(ctx.world.landMarket.lots.some((lot) => lot.parcel === 'hallowfield')).toBe(false);
+  });
+
   it('never lists a parcel the house already holds', () => {
     const ctx = testWorld(bundle);
     tickLandMarket(ctx, scriptedRng([true]));
@@ -714,6 +755,16 @@ describe('tickLandMarket', () => {
 });
 
 describe('landView', () => {
+  it('hides stale owned and expired lots before the market phase can clean them up', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.landMarket.lots.push(
+      { parcel: 'hallowfield', price: 84, closesYear: ctx.world.year + 2, reason: 'fair' },
+      { parcel: 'sowerhay', price: 84, closesYear: ctx.world.year, reason: 'fair' },
+    );
+
+    expect(landView(ctx).market).toEqual([]);
+  });
+
   it('lists every held parcel, with the demesne marked unsellable and a farm sellable', () => {
     const view = landView(testWorld(bundle));
     expect(view.held.length).toBeGreaterThan(0);
