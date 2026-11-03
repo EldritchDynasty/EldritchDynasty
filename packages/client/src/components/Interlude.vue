@@ -43,13 +43,13 @@ useModal(card, () => props.actions.dismissInterlude());
 </template>
 
 <style scoped>
+/* A scene and its line (#2615) can outgrow a phone held sideways. `margin:
+   auto` on the card centres it as `place-items` did, and unlike it collapses
+   to nothing when the card is taller than the scrim, so the top of the scene
+   scrolls into view rather than being cut off above it. */
 .scrim {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
-  /* A scene and its line can outgrow a phone held sideways. `margin: auto`
-     on the card centres it like `place-items` did, and unlike it collapses
-     to nothing when the card is taller than the scrim, so the top of the
-     scene scrolls into view rather than being cut off above it. */
   display: grid; overflow-y: auto; padding: 40px;
   /* NO OVERLAY HONOURED THE SAFE AREA (issue #106). See `Book.vue` for why
      these fall back to nothing on a device with no notch to clear. */
