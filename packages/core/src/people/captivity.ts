@@ -76,7 +76,7 @@ export function releaseIntruder(ctx: SimCtx, person: string): boolean {
 
 function captive(ctx: SimCtx, id: string): Person | undefined {
   const p = ctx.world.people.get(id);
-  if (!p || p.status !== 'alive' || !p.captivity) return undefined;
+  if (!p || p.status !== 'alive' || !p.captivity || p.captivity.since > ctx.world.year) return undefined;
   if (p.captivity.home.house !== ctx.world.playerHouse
     && !ctx.world.mystic.contracts.some(c => c.practitioner === p.id && c.providerFee > 0)) return undefined;
   const membership = currentMembership(p, ctx.world.year);
