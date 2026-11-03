@@ -375,12 +375,12 @@ export function readShareCode(
   // per code character, while bounding raw input before normalization so a
   // megabyte of whitespace cannot hide a small otherwise-valid code.
   if (code.length > SHARE_CODE_MAX * 4) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
-  // Rich-text copy can insert soft hyphens, zero-width joiners and
-  // directionality marks (ALM, LRM/RLM, legacy bidi embeddings/overrides
-  // and modern isolates) around an ASCII code in RTL text. None belong to
-  // its wire alphabet; treat them as layout separators only after bounding
-  // the raw input length.
-  const text = code.replace(/[\s\u00AD\u061C\u200B-\u200F\u202A-\u202E\u2060\u2066-\u2069]+/g, '');
+  // Rich-text copies can carry invisible Unicode formatting around or
+  // between visible ASCII code characters: bidi controls, soft hyphens,
+  // combining grapheme joiners, variation selectors, and others. None belong
+  // to the wire alphabet. Strip the whole default-ignorable category rather
+  // than a hand-maintained subset, only after bounding the raw input.
+  const text = code.replace(/[\s\p{Default_Ignorable_Code_Point}]+/gu, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
