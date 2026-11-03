@@ -9,7 +9,7 @@ import {
   saveGame, seedLibraryMemories, setProseMode, setProseVariants, testRng, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
-import { completeStudies, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
+import { completeStudies, conditionDrag, heldBooks, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
 import { canonical } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -32,6 +32,56 @@ describe('authored physical acquisition (#334)', () => {
     expect(ctx.world.library.get(effect.book)).toMatchObject({ acquiredYear: 1042, condition: 39 });
     const saved = saveGame(ctx);
     expect(canonical(saveGame(loadGame(saved, bundle)))).toBe(canonical(saved));
+  });
+});
+
+describe('future-acquired physical copies (#2699)', () => {
+  it('does not expose, damage, or restore a book before its acquisition year', () => {
+    const ctx = bootstrap(bundle, 2699, 1042);
+    ctx.world.library.clear();
+    const id = 'lesser_workings_of_fluid';
+    const copy = acquireLibraryCopy(ctx, id)!;
+    copy.acquiredYear = ctx.world.year + 2;
+    copy.condition = 40;
+
+    const saved = saveGame(ctx);
+    expect(heldBooks(ctx)).toEqual([]);
+    expect(conditionDrag(ctx, id)).toBe(1); // Borrowed reading is not slowed by a future shelf copy.
+    expect(restorationQuote(ctx, id)).toBeUndefined();
+    expect(degradeLibraryCopy(ctx, id, 20)).toBeUndefined();
+    expect(copy.condition).toBe(40);
+    expect(saveGame(ctx)).toEqual(saved);
+
+    ctx.world.year = copy.acquiredYear - 1;
+    expect(heldBooks(ctx)).toEqual([]);
+    ctx.world.year = copy.acquiredYear;
+    expect(heldBooks(ctx)).toContain(copy);
+    expect(conditionDrag(ctx, id)).toBeCloseTo(1.6);
+    expect(restorationQuote(ctx, id)?.ok).toBe(true);
+    expect(degradeLibraryCopy(ctx, id, 20)).toBe(copy);
+    expect(copy.condition).toBe(20);
+  });
+
+  it('liquidates only currently held books and leaves future-only shelves untouched', () => {
+    const ctx = bootstrap(bundle, 2700, 1042);
+    ctx.world.library.clear();
+    const future = acquireLibraryCopy(ctx, 'lesser_workings_of_fluid')!;
+    future.acquiredYear = ctx.world.year + 1;
+    const present = acquireLibraryCopy(ctx, 'lesser_workings_of_death')!;
+
+    ctx.world.treasury = DEBT_FLOOR - 1;
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.library.has(present.id)).toBe(false);
+    expect(ctx.world.library.has(future.id)).toBe(true);
+
+    ctx.world.treasury = DEBT_FLOOR - 1;
+    const before = saveGame(ctx);
+    tickDistressedBookSale(ctx);
+    expect(saveGame(ctx)).toEqual(before);
+
+    ctx.world.year = future.acquiredYear;
+    tickDistressedBookSale(ctx);
+    expect(ctx.world.library.has(future.id)).toBe(false);
   });
 });
 
