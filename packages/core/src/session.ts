@@ -786,7 +786,8 @@ export class GameSession {
   book(opts: { from?: number; to?: number } = {}): ChronicleView[] {
     const { from, to } = opts;
     const entries = chronicleReading(this.ctx.world.chronicle).filter(
-      (e) => (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
+      (e) => e.year <= this.ctx.world.year
+        && (from === undefined || e.year >= from) && (to === undefined || e.year <= to),
     );
     return asRead(this.ctx, entries);
   }
@@ -809,7 +810,7 @@ export class GameSession {
   /** Stable authored pages in which the book explicitly cast this person. */
   mentions(person: string): string[] {
     return chronicleReading(this.ctx.world.chronicle).flatMap((entry) =>
-      entry.id && entry.people?.includes(person) ? [entry.id] : []);
+      entry.year <= this.ctx.world.year && entry.id && entry.people?.includes(person) ? [entry.id] : []);
   }
 
   /**
@@ -826,6 +827,7 @@ export class GameSession {
     const requested = opts.limit ?? 5;
     const limit = Number.isNaN(requested) ? 5 : Math.max(0, Math.floor(requested));
     return chronicleReading(w.chronicle).flatMap((entry, index) => {
+      if (entry.year > w.year) return [];
       const blank = entry.text === null || entry.record === 'omit';
       const deed = blank ? undefined : entry.claims?.find((claim) => claim.kind === 'deed' && claim.person === person);
       if (!entry.people?.includes(person) && !deed) return [];
@@ -1166,8 +1168,10 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
   // here, without sending the whole person store (or hidden facts) to Vue.
   // Chronicle views must not expose writable references into the saved book.
   // Deep copies matter: a page's people, claims and cause are nested values.
-  const chronicle = asRead(ctx, chronicleReading(w.chronicle).slice(-chronicleLines));
-  const chroniclePeople = [...new Set(w.chronicle.filter((entry) => entry.text !== null && entry.record !== 'omit')
+  const chronicle = asRead(ctx, chronicleReading(w.chronicle)
+    .filter((entry) => entry.year <= w.year).slice(-chronicleLines));
+  const chroniclePeople = [...new Set(w.chronicle.filter((entry) => entry.year <= w.year
+    && entry.text !== null && entry.record !== 'omit')
     .flatMap((entry) => [...(entry.people ?? []), ...(entry.claims ?? [])
       .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]
     .flatMap((id) => {
