@@ -155,7 +155,7 @@ export function papersDemanded(dowry: number, kinship: number, deepBlood: number
 export function papersHeld(ctx: SimCtx, p: Person): number {
   const shown = maternalDepth(ctx, p.id);
   const filed = p.lineageDocuments
-    .filter((d) => d.exposed === undefined)
+    .filter((d) => d.exposed === undefined || d.exposed > ctx.world.year)
     .reduce((best, d) => Math.max(best, d.generations), 0);
   return Math.max(shown, Math.min(FULL_PEDIGREE, filed));
 }
@@ -228,7 +228,7 @@ export function tickPapers(ctx: SimCtx, rng: Rng): number {
 
   for (const p of w.people.household(w.playerHouse, w.year)) {
     for (const doc of p.lineageDocuments) {
-      if (!doc.forged || doc.exposed !== undefined) continue;
+      if (!doc.forged || (doc.exposed !== undefined && doc.exposed <= w.year)) continue;
       const grade = gradeOf(doc);
       if (!rng.bool(EXPOSURE_PER_YEAR[grade])) continue;
 
