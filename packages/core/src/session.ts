@@ -887,7 +887,7 @@ export class GameSession {
       return w.succession.map((held) => {
         const p = w.people.get(held.person);
         const said = p ? visibleRecordView(this.ctx, p.id, household) : undefined;
-        const byname = p ? bynameView(p) : undefined;
+        const byname = p ? bynameView(p, w.year) : undefined;
         return {
           person: held.person,
           name: held.name,
@@ -1134,7 +1134,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           drift: view.divergence.size > 0,
         };
         if (p.epithet !== undefined) m.epithet = p.epithet;
-        const byname = bynameView(p);
+        const byname = bynameView(p, w.year);
         if (byname) m.byname = byname;
         if (succession.heir === p.id) m.succession = 'heir';
         else if (successionPossible.has(p.id)) m.succession = 'possible';
@@ -1176,7 +1176,7 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
       .flatMap((claim) => claim.kind === 'deed' ? [claim.person] : [])]))]
     .flatMap((id) => {
       const person = w.people.get(id);
-      const byname = person ? bynameView(person) : undefined;
+      const byname = person ? bynameView(person, w.year) : undefined;
       return person ? [{ id: String(id), name: person.name,
         ...(person.epithet ? { epithet: person.epithet } : {}),
         ...(byname ? { byname } : {}),
