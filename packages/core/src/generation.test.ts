@@ -236,3 +236,46 @@ describe('the generation\'s question and answer speak the reader\'s setting (#75
     expect(pick('plainenglish')).toEqual(pick('original'));
   });
 });
+
+
+describe('dated branch concerns (#2786)', () => {
+  it('asks about a standing hall rather than a future or extinct one', () => {
+    const ctx = testWorld(bundle, 2786001, 1200);
+    const w = ctx.world;
+    w.bloodHighWater = 0;
+    for (let i = 0; i < 8; i++) {
+      place(ctx, { sex: 'male', age: 30 + i, name: `Broad kin ${i}` });
+    }
+    w.discrepancies.clear();
+    w.clausesRecovered.clear();
+    for (const person of w.people.living()) person.madness = 0;
+    const founder = w.people.living()[0]!;
+    const currentId = 'standing_hall' as never;
+    const futureId = 'unbuilt_hall' as never;
+    const extinctId = 'extinct_hall' as never;
+    const futureYear = w.year + 4;
+    w.branches.set(currentId, {
+      id: currentId, name: 'Standing Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: w.year - 20, grievance: 65,
+    } as never);
+    w.branches.set(futureId, {
+      id: futureId, name: 'Unbuilt Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: futureYear, grievance: 85,
+    } as never);
+    w.branches.set(extinctId, {
+      id: extinctId, name: 'Extinct Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: w.year - 50, extinct: w.year - 1, grievance: 95,
+    } as never);
+
+    expect(chooseGenerationQuestion(ctx)).toMatchObject({
+      kind: 'branch', subject: currentId, subjectName: 'Standing Hall', baseline: 65,
+    });
+    w.branches.get(currentId)!.extinct = w.year;
+    expect(chooseGenerationQuestion(ctx)?.kind).not.toBe('branch');
+
+    w.year = futureYear;
+    expect(chooseGenerationQuestion(ctx)).toMatchObject({
+      kind: 'branch', subject: futureId, subjectName: 'Unbuilt Hall', baseline: 85,
+    });
+  });
+});
