@@ -73,7 +73,8 @@ export function deriveRecordView(ctx: SimCtx, personId: string): RecordView {
   let claimedDeath: { year: number; cause: string } | undefined;
 
   for (const entry of w.chronicle) {
-    if (!entry.claims?.length) continue;
+    // A restored future page cannot change what the family's Record says today.
+    if (entry.year > w.year || !entry.claims?.length) continue;
     for (const claim of entry.claims) {
       if (claim.person !== personId) continue;
       if (claim.kind === 'attr') {

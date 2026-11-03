@@ -234,7 +234,40 @@ describe('deriveRecordView — the record layer (issue #19)', () => {
       year: ctx.world.year + 5, weight: 'line', text: 'second', named: false,
       claims: [{ kind: 'attr', person: p.id, attr: 'strength', value: 90 }],
     });
+    expect(deriveRecordView(ctx, p.id).attrs.get('strength')).toBe(10);
+    ctx.world.year += 5;
     expect(deriveRecordView(ctx, p.id).attrs.get('strength')).toBe(90);
+  });
+
+  it('does not reveal future claims of attributes, traits or death before their page year', () => {
+    const ctx = bootstrap(bundle, 2667, 1042);
+    const p = place(ctx, { sex: 'male', age: 30, traits: ['hard_hands'] });
+    const later = ctx.world.year + 5;
+    ctx.world.chronicle.push({
+      year: ctx.world.year, weight: 'line', text: 'what was said now', named: false,
+      claims: [{ kind: 'attr', person: p.id, attr: 'madness', value: 8 }],
+    });
+    ctx.world.chronicle.push({
+      year: later, weight: 'line', text: 'what will be said later', named: false,
+      claims: [
+        { kind: 'attr', person: p.id, attr: 'madness', value: 90 },
+        { kind: 'trait', person: p.id, trait: 'hard_hands', has: false },
+        { kind: 'death', person: p.id, year: later, cause: 'the future' },
+      ],
+    });
+
+    const present = deriveRecordView(ctx, p.id);
+    expect(present.attrs.get('madness')).toBe(8);
+    expect(present.claimedTraits.has('hard_hands')).toBe(true);
+    expect(present.claimedDeath).toBeUndefined();
+    expect(present.divergence.has('death')).toBe(false);
+
+    ctx.world.year = later;
+    const future = deriveRecordView(ctx, p.id);
+    expect(future.attrs.get('madness')).toBe(90);
+    expect(future.claimedTraits.has('hard_hands')).toBe(false);
+    expect(future.claimedDeath).toEqual({ year: later, cause: 'the future' });
+    expect(future.divergence.has('death')).toBe(true);
   });
 });
 
