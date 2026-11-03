@@ -222,7 +222,14 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
           ? msg(ctx, 'generation.answer.daughter_died', '{DAUGHTER} did not live to make that marriage.', { DAUGHTER: q.subjectName })
           : msg(ctx, 'generation.answer.daughter_died_unnamed', 'The daughter did not live to make that marriage.');
       }
-      const marriage = subject.marriages.find((m) => m.to === undefined);
+      // The question asks what marriage the daughter made in THIS generation,
+      // not whether she still has a living spouse at its close. A wedding
+      // followed by widowhood or divorce still happened. Ignore earlier
+      // marriages (she may already have been a widow when the question opened)
+      // and future-dated entries; the latest union is the closing outcome.
+      const marriage = subject.marriages
+        .filter((m) => m.from >= q.opened && m.from <= w.year)
+        .sort((a, b) => b.from - a.from)[0];
       if (!marriage) {
         return msg(ctx, 'generation.answer.unmarried', '{DAUGHTER} remained unmarried when the generation closed.',
           { DAUGHTER: subject.name });
