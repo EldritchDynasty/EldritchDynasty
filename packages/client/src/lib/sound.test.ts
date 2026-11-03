@@ -1065,6 +1065,48 @@ describe('the bed decides when the house may be heard', () => {
     expect(e.made[0]!.calls).toContain('close');
   });
 
+  it('restores unlocked sound when reattached to an already-visible document', () => {
+    const e = fakeEngine();
+    const oldPage = fakePage();
+    const newPage = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    bed.attach(oldPage.doc, oldPage.win);
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    oldPage.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    oldPage.doc.visibilityState = 'hidden';
+    oldPage.fire('doc:visibilitychange');
+    expect(bed.audible).toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+
+    // The replacement page was visible before the new listeners were added.
+    // It will not emit a visibilitychange or pageshow just for our attach().
+    bed.attach(newPage.doc, newPage.win);
+    expect(oldPage.count(), 'listeners leaked on the old page').toBe(0);
+    expect(bed.audible, 'an already visible new document remained muted').toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    newPage.doc.visibilityState = 'hidden';
+    newPage.fire('doc:visibilitychange');
+    const pausedPage = fakePage();
+    bed.attach(pausedPage.doc, pausedPage.win, (pause) => {
+      pause(); // The host refuses foreground playback during registration.
+      return () => undefined;
+    });
+    expect(bed.audible, 'document visibility overrode the native pause').toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+    pausedPage.fire('win:pointerdown');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    bed.dispose();
+    expect(newPage.count()).toBe(0);
+    expect(pausedPage.count()).toBe(0);
+  });
+
   it('honours a native pause delivered synchronously while registering listeners (#1986)', () => {
     const e = fakeEngine();
     const page = fakePage();
