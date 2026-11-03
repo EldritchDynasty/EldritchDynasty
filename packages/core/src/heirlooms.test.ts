@@ -326,6 +326,28 @@ describe('the spend flag', () => {
     expect(ctx.world.heirlooms.get('portion_of_agelessness')!.spent).toBe(true);
   });
 
+  it('ignores a future saved use until that use year, then enforces its full cooldown', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const bearer = someone(ctx);
+    const id = 'the_rod';
+    const state = grantHeirloom(ctx, id)!;
+    state.lastUsedYear = ctx.world.year + 2; // An imported use that has not yet happened.
+    const before = digestOf(ctx);
+
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+    expect(eligibleBearers(ctx, id)).toContain(bearer);
+    expect(digestOf(ctx)).toBe(before);
+
+    ctx.world.year += 1;
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+    ctx.world.year += 1;
+    expect(canUseHeirloom(ctx, id, bearer)).toMatchObject({ ok: false, readyIn: 25 });
+    ctx.world.year += 24;
+    expect(canUseHeirloom(ctx, id, bearer)).toMatchObject({ ok: false, readyIn: 1 });
+    ctx.world.year += 1;
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+  });
+
   it('cooldown: not twice in the same generation, and it says how long', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const p = someone(ctx);
