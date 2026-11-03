@@ -89,6 +89,46 @@ describe('activeCommitment / beginCommitment', () => {
     expect(activeCommitment(ctx)?.id).toBe(c.id);
   });
 
+  it('keeps future-starting commitments dormant until their year arrives', () => {
+    const ctx = testWorld(bundle);
+    const officer = place(ctx, { sex: 'male', age: 30 });
+    const c = beginCommitment(ctx, 11, 'the_wars');
+    expect(addOfficer(ctx, officer.id)).toBe(true);
+    const presentYear = ctx.world.year;
+    c.began = presentYear + 1; // An inconsistent but schema-valid restored commitment.
+
+    const before = {
+      men: c.men,
+      credit: c.credit,
+      tide: ctx.world.muster.tide,
+      pages: ctx.world.chronicle.length,
+      position: c.position,
+    };
+    expect(activeCommitment(ctx)).toBeUndefined();
+    expect(musterUpkeep(ctx)).toBe(0);
+    expect(musterMortality(ctx, officer)).toBe(0);
+    expect(positionOptions(ctx)).toEqual([]);
+    expect(musterOrder(ctx, { op: 'reinforce', men: 4 }).ok).toBe(false);
+    expect(musterOrder(ctx, { op: 'buy', position: 'none' }).ok).toBe(false);
+    expect(musterOrder(ctx, { op: 'withdraw' }).ok).toBe(false);
+    tickMuster(ctx, testRng('future-muster'));
+    expect({
+      men: c.men,
+      credit: c.credit,
+      tide: ctx.world.muster.tide,
+      pages: ctx.world.chronicle.length,
+      position: c.position,
+    }).toEqual(before);
+
+    ctx.world.year = presentYear + 1;
+    expect(activeCommitment(ctx)).toBe(c);
+    expect(musterUpkeep(ctx)).toBeGreaterThan(0);
+    expect(musterMortality(ctx, officer)).toBeGreaterThan(0);
+    expect(musterOrder(ctx, { op: 'reinforce', men: 1 }).ok).toBe(true);
+    tickMuster(ctx, testRng('future-muster'));
+    expect(ctx.world.chronicle.length).toBe(before.pages + 1);
+  });
+
   it('mints a fresh id off counters.muster, every time', () => {
     const ctx = testWorld(bundle);
     const first = beginCommitment(ctx, 5, 'the_wars');
@@ -289,6 +329,38 @@ describe('tickMuster', () => {
  * and checking a second one accrues credit faster for the same men and tide.
  */
 describe('escalation, read through tickMuster', () => {
+  it('ignores future settled service when calculating present escalation', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.respect = 'exalted';
+    const live = beginCommitment(ctx, 30, 'the_wars');
+    const presentYear = ctx.world.year;
+
+    tickMuster(ctx, testRng('future-escalation'));
+    const baseline = { men: live.men, credit: live.credit };
+
+    live.men = 30;
+    live.credit = 0;
+    ctx.world.muster.tide = 50;
+    ctx.world.muster.commitments.push({
+      ...live,
+      id: 'must_future_settled',
+      began: presentYear + 1,
+      status: 'settled',
+      from: {},
+      officers: [],
+      credit: 0,
+    });
+    tickMuster(ctx, testRng('future-escalation'));
+    expect({ men: live.men, credit: live.credit }).toEqual(baseline);
+
+    ctx.world.year = presentYear + 1;
+    live.men = 30;
+    live.credit = 0;
+    ctx.world.muster.tide = 50;
+    tickMuster(ctx, testRng('future-escalation'));
+    expect(live.credit).toBeGreaterThan(baseline.credit);
+  });
+
   it('a second commitment accrues credit faster than the first, at the same men and tide', () => {
     // `testRng('freeze')` is deterministic in the seed alone, so calling it
     // fresh each time — with the tide reset to the same start first — gives
