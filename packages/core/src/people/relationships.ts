@@ -323,7 +323,9 @@ export function echoGrudges(ctx: SimCtx): number {
         .filter((r) => holderHouse(r) === house)
         .flatMap((r) => r.grudges)
         .filter((x) => x.echoedIn !== undefined);
-      if (heard.some((x) => w.year - x.echoedIn! < ECHO_SPACING)) continue;
+      // A future saved echo has not been heard yet; negative ages must not
+      // consume this generation's one opportunity to speak.
+      if (heard.some((x) => x.echoedIn! <= w.year && w.year - x.echoedIn! < ECHO_SPACING)) continue;
       g.echoedIn = w.year;
       const origin = ctx.content.event(g.originEvent);
       const about = origin?.title
