@@ -561,7 +561,8 @@ function openingPages(ctx: SimCtx): ChronicleEntry[] {
   if (!arc) return [];
   const events = new Set(arc.nodes.map((n) => String(n.event)));
   return ctx.world.chronicle
-    .filter((e) => e.eventId !== undefined && events.has(e.eventId))
+    .filter((e) => e.year <= ctx.world.year
+      && e.eventId !== undefined && events.has(e.eventId))
     .map((entry) => structuredClone(entry));
 }
 
