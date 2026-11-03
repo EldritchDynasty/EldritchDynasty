@@ -819,8 +819,16 @@ export function createGame(
 
     async exportSave(slot) {
       try {
-        const save = await platform.readSave(slot);
+        // Capture the requested slot before any later host write/delete can
+        // replace it. A native read may resolve asynchronously, so it must
+        // join the same ordering tail as autosaves and chapter snapshots.
+        // This is read-only: do not bump autosaveRevision (which would make
+        // the last genuine save's completion invisible to the status UI).
+        const read = autosaveTail.then(() => platform.readSave(slot));
+        autosaveTail = read.then(() => undefined, () => undefined);
+        const save = await read;
         if (!save) return false;
+        // Do not hold the mutation queue while a user chooses a destination.
         await platform.exportSave(save);
         return true;
       } catch {
