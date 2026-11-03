@@ -29,7 +29,11 @@ watch([() => props.text, () => props.proseMode], async () => {
   // no glossary alias, even when no related disclosure was open. Focus may
   // belong to an embedded document: the outer document's activeElement is
   // then its iframe, never the button inside this passage.
-  const focused = host?.ownerDocument.activeElement;
+  // Inside an open shadow root, the document reports the shadow host as
+  // activeElement, not the focused glossary button/note. Follow the focused
+  // descendant before deciding whether replacing this passage needs a restore.
+  let focused = host?.ownerDocument.activeElement;
+  while (focused?.shadowRoot?.activeElement) focused = focused.shadowRoot.activeElement;
   const restoreFocus = !!host && !!focused && host.contains(focused)
     && (chain.value.length > 0 || focused === primary);
   chain.value = [];
