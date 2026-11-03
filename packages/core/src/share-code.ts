@@ -5,7 +5,7 @@ import type {
 } from '@ed/schema';
 import { assertNever, indexContent, PERSON_NAME_MAX, SAVE_FORMAT } from '@ed/schema';
 import { campaignDef } from './campaign.js';
-import { FRIEND_NAME_MAX, MAX_FRIENDS } from './people/friends.js';
+import { FRIEND_NAME_MAX, MAX_FRIENDS, normaliseFriends } from './people/friends.js';
 import { HOUSE_NAME_MAX, type FoundingChoice } from './prologue.js';
 import { hashSeed } from './rng.js';
 import { newGame, type GameSession } from './session.js';
@@ -255,6 +255,19 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     || !Number.isInteger(w.seed) || w.seed < 0 || w.seed > 0xffffffff) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
+  // A restored or programmatically altered decision log can pass the compact
+  // wire schema but fail the signing's real friend rules. Reuse that validator
+  // and require its result to be unchanged: silently dropping an invisible
+  // name, normalizing spelling, or refusing duplicates would break the
+  // founding that this code promises to reproduce.
+  const checkedFriends = normaliseFriends(ctx, founding.friends, founding.year);
+  if (!checkedFriends.ok
+    || checkedFriends.friends.length !== founding.friends.length
+    || checkedFriends.friends.some((friend, i) =>
+      friend.name !== founding.friends[i]!.name || friend.sex !== founding.friends[i]!.sex)) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
+
   const signing = w.decisionLog.find((row) => row.kind === 'signing');
   const given = signing?.answers ?? {};
   const answers = Object.keys(given).length ? def.examination.map((q) => {
