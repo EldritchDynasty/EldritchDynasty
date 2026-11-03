@@ -16975,3 +16975,205 @@ reported as one.
 Bot policies; always-Embellish is an extreme player. Game years and prompts
 are not reading time, and nothing here shows a reader notices or values the
 scene. No player session was run.
+
+## 2026-11-03 — #1946: where scheduled and authored promises go, and an authored arc's beat at collection (#2625)
+
+**Question.** #1946's remaining plan asks for a fresh audit with the
+corrected observer before any tuning: classify today's thin tail, and give
+every promised-route loss a disposition or a bounded owner. This entry is
+that audit on current `main`, plus the one engine fault it demonstrated and
+fixed (#2625). The content-timing fault it also found is filed as #2627 and
+changes nothing here.
+
+### Protocol
+
+Baseline `main` `d3ffa6608eb50543d45d208f464a74b52f1aa06e`; frozen candidate
+`8e49789305558520f711a3a2e2d2a0e5d6a3f47f` (one changed argument in
+`advanceArc`, plus witnesses). Node 22.23.4; content hash `93f7c1a5a7ce…`,
+identical in both. Canonical: 800 Long Lines ×500 years, seeds `5000 + 7*i`,
+chronicler auto-resolution (`stepYear(ctx, true)`, the fire-rate batch's own
+seeds and policy). Independent, declared on #2625 before either column ran:
+800 Long Lines ×500 years, seeds `3194600 + 41*i`. Wilson 95% intervals over
+houses. Four instruments:
+
+1. `report:story-routes` (the #1974 per-promise observer) with all 33
+   outcome-launched schedule targets, four shards of 200, two complete-save
+   observer controls each (eight per column, all equal).
+2. A read-only **schedule-retirement replay** that follows every entry of
+   `world.scheduled` — including Record-option schedules, which the route
+   observer does not watch — to delivery (its exact launching page) or to the
+   reason it left: a once-only target that had already fired, the 40-year
+   `SCHEDULE_PATIENCE` with conditions false or cast failed, the line ending,
+   or a due year past collection.
+3. A read-only **arc replay** that records every beat draw (not retries) of
+   every arc instance and its state at the term.
+4. `npm run gates -- outcome-reach` on each column.
+
+The two replays and their merge scripts are workspace scratch, not committed
+tools: `packages/core/src/tools/**` is the gates lane, which another session
+held throughout.
+
+### The thin tail today (canonical baseline)
+
+None of the 521 non-frame full-campaign events is under the 0.5% floor.
+
+| Event | Houses /800 | Class | Why |
+|---|---:|---|---|
+| `the_unmaking` | 6 = 0.750% [0.344, 1.627] | legendary | cast-rationed: a Hierophant who took the Vessel rite in an eminent house; weight 2400 already pays for the window |
+| `waking_early` | 8 = 1.000% [0.508, 1.961] | Age-scoped | Quickening only, an unwoken child of exactly nine |
+| `a_page_in_our_own_hand` | 10 = 1.250% [0.680, 2.286] | optional consequence | reads `the_house_held_the_wardenship`, set by a rare chosen wardenship |
+| `eight_days_and_then_it_did` | 10 = 1.250% [0.680, 2.286] | **promised beat** | third beat of `arc_the_eight_days`; 15 more rulings drew it past 1542 (below) |
+| `the_hall_is_answered` | 10 = 1.250% [0.680, 2.286] | promised continuation | 15 promises: 10 delivered, 4 ended by #1977's no-grown-speaker rule, 1 start refused at the term |
+| `the_millers_boy` | 10 = 1.250% [0.680, 2.286] | Age-scoped | Quickening only, 50-year cooldown |
+| `the_physician_from_bramme` | 10 = 1.250% [0.680, 2.286] | Age-scoped | Plague only |
+| `the_house_has_one_name_left` | 12 = 1.500% [0.860, 2.603] | premise | two or fewer living blood and an unwed sole heir |
+| `a_different_office_asks` | 14 = 1.750% [1.045, 2.916] | optional consequence | reads `the_rhyme_in_the_chapter_yard` |
+| `who_gets_the_physician` | 14 = 1.750% [1.045, 2.916] | Age-scoped | Plague only |
+
+Route reach: Herald's old question 19 houses (43 visits, 22 full and 21 short
+answers, 19 deliveries, one duplicate, one short answer given in 1542); Hall
+answered 10; Hall stops writing 24; cellar shelf 23. Longest answer silence
+mean 54.72y, max 74. Baseline outcome reach passes: 1,195 authored outcomes,
+five zeroes explicitly too rare for 800 runs to judge.
+
+### Where every scheduled promise went (canonical baseline)
+
+All 5,236 schedules made in 800 houses:
+
+| Disposition | Schedules | Verdict |
+|---|---:|---|
+| Delivered with its exact launching page | 4,765 (91.0%) | — |
+| Once-only target had already fired | 240 | intended: a remembered account comes back once per house (#334); the launcher repeats |
+| Line ended first | 141 | not a delivery fault |
+| Patience expired, conditions false throughout | 58 | **50 are #2627** (below); 8 are the third glimpse with no branch hall |
+| Patience expired, cast failed throughout | 43 | the third glimpse: a branch hall with no grown cadet for 40 years |
+| Due after collection | 9 | retained expiry (below) |
+
+- **#2627, a content-timing fault.** `the_fourth_yssene_clause` (33 of 81
+  schedules) and `the_mason_reaches_the_turn` (17 of 47) are scheduled one
+  year out by the outcome that also grants their reader's knowledge or flag,
+  but the targets are floored at 1291 and 1330. Every expired one was
+  launched 1126–1247 or 1126–1255, more than 40 years before its floor.
+  The choice is content's (schedule at the floor, lower the floor, or accept
+  ambient-only reach), so it is filed for `lane-content`, not patched here.
+- **The third glimpse** (`the_branch_hall_book`) waits on a branch hall with
+  a grown cadet; 51 of 779 schedules expire (43 cast, 8 conditions), launched
+  1092–1097. Its author wrote the 40-year wait into the YAML. Recorded as
+  premise-limited; the cast failures are a lead for whoever next touches
+  branch halls, not a diagnosed fault.
+- **Due after collection: retain expiry.** Nine schedules in nine houses:
+  eight drawn past 1542 when made (five one year out from 1542, three four
+  years out from 1540–1541, one twenty years out from 1523) and one retried
+  past it (first due 1538). Nothing outside `selection.ts` reads
+  `world.scheduled`, no launching outcome promises the scene in words, and
+  the book closes either way. Preventing the offer or authoring a late
+  response would cost more than the 0.17% it addresses.
+- **Observer gaps (gates lane, not changed).** `routeLaunchers` reads outcome
+  effects only, so Record-option schedules are invisible to it
+  (`the_old_list_reaches_the_cellar`: 279 schedules); `retired_without_delivery`
+  conflates the once-only and patience rows above; and #1977's `recast` /
+  `inherit: hall` endings print as `cancelled_other_or_unknown`. The
+  replays above supply those counts until a gates-lane slice adds them.
+
+### The fault: an authored arc's later beat drawn past collection (#2625)
+
+`startArc` admits an authored arc only when its fastest graph can finish
+(#133). `advanceArc` then drew every later beat over its whole authored range:
+`scheduleNext` was bounded only for inline chains (#1971 kept authored arcs out
+of scope). A beat whose range straddled the term could land after the book
+closed although an authored delay that arrived in time existed. Seed 5028:
+`arc_the_muster`'s `word` (4–11 years) drawn in 1534, due 1545.
+
+**Change.** Every later beat takes #1971's rule: one draw inside the overlap
+of its authored range and the remaining campaign. Ranges that fit keep their
+exact draw and RNG stream; a fixed or impossible delay is neither shortened
+nor ended (#133's authored rule; the inline refusal stays inline, #1980);
+the bound is per beat and never compresses an earlier beat for a later one.
+Content, rations, weights, conditions, cast policies, retries, proof rules,
+thresholds and `SAVE_FORMAT` (41) are unchanged; saved due dates are not
+redrawn.
+
+### Results, paired
+
+**The structural claim.** A *straddling* draw is a later beat whose authored
+minimum fits before 1542 but whose maximum does not. Drawn past the term:
+
+| Sample | Baseline | Candidate | Straddling draws inside the term |
+|---|---:|---:|---|
+| Canonical `5000 + 7*i` | **156** in 144 houses | **0** | 142 → 307 |
+| Independent `3194600 + 41*i` | **158** in 137 houses | **0** | 163 → 323 |
+
+Every baseline shard is non-zero (33/37/48/38 and 35/41/43/39), so each ran
+the old code. Inline chains draw none past the term in any column, as #1971
+already guaranteed. Draws whose authored minimum no longer fits stay as
+authored: 101 → 117 and 80 → 108, more because more instances now reach a
+late node. At the term, authored instances still waiting on a beat drawn past
+1542 fall 255 → 117 (canonical); every one left is such an impossible draw.
+
+**Which beats now arrive** (houses /800, base → candidate; canonical, then
+independent):
+
+| Beat | Canonical | Independent |
+|---|---|---|
+| `arc_the_eight_days` · `and_then_it_did` (clause reveal) | 10 → **25** (1.250% → 3.125% [2.126, 4.573]) | 15 → **29** |
+| `arc_the_two_it_fitted` · `the_second_time` | 81 → 107 | 110 → 130 |
+| `arc_the_given_seal` · `counted` | 82 → 99 | 84 → 102 |
+| `arc_the_given_seal` · `our_letter` | 22 → 31 | 28 → 35 |
+| `arc_everybody_has_a_theory` · `the_theory_breaks` | 44 → 61 | 41 → 55 |
+| `arc_the_second_table` · `the_road` | 469 → 475 | 472 → 487 |
+| `arc_the_song_we_taught_them` · `one_version` | 127 → 132 | 115 → 120 |
+
+`eight_days_and_then_it_did` leaves the rarest ten. Mean recovered clauses
+move 5.8388 → 5.8550 and 5.8850 → 5.8963.
+
+**What else moved.** Complete saves are byte-identical in **572/800** and
+**569/800** houses; the rest diverge after their first changed draw. Broken
+lines stay 172 and 160. Longest answer silence: mean 54.715 → 54.719 (max 74
+both) and 54.696 → 54.700 (max 85 both). Route reports (canonical): 608/800
+rows identical; Herald's old question 19 → 20 houses, Hall answered 10 → 11,
+Hall stops writing 24 → 24, cellar 23 → 22, all inside paired-seed
+divergence. Choices 104,786 → 104,868, repeated 22,460 → 22,468. By-tier
+selection: `head/rare/arc` 792 → 893 (the late beats themselves),
+`head/uncommon/arc` 1,439 → 1,451, `family/uncommon/arc` 6,745 → 6,760;
+every ambient, pressure and forced row moves by at most 9 selections. No
+template outside the authored arcs' later beats moves by more than 7
+firings in either sample. Fire rate (the
+canonical rows are the gate batch's own seeds and policy): rarest is
+`the_unmaking` at 0.750%, nothing under the 0.5% floor in either column.
+
+**Gates and pacing.** `gates -- outcome-reach` passes on both revisions:
+1,195 authored outcomes and the same five zeroes, each still explicitly too
+rare for 800 runs (two of their eligible-firing counts move by one). The
+24-house `gate:long` pair (seeds `20000 + 37*i`, chronicler; log SHA-256
+`e4f5b2a9…` → `0593570f…`) keeps its endings line exactly — 0 apotheosis,
+0 unmade, 3 broken_line, 11 forgotten, 10 devoured — and its answer-silence
+line (mean 57.5, max 62). Rare/mythic templates never seen fall 10 → 9
+(`seal_our_own_letter_returns`, the given seal's last beat, now appears);
+mean choices 145.6 → 145.8, Record prompts 20.7 → 20.8, end treasury
+1187.9 → 1228.0, late respect regarded/exalted 7/8 → 6/9. Twenty-four houses
+show direction only; no ending-distribution claim is made.
+`arcs.slow.test.ts` passes (17 tests) on the candidate.
+
+**Mechanism witnesses** (`arc-term.test.ts`): a straddling later beat lands
+in the term in Short, Long and Demo; a fitting authored draw keeps its due
+year and RNG stream exactly; a fixed later delay past the term is drawn as
+authored and leaves the arc waiting, not ended; production
+`arc_the_eight_days` started in 1300 delivers its clause beat by 1542 after
+a ruling in 1389. Six of these fail on the old code. Shard hashes —
+route reports: baseline `7020a7ba eed6f00a d28ec4bb 3c6d8d65`, candidate
+`9bf8dabf 47ce2b6b 5e853b39 4eae5e51`; arc replays canonical
+`89d88f36 bdf1132e 7f5d08d3 4734e3e0` → `41ebebc1 d97e2f42 762fa244 31a5137f`,
+independent `d0961c07 1f5a6aff 8b61081e 80db15e5` →
+`fb2f8aaf 5a09999b 21a9034d 0084626c`; retirement replay
+`0fae2a5a 9142c8b6 f1c35855 8606c7bb`.
+
+### Limits
+
+Bot policy only (the chronicler). Beat reach and clause counts are delivery
+measurements, not evidence that a reader notices or values a late scene.
+Paired seeds diverge after the first changed draw, so the columns compare
+sampled distributions after that point. Landing-base commits after
+`d3ffa660` (`a281897a`, `53836828`, `8e08635f`, `0fa9e573`, `f4535f79`)
+change ending wording, saved interlude bodies and client code; none draws or
+changes the year, so they are not re-measured here. Artifacts are workspace
+scratch; SHA-256 prefixes are given with each column.
