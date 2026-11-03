@@ -10,6 +10,7 @@ import { order } from '../table.js';
 import { makeRng } from '../rng.js';
 import { phase, place, testWorld } from '../testing.js';
 import type { SimCtx } from '../world.js';
+import { setProseMode } from '../prose.js';
 
 /**
  * #1898: THE ORDINARY DECISIONS, COME BACK TO.
@@ -95,6 +96,42 @@ describe('decision-started arcs (#1898)', () => {
     startDecisionArcs(ctx, 'tutor', { PUPIL: b.id });
     expect(instancesOf(ctx, TERM).map((i) => i.bindings.PUPIL)).toEqual([a.id, b.id]);
   });
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`ignores future-dated decision arcs when applying the present cooldown (${mode}) (#2768)`, () => {
+      const ctx = testWorld(bundle, 2768, 1060);
+      setProseMode(ctx, mode);
+      const year = ctx.world.year;
+      const futurePupil = place(ctx, { sex: 'male', age: 12, name: 'Future Term' });
+      const presentPupil = place(ctx, { sex: 'female', age: 12, name: 'Present Term' });
+      const laterPupil = place(ctx, { sex: 'male', age: 11, name: 'Later Term' });
+
+      // Build an actual future decision/arc, then read an earlier recovered
+      // year. The future, ended record must not impose today's cooldown.
+      ctx.world.year = year + 4;
+      startDecisionArcs(ctx, 'tutor', { PUPIL: futurePupil.id });
+      const future = instancesOf(ctx, TERM)[0]!;
+      expect(future.startedYear).toBe(year + 4);
+      future.status = 'ended';
+
+      ctx.world.year = year;
+      startDecisionArcs(ctx, 'tutor', { PUPIL: presentPupil.id });
+      expect(instancesOf(ctx, TERM).map((a) => a.bindings.PUPIL))
+        .toEqual([futurePupil.id, presentPupil.id]);
+      instancesOf(ctx, TERM)[1]!.status = 'ended';
+
+      // The same history becomes genuinely recent in its own starting year.
+      ctx.world.year = year + 4;
+      startDecisionArcs(ctx, 'tutor', { PUPIL: laterPupil.id });
+      expect(instancesOf(ctx, TERM)).toHaveLength(2);
+
+      // At the exact end of cooldown, both recorded starts are old enough.
+      ctx.world.year += ctx.content.arc(TERM)!.startsOn!.cooldownYears;
+      startDecisionArcs(ctx, 'tutor', { PUPIL: laterPupil.id });
+      expect(instancesOf(ctx, TERM).map((a) => a.bindings.PUPIL))
+        .toEqual([futurePupil.id, presentPupil.id, laterPupil.id]);
+    });
+  }
 
   it('a waking in the house opens the story; a waking in another house does not', () => {
     // The founding children wake in the first decades; run lifecycle until
