@@ -111,6 +111,27 @@ describe('first Standing glossary term in saved Chronicle text', () => {
     }
   });
 
+  it('keeps Mongolian vowel separator within words instead of disclosing an embedded alias (#2585)', () => {
+    // U+180E is a format control between parts of the same Mongolian word,
+    // not whitespace announcing a new standalone English label.
+    const separator = '\u180E';
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const alias of ['Standing', 'Reputation']) {
+        for (const text of [`house${separator}${alias}`, `${alias}${separator}house`]) {
+          expect(splitFirstGlossary(text, mode)).toEqual([{ text }]);
+        }
+      }
+
+      // The ignored embedded match must not consume the next valid link.
+      const text = `house${separator}Standing Standing`;
+      const segments = splitFirstGlossary(text, mode);
+      expect(segments).toEqual([
+        { text: `house${separator}Standing ` },
+        { text: 'Standing', term: 'standing' },
+      ]);
+      expect(segments.map(segment => segment.text).join('')).toBe(text);
+    }
+  });
   it('keeps WORD JOINER-attached aliases out of standalone glossary disclosures', () => {
     // U+2060 explicitly prevents a word break, despite its Unicode Cf category.
     // Without this boundary check, a joined word receives an intrusive button.
