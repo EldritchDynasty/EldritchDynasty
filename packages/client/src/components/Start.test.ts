@@ -2536,7 +2536,7 @@ describe('front-door Library and save accessibility in both registers (#410)', (
       expect(w.get('.library').attributes('aria-label')).toBe('Completed houses');
       expect(w.get('.saved').attributes('aria-label')).toBe('Saved games');
       expect(w.findAll('.campaign strong').map((label) => label.text()))
-        .toEqual(['A Short Line (shorter campaign)', 'A Long Line (longer campaign)', 'A Demonstration (demonstration)']);
+        .toEqual(['A Short Line (shorter campaign)', 'A Long Line (longer campaign)', 'A Demonstration']);
       expect((w.get('input[value="long"]').element as HTMLInputElement).checked).toBe(true);
 
       await w.get('.library-head > button').trigger('click');
