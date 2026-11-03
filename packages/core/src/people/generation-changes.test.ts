@@ -1,9 +1,54 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { newGame, place } from '@ed/core';
+import { asId, type PersonId } from '@ed/schema';
+import { setProseMode } from '../prose.js';
 import { generationChangesOf } from './generation-changes.js';
 
 const content = loadContent();
+
+describe('future succession tenures stay outside the generation reader (#2747)', () => {
+  it('shows the present generation until a later tenure actually starts', () => {
+    const game = newGame(content, { seed: 274701 });
+    const ctx = game.ctx;
+    const w = ctx.world;
+    w.year = 1100;
+    const first = w.succession[0]!;
+    const future = { person: asId<PersonId>('p_future_head'), name: 'A Later Head', from: 1101 };
+    w.succession = [first, future];
+    const unchanged = structuredClone(w.succession);
+
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(generationChangesOf(ctx)).toMatchObject({
+        count: 1, index: 0, tenure: { person: first.person, name: first.name, from: first.from },
+        through: 1100,
+      });
+      // The future tenure also cannot be chosen by requesting its saved index.
+      expect(generationChangesOf(ctx, 1).tenure?.person).toBe(first.person);
+      expect(w.succession).toEqual(unchanged);
+    }
+
+    w.year = 1101;
+    expect(generationChangesOf(ctx)).toMatchObject({
+      count: 2, index: 1, tenure: { person: future.person, name: future.name, from: 1101 },
+      through: 1101,
+    });
+    expect(generationChangesOf(ctx, 0).tenure?.person).toBe(first.person);
+    expect(w.succession).toEqual(unchanged);
+  });
+
+  it('does not create a generation out of an entirely future-dated history', () => {
+    const game = newGame(content, { seed: 274702 });
+    game.ctx.world.year = 1100;
+    const future = { person: asId<PersonId>('p_future_head'), name: 'A Later Head', from: 1101 };
+    game.ctx.world.succession = [future];
+    expect(generationChangesOf(game.ctx)).toEqual({
+      index: 0, count: 0, through: 1100, changes: [], more: 0,
+    });
+    expect(game.ctx.world.succession).toEqual([future]);
+  });
+});
 
 function deathInCurrentGeneration(seed: number) {
   const session = newGame(content, { seed });
