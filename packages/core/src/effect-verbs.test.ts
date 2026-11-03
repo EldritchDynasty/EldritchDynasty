@@ -354,3 +354,45 @@ describe('the rumour effect verb', () => {
     expect(ctx.world.rumours.has('rumour_of_the_test')).toBe(false);
   });
 });
+
+
+describe('future-founded branch effects (#2784)', () => {
+  it('targets the angriest existing hall, then admits a newly founded hall', () => {
+    const ctx = testWorld(bundle, 2784001);
+    const w = ctx.world;
+    const founder = place(ctx, { name: 'Branch effect cousin', sex: 'male', age: 30 });
+    const presentId = 'branch_present' as never;
+    const futureId = 'branch_future' as never;
+    const futureYear = w.year + 3;
+    w.branches.set(presentId, {
+      id: presentId, name: 'Present Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: w.year, grievance: 30,
+    } as never);
+    w.branches.set(futureId, {
+      id: futureId, name: 'Unbuilt Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: futureYear, grievance: 75,
+    } as never);
+
+    applyEffect({ kind: 'branch', op: 'slight', amount: 10 }, ctx, {});
+    expect(w.branches.get(presentId)!.grievance).toBe(40);
+    expect(w.branches.get(futureId)!.grievance).toBe(75);
+
+    w.year = futureYear;
+    applyEffect({ kind: 'branch', op: 'slight', amount: 10 }, ctx, {});
+    expect(w.branches.get(presentId)!.grievance).toBe(40);
+    expect(w.branches.get(futureId)!.grievance).toBe(85);
+  });
+
+  it('does not change a future hall when no hall has yet been founded', () => {
+    const ctx = testWorld(bundle, 2784002);
+    const w = ctx.world;
+    const founder = place(ctx, { name: 'Unbuilt hall founder', sex: 'male', age: 30 });
+    const id = 'only_future_branch' as never;
+    w.branches.set(id, {
+      id, name: 'Unbuilt Hall', house: w.playerHouse, founder: founder.id,
+      splitFrom: 'main', foundedYear: w.year + 5, grievance: 90,
+    } as never);
+    applyEffect({ kind: 'branch', op: 'appease', amount: 10 }, ctx, {});
+    expect(w.branches.get(id)!.grievance).toBe(90);
+  });
+});
