@@ -501,6 +501,47 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     }
   });
 
+  it('does not offer codes for restored friend rosters the signing would change or refuse', () => {
+    // The compact wire schema checks only types, lengths, and the five-friend
+    // limit. An older/corrupted decision log may still fail the production
+    // friend normalizer on import, or silently change its recorded names.
+    const changes: { label: string; edit: (roster: typeof SIGNED.friends) => void }[] = [
+      {
+        label: 'case-blind duplicate',
+        edit: (roster) => { roster[1]!.name = roster[0]!.name.toUpperCase(); },
+      },
+      {
+        label: 'invisible-only name',
+        edit: (roster) => { roster[1]!.name = '\u200B'; },
+      },
+      {
+        label: 'noncanonical spacing',
+        edit: (roster) => { roster[1]!.name = '  Corven   Pike  '; },
+      },
+    ];
+
+    for (const { label, edit } of changes) {
+      const s = founded();
+      const founding = s.ctx.world.decisionLog.find((row) => row.kind === 'founding');
+      if (!founding) throw new Error('the signing did not record a founding');
+      edit(founding.friends);
+      const before = JSON.stringify(s.ctx.world.decisionLog);
+
+      for (const names of [false, true]) {
+        expect(s.shareCode({ build: BUILD, names }), `${label} / names=${names}`)
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+      // The read-only exporter must never repair or mutate an old save.
+      expect(JSON.stringify(s.ctx.world.decisionLog)).toBe(before);
+    }
+
+    const valid = founded();
+    for (const names of [false, true]) {
+      const code = codeOf(valid, { names });
+      expect(readShareCode(code, content, { build: BUILD }).ok).toBe(true);
+    }
+  });
+
   it('has nothing to say before the house is founded', () => {
     const s = newGame(content, { seed: 1, startYear: CAMPAIGNS.short.startYear, campaign: 'short' });
     expect(s.shareCode()).toEqual({ ok: false, unavailable: 'not_founded' });
