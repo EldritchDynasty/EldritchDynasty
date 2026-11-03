@@ -164,6 +164,25 @@ describe('what is held against the house', () => {
     expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBeUndefined();
   });
 
+  it('excludes future-dated grudges from live hostility and cast selection (#2712)', () => {
+    const { ctx, us, them } = feuding(2712);
+    const later = place(ctx, { sex: 'male', age: 35, name: 'Future rival', house: 'house_calder' });
+    const present = addGrudge(ctx, them.id, us.id, { severity: 25, inheritance: 'none' });
+    const future = addGrudge(ctx, later.id, us.id, { severity: 90, inheritance: 'none' });
+    future.originYear = ctx.world.year + 6; // Recovered history from a later year.
+    const before = structuredClone([...ctx.world.relationships.values()]);
+
+    expect(grudgesAgainst(ctx.world, us.id).map((g) => g.id)).toEqual([present.id]);
+    expect(grudgeAgainstUs(ctx.world)).toBe(25);
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBe(them.id);
+
+    ctx.world.year = future.originYear;
+    expect(grudgesAgainst(ctx.world, us.id).map((g) => g.id)).toEqual([present.id, future.id]);
+    expect(grudgeAgainstUs(ctx.world)).toBe(90);
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBe(later.id);
+    expect([...ctx.world.relationships.values()]).toEqual(before);
+  });
+
   it('prefers the bitterest of several enemies', () => {
     const { ctx, us, them } = feuding();
     const worse = place(ctx, { sex: 'male', age: 35, name: 'Worse', house: 'house_calder' });
