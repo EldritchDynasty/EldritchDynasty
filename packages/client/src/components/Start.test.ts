@@ -712,6 +712,44 @@ describe('named saves', () => {
     }
   });
 
+  it('preserves an incompatible full autosave for recovery after Continue refuses (#2616, #1207)', async () => {
+    // A parseable, wrong-version save is still the player's original data.
+    // Continue must not delete it before the exposed Copy out can read it.
+    const incompatible = { campaign: 'short', format: -1, note: 'recover my old save' };
+    const separateDemo = { campaign: 'demo', note: 'another saved run' };
+    const exported = vi.fn(async (_save: unknown) => undefined);
+    const host = { ...sharePlatform(), exportSave: exported };
+    host.saves.set('autosave', incompatible);
+    host.saves.set('demo-autosave', separateDemo);
+
+    const game = createGame(content, host);
+    await flush();
+    expect(game.resumable.value).toBe(true);
+    const w = mount(Start, { props: { actions: game.actions, resumable: game.resumable.value } });
+    try {
+      await flush();
+      expect(w.find('section.saved').exists()).toBe(false);
+
+      await w.get('.primary-row button.primary').trigger('click');
+      await flush();
+      expect(w.get('.resume-refusal').text()).toContain('could not be resumed');
+      expect(game.view.value).toBeNull();
+      expect(host.saves.get('autosave')).toEqual(incompatible);
+      expect(host.saves.get('demo-autosave')).toEqual(separateDemo);
+
+      // The UI's actual recovery verb must export the same invalid bytes,
+      // without accepting them as a playable run or touching the demo.
+      expect(w.get('section.saved').text()).toContain('The last sitting');
+      await w.get('section.saved button[aria-label="Copy out saved run autosave"]').trigger('click');
+      await flush();
+      expect(exported).toHaveBeenCalledExactlyOnceWith(incompatible);
+      expect(host.saves.get('autosave')).toEqual(incompatible);
+      expect(host.saves.get('demo-autosave')).toEqual(separateDemo);
+    } finally {
+      w.unmount();
+    }
+  });
+
   it('still offers the autosave slot from the list when resumable lags behind it', async () => {
     const saves: SaveSummary[] = [{ slot: 'autosave', year: 1090 }];
     const w = mount(Start, { props: { actions: spyActions(saves), resumable: false } });
