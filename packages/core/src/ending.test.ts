@@ -1456,8 +1456,8 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
 
     // An imported or inconsistent record can pair a future page with a future
-    // outcome. The Afterimage's historical inventory still discovers it, but
-    // it is not testimony available to the creditor at this year's reading.
+    // outcome. The creditor must reject it at this year's reading, regardless
+    // of the separate Afterimage projection's chronology rules (#2657).
     const victim = w.people.get(recorded.people![0]!)!;
     recorded.year = w.year + 1;
     decision.year = recorded.year;
@@ -1465,7 +1465,6 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     // Keep all three witnesses consistent so the purpose date guard, not
     // a missing rite attribution, is the only reason to refuse the page.
     victim.died = recorded.year;
-    expect(afterimageEvidence(ctx).spentBlood?.source.year).toBe(w.year + 1);
     const before = digestOf(ctx);
     for (const mode of ['original', 'plainenglish'] as const) {
       setProseMode(ctx, mode);
