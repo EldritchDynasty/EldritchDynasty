@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadContent } from '@ed/content';
@@ -117,6 +117,29 @@ describe('atomic exported run replacement (#904)', () => {
     const target = join(directory, 'eldritch-run.json');
     writeFileSync(target, '{"format":28,"year":1450}', 'utf8');
     expect(writeJsonAtomically(target, { format: 28, year: 1452 })).toBe(target);
+    expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual({ format: 28, year: 1452 });
+    expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
+  });
+
+  it('creates owner-only native JSON and keeps it private on replacement (#2587)', () => {
+    // POSIX applies mode 0666 minus umask to open('wx') unless explicitly
+    // restricted. Exercise a normal permissive umask rather than depending on
+    // the CI runner's configuration. Windows file privacy uses ACLs instead.
+    if (process.platform === 'win32') return;
+    const target = join(directory, 'eldritch-run.json');
+    const previousUmask = process.umask(0o022);
+    try {
+      writeJsonAtomically(target, { format: 28, year: 1450 });
+      expect(statSync(target).mode & 0o077).toBe(0);
+
+      // Replacing a formerly world-readable inode must not inherit its bits.
+      chmodSync(target, 0o644);
+      expect(statSync(target).mode & 0o777).toBe(0o644);
+      writeJsonAtomically(target, { format: 28, year: 1452 });
+      expect(statSync(target).mode & 0o077).toBe(0);
+    } finally {
+      process.umask(previousUmask);
+    }
     expect(JSON.parse(readFileSync(target, 'utf8'))).toEqual({ format: 28, year: 1452 });
     expect(readdirSync(directory)).toEqual(['eldritch-run.json']);
   });
