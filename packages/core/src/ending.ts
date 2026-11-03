@@ -657,6 +657,12 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       return personId !== undefined
         && page.id === `ledger_wait:${personId}`
         && page.rung === 'demigod'
+        // The wait is an automatic Chronicle entry, not a player-authored
+        // Record choice. An embellished/omitted or reclassified entry cannot
+        // serve as the original, unaltered testimony of that wait.
+        && page.weight === 'paragraph'
+        && page.named === false
+        && page.record === undefined
         && page.text !== null
         && !page.greyed
         && page.year <= w.year;
