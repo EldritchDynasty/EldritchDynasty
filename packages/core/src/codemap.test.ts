@@ -885,6 +885,16 @@ describe('the editor Vite entry points', () => {
     }
     return `Read-only fixture changed:\n${differences.length ? differences.join('\n') : '(no persistent entry difference; inspect snapshot traversal)'}`;
   }
+  function assertUnchangedSnapshot(
+    before: string, after: string, beforeEntries: SnapshotManifest, afterEntries: SnapshotManifest,
+  ): void {
+    // Vitest's error reporter can omit an expect() message on CI. Throw the
+    // manifest diff explicitly so intermittent Git bookkeeping changes name
+    // the offending paths instead of reporting only two opaque hashes.
+    if (after !== before) {
+      throw new Error(`Fixture snapshot SHA changed: ${before} -> ${after}\n${describeSnapshotChanges(beforeEntries, afterEntries)}`);
+    }
+  }
   function snapshot(
     root: string, afterListing?: (dir: string, names: readonly string[]) => void,
     manifest?: SnapshotManifest,
@@ -954,7 +964,7 @@ describe('the editor Vite entry points', () => {
       utimesSync(gitDir, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
       const afterEntries: SnapshotManifest = new Map();
       const after = snapshot(cwd, undefined, afterEntries);
-      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
+      assertUnchangedSnapshot(before, after, beforeEntries, afterEntries);
       write('packages/core/src/permanent.ts', 'export const changed = true;\n');
       expect(snapshot(cwd)).not.toBe(before);
     });
@@ -969,7 +979,7 @@ describe('the editor Vite entry points', () => {
       utimesSync(config, new Date('2000-01-01T00:00:00Z'), new Date('2000-01-01T00:00:00Z'));
       const afterEntries: SnapshotManifest = new Map();
       const after = snapshot(cwd, undefined, afterEntries);
-      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
+      assertUnchangedSnapshot(before, after, beforeEntries, afterEntries);
 
       writeFileSync(config, readFileSync(config, 'utf8') + '\n[fixture-change]\nvalue = changed\n');
       expect(snapshot(cwd)).not.toBe(before);
@@ -1014,6 +1024,24 @@ describe('the editor Vite entry points', () => {
       expect(after).not.toBe(before);
     });
 
+    it('reports changed paths rather than only opaque hashes when a read-only snapshot mismatches', () => {
+      const beforeEntries = new Map<string, SnapshotEntry>([
+        ['.git/config', { kind: 'file', size: 3, mtimeMs: 1, digest: 'original' }],
+      ]);
+      const changedContents = new Map<string, SnapshotEntry>([
+        ['.git/config', { kind: 'file', size: 4, mtimeMs: 2, digest: 'modified' }],
+      ]);
+      expect(() => assertUnchangedSnapshot('old-sha', 'new-sha', beforeEntries, changedContents))
+        .toThrow(/Fixture snapshot SHA changed: old-sha -> new-sha[\s\S]*content changed: \.git\/config/);
+      const changedMetadata = new Map<string, SnapshotEntry>([
+        ['.git/config', { kind: 'file', size: 3, mtimeMs: 2, digest: 'original' }],
+      ]);
+      expect(() => assertUnchangedSnapshot('old-sha', 'new-sha', beforeEntries, changedMetadata))
+        .toThrow(/metadata only: \.git\/config/);
+      expect(() => assertUnchangedSnapshot('same-sha', 'same-sha', beforeEntries, changedContents))
+        .not.toThrow();
+    });
+
     it('plans dirty local changes from a subdirectory without credentials or writes', async () => {
       const { cwd } = checkout();
       const beforeEntries: SnapshotManifest = new Map();
@@ -1028,7 +1056,7 @@ describe('the editor Vite entry points', () => {
       expect(await planner.gatherPlan({ cwd: join(cwd, 'packages/core'), base: 'HEAD' })).toEqual(parsed);
       const afterEntries: SnapshotManifest = new Map();
       const after = snapshot(cwd, undefined, afterEntries);
-      expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
+      assertUnchangedSnapshot(before, after, beforeEntries, afterEntries);
     });
 
     it('reports missing base and real shallow history as uncertain, without repairing either', () => {
@@ -1044,7 +1072,7 @@ describe('the editor Vite entry points', () => {
         expect(commands(parsed.recommendedLocal)).toEqual([FULL]);
         const afterEntries: SnapshotManifest = new Map();
         const after = snapshot(cwd, undefined, afterEntries);
-        expect(after, describeSnapshotChanges(beforeEntries, afterEntries)).toBe(before);
+        assertUnchangedSnapshot(before, after, beforeEntries, afterEntries);
       }
     });
 
