@@ -1239,6 +1239,28 @@ describe('collection returns to where the run began (#1867 §6)', () => {
     expect(w.chronicle.at(-1)!.text).toBe('The children have signed the autumn page.');
   });
 
+  it('quotes opening-arc pages only after their year, retaining dated blanks', () => {
+    const ctx = atTheTerm();
+    const year = ctx.world.year;
+    ctx.world.ending = { id: 'forgotten', year };
+    ctx.world.chronicle.push(
+      page(year, 'the_tutors_good_years', null, { record: 'omit' }),
+      page(year + 1, 'three_names_in_the_day_book', 'A future claim.', { record: 'embellish' }),
+    );
+
+    const before = digestOf(ctx);
+    expect(epilogueOf(ctx)!.beginning?.pages.map((e) => [e.eventId, e.text])).toEqual([
+      ['the_tutors_good_years', null],
+    ]);
+    expect(digestOf(ctx), 'a reader never changes the saved account').toBe(before);
+
+    ctx.world.chronicle.at(-1)!.year = year;
+    expect(epilogueOf(ctx)!.beginning?.pages.map((e) => [e.eventId, e.text])).toEqual([
+      ['the_tutors_good_years', null],
+      ['three_names_in_the_day_book', 'A future claim.'],
+    ]);
+  });
+
   it('says nothing it did not see: no ambition tracked, no crossing, no opening pages', () => {
     const ctx = atTheTerm();
     ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
