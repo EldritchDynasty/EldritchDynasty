@@ -302,7 +302,7 @@ export function bidAtAuction(ctx: SimCtx, lotId_: string, currency: BidCurrency,
   if (pledge?.reason) return { ok: false, reason: pledge.reason };
   if (currency === 'heirloom') {
     const offered = heirloomOffered ? w.heirlooms.get(heirloomOffered) : undefined;
-    if (!offered || offered.acquiredYear > w.year) {
+    if (!heirloomOffered || !offered || offered.acquiredYear > w.year) {
       return { ok: false, reason: msg(ctx, 'auction.refuse.bid_no_heirloom', 'the house does not hold that heirloom') };
     }
     if (spentHeirloom(offered)) {
