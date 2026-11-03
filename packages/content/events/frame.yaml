@@ -900,14 +900,19 @@ events:
     tags: [frame, baseline, record]
     purposes: [advance_clause, establish_magic_rule, force_record_choice]
     # A page nobody agrees about needs the family to have left one — this is
-    # the interlude for a house that omits.
+    # the interlude for a house that omits. It names the blank it reads
+    # (#1987): {PAGE_YEAR} and {PAGE_SUBJECT} are the earliest blank no
+    # interlude has named yet, so the first time it plays it points at the
+    # house's own first omission. It names the page and settles nothing.
     reads:
       - { omitted: { atLeast: 1 } }
     slots:
       LISTENER_A: { role: listener_blood }
       LISTENER_B: { role: listener_record }
     body: >-
-      There is a page the guardian turns past every time, and {NARRATOR.they}
+      There is a page the guardian turns past every time, the one dated
+      {PAGE_YEAR}, beneath which the house was to have written of
+      {PAGE_SUBJECT} and wrote nothing at all; and {NARRATOR.they}
       turn{NARRATOR.s} past it at the same speed {NARRATOR.they}
       turn{NARRATOR.s} the others, which is the only reason anybody ever
       noticed. It has been read aloud in this room perhaps four times in eight
@@ -1442,12 +1447,13 @@ proseVariants:
     plainenglish: >-
       A Page Always Skipped
   - address: "content:events/frame.yaml#events[id=frame_the_page_he_does_not_turn].body"
-    of: "7e6862388174c6ac"
+    of: "284b4ecb0ee653a7"
     plainenglish: >-
-      There is one page the guardian always turns past. Every time,
-      {NARRATOR.they} turn{NARRATOR.s} past it at exactly the same speed
-      {NARRATOR.they} turn{NARRATOR.s} the others, and that is the only reason
-      anyone ever noticed. In eight hundred years it has been read aloud in
+      There is one page the guardian always turns past: the page for
+      {PAGE_YEAR}, where the house should have written about {PAGE_SUBJECT}
+      and wrote nothing. Every time, {NARRATOR.they} turn{NARRATOR.s} past it
+      at exactly the same speed {NARRATOR.they} turn{NARRATOR.s} the others,
+      and that is the only reason anyone ever noticed. In eight hundred years it has been read aloud in
       this room perhaps four times, each time by someone who did not know it
       was that page. Each of those four people describes it differently from
       the other three.
