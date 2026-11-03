@@ -40,13 +40,16 @@ export function heirloomDef(ctx: SimCtx, id: string): HeirloomDef | undefined {
   return ctx.content.heirloom(id);
 }
 
-/** Put one in the house's hands. Idempotent — a house owns a thing once. */
+/** Put one in the house's hands. An already held heirloom is not granted twice. */
 export function grantHeirloom(ctx: SimCtx, id: string): HeirloomState | undefined {
   const def = heirloomDef(ctx, id);
   if (!def) return undefined;
 
   const existing = ctx.world.heirlooms.get(id);
-  if (existing) return existing;
+  // A future-dated imported state is not possession yet. A real grant now
+  // replaces that phantom with fresh charges, rather than preserving its
+  // future date or any spending attached to it.
+  if (existing && existing.acquiredYear <= ctx.world.year) return existing;
 
   const state: HeirloomState = {
     id,
