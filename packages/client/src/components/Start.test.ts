@@ -333,6 +333,50 @@ describe('the Demonstration front door (#2063)', () => {
     expect(reSavedDemo).toEqual(originalDemo);
   });
 
+  it('lists a Demonstration written by a slow host before the Start screen takes its snapshot (#2624)', async () => {
+    const host = sharePlatform();
+    const game = createGame(content, host);
+    await flush();
+    game.actions.begin(1979004, 'short');
+    await flush();
+    const fullSave = host.saves.get('autosave');
+    expect(fullSave).toMatchObject({ campaign: 'short' });
+
+    // A native write may still be pending when Leave remounts Start. Without
+    // waiting for autosaveTail, the first listSaves(true) resolves too early
+    // and the new Demonstration never appears until the screen is revisited.
+    let finishWrite!: () => void;
+    const slowWrite = new Promise<void>((resolve) => { finishWrite = resolve; });
+    const writeSave = host.writeSave.bind(host);
+    let demoWriteStarted = false;
+    host.writeSave = async (slot, save) => {
+      if (slot === 'demo-autosave') {
+        demoWriteStarted = true;
+        await slowWrite;
+      }
+      await writeSave(slot, save);
+    };
+
+    game.actions.begin(1979005, 'demo');
+    const listing = game.actions.listSaves(true);
+    let listingSettled = false;
+    void listing.then(() => { listingSettled = true; });
+    try {
+      await flush();
+      expect(demoWriteStarted).toBe(true);
+      expect(host.saves.has('demo-autosave')).toBe(false);
+      expect(listingSettled).toBe(false);
+    } finally {
+      finishWrite();
+    }
+    expect(await listing).toEqual(expect.arrayContaining([
+      { slot: 'autosave' },
+      { slot: 'demo-autosave' },
+    ]));
+    expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
+    expect(host.saves.get('autosave')).toEqual(fullSave);
+  });
+
   it('reports a refused Demonstration resume at its own row, leaving full Continue available', async () => {
     const actions = spyActions([{ slot: 'demo-autosave', year: 1061 }]);
     vi.mocked(actions.load).mockResolvedValueOnce(false);
