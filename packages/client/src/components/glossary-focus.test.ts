@@ -322,3 +322,38 @@ describe('in-place Standing disclosure', () => {
   });
 
 });
+
+describe('authored Discrepancy disclosure and Standing relation (#2603)', () => {
+  it('follows a related term in both reading modes, then returns keyboard focus on Escape', async () => {
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      const label = proseMode === 'original' ? 'Discrepancy' : 'Disputed account';
+      const relatedName = proseMode === 'original' ? 'Standing' : 'Reputation';
+      const text = label + ' was questioned.';
+      const wrapper = render(text, proseMode);
+      const first = wrapper.get('button.glossary-term');
+      expect(first.text()).toBe(label);
+      await first.trigger('click');
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(1);
+      const related = wrapper.findAll('button.glossary-term')
+        .find(button => button.text() === relatedName);
+      expect(related).toBeDefined();
+      await related!.trigger('click');
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(2);
+      expect(wrapper.findAll('button.glossary-term')).toHaveLength(2);
+      const nested = wrapper.findAll('[role="note"]')[1]!;
+      expect(nested.text()).toContain(
+        proseMode === 'original'
+          ? 'the regard the wider world gives the house.'
+          : 'How the wider world regards this family.',
+      );
+      (nested.element as HTMLElement).focus();
+      await nested.trigger('keydown', { key: 'Escape' });
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(1);
+      expect(document.activeElement).toBe(related!.element);
+      await first.trigger('keydown', { key: 'Escape' });
+      expect(wrapper.find('[role="note"]').exists()).toBe(false);
+      expect(document.activeElement).toBe(first.element);
+      expect(wrapper.text()).toBe(text);
+    }
+  });
+});
