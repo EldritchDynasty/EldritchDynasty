@@ -9,7 +9,7 @@ import {
   digestOf, saveGame, seedLibraryMemories, setProseMode, setProseVariants, testRng, useHeirloom, order, tableView, DEBT_FLOOR,
 } from '@ed/core';
 import { missingPlainEnglish } from './prose.js';
-import { completeStudies, conditionDrag, heldBooks, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
+import { completeStudies, conditionDrag, heldBooks, loseLibraryCopy, restorationQuote, tickDistressedBookSale, tickLibraryWear, tickRestorations } from './people/library.js';
 import { canonical } from './save.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -36,6 +36,45 @@ describe('authored physical acquisition (#334)', () => {
 });
 
 describe('future-acquired physical copies (#2699)', () => {
+  it('replaces a future phantom with a pristine copy granted today (#2721)', () => {
+    const ctx = bootstrap(bundle, 2721, 1042);
+    ctx.world.library.clear();
+    const id = 'lesser_workings_of_fluid';
+    const phantom = acquireLibraryCopy(ctx, id)!;
+    phantom.acquiredYear = ctx.world.year + 3;
+    phantom.condition = 24;
+    phantom.restoresAt = ctx.world.year + 2;
+
+    expect(heldBooks(ctx)).toEqual([]);
+    const granted = acquireLibraryCopy(ctx, id)!;
+    expect(granted).not.toBe(phantom);
+    expect(granted).toEqual({ id, acquiredYear: ctx.world.year, condition: 100 });
+    expect(ctx.world.library.get(id)).toBe(granted);
+    expect(heldBooks(ctx)).toEqual([granted]);
+    expect(restorationQuote(ctx, id)?.reason).toBe('the copy needs no repair');
+
+    // A later acquisition of a genuinely held copy must not restore its wear.
+    granted.condition = 36;
+    expect(acquireLibraryCopy(ctx, id)).toBe(granted);
+    expect(granted.condition).toBe(36);
+  });
+
+  it('does not lose a future phantom or touch studies before ownership begins (#2721)', () => {
+    const ctx = bootstrap(bundle, 2721, 1042);
+    ctx.world.library.clear();
+    const id = 'lesser_workings_of_fluid';
+    const phantom = acquireLibraryCopy(ctx, id)!;
+    phantom.acquiredYear = ctx.world.year + 2;
+    const before = digestOf(ctx);
+    expect(loseLibraryCopy(ctx, id)).toBe(false);
+    expect(digestOf(ctx)).toBe(before);
+    expect(ctx.world.library.get(id)).toBe(phantom);
+
+    ctx.world.year = phantom.acquiredYear;
+    expect(loseLibraryCopy(ctx, id)).toBe(true);
+    expect(ctx.world.library.has(id)).toBe(false);
+  });
+
   it('does not expose, damage, or restore a book before its acquisition year', () => {
     const ctx = bootstrap(bundle, 2699, 1042);
     ctx.world.library.clear();
