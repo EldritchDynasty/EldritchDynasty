@@ -38,7 +38,7 @@ describe('a frame read on the record itself', () => {
     expect(inPool(ctx), 'nothing has been written yet').toBe(false);
 
     ctx.world.chronicle.push({
-      year: 1200, weight: 'page', text: 'Two of three, and everyone present saw it.',
+      year: ctx.world.year, weight: 'page', text: 'Two of three, and everyone present saw it.',
       eventId: SOURCE, named: true, record: 'record',
     });
     expect(inPool(ctx)).toBe(true);
@@ -52,7 +52,7 @@ describe('a frame read on the record itself', () => {
   it('counts a dated blank as a page', () => {
     const ctx = bootstrap(bundle, 4242, 1042);
     ctx.world.chronicle.push({
-      year: 1200, weight: 'page', text: null, eventId: SOURCE, named: false, record: 'omit',
+      year: ctx.world.year, weight: 'page', text: null, eventId: SOURCE, named: false, record: 'omit',
     });
     expect(inPool(ctx)).toBe(true);
   });
@@ -60,11 +60,22 @@ describe('a frame read on the record itself', () => {
   it('is not satisfied by some other event writing a page', () => {
     const ctx = bootstrap(bundle, 4242, 1042);
     ctx.world.chronicle.push({
-      year: 1200, weight: 'page', text: 'Something else entirely.',
+      year: ctx.world.year, weight: 'page', text: 'Something else entirely.',
       eventId: 'seal_aftermath', named: false, record: 'record',
     });
     expect(inPool(ctx)).toBe(false);
   });
+  it('does not unlock an interlude from a page dated after this year', () => {
+    const ctx = bootstrap(bundle, 4242, 1042);
+    ctx.world.chronicle.push({
+      year: ctx.world.year + 1, weight: 'page', text: 'An account not yet written.',
+      eventId: SOURCE, named: true, record: 'record',
+    });
+    expect(inPool(ctx), 'a future-dated page cannot trigger the frame now').toBe(false);
+    ctx.world.chronicle.at(-1)!.year = ctx.world.year;
+    expect(inPool(ctx), 'the same page can trigger the frame once dated today').toBe(true);
+  });
+
 });
 
 /**
