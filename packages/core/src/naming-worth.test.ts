@@ -163,6 +163,36 @@ describe('a name the player chose costs something', () => {
     expect(namesakeBurden(ctx)).toBeCloseTo(NAMESAKE_EXPECTATION);
   });
 
+  it('ignores future succession histories until their year (#2745)', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const { ctx, head } = withNamesake(true);
+      setProseMode(ctx, mode);
+      const year = ctx.world.year;
+
+      // A recovered future namesake is not an earlier Head today.
+      ctx.world.succession = [
+        { person: asId<PersonId>('p_future'), name: 'Edric', from: year + 1, to: year + 2 },
+        { person: head.id, name: head.name, from: year },
+      ];
+      const untouched = structuredClone(ctx.world.succession);
+      expect(headNamesake(ctx)).toBeUndefined();
+      expect(namesakeBurden(ctx)).toBe(0);
+      expect(ctx.world.succession).toEqual(untouched);
+
+      // An actual earlier bearer still counts, but the future bearer does not.
+      ctx.world.succession.unshift({
+        person: asId<PersonId>('p_past'), name: 'Edric', from: year - 100, to: year - 1,
+      });
+      expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 1 });
+      expect(namesakeBurden(ctx)).toBeCloseTo(NAMESAKE_EXPECTATION);
+
+      // Once the saved future reign's date arrives it becomes historical evidence.
+      ctx.world.year = year + 1;
+      expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 2 });
+      expect(namesakeBurden(ctx)).toBeCloseTo(2 * NAMESAKE_EXPECTATION);
+    }
+  });
+
   it('measures a Head the player named after a Head', () => {
     const { ctx } = withNamesake(true);
     expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 1 });
