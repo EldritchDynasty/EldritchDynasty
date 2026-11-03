@@ -249,6 +249,28 @@ describe('the plate', () => {
     expect(head(lit).colour).not.toBe(head(plain).colour);
   });
 
+  it('measures Chronicle titles with the font PNG and SVG actually draw (#2565)', () => {
+    const measured: { text: string; font: string }[] = [];
+    const measure: Measure = (text, font) => {
+      measured.push({ text, font });
+      return text.length * 6;
+    };
+    const rows = plateRows([entry({ title: 'A bold account', text: 'A thing happened.' })], measure);
+    const heading = rows.find((row) => row.text === 'A bold account');
+    expect(heading).toBeDefined();
+    expect(heading!.weight).toBe(500);
+    expect(measured.find((call) => call.text === heading!.text)?.font).toBe(rowFont(heading!));
+    expect(rowFont(heading!)).toContain('500 ');
+    expect(plateSvg(rows, 'House', 'Chronicle'))
+      .toContain('font-weight="500">A bold account</text>');
+
+    // Body rows keep their original face and are not accidentally emphasised.
+    const body = rows.find((row) => row.text === 'A thing happened.');
+    expect(body).toBeDefined();
+    expect(body!.weight).toBeUndefined();
+    expect(rowFont(body!)).not.toContain('500 ');
+  });
+
   it('sets an improvement in italic, because the house is telling it', () => {
     const rows = plateRows([entry({ record: 'embellish' })], monospace);
     expect(rows.some((r) => r.italic)).toBe(true);
