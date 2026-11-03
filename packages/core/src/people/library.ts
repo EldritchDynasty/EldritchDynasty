@@ -235,7 +235,10 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id)) {
     return { ok: false, reason: msg(ctx, 'library.refuse.on_duty', 'they are keeping a Mystic duty') };
   }
-  if (ctx.world.library.get(def.id)?.restoresAt !== undefined) {
+  const shelfCopy = ctx.world.library.get(def.id);
+  // An imported appointment on a future-only copy cannot block a borrowed
+  // study today: the house has no physical copy at the binder yet.
+  if (shelfCopy && shelfCopy.acquiredYear <= ctx.world.year && shelfCopy.restoresAt !== undefined) {
     return { ok: false, reason: msg(ctx, 'library.refuse.binder', 'the copy is with the binder') };
   }
   // §11's LEARNING GATE (issue #79). "Until a character Awakens, all power is
