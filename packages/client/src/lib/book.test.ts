@@ -943,6 +943,41 @@ describe('share codes on exported images', () => {
     expect(svg).toContain('font-family="Georgia, &quot;Iowan Old Style&quot;, &quot;Palatino Linotype&quot;, serif" font-size="18" font-style="normal">A &lt;line&gt; &amp; &quot;witness&quot;</text>');
   });
 
+  it('puts accessible SVG name and complete nameless code before artwork in both reading modes (#2609)', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const foot = plateFoot(CODE, monospace, mode);
+      const chronicle = plateSvg([], 'House <Ash>', 'An & account', foot);
+      const chronicleChildren = chronicle.split('\n').slice(1);
+      expect(chronicleChildren[0]).toBe('<title>House &lt;Ash&gt; · An &amp; account</title>');
+      expect(chronicleChildren[1]).toBe(`<desc>${foot.label}. Share code: ${CODE}</desc>`);
+      expect(chronicleChildren[2]).toMatch(/^<rect /);
+      expect(chronicle.match(/<title>/g)).toHaveLength(1);
+      expect(chronicle.match(/<desc>/g)).toHaveLength(1);
+      // No-code exports still have a named image, followed immediately by artwork.
+      const noCodePlate = plateSvg([], 'House', 'An account');
+      expect(noCodePlate.split('\n')[1]).toBe('<title>House · An account</title>');
+      expect(noCodePlate.split('\n')[2]).toMatch(/^<rect /);
+      expect(noCodePlate).not.toContain('<desc>');
+
+      const model = afterimageModel({
+        ...input, houseName: 'House <Ash>', endingTitle: 'An & ending', shareCode: CODE,
+      }, mode);
+      const afterimage = afterimageSvg(model, afterimageLayout(model, monospace));
+      const afterimageChildren = afterimage.split('\n').slice(1);
+      expect(afterimageChildren[0]).toBe('<title>House &lt;Ash&gt; · An &amp; ending</title>');
+      expect(afterimageChildren[1]).toBe(`<desc>${model.share!.heading}: ${CODE}</desc>`);
+      expect(afterimageChildren[2]).toMatch(/^<rect /);
+      expect(afterimage.match(/<title>/g)).toHaveLength(1);
+      expect(afterimage.match(/<desc>/g)).toHaveLength(1);
+
+      const noCodeModel = afterimageModel(input, mode);
+      const noCodeAfterimage = afterimageSvg(noCodeModel, afterimageLayout(noCodeModel, monospace));
+      expect(noCodeAfterimage.split('\n')[1]).toBe('<title>Salt · T</title>');
+      expect(noCodeAfterimage.split('\n')[2]).toMatch(/^<rect /);
+      expect(noCodeAfterimage).not.toContain('<desc>');
+    }
+  });
+
   it('chooses the face per row', () => {
     expect(rowFont({ size: 14, mono: true })).toBe(`14px ${PLATE.mono}`);
     expect(rowFont({ size: 19, italic: true })).toBe(`italic 19px ${PLATE.serif}`);
