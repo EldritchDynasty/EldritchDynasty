@@ -362,7 +362,10 @@ export function echoBearing(ctx: SimCtx): number {
   for (const entry of acts) {
     if (entry.echoed || ctx.world.year - entry.year < ECHO_AFTER) continue;
     entry.echoed = true;
-    const sameKind = acts.filter((a) => a.kind === entry.kind && a.echoedIn !== undefined);
+    // Future-dated saved echoes have not happened yet and cannot suppress a
+    // due line or advance this year's sentence rotation.
+    const sameKind = acts.filter((a) => a.kind === entry.kind
+      && a.echoedIn !== undefined && a.echoedIn <= ctx.world.year);
     if (sameKind.some((a) => ctx.world.year - a.echoedIn! < ECHO_SPACING)) continue;
     entry.echoedIn = ctx.world.year;
     ctx.world.chronicle.push({
