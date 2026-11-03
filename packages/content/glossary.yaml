@@ -12,3 +12,18 @@ glossary:
       original: the regard the wider world gives the house.
       plainenglish: How the wider world regards this family.
     related: []
+
+  # The Record's account is not impartial. This terms a challenge to a
+  # written claim, not a verdict that either teller is right.
+  - id: discrepancy
+    names:
+      original: Discrepancy
+      plainenglish: Disputed account
+    aliases:
+      # Saved wording retains its own register when preferences change.
+      original: [Discrepancy, Discrepancies, Disputed account, Disputed accounts]
+      plainenglish: [Disputed account, Disputed accounts, Discrepancy, Discrepancies]
+    definition:
+      original: a claim in the house's Record challenged by another account or surviving proof.
+      plainenglish: When another account or piece of evidence disputes what the family wrote down.
+    related: [standing]
