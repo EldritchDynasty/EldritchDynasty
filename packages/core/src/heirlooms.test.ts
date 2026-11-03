@@ -99,6 +99,40 @@ describe('arc heirlooms do not spend the ambient frequency ration', () => {
 });
 
 describe('applying an heirloom is generic', () => {
+  it('replaces a future-dated phantom with a real grant today, without resetting real holdings (#2719)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const id = 'portion_of_agelessness';
+    const bearer = someone(ctx);
+    const phantom = grantHeirloom(ctx, id)!;
+    phantom.acquiredYear = ctx.world.year + 3;
+    phantom.spent = true;
+    phantom.usesLeft = 0;
+    phantom.lastUsedYear = ctx.world.year + 2;
+    phantom.usedOn.push(bearer.id);
+
+    expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(false);
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
+
+    // A real event grant today must not inherit a saved phantom acquisition,
+    // consumed charges, stale bearer history or cooldown from a future year.
+    const granted = grantHeirloom(ctx, id)!;
+    expect(granted).not.toBe(phantom);
+    expect(granted).toEqual({
+      id, acquiredYear: ctx.world.year,
+      usesLeft: ctx.content.mustHeirloom(id).use.charges,
+      spent: false, usedOn: [],
+    });
+    expect(ctx.world.heirlooms.get(id)).toBe(granted);
+    expect(heldHeirlooms(ctx)).toContain(granted);
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+
+    // A second grant once truly held remains idempotent, even after spending.
+    granted.spent = true;
+    expect(grantHeirloom(ctx, id)).toBe(granted);
+    expect(granted.spent).toBe(true);
+    expect(granted.acquiredYear).toBe(ctx.world.year);
+  });
+
   it('does not present or spend a future-acquired heirloom before its year (#2697)', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const bearer = someone(ctx);
