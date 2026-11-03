@@ -361,3 +361,72 @@ describe('cadet endowment has a measured political cost and benefit (#1219)', ()
     expect(loaded.world.branches.get(gift.id)?.grievance).toBeCloseTo(gift.grievance, 8);
   });
 });
+
+
+describe('future-founded cadet halls (#2781)', () => {
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`does not retire an unbuilt hall before its founding (${mode})`, () => {
+      const { ctx, cousin } = household(mode);
+      const w = ctx.world;
+      const foundingYear = w.year + 8;
+      const id = 'future_hall' as never;
+      w.branches.set(id, {
+        id, name: 'The Unbuilt Hall', house: w.playerHouse, founder: cousin.id,
+        splitFrom: 'main', foundedYear: foundingYear, grievance: 90,
+      } as never);
+      w.discontent = 0;
+      const pages = w.chronicle.length;
+
+      tickBranches(ctx);
+      expect(w.branches.get(id)!.extinct).toBeUndefined();
+      expect(w.branches.get(id)!.grievance).toBe(90);
+      expect(w.chronicle).toHaveLength(pages);
+      expect(w.discontent).toBe(0);
+
+      w.year = foundingYear - 1;
+      tickBranches(ctx);
+      expect(w.branches.get(id)!.extinct).toBeUndefined();
+      expect(w.chronicle).toHaveLength(pages);
+      expect(w.discontent).toBe(0);
+
+      // A genuine, empty hall may be closed once its actual founding year arrives.
+      w.year = foundingYear;
+      tickBranches(ctx);
+      expect(w.branches.get(id)!.extinct).toBe(foundingYear);
+      expect(w.chronicle).toHaveLength(pages + 1);
+      expect(w.chronicle.at(-1)!.text).toContain('0 years after it began.');
+    });
+  }
+
+  it('does not count not-yet-founded halls against the five-hall cap', () => {
+    const { ctx, cousin } = household();
+    const w = ctx.world;
+    const ids = Array.from({ length: 5 }, (_, index) => `future_hall_${index}`);
+    for (const id of ids) {
+      w.branches.set(id as never, {
+        id, name: id, house: w.playerHouse, founder: cousin.id,
+        splitFrom: 'main', foundedYear: w.year + 10, grievance: 90,
+      } as never);
+    }
+    const pages = w.chronicle.length;
+    const founded = settleBranches(ctx);
+    expect(founded).toHaveLength(1);
+    expect(w.chronicle).toHaveLength(pages + 1);
+    for (const id of ids) expect(w.branches.get(id as never)!.extinct).toBeUndefined();
+  });
+
+  it('keeps previously extinct historical branches retired', () => {
+    const { ctx, cousin } = household();
+    const w = ctx.world;
+    const id = 'old_extinct_hall' as never;
+    w.branches.set(id, {
+      id, name: 'Old Hall', house: w.playerHouse, founder: cousin.id,
+      splitFrom: 'main', foundedYear: w.year - 30, extinct: w.year - 1, grievance: 90,
+    } as never);
+    w.discontent = 0;
+    tickBranches(ctx);
+    expect(w.branches.get(id)!.extinct).toBe(w.year - 1);
+    expect(w.discontent).toBe(0);
+    expect(w.chronicle).toHaveLength(0);
+  });
+});
