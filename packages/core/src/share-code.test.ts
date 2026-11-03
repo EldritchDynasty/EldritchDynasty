@@ -373,7 +373,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     const code = codeOf(founded(), { names: true });
     // Directionality controls cannot occur in the ASCII wire format, but a
     // bidi text container may insert them around or inside copied characters.
-    for (const mark of ['\\u061C', '\\u200E', '\\u200F', '\\u2066', '\\u2067', '\\u2068', '\\u2069']) {
+    for (const mark of ['\u061C', '\u200E', '\u200F', '\u2066', '\u2067', '\u2068', '\u2069']) {
       const copied = `${mark}${code.split('').join(mark)}${mark}`;
       expect(readShareCode(copied, content, { build: BUILD }).ok).toBe(true);
       expect(newGameFromShareCode(copied, content, { build: BUILD }).ok).toBe(true);
@@ -385,7 +385,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     // Ignoring a bidi mark must not make a visible mutation pass the checksum.
     const body = code.split('.')[1]!;
     const altered = code.replace(body, (body[0] === 'A' ? 'B' : 'A') + body.slice(1));
-    expect(problemOf(`\\u200F${altered}\\u200E`)).toEqual({ kind: 'damaged' });
+    expect(problemOf(`\u200F${altered}\u200E`)).toEqual({ kind: 'damaged' });
   });
 
   it('bounds padded input before normalizing away whitespace', () => {
