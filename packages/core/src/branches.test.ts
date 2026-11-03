@@ -394,7 +394,9 @@ describe('future-founded cadet halls (#2781)', () => {
       tickBranches(ctx);
       expect(w.branches.get(id)!.extinct).toBe(foundingYear);
       expect(w.chronicle).toHaveLength(pages + 1);
-      expect(w.chronicle.at(-1)!.text).toContain('0 years after it began.');
+      expect(w.chronicle.at(-1)!.text).toContain(mode === 'original'
+        ? 'ended, 0 years after it began.'
+        : 'had no one left after 0 years.');
     });
   }
 
