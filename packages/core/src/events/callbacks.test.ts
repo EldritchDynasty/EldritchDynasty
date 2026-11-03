@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { declineMatch, queueMatch, resolveMatch } from './decisions.js';
 import { dealMatch } from '../people/match.js';
-import { startDecisionArcs } from './arcs.js';
+import { startArc, startDecisionArcs } from './arcs.js';
 import { applyEffect } from './effects.js';
 import { captureFamily } from '../people/captivity.js';
 import { causeOf } from '../cause.js';
@@ -132,6 +132,28 @@ describe('decision-started arcs (#1898)', () => {
         .toEqual([futurePupil.id, presentPupil.id, laterPupil.id]);
     });
   }
+
+  it('future active arcs do not exhaust a present decision-arc capacity (#2768)', () => {
+    const ctx = testWorld(bundle, 2769, 1060);
+    const year = ctx.world.year;
+    const futurePupil = place(ctx, { sex: 'male', age: 12, name: 'Future Capacity' });
+    const presentPupil = place(ctx, { sex: 'female', age: 12, name: 'Present Capacity' });
+    const arc = ctx.content.arc(TERM)!;
+
+    // Fill the future year's actual concurrency limit, not an assumed
+    // constant: earlier years must still have their full capacity.
+    ctx.world.year = year + 4;
+    for (let i = 0; i < arc.maxConcurrentInstances; i++) {
+      expect(startArc(arc, ctx, makeRng(2768 + i), { PUPIL: futurePupil.id })).toBeDefined();
+    }
+    expect(instancesOf(ctx, TERM)).toHaveLength(arc.maxConcurrentInstances);
+
+    ctx.world.year = year;
+    startDecisionArcs(ctx, 'tutor', { PUPIL: presentPupil.id });
+    expect(instancesOf(ctx, TERM)).toHaveLength(arc.maxConcurrentInstances + 1);
+    expect(instancesOf(ctx, TERM).at(-1)?.bindings.PUPIL).toBe(presentPupil.id);
+    expect(instancesOf(ctx, TERM).at(-1)?.startedYear).toBe(year);
+  });
 
   it('a waking in the house opens the story; a waking in another house does not', () => {
     // The founding children wake in the first decades; run lifecycle until
