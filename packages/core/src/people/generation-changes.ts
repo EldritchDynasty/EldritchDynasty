@@ -48,11 +48,11 @@ export function chronicleReading(entries: readonly ChronicleEntry[]): ChronicleE
 }
 
 /** Read a record without materialising an archived person's genome in the save. */
-function recordedDeath(ctx: SimCtx, person: Person, roster: Person[]) {
+function recordedDeath(ctx: SimCtx, person: Person, roster: Person[], pages: readonly ChronicleEntry[]) {
   const people = new PersonStore();
   people.add(structuredClone(person));
   return visibleRecordView({ ...ctx, world: { ...ctx.world, people,
-    chronicle: ctx.world.chronicle.filter((page) => page.text !== null && page.record !== 'omit'),
+    chronicle: pages.filter((page) => page.text !== null && page.record !== 'omit'),
   } }, person.id, roster).claimedDeath;
 }
 
@@ -72,7 +72,9 @@ export function generationChangesOf(ctx: SimCtx, index?: number): GenerationChan
   const through = Math.min(held.to ?? w.year, w.year);
   const opening = campaignDef(w.campaign).startYear;
   const within = (year: number) => year >= held.from && year <= through;
-  const pages = chronicleReading(w.chronicle);
+  // Assign legacy page identities against the complete book before filtering;
+  // historical links must keep the same ids as book() even with future imports.
+  const pages = chronicleReading(w.chronicle).filter((page) => page.year <= w.year);
   const roster = w.people.household(w.playerHouse, w.year);
   const inTree = new Set(roster.map((p) => String(p.id)));
   for (const person of w.people.all()) if (person.status === 'vessel_consumed') inTree.add(person.id);
@@ -105,7 +107,7 @@ export function generationChangesOf(ctx: SimCtx, index?: number): GenerationChan
   for (const p of family) {
     const claimPage = deathClaims.get(p.id);
     // Most people have no death claim; the public life dates need no genome.
-    const death = claimPage ? recordedDeath(ctx, p, roster)?.year ?? p.died : p.died;
+    const death = claimPage ? recordedDeath(ctx, p, roster, pages)?.year ?? p.died : p.died;
     deaths.set(p.id, death);
     if (p.born > opening && within(p.born)) {
       const parents = (['mother', 'father'] as const).flatMap((role) => {
