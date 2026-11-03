@@ -6,7 +6,7 @@ import { rollDeath } from './people/demography.js';
 import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
 import { beginImprovement, damageParcel, grantParcel, landView } from './land.js';
 import { order, tableView } from './table.js';
-import { commitDuty, fieldSupplySaving, lifeCareFor, mysticView, quoteDuty, wardedYieldFactor } from './mystic.js';
+import { commitDuty, fieldSupplySaving, lifeCareFor, mysticView, quoteDuty, targetGap, wardedYieldFactor } from './mystic.js';
 import { resolvePresence } from './presence.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import { runYears } from './year/step.js';
@@ -33,6 +33,87 @@ const bundle = loadContent();
 const SEAT: SceneSite = { kind: 'hall', hall: 'main' };
 const FARM = 'hallowfield';
 const farmSite: SceneSite = { kind: 'parcel', parcel: FARM, slots: ['WARDEN'] };
+
+
+describe('future-dated Mystic target eligibility (#2792)', () => {
+  it('does not allow a library custodian to be assigned before the copy is acquired', () => {
+    const ctx = testWorld(bundle);
+    ctx.world.treasury = 500;
+    const working = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'library_care');
+    if (!working) throw new Error('missing authored library caretaker');
+    const book = working.books[0]!;
+    const acquired = ctx.world.year + 4;
+    ctx.world.library.set(book, { id: book, acquiredYear: acquired, condition: 80 });
+    const sex = canLearn('female', working.affinity) ? 'female' : 'male';
+    const p = place(ctx, { sex, age: 30, awakened: true });
+    p.spellsKnown = working.books.map(asId);
+    const site: SceneSite = { kind: 'book', book };
+    const order = { person: p.id, working: working.id, target: site };
+
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+    expect(quoteDuty(ctx, order).gap).toBe('target_lost');
+    ctx.world.year = acquired - 1;
+    expect(quoteDuty(ctx, order).ok).toBe(false);
+    ctx.world.year = acquired;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+    expect(quoteDuty(ctx, order).ok).toBe(true);
+    ctx.world.year++;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+  });
+
+  it('does not qualify a future prepared covert expedition for paid support', () => {
+    const ctx = testWorld(bundle);
+    const working = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'covert_support');
+    if (!working) throw new Error('missing authored covert support');
+    const departure = ctx.world.year + 5;
+    const operation = 'future_mystic_expedition';
+    ctx.world.covert.operations.push({
+      opportunity: 'future_access', targetHouse: 'house_marrow',
+      targetMembershipFrom: ctx.world.year, purpose: 'settle_grudge',
+      plan: {
+        id: operation, sponsor: 'sponsor', operative: 'operative', target: 'target',
+        motive: { kind: 'grudge', grudge: 'grudge' },
+        site: { kind: 'covert', operation }, bindings: {},
+        preparation: 'hasty', preparedAt: departure, attemptYear: departure + 2,
+        paidCrowns: 20,
+      },
+      stage: 'preparing', defence: { guards: [], response: 'ordinary', paidCrowns: 0 },
+      enemyWarned: false, crew: [], supportService: [],
+    });
+    const site: SceneSite = { kind: 'covert', operation };
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+    ctx.world.year = departure - 1;
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+    ctx.world.year = departure;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+    ctx.world.year++;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+    ctx.world.covert.operations[0]!.stage = 'closed';
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+  });
+
+  it('does not qualify a future muster as a field-working site before it begins', () => {
+    const ctx = testWorld(bundle);
+    const working = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'field_care');
+    if (!working) throw new Error('missing authored field care');
+    const began = ctx.world.year + 5;
+    const commitment = 'future_mystic_muster';
+    ctx.world.muster.commitments.push({
+      id: commitment, began, age: 'the_wars', men: 10,
+      from: {}, officers: [], credit: 0, status: 'in_the_field',
+    });
+    const site: SceneSite = { kind: 'muster', commitment };
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+    ctx.world.year = began - 1;
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+    ctx.world.year = began;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+    ctx.world.year++;
+    expect(targetGap(ctx, working, site, {})).toBeUndefined();
+    ctx.world.muster.commitments[0]!.status = 'settled';
+    expect(targetGap(ctx, working, site, {})).toBe('target_lost');
+  });
+});
 
 describe('every authored civilian definition has a live system reader (#1877)', () => {
   it.each(bundle.bundle.mysticWorkings.filter(w => civilianApplication(w) !== undefined && w.benefit.kind !== 'commission'))(
