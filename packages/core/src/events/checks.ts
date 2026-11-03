@@ -113,7 +113,8 @@ function matchesQuery(ctx: SimCtx, c: ChronicleEntry, q: ChronicleQuery): boolea
 function chronicleScore(ctx: SimCtx, q: ChronicleQuery): number {
   const w = ctx.world;
   const cutoff = q.withinYears !== undefined ? w.year - q.withinYears : -Infinity;
-  const considered = w.chronicle.filter((c) => c.year >= cutoff);
+  // Imported or inconsistent future pages are not evidence the family can cite yet.
+  const considered = w.chronicle.filter((c) => c.year >= cutoff && c.year <= w.year);
   const matched = considered.filter((c) => matchesQuery(ctx, c, q));
   if (q.measure === 'ratio') return considered.length ? matched.length / considered.length : 0;
   return matched.length;
