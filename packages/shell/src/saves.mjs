@@ -56,9 +56,13 @@ export function requireSaveEnvelope(save) {
  */
 export function listSaves(root) {
   const out = [];
+  // A case-sensitive profile may contain both House.edsave.json and
+  // House.EDSAVE.JSON. Both are refused as aliases, but share one UI slot.
+  const seenSlots = new Set();
   for (const fileName of readdirSync(root)) {
     const slot = slotOfFile(fileName);
-    if (slot === undefined) continue;
+    if (slot === undefined || seenSlots.has(slot)) continue;
+    seenSlots.add(slot);
     const path = join(root, fileName);
     // A bad entry must never hide a healthy run. Preserve the listing row even
     // when metadata lookup fails, with an explicit unreadable reason.
