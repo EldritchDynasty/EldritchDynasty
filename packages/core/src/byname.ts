@@ -171,8 +171,8 @@ function restsOn(grant: BynameGrant, discrepancy: string, page: string): boolean
 /**
  * How the reader is told a byname stands — read off the saved grant alone,
  * never off live hidden state. `undefined` means the person has no byname.
+ * An optional present-year boundary hides settlements that have yet to happen.
  */
-/** A present-year read does not reveal a settlement that has yet to happen. */
 export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): BynameStanding | undefined {
   if (person.epithet === undefined) return undefined;
   const grant = person.byname;
