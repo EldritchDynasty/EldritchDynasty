@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { glossaryDefinition, splitFirstGlossary, splitFirstStanding, standingGlossaryDefinition } from './glossary.js';
+import { loadBundle } from './content.js';
 
 describe('first Standing glossary term in saved Chronicle text', () => {
   it('preserves every character while marking only the first standalone label', () => {
@@ -233,5 +234,72 @@ describe('Discrepancy as public glossary vocabulary (#2603)', () => {
       .toBe("a claim in the house's Record challenged by another account or surviving proof.");
     expect(glossaryDefinition('discrepancy', 'plainenglish'))
       .toBe('When another account or piece of evidence disputes what the family wrote down.');
+  });
+});
+
+
+describe('Ledger and clause public glossary vocabulary (#2611)', () => {
+  it('explains the Ledger without revealing an unrecovered clause', () => {
+    expect(glossaryDefinition('ledger', 'original'))
+      .toBe("the house's account of its founding bargain, recovered a clause at a time.");
+    expect(glossaryDefinition('ledger', 'plainenglish'))
+      .toBe('The agreement that binds the family. Its terms become known as you uncover them.');
+    for (const mode of ['original', 'plainenglish'] as const) {
+      const source = 'The Ledger has changed. The Ledger remains.';
+      const segments = splitFirstGlossary(source, mode);
+      expect(segments).toEqual([
+        { text: 'The ' },
+        { text: 'Ledger', term: 'ledger' },
+        { text: ' has changed. The Ledger remains.' },
+      ]);
+      expect(segments.map(segment => segment.text).join('')).toBe(source);
+    }
+  });
+
+  it('uses the longest authored alias for Ledger clause(s), then leaves all later words intact', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const phrase of ['Ledger clause', 'Ledger clauses']) {
+        const source = `${phrase} were recovered. Another clause was read.`;
+        const segments = splitFirstGlossary(source, mode);
+        // The entire contract-term label should link to its own explanation,
+        // rather than splitting off the overlapping, shorter 'Ledger' alias.
+        expect(segments).toEqual([
+          { text: phrase, term: 'clause' },
+          { text: ' were recovered. Another clause was read.' },
+        ]);
+        expect(segments.map(segment => segment.text).join('')).toBe(source);
+      }
+      expect(splitFirstGlossary('PreLedger Ledger', mode)).toEqual([
+        { text: 'PreLedger ' },
+        { text: 'Ledger', term: 'ledger' },
+      ]);
+    }
+  });
+
+  it('recognizes both current and saved labels in Plain English without rewording saved prose', () => {
+    expect(splitFirstGlossary('Contract terms were found.', 'plainenglish')).toEqual([
+      { text: 'Contract terms', term: 'clause' },
+      { text: ' were found.' },
+    ]);
+    expect(splitFirstGlossary('A clause was recorded.', 'original')).toEqual([
+      { text: 'A ' },
+      { text: 'clause', term: 'clause' },
+      { text: ' was recorded.' },
+    ]);
+    expect(glossaryDefinition('clause', 'original'))
+      .toBe("one term of the house's founding bargain, entered in the Record when recovered.");
+    expect(glossaryDefinition('clause', 'plainenglish'))
+      .toBe("One part of the family's agreement, recorded when the family discovers it.");
+  });
+
+  it('links Ledger and clause without adding new mechanics or unvalidated references', () => {
+    const terms = loadBundle().glossary;
+    expect(terms.find(term => term.id === 'ledger')?.related).toEqual(['clause']);
+    expect(terms.find(term => term.id === 'clause')?.related).toEqual(['ledger']);
+    for (const id of ['ledger', 'clause']) {
+      const term = terms.find(entry => entry.id === id)!;
+      expect(term.aliases.original).toContain(term.names.original);
+      expect(term.aliases.plainenglish).toContain(term.names.plainenglish);
+    }
   });
 });
