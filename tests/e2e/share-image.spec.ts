@@ -139,3 +139,87 @@ for (const mode of ['original', 'plainenglish'] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+/**
+ * The Canvas-free path (#2398) uses actual SVG geometry, not the Canvas
+ * measurement available in the PNG and toBlob(null) scenarios above.
+ * Exercise the actual font in Chromium, not jsdom's stubbed SVG widths.
+ */
+for (const mode of ['original', 'plainenglish'] as const) {
+  test(`a Canvas-free browser exports the complete Chronicle share code as SVG (${mode})`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.addInitScript(({ save, mode }) => {
+      localStorage.setItem('eldritch-dynasty:reading', JSON.stringify({ proseMode: mode }));
+      localStorage.setItem('ed:save:autosave', JSON.stringify(save));
+      // Disable the initial text-measurement Canvas as well as PNG painting.
+      Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+        configurable: true, value: () => null,
+      });
+    }, { save: foundedSave(), mode });
+    await page.goto('/');
+
+    await page.getByRole('button', { name: mode === 'plainenglish'
+      ? 'Continue your last game' : 'Continue the last sitting', exact: true }).click();
+    await page.getByRole('button', { name: mode === 'plainenglish'
+      ? 'Read full Chronicle' : 'Read it whole', exact: true }).click();
+    const pending = page.waitForEvent('download');
+    await page.getByRole('button', { name: mode === 'plainenglish'
+      ? 'Save an image' : 'Save this as a page', exact: true }).click();
+    const download = await pending;
+    expect(download.suggestedFilename()).toMatch(/\\.svg$/);
+
+    const svg = await readFile(await download.path(), 'utf8');
+    const exported = await page.evaluate(({ source, mode }) => {
+      const xml = new DOMParser().parseFromString(source, 'image/svg+xml');
+      const texts = Array.from(xml.querySelectorAll('text'));
+      const label = mode === 'plainenglish'
+        ? 'Eldritch Dynasty · Share code for this starting point (names not included)'
+        : 'Eldritch Dynasty · The same beginning, names withheld';
+      const labelIndex = texts.findIndex(node => node.textContent === label);
+      // Check that the game's hidden measurement probe was retired before
+      // creating a separate, real SVG gauge for the exported code.
+      const strayProbes = document.querySelectorAll('svg[aria-hidden="true"][style*="-10000px"]').length;
+      const gauge = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      const probe = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      gauge.style.cssText = 'position:absolute;left:-10000px;top:-10000px;visibility:hidden';
+      gauge.append(probe);
+      document.body.append(gauge);
+      try {
+        const lines = labelIndex < 0 ? [] : texts.slice(labelIndex + 1).map(node => {
+          const text = node.textContent ?? '';
+          const font = node.getAttribute('font-family') ?? '';
+          const size = Number(node.getAttribute('font-size'));
+          probe.style.font = `${size}px ${font}`;
+          probe.textContent = text;
+          return { text, font, x: Number(node.getAttribute('x')), width: probe.getComputedTextLength() };
+        });
+        return {
+          parseErrors: xml.querySelectorAll('parsererror').length,
+          labelIndex,
+          description: xml.querySelector('desc')?.textContent ?? '',
+          lines, strayProbes,
+        };
+      } finally {
+        gauge.remove();
+      }
+    }, { source: svg, mode });
+
+    expect(exported.parseErrors).toBe(0);
+    expect(exported.labelIndex, 'the exported SVG labels the anonymous founding').toBeGreaterThan(-1);
+    expect(exported.strayProbes, 'temporary SVG measurement must be cleaned up').toBe(0);
+    expect(exported.lines.length).toBeGreaterThan(0);
+    const code = exported.lines.map(line => line.text).join('');
+    expect(code).toMatch(/^ED1/);
+    expect(exported.description).toContain(`Share code: ${code}`);
+    expect(exported.description).not.toContain('House Plate');
+    for (const line of exported.lines) {
+      expect(line.font).toContain('monospace');
+      expect(line.width).toBeGreaterThan(0);
+      expect(line.x + line.width, `"${line.text}" runs past the SVG column`).toBeLessThanOrEqual(1200 - 64);
+    }
+    const read = readShareCode(code, loadBundle());
+    if (!read.ok) expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    expect(errors).toEqual([]);
+  });
+}
