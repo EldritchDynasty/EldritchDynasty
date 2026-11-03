@@ -104,6 +104,86 @@ describe('the last night reads the book', () => {
 });
 
 /**
+ * An imported Chronicle may have pages whose dates are beyond the current
+ * reading. The creditor must not count or quote testimony not yet written.
+ */
+describe('a creditor cannot read future Chronicle pages (#2656)', () => {
+  it('accepts a same-year God attestation, never a future one', () => {
+    const ctx = atTheTerm();
+    ctx.world.ascension.best = 'god';
+    ctx.world.ascension.rung = 'god';
+    forge(ctx, 'god', ctx.world.year + 1);
+
+    expect(readTheChronicle(ctx).attested).toBe('none');
+    expect(readTheChronicle(ctx).attestedYear).toBeUndefined();
+    expect(selectEnding(ctx)).toBe('forgotten');
+
+    ctx.world.chronicle.at(-1)!.year = ctx.world.year;
+    const r = readTheChronicle(ctx);
+    expect(r.attested).toBe('god');
+    expect(r.attestedYear).toBe(ctx.world.year);
+    expect(r.substantiated).toBe('god');
+    expect(selectEnding(ctx)).toBe('apotheosis');
+  });
+
+  it('ignores future blanks and authored lies, while keeping standing discrepancies visible', () => {
+    const ctx = atTheTerm();
+    attest(ctx, 'hierophant', ctx.world.year);
+    const baseline = readTheChronicle(ctx);
+    const id = 'future_embellishment';
+    ctx.world.discrepancies.set(id, { severity: 'total', provableBy: [], state: 'open' });
+    ctx.world.chronicle.push({
+      year: ctx.world.year + 1, weight: 'paragraph', text: 'The house wrote a later claim.',
+      named: false, record: 'embellish', discrepancyId: id,
+    });
+    ctx.world.chronicle.push({
+      year: ctx.world.year + 1, weight: 'paragraph', text: null,
+      named: false, record: 'omit',
+    });
+
+    const earlier = readTheChronicle(ctx);
+    expect(earlier.pages).toBe(baseline.pages);
+    expect(earlier.blanks).toBe(baseline.blanks);
+    expect(earlier.embellished).toBe(baseline.embellished);
+    expect(earlier.standingLies).toBe(baseline.standingLies + 1);
+    expect(earlier.unsupportable).toBe(0);
+    expect(earlier.substantiated).toBe('hierophant');
+
+    for (const page of ctx.world.chronicle.slice(-2)) page.year = ctx.world.year;
+    const current = readTheChronicle(ctx);
+    expect(current.pages).toBe(baseline.pages + 1);
+    expect(current.blanks).toBe(baseline.blanks + 1);
+    expect(current.embellished).toBe(baseline.embellished + 1);
+    expect(current.unsupportable).toBe(4);
+    expect(current.standingLies).toBe(earlier.standingLies);
+  });
+
+  it('quotes only dated, eligible pages in order, without changing saved history', () => {
+    const ctx = atTheTerm();
+    const year = ctx.world.year;
+    ctx.world.ending = { id: 'forgotten', year };
+    ctx.world.chronicle.push(
+      { year: year - 1, weight: 'illuminated', text: 'An earlier recovered clause.', named: false },
+      { year: year + 1, weight: 'illuminated', text: 'The future clause.', named: false },
+      { year, weight: 'paragraph', text: null, named: false, record: 'omit' },
+      { year: year + 2, weight: 'paragraph', text: 'A later boast.', named: false, record: 'embellish' },
+    );
+    const before = digestOf(ctx);
+    const view = epilogueOf(ctx)!;
+
+    expect(view.read.map((page) => [page.year, page.text])).toEqual([
+      [year - 1, 'An earlier recovered clause.'],
+      [year, null],
+    ]);
+    expect(view.reckoning.pages).toBe(1);
+    expect(view.reckoning.blanks).toBe(1);
+    expect(view.reckoning.embellished).toBe(0);
+    expect(view.read[0]).not.toBe(ctx.world.chronicle[0]);
+    expect(digestOf(ctx), 'reading never writes or changes a save').toBe(before);
+  });
+});
+
+/**
  * §29.3'S THIRD BITE — THE RECORD READ BACK.
  *
  * §6's closing sentence is the specification: *a house that embellished
