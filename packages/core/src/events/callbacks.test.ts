@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { declineMatch, queueMatch, resolveMatch } from './decisions.js';
 import { dealMatch } from '../people/match.js';
-import { dueArcSteps, startArc, startDecisionArcs } from './arcs.js';
+import { cancelDecisionArcs, dueArcSteps, startArc, startDecisionArcs } from './arcs.js';
 import { applyEffect } from './effects.js';
 import { captureFamily } from '../people/captivity.js';
 import { causeOf } from '../cause.js';
@@ -173,6 +173,27 @@ describe('decision-started arcs (#1898)', () => {
 
     ctx.world.year = year + 4;
     expect(dueArcSteps(ctx, makeRng(2770)).some((step) => step.instance.id === future.id)).toBe(true);
+  });
+
+  it('present cancellation leaves an arc that starts in a future year untouched (#2768)', () => {
+    const ctx = testWorld(bundle, 2771, 1060);
+    const year = ctx.world.year;
+    const pupil = place(ctx, { sex: 'male', age: 10, name: 'Later Schoolroom' });
+    const arc = ctx.content.arc(TERM)!;
+
+    ctx.world.year = year + 4;
+    const future = startArc(arc, ctx, makeRng(2771), { PUPIL: pupil.id })!;
+    expect(future.status).toBe('active');
+
+    ctx.world.year = year;
+    const present = startArc(arc, ctx, makeRng(2772), { PUPIL: pupil.id })!;
+    cancelDecisionArcs(ctx, 'tutor', pupil.id);
+    expect(present.status).toBe('cancelled');
+    expect(future.status).toBe('active');
+
+    ctx.world.year = year + 4;
+    cancelDecisionArcs(ctx, 'tutor', pupil.id);
+    expect(future.status).toBe('cancelled');
   });
 
   it('a waking in the house opens the story; a waking in another house does not', () => {
