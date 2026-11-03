@@ -162,13 +162,13 @@ describe('a creditor cannot read future Chronicle pages (#2656)', () => {
     const ctx = atTheTerm();
     const year = ctx.world.year;
     ctx.world.ending = { id: 'forgotten', year };
+    const baseline = epilogueOf(ctx)!;
     ctx.world.chronicle.push(
       { year: year - 1, weight: 'illuminated', text: 'An earlier recovered clause.', named: false },
       { year: year + 1, weight: 'illuminated', text: 'The future clause.', named: false },
       { year, weight: 'paragraph', text: null, named: false, record: 'omit' },
       { year: year + 2, weight: 'paragraph', text: 'A later boast.', named: false, record: 'embellish' },
     );
-    const baseline = epilogueOf(ctx)!;
     const before = digestOf(ctx);
     const view = epilogueOf(ctx)!;
 
