@@ -65,7 +65,7 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
         : `That code was made by another edition of the game (${parts}). It would not begin the same house, so it is not offered.`;
     }
     case 'demonstration':
-      return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code is from the Demonstration, which is not a house\'s beginning.';
+      return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code belongs to a Demonstration house, not a full Line. It cannot begin this one.';
     case 'names_needed': {
       // 'friends' is one missing-name category but can mean several people.
       // Counting categories would misleadingly ask for only one name.
