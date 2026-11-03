@@ -1534,6 +1534,29 @@ describe('a witnessed Ledger clause beside the Long Line purpose (#1983)', () =>
     expect(epilogueOf(ctx)!.purpose?.kind).toBe('ledger_witness');
   });
 
+  it('does not read a recovered clause from a future-dated Chronicle page', () => {
+    const { ctx, page } = witnessedLedger();
+    const ending = selectEnding(ctx);
+
+    // A correctly named, unique page cannot be testimony before its year.
+    page.year = ctx.world.year + 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(ending);
+    }
+    // Its actual place in the Chronicle still qualifies; no changed ending.
+    page.year = ctx.world.year;
+    expect(epilogueOf(ctx)!.purpose).toEqual({
+      kind: 'ledger_witness', clause: clause.name, year: ctx.world.year, text: clause.text,
+    });
+    expect(selectEnding(ctx)).toBe(ending);
+    const witnessed = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ledger_witness');
+    // The evidence reader is a value-only projection, not a mutation.
+    expect(digestOf(ctx)).toBe(witnessed);
+  });
+
   it('does not treat the ambition, an inherited clause, or a count without a page as an act', () => {
     const { ctx, page } = witnessedLedger();
     ctx.world.chronicle = ctx.world.chronicle.filter((entry) => entry !== page);

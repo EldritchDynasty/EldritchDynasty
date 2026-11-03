@@ -613,6 +613,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       }, clause);
       const matches = w.chronicle.filter((entry) =>
         entry.weight === 'illuminated' && entry.named && !entry.greyed
+        // A page from a later year is not yet testimony at collection.
+        && entry.year <= w.year
         && entry.record === undefined
         && ((entry.title === clause.name && entry.text === clause.text)
           || (entry.title === plain.name && entry.text === plain.text)));
