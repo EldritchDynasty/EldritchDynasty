@@ -54,7 +54,7 @@ describe('what a keypress means', () => {
       // must still own numbered choices, Enter, Space, and help keys.
       expect(isGlossaryFocus(document.activeElement)).toBe(true);
       for (const key of ['1', 'Enter', ' ', '?']) {
-        expect(isGlossaryFocus(document.activeElement), key).toBe(true);
+        expect(isGlossaryFocus(document.activeElement) ? null : shortcutFor({ key }), key).toBeNull();
       }
 
       glossary.classList.remove('glossary-text');
