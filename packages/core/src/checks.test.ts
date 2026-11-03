@@ -121,6 +121,29 @@ describe('poolScore', () => {
     expect(ratio).toBeCloseTo(1 / 3);
   });
 
+  it('record: future-dated pages change neither the count nor the ratio denominator', () => {
+    const ctx = testWorld(bundle, 1042, 1042);
+    ctx.world.chronicle.length = 0;
+    ctx.world.chronicle.push(
+      { year: 1040, weight: 'line', text: 'old match', named: false, record: 'record' },
+      { year: 1041, weight: 'line', text: 'old nonmatch', named: false, record: 'omit' },
+      { year: 1042, weight: 'line', text: 'current match', named: false, record: 'record' },
+      { year: 1043, weight: 'line', text: 'future match', named: false, record: 'record' },
+      { year: 1044, weight: 'line', text: 'future nonmatch', named: false, record: 'omit' },
+    );
+    const score = (measure: 'count' | 'ratio', withinYears?: number) =>
+      poolScore(ctx, { kind: 'record', against: {
+        record: 'record', measure, ...(withinYears === undefined ? {} : { withinYears }),
+      } }, {});
+
+    expect(score('count')).toBe(2); // A future match cannot boost the pool.
+    expect(score('ratio')).toBeCloseTo(2 / 3); // Future matches and nonmatches stay out.
+    expect(score('count', 2)).toBe(2); // The lower year bound remains inclusive.
+    expect(score('ratio', 2)).toBeCloseTo(2 / 3);
+    expect(score('count', 0)).toBe(1); // The current year is still included.
+    expect(score('ratio', 0)).toBe(1);
+  });
+
   it('record: discrepancyState follows the entry\'s linked Discrepancy, not a guess', () => {
     const ctx = testWorld(bundle, 1042, 1042);
     ctx.world.discrepancies.set('lie_a', { severity: 'minor', provableBy: [], state: 'proven' });
