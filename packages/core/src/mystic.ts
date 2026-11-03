@@ -881,7 +881,8 @@ function prepareFieldOpposition(ctx: SimCtx, commitment: string): void {
     };
     const hostile = new Set<string>();
     for (const relationship of w.relationships.values()) {
-      if (relationship.sentiment >= 0 && !relationship.grudges.some(g => g.severity > 0)) continue;
+      // A restored future quarrel is not hostility the field can act on yet.
+      if (relationship.sentiment >= 0 && !relationship.grudges.some(g => g.severity > 0 && g.originYear <= w.year)) continue;
       const from = houseOf(relationship.from);
       const to = houseOf(relationship.to);
       const other = from === w.playerHouse ? to : to === w.playerHouse ? from : undefined;
