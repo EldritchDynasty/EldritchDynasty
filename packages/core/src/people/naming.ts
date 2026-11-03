@@ -258,7 +258,9 @@ export function headNamesake(ctx: SimCtx): Namesake | undefined {
   const w = ctx.world;
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
   if (!head) return undefined;
-  if (!w.decisionLog.some((d) => d.kind === 'name' && d.person === head.id)) return undefined;
+  // An imported future naming decision has not been made yet. It cannot raise
+  // today's namesake expectation or put a premature account in the chronicle.
+  if (!w.decisionLog.some((d) => d.kind === 'name' && d.person === head.id && d.year <= w.year)) return undefined;
 
   const mine = baseName(head.name);
   // Heads before him, by the name the house called them while they held it.
