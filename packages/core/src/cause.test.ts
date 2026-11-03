@@ -36,6 +36,9 @@ describe('Chronicle cause provenance for repeated authored Discrepancies (#1990)
     ctx.world.chronicle = ctx.world.chronicle.filter((page) => page.id !== second);
     const cause = { year: 1042, page: first, blank: false };
 
+    expect(causeOf(ctx, answer)).toBeUndefined();
+    expect(answeredBy(ctx, first)).toEqual([]);
+    ctx.world.year = 1045;
     expect(causeOf(ctx, discrepancyId)).toEqual(cause);
     expect(causeOf(ctx, answer)).toEqual(cause);
     expect(answeredBy(ctx, first)).toEqual([1045]);
@@ -58,6 +61,7 @@ describe('Chronicle cause provenance for repeated authored Discrepancies (#1990)
     // belonged to. An explicitly saved page-to-page cause remains reliable.
     ctx.world.discrepancies.get(discrepancyId)!.state = 'buried';
     expect(causeOf(ctx, answer)).toBeUndefined();
+    ctx.world.year = 1045;
     ctx.world.chronicle.find((page) => page.id === answer)!.cause = {
       year: 1042, page: second,
     };
@@ -65,4 +69,39 @@ describe('Chronicle cause provenance for repeated authored Discrepancies (#1990)
     expect(answeredBy(ctx, second)).toEqual([1045]);
     expect(answeredBy(ctx, first)).toEqual([]);
   });
+  it('ignores a future duplicate until it makes the present discrepancy ambiguous', () => {
+    const ctx = testWorld(content, 2675, 1042);
+    const discrepancy = 'the_early_waking_lie';
+    ctx.world.chronicle.push(
+      {
+        id: 'present_origin', year: 1042, weight: 'paragraph', text: 'The first account.',
+        named: false, record: 'embellish', discrepancyId: discrepancy,
+      },
+      {
+        id: 'present_answer', year: 1042, weight: 'line', text: 'The proof arrived.',
+        named: false, discrepancyId: discrepancy,
+      },
+      {
+        id: 'future_duplicate', year: 1043, weight: 'paragraph', text: 'A later account.',
+        named: false, record: 'embellish', discrepancyId: discrepancy,
+      },
+    );
+    ctx.world.discrepancies.set(discrepancy, {
+      severity: 'minor', provableBy: ['the_church'], state: 'proven',
+    });
+    const before = structuredClone(ctx.world.chronicle);
+    const cause = { year: 1042, page: 'present_origin', blank: false };
+
+    expect(causeOf(ctx, discrepancy)).toEqual(cause);
+    expect(causeOf(ctx, 'present_answer')).toEqual(cause);
+    expect(causeOf(ctx, 'future_duplicate')).toBeUndefined();
+    expect(answeredBy(ctx, 'present_origin')).toEqual([1042]);
+
+    ctx.world.year = 1043;
+    expect(causeOf(ctx, discrepancy)).toBeUndefined();
+    expect(causeOf(ctx, 'present_answer')).toBeUndefined();
+    expect(answeredBy(ctx, 'present_origin')).toEqual([]);
+    expect(ctx.world.chronicle).toEqual(before);
+  });
+
 });
