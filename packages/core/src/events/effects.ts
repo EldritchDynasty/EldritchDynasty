@@ -215,7 +215,7 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       const target = key && key !== MAIN_BRANCH
         ? w.branches.get(key)
         : [...w.branches.values()]
-          .filter(isActiveBranch)
+          .filter((b) => isActiveBranch(b) && b.foundedYear <= w.year)
           .sort((a, b) => b.grievance - a.grievance)[0];
       if (!target) break;
       const delta = eff.op === 'appease' ? -Math.abs(eff.amount) : Math.abs(eff.amount);
