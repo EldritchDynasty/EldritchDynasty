@@ -119,7 +119,7 @@ function readHolds(ctx: SimCtx, r: FrameRead): boolean {
     // The entry survives every Record option — `applyRecord` rewrites what the
     // page SAYS and never removes it, so an omission is a dated blank with the
     // event id still on it. That is the point: the guardian reads the blank.
-    return w.chronicle.some((c) => c.eventId === r.chronicled);
+    return w.chronicle.some((c) => c.year <= w.year && c.eventId === r.chronicled);
   }
   if ('omitted' in r) {
     return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'omit').length
