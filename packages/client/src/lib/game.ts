@@ -796,7 +796,14 @@ export function createGame(
       // The ordinary store catalogue still excludes demo slots, preserving the
       // full-campaign host contract. Only the explicit front door asks for all
       // slots and presents demo saves under their own heading (#2063).
-      if (includeDemo) return platform.listSaves();
+      if (includeDemo) {
+        // Start can mount before an earlier host autosave has finished. Wait
+        // for writes already queued so its one-time list cannot miss a run
+        // that becomes durable just after the listing snapshot (#2624).
+        // autosaveTail absorbs failed writes; listing itself stays read-only.
+        await autosaveTail;
+        return platform.listSaves();
+      }
       // A host failure must reach the caller so it can offer Retry (#1176).
       await refreshSaves(true);
       return saves.value;
