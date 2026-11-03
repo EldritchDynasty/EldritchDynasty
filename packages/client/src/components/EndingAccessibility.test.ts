@@ -4,6 +4,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import type { AchievementView, EpilogueView, SessionView, ShareCodeProblem } from '@ed/core';
 import type { GameActions } from '../lib/game';
 import Ending from './Ending.vue';
+import { selectShareCodeTextarea } from '../lib/ending-textarea';
 import { shareCodeProblem } from '../lib/share-code';
 import { copyTextInBrowser } from '../platform';
 import { downloadBlob } from '../lib/download';
@@ -430,6 +431,54 @@ describe('the last night shows the code', () => {
       attested: 'none', attestedTitle: '', substantiated: 'none', substantiatedTitle: '', rungsWithheld: 0, livingBlood: 1,
     },
   } as unknown as EpilogueView;
+
+  it('selects the whole displayed code on focus for manual copying', async () => {
+    const shareCode = () => ({ ok: true as const, code: 'ED1.plain.x' });
+    const w = mount(Ending, {
+      props: { view, epilogue, actions: { restart: vi.fn(), shareCode } as unknown as GameActions },
+    });
+    try {
+      const textarea = w.get('#share-code').element as HTMLTextAreaElement;
+      textarea.setSelectionRange(3, 3);
+      const select = vi.spyOn(textarea, 'select');
+      await w.get('#share-code').trigger('focus');
+      expect(select).toHaveBeenCalledOnce();
+      expect(textarea.selectionStart).toBe(0);
+      expect(textarea.selectionEnd).toBe(textarea.value.length);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('selects iframe-realm HTML textareas but refuses non-HTML or non-textarea targets', () => {
+    const frame = document.createElement('iframe');
+    document.body.append(frame);
+    try {
+      const textarea = frame.contentDocument!.createElement('textarea');
+      frame.contentDocument!.body.append(textarea);
+      textarea.value = 'ED1.embedded.x';
+      textarea.setSelectionRange(4, 4);
+      // Different JavaScript Window, same genuine HTML element.
+      expect(textarea).not.toBeInstanceOf(HTMLTextAreaElement);
+      const select = vi.spyOn(textarea, 'select');
+      selectShareCodeTextarea(textarea);
+      expect(select).toHaveBeenCalledOnce();
+      expect(textarea.selectionStart).toBe(0);
+      expect(textarea.selectionEnd).toBe(textarea.value.length);
+
+      const svgLookalike = document.createElementNS('http://www.w3.org/2000/svg', 'textarea');
+      const svgSelect = vi.fn();
+      Object.assign(svgLookalike, { select: svgSelect });
+      selectShareCodeTextarea(svgLookalike);
+      selectShareCodeTextarea(document.createElement('button'));
+      selectShareCodeTextarea(new EventTarget());
+      selectShareCodeTextarea(null);
+      expect(svgSelect).not.toHaveBeenCalled();
+      expect(select).toHaveBeenCalledOnce();
+    } finally {
+      frame.remove();
+    }
+  });
 
   it('leaves the names out until the reader asks for them', async () => {
     const shareCode = vi.fn((names: boolean) => ({ ok: true as const, code: names ? 'ED1.named.x' : 'ED1.plain.x' }));

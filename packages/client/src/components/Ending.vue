@@ -5,6 +5,7 @@ import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
 import { downloadBlob } from '../lib/download';
+import { selectShareCodeTextarea } from '../lib/ending-textarea';
 import {
   MAX_PLATE_CANVAS_HEIGHT, PLATE, afterimageLayout, afterimageModel, afterimageName, afterimageSvg, rowFont, type Measure,
 } from '../lib/book';
@@ -43,7 +44,7 @@ const shareNames = ref(false);
 const share = computed(() => props.actions.shareCode(shareNames.value));
 const nameless = computed(() => props.actions.shareCode(false));
 function selectAll(event: Event): void {
-  if (event.target instanceof HTMLTextAreaElement) event.target.select();
+  selectShareCodeTextarea(event.target);
 }
 /** Which code the latest copy put on the clipboard, or that it failed. */
 const copied = ref<{ code: string; ok: boolean } | null>(null);
