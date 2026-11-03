@@ -9,8 +9,8 @@ import type { Register } from '@ed/schema';
  * which way an outcome went without reading first: a boon, a blow, and the
  * plain note for the outcome that did neither.
  *
- * That is the whole budget. Seven cues in a Long Line, and six of them
- * are under a second. If you are here to add an eighth, the question to answer
+ * That is the whole budget. Six cues in a Long Line, and five of them
+ * are under a second. If you are here to add a seventh, the question to answer
  * first is which of these you are willing to take out.
  *
  * ── Who owns it ───────────────────────────────────────────────────────────
