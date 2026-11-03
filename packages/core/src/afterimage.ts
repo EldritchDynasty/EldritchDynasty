@@ -49,7 +49,9 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   const pages = w.chronicle.map((page, index) => ({ page, index }))
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
-  const written = pages.filter((page) => page.text !== null);
+  // Legacy/imported omissions may retain old text. Their words are not
+  // written testimony, even if the saved page's `text` was never cleared.
+  const written = pages.filter((page) => page.text !== null && page.record !== 'omit');
   // A recorded outcome can be attributed only to exactly one written page
   // for its event and year. Index once instead of re-scanning the entire
   // Chronicle for each outcome in a centuries-long decision log (#2607).
