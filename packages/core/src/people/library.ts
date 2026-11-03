@@ -40,7 +40,7 @@ export function knowsAffinity(ctx: SimCtx, p: Person, affinity: string): boolean
 }
 
 export function heldBooks(ctx: SimCtx): LibraryBookState[] {
-  return [...ctx.world.library.values()];
+  return [...ctx.world.library.values()].filter((copy) => copy.acquiredYear <= ctx.world.year);
 }
 
 /** Put a copy on the shelf. Idempotent — the house owns a physical copy once. */
@@ -75,7 +75,7 @@ export function loseLibraryCopy(ctx: SimCtx, id: string): boolean {
 export function tickDistressedBookSale(ctx: SimCtx): void {
   const w = ctx.world;
   if (w.treasury >= DEBT_FLOOR) return;
-  const candidates = [...w.library.values()]
+  const candidates = heldBooks(ctx)
     .filter((copy) => copy.restoresAt === undefined)
     .map((copy) => ({ copy, def: spellbookDef(ctx, copy.id) }))
     .filter((item): item is { copy: LibraryBookState; def: SpellbookDef } => item.def !== undefined)
@@ -116,7 +116,7 @@ export function tickDistressedBookSale(ctx: SimCtx): void {
  */
 export function degradeLibraryCopy(ctx: SimCtx, id: string, amount?: number): LibraryBookState | undefined {
   const state = ctx.world.library.get(id);
-  if (!state) return undefined;
+  if (!state || state.acquiredYear > ctx.world.year) return undefined;
   const def = spellbookDef(ctx, id);
   state.condition = Math.min(100, Math.max(0, state.condition - (amount ?? def?.degradesBy ?? 20)));
   return state;
@@ -168,7 +168,7 @@ export interface RestorationQuote {
 export function restorationQuote(ctx: SimCtx, id: string): RestorationQuote | undefined {
   const copy = ctx.world.library.get(id);
   const def = spellbookDef(ctx, id);
-  if (!copy || !def) return undefined;
+  if (!copy || !def || copy.acquiredYear > ctx.world.year) return undefined;
   const missing = Math.max(0, 100 - copy.condition);
   const reduction = libraryCare(ctx, id, 'restorationReduction')?.benefit.restorationReduction ?? 0;
   const fee = Math.max(1, Math.ceil(def.price.min * 0.2 * missing / 100 * (1 - reduction)));
@@ -364,7 +364,7 @@ const RUIN_STUDY_MULTIPLIER = 2;
  */
 export function conditionDrag(ctx: SimCtx, id: string): number {
   const state = ctx.world.library.get(id);
-  if (!state) return 1;
+  if (!state || state.acquiredYear > ctx.world.year) return 1;
   return 1 + (RUIN_STUDY_MULTIPLIER - 1) * ((100 - state.condition) / 100);
 }
 
