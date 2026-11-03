@@ -217,6 +217,60 @@ describe('the annual upkeep', () => {
     expect(grudgesAgainst(ctx.world, us.id).length).toBe(1);
   });
 
+  it('does not decay a recovered future grudge before its origin year (#2770)', () => {
+    const { ctx, us, them } = feuding(2770);
+    const started = addGrudge(ctx, them.id, us.id, { severity: 10, inheritance: 'none' });
+    const future = addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'none' });
+    const year = ctx.world.year;
+    future.originYear = year + 3;
+
+    for (let y = year; y < future.originYear; y++) {
+      ctx.world.year = y;
+      tickRelationships(ctx);
+    }
+    expect(started.severity).toBeLessThan(10);
+    expect(future.severity).toBe(80);
+    expect(grudgesAgainst(ctx.world, us.id)).toEqual([started]);
+
+    ctx.world.year = future.originYear;
+    tickRelationships(ctx);
+    expect(future.severity).toBeCloseTo(80 - future.decayPerYear);
+    expect(grudgesAgainst(ctx.world, us.id)).toEqual([started, future]);
+  });
+
+  it('keeps a future-only quarrel dormant across a death, then inherits it on time (#2770)', () => {
+    const { ctx, us, them } = feuding(2771);
+    const son = place(ctx, { sex: 'male', age: 20, name: 'His heir' });
+    beget(ctx, son, undefined, us);
+    const future = addGrudge(ctx, them.id, us.id, { severity: 70, inheritance: 'heir_only' });
+    future.originYear = ctx.world.year + 2;
+    ctx.world.people.kill(us.id, ctx.world.year, 'a fever');
+
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)?.grudges).toEqual([future]);
+    expect(edge(ctx.world, them.id, son.id)).toBeUndefined();
+    expect(future.severity).toBe(70);
+
+    ctx.world.year = future.originYear;
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)).toBeUndefined();
+    expect(edge(ctx.world, them.id, son.id)?.grudges).toEqual([future]);
+    expect(future.severity).toBeCloseTo(70 - future.decayPerYear);
+  });
+
+  it('retains a future-only uninheritable quarrel until its origin year (#2770)', () => {
+    const { ctx, us, them } = feuding(2772);
+    const future = addGrudge(ctx, them.id, us.id, { severity: 20, inheritance: 'none' });
+    future.originYear = ctx.world.year + 2;
+    ctx.world.people.kill(us.id, ctx.world.year, 'a fever');
+
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)?.grudges).toEqual([future]);
+    ctx.world.year = future.originYear;
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)).toBeUndefined();
+  });
+
   it('ends an uninheritable quarrel when either party dies', () => {
     const { ctx, us, them } = feuding();
     addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'none' });
