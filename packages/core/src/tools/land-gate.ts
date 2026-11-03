@@ -170,7 +170,11 @@ function runLand(source: Content, seed: number, years: number): LandRun {
     }
     clearNamingQueue(ctx);
 
-    for (const entry of w.decisionLog.slice(logAt)) {
+    // Only entries added by this step matter. Avoid allocating a copied
+    // suffix every simulated year; keep a fixed end like the old slice did.
+    const logEnd = w.decisionLog.length;
+    for (let index = logAt; index < logEnd; index++) {
+      const entry = w.decisionLog[index]!;
       if (entry.kind !== 'outcome') continue;
       const event = ctx.content.event(entry.event);
       if (!event) continue;
