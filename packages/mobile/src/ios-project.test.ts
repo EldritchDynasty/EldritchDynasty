@@ -411,6 +411,7 @@ describe('Android tagged offline payload', () => {
 
 function fakeNativePicker() {
   const listeners = new Map<string, () => void>();
+  const registered = new Map<string, Set<EventListenerOrEventListenerObject>>();
   const input = {
     type: '',
     accept: '',
@@ -418,17 +419,68 @@ function fakeNativePicker() {
     onchange: null as (() => void) | null,
     click: vi.fn(),
     addEventListener(name: string, callback: EventListenerOrEventListenerObject) {
+      const callbacks = registered.get(name) ?? new Set<EventListenerOrEventListenerObject>();
+      callbacks.add(callback);
+      registered.set(name, callbacks);
       listeners.set(name, () => {
         const event = { type: name } as Event;
-        if (typeof callback === 'function') callback(event);
-        else callback.handleEvent(event);
+        for (const current of [...callbacks]) {
+          if (typeof current === 'function') current(event);
+          else current.handleEvent(event);
+        }
       });
+    },
+    removeEventListener(name: string, callback: EventListenerOrEventListenerObject) {
+      const callbacks = registered.get(name);
+      callbacks?.delete(callback);
+      if (callbacks?.size === 0) {
+        registered.delete(name);
+        listeners.delete(name);
+      }
     },
   };
   return { input, listeners };
 }
 
 describe('mobile native save import picker', () => {
+  it('removes the cancel and change listeners after repeated successful imports (#2301)', async () => {
+    const { input, listeners } = fakeNativePicker();
+    const previousChange = vi.fn();
+    input.onchange = previousChange;
+    class ImmediateReader {
+      result = '{"format":28}';
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      onabort: (() => void) | null = null;
+      readAsText() { this.onload?.(); }
+    }
+
+    vi.stubGlobal('FileReader', ImmediateReader);
+    try {
+      for (let i = 0; i < 3; i++) {
+        const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+        expect(listeners.has('cancel')).toBe(true);
+        expect(listeners.has('change')).toBe(true);
+        input.files = [{} as File];
+        listeners.get('change')!();
+        await expect(choice).resolves.toEqual({ format: 28 });
+        expect(listeners.size).toBe(0);
+        expect(input.onchange).toBe(previousChange);
+      }
+      expect(input.click).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('cleans up both listeners if the native picker click fails (#2301)', async () => {
+    const { input, listeners } = fakeNativePicker();
+    input.click.mockImplementation(() => { throw new Error('native picker unavailable'); });
+    const choice = chooseSaveFile(input as unknown as HTMLInputElement);
+    await expect(choice).resolves.toBeNull();
+    expect(listeners.size).toBe(0);
+  });
+
   it('treats native picker cancellation as a benign import dismissal (#1416)', async () => {
     const { input, listeners } = fakeNativePicker();
     const choice = chooseSaveFile(input as unknown as HTMLInputElement);
@@ -444,14 +496,14 @@ describe('mobile native save import picker', () => {
   });
 
   it('treats a change event without a selected file as cancellation (#1416)', async () => {
-    const { input } = fakeNativePicker();
+    const { input, listeners } = fakeNativePicker();
     const choice = chooseSaveFile(input as unknown as HTMLInputElement);
-    input.onchange?.();
+    listeners.get('change')!();
     await expect(choice).resolves.toBe(PICKER_CANCELLED);
   });
 
   it('retains the original JSON import behavior for a selected file', async () => {
-    const { input } = fakeNativePicker();
+    const { input, listeners } = fakeNativePicker();
     const json = { format: 28, year: 1250 };
     class FakeReader {
       result: string | null = null;
@@ -468,15 +520,15 @@ describe('mobile native save import picker', () => {
     try {
       const choice = chooseSaveFile(input as unknown as HTMLInputElement);
       input.files = [{} as File];
-      input.onchange?.();
+      listeners.get('change')!();
       await expect(choice).resolves.toEqual(json);
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
-  it('settles rather than throwing from onchange when FileReader construction is refused (#896)', async () => {
-    const { input } = fakeNativePicker();
+  it('settles rather than throwing from change events when FileReader construction is refused (#896)', async () => {
+    const { input, listeners } = fakeNativePicker();
     class RefusedReader {
       constructor() { throw new Error('FileReader unavailable in WebView'); }
     }
@@ -484,15 +536,16 @@ describe('mobile native save import picker', () => {
     try {
       const choice = chooseSaveFile(input as unknown as HTMLInputElement);
       input.files = [{} as File];
-      expect(() => input.onchange?.()).not.toThrow();
+      expect(() => listeners.get('change')!()).not.toThrow();
       await expect(choice).resolves.toBeNull();
+      expect(listeners.size).toBe(0);
     } finally {
       vi.unstubAllGlobals();
     }
   });
 
   it('settles with null when the selected file cannot be parsed', async () => {
-    const { input } = fakeNativePicker();
+    const { input, listeners } = fakeNativePicker();
     class InvalidReader {
       result = '{invalid';
       onload: (() => void) | null = null;
@@ -505,7 +558,7 @@ describe('mobile native save import picker', () => {
     try {
       const choice = chooseSaveFile(input as unknown as HTMLInputElement);
       input.files = [{} as File];
-      input.onchange?.();
+      listeners.get('change')!();
       await expect(choice).resolves.toBeNull();
     } finally {
       vi.unstubAllGlobals();

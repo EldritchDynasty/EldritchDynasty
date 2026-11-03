@@ -13,30 +13,47 @@ const PICKER_CANCELLED = Symbol.for(BROWSER_IMPORT_CANCELLED.description!);
  */
 export function chooseSaveFile(input: HTMLInputElement): Promise<unknown | null> {
   return new Promise((resolve) => {
-    // The Platform owns which file types are accepted; this helper handles
-    // only native picker completion and JSON reading.
-    // Dismissing a native picker emits `cancel`, not `change`. Without
-    // this listener, callers of importSave wait on a never-settled Promise.
-    input.addEventListener('cancel', () => resolve(PICKER_CANCELLED), { once: true });
-    input.onchange = () => {
+    let settled = false;
+    const finish = (value: unknown | null) => {
+      if (settled) return;
+      settled = true;
+      // A successful file choice never fires the native cancel event. Leaving
+      // its once-listener behind would retain a settled Promise for every
+      // subsequent import on a reused input (#2301).
+      input.removeEventListener('cancel', onCancel);
+      input.removeEventListener('change', onChange);
+      resolve(value);
+    };
+    const onCancel = () => finish(PICKER_CANCELLED);
+    const onChange = () => {
+      if (settled) return;
       const file = input.files?.[0];
-      if (!file) { resolve(PICKER_CANCELLED); return; }
+      if (!file) { finish(PICKER_CANCELLED); return; }
 
       try {
         // A WebView may deny even constructing FileReader. This callback runs
         // after the Promise executor, so an uncaught throw would strand import.
         const reader = new FileReader();
-        reader.onerror = () => resolve(null);
-        reader.onabort = () => resolve(null);
+        reader.onerror = () => finish(null);
+        reader.onabort = () => finish(null);
         reader.onload = () => {
-          try { resolve(JSON.parse(String(reader.result))); } catch { resolve(null); }
+          if (settled) return;
+          try { finish(JSON.parse(String(reader.result))); } catch { finish(null); }
         };
         reader.readAsText(file);
       } catch {
-        resolve(null);
+        finish(null);
       }
     };
 
-    try { input.click(); } catch { resolve(null); }
+    try {
+      // Temporary listeners are removed on *every* outcome, rather than only
+      // when a cancel happens. Do not overwrite an owner's input.onchange.
+      input.addEventListener('cancel', onCancel, { once: true });
+      input.addEventListener('change', onChange);
+      input.click();
+    } catch {
+      finish(null);
+    }
   });
 }
