@@ -706,9 +706,10 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // Two indistinguishable pages are not proof that either refers to this rite.
   if (pages.length !== 1) return undefined;
   const page = pages[0]!;
-  // A greyed page is known to have existed and gone; its old words cannot
-  // serve as surviving testimony at the last night (as for rung attestation).
-  if (page.greyed) return undefined;
+  // A greyed page is lost; a page dated after collection has not yet
+  // happened. Neither can testify to a family cost at this last night.
+  // Other purpose witnesses reject future pages for the same reason.
+  if (page.greyed || page.year > w.year) return undefined;
   return {
     kind: 'blood_spent',
     person: purposePersonName(spent),

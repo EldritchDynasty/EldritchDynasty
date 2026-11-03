@@ -1341,6 +1341,49 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(digestOf(ctx)).toBe(before);
   });
 
+  it('does not cite a rite page dated after the Long Line has ended', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const recorded = w.chronicle[0]!;
+    const decision = w.decisionLog[0]!;
+    if (decision.kind !== 'outcome') throw new Error('expected an attributed rite');
+
+    const ending = selectEnding(ctx);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+
+    // An imported or inconsistent record can pair a future page with a future
+    // outcome. The Afterimage's historical inventory still discovers it, but
+    // it is not testimony available to the creditor at this year's reading.
+    const victim = w.people.get(recorded.people![0]!)!;
+    recorded.year = w.year + 1;
+    decision.year = recorded.year;
+    // The attributed rite also checks the person's actual death year.
+    // Keep all three witnesses consistent so the purpose date guard, not
+    // a missing rite attribution, is the only reason to refuse the page.
+    victim.died = recorded.year;
+    expect(afterimageEvidence(ctx).spentBlood?.source.year).toBe(w.year + 1);
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(ending);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // Once the page and decision belong to the completed term, the same
+    // recorded, named cost is available without changing the ending.
+    recorded.year = w.year;
+    decision.year = w.year;
+    victim.died = w.year;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'blood_spent', person: 'Meriel of the Tides', year: w.year,
+      });
+      expect(selectEnding(ctx)).toBe(ending);
+    }
+  });
+
   it('reads a later surviving blood rite when the earlier written testimony was lost', () => {
     const ctx = accountedRite();
     const w = ctx.world;
