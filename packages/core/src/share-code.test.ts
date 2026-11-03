@@ -505,7 +505,7 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     // The compact wire schema checks only types, lengths, and the five-friend
     // limit. An older/corrupted decision log may still fail the production
     // friend normalizer on import, or silently change its recorded names.
-    const changes: { label: string; edit: (roster: typeof SIGNED.friends) => void }[] = [
+    const changes: { label: string; edit: (roster: { name: string }[]) => void }[] = [
       {
         label: 'case-blind duplicate',
         edit: (roster) => { roster[1]!.name = roster[0]!.name.toUpperCase(); },
