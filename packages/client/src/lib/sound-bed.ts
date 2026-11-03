@@ -182,6 +182,9 @@ export class SoundBed {
   ): () => void {
     if (this.#disposed) return () => undefined;
     this.#detach();
+    // Replacing an attachment may move a hidden page's audio to an already
+    // visible document without another visibilitychange/pageshow event.
+    const wasDocumentHidden = this.#documentHidden;
     // Ambient: mixes with whatever the player is already listening to, and
     // obeys a phone's silent switch, where the engine supports saying so.
     // `auto` is the only value replaced; a host that chose already chose.
@@ -215,8 +218,13 @@ export class SoundBed {
     // Browser visibility and gesture handling must still attach, and the
     // returned detach must still remove those listeners.
     let unpause: () => void = () => undefined;
+    let pausedDuringSubscription = false;
     try {
-      unpause = onPause?.(hide) ?? unpause;
+      unpause = onPause?.(() => {
+        // A synchronous host pause outranks the new document's visible state.
+        pausedDuringSubscription = true;
+        hide();
+      }) ?? unpause;
     } catch {
       // Treat the unavailable host hook as silence, not a failed game mount.
     }
@@ -227,6 +235,12 @@ export class SoundBed {
     // A real visibilitychange, pageshow or a fresh user gesture can resume.
     this.#documentHidden = doc.visibilityState !== 'visible';
     if (this.#documentHidden) this.hide();
+    else if (wasDocumentHidden && !pausedDuringSubscription) {
+      // The new document is already visible. Restore an unlocked bed muted
+      // only by the old document's visibility, without waiting for an event
+      // that the new document may never dispatch.
+      this.show();
+    }
     // A former attachment may still have its cleanup callback in a caller.
     // Calling that stale callback must neither tear down nor forget a newer
     // attachment. Each cleanup owns only its own listeners and host pause hook.
