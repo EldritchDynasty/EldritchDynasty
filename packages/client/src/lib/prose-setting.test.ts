@@ -412,3 +412,93 @@ describe('Demonstration chapter persistence ordering (#1979)', () => {
     expect(slots.has(slot)).toBe(false);
   });
 });
+
+/**
+ * An export is a snapshot request, not a request to read whichever run a
+ * slow host happens to hold after the reader starts a different sitting.
+ * Preserve existing Start-screen concurrency; serialize only the slot read,
+ * not the device's subsequent export picker (#2571).
+ */
+describe('save exports respect the host mutation order (#2571)', () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it('captures earlier Demonstration bytes ahead of a new run without holding writes for the export picker', async () => {
+    const slots = new Map<string, unknown>();
+    const delayedRead = deferred<unknown | null>();
+    const delayedPicker = deferred<void>();
+    let delayNextDemoRead = false;
+    let readStarted = false;
+    let exported: unknown | null = null;
+    const platform: Platform = {
+      ...browserPlatform(),
+      readSave: async (slot) => {
+        if (slot === 'demo-autosave' && delayNextDemoRead) {
+          delayNextDemoRead = false;
+          readStarted = true;
+          return delayedRead.promise;
+        }
+        return slots.get(slot) ?? null;
+      },
+      writeSave: async (slot, save) => { slots.set(slot, save); },
+      exportSave: async (save) => {
+        exported = save;
+        await delayedPicker.promise;
+      },
+    };
+
+    const game = createGame(loadBundle(), platform);
+    game.actions.begin(2571001, 'demo');
+    await vi.waitFor(() => expect(slots.has('demo-autosave')).toBe(true));
+    const firstSnapshot = slots.get('demo-autosave')!;
+
+    delayNextDemoRead = true;
+    const exporting = game.actions.exportSave('demo-autosave');
+    await vi.waitFor(() => expect(readStarted).toBe(true));
+
+    // A later signing queues a different snapshot of that same demo slot.
+    game.actions.begin(2571002, 'demo');
+    await Promise.resolve();
+    expect(slots.get('demo-autosave')).toBe(firstSnapshot);
+
+    delayedRead.resolve(firstSnapshot);
+    await vi.waitFor(() => expect(exported).toBe(firstSnapshot));
+
+    // A slow destination picker does not hold up the new autosave.
+    await vi.waitFor(() => expect(slots.get('demo-autosave')).not.toBe(firstSnapshot));
+    await vi.waitFor(() => expect(game.saveStatus.value).toBe('saved'));
+    expect(exported).toBe(firstSnapshot);
+    delayedPicker.resolve(undefined);
+    expect(await exporting).toBe(true);
+  });
+
+  it('continues writing after an export read fails, without reporting a false successful export', async () => {
+    const slots = new Map<string, unknown>();
+    let failDemoRead = false;
+    let exports = 0;
+    const platform: Platform = {
+      ...browserPlatform(),
+      readSave: async (slot) => {
+        if (slot === 'demo-autosave' && failDemoRead) {
+          failDemoRead = false;
+          throw new Error('native slot read unavailable');
+        }
+        return slots.get(slot) ?? null;
+      },
+      writeSave: async (slot, save) => { slots.set(slot, save); },
+      exportSave: async () => { exports++; },
+    };
+    const game = createGame(loadBundle(), platform);
+    game.actions.begin(2571003, 'demo');
+    await vi.waitFor(() => expect(slots.has('demo-autosave')).toBe(true));
+    const firstSnapshot = slots.get('demo-autosave')!;
+
+    failDemoRead = true;
+    const exporting = game.actions.exportSave('demo-autosave');
+    game.actions.begin(2571004, 'demo');
+
+    expect(await exporting).toBe(false);
+    await vi.waitFor(() => expect(slots.get('demo-autosave')).not.toBe(firstSnapshot));
+    expect(exports).toBe(0);
+    await vi.waitFor(() => expect(game.saveStatus.value).toBe('saved'));
+  });
+});
