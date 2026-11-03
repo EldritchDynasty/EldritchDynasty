@@ -137,6 +137,32 @@ describe('achievements (issue #323)', () => {
     expect(save).not.toHaveProperty('achievements');
   });
 
+  it('does not use decisions dated after the run ends to award or revoke achievements (#2695)', () => {
+    const save = finished();
+    const endingYear = save.ending!.year;
+    const subject = save.people[0]!.id;
+    save.decisionLog.push(
+      { kind: 'record', year: endingYear + 1, event: 'a_future_record', option: 'record' },
+      { kind: 'match', year: endingYear + 1, subject, card: null, spouse: 'outsider' },
+    );
+
+    const futureOnly = earnedAchievements(save);
+    expect(futureOnly.filter((id) => id.startsWith('record_'))).toEqual([]);
+    expect(futureOnly).not.toContain('match_never_refused');
+
+    // Same-year decisions are real, and a contradictory future Record does not
+    // invalidate the completed run's actually truthful pages.
+    save.decisionLog.push(
+      { kind: 'record', year: endingYear, event: 'the_final_record', option: 'record' },
+      { kind: 'record', year: endingYear + 2, event: 'a_future_omission', option: 'omit' },
+    );
+    expect(earnedAchievements(save)).toContain('record_all_truthful');
+    expect(earnedAchievements(save)).toContain('record_never_omitted');
+
+    save.decisionLog.push({ kind: 'match', year: endingYear, subject, card: null, spouse: 'outsider' });
+    expect(earnedAchievements(save)).toContain('match_never_refused');
+  });
+
   it('derives record extremes only after the house has actually answered a Record block', () => {
     const save = finished();
     expect(earnedAchievements(save)).not.toContain('record_never_embellished');
