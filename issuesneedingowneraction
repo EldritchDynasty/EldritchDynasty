@@ -162,8 +162,9 @@ Owner actions:
 #323 closed on 2026-10-17 (PR #1790) with its engineering complete: the dated
 demo arc and every-seed proof of the signing, a complete Age, a forced Record,
 an interlude and a verdict, built to the owner's 2026-10-14 design. Only the
-Steam owner actions above remain. The demo is not offered on the normal start
-screen; shipping it is a Steam step and waits on the App ID.
+Steam owner actions above remain. The separate 33-year Demonstration is now
+playable from the normal client start screen. Publishing a Steam demo is still
+an owner action and waits on the real Steam App ID.
 
 #277, the commercial-pass parent, closed the same day. Open engineering is
 chosen from the issue tracker by priority label (AGENTS.md); this file keeps
