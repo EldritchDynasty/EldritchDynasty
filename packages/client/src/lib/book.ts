@@ -17,14 +17,15 @@ import { recordedParent, type MemberView } from './kin';
  * NOT match.
  */
 
-export type Lens = 'all' | 'blank' | 'improved' | 'illuminated';
-
-export const LENSES: { id: Lens; label: string }[] = [
+/** The displayed choices own the closed Chronicle lens vocabulary. */
+export const LENSES = [
   { id: 'all', label: 'The whole book' },
   { id: 'blank', label: 'Left blank' },
   { id: 'improved', label: 'Improved' },
   { id: 'illuminated', label: 'Illuminated' },
-];
+] as const;
+
+export type Lens = (typeof LENSES)[number]['id'];
 
 /** A single source for on-screen lens labels and exported plate framing. */
 export const PLAIN_LENS_LABELS: Readonly<Record<Lens, string>> = {
