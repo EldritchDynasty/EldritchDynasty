@@ -2778,3 +2778,90 @@ describe('copying goes through the host', () => {
     }
   });
 });
+
+describe('asynchronous Library focus ownership (#2577)', () => {
+  const library: RunLibrary = {
+    format: 1,
+    runs: [{
+      id: 'lib_focus', seed: 77, campaign: 'short', endedYear: 1342,
+      house: 'House Salt', ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+    }],
+  };
+
+  it('leaves focus on another live Start control after a delayed Library clear', async () => {
+    let finish!: () => void;
+    const actions = spyActions();
+    vi.mocked(actions.clearLibrary).mockImplementationOnce(
+      () => new Promise<void>((resolve) => { finish = resolve; }),
+    );
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head > button').trigger('click');
+      await w.get('.library-clear-confirm .confirm-clear').trigger('click');
+
+      // The host is still clearing the Library. The reader has moved back to
+      // a campaign choice, which the eventual host reply must not steal.
+      const radio = w.get('input[name="campaign"][value="long"]').element as HTMLInputElement;
+      radio.focus();
+      expect(document.activeElement).toBe(radio);
+      finish();
+      await flush();
+      expect(document.activeElement).toBe(radio);
+      expect(actions.clearLibrary).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps external focus when a slow single-house removal is refused', async () => {
+    let fail!: (reason: Error) => void;
+    const actions = spyActions();
+    vi.mocked(actions.deleteLibraryRun).mockImplementationOnce(
+      () => new Promise<void>((_resolve, reject) => { fail = reject; }),
+    );
+    const outside = document.createElement('button');
+    outside.textContent = 'Other screen control';
+    document.body.append(outside);
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-title > button').trigger('click');
+      await w.get('.library-remove-confirm .confirm-remove').trigger('click');
+      outside.focus();
+      expect(document.activeElement).toBe(outside);
+
+      fail(new Error('Native Library write refused'));
+      await flush();
+      expect(document.activeElement).toBe(outside);
+      expect(w.text()).toContain('That house could not be removed from the Library');
+      expect(actions.deleteLibraryRun).toHaveBeenCalledTimes(1);
+    } finally {
+      w.unmount();
+      outside.remove();
+    }
+  });
+
+  it('restores the surviving Clear control when the confirmation was removed', async () => {
+    let finish!: () => void;
+    const actions = spyActions();
+    vi.mocked(actions.clearLibrary).mockImplementationOnce(
+      () => new Promise<void>((resolve) => { finish = resolve; }),
+    );
+    const w = mount(Start, { attachTo: document.body, props: { actions, resumable: false, library } });
+    try {
+      await flush();
+      await w.get('.library-head > button').trigger('click');
+      const confirmation = w.get('.library-clear-confirm .confirm-clear');
+      (confirmation.element as HTMLButtonElement).focus();
+      expect(document.activeElement).toBe(confirmation.element);
+      await confirmation.trigger('click');
+      expect(w.find('.library-clear-confirm').exists()).toBe(false);
+      finish();
+      await flush();
+      expect(document.activeElement).toBe(w.get('.library-head > button').element);
+    } finally {
+      w.unmount();
+    }
+  });
+});
