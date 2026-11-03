@@ -1221,6 +1221,19 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('does not repeat an already-suffixed epithet in a recorded blood-relative cost', () => {
+    const ctx = accountedRite();
+    const victim = ctx.world.people.get(ctx.world.chronicle[0]!.people![0]!)!;
+    victim.name = 'Meriel of the Tides';
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'blood_spent', person: victim.name });
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'blood_spent', person: victim.name });
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
+  });
+
   it('does not let an earlier outsider rite hide a later documented blood-relative cost', () => {
     const ctx = accountedRite();
     const w = ctx.world;
@@ -1398,6 +1411,21 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
   });
 
+  it('does not repeat an epithet already included in either named branch relative', () => {
+    const { ctx, founder, relative } = foundedHall();
+    founder.name = 'Edrin the Patient';
+    founder.epithet = 'the Patient';
+    relative.name = 'Leora of the Orchard';
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const expected = { kind: 'branch_kept', founder: 'Edrin the Patient', person: 'Leora of the Orchard' };
+    expect(epilogueOf(ctx)!.purpose).toMatchObject(expected);
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toMatchObject(expected);
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
+  });
+
   it('does not infer a surviving household from ambition selection, an extinct branch or one survivor', () => {
     const { ctx, branch, relative, cousin } = foundedHall();
     const w = ctx.world;
@@ -1557,6 +1585,18 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     if (view.purpose?.kind !== 'ascendant_wait') throw new Error('missing wait evidence');
     view.purpose.text = 'A rewritten history.';
     expect(ctx.world.chronicle[0]!.text).toBe('Edric stopped growing older, but the house had not finished the Ledger.');
+  });
+
+  it('does not repeat an already-suffixed ascendant epithet in the witnessed wait', () => {
+    const { ctx, ascendant } = accountedWait();
+    ascendant.name = 'Edric the Unwearied';
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'ascendant_wait', person: ascendant.name });
+    setProseMode(ctx, 'plainenglish');
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'ascendant_wait', person: ascendant.name });
+    expect(selectEnding(ctx)).toBe(selected);
+    expect(digestOf(ctx)).toBe(before);
   });
 
   it('requires a pursued ambition, a Long Line and an unlost account', () => {
