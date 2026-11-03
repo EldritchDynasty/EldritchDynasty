@@ -167,7 +167,8 @@ const URGENT_DISCOUNT = 0.85;
  */
 export function tickLandMarket(ctx: SimCtx, rng: Rng): void {
   const w = ctx.world;
-  w.landMarket.lots = w.landMarket.lots.filter((l) => l.closesYear > w.year);
+  // Imported stale listings are no longer tradable once the house holds the ground.
+  w.landMarket.lots = w.landMarket.lots.filter((l) => l.closesYear > w.year && !liveStateOf(ctx, l.parcel));
   if (w.landMarket.lots.length >= MAX_OPEN_LOTS) return;
 
   const listed = new Set(w.landMarket.lots.map((l) => l.parcel));
@@ -190,8 +191,10 @@ export function tickLandMarket(ctx: SimCtx, rng: Rng): void {
 /** Buy a lot currently on the market. Mints a fresh `ParcelState` off `counters.parcel`, the way every instance id in this codebase is minted. */
 export function buyParcel(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
-  const lot = w.landMarket.lots.find((l) => l.parcel === parcel);
-  if (!lot) {
+  const lot = w.landMarket.lots.find((l) => l.parcel === parcel && l.closesYear > w.year);
+  // Recheck the live deed here: a restored stale lot may be offered before the
+  // next market tick, but cannot mint a second holding of the same parcel.
+  if (!lot || liveStateOf(ctx, parcel)) {
     return { ok: false, reason: msg(ctx, 'land.refuse.buy_not_listed', 'nothing of that name is on the market') };
   }
   const def = ctx.content.parcel(parcel);
@@ -794,6 +797,8 @@ export function landView(ctx: SimCtx): LandView {
 
   const market: LandView['market'] = [];
   for (const lot of w.landMarket.lots) {
+    // The Table may be opened before the annual market refresh.
+    if (lot.closesYear <= w.year || liveStateOf(ctx, lot.parcel)) continue;
     const def = ctx.content.parcel(lot.parcel);
     if (!def) continue;
     market.push({
