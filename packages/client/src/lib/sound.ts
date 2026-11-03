@@ -569,13 +569,19 @@ export class Sound {
     if (context.state === 'running' || this.resuming === context) return;
     const pending = context.resume?.();
     if (!pending) return;
-    this.resuming = context;
-    const clear = () => {
-      if (this.resuming === context) this.resuming = null;
-    };
-    // Handle both resolutions explicitly; `finally` would create a rejected
-    // child promise if resume failed, which could go unobserved on a WebView.
-    void pending.then(clear, clear);
+    // Some engines enter 'running' synchronously, even though resume() returns
+    // a promise. Do not keep a stale in-flight guard over a *later* suspension
+    // in the same event turn (pagehide -> pageshow, or host pause -> gesture).
+    // Only a device still suspended/interrupted needs coalescing.
+    if (context.state !== 'running') {
+      this.resuming = context;
+      const clear = () => {
+        if (this.resuming === context) this.resuming = null;
+      };
+      // A rejection handler is required on the derived promise as well:
+      // `finally` would otherwise create an unobserved rejected child.
+      void pending.then(clear, clear);
+    }
     this.watch(pending, context, true);
   }
 
