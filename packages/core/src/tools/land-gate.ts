@@ -90,13 +90,17 @@ interface LandRun {
   eventFires: Record<string, number>;
 }
 
-const landEffects = (event: EventTemplate, outcomeId: string) => {
+/** Keep the first authored outcome match without flattening every choice on each recorded decision. */
+export const landEffects = (event: EventTemplate, outcomeId: string) => {
   if (event.interaction.kind === 'narration') {
     return event.interaction.outcomes.find((o) => o.id === outcomeId)?.effects.filter((e) => e.kind === 'land') ?? [];
   }
-  return event.interaction.choices
-    .flatMap((c) => c.outcomes)
-    .find((o) => o.id === outcomeId)?.effects.filter((e) => e.kind === 'land') ?? [];
+  for (const choice of event.interaction.choices) {
+    for (const outcome of choice.outcomes) {
+      if (outcome.id === outcomeId) return outcome.effects.filter((e) => e.kind === 'land');
+    }
+  }
+  return [];
 };
 
 /** Prefer a branch whose outcomes reliably carry a land effect. */
