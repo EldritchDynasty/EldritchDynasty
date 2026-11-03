@@ -5,8 +5,12 @@
 > Editorial guidance and illustrative beats, reviewed against `main` at
 > `098bfe02` on 22 October 2026. Examples and desired emotional effects are not
 > guarantees of event reach or evidence from players. The live YAML and
-> [fullstory.md](fullstory.md) describe the shipped story; #1867 tracks the
-> further founder identity and attachment work.
+> [fullstory.md](fullstory.md) describe the shipped story.
+>
+> **Founder-identity update (4 November 2026):** the historical review predates
+> the shipped #1867 founder identity and blood-parent configuration options.
+> For current behavior see [the core founding cast](packages/core/src/people/founding-cast.ts)
+> and [the client guide](packages/client/AGENTS.md#the-two-ends-of-the-run).
 
 ## Purpose
 
@@ -80,7 +84,7 @@ Three things are owed:
 - the sons;
 - the term.
 
-The founder treats centuries as a number because he will not personally have to endure them.
+The founder treats centuries as a number because they will not personally have to endure them.
 
 That is the first sin of the dynasty and the template for almost everything the player will later do.
 
@@ -88,7 +92,7 @@ That is the first sin of the dynasty and the template for almost everything the 
 
 The player is not one mortal character. The player is the will of the line.
 
-Internally, the implementation makes this literal: the player names the first character and first Head (Daveed Gearithy by default). When death reaches him it is redirected; he becomes the guardian spirit of the house and remains castable forever. The player has been him all along. The authored founding body remains male; #1867's identity/configuration extension is not shipped.
+Internally, the implementation makes this literal: the first Head is the chosen founder (Daveed Gearithy by default). The signing accepts the founder's name and gender and separately chooses whether the founder is the blood father or blood mother; a nonbinary identity does not determine that blood-parent configuration. When death reaches the founder it is redirected: they become the house's guardian spirit, remain castable forever and never return to living status. The player has been that founder all along. The default is still a male blood father, not a rule that every founder must be male.
 
 That fact should remain a story advantage rather than casual exposition. It gives the entire campaign a second reading: the founder who signed the debt never truly leaves the family alone with it.
 
