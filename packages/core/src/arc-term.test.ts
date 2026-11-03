@@ -227,7 +227,9 @@ describe('promised follow-ups near collection (#1971)', () => {
     expect(generation).not.toHaveBeenCalled();
   });
 
-  it.each([false, true])('bounds later nodes only for inline arcs (%s)', (inline) => {
+  // #1971 bounded inline chains only; an authored arc's later beat is the
+  // same kind of promise and takes the same rule (#1946, below).
+  it.each([false, true])('bounds later nodes for inline and authored arcs alike (inline: %s)', (inline) => {
     const a = arc([
       node('entry', 'immediate', ['last']),
       node('last', { minYears: 6, maxYears: 18 }, ['end']),
@@ -241,7 +243,7 @@ describe('promised follow-ups near collection (#1971)', () => {
       id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
     }, undefined, ctx, rng);
     expect(instance.node).toBe('last');
-    expect(instance.dueYear).toBe(inline ? END_YEAR : END_YEAR + 2);
+    expect(instance.dueYear).toBe(END_YEAR);
   });
 
   it.each([
@@ -293,5 +295,107 @@ describe('promised follow-ups near collection (#1971)', () => {
     expect(due).toBeLessThanOrEqual(END_YEAR);
     scheduleNext(next, ctx, original);
     expect(bounded.next()).toBe(original.next());
+  });
+});
+
+/**
+ * #1946: an authored arc is admitted only when its fastest whole graph can
+ * finish before collection (#133), and then drew every later beat over its
+ * entire authored range. A beat whose range straddled collection could land
+ * after the book closed although an authored delay that arrived in time
+ * existed — `arc_the_eight_days`'s clause reveal, 150–320 years after the
+ * ruling, most often. Each beat now takes #1971's rule: one draw, inside the
+ * overlap of its range and the remaining campaign. A beat is bounded on its
+ * own; the bound neither shortens a range that fits nor rescues a fixed or
+ * already impossible delay, and the beat after it keeps its own rule.
+ */
+describe('authored arcs promise each beat inside the term (#1946)', () => {
+  const advance = (a: ArcDef, instance: ReturnType<typeof startArc>, from: string, ctx: ReturnType<typeof testWorld>, rng = testRng()) => {
+    advanceArc({ instance: instance!, node: a.nodes.find((n) => n.id === from)!, fill: {}, playerCast: [], absent: false }, {
+      id: 'done', weight: 100, text: 'Done.', tags: [], effects: [],
+    }, undefined, ctx, rng);
+  };
+  const high = () => {
+    const rng = testRng();
+    const draw = vi.spyOn(rng, 'range').mockImplementation((min, max) => min + 0.99 * (max - min));
+    return { rng, draw };
+  };
+
+  it.each(['short', 'long', 'demo'] as const)('draws a straddling later beat inside the remaining %s campaign', (campaign) => {
+    const a = arc([
+      node('entry', 'immediate', ['last']),
+      node('last', { minYears: 6, maxYears: 18 }, ['end']),
+    ]);
+    const end = CAMPAIGNS[campaign].endYear;
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, end - 16);
+    ctx.world.campaign = campaign;
+    const instance = startArc(a, ctx, testRng());
+    const { rng, draw } = high();
+    advance(a, instance, 'entry', ctx, rng);
+    expect(instance!.status).toBe('active');
+    expect(instance!.dueYear).toBe(end);
+    expect(draw).toHaveBeenCalledTimes(1);
+  });
+
+  it('bounds one beat at a time: a later fixed delay past collection still waits, undrawn and unshortened', () => {
+    const a = arc([
+      node('entry', 'immediate', ['middle']),
+      node('middle', { minYears: 6, maxYears: 18 }, ['last']),
+      node('last', { minYears: 10, maxYears: 10 }, ['end']),
+    ]);
+    const ctx = testWorld({ ...content.bundle, arcs: [...content.bundle.arcs, a] }, 1, END_YEAR - 16);
+    const instance = startArc(a, ctx, testRng());
+    expect(instance).toBeDefined();
+    advance(a, instance, 'entry', ctx, high().rng);
+    expect(instance!.dueYear).toBe(END_YEAR);
+
+    ctx.world.year = END_YEAR;
+    const { rng, draw } = high();
+    advance(a, instance, 'middle', ctx, rng);
+    // An authored arc is not ended for an impossible beat (#133's rule,
+    // unchanged); the fixed delay is drawn exactly as authored.
+    expect(instance!.status).toBe('active');
+    expect(instance!.node).toBe('last');
+    expect(instance!.dueYear).toBe(END_YEAR + 10);
+    expect(draw).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a fitting authored draw and its RNG stream exactly', () => {
+    const a = arc([
+      node('entry', 'immediate', ['last']),
+      node('last', { minYears: 6, maxYears: 18 }, ['end']),
+    ]);
+    const bundle = { ...content.bundle, arcs: [...content.bundle.arcs, a] };
+    const due = (bounded: boolean) => {
+      const ctx = testWorld(bundle, 1, END_YEAR - 40);
+      const instance = startArc(a, ctx, testRng());
+      const rng = testRng('authored-fits');
+      if (bounded) advance(a, instance, 'entry', ctx, rng);
+      else instance!.dueYear = scheduleNext(a.nodes[1]!, ctx, rng);
+      return { due: instance!.dueYear, next: rng.next() };
+    };
+    expect(due(true)).toEqual(due(false));
+  });
+
+  it("delivers the eight days' clause beat before collection when the ruling leaves room", () => {
+    const eight = content.mustArc('arc_the_eight_days');
+    expect(eight.inline).toBe(false);
+    const ctx = testWorld(content, 1, 1300);
+    const instance = startArc(eight, ctx, testRng());
+    expect(instance?.node).toBe('two_hands');
+    advance(eight, instance, 'two_hands', ctx, high().rng);
+    // The ruling's own 25–90 years fit whole, so its draw is the authored one.
+    expect(instance!.node).toBe('which_one_we_keep');
+    expect(instance!.dueYear).toBe(1300 + Math.round(25 + 0.99 * 65));
+
+    ctx.world.year = instance!.dueYear!;
+    const ruling = ctx.world.year;
+    const { rng, draw } = high();
+    advance(eight, instance, 'which_one_we_keep', ctx, rng);
+    expect(instance!.node).toBe('and_then_it_did');
+    // 150–320 years from a 1389 ruling straddles 1542: the reveal lands inside.
+    expect(instance!.dueYear).toBeGreaterThanOrEqual(ruling + 150);
+    expect(instance!.dueYear).toBeLessThanOrEqual(END_YEAR);
+    expect(draw).toHaveBeenCalledTimes(1);
   });
 });

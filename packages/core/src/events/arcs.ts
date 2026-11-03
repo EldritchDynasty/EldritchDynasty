@@ -145,8 +145,9 @@ export function chooseSuccessor(
 export function scheduleNext(node: ArcNode, ctx: SimCtx, rng: Rng, boundToCampaign = false): number {
   const s = node.schedule;
   if (s === 'immediate') return ctx.world.year;
-  // A promised inline beat may choose an earlier legal delay when its range
-  // straddles collection (#1971). Draw once in that overlap, preserving both
+  // A promised beat — an inline one (#1971) or an authored arc's later one
+  // (#1946) — may choose an earlier legal delay when its range straddles
+  // collection. Draw once in that overlap, preserving both
   // the authored minimum and the old draw when the entire range still fits.
   // An already impossible delay is not permission to bring the beat forward;
   // startArc refuses impossible openings, and later conditions/cast can still
@@ -427,5 +428,13 @@ export function advanceArc(
   }
 
   instance.node = next;
-  instance.dueYear = scheduleNext(nextNode, ctx, rng, arc.inline);
+  // EVERY LATER BEAT IS A PROMISE (#1946). An authored arc was admitted on the
+  // promise that its fastest graph could finish before collection (#133), and
+  // then drew each later beat over its whole authored range — so a beat whose
+  // range straddled the term could land after the book closed although an
+  // authored delay that arrived in time existed. `arc_the_eight_days` drew its
+  // clause reveal (150–320 years after the ruling) past 1542 that way. Both
+  // kinds of arc now take #1971's one-draw bound; only the inline chain's
+  // refusal of an impossible beat, above, stays inline-only (#133, #1980).
+  instance.dueYear = scheduleNext(nextNode, ctx, rng, true);
 }
