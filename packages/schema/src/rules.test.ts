@@ -442,6 +442,19 @@ describe('the content rules', () => {
     expect(issues.some((i) => i.message.includes('{NOBODY}'))).toBe(true);
   });
 
+  it('lets only a frame scene that reads the blanks name one, and never as a person (#1987)', () => {
+    const OMISSION = 'frame_the_page_he_does_not_turn';
+    const pageErrors = (mutate: (b: ContentBundle) => void) => runRule('slots/references', withEvents(mutate))
+      .filter((i) => i.level === 'error' && i.message.includes('PAGE_'));
+    const scene = (b: ContentBundle) => b.events.find((e) => e.id === OMISSION)!;
+    expect(scene(content.bundle).reads.some((r) => 'omitted' in r), `${OMISSION} no longer reads the blanks`).toBe(true);
+
+    expect(pageErrors((b) => { scene(b).body += ' The page of {PAGE_YEAR}, about {PAGE_SUBJECT}.'; })).toEqual([]);
+    expect(pageErrors((b) => { scene(b).body += ' {PAGE_SUBJECT.their} page.'; })).toHaveLength(1);
+    const elsewhere = (b: ContentBundle) => b.events.find((e) => e.tier !== 'frame')!;
+    expect(pageErrors((b) => { elsewhere(b).body += ' The page of {PAGE_YEAR}.'; })).not.toEqual([]);
+  });
+
   it('catches an arc pointing at a node that is not there', () => {
     const b = withEvents((x) => { x.arcs[0]!.entry = 'no_such_node'; });
     expect(runRule('arcs/wiring', b).some((i) => i.message.includes('no_such_node'))).toBe(true);

@@ -888,9 +888,17 @@ function commitRecord(
       fill,
       ctx,
     );
+  // What the docket asked about, in this firing's names (#1987). A blank keeps
+  // it so the frame can point at the blank by more than its year. A subject
+  // whose slot did not resolve is not kept: the frame then names the year
+  // alone rather than print a raw `{TOKEN}` at the player.
+  const subjectText = renderBody(renderProse(ctx, recordAddress === undefined
+    ? undefined : `${recordAddress}.subject`, block.subject), fill, ctx).trim();
+  const subject = subjectText && !/[{}]/.test(subjectText) ? subjectText : undefined;
   if (entry) {
     entry.text = text;
     entry.record = option;
+    if (subject) entry.subject = subject;
     if (option === 'omit') entry.title = undefined;
     if (discrepancyId) entry.discrepancyId = discrepancyId;
     entry.claims = claims.length ? claims : undefined;
@@ -902,6 +910,7 @@ function commitRecord(
   } else {
     w.chronicle.push({
       id: entryId, year: w.year, weight: 'paragraph', text, eventId: e.id, named: false, record: option,
+      ...(subject ? { subject } : {}),
       ...(discrepancyId ? { discrepancyId } : {}),
       ...(claims.length ? { claims } : {}),
       ...(forgedRung ? { rung: forgedRung } : {}),

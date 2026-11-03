@@ -33,8 +33,11 @@
  *   buried. Recorded Life shows that state on that page. This is Embellish
  *   only: no read model ties an Omit's Discrepancy to its blank.
  * - `interlude`: an interlude whose declared `reads` name a Discrepancy the
- *   altered choice opened. A `FrameEntry` stores no source page, so the
- *   template's reads are the only page-level evidence an interlude has.
+ *   altered choice opened, or one whose scene named this exact page
+ *   (`FrameEntry.cites`, #1987: the omission scene printing the blank's year
+ *   or the matter the docket asked about). A read that merely holds is not a
+ *   citation, so an omission scene that named some other blank stays a
+ *   themed callback here.
  *
  * The last four exist only because the page was altered. The report keeps
  * `followup` apart from them because it measures the act returning, not the
@@ -291,7 +294,7 @@ export function lookForReturns(ctx: SimCtx, watch: ReturnWatch, prompts: number)
     const entry = w.frame.entries[watch.frame]!;
     watch.firstInterludeAfterYears ??= entry.year - source.year;
     const bearing = interludeBearing(ctx.content.event(entry.eventId)?.reads ?? [], source);
-    if (bearing === 'names_lie') note('interlude', entry.eventId);
+    if (bearing === 'names_lie' || entry.cites?.page === source.entry) note('interlude', entry.eventId);
     else if (bearing !== 'none') {
       watch.themed ??= {
         year: entry.year, afterYears: entry.year - source.year, afterPrompts: prompts - watch.prompts,

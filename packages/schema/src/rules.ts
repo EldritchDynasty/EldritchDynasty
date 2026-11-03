@@ -1,7 +1,7 @@
 import { DECISION_ARC_BINDINGS, type ArcDef, type Schedule } from './arc.js';
 import type { Content } from './content-index.js';
 import type { Effect, EventTemplate, RecordBlock, SlotRole } from './event.js';
-import { isLadderRole, outcomeDrawSets, outcomeGuardKey, outcomeGuardsComplementary, type Outcome } from './event.js';
+import { FRAME_PAGE_TOKENS, frameReadBindsPage, isLadderRole, outcomeDrawSets, outcomeGuardKey, outcomeGuardsComplementary, type Outcome } from './event.js';
 import { RECURRING_CAST_ROLES } from './character.js';
 import type { Filter } from './conditions.js';
 import type { Issue, ValidationRule } from './validate.js';
@@ -325,8 +325,13 @@ const slotReferences: ValidationRule = {
     const issues: Issue[] = [];
     for (const e of content.events) {
       const slotIds = new Set(Object.keys(e.slots));
+      // A frame scene that reads the family's blanks may name the one it binds
+      // (`FRAME_PAGE_TOKENS`, #1987). Anywhere else they would print raw.
+      const bindsPage = e.tier === 'frame' && e.reads.some(frameReadBindsPage);
+      const pageToken = (slot: string) => (FRAME_PAGE_TOKENS as readonly string[]).includes(slot);
       // `{NARRATOR}` is the founder without a slot (forms.ts).
-      const known = (slot: string) => slotIds.has(slot) || slot === NARRATOR_TOKEN;
+      const known = (slot: string) => slotIds.has(slot) || slot === NARRATOR_TOKEN
+        || (bindsPage && pageToken(slot));
       for (const [field, text] of [['body', e.body], ['absentBody', e.absentBody], ['inheritedBody', e.inheritedBody]] as const) {
         for (const token of slotTokens(text ?? '')) {
           if (token.form === undefined && !known(token.slot)) {
@@ -339,6 +344,15 @@ const slotReferences: ValidationRule = {
       // the body: forms are new, and nothing authored before them can trip this.
       for (const entry of contentProseEntries(e.id, e)) {
         for (const token of slotTokens(entry.text)) {
+          if (pageToken(token.slot) && !slotIds.has(token.slot)) {
+            if (!bindsPage) {
+              issues.push(err(this.id, `event:${e.id}`, `${entry.address} names a page with ${token.raw}, `
+                + 'which only a frame scene with an `omitted` read binds'));
+            } else if (token.form !== undefined) {
+              issues.push(err(this.id, `event:${e.id}`, `${entry.address} gives ${token.raw} a form; a page is not a person`));
+            }
+            continue;
+          }
           if (token.form === undefined) continue;
           if (!known(token.slot) && token.slot !== PRIMORDIAL_ACTOR_SLOT) {
             issues.push(err(this.id, `event:${e.id}`, `${entry.address} references undefined slot in ${token.raw}`));

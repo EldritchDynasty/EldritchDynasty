@@ -157,6 +157,26 @@ describe('the record-return report (#1987)', () => {
     expect(watch.firstInterludeAfterYears).toBe(40);
   });
 
+  it('the omission scene naming this blank returns it; naming another blank stays themed (#1987)', () => {
+    const { ctx, watch } = altered({ mode: 'omit', discrepancies: [] });
+    const w = ctx.world;
+    const omission = frameReading((r) => 'omitted' in r);
+    w.year = 1076;
+    w.frame.entries.push({
+      year: 1076, eventId: omission.id, outcomeId: 'only', text: '', cites: { page: 'p-other', year: 1050 },
+    });
+    lookForReturns(ctx, watch, 9);
+    expect(watch.first).toBeUndefined();
+    expect(watch.themed).toMatchObject({ afterYears: 16, event: omission.id, read: 'omitted_count' });
+
+    w.year = 1090;
+    w.frame.entries.push({
+      year: 1090, eventId: omission.id, outcomeId: 'only', text: '', cites: { page: 'p-src', year: 1060 },
+    });
+    lookForReturns(ctx, watch, 14);
+    expect(watch.first).toMatchObject({ kind: 'interlude', afterYears: 30, ref: omission.id });
+  });
+
   it('keeps altered houses in the denominators and censors the ones with no return', () => {
     const echo = ret({});
     const follow = ret({ kind: 'followup', year: 1135, afterYears: 75, afterPrompts: 30 });
