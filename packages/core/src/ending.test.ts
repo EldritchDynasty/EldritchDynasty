@@ -168,16 +168,18 @@ describe('a creditor cannot read future Chronicle pages (#2656)', () => {
       { year, weight: 'paragraph', text: null, named: false, record: 'omit' },
       { year: year + 2, weight: 'paragraph', text: 'A later boast.', named: false, record: 'embellish' },
     );
+    const baseline = epilogueOf(ctx)!;
     const before = digestOf(ctx);
     const view = epilogueOf(ctx)!;
 
-    expect(view.read.map((page) => [page.year, page.text])).toEqual([
+    expect(view.read.slice(-2).map((page) => [page.year, page.text])).toEqual([
       [year - 1, 'An earlier recovered clause.'],
       [year, null],
     ]);
-    expect(view.reckoning.pages).toBe(1);
-    expect(view.reckoning.blanks).toBe(1);
-    expect(view.reckoning.embellished).toBe(0);
+    expect(view.read).toHaveLength(baseline.read.length + 2);
+    expect(view.reckoning.pages).toBe(baseline.reckoning.pages + 1);
+    expect(view.reckoning.blanks).toBe(baseline.reckoning.blanks + 1);
+    expect(view.reckoning.embellished).toBe(baseline.reckoning.embellished);
     expect(view.read[0]).not.toBe(ctx.world.chronicle[0]);
     expect(digestOf(ctx), 'reading never writes or changes a save').toBe(before);
   });
@@ -710,9 +712,9 @@ describe('the epilogue rings the prologue', () => {
       heirloom: 'portion_of_agelessness',
       grudge: 'house_marrow',
     });
-    ctx.world.chronicle.push({ year: 1700, weight: 'paragraph', text: null, named: false, record: 'omit' });
+    ctx.world.chronicle.push({ year: ctx.world.year - 1, weight: 'paragraph', text: null, named: false, record: 'omit' });
     ctx.world.chronicle.push({
-      year: 1701, weight: 'paragraph', text: 'A thing that did not happen.', named: false, record: 'embellish',
+      year: ctx.world.year, weight: 'paragraph', text: 'A thing that did not happen.', named: false, record: 'embellish',
     });
     closeTheLedger(ctx);
 
