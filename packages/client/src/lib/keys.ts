@@ -113,6 +113,14 @@ export function isGlossaryFocus(el: Element | null): boolean {
   return el !== null && innermostActiveElement(el).closest('.glossary-text') !== null;
 }
 
+/** Open shadow hosts belong to their owning document's DOM realm. A global
+ * ShadowRoot instanceof check fails for otherwise-valid iframe-owned roots. */
+function openShadowHost(root: Node | undefined): Element | null {
+  if (root?.nodeType !== 11) return null;
+  const shadow = root as ShadowRoot;
+  return shadow.mode === 'open' ? shadow.host : null;
+}
+
 /**
  * Treat descendants of custom ARIA text-entry widgets as typing too. Focus may
  * sit on a child rather than the role-bearing element, including across an
@@ -130,7 +138,7 @@ export function isField(el: Element | null): boolean {
     // parentElement stops at a ShadowRoot; continue through its open host.
     const root: Node | undefined = active.getRootNode?.();
     active = active.parentElement
-      ?? (root instanceof ShadowRoot && root.mode === 'open' ? root.host : null);
+      ?? openShadowHost(root);
   }
   return false;
 }
@@ -151,7 +159,7 @@ export function isControl(el: Element | null): boolean {
 
     const root: Node | undefined = active.getRootNode?.();
     active = active.parentElement
-      ?? (root instanceof ShadowRoot && root.mode === 'open' ? root.host : null);
+      ?? openShadowHost(root);
   }
   return false;
 }
