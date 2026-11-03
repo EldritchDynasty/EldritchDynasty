@@ -1113,6 +1113,23 @@ describe('the house bids on a lot of its own choosing (#1183)', () => {
     expect(ctx.world.heirlooms.has(lot.refId)).toBe(false);
   });
 
+  it('voids a forged Burden pledge on settlement instead of trading it away (#2701)', () => {
+    const ctx = bootstrap(bundle, 2703, 1042);
+    grantHeirloom(ctx, 'the_ring');
+    const lot = heirloomLot(ctx, 'burden_collateral_sale');
+    lot.playerBid = {
+      house: ctx.world.playerHouse, currency: 'heirloom', amount: 0,
+      heirloomOffered: 'the_ring',
+    };
+    ctx.world.auction.upcoming = [lot];
+    ctx.world.treasury = 0;
+    ctx.world.bidCeiling = 0;
+
+    expect(sell(ctx, lot)?.winner).toBe('nobody');
+    expect(ctx.world.heirlooms.has('the_ring')).toBe(true);
+    expect(ctx.world.heirlooms.has(lot.refId)).toBe(false);
+  });
+
   it('withdrawing hands the lot back to the ceiling and the steward', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const lot = heirloomLot(ctx);
