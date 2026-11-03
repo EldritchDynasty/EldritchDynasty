@@ -17172,8 +17172,9 @@ independent `d0961c07 1f5a6aff 8b61081e 80db15e5` →
 Bot policy only (the chronicler). Beat reach and clause counts are delivery
 measurements, not evidence that a reader notices or values a late scene.
 Paired seeds diverge after the first changed draw, so the columns compare
-sampled distributions after that point. Landing-base commits after
-`d3ffa660` (`a281897a`, `53836828`, `8e08635f`, `0fa9e573`, `f4535f79`)
-change ending wording, saved interlude bodies and client code; none draws or
-changes the year, so they are not re-measured here. Artifacts are workspace
-scratch; SHA-256 prefixes are given with each column.
+sampled distributions after that point. The commits that landed on `main`
+between `d3ffa660` and the preflight base `03112675` change the ending's
+purpose evidence, Afterimage testimony, saved interlude bodies, share-code
+parsing and client code; none draws or changes the year, so they are not
+re-measured here. Artifacts are workspace scratch; SHA-256 prefixes are
+given with each column.
