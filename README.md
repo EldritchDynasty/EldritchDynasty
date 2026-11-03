@@ -6,7 +6,7 @@ You begin as the signing founder, named by you, and continue as the house's guar
 
 > In year 1042 your ancestor signed something. In 1542 the other party comes to collect.
 
-**Status:** pre-release. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android/iPhone (iOS) Capacitor host are working. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line, from 1042 to the reckoning in 1542.
+**Status:** pre-release. The simulation, content pipeline, authoring tool, game client, Windows Electron host and Android/iPhone (iOS) Capacitor host are working. `npm run play` runs the browser client with the 300-year Short Line selected; the same start screen also offers the complete 500-year Long Line (1042–1542) and **A Demonstration**, a separate 33-year first account.
 
 The verified `v0.1.0-beta.3` prerelease has an **unsigned Windows NSIS installer and Android AAB**; iOS has unsigned simulator save/resume/export/import proof. Signing, store accounts, TestFlight and physical-device release checks remain owner-blocked in [issuesneedingowneraction](issuesneedingowneraction). These are development proofs, not published store releases. macOS and Linux desktop builds are out of scope.
 
@@ -165,7 +165,7 @@ Omitting an entry does not remove it. It prints as a dated blank line, and the b
 
 Hand the pen back whenever you like — the chronicler answers through exactly the same code, which is what the headless harness runs for a complete Long Line at a time.
 
-The implemented game also includes **achievements**, a **Plain English** prose mode alongside the Original, and a physical library whose books wear, can be restored, sold, burned, paid as tribute or stolen. **The Long Wait** makes an unwoken man's future a house decision: keep waiting, or declare him mundane and free the succession; a waking past thirty comes through a scripted scene. The engine also has a 33-year demo profile, **A Demonstration**, using the same systems for a dated introduction with a complete Age, a Record decision, an interlude and a verdict. It is not yet offered on the normal start screen.
+The implemented game also includes **achievements**, a **Plain English** prose mode alongside the Original, and a physical library whose books wear, can be restored, sold, burned, paid as tribute or stolen. **The Long Wait** makes an unwoken man's future a house decision: keep waiting, or declare him mundane and free the succession; a waking past thirty comes through a scripted scene. The start screen also offers the 33-year profile **A Demonstration**, using the same systems for a dated introduction with a complete Age, a Record decision, an interlude and a verdict. Its saved runs have their own Continue, export and removal controls; they remain separate from Short/Long saves and cannot turn into a full campaign.
 
 ## Frequency
 
