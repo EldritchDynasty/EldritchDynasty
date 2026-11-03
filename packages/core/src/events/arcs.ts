@@ -78,7 +78,8 @@ export function startDecisionArcs(ctx: SimCtx, decision: ArcDecision, cast: Reco
     const opening = entry && ctx.content.event(entry.event);
     if (!opening || !eventInCampaign(opening, w.campaign)) continue;
     const cooldown = arc.startsOn.cooldownYears;
-    const recent = [...w.arcs.values()].some((a) => a.arc === arc.id && w.year - a.startedYear < cooldown);
+    const recent = [...w.arcs.values()].some((a) =>
+      a.arc === arc.id && a.startedYear <= w.year && w.year - a.startedYear < cooldown);
     if (recent) continue;
     const seed: SlotFill = {};
     for (const slot of DECISION_ARC_BINDINGS[decision]) {
