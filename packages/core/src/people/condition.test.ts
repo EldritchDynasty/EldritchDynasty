@@ -57,6 +57,50 @@ describe('annual bodily condition', () => {
     expect(Math.abs(a.mother.acquired[ACQUIRED_SPACING] ?? 0)).toBeLessThan(0.01);
   });
 
+  it('ignores an unborn saved child until their recorded birth year (#2762)', () => {
+    const ctx = testWorld(content, 2762, 1042);
+    const mother = place(ctx, { sex: 'female', age: 24, name: 'Mother of Tomorrow' });
+    const father = place(ctx, { sex: 'male', age: 25, name: 'Father of Tomorrow' });
+    const future = place(ctx, { sex: 'female', age: -3, name: 'Future Daughter' });
+    marry(ctx, mother, father);
+    beget(ctx, future, mother, father);
+
+    expect(future.born).toBe(ctx.world.year + 3);
+    expect(spacing(ctx, mother)).toBe(0);
+    expect(mother.acquired[ACQUIRED_SPACING]).toBe(0);
+
+    ctx.world.year = future.born;
+    expect(spacing(ctx, mother)).toBe(-45);
+    expect(mother.acquired[ACQUIRED_SPACING]).toBe(-31.5);
+  });
+
+  it('ignores unborn siblings for both the most recent birth and the deterministic ordinal (#2762)', () => {
+    const setup = (unborn: boolean) => {
+      const ctx = testWorld(content, 2763, 1042);
+      const mother = place(ctx, { sex: 'female', age: 25, name: 'Mother of Two' });
+      const father = place(ctx, { sex: 'male', age: 27, name: 'Father of Two' });
+      const bornChild = place(ctx, { sex: 'male', age: 1, name: 'Older Son' });
+      marry(ctx, mother, father);
+      beget(ctx, bornChild, mother, father);
+      if (unborn) {
+        const future = place(ctx, { sex: 'female', age: -5, name: 'Future Daughter' });
+        beget(ctx, future, mother, father);
+      }
+      mother.acquired.fertility = 23;
+      return { ctx, mother };
+    };
+
+    const baseline = setup(false);
+    const future = setup(true);
+    const target = spacing(baseline.ctx, baseline.mother);
+    expect(target).toBeLessThan(0);
+    expect(target).toBeGreaterThan(-45);
+    expect(spacing(future.ctx, future.mother)).toBe(target);
+    expect(future.mother.acquired[ACQUIRED_SPACING])
+      .toBe(baseline.mother.acquired[ACQUIRED_SPACING]);
+    expect(future.mother.acquired.fertility).toBe(23);
+  });
+
   it('touches neither Madness nor Eldritch expression', () => {
     const ctx = testWorld(content, 127, 1042);
     const before = ctx.world.people.all().map((p) => ({
