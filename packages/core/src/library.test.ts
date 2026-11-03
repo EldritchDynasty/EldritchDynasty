@@ -75,6 +75,25 @@ describe('future-acquired physical copies (#2699)', () => {
     expect(ctx.world.library.has(id)).toBe(false);
   });
 
+  it('does not block a borrowed study on a future-only binder appointment (#2721)', () => {
+    const ctx = bootstrap(bundle, 2721, 1042);
+    ctx.world.library.clear();
+    const def = ctx.content.mustSpellbook('lesser_workings_of_fluid');
+    const reader = place(ctx, { sex: 'male', age: 30, awakened: true });
+    reader.acquired[def.affinity] = 100;
+    expect(canStudySpellbook(ctx, reader, def).ok).toBe(true);
+
+    const phantom = acquireLibraryCopy(ctx, def.id)!;
+    phantom.acquiredYear = ctx.world.year + 3;
+    phantom.restoresAt = phantom.acquiredYear;
+    // Before acquisition, a future binder record is not a real obstruction.
+    expect(canStudySpellbook(ctx, reader, def).ok).toBe(true);
+    ctx.world.year = phantom.acquiredYear;
+    expect(canStudySpellbook(ctx, reader, def)).toEqual({
+      ok: false, reason: 'the copy is with the binder',
+    });
+  });
+
   it('does not expose, damage, or restore a book before its acquisition year', () => {
     const ctx = bootstrap(bundle, 2699, 1042);
     ctx.world.library.clear();
