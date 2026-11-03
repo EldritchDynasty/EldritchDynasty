@@ -954,6 +954,51 @@ events:
             There is a third account of that room, in a hand nobody has since
             identified, which gives no name at all and records only the hour.
 
+  # THE BASELINE FOR A HOUSE THAT WRITES IT LARGER (#2001). The five above
+  # read truthful Records or omissions, so a house that embellishes every
+  # Record block satisfies none of them; #1987's baseline found a third of
+  # such Short Lines with no interlude at all. Every Embellish opens a
+  # Discrepancy, so this reads one, and nothing about it: not which, not its
+  # state, not whose. That is also why the text must hold for every other
+  # way a Discrepancy opens (an authored lie, a secret another house holds,
+  # the Church's papers): the family's book says a thing one way and somebody
+  # outside keeps it another. Which of them is right the guardian never says,
+  # and nor does the game. Weight and cooldown sit inside the baselines' own
+  # range so it does not crowd the named beats out of the chronicler's mix.
+  - id: frame_the_weight_of_a_sentence
+    title: The Weight of a Sentence
+    tier: frame
+    frequency: rare
+    weight: 32
+    repeatable: true
+    cooldownYears: 150
+    tags: [frame, baseline, record]
+    purposes: [force_record_choice, plant_rumour, buy_patience]
+    reads:
+      - { anyDiscrepancy: { atLeast: 1 } }
+    slots:
+      LISTENER_A: { role: listener_blood }
+      LISTENER_B: { role: listener_record }
+    body: >-
+      The finest pages in the family's book are the ones written with the
+      most care, their capitals laid in leaf that generations of fingers have
+      traced until it is worn to the colour of straw, and their lines running
+      even to the margin as lines do when the hand that made them knew before
+      it began exactly what they would say. Beyond this house the same years
+      are kept in plainer hands, in parish rolls and in the letters of other
+      families, and somewhere among them a thing the family wrote is written
+      otherwise. The guardian reads the family's sentence as the family set it
+      down, and does not read the other, and has never once said that it was
+      wrong.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: only
+          weight: 100
+          text: >-
+            The gold has lasted best in the margins, where nobody's finger has
+            ever needed to go.
+
 proseVariants:
   - address: "content:events/frame.yaml#events[id=frame_the_seal_still_west].title"
     of: "0bfa3e55f85ffc39"
@@ -1423,3 +1468,25 @@ proseVariants:
     plainenglish: >-
       There is a third account of that room, in handwriting nobody has ever identified. It gives
       no name at all, and records only the hour.
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].title"
+    of: "c0f9488389b19737"
+    plainenglish: >-
+      A Sentence Written With Care
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].body"
+    of: "06535bff7017cadb"
+    plainenglish: >-
+      The best pages in the family's book are the ones written most
+      carefully. Their capital letters were laid in gold, and generations of
+      fingers have traced them until the gold has worn as pale as straw.
+      Their lines run straight to the edge of the page, the way lines do when
+      the writer knew exactly what they would say before starting. Outside
+      this house, other people kept the same years in plainer writing, in
+      church records and in letters between other families. Somewhere in
+      those, something the family wrote is written differently. The guardian
+      reads the family's version as the family wrote it. The guardian does not
+      read the other version, and has never once called either one wrong.
+  - address: "content:events/frame.yaml#events[id=frame_the_weight_of_a_sentence].interaction.outcomes[id=only].text"
+    of: "0aba24172286de7b"
+    plainenglish: >-
+      The gold has lasted best at the edges of the page, where nobody ever
+      needed to touch it.
