@@ -250,11 +250,12 @@ function currentGrudges(builders: Map<string, Builder>, ctx: SimCtx): void {
 
     for (const grudge of rel.grudges) {
       if (grudge.severity <= 1) continue;
+      // A restored future page cannot yet name the source of an active quarrel.
       const entry = (grudge.originPage
-        ? w.chronicle.find((c) => c.id === grudge.originPage)
+        ? w.chronicle.find((c) => c.year <= w.year && c.id === grudge.originPage)
         : undefined)
         ?? w.chronicle.find((c) =>
-          c.year === grudge.originYear && c.eventId === grudge.originEvent);
+          c.year <= w.year && c.year === grudge.originYear && c.eventId === grudge.originEvent);
       const namedOrigin = (modeCtx: SimCtx) => entry?.title ?? clip(entry?.text) ?? msg(modeCtx, 'threads.grudge.default', 'the quarrel');
       const holder = (modeCtx: SimCtx) => !from ? houseName(modeCtx, rel.from)
         : from === outsider ? `${from.name} of ${houseName(modeCtx, house)}` : from.name;
@@ -276,7 +277,8 @@ function currentRecords(builders: Map<string, Builder>, ctx: SimCtx): void {
   const w = ctx.world;
   for (const [id, discrepancy] of w.discrepancies) {
     if (discrepancy.state !== 'open') continue;
-    const entry = w.chronicle.find((c) => c.discrepancyId === id);
+    // An imported future telling must not disclose an active or past dispute.
+    const entry = w.chronicle.find((c) => c.year <= w.year && c.discrepancyId === id);
     const year = entry?.year ?? w.year;
     const claim = (modeCtx: SimCtx) => entry?.title
       ? msg(modeCtx, 'threads.record.named.current', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title })
@@ -440,7 +442,7 @@ function historicalOrigins(
 
   for (const [id, discrepancy] of w.discrepancies) {
     if (discrepancy.state === 'open') continue;
-    const entry = w.chronicle.find((c) => c.discrepancyId === id);
+    const entry = w.chronicle.find((c) => c.year <= w.year && c.discrepancyId === id);
     const year = entry?.year ?? w.year;
     const claim = (modeCtx: SimCtx) => entry?.title ? msg(modeCtx, 'threads.record.named.history', 'the {YEAR} entry “{TITLE}”', { YEAR: String(year), TITLE: entry.title }) : msg(modeCtx, 'threads.record.disputed.history', 'a disputed {YEAR} entry', { YEAR: String(year) });
     for (const house of discrepancy.provableBy) {
