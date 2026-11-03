@@ -3,7 +3,7 @@ import type {
   CampaignId, Content, ContentBundle, FounderAnswer, FoundingConfiguration, Gender, LibraryRun, PrologueDef, ProseMode,
   ProseVariant, Sex,
 } from '@ed/schema';
-import { assertNever, indexContent, PERSON_NAME_MAX, SAVE_FORMAT } from '@ed/schema';
+import { assertNever, FounderIdentityS, indexContent, PERSON_NAME_MAX, SAVE_FORMAT } from '@ed/schema';
 import { campaignDef } from './campaign.js';
 import { FRIEND_NAME_MAX, MAX_FRIENDS, normaliseFriends } from './people/friends.js';
 import { HOUSE_NAME_MAX, type FoundingChoice } from './prologue.js';
@@ -291,6 +291,14 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
 
   const names = opts.names === true;
   const founder = signing?.founder;
+  // A restored or programmatically altered signing row may contain an invalid
+  // founder identity. Check it before the exhaustive wire switches, which
+  // otherwise throw, and in both privacy modes: omitting a bad name must not
+  // turn an unrepresentable founding into a seemingly valid share code.
+  if (founder && (!FounderIdentityS.safeParse(founder).success
+    || (founder.name !== undefined && founder.name.length > PERSON_NAME_MAX))) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const payload: Payload = [
     ...editionOf(ctx.content, opts.build),
     campaignLetter(w.campaign),
