@@ -1349,6 +1349,35 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     });
   });
 
+  it('indexes an exact event and year, ignoring other events while refusing duplicate rite pages (#2607)', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const victim = w.chronicle[0]!.people![0]!;
+    // An unrelated event in the same year is not a second account of this rite.
+    w.chronicle.push(page({
+      id: 'another-event-page', year: w.year, eventId: 'unrelated_event',
+      text: 'A different event also entered the Chronicle this year.',
+    }));
+    const selectedEnding = selectEnding(ctx);
+    const before = digestOf(ctx);
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victim);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Meriel of the Tides',
+      text: 'The house wrote that Meriel walked away.',
+    });
+    expect(selectEnding(ctx)).toBe(selectedEnding);
+    expect(digestOf(ctx)).toBe(before);
+
+    // The old decision log has no page ID. Even an otherwise identical
+    // second page for the same event and year makes attribution impossible.
+    w.chronicle.push({ ...w.chronicle[0]!, id: 'second-rite-page' });
+    const ambiguous = digestOf(ctx);
+    expect(afterimageEvidence(ctx).spentBlood).toBeUndefined();
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(selectedEnding);
+    expect(digestOf(ctx)).toBe(ambiguous);
+  });
+
   it('does not infer pursuit from selecting an ambition, an unsupported rite, or an ambiguous page', () => {
     const ctx = accountedRite();
     const w = ctx.world;
