@@ -2,8 +2,13 @@
 
 Reviewed against `main` at `098bfe02` on 22 October 2026. These are an analysis
 of implemented hooks and proposed improvements, not measured player responses.
-The founder currently accepts a name and remains the authored male signer;
-the identity/configuration extension is tracked in #1867.
+
+**Current implementation update (4 November 2026):** since that review, #1867
+shipped founder gender and blood-parent configuration as separate signing choices;
+Daveed Gearithy remains the default male blood father, not the only possible
+founder. See [the client guide](packages/client/AGENTS.md#the-two-ends-of-the-run)
+and [the founding-cast implementation](packages/core/src/people/founding-cast.ts).
+The emotional hooks below remain hypotheses, not observed player responses.
 
 **Eldritch Dynasty’s strongest hook is: “I’m building a future for this family, but the things I do to secure it may be what destroys it.”** The mystery draws the player in; particular people, ambitions and remembered decisions give them reasons to stay.
 
@@ -12,7 +17,7 @@ Reading the current implementation and content, these are the main points where 
 | Point in the game | What hooks the player | Goal and emotional investment |
 |---|---|---|
 | **Before playing: the debt has a date** | “An ancestor signed something. The other party comes to collect.” There is an unanswered question and a definite reckoning. | **Curiosity and apprehension:** What did we agree to? Can I prepare the family to survive collection? |
-| **The signing: making this my house** | Naming the founder and house, answering the Examination, choosing an heirloom and an inherited grudge. Each answer gives something and costs something. | **Ownership:** These are my family’s strengths, compromises and enemies. I want to see what my choices produce. |
+| **The signing: making this my house** | Naming the founder and house, choosing the founder's gender and blood-parent role, answering the Examination, choosing an heirloom and an inherited grudge. Each answer gives something and costs something. | **Ownership:** These are my family’s strengths, compromises and enemies. I want to see what my choices produce. |
 | **First marriages, births and awakenings** | A marriage promises a future child; the child’s inheritance and awakening remain uncertain. Naming children makes that anticipation personal. | **Hope:** Will this child be the one? Can I give them the education, partner and protection they need? |
 | **First succession** | Someone the player prepared takes responsibility; others establish branches. The founder’s persistence as guardian connects those changing lives. | **Continuity and grief:** Can the next generation carry forward what the last one built? A person’s death leaves an unfinished project. |
 | **The first costly Record decision** | Record, Omit or Embellish makes the player responsible for the family’s account of an event. Truth can damage standing; concealment can damage descendants. | **Complicity:** Do I protect the house now, or leave its children the truth? Later consequences make an earlier decision worth remembering. |
