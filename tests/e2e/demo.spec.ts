@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import { loadBundle } from '@ed/content';
 import { newGame } from '@ed/core';
@@ -120,7 +121,7 @@ test('a denied demo autosave write leaves the full continuation intact #2313', a
 });
 
 test('demo autosave, chapter and export stay separate from a Short Line continuation #2159', async ({ page }) => {
-  const { full } = await openWithSaves(page, 'original', { demo: true, namedDemo: true });
+  const { full, demo } = await openWithSaves(page, 'original', { demo: true, namedDemo: true });
   const demos = page.getByRole('region', { name: 'Demonstrations kept' });
   await expect(demos).toBeVisible();
   await expect(demos.getByRole('button', { name: /Return to the Demonstration/ })).toBeVisible();
@@ -132,6 +133,13 @@ test('demo autosave, chapter and export stay separate from a Short Line continua
   await demos.getByRole('button', { name: 'Copy out demonstration demo-autosave' }).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toMatch(/^eldritch-\d+\.json$/);
+  // The filename alone cannot prove that Copy out exported the Demonstration.
+  // Inspect the browser's real download, not an in-memory mocked response.
+  const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
+  expect(exported.campaign).toBe('demo');
+  expect(exported).toEqual(JSON.parse(JSON.stringify(demo)));
+  expect(exported).not.toEqual(full);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
 
   await demos.getByRole('button', { name: /Return to the Demonstration/ }).click();
   await expect(page.locator('.board')).toBeVisible();
