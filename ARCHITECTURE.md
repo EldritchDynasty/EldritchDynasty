@@ -131,7 +131,7 @@ YAML ──assembleBundle──▶ ContentBundle ──indexContent──▶ Con
 | Rival-house **descent** | `core/src/people/rivals.ts` | `rivals.test.ts` |
 | Authored recurring-role **dismissal and recasting** | `core/src/events/effects.ts` → `recast`; `people/succession.ts` → `maintainCast` | `effect-verbs.test.ts`, `rules.test.ts` (`recast/role`) |
 | Which outside houses **recur** — a read model over grudges, the Match, lies | `core/src/relationship-threads.ts` | `rivals.test.ts` |
-| The **campaign** — Short Line, Long Line or demo (not yet on the normal start screen) | `core/src/campaign.ts` → `CAMPAIGNS` | `campaign.test.ts`, `gate:campaigns` |
+| The **campaign** — Short Line, Long Line or the 33-year Demonstration (each a Start choice) | `core/src/campaign.ts` → `CAMPAIGNS` | `campaign.test.ts`, `gate:campaigns` |
 | The house's **ambition** | `core/src/ambition.ts` | `ambition.test.ts` |
 | What a standing **delegation** answers, and what must still surface | `core/src/delegation.ts` → `mustSurface` | `deciders.test.ts`, `decisions.slow.test.ts` |
 | **Advisers** — a person's advice, never the engine's answer | `core/src/advisers.ts` | `advisers.test.ts` |
