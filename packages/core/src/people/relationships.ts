@@ -201,7 +201,19 @@ export function tickRelationships(ctx: SimCtx): void {
     // holding solely future quarrels until they can begin, even if its named
     // holder has died in the recovered present.
     const presentGrudges = rel.grudges.filter((g) => g.originYear <= w.year);
-    if (!presentGrudges.length && rel.grudges.length) continue;
+    const futureGrudges = rel.grudges.filter((g) => g.originYear > w.year);
+    if (!presentGrudges.length && futureGrudges.length) continue;
+
+    // Keep not-yet-originated quarrels on the saved edge if a present quarrel
+    // ends or changes holders. They must wait for their own year to inherit.
+    const retainFuture = () => {
+      if (!futureGrudges.length) {
+        w.relationships.delete(k);
+      } else {
+        rel.grudges = futureGrudges;
+        rel.sentiment = 0;
+      }
+    };
 
     // Re-point either end that has died, per the grudge's own policy. A
     // relationship carrying present grudges with different policies keeps the widest.
@@ -210,7 +222,7 @@ export function tickRelationships(ctx: SimCtx): void {
       'none',
     );
     if (policy === 'none') {
-      if (dead(rel.from) || dead(rel.to)) w.relationships.delete(k);
+      if (dead(rel.from) || dead(rel.to)) retainFuture();
       continue;
     }
 
@@ -229,15 +241,16 @@ export function tickRelationships(ctx: SimCtx): void {
     // hit a year with no living holder and was quietly ended by this line.
     if (!from || !to || from === to) {
       if (policy === 'house_wide') continue;
-      w.relationships.delete(k);
+      retainFuture();
       continue;
     }
     if (from === rel.from && to === rel.to) continue;
 
-    w.relationships.delete(k);
+    const sentiment = rel.sentiment;
+    retainFuture();
     const moved = upsert(w, from, to);
-    moved.sentiment = Math.max(-100, Math.min(100, moved.sentiment + rel.sentiment));
-    moved.grudges.push(...rel.grudges);
+    moved.sentiment = Math.max(-100, Math.min(100, moved.sentiment + sentiment));
+    moved.grudges.push(...presentGrudges);
     for (const kind of rel.kinds) if (!moved.kinds.includes(kind)) moved.kinds.push(kind);
     moved.from = from;
     moved.to = to;
