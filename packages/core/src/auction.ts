@@ -252,7 +252,7 @@ export function marriageBidOffer(ctx: SimCtx, lotId: string): { signer?: { id: s
   if (!signer || signer.status !== 'alive') {
     return { reason: msg(ctx, 'auction.refuse.pledge_head', 'the sitting Head must sign the pledge') };
   }
-  if (w.marriagePromises.length || w.auction.upcoming.some((l) => l.id !== lotId
+  if (w.marriagePromises.some((promise) => promise.year <= w.year) || w.auction.upcoming.some((l) => l.id !== lotId
     && l.playerBid?.currency === 'marriage_promise')) {
     return { reason: msg(ctx, 'auction.refuse.pledge_outstanding', 'the house has already promised a granddaughter') };
   }
