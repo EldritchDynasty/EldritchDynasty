@@ -5,7 +5,7 @@ import { asId, proseOriginalHash, type HouseId } from '@ed/schema';
 import { validateBundle } from '@ed/schema';
 import {
   bootstrap, runYears, attr, applyEffect, commitOutcome,
-  canUseHeirloom, eligibleBearers, grantHeirloom, testRng, useHeirloom,
+  canUseHeirloom, eligibleBearers, grantHeirloom, heldHeirlooms, testRng, useHeirloom,
   loadGame, missingPlainEnglish, saveGame, setProseMode, setProseVariants,
 } from '@ed/core';
 
@@ -99,6 +99,44 @@ describe('arc heirlooms do not spend the ambient frequency ration', () => {
 });
 
 describe('applying an heirloom is generic', () => {
+  it('does not present or spend a future-acquired heirloom before its year (#2697)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const bearer = someone(ctx);
+    const id = 'portion_of_agelessness';
+    const state = grantHeirloom(ctx, id)!;
+    state.acquiredYear = ctx.world.year + 2;
+
+    const before = saveGame(ctx);
+    expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(false);
+    expect(canUseHeirloom(ctx, id, bearer)).toEqual({
+      ok: false, reason: 'the house does not hold it',
+    });
+    expect(eligibleBearers(ctx, id)).toEqual([]);
+    expect(useHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(saveGame(ctx)).toEqual(before);
+
+    ctx.world.year = state.acquiredYear - 1;
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
+
+    ctx.world.year = state.acquiredYear;
+    expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(true);
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+    expect(eligibleBearers(ctx, id)).toContain(bearer);
+    expect(useHeirloom(ctx, id, bearer).ok).toBe(true);
+  });
+
+  it('does not count future-acquired Regalia among the current holdings (#2697)', () => {
+    const ctx = bootstrap(bundle, 1042, 1042);
+    const id = 'the_ninefold_seal';
+    const state = ctx.world.heirlooms.get(id)!;
+    expect(state).toBeDefined();
+    state.acquiredYear = ctx.world.year + 1;
+
+    expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(false);
+    ctx.world.year = state.acquiredYear;
+    expect(heldHeirlooms(ctx).some((held) => held.id === id)).toBe(true);
+  });
+
   it('refuses one the house does not hold', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const p = someone(ctx);
