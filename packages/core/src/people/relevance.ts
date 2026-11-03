@@ -67,7 +67,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
           person.status === 'alive'
           && age >= 17
           && age <= 45
-          && !person.marriages.some((m) => m.to === undefined)
+          && !person.marriages.some((m) => m.from <= w.year && (m.to === undefined || m.to > w.year))
         ) add(out, person.id, msg(ctx, 'relevance.unmarried_blood', 'unmarried, of the blood'));
       }
       break;
