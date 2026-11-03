@@ -86,6 +86,9 @@ describe('a slot is a name, not a path', () => {
   it('reads its own files back out of a listing and ignores everything else', () => {
     expect(slotOfFile('the autumn run.edsave.json')).toBe('the autumn run');
     expect(slotOfFile('the autumn  run.edsave.json')).toBe('the autumn  run');
+    // Case-folded extensions are discoverable as unreadable, never loaded.
+    expect(slotOfFile('House.EDSAVE.JSON')).toBe('House');
+    expect(slotOfFile('House.EdSaVe.JsOn')).toBe('House');
     expect(slotOfFile('notes.txt')).toBeUndefined();
     expect(slotOfFile('../escaped.edsave.json')).toBeUndefined();
     expect(slotOfFile('.edsave.json')).toBeUndefined();
@@ -341,6 +344,38 @@ describe('the save directory', () => {
 
     expect(() => readSave(root, 'House')).toThrow(SaveSlotError);
     expect(readFileSync(path, 'utf8')).toBe(original);
+  });
+
+  it('shows a case-renamed save extension as unreadable instead of losing the slot (#2635)', () => {
+    const alias = join(root, 'House.EDSAVE.JSON');
+    const bytes = JSON.stringify(aSave({ year: 1420 }));
+    writeFileSync(alias, bytes, 'utf8');
+    writeSave(root, 'healthy', aSave({ year: 1450 }));
+
+    const bySlot = new Map(listSaves(root).map((entry) => [entry.slot, entry]));
+    expect(bySlot.size).toBe(2);
+    expect(bySlot.get('House')).toMatchObject({
+      unreadable: expect.stringContaining('conflicts with existing filename'),
+    });
+    expect(bySlot.get('House')?.year).toBeUndefined();
+    expect(bySlot.get('healthy')).toMatchObject({ year: 1450, format: 6 });
+    expect(() => readSave(root, 'House')).toThrow(SaveSlotError);
+    expect(() => deleteSave(root, 'House')).toThrow(SaveSlotError);
+    expect(readFileSync(alias, 'utf8')).toBe(bytes);
+  });
+
+  it('does not duplicate a slot if both extension spellings exist (#2635)', () => {
+    if (process.platform === 'win32') return;
+    const original = JSON.stringify(aSave());
+    writeFileSync(join(root, 'House.edsave.json'), original, 'utf8');
+    writeFileSync(join(root, 'House.EDSAVE.JSON'), original, 'utf8');
+
+    const listed = listSaves(root);
+    expect(listed).toHaveLength(1);
+    expect(listed[0]).toMatchObject({
+      slot: 'House',
+      unreadable: expect.stringContaining('conflicts with existing filename'),
+    });
   });
 
   it('refuses case-only deletion aliases without losing an existing run (#2380)', () => {
