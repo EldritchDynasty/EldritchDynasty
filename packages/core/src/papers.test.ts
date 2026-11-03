@@ -230,6 +230,54 @@ describe('and getting caught', () => {
     expect(girl.lineageDocuments).toHaveLength(1);
   });
 
+  it.each(['original', 'plainenglish'] as const)(
+    'keeps not-yet-exposed documents valid until their exposure year (%s, #2764)',
+    (mode) => {
+      const ctx = testWorld(bundle, 2764);
+      setProseMode(ctx, mode);
+      const person = place(ctx, { sex: 'female', age: 24, name: 'Future exposure' });
+      const doc = filePedigree(ctx, person, 'caster');
+      const year = ctx.world.year;
+      doc.exposed = year + 3;
+
+      expect(papersHeld(ctx, person)).toBe(3);
+      ctx.world.year = year + 2;
+      expect(papersHeld(ctx, person)).toBe(3);
+      ctx.world.year = year + 3;
+      expect(papersHeld(ctx, person)).toBe(0);
+      ctx.world.year = year + 4;
+      expect(papersHeld(ctx, person)).toBe(0);
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
+    'permits a real earlier exposure but keeps a future one if the roll misses (%s, #2764)',
+    (mode) => {
+      const ctx = testWorld(bundle, 2765);
+      setProseMode(ctx, mode);
+      const person = place(ctx, { sex: 'female', age: 28, name: 'Earlier exposure' });
+      const doc = filePedigree(ctx, person, 'bramme');
+      const year = ctx.world.year;
+      doc.exposed = year + 5;
+      const baseline = ctx.world.discrepancies.size;
+      const pageCount = ctx.world.chronicle.length;
+
+      const misses = { ...testRng('future-papers-miss'), bool: (_chance: number) => false };
+      expect(tickPapers(ctx, misses)).toBe(0);
+      expect(doc.exposed).toBe(year + 5);
+      expect(papersHeld(ctx, person)).toBe(2);
+      expect(ctx.world.discrepancies.size).toBe(baseline);
+
+      const exposes = { ...testRng('future-papers-hit'), bool: (_chance: number) => true };
+      expect(tickPapers(ctx, exposes)).toBe(1);
+      expect(doc.exposed).toBe(year);
+      expect(papersHeld(ctx, person)).toBe(0);
+      expect(ctx.world.discrepancies.size).toBe(baseline + 1);
+      expect(ctx.world.chronicle.slice(pageCount)).toHaveLength(1);
+      expect(tickPapers(ctx, exposes)).toBe(0);
+    },
+  );
+
   it('the papers phase catches forgeries and names the records that would settle it', () => {
     const ctx = testWorld(bundle);
     const before = ctx.world.discrepancies.size;
