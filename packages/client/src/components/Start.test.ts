@@ -153,6 +153,40 @@ describe('fresh RNG seeds for a new house (#1013)', () => {
   });
 });
 
+describe('Start seed fallback without Web Crypto (#2637)', () => {
+  it.each([
+    ['the crypto global is absent', undefined],
+    ['getRandomValues is unavailable', {}],
+  ])('keeps Advanced and Begin usable when %s', async (_label, unavailableCrypto) => {
+    vi.stubGlobal('crypto', unavailableCrypto);
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.625);
+    try {
+      const actions = spyActions();
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        const advanced = w.findAll('button').find((button) => button.text() === 'Advanced');
+        expect(advanced).toBeTruthy();
+        await advanced!.trigger('click');
+        expect((w.get('#seed').element as HTMLInputElement).value).toBe(String(0xa0000000));
+
+        await w.get('button.primary').trigger('click');
+        expect(actions.begin).toHaveBeenCalledWith(0xa0000000, 'short');
+
+        // Lack of host entropy must not prevent a reader entering their own seed.
+        await w.get('#seed').setValue(73);
+        await w.get('button.primary').trigger('click');
+        expect(actions.begin).toHaveBeenLastCalledWith(73, 'short');
+      } finally {
+        w.unmount();
+      }
+    } finally {
+      random.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
 describe('campaign choice (#66)', () => {
   it('describes the Long Line summit as a difficult goal, not a guaranteed route (#1978)', async () => {
     for (const proseMode of ['original', 'plainenglish'] as const) {
