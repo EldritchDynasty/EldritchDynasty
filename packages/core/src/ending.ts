@@ -268,7 +268,9 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   let attested: Rung = 'none';
   let attestedYear: number | undefined;
 
-  for (const entry of w.chronicle) {
+  // Imported or inconsistent future pages are not yet part of the account.
+  const readableEntries = w.chronicle.filter((entry) => entry.year <= w.year);
+  for (const entry of readableEntries) {
     if (entry.text === null) blanks += 1;
     else pages += 1;
     if (entry.record === 'record') recorded += 1;
@@ -283,7 +285,7 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   let provenLies = 0;
   let standingLies = 0;
   let unsupportable = 0;
-  const embellishedDiscrepancies = new Set(w.chronicle.flatMap((entry) =>
+  const embellishedDiscrepancies = new Set(readableEntries.flatMap((entry) =>
     entry.record === 'embellish' && entry.discrepancyId ? [entry.discrepancyId] : []));
   for (const [id, d] of w.discrepancies.entries()) {
     if (d.state === 'proven') provenLies += 1;
@@ -771,7 +773,8 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
   // Entries include nested claims, people and cause data, so spreading only
   // the array or its entries would still let a view rewrite the book.
   const read = w.chronicle
-    .filter((e) => e.text === null || e.record === 'embellish' || e.weight === 'illuminated')
+    .filter((e) => e.year <= w.year
+      && (e.text === null || e.record === 'embellish' || e.weight === 'illuminated'))
     .slice(-EPILOGUE_PAGES)
     .map((entry) => structuredClone(entry));
 
