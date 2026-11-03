@@ -205,18 +205,16 @@ describe('a scene that reads the blanks names one', () => {
     expect([inline(source.record?.subject ?? ''), source.title]).toContain(words);
   });
 
-  it('ships an omission scene that names the first blank, in both prose modes', () => {
-    for (const mode of ['original', 'plainenglish'] as const) {
-      const game = newGame(bundle, { seed: 1987, proseMode: mode });
-      blank(game.ctx, 'chr_first', 1077, 'the list out of Caster');
-      const shipped = game.ctx.content.events.find((e) => e.id === ID)!;
-      const entry = presentFrame(game.ctx, { ...shipped, slots: {} }, makeRng(1))!;
-      expect(entry.cites, mode).toEqual({ page: 'chr_first', year: 1077 });
-      expect(entry.body, mode).toContain('1077');
-      expect(entry.body, mode).toContain('the list out of Caster');
-      expect(entry.body, mode).not.toMatch(/[{}]/);
-      expect(missingPlainEnglish(game.ctx), mode).toEqual([]);
-    }
+  it.each(['original', 'plainenglish'] as const)('ships an omission scene that names the first blank (%s)', (mode) => {
+    const game = newGame(bundle, { seed: 1987, proseMode: mode });
+    blank(game.ctx, 'chr_first', 1077, 'the list out of Caster');
+    const shipped = game.ctx.content.events.find((e) => e.id === ID)!;
+    const entry = presentFrame(game.ctx, { ...shipped, slots: {} }, makeRng(1))!;
+    expect(entry.cites).toEqual({ page: 'chr_first', year: 1077 });
+    expect(entry.body).toContain('1077');
+    expect(entry.body).toContain('the list out of Caster');
+    expect(entry.body).not.toMatch(/[{}]/);
+    expect(missingPlainEnglish(game.ctx)).toEqual([]);
   });
 
   it('sets a subject written as its own sentence inside the scene\'s', () => {
