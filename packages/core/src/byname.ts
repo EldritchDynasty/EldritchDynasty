@@ -172,7 +172,8 @@ function restsOn(grant: BynameGrant, discrepancy: string, page: string): boolean
  * How the reader is told a byname stands — read off the saved grant alone,
  * never off live hidden state. `undefined` means the person has no byname.
  */
-export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>): BynameStanding | undefined {
+/** A present-year read does not reveal a settlement that has yet to happen. */
+export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): BynameStanding | undefined {
   if (person.epithet === undefined) return undefined;
   const grant = person.byname;
   if (!grant) return 'unknown';
@@ -183,7 +184,8 @@ export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>): Byna
       switch (pen) {
         case 'record': return 'attested';
         case 'embellish': {
-          const settled = grant.settled?.state;
+          const settled = grant.settled && (asOfYear === undefined || grant.settled.year <= asOfYear)
+            ? grant.settled.state : undefined;
           if (settled === undefined) return 'claimed';
           switch (settled) {
             case 'proven': return 'contested';
@@ -214,8 +216,8 @@ export interface BynameView {
   settledYear?: Year;
 }
 
-export function bynameView(person: Pick<Person, 'epithet' | 'byname'>): BynameView | undefined {
-  const standing = bynameStanding(person);
+export function bynameView(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): BynameView | undefined {
+  const standing = bynameStanding(person, asOfYear);
   if (standing === undefined || person.epithet === undefined) return undefined;
   const grant = person.byname;
   if (!grant) return { text: person.epithet, standing };
@@ -226,7 +228,8 @@ export function bynameView(person: Pick<Person, 'epithet' | 'byname'>): BynameVi
       standing,
       year: grant.year,
       page: source.page,
-      ...(grant.settled ? { settledYear: grant.settled.year } : {}),
+      ...(grant.settled && (asOfYear === undefined || grant.settled.year <= asOfYear)
+        ? { settledYear: grant.settled.year } : {}),
     };
     default: return assertNever(source.kind);
   }
