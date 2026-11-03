@@ -67,7 +67,7 @@ function widowOfHead(ctx: SimCtx, p: Person): boolean {
   return p.marriages.some((marriage) => {
     const spouse = ctx.world.people.get(marriage.spouse);
     return spouse?.status === 'dead'
-      && ctx.world.succession.some((held) => held.person === spouse.id);
+      && ctx.world.succession.some((held) => held.person === spouse.id && held.from <= ctx.world.year);
   });
 }
 
@@ -90,7 +90,9 @@ function lensOf(
     }
   }
 
-  const heldSeal = ctx.world.succession.some((held) => held.person === p.id && held.to !== undefined);
+  const heldSeal = ctx.world.succession.some((held) =>
+    held.person === p.id && held.from <= ctx.world.year
+    && held.to !== undefined && held.to <= ctx.world.year);
   const regent = isRegent(ctx.world, p) && p.castSlots.includes('head');
   if (heldSeal || regent || widowOfHead(ctx, p)) {
     const cares = () => heldSeal
