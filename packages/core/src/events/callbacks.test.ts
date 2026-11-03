@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { declineMatch, queueMatch, resolveMatch } from './decisions.js';
 import { dealMatch } from '../people/match.js';
-import { startArc, startDecisionArcs } from './arcs.js';
+import { dueArcSteps, startArc, startDecisionArcs } from './arcs.js';
 import { applyEffect } from './effects.js';
 import { captureFamily } from '../people/captivity.js';
 import { causeOf } from '../cause.js';
@@ -153,6 +153,26 @@ describe('decision-started arcs (#1898)', () => {
     expect(instancesOf(ctx, TERM)).toHaveLength(arc.maxConcurrentInstances + 1);
     expect(instancesOf(ctx, TERM).at(-1)?.bindings.PUPIL).toBe(presentPupil.id);
     expect(instancesOf(ctx, TERM).at(-1)?.startedYear).toBe(year);
+  });
+
+  it('a future-started arc never presents even when its saved due year is early (#2768)', () => {
+    const ctx = testWorld(bundle, 2770, 1060);
+    const year = ctx.world.year;
+    const pupil = place(ctx, { sex: 'female', age: 10, name: 'Future Scene' });
+    const arc = ctx.content.arc(TERM)!;
+
+    ctx.world.year = year + 4;
+    const future = startArc(arc, ctx, makeRng(2770), { PUPIL: pupil.id })!;
+    expect(future.startedYear).toBe(year + 4);
+    future.dueYear = year; // An inconsistent saved schedule predates its opening.
+
+    ctx.world.year = year;
+    expect(dueArcSteps(ctx, makeRng(2770)).some((step) => step.instance.id === future.id)).toBe(false);
+    expect(future.status).toBe('active');
+    expect(future.dueYear).toBe(year);
+
+    ctx.world.year = year + 4;
+    expect(dueArcSteps(ctx, makeRng(2770)).some((step) => step.instance.id === future.id)).toBe(true);
   });
 
   it('a waking in the house opens the story; a waking in another house does not', () => {
