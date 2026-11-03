@@ -219,15 +219,17 @@ export class SoundBed {
     // returned detach must still remove those listeners.
     let unpause: () => void = () => undefined;
     let pausedDuringSubscription = false;
+    let subscribing = true;
     try {
       unpause = onPause?.(() => {
-        // A synchronous host pause outranks the new document's visible state.
-        pausedDuringSubscription = true;
+        // Only a synchronous host pause can veto the initial visible sample.
+        if (subscribing) pausedDuringSubscription = true;
         hide();
       }) ?? unpause;
     } catch {
       // Treat the unavailable host hook as silence, not a failed game mount.
     }
+    subscribing = false;
     // A native host may report a pause synchronously while onPause is being
     // subscribed, even though the webview still reports "visible". Do not
     // mistake the initial visibility sample for a foreground/resume event:
