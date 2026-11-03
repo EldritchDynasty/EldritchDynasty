@@ -70,6 +70,46 @@ describe('claiming a friend’s name', () => {
     expect(before).toBe(makeRng(7).int(1000));
   });
 
+  it('honors an arrival today before a saved future spend, without reusing past or current spends', () => {
+    const year = 1200;
+    const friend: FriendName = { name: 'Marisol', sex: 'female', dueFrom: 1042 };
+    let handedOut = 0;
+    // Compare the same deterministic rolls against an unspent name, rather
+    // than relying on one lucky seed to exercise the one-in-ten selection.
+    for (let seed = 0; seed < 200; seed++) {
+      const fresh = [{ ...friend }];
+      const restored = [{ ...friend, spentIn: 1300 }];
+      const expected = claimFriendName(fresh, 'female', new Set(), year, makeRng(seed));
+      const actual = claimFriendName(restored, 'female', new Set(), year, makeRng(seed));
+      expect(actual, `seed ${seed}: a future spend must not hide today's name`).toBe(expected);
+      if (actual) {
+        handedOut++;
+        expect(restored[0]!.spentIn).toBe(year);
+        const again = makeRng(seed);
+        expect(claimFriendName(restored, 'female', new Set(), year, again)).toBeUndefined();
+        expect(again.int(1000)).toBe(makeRng(seed).int(1000));
+      } else {
+        expect(restored[0]!.spentIn).toBe(1300);
+      }
+    }
+    expect(handedOut).toBeGreaterThan(0);
+
+    const blocked: { entry: FriendName; sex: 'male' | 'female'; taken?: string[] }[] = [
+      { entry: { ...friend, spentIn: year - 1 }, sex: 'female' },
+      { entry: { ...friend, spentIn: year }, sex: 'female' },
+      { entry: { ...friend, spentIn: year + 100, dueFrom: year + 1 }, sex: 'female' },
+      { entry: { ...friend, spentIn: year + 100 }, sex: 'male' },
+      { entry: { ...friend, spentIn: year + 100 }, sex: 'female', taken: ['Marisol'] },
+    ];
+    for (const { entry, sex, taken = [] } of blocked) {
+      const rng = makeRng(23);
+      const original = { ...entry };
+      expect(claimFriendName([entry], sex, new Set(taken), year, rng)).toBeUndefined();
+      expect(entry).toEqual(original);
+      expect(rng.int(1000)).toBe(makeRng(23).int(1000));
+    }
+  });
+
   it('hands out a name of the sex asked for, and only that sex', () => {
     const friends = bag();
     const taken = new Set<string>();
