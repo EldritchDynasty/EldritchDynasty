@@ -872,6 +872,37 @@ describe('the bed decides when the house may be heard', () => {
     expect(ctx.sources).toHaveLength(before + cueScore('page').voices.length);
   });
 
+  it('does not resume a running context on every gesture or cue, but recovers after suspension (#2595)', () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    const resumes = () => ctx.calls.filter((call) => call === 'resume').length;
+    const initial = resumes();
+    expect(initial).toBeGreaterThan(0);
+
+    // One player action can dispatch pointerdown, pointerup and click.
+    // Later accepted cues must not add unnecessary host resume requests either.
+    for (const gesture of ['pointerup', 'click', 'keydown', 'touchend']) {
+      page.fire(`win:${gesture}`);
+    }
+    bed.cue('page');
+    bed.cue('seal');
+    expect(resumes(), 'a running context was resumed for every player interaction').toBe(initial);
+
+    page.fire('win:pagehide');
+    expect(ctx.state).toBe('suspended');
+    page.fire('win:pointerdown'); // some hosts offer no explicit foreground event
+    expect(ctx.state).toBe('running');
+    expect(resumes(), 'a suspended context did not resume on a new gesture').toBe(initial + 1);
+
+    // iOS can report interrupted instead of suspended; this still needs resume.
+    ctx.state = 'interrupted';
+    page.fire('win:keydown');
+    expect(ctx.state).toBe('running');
+    expect(resumes()).toBe(initial + 2);
+    bed.dispose();
+  });
+
   it('obeys the switch in Reading settings, and brings back the drone the screen wants now', () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:keydown');
