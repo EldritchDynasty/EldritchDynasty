@@ -181,6 +181,13 @@ export interface RecordReturnRun {
   prompts: number;
   interludes: number;
   firstInterludeElapsed?: number;
+  /**
+   * The template of every interlude shown, in order (#2001): which scenes the
+   * frame had to offer this house, not only how many. Optional so that rows
+   * written before it existed still summarise; the mix counts only rows that
+   * carry it.
+   */
+  interludeEvents?: string[];
   source?: AlteredSource;
   /** The first return of any kind. */
   first?: RecordReturn;
@@ -387,6 +394,7 @@ export function playRecordReturnRun(
     prompts,
     interludes: w.frame.entries.length,
     ...(first ? { firstInterludeElapsed: first.year - def.startYear } : {}),
+    interludeEvents: w.frame.entries.map((e) => e.eventId),
     ...(watch ? { source: watch.source } : {}),
     ...(watch?.first ? { first: watch.first } : {}),
     firstByKind: watch?.firstByKind ?? {},
@@ -528,6 +536,11 @@ export interface RecordReturnSummary {
   /** Over the whole column, altered or not. */
   noInterlude: number;
   firstInterludeElapsed: Spread;
+  /**
+   * Over the whole column: which interludes it was shown (#2001). `runs`
+   * counts only rows that list their interludes, and is the denominator.
+   */
+  interludeMix: { runs: number; total: number; byEvent: [string, number][] };
 }
 
 /** How many of the commonest first altered templates the report names. */
@@ -538,6 +551,16 @@ const tally = (keys: readonly string[]) => {
   for (const k of keys) out[k] = (out[k] ?? 0) + 1;
   return out;
 };
+
+function interludeMix(col: readonly RecordReturnRun[]): RecordReturnSummary['interludeMix'] {
+  const listed = col.filter((r) => r.interludeEvents !== undefined);
+  const events = listed.flatMap((r) => r.interludeEvents!);
+  return {
+    runs: listed.length,
+    total: events.length,
+    byEvent: Object.entries(tally(events)).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+  };
+}
 
 export function summariseRecordReturns(rows: readonly RecordReturnRun[]): RecordReturnSummary[] {
   const keys = [...new Set(rows.map((r) => `${r.campaign}/${r.policy}`))];
@@ -597,6 +620,7 @@ export function summariseRecordReturns(rows: readonly RecordReturnRun[]): Record
         firstOfferElapsed: spread(col.filter((r) => r.firstOfferElapsed !== undefined).map((r) => r.firstOfferElapsed!)),
         noInterlude: col.filter((r) => r.interludes === 0).length,
         firstInterludeElapsed: spread(col.filter((r) => r.firstInterludeElapsed !== undefined).map((r) => r.firstInterludeElapsed!)),
+        interludeMix: interludeMix(col),
       }];
     });
   });
@@ -646,6 +670,17 @@ export function recordReturnReport(summaries: readonly RecordReturnSummary[]): s
     const f = s.firstInterludeElapsed;
     const top = s.sources.map(([id, n]) => `${id}: ${n}`).join(', ') || '—';
     lines.push(`| ${label(s)} | ${num(e.q25)} / ${num(e.median)} / ${num(e.q75)} | ${num(s.source.promptsBefore.median)} | ${num(s.source.truthfulBefore.median)} | ${num(s.firstOfferElapsed.median)} | ${top} | ${s.noInterlude} · ${num(f.q25)} / ${num(f.median)} / ${num(f.q75)} |`);
+  }
+  // The mix is a property of the whole column, so only its `any` row prints it.
+  const columns = summaries.filter((s) => s.mode === 'any' && s.interludeMix.runs > 0);
+  if (columns.length) {
+    lines.push('');
+    lines.push('| Campaign / policy | Runs listing interludes · interludes · per run | Interludes by template, most first |');
+    lines.push('| --- | --- | --- |');
+    for (const s of columns) {
+      const m = s.interludeMix;
+      lines.push(`| ${s.campaign} / ${s.policy} | ${m.runs} · ${m.total} · ${num(m.total / m.runs)} | ${m.byEvent.map(([id, n]) => `${id}: ${n}`).join(', ') || '—'} |`);
+    }
   }
   return lines;
 }
