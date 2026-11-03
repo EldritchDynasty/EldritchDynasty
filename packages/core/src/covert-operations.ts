@@ -25,7 +25,9 @@ function known(ctx: SimCtx, p: Person): boolean {
   return p.castSlots.includes('rival') || p.castSlots.includes('the_match')
     // A future-dated imported page cannot reveal a person before that year.
     || ctx.world.chronicle.some(c => c.year <= ctx.world.year && c.people?.includes(p.id))
-    || ctx.world.covert.threats.some(t => t.observation?.identifiedOperative === p.id);
+    || ctx.world.covert.threats.some(t =>
+      t.observation !== undefined && t.observation.year <= ctx.world.year
+      && t.observation.identifiedOperative === p.id);
 }
 
 function available(ctx: SimCtx, p: Person): boolean {
@@ -75,7 +77,9 @@ export function covertOpportunities(ctx: SimCtx, tally?: (r: Relationship, stage
       const id = `${g.id}:${target.id}:${membership.from}`;
       if (used.has(id) || out.some(o => o.id === id)) continue;
       fresh = true;
-      const attacked = w.covert.threats.some(t => t.observation?.identifiedOperative === target.id);
+      const attacked = w.covert.threats.some(t =>
+        t.observation !== undefined && t.observation.year <= w.year
+        && t.observation.identifiedOperative === target.id);
       out.push({ id, target, sponsor, grudge: g.id, purposes: attacked ? ['answer_attack', 'settle_grudge'] : ['settle_grudge'] });
     }
     tally?.(r, fresh ? 'opportunity' : reached ? 'used' : 'no_target');
