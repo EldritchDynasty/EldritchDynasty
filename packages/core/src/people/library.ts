@@ -190,7 +190,7 @@ export function restorationQuote(ctx: SimCtx, id: string): RestorationQuote | un
 /** Finish binding AFTER annual wear; the returned copy is pristine this year. */
 export function tickRestorations(ctx: SimCtx): void {
   for (const copy of ctx.world.library.values()) {
-    if (copy.restoresAt === undefined || copy.restoresAt > ctx.world.year) continue;
+    if (copy.acquiredYear > ctx.world.year || copy.restoresAt === undefined || copy.restoresAt > ctx.world.year) continue;
     copy.condition = 100;
     delete copy.restoresAt;
     const def = spellbookDef(ctx, copy.id);
