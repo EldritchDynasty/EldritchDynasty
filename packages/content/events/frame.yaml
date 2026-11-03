@@ -963,13 +963,20 @@ events:
   # way a Discrepancy opens (an authored lie, a secret another house holds,
   # the Church's papers): the family's book says a thing one way and somebody
   # outside keeps it another. Which of them is right the guardian never says,
-  # and nor does the game. Weight and cooldown sit inside the baselines' own
-  # range so it does not crowd the named beats out of the chronicler's mix.
+  # and nor does the game.
+  #
+  # HALF A BASELINE'S WEIGHT, ON PURPOSE. In a house that only embellishes
+  # this is usually the one scene eligible, and there its weight does nothing:
+  # 32 and 16 gave the same 4 of 400 Short always-Embellish runs with no
+  # interlude, on the same seeds. Weight only decides the years when something
+  # else is eligible too, and there it should yield. At 32 it took 13% of the
+  # chronicler's named, story-specific interludes; at 16, 8%
+  # (docs/BALANCE-LOG.md, #2001). The cooldown is the baselines' own.
   - id: frame_the_weight_of_a_sentence
     title: The Weight of a Sentence
     tier: frame
     frequency: rare
-    weight: 32
+    weight: 16
     repeatable: true
     cooldownYears: 150
     tags: [frame, baseline, record]
