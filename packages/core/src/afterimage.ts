@@ -50,6 +50,20 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
   const written = pages.filter((page) => page.text !== null);
+  // A recorded outcome can be attributed only to exactly one written page
+  // for its event and year. Index once instead of re-scanning the entire
+  // Chronicle for each outcome in a centuries-long decision log (#2607).
+  // null means multiple pages share that key, so attribution is ambiguous.
+  const writtenByEvent = new Map<string, Map<number, ChronicleEntry | null>>();
+  for (const page of written) {
+    if (page.eventId === undefined) continue;
+    let years = writtenByEvent.get(page.eventId);
+    if (!years) {
+      years = new Map<number, ChronicleEntry | null>();
+      writtenByEvent.set(page.eventId, years);
+    }
+    years.set(page.year, years.has(page.year) ? null : page);
+  }
   const people = new Map<string, { person: string; name: string; epithet?: string; sources: AfterimageSource[] }>();
   const mention = (id: string, source: AfterimageSource): void => {
     const p = w.people.get(id);
@@ -73,11 +87,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   for (const decision of w.decisionLog) {
     if (decision.kind !== 'outcome') continue;
     // Omitted outcomes cannot supply names or reconstruct the missing account.
-    const matches = written.filter((entry) => entry.eventId === decision.event && entry.year === decision.year);
     // The old log has no page id. Repeated same-year firings cannot be joined
     // unambiguously, so do not attach one decision to somebody else's page.
-    if (matches.length !== 1) continue;
-    const page = matches[0]!;
+    const page = writtenByEvent.get(decision.event)?.get(decision.year);
+    if (!page) continue;
     if (decision.choiceId) {
       for (const id of new Set(Object.values(decision.fill).flat())) {
         mention(id, { ...sourceOf(page), choice: decision.choiceId });
