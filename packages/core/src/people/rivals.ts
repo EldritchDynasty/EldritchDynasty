@@ -245,13 +245,16 @@ export function pickRivalCandidate(
   if (templateId === undefined) return rng.pick(candidates);
 
   const remembered = candidates.filter((p) => p.courtship?.template === templateId
+    && p.courtship.offered <= w.year
     && w.year - p.courtship.offered >= RIVAL_REOFFER_AFTER);
   if (remembered.length && rng.bool(rivalReofferChance(ctx, houseId))) return rng.pick(remembered);
 
   // Once the house has met somebody, they are no longer an anonymous fresh
   // draw. If the callback coin does not land, use somebody genuinely new or
   // fall back to an ordinary pool recipe.
-  const fresh = candidates.filter((p) => p.courtship === undefined);
+  // Future imported introductions have not happened yet: treat them as fresh,
+  // not as a remembered callback or a prior rejection.
+  const fresh = candidates.filter((p) => p.courtship === undefined || p.courtship.offered > w.year);
   return fresh.length ? rng.pick(fresh) : undefined;
 }
 
