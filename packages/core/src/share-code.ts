@@ -375,11 +375,11 @@ export function readShareCode(
   // per code character, while bounding raw input before normalization so a
   // megabyte of whitespace cannot hide a small otherwise-valid code.
   if (code.length > SHARE_CODE_MAX * 4) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
-  // Rich-text copy can insert U+00AD soft hyphens, U+200B zero-width
-  // spaces, U+200C/U+200D zero-width joiners, or U+2060 word joiners at
-  // visual wrap points. None can belong to this ASCII wire alphabet; treat
-  // them like line breaks, but only after bounding the original raw input.
-  const text = code.replace(/[\s\u00AD\u200B-\u200D\u2060]+/g, '');
+  // Rich-text copy can insert soft hyphens, zero-width joiners and
+  // directionality marks (ARABIC LETTER MARK, LRM/RLM and bidi isolates)
+  // around an ASCII code in RTL text. None belong to its wire alphabet;
+  // treat them as layout separators, after bounding the raw input length.
+  const text = code.replace(/[\s\u00AD\u061C\u200B-\u200F\u2060\u2066-\u2069]+/g, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
