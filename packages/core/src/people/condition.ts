@@ -65,7 +65,7 @@ export function nutrition(ctx: SimCtx): number {
  */
 export function spacing(ctx: SimCtx, mother: Person): number {
   const w = ctx.world;
-  const children = w.people.children(mother.id);
+  const children = w.people.children(mother.id).filter((child) => child.born <= w.year);
   const last = children.reduce((year, child) => Math.max(year, child.born), -Infinity);
   let target = 0;
 
