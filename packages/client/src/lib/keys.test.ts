@@ -31,6 +31,41 @@ describe('what a keypress means', () => {
     expect(app).toContain('if (isGlossaryFocus(el)) return;');
     expect(app).toMatch(/if \(isGlossaryFocus\(el\)\) return;\s*const press = shortcutFor/);
   });
+  it('keeps global shortcuts out of a glossary wrapping nested open shadow widgets (#2737)', () => {
+    const glossary = document.createElement('span');
+    glossary.className = 'glossary-text';
+    const outerHost = document.createElement('span');
+    const outerRoot = outerHost.attachShadow({ mode: 'open' });
+    const innerHost = document.createElement('span');
+    const innerRoot = innerHost.attachShadow({ mode: 'open' });
+    const definitionControl = document.createElement('span');
+    definitionControl.tabIndex = 0;
+    innerRoot.append(definitionControl);
+    outerRoot.append(innerHost);
+    glossary.append(outerHost);
+    document.body.append(glossary);
+    try {
+      definitionControl.focus();
+      expect(document.activeElement).toBe(outerHost);
+      expect(outerRoot.activeElement).toBe(innerHost);
+      expect(innerRoot.activeElement).toBe(definitionControl);
+
+      // closest() alone stops at innerRoot. The glossary outside both roots
+      // must still own numbered choices, Enter, Space, and help keys.
+      expect(isGlossaryFocus(document.activeElement)).toBe(true);
+      for (const key of ['1', 'Enter', ' ', '?']) {
+        expect(isGlossaryFocus(document.activeElement), key).toBe(true);
+      }
+
+      glossary.classList.remove('glossary-text');
+      expect(isGlossaryFocus(document.activeElement)).toBe(false);
+      outerHost.classList.add('glossary-text');
+      expect(isGlossaryFocus(document.activeElement)).toBe(true);
+    } finally {
+      glossary.remove();
+    }
+  });
+
   it('turns a year on Space and on Enter, and five on Shift+Enter', () => {
     expect(shortcutFor({ key: ' ' })).toEqual({ kind: 'advance', years: 1 });
     expect(shortcutFor({ key: 'Enter' })).toEqual({ kind: 'advance', years: 1 });
