@@ -23,7 +23,7 @@ the **family**, generation after generation
 (roughly one chapter per generation). Each round: years pass, you pick a
 marriage partner for your heir from three candidate cards, a handful of text events fire,
 children are born, you decide what the chronicle records about the generation just lived,
-and you name an heir. The shipped start screen defaults to **A Short Line: 300 years (1042–1342)**; **A Long Line** is the full **500-year (1042–1542)** campaign, roughly twenty generations. See §5, Core Loop.
+and you name an heir. The shipped start screen defaults to **A Short Line: 300 years (1042–1342)**; **A Long Line** is the full **500-year (1042–1542)** campaign, roughly twenty generations. **A Demonstration** is also selectable: a separate 33-year introduction with one Age, a Record decision, an interlude and a verdict. Its saves do not become Short or Long campaigns. See §5, Core Loop.
 
 When the docket asks for a choice, a party, a Match or a Record, **the clock
 waits for the answer**. Between those decisions the house table lets you
