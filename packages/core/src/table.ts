@@ -8,7 +8,7 @@ import { filePedigree, papersHeld, PEDIGREE_COVERS, PEDIGREE_PRICE, type Pedigre
 import { bindService, CROWN, freeBond, isBonded, MAX_BOND } from './people/bond.js';
 import { DEBT_FLOOR } from './economy.js';
 import { BOOK_SEARCH_FEE, BOOK_SEARCH_YEARS, bidAtAuction, commissionBook, lotName, marriageBidOffer, sellerName, tradeableHeirlooms, withdrawBid } from './auction.js';
-import { PLEDGE_TERM } from './people/pledges.js';
+import { marriagePledge, PLEDGE_TERM } from './people/pledges.js';
 import { queueChoice } from './events/decisions.js';
 import { evalCondition } from './events/conditions.js';
 import { candidatesFor, resolveSlots } from './events/slots.js';
@@ -1435,7 +1435,7 @@ const STEWARD_TUTOR_FLOOR = 150;
 /** Whether the market may be shown this person (`withhold`). */
 export function onTheMarket(ctx: SimCtx, p: Person): boolean {
   return ctx.world.withheld[p.id] === undefined
-    && !ctx.world.marriagePromises.some((promise) => promise.girl === p.id);
+    && !marriagePledge(ctx, p);
 }
 
 /** How much this person has been taught, over what the blood gave them. */
