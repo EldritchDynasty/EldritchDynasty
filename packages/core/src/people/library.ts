@@ -43,12 +43,14 @@ export function heldBooks(ctx: SimCtx): LibraryBookState[] {
   return [...ctx.world.library.values()].filter((copy) => copy.acquiredYear <= ctx.world.year);
 }
 
-/** Put a copy on the shelf. Idempotent — the house owns a physical copy once. */
+/** Put a copy on the shelf. A presently owned physical copy is idempotent. */
 export function acquireLibraryCopy(ctx: SimCtx, id: string): LibraryBookState | undefined {
   const def = spellbookDef(ctx, id);
   if (!def) return undefined;
   const existing = ctx.world.library.get(id);
-  if (existing) return existing;
+  // A future-dated imported copy is not yet on today's shelf. An actual grant
+  // now must start with a pristine copy, not its phantom wear or binder state.
+  if (existing && existing.acquiredYear <= ctx.world.year) return existing;
   const state: LibraryBookState = { id, acquiredYear: ctx.world.year, condition: 100 };
   ctx.world.library.set(id, state);
   return state;
@@ -60,7 +62,10 @@ export function acquireLibraryCopy(ctx: SimCtx, id: string): LibraryBookState | 
  * Already learned spells live on the person and are not erased.
  */
 export function loseLibraryCopy(ctx: SimCtx, id: string): boolean {
-  if (!ctx.world.library.delete(id)) return false;
+  const copy = ctx.world.library.get(id);
+  // A future-dated imported copy cannot be burned, stolen or sold today.
+  if (!copy || copy.acquiredYear > ctx.world.year) return false;
+  ctx.world.library.delete(id);
   ctx.world.studies = ctx.world.studies.filter((study) => study.book !== id);
   return true;
 }
