@@ -17178,3 +17178,50 @@ purpose evidence, Afterimage testimony, saved interlude bodies, share-code
 parsing and client code; none draws or changes the year, so they are not
 re-measured here. Artifacts are workspace scratch; SHA-256 prefixes are
 given with each column.
+
+## 2026-11-03 — #1987 steps 5–6: the omission scene names its blank
+
+**What changed.** Step 4 chose intervention (b): `frame_the_page_he_does_not_turn` should name the blank it reads.
+
+- **Record commit:** each page keeps its Record block's rendered `subject`, on a blank too (`ChronicleEntry.subject`).
+- **Frame:** a scene with an `omitted` read binds the earliest blank that no interlude has named yet. It prints `{PAGE_YEAR}` and `{PAGE_SUBJECT}`. `FrameEntry.cites` records that page only when the words printed it.
+- **Scene:** the omission scene now opens "the one dated {PAGE_YEAR}, beneath which the house was to have written of {PAGE_SUBJECT} and wrote nothing at all". Original and Plain English both change.
+- **Report:** `gate:record-returns` counts a cite of the exact altered page as an `interlude` return.
+
+Two other changes matter here. #2615 (merged in #2618) made interlude bodies visible at all; before it, this scene's text never reached a reader. No cadence, gap or weight changed.
+
+**Protocol.** This is step 1's protocol: Short Line, seeds `198700 + i` for i = 0…399, authored founder, and the `chronicler`, forced-`omit` and forced-`embellish` policies.
+
+- **Before and after:** the same build, `7ba9371c`. The "after" column is the shipped `frame.yaml`. The "before" column swaps the scene's pre-#1987 body back in memory.
+- **Population:** houses whose first altered page was an Omit. Intervals are Wilson 95%.
+
+**Pairing check.** The text change touches nothing the draw sees:
+
+- Every row is identical before and after, apart from how its returns are classified.
+- The interlude count is identical: 1489 in the 400 forced-`omit` runs.
+- The forced-`embellish` rows are byte-identical.
+
+| Column | Before: interlude names the blank | After: interlude names the blank | After: years q25 / median / q75 | After: within 25 y, of houses observed 25 y |
+| --- | --- | --- | --- | --- |
+| forced `omit` | 0/399 = 0.0% [0.0, 1.0] | **372/399 = 93.2% [90.3, 95.3]** | 9 / **26.5** / 53 | 183/395 = 46.3% [41.5, 51.3] |
+| `chronicler` | 0/206 = 0.0% [0.0, 1.8] | **150/206 = 72.8% [66.4, 78.4]** | 15 / **41.5** / 85 | 52/204 = 25.5% [20.0, 31.9] |
+| `chronicler`, first mode Embellish (control) | 3/171 | 3/171 | — | — |
+
+**Against the target.** Step 4 set ≥ 85% in both columns with a median within 25 years. The owner revised it on 3 November (#1987):
+
+| Column | Revised bar | Result |
+| --- | --- | --- |
+| forced `omit` | ≥ 85% named, median ≤ 30 years | **passes** |
+| `chronicler` | ≥ 65% named, median ≤ 45 years | **passes** |
+
+The original "within 25 years" and "≥ 85% for chronicler" need a cadence or priority lever. Those moved to #2632.
+
+**Why houses miss.** These counts come from the in-memory measurement on the pre-rebase build (`8a31b34`). That build gave identical forced-`omit` numbers and 149/206 for chronicler.
+
+- **Forced `omit`:** 27 houses miss. 26 of them break their line first.
+- **Chronicler:** 57 houses miss.
+  - 12 break their line, and 1 run ends within 45 years.
+  - In the remaining 44, the omission scene never fires after the choice. A house that also records truthfully and embellishes has more frame scenes eligible for each cut.
+- **Timing:** the floor is `FRAME_MIN_GAP_YEARS = 45`. The first interlude often lands just before the house's first Omit, at about 41–55 years elapsed against about 50 for the choice.
+
+**Not measured:** Long Line, reading time and comprehension. A naming interlude is a return the player *can* trace. Whether players do trace it still needs observed sessions.
