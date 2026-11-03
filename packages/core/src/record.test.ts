@@ -468,6 +468,32 @@ describe('reveal_signs — the perception layer\'s modifier, closed here (issue 
     expect(view.attrs.get('madness')).toBeCloseTo(40, 5);
     expect(view.divergence.size).toBe(0);
   });
+
+  it('a sign-reader cannot reveal a future stored death before its year', () => {
+    const ctx = bootstrap(bundle, 2790, 1042);
+    const p = place(ctx, { sex: 'male', age: 65 });
+    const died = ctx.world.year + 10;
+    // Use the sole death gate while constructing a restored future-dated state.
+    ctx.world.people.kill(p.id, died, 'the years');
+    place(ctx, { sex: 'female', age: 40, traits: ['reads_the_signs'] });
+    place(ctx, { sex: 'female', age: 45, traits: ['reads_the_signs'] });
+
+    const roster = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year);
+    expect(revealPower(ctx, roster)).toBeGreaterThanOrEqual(1);
+    expect(deriveRecordView(ctx, p.id).claimedDeath).toBeUndefined();
+    expect(visibleRecordView(ctx, p.id, roster).claimedDeath).toBeUndefined();
+
+    ctx.world.year = died - 1;
+    expect(visibleRecordView(ctx, p.id, roster).claimedDeath).toBeUndefined();
+    ctx.world.year = died;
+    expect(visibleRecordView(ctx, p.id, roster).claimedDeath).toEqual({
+      year: died, cause: 'the years',
+    });
+    ctx.world.year = died + 1;
+    expect(visibleRecordView(ctx, p.id, roster).claimedDeath).toEqual({
+      year: died, cause: 'the years',
+    });
+  });
 });
 
 describe('the pen may claim one rung, and only while it is believed (issue #77)', () => {
