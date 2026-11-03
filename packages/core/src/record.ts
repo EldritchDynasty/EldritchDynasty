@@ -148,7 +148,10 @@ export function visibleRecordView(ctx: SimCtx, personId: string, roster: Person[
     claimedTraits: new Set([...p.traits].map(String)),
     divergence: new Set(),
   };
-  if (p.died !== undefined) seenThrough.claimedDeath = { year: p.died, cause: p.causeOfDeath ?? 'unrecorded' };
+  // A restored future death has not happened in the year being read.
+  if (p.died !== undefined && p.died <= ctx.world.year) {
+    seenThrough.claimedDeath = { year: p.died, cause: p.causeOfDeath ?? 'unrecorded' };
+  }
   return seenThrough;
 }
 
