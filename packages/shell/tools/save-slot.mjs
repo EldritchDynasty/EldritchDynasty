@@ -86,7 +86,10 @@ export function resolveSavePath(root, slot) {
  * player put there.
  */
 export function slotOfFile(fileName) {
-  if (typeof fileName !== 'string' || !fileName.endsWith(SAVE_EXTENSION)) return undefined;
+  // A case-renamed extension is still one of our saves on Windows. Let the
+  // directory list it as unreadable; read/write/delete retain their strict
+  // canonical filename and collision checks rather than guessing the file.
+  if (typeof fileName !== 'string' || !fileName.toLowerCase().endsWith(SAVE_EXTENSION)) return undefined;
   const slot = fileName.slice(0, -SAVE_EXTENSION.length);
   // Directory enumeration must use the same slot-name rules as read/delete:
   // an otherwise plausible filename ending with a space before the extension
