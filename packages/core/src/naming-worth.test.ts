@@ -143,6 +143,26 @@ describe('a name the player chose costs something', () => {
     return { ctx, head };
   }
 
+  it('does not charge a Head for a naming decision written in a future year (#2691)', () => {
+    const { ctx, head } = withNamesake(false);
+    const presentYear = ctx.world.year;
+    const futureYear = presentYear + 1;
+    ctx.world.decisionLog.push({ kind: 'name', year: futureYear, person: head.id, name: head.name });
+
+    expect(headNamesake(ctx), 'the future decision must not count as a present choice').toBeUndefined();
+    expect(namesakeBurden(ctx)).toBe(0);
+
+    // At the decision's own year it becomes evidence, with no extra saved flag.
+    ctx.world.year = futureYear;
+    expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 1 });
+    expect(namesakeBurden(ctx)).toBeCloseTo(NAMESAKE_EXPECTATION);
+
+    // An already-made decision is still a valid namesake in a later year.
+    ctx.world.year += 1;
+    expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 1 });
+    expect(namesakeBurden(ctx)).toBeCloseTo(NAMESAKE_EXPECTATION);
+  });
+
   it('measures a Head the player named after a Head', () => {
     const { ctx } = withNamesake(true);
     expect(headNamesake(ctx)).toEqual({ name: 'Edric', before: 1 });
