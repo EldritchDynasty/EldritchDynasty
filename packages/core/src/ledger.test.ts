@@ -196,6 +196,39 @@ describe('revealClause (concept §18)', () => {
     expect(active.paid.clause).toBe(paid);
   });
 
+  it.each(['archivist', 'chronicler'] as const)(
+    'does not let a rival house\'s %s reveal the player\'s Ledger',
+    (role) => {
+      const ctx = bootstrap(bundle, 1042, 1042);
+      const foreign = place(ctx, {
+        sex: 'female', age: 34, name: `Foreign ${role}`, house: 'house_marrow',
+        contract: {
+          role, term: 'lifetime', wage: 5, loyalty: 60,
+          boundTo: 'house_marrow', onEmployerDeath: 'passes_to_heir',
+          debt: 0, knowsSecrets: [],
+        },
+      });
+      // The rival IS in the global living roster; the regression must not
+      // accidentally pass because a test fixture failed to create a keeper.
+      expect(ctx.world.people.living()).toContain(foreign);
+      expect(ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)).not.toContain(foreign);
+      const active = activeNamed('the_long_peace');
+      const count = ctx.world.clausesRecovered.size;
+      const pages = ctx.world.chronicle.length;
+      expect(revealClause(ctx, active)).toBeUndefined();
+      expect(ctx.world.clausesRecovered.size).toBe(count);
+      expect(ctx.world.chronicle).toHaveLength(pages);
+      expect(active.paid.clause).toBeUndefined();
+
+      if (role === 'archivist') hireArchivist(ctx);
+      else hireChronicler(ctx);
+      const paid = revealClause(ctx, active);
+      expect(paid).toBeTruthy();
+      expect(ctx.world.clausesRecovered.size).toBe(count + 1);
+      expect(active.paid.clause).toBe(paid);
+    },
+  );
+
   /**
    * The load-bearing rule, and the one with no other guard on it. It is the
    * whole reason the Ledger is something the player causes rather than
