@@ -5,11 +5,50 @@ import {
   runYears, sellParcel, setRentsPolicy, testRng, testWorld, tickLandImprovements, tickLandRisks,
 } from '@ed/core';
 import { CAMPAIGN_YEARS } from './campaign.js';
-import { indexContent } from '@ed/schema';
-import { runLandGatePartition } from './tools/land-gate.js';
+import { indexContent, type EventTemplate } from '@ed/schema';
+import { landEffects, runLandGatePartition } from './tools/land-gate.js';
 import { partitionGateInputs, reduceGatePartitions, runGatePartitionsInWorkers } from './tools/gate-partition.js';
 
 const bundle = loadContent();
+
+describe('allocation-free land effect lookup (#2605)', () => {
+  it('preserves first-match and land-only filtering for every authored outcome', () => {
+    for (const event of bundle.events) {
+      const outcomes = event.interaction.kind === 'narration'
+        ? event.interaction.outcomes
+        : event.interaction.choices.flatMap((choice) => choice.outcomes);
+      for (const outcome of outcomes) {
+        // This is the former implementation, retained as a test oracle only.
+        const expected = outcomes.find((candidate) => candidate.id === outcome.id)
+          ?.effects.filter((effect) => effect.kind === 'land') ?? [];
+        expect(landEffects(event, outcome.id)).toEqual(expected);
+      }
+      expect(landEffects(event, '__unknown_land_gate_outcome__')).toEqual([]);
+    }
+  });
+
+  it('stops at the first matching choice when outcome identifiers repeat', () => {
+    const land = { kind: 'land', op: 'grant' };
+    const other = { kind: 'standing' };
+    const laterLand = { kind: 'land', op: 'seize' };
+    const event = { interaction: { kind: 'choice', choices: [
+      { outcomes: [{ id: 'shared', effects: [other, land] }] },
+      { outcomes: [{ id: 'shared', effects: [laterLand] }] },
+    ] } } as unknown as EventTemplate;
+    expect(landEffects(event, 'shared')).toEqual([land]);
+    expect(landEffects(event, 'missing')).toEqual([]);
+  });
+
+  it('retains narrated-outcome matching, including non-land effects and misses', () => {
+    const land = { kind: 'land', op: 'damage' };
+    const other = { kind: 'standing' };
+    const event = { interaction: { kind: 'narration', outcomes: [
+      { id: 'recorded', effects: [other, land] },
+    ] } } as unknown as EventTemplate;
+    expect(landEffects(event, 'recorded')).toEqual([land]);
+    expect(landEffects(event, 'missing')).toEqual([]);
+  });
+});
 
 describe('land gate partitions (#1810)', () => {
   it('preserves complete ordered holding observations through isolated workers', () => {
