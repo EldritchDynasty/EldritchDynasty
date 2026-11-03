@@ -33,6 +33,9 @@ useModal(card, () => props.actions.dismissInterlude());
       :aria-label="proseMode === 'plainenglish' ? 'Story interlude' : 'an interlude'"
       @click.stop
     >
+      <!-- The scene, then the line it pays off (#2615). An interlude saved
+           before the body was kept has only its line, and shows only that. -->
+      <p v-if="entry.body" class="scene">{{ entry.body }}</p>
       <p>{{ entry.text }}</p>
       <button class="quiet small" @click="actions.dismissInterlude()">{{ proseMode === 'plainenglish' ? 'Continue' : 'Go on' }}</button>
     </article>
@@ -43,7 +46,11 @@ useModal(card, () => props.actions.dismissInterlude());
 .scrim {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
-  display: grid; place-items: center; padding: 40px;
+  /* A scene and its line can outgrow a phone held sideways. `margin: auto`
+     on the card centres it like `place-items` did, and unlike it collapses
+     to nothing when the card is taller than the scrim, so the top of the
+     scene scrolls into view rather than being cut off above it. */
+  display: grid; overflow-y: auto; padding: 40px;
   /* NO OVERLAY HONOURED THE SAFE AREA (issue #106). See `Book.vue` for why
      these fall back to nothing on a device with no notch to clear. */
   padding-top: max(40px, env(safe-area-inset-top));
@@ -52,7 +59,7 @@ useModal(card, () => props.actions.dismissInterlude());
   padding-right: max(40px, env(safe-area-inset-right));
 }
 .interlude {
-  max-width: 56ch; background: var(--vellum-deep);
+  margin: auto; max-width: 56ch; background: var(--vellum-deep);
   border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
   padding: 40px 44px; text-align: center;
 }

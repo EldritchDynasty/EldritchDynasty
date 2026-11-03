@@ -555,6 +555,14 @@ export const FrameEntryS = z.object({
   year: z.number(),
   eventId: z.string(),
   outcomeId: z.string(),
+  /**
+   * The scene the outcome line pays off, rendered at the same moment and in
+   * the same prose mode (#2615). Every frame outcome carries its own `text`,
+   * so `text` alone was only the punchline and the authored body never reached
+   * a reader. Absent when the outcome had no text of its own (`text` is then
+   * the body) and on interludes saved before #2615, which keep their old line.
+   */
+  body: z.string().optional(),
   text: z.string(),
 });
 export type FrameEntry = z.infer<typeof FrameEntryS>;
