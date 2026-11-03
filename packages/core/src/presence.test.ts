@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId } from '@ed/schema';
 import { place, testWorld } from './testing.js';
-import { covertParticipants, covertReservation, deployedPeople, dutyPlaceOf, resolvePresence } from './presence.js';
+import { covertParticipants, covertReservation, deployedPeople, dutyPlaceOf, resolvePresence, serviceReservation } from './presence.js';
 
 const content = loadContent();
 describe('physical attendance (#1868)', () => {
@@ -105,6 +105,49 @@ describe('physical attendance (#1868)', () => {
     expect([...deployedPeople(ctx)]).toEqual([]);
     expect(covertReservation(ctx, operative.id)).toBeUndefined();
     for (const id of persons) expect(home()).toContain(id);
+  });
+
+  it('does not deploy a future outside service or expose its scene before its start', () => {
+    const ctx = testWorld(content);
+    const w = ctx.world;
+    const practitioner = place(ctx, { sex: 'male', age: 30 });
+    const began = w.year + 6;
+    const contract = 'future_commission';
+    w.mystic.contracts.push({
+      id: contract, kind: 'commission', practitioner: practitioner.id,
+      working: 'the_still_binding', stage: 'preparing',
+      started: began, ready: began + 1, ends: began + 3,
+      providerFee: 0, escrow: 0, worked: 0, payments: [],
+    });
+    const site = { kind: 'service', contract } as const;
+    const atHome = () => resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}).people.includes(practitioner.id);
+    const atService = () => resolvePresence(ctx, site, {}).people;
+
+    // The stored contract is real saved data, but this service has not started.
+    expect(serviceReservation(ctx, practitioner.id)).toBeUndefined();
+    expect(deployedPeople(ctx).has(practitioner.id)).toBe(false);
+    expect(dutyPlaceOf(ctx, site, {})).toBeUndefined();
+    expect(atService()).toEqual([]);
+    expect(atHome()).toBe(true);
+
+    w.year = began - 1;
+    expect(serviceReservation(ctx, practitioner.id)).toBeUndefined();
+    expect(atService()).toEqual([]);
+    w.year = began;
+    expect(serviceReservation(ctx, practitioner.id)).toBe(contract);
+    expect(deployedPeople(ctx).has(practitioner.id)).toBe(true);
+    expect(dutyPlaceOf(ctx, site, {})).toEqual({ service: contract });
+    expect(atService()).toEqual([practitioner.id]);
+    expect(atHome()).toBe(false);
+
+    w.year++;
+    w.mystic.contracts[0]!.stage = 'working';
+    expect(deployedPeople(ctx).has(practitioner.id)).toBe(true);
+    w.mystic.contracts[0]!.stage = 'closed';
+    expect(serviceReservation(ctx, practitioner.id)).toBeUndefined();
+    expect(deployedPeople(ctx).has(practitioner.id)).toBe(false);
+    expect(atService()).toEqual([]);
+    expect(atHome()).toBe(true);
   });
 
 });
