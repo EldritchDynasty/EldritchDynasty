@@ -388,6 +388,34 @@ describe('retiring the names of the dead', () => {
     expect(taken.has('Edric')).toBe(false);
   });
 
+  it('releases a stale reservation even after the mourning anniversary was missed', () => {
+    const taken = new Set(['Edric']);
+    expect(retireNames(taken, [row('Edric', { died: 1200 })], 1231)).toEqual(['Edric']);
+    expect(taken.has('Edric')).toBe(false);
+    expect(retireNames(taken, [row('Edric', { died: 1200 })], 1232)).toEqual([]);
+  });
+
+  it('preserves a newer namesake through their own mourning period', () => {
+    const taken = new Set(['Edric']);
+    const holders = [row('Edric', { died: 1200 }), row('Edric', { died: 1235 })];
+
+    expect(retireNames(taken, holders, 1245)).toEqual([]);
+    expect(taken.has('Edric')).toBe(true);
+
+    expect(retireNames(taken, holders, 1265)).toEqual(['Edric']);
+    expect(taken.has('Edric')).toBe(false);
+  });
+
+  it('does not release a name when another holder died in the future or has no death date', () => {
+    const taken = new Set(['Edric', 'Alys']);
+    const holders = [
+      row('Edric', { died: 1200 }), row('Edric', { died: 1251 }),
+      row('Alys', { died: 1200 }), row('Alys'),
+    ];
+    expect(retireNames(taken, holders, 1250)).toEqual([]);
+    expect([...taken].sort()).toEqual(['Alys', 'Edric']);
+  });
+
   it('keeps a name the living are using', () => {
     // The second Edric was born once the first one's name came free. When the
     // window closes on the FIRST Edric, releasing it again would hand the
