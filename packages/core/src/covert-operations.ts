@@ -103,7 +103,9 @@ function quotePreparation(ctx: SimCtx, order: PreparationOrder, opportunity: Ret
     return refuse(msg(ctx, 'operation.refuse.person', 'that person cannot leave on this expedition'));
   }
   const againstUs = [...w.relationships.values()].some(r => r.from === p.id
-    && (r.to === w.playerHouse || w.people.get(r.to)?.castSlots.includes('head')) && r.grudges.some(g => g.severity >= 60));
+    && (r.to === w.playerHouse || w.people.get(r.to)?.castSlots.includes('head'))
+    // A future-dated recovered grudge cannot make the operative unwilling today.
+    && r.grudges.some(g => g.severity >= 60 && g.originYear <= w.year));
   if (againstUs || p.contract && p.contract.loyalty < 40) return refuse(msg(ctx, 'operation.refuse.willingness', 'they will not undertake this purpose for the house'));
   if (w.treasury - quote.price < DEBT_FLOOR) return refuse(msg(ctx, 'operation.refuse.cost', 'the house cannot pay for this preparation'));
   return { ...quote, ok: true, reason: undefined };
