@@ -133,7 +133,7 @@ function setVolume(event: Event) {
       <label class="small">
         {{ plainEnglish ? 'How loud' : 'Volume' }}
         <input
-          type="range" min="0" max="100" step="10"
+          type="range" min="0" max="100" step="1"
           :value="volumePercent" :disabled="!sound" :aria-valuetext="volumeText"
           @input="setVolume"
         />
