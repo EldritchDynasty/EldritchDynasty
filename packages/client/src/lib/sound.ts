@@ -319,8 +319,8 @@ function detectEngines(): Ctor[] {
  *
  *  - **The context starts suspended.** Browsers refuse to start audio before a
  *    gesture, and a context created on page load is a context that is dead by
- *    the time anybody clicks anything. `resume()` on every cue is the fix, and
- *    it is a no-op once it has worked.
+ *    the time anybody clicks anything. Resume when the context is not running,
+ *    and retry from a gesture if the host requires activation.
  *  - **Nothing is created until the first cue.** A tool that opens an
  *    `AudioContext` on load spins the audio thread for people who never turn
  *    the sound on.
@@ -428,8 +428,12 @@ export class Sound {
         return null;
       }
     }
-    // Suspended until a gesture. Harmless to call when it is already running.
-    this.watch(this.context.resume?.(), this.context, true);
+    // Each accepted cue comes through here. Skip redundant host resume
+    // requests while already running, but retry suspended or interrupted
+    // contexts (including after a gesture-policy refusal).
+    if (this.context.state !== 'running') {
+      this.watch(this.context.resume?.(), this.context, true);
+    }
     return { context: this.context, out: this.out };
   }
 
@@ -532,7 +536,7 @@ export class Sound {
     if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const ctx = this.context;
-      if (ctx) this.watch(ctx.resume?.(), ctx, true);
+      if (ctx && ctx.state !== 'running') this.watch(ctx.resume?.(), ctx, true);
     });
   }
 
