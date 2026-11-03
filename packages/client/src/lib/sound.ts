@@ -340,6 +340,8 @@ export class Sound {
   private readonly noiseBuffers = new WeakMap<AudioContext, AudioBuffer>();
   /** What the playing drone was built from, so an unchanged one is left alone. */
   private droneKey = '';
+  /** Only one asynchronous resume at a time per device, even before state changes to running. */
+  private resuming: AudioContext | null = null;
   private readonly ctors: readonly Ctor[];
 
   #muted = true;
@@ -429,9 +431,7 @@ export class Sound {
     // Each accepted cue comes through here. Skip redundant host resume
     // requests while already running, but retry suspended or interrupted
     // contexts (including after a gesture-policy refusal).
-    if (this.context.state !== 'running') {
-      this.watch(this.context.resume?.(), this.context, true);
-    }
+    this.resumeIfNeeded(this.context);
     return { context: this.context, out: this.out };
   }
 
@@ -534,7 +534,7 @@ export class Sound {
     if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const ctx = this.context;
-      if (ctx && ctx.state !== 'running') this.watch(ctx.resume?.(), ctx, true);
+      if (ctx) this.resumeIfNeeded(ctx);
     });
   }
 
@@ -546,6 +546,7 @@ export class Sound {
     const context = this.context;
     this.context = null;
     this.out = null;
+    this.resuming = null;
     // Some hosts throw synchronously rather than rejecting close(). Disposal
     // must still succeed, and a later gesture may open a fresh context.
     try { quietly(context?.close?.()); } catch { /* already gone */ }
@@ -561,6 +562,23 @@ export class Sound {
    * policy, not a dead device: keep the suspended context for gesture() / wake().
    * Other refusals (including suspend()) still fail into silence.
    */
+  /** A resume may be pending while state is still suspended/interrupted.
+   * Coalesce gestures and cues until it settles, but never cache a rejected attempt.
+   */
+  private resumeIfNeeded(context: AudioContext): void {
+    if (context.state === 'running' || this.resuming === context) return;
+    const pending = context.resume?.();
+    if (!pending) return;
+    this.resuming = context;
+    const clear = () => {
+      if (this.resuming === context) this.resuming = null;
+    };
+    // Handle both resolutions explicitly; `finally` would create a rejected
+    // child promise if resume failed, which could go unobserved on a WebView.
+    void pending.then(clear, clear);
+    this.watch(pending, context, true);
+  }
+
   private watch(pending: Promise<unknown> | undefined, context: AudioContext, resume = false): void {
     pending?.catch((reason: unknown) => {
       // A stale promise from a disposed context must not disable a later one.
@@ -578,6 +596,7 @@ export class Sound {
     const context = this.context;
     this.context = null;
     this.out = null;
+    this.resuming = null;
     try { quietly(context?.close?.()); } catch { /* already gone */ }
   }
 

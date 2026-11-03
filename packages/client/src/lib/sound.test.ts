@@ -903,6 +903,68 @@ describe('the bed decides when the house may be heard', () => {
     bed.dispose();
   });
 
+  it('coalesces in-flight resumes across cues and gestures, then retries after an activation refusal', async () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('seal');
+    const ctx = e.made[0]!;
+    await settle(); // the initial context creation has finished its own resume
+    ctx.state = 'suspended';
+
+    // Real hosts need not change state until their resume promise settles.
+    // The old eager fake did, hiding duplicate requests from rapid gestures.
+    const pending: { resolve(): void; reject(reason: unknown): void }[] = [];
+    ctx.resume = () => {
+      ctx.calls.push('resume:pending');
+      return new Promise<void>((resolve, reject) => pending.push({
+        resolve: () => { ctx.state = 'running'; resolve(); },
+        reject,
+      }));
+    };
+    const calls = () => ctx.calls.filter((call) => call === 'resume:pending').length;
+    s.cue('page');
+    s.wake();
+    s.setDrone(WARM);
+    s.cue('plain');
+    expect(calls(), 'multiple resume requests on one unsettled context').toBe(1);
+
+    // A temporary autoplay-policy refusal must allow a later gesture to try.
+    pending[0]!.reject(Object.assign(new Error('activation required'), { name: 'NotAllowedError' }));
+    await settle();
+    expect(s.available).toBe(true);
+    s.wake();
+    expect(calls(), 'a settled refusal permanently blocked a retry').toBe(2);
+    s.cue('seal');
+    expect(calls(), 'a second in-flight resume was duplicated').toBe(2);
+    pending[1]!.resolve();
+    await settle();
+    s.wake();
+    expect(calls(), 'a running context requested another resume').toBe(2);
+    s.close();
+  });
+
+  it('does not let an unresolved resume from a closed context block its replacement', async () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('seal');
+    const old = e.made[0]!;
+    await settle();
+    old.state = 'interrupted';
+    old.resume = () => {
+      old.calls.push('resume:never-settles');
+      return new Promise<void>(() => undefined);
+    };
+    s.wake();
+    expect(old.calls).toContain('resume:never-settles');
+    s.close();
+    s.cue('plain');
+    expect(e.made).toHaveLength(2);
+    expect(e.made[1]!.calls, 'a stale in-flight resume blocked the fresh audio device').toContain('resume');
+    s.close();
+  });
+
   it('obeys the switch in Reading settings, and brings back the drone the screen wants now', () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:keydown');
