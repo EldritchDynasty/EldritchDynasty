@@ -48,6 +48,64 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(false);
   });
 
+  it('ignores a future saved reservation in the current marriage market and pledge phase', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    ctx.world.year = girl.born + 18;
+    // Simulate a recovered save with a not-yet-signed pledge naming this girl.
+    promise.year = ctx.world.year + 4;
+    promise.girl = girl.id;
+    const before = structuredClone(ctx.world.marriagePromises);
+    const lines = ctx.world.chronicle.length;
+
+    expect(onTheMarket(ctx, girl)).toBe(true);
+    phase('promises', ctx);
+    expect(ctx.world.marriagePromises).toEqual(before);
+    expect(ctx.world.chronicle).toHaveLength(lines);
+    const suitor = place(ctx, { sex: 'male', age: 24, name: 'Unpledged suitor', house: promise.toHouse });
+    wed(ctx, suitor, girl);
+    expect(girl.marriages).toEqual([{ spouse: suitor.id, from: ctx.world.year }]);
+    expect(ctx.world.marriagePromises).toEqual(before);
+  });
+
+  it('activates a recovered future pledge in its own year, not before', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    promise.year = ctx.world.year + 3;
+    const before = structuredClone(promise);
+    const lines = ctx.world.chronicle.length;
+
+    phase('promises', ctx);
+    expect(ctx.world.marriagePromises).toEqual([before]);
+    expect(ctx.world.chronicle).toHaveLength(lines);
+    ctx.world.year = promise.year;
+    phase('promises', ctx);
+    expect(ctx.world.marriagePromises).toEqual([before]);
+
+    // Only a granddaughter born after signing can be reserved.
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    expect(promise.girl).toBe(girl.id);
+    expect(onTheMarket(ctx, girl)).toBe(false);
+  });
+
+  it('does not let a future phantom pledge block an auction bid today', () => {
+    const { ctx, lot, promise } = wonPledge();
+    promise.year = ctx.world.year + 5;
+    const next = { ...lot, id: 'future_pledge_next', announcedYear: ctx.world.year,
+      saleYear: ctx.world.year + 2, playerBid: undefined };
+    ctx.world.auction.upcoming = [next];
+    expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(true);
+
+    // Once the original contract's year arrives it really is outstanding.
+    ctx.world.year = promise.year;
+    const later = { ...next, id: 'future_pledge_later', saleYear: ctx.world.year + 2, playerBid: undefined };
+    ctx.world.auction.upcoming = [later];
+    expect(bidAtAuction(ctx, later.id, 'marriage_promise', 0).ok).toBe(false);
+  });
+
   it('keeps the original signer through succession and refuses a second registered promise bid', () => {
     const ctx = bootstrap(bundle, 1449, 1042);
     const head = ctx.world.people.living().find((p) => p.castSlots.includes('head'))!;
