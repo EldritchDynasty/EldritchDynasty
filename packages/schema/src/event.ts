@@ -6,6 +6,7 @@ import { FrequencyS } from './frequency.js';
 import { ClaimS } from './claim.js';
 import { RecordBynameS } from './byname.js';
 import { TargetS } from './target.js';
+import { assertNever } from './exhaustive.js';
 import { ScheduleS } from './arc.js';
 import { DeciderS } from './decider.js';
 import { RiteS } from './rung.js';
@@ -819,6 +820,31 @@ export const FrameReadS = z.union([
   z.object({ chronicled: z.string() }),
 ]);
 export type FrameRead = z.infer<typeof FrameReadS>;
+
+/**
+ * THE PAGE A SCENE MAY NAME (#1987).
+ *
+ * An `omitted` read is about the family's dated blanks, and a scene that
+ * reads one may point at the blank itself: `{PAGE_YEAR}` is its year and
+ * `{PAGE_SUBJECT}` the matter its Record block asked about ("the list out of
+ * Caster"), the phrase the player saw when they chose to leave it blank. Both
+ * name the page and neither is a person, so neither takes a form.
+ *
+ * `presentFrame` binds the earliest blank no interlude has named yet. A count
+ * read (`recorded`, `anyDiscrepancy`) is about the whole book and binds
+ * nothing; a named Discrepancy or event has its own words already.
+ */
+export const FRAME_PAGE_TOKENS = ['PAGE_YEAR', 'PAGE_SUBJECT'] as const;
+export type FramePageToken = (typeof FRAME_PAGE_TOKENS)[number];
+
+export function frameReadBindsPage(r: FrameRead): boolean {
+  if ('discrepancy' in r) return false;
+  if ('anyDiscrepancy' in r) return false;
+  if ('recorded' in r) return false;
+  if ('chronicled' in r) return false;
+  if ('omitted' in r) return true;
+  return assertNever(r);
+}
 
 export const EventTemplateS = z.object({
   id: z.string().regex(/^[a-z0-9_]+$/, 'ids are snake_case and never renamed after commit'),

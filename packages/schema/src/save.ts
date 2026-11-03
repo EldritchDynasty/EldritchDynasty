@@ -564,6 +564,12 @@ export const FrameEntryS = z.object({
    */
   body: z.string().optional(),
   text: z.string(),
+  /**
+   * The Chronicle page this interlude names (#1987): its id and year. Set only
+   * when the rendered scene actually printed `{PAGE_YEAR}` or
+   * `{PAGE_SUBJECT}`, so a read that merely holds is not a citation.
+   */
+  cites: z.object({ page: z.string(), year: z.number() }).optional(),
 });
 export type FrameEntry = z.infer<typeof FrameEntryS>;
 
@@ -578,6 +584,8 @@ export const ChronicleEntryS = z.object({
   eventId: z.string().optional(),
   named: z.boolean(),
   record: z.enum(['record', 'omit', 'embellish']).optional(),
+  /** What the Record block asked about, rendered at the commit, kept on a blank too (#1987). */
+  subject: z.string().optional(),
   greyed: z.boolean().optional(),
   /**
    * The rung this page attests (issue #39). At the term the creditor reads the

@@ -1,11 +1,12 @@
 import type { EventTemplate, FrameEntry, FrameRead } from '@ed/schema';
-import { assertNever, eventInCampaign } from '@ed/schema';
-import type { SimCtx } from '../world.js';
+import { assertNever, eventInCampaign, FRAME_PAGE_TOKENS, frameReadBindsPage, slotTokenPattern } from '@ed/schema';
+import type { FramePageToken } from '@ed/schema';
+import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { Rng } from '../rng.js';
 import { evalCondition } from './conditions.js';
 import { autoCast, renderBody, resolveSlots } from './slots.js';
 import { pickOutcome } from './effects.js';
-import { proseForEventBody, proseForOutcome } from '../prose.js';
+import { proseForEventBody, proseForEventTitle, proseForOutcome, proseForRecordSubject } from '../prose.js';
 import { advanceArc, type ArcStep } from './arcs.js';
 import { lastAnswerYear } from './answers.js';
 
@@ -212,6 +213,78 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
 }
 
 /**
+ * THE BLANK A SCENE NAMES (#1987).
+ *
+ * The owner's target: a house's first Omit comes back as that omission,
+ * identifiably, in the first stretch of play. The omission scene already
+ * reached about 94% of Omit houses a median 16 years on, and named no page,
+ * year or person, so the player could not tell it was about theirs.
+ *
+ * The earliest blank no interlude has named yet, so the first time the scene
+ * plays it points at the house's FIRST omission, and a later return points at
+ * the next. Once every blank has been named it returns to the newest one:
+ * still true, and the guardian has had the longest to think about it.
+ * Deterministic: it reads the book and the frame, and draws nothing.
+ */
+export function pageToCite(ctx: SimCtx, e: EventTemplate): ChronicleEntry | undefined {
+  if (!e.reads.some(frameReadBindsPage)) return undefined;
+  const w = ctx.world;
+  const cited = new Set(w.frame.entries.flatMap((f) => (f.cites ? [f.cites.page] : [])));
+  const blanks = w.chronicle.filter((c) => c.record === 'omit' && c.id !== undefined);
+  return blanks.find((c) => !cited.has(c.id!)) ?? blanks.at(-1);
+}
+
+/**
+ * `{PAGE_YEAR}` and `{PAGE_SUBJECT}`, after the people are rendered. A page
+ * saved before #1987 kept no subject, so it falls back to its Record block's
+ * own subject when that names nobody, and otherwise to the act's title: both
+ * have Plain English rows, and either is truer than a bare year.
+ */
+function namePage(ctx: SimCtx, text: string, page: ChronicleEntry): { text: string; named: boolean } {
+  let named = false;
+  const out = text.replace(slotTokenPattern(), (m, name: string, form: string | undefined) => {
+    if (form !== undefined || !isPageToken(name)) return m;
+    named = true;
+    return pageWords(ctx, page, name);
+  });
+  return { text: out, named };
+}
+
+const isPageToken = (name: string): name is FramePageToken =>
+  (FRAME_PAGE_TOKENS as readonly string[]).includes(name);
+
+function pageWords(ctx: SimCtx, page: ChronicleEntry, token: FramePageToken): string {
+  switch (token) {
+    case 'PAGE_YEAR': return String(page.year);
+    case 'PAGE_SUBJECT': return page.subject ? inline(page.subject) : subjectOf(ctx, page);
+    default: return assertNever(token);
+  }
+}
+
+/** Any page token left unrendered: a scene that names a blank, with none to name. */
+const namesAPage = (text: string): boolean =>
+  [...text.matchAll(slotTokenPattern())].some((m) => m[2] === undefined && isPageToken(m[1]!));
+
+function subjectOf(ctx: SimCtx, page: ChronicleEntry): string {
+  const source = page.eventId === undefined ? undefined : ctx.content.event(page.eventId);
+  if (!source) return String(page.year);
+  const subject = source.record?.subject;
+  return subject && !/[{}]/.test(subject)
+    ? inline(proseForRecordSubject(ctx, source, subject))
+    : proseForEventTitle(ctx, source);
+}
+
+/**
+ * A docket subject set inside the scene's sentence. 53 of the 212 authored
+ * subjects are sentences of their own ("The account of Aldous at the
+ * incident."), written to head the Record prompt, so the full stop goes and
+ * a leading article drops to lower case. Anything else is left as written.
+ */
+export function inline(subject: string): string {
+  return subject.trim().replace(/[.!?]+$/, '').replace(/^(The|A|An) /, (m) => m.toLowerCase());
+}
+
+/**
  * Show one interlude. `resolveSlots` and `renderBody` are the same functions
  * every other tier uses — the frame narrows its own two roles in
  * `events/slots.ts`, not here — so this is genuinely the whole of what
@@ -238,9 +311,25 @@ export function presentFrame(ctx: SimCtx, e: EventTemplate, rng: Rng, arcStep?: 
   // for as long as interludes existed the player read the punchline alone:
   // "A good lunch, that afternoon." with no heralds before it. The body is
   // rendered here, once, with the same fill and prose mode as the line.
-  const scene = outcome.text ? renderBody(proseForEventBody(ctx, e, e.body), fill, ctx).trim() : '';
+  let scene = outcome.text ? renderBody(proseForEventBody(ctx, e, e.body), fill, ctx).trim() : '';
+  let line = text;
+  const page = pageToCite(ctx, e);
+  let cites: FrameEntry['cites'];
+  if (page) {
+    const named = [namePage(ctx, scene, page), namePage(ctx, line, page)] as const;
+    [scene, line] = [named[0].text, named[1].text];
+    if (named[0].named || named[1].named) cites = { page: page.id!, year: page.year };
+  }
+  // A scene written to name a blank, with no blank in the book to name (a
+  // save whose pages carry no ids), is a cast that did not fill. Show nothing
+  // rather than `{PAGE_YEAR}`.
+  if (namesAPage(scene) || namesAPage(line)) {
+    ctx.observeSelection?.({ kind: 'cast_failure', year: w.year, event: String(e.id), source: 'frame', missing: 'PAGE' });
+    return undefined;
+  }
   const entry: FrameEntry = {
-    year: w.year, eventId: e.id, outcomeId: outcome.id, ...(scene ? { body: scene } : {}), text,
+    year: w.year, eventId: e.id, outcomeId: outcome.id, ...(scene ? { body: scene } : {}), text: line,
+    ...(cites ? { cites } : {}),
   };
 
   w.frame.entries.push(entry);

@@ -36,6 +36,14 @@ export interface ChronicleEntry {
   named: boolean;
   record?: 'record' | 'omit' | 'embellish';
   /**
+   * WHAT THE RECORD BLOCK ASKED ABOUT (#1987): its `subject`, rendered with
+   * this firing's cast in the prose mode of the commit. Kept on a blank as
+   * well. The page says nothing, but the house knows what it is silent about,
+   * and the frame's omission scene names the blank by it. Never printed on
+   * the page itself.
+   */
+  subject?: string;
+  /**
    * Known to have existed, and gone: a dead cadet branch, a burned book, a
    * person nobody will mention again. Rendered grey (concept §6).
    */

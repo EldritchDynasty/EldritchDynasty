@@ -4,8 +4,9 @@ import { bootstrap, stepYear } from './sim.js';
 import { outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
 import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
-  frameDue, frameOverdue, framePool, lastAnswerYear, presentFrame,
+  frameDue, frameOverdue, framePool, inline, lastAnswerYear, pageToCite, presentFrame,
 } from './events/frame.js';
+import { applyRecord } from './events/decisions.js';
 import { GLIMPSE_TAG, answerPages, answerYears, answers, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
 import { GameSession, newGame, viewOf } from './session.js';
 import { canonical, loadGame, saveGame } from './save.js';
@@ -113,6 +114,94 @@ describe('an interlude shows its scene, then its line', () => {
     const { entry } = present('original', (o) => ({ ...o, text: '' }));
     expect(entry.body).toBeUndefined();
     expect(entry.text).toMatch(/^There is a page the guardian turns past/);
+  });
+});
+
+/**
+ * THE BLANK, BY NAME (#1987).
+ *
+ * The owner's target is that a house's first Omit comes back as that
+ * omission, identifiably. These build the book by hand: a scene that reads
+ * the blanks binds the earliest one no interlude has named, says its year and
+ * what the docket asked about it, and records the citation only when its
+ * words actually printed one.
+ */
+describe('a scene that reads the blanks names one', () => {
+  const ID = 'frame_the_page_he_does_not_turn';
+  const blank = (ctx: ReturnType<typeof bootstrap>, id: string, year: number, subject?: string) => {
+    ctx.world.chronicle.push({
+      id, year, weight: 'paragraph', text: null, eventId: 'the_letters_to_the_weighers', named: false, record: 'omit',
+      ...(subject ? { subject } : {}),
+    });
+    ctx.world.decisionLog.push({ kind: 'record', year, event: 'the_letters_to_the_weighers', option: 'omit' });
+  };
+  const scene = (ctx: ReturnType<typeof bootstrap>, body: string) => {
+    const real = ctx.content.events.find((e) => e.id === ID)!;
+    return { ...real, slots: {}, body };
+  };
+  const NAMING = 'The page of {PAGE_YEAR} says nothing about {PAGE_SUBJECT}.';
+
+  it('binds the earliest unnamed blank, then the next, then the newest once all are named', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_a', 1077, 'the letters');
+    blank(ctx, 'chr_b', 1102, 'the second drowning');
+    const e = scene(ctx, NAMING);
+
+    const first = presentFrame(ctx, e, makeRng(1))!;
+    expect(first.body).toBe('The page of 1077 says nothing about the letters.');
+    expect(first.cites).toEqual({ page: 'chr_a', year: 1077 });
+    expect(pageToCite(ctx, e)?.id).toBe('chr_b');
+    expect(presentFrame(ctx, e, makeRng(2))!.cites?.page).toBe('chr_b');
+    expect(pageToCite(ctx, e)?.id, 'every blank named: the newest').toBe('chr_b');
+  });
+
+  it('cites nothing when its words name no page, and binds nothing for a count read', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_a', 1077, 'the letters');
+    const quiet = presentFrame(ctx, scene(ctx, 'There is a page the guardian turns past.'), makeRng(1))!;
+    expect(quiet.cites).toBeUndefined();
+    const counting = { ...scene(ctx, NAMING), reads: [{ recorded: { atLeast: 0 } }] };
+    expect(pageToCite(ctx, counting)).toBeUndefined();
+  });
+
+  it('shows nothing rather than a raw token when there is no blank to name', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    // The read holds on the docket's log, but no page in the book carries an id.
+    ctx.world.decisionLog.push({ kind: 'record', year: 1077, event: 'the_letters_to_the_weighers', option: 'omit' });
+    expect(presentFrame(ctx, scene(ctx, NAMING), makeRng(1))).toBeUndefined();
+    expect(ctx.world.frame.entries).toEqual([]);
+  });
+
+  it('keeps the docket\'s subject on the blank at the commit, and survives a save', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    const source = ctx.content.events.find((e) => e.record && !/[{}]/.test(e.record.subject))!;
+    ctx.world.year = 1077;
+    applyRecord(ctx, source, 'chr_src', 'omit');
+    const page = ctx.world.chronicle.find((c) => c.id === 'chr_src')!;
+    expect(page.text, 'the blank stays blank').toBeNull();
+    expect(page.subject).toBe(source.record!.subject.trim());
+
+    const entry = presentFrame(ctx, scene(ctx, NAMING), makeRng(1))!;
+    expect(entry.body).toBe(`The page of 1077 says nothing about ${inline(page.subject!)}.`);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(resumed.world.chronicle.find((c) => c.id === 'chr_src')?.subject).toBe(page.subject);
+    expect(resumed.world.frame.entries.at(-1)).toEqual(entry);
+  });
+
+  it('names an older blank by its Record block or its title', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_old', 1077); // saved before the subject was kept
+    const source = ctx.content.event('the_letters_to_the_weighers')!;
+    const words = presentFrame(ctx, scene(ctx, '{PAGE_SUBJECT}'), makeRng(1))!.body;
+    expect(words).toBeTruthy();
+    expect(words).not.toMatch(/[{}]/);
+    expect([inline(source.record?.subject ?? ''), source.title]).toContain(words);
+  });
+
+  it('sets a subject written as its own sentence inside the scene\'s', () => {
+    expect(inline('The account of Aldous at the incident.')).toBe('the account of Aldous at the incident');
+    expect(inline('the list out of Caster')).toBe('the list out of Caster');
+    expect(inline('Cradlemoor, drained')).toBe('Cradlemoor, drained');
   });
 });
 
