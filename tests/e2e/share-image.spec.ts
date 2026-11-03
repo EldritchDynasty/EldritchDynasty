@@ -167,7 +167,7 @@ for (const mode of ['original', 'plainenglish'] as const) {
     await page.getByRole('button', { name: mode === 'plainenglish'
       ? 'Save an image' : 'Save this as a page', exact: true }).click();
     const download = await pending;
-    expect(download.suggestedFilename()).toMatch(/\\.svg$/);
+    expect(download.suggestedFilename().endsWith('.svg')).toBe(true);
 
     const svg = await readFile(await download.path(), 'utf8');
     const exported = await page.evaluate(({ source, mode }) => {
