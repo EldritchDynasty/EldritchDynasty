@@ -101,7 +101,7 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     expect(shareCodeProblem(demo, 'plainenglish'))
       .toBe('This code is from the demo. Demo codes cannot start a full game.');
     expect(shareCodeProblem(demo, 'original'))
-      .toBe("That code is from the Demonstration, which is not a house's beginning.");
+      .toBe('That code belongs to a Demonstration house, not a full Line. It cannot begin this one.');
   });
 
   it('keeps the founding validator rejection unchanged in both modes', () => {
