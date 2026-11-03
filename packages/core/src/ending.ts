@@ -578,6 +578,12 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
   };
 }
 
+/** A saved name can already carry its earned epithet; the last night must not repeat it. */
+function purposePersonName(person: { name: string; epithet?: string }): string {
+  return person.epithet && !person.name.endsWith(` ${person.epithet}`)
+    ? `${person.name} ${person.epithet}` : person.name;
+}
+
 /**
  * A purpose is not evidence of its own pursuit. The house may have aimed to
  * deepen its blood and still put a named relative into a rite. Show that cost
@@ -639,10 +645,10 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (!survivor) continue;
       return {
         kind: 'branch_kept',
-        founder: founder.epithet ? `${founder.name} ${founder.epithet}` : founder.name,
+        founder: purposePersonName(founder),
         branch: branch.name,
         year: branch.foundedYear,
-        person: survivor.epithet ? `${survivor.name} ${survivor.epithet}` : survivor.name,
+        person: purposePersonName(survivor),
       };
     }
     return undefined;
@@ -675,7 +681,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (!person || person.houseOfOrigin !== w.playerHouse) continue;
       return {
         kind: 'ascendant_wait',
-        person: person.epithet ? `${person.name} ${person.epithet}` : person.name,
+        person: purposePersonName(person),
         year: page.year,
         text: page.text!,
       };
@@ -703,7 +709,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   if (page.greyed) return undefined;
   return {
     kind: 'blood_spent',
-    person: spent.epithet ? `${spent.name} ${spent.epithet}` : spent.name,
+    person: purposePersonName(spent),
     year: page.year,
     text: page.text!,
     embellished: page.record === 'embellish',
