@@ -13,6 +13,7 @@ import { ensureHead } from './people/succession.js';
 import { makeRng } from './rng.js';
 import { loadGame, saveGame } from './save.js';
 import { relevantPeople } from './people/relevance.js';
+import { coreMessageAddress } from './messages.js';
 import { setProseMode, setProseVariants } from './prose.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 import { mustSurface } from './delegation.js';
@@ -982,4 +983,50 @@ describe('once the house has stood on God, the ascent reads the book (#1978)', (
     expect(ambitionView(ctx)!.next).toBe(
       'The house has reached God. Now protect the record: 1 embellished claim is still disputed, and at the end the creditor accepts only what the Chronicle can support. Record the rest truthfully, and settle that lie if you are given a way to.');
   });
+});
+
+describe('bloodline relevance dates marriages (#2766)', () => {
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`does not treat a future marriage as current in ${mode}`, () => {
+      const ctx = testWorld(content, 2766);
+      const w = ctx.world;
+      const startYear = w.year;
+      const relative = place(ctx, { sex: 'female', age: 24, name: 'Future Bride' });
+      const partner = place(ctx, { sex: 'male', age: 26, name: 'Future Groom' });
+      w.houseAmbition = 'deepen_blood';
+
+      // A recovered save can carry marriage rows whose signing year is still
+      // ahead of the world. They must not hide a current planning cue.
+      relative.marriages.push({ spouse: partner.id, from: startYear + 3 });
+      partner.marriages.push({ spouse: relative.id, from: startYear + 3 });
+
+      const original = 'unmarried, of the blood';
+      const plainenglish = 'unmarried family member available to marry';
+      setProseVariants(ctx, [{
+        address: coreMessageAddress('relevance.unmarried_blood'),
+        of: proseOriginalHash(original),
+        plainenglish,
+      }]);
+      setProseMode(ctx, mode);
+      const cue = mode === 'original' ? original : plainenglish;
+      const cues = () => relevantPeople(ctx).get(relative.id) ?? [];
+
+      expect(cues()).toContain(cue);
+      w.year = startYear + 2;
+      expect(cues()).toContain(cue);
+
+      // From the signing year onward the person is actually married.
+      w.year = startYear + 3;
+      expect(cues()).not.toContain(cue);
+
+      // Once the marriage has ended the current reader sees them as free
+      // again, including in and after the ending year.
+      relative.marriages[0]!.to = startYear + 4;
+      partner.marriages[0]!.to = startYear + 4;
+      w.year = startYear + 4;
+      expect(cues()).toContain(cue);
+      w.year = startYear + 5;
+      expect(cues()).toContain(cue);
+    });
+  }
 });
