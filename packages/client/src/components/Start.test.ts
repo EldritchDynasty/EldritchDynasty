@@ -185,6 +185,35 @@ describe('Start seed fallback without Web Crypto (#2637)', () => {
       vi.unstubAllGlobals();
     }
   });
+
+  it('still mounts when an exposed host crypto method rejects the seed draw (#2648)', async () => {
+    const getRandomValues = vi.fn(() => { throw new Error('host entropy unavailable'); });
+    vi.stubGlobal('crypto', { getRandomValues });
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0.375);
+    try {
+      const actions = spyActions();
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        expect(getRandomValues).toHaveBeenCalledTimes(1);
+        await w.findAll('button').find((button) => button.text() === 'Advanced')!.trigger('click');
+        expect((w.get('#seed').element as HTMLInputElement).value).toBe(String(0x60000000));
+
+        await w.get('button.primary').trigger('click');
+        expect(actions.begin).toHaveBeenCalledWith(0x60000000, 'short');
+
+        // A failed host draw must not prevent a deliberate user-selected seed.
+        await w.get('#seed').setValue(73);
+        await w.get('button.primary').trigger('click');
+        expect(actions.begin).toHaveBeenLastCalledWith(73, 'short');
+      } finally {
+        w.unmount();
+      }
+    } finally {
+      random.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe('campaign choice (#66)', () => {
