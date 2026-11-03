@@ -227,6 +227,8 @@ export class ReadingLog {
   #window = new Set<string>();
   /** A saved run is being picked up: its first window is history, not news. */
   #pickingUp = false;
+  /** Keep the loaded run's year until its Chronicle confirms the pickup. */
+  #pendingPickupYear: number | null = null;
   /** A newer start must not be cancelled by an older asynchronous pickup. */
   #startGeneration = 0;
 
@@ -252,9 +254,16 @@ export class ReadingLog {
    */
   note(event: Untimed<ReadingLogEvent>): void {
     if (this.#ended || this.truncated) return;
+    // App.vue observes the new year before the Chronicle that confirms a
+    // saved-run pickup. Do not write that year into the previous house's gap.
+    if (event.kind === 'year' && this.#pickingUp) {
+      this.#pendingPickupYear = event.year;
+      return;
+    }
     if (event.kind === 'action' && event.act === 'start') {
       this.#startGeneration++;
       this.#pickingUp = PICKUPS.has(event.verb);
+      this.#pendingPickupYear = null;
       if (event.verb === 'begin' || event.verb === 'beginFromShareCode') {
         // The next house can reuse every Chronicle id (especially with a
         // repeated seed). A page fresh to that house is not a revisit to
@@ -262,6 +271,7 @@ export class ReadingLog {
         this.#shown.clear();
         this.#window.clear();
         this.#last.delete('run');
+        this.#last.delete('year');
       }
     }
     const state = stateKey(event);
@@ -291,6 +301,13 @@ export class ReadingLog {
     const carried = this.#pickingUp;
     this.#pickingUp = false;
     if (carried) {
+      // A matching new-world year might not trigger Vue's year watcher at all.
+      // Use the last observed one then, but prefer a changed year deferred
+      // while the pickup was pending. Confirm it AFTER the pickup boundary.
+      const previousYear = this.#last.get('year');
+      const pickupYear = this.#pendingPickupYear
+        ?? (previousYear === undefined ? null : Number(previousYear));
+      this.#pendingPickupYear = null;
       // A load/import/resume can replace the current house without a Begin.
       // Saved houses can reuse the exact Chronicle ids we saw in the previous
       // house. The first window is carried history, but it must be recorded
@@ -298,9 +315,11 @@ export class ReadingLog {
       this.#shown.clear();
       this.#window.clear();
       this.#last.delete('run');
+      this.#last.delete('year');
       // A loaded save is a boundary for observer gaps as well as page IDs;
       // only a successfully displayed Chronicle produces this marker.
       this.note({ kind: 'pickup' });
+      if (pickupYear !== null) this.note({ kind: 'year', year: pickupYear });
     }
     for (const entry of entries) if (entry.id && !this.#window.has(entry.id)) this.page(entry.year, entry, carried);
     this.#window = new Set(entries.flatMap((entry) => (entry.id ? [entry.id] : [])));
@@ -313,7 +332,10 @@ export class ReadingLog {
   pickUpFailed(generation: number): void {
     // The old import/load may finish after another pickup has begun (or a
     // new game has started). Its failure cannot erase that newer boundary.
-    if (generation === this.#startGeneration) this.#pickingUp = false;
+    if (generation === this.#startGeneration) {
+      this.#pickingUp = false;
+      this.#pendingPickupYear = null;
+    }
   }
 
   /** A chronicle page came on screen. The second time it is a revisit. */
