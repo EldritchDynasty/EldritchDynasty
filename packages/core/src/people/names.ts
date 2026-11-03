@@ -228,16 +228,22 @@ export function retireNames(
   people: Iterable<{ name: string; died?: number; alive: boolean }>,
   year: number,
 ): string[] {
-  const living = new Set<string>();
-  const releasing: string[] = [];
+  const reserved = new Set<string>();
+  const eligible = new Set<string>();
   for (const p of people) {
-    if (p.alive) living.add(p.name);
-    else if (p.died !== undefined && year - p.died === NAME_MOURNING_YEARS) releasing.push(p.name);
+    if (p.alive || p.died === undefined || year - p.died < NAME_MOURNING_YEARS) {
+      // A newer namesake can still be living or mourned when an older name
+      // reaches its anniversary. Never release their shared reservation.
+      reserved.add(p.name);
+    } else {
+      // Recover missed anniversaries too: a saved name may still be reserved
+      // after its holder's exact thirty-year anniversary has passed.
+      eligible.add(p.name);
+    }
   }
   const freed: string[] = [];
-  for (const name of releasing) {
-    if (living.has(name)) continue;
-    if (taken.delete(name)) freed.push(name);
+  for (const name of eligible) {
+    if (!reserved.has(name) && taken.delete(name)) freed.push(name);
   }
   return freed;
 }
