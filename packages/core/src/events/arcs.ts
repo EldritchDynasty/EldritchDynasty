@@ -200,7 +200,7 @@ export function dueArcSteps(ctx: SimCtx, rng: Rng, layer?: 'tale' | 'frame'): Ar
   const out: ArcStep[] = [];
 
   for (const inst of ctx.world.arcs.values()) {
-    if (inst.status !== 'active') continue;
+    if (inst.status !== 'active' || inst.startedYear > ctx.world.year) continue;
     if ((inst.dueYear ?? 0) > ctx.world.year) continue;
 
     const arc = ctx.content.arc(inst.arc);
