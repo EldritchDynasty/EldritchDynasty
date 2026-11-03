@@ -848,6 +848,12 @@ describe('the editor Vite entry points', () => {
     };
     const git = (...args: string[]) => execFileSync('git', args, { cwd, env: gitEnv, encoding: 'utf8', stdio: 'pipe' }).trim();
     git('init', '-q');
+    // Git may schedule maintenance after add/commit. Its transient
+    // .git/objects/maintenance.lock can disappear between read-only
+    // snapshots and falsely implicate the planner. Keep this fixture
+    // self-contained; don't weaken the snapshot's persistent-file checks.
+    git('config', '--local', 'maintenance.auto', 'false');
+    git('config', '--local', 'gc.auto', '0');
     git('config', 'user.name', 'Verification fixture');
     git('config', 'user.email', 'fixture@example.invalid');
     write('packages/core/src/example.ts', 'export const n = 1;\n');
@@ -951,6 +957,15 @@ describe('the editor Vite entry points', () => {
   }
 
   describe('read-only CLI and explicit portable execution', () => {
+    it('disables automatic maintenance in fixture Git repos but detects durable config writes', () => {
+      const { cwd, git } = checkout();
+      expect(git('config', '--local', '--get', 'maintenance.auto')).toBe('false');
+      expect(git('config', '--local', '--get', 'gc.auto')).toBe('0');
+      const before = snapshot(cwd);
+      git('config', '--local', 'gc.auto', '1');
+      expect(snapshot(cwd)).not.toBe(before);
+    });
+
     it('ignores transient directory metadata but still detects persistent file changes', () => {
       const { cwd, write } = checkout();
       const beforeEntries: SnapshotManifest = new Map();
