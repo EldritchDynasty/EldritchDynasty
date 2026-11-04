@@ -976,3 +976,64 @@ describe('authored grudge holder direction (#2407)', () => {
     expect(edge(ctx.world, head.id, injured.id)?.grudges ?? []).toEqual([]);
   });
 });
+
+
+describe('recovered future-born grudge participants (#2859, #2860)', () => {
+  it('keeps a house-wide quarrel with its dead holder until a future heir is born (#2859)', () => {
+    const { ctx, us, them } = feuding(2859);
+    const w = ctx.world;
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Not yet born', house: 'house_marrow' });
+    beget(ctx, son, undefined, them);
+    son.born = w.year + 2; // A restored alive row dated after the current year.
+    const grudge = addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'house_wide' });
+    w.people.kill(them.id, w.year, 'a fever');
+
+    tickRelationships(ctx);
+    expect(edge(w, son.id, us.id)).toBeUndefined();
+    expect(edge(w, them.id, us.id)?.grudges).toContain(grudge);
+
+    w.year = son.born;
+    tickRelationships(ctx);
+    expect(edge(w, son.id, us.id)?.grudges).toContain(grudge);
+    expect(edge(w, them.id, us.id)).toBeUndefined();
+  });
+
+  it('excludes future-born rival holders until their actual birth year (#2860)', () => {
+    const { ctx, us, them } = feuding(2860);
+    const w = ctx.world;
+    const unborn = place(ctx, { sex: 'male', age: 35, name: 'Later rival', house: 'house_calder' });
+    unborn.born = w.year + 2;
+    addGrudge(ctx, them.id, us.id, { severity: 25, inheritance: 'none' });
+    addGrudge(ctx, unborn.id, us.id, { severity: 85, inheritance: 'none' });
+
+    expect(bitterestAgainst(w, w.playerHouse)).toBe(them.id);
+    w.year = unborn.born;
+    expect(bitterestAgainst(w, w.playerHouse)).toBe(unborn.id);
+  });
+
+  it('does not let a not-yet-born cadet speaker start the family quarrel (#2860)', () => {
+    const { ctx, us } = feuding(28602);
+    const w = ctx.world;
+    us.castSlots.push('head');
+    const speaker = place(ctx, { sex: 'male', age: 30, name: 'Future speaker' });
+    const branch: BranchState = {
+      id: 'br_future_speaker' as BranchState['id'], name: 'The later hall',
+      house: w.playerHouse as BranchState['house'],
+      founder: speaker.id, splitFrom: 'main', foundedYear: w.year - 20,
+      speaker: speaker.id, grievance: 90,
+    };
+    w.branches.set(branch.id, branch);
+    speaker.born = w.year + 2;
+    const beforePages = w.chronicle.length;
+
+    expect(tickFamilyQuarrels(ctx)).toEqual([]);
+    expect(w.chronicle).toHaveLength(beforePages);
+    expect(branch.grievance).toBe(90);
+    expect(edge(w, speaker.id, us.id)).toBeUndefined();
+
+    w.year = speaker.born;
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(1);
+    expect(edge(w, speaker.id, us.id)?.grudges).toHaveLength(1);
+    expect(branch.grievance).toBeLessThan(90);
+  });
+});

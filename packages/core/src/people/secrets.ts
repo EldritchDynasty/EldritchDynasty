@@ -197,8 +197,12 @@ export function tickSecrets(ctx: SimCtx, rng: Rng): void {
 export function driftLoyalty(ctx: SimCtx): void {
   const w = ctx.world;
   for (const p of w.people.living()) {
+    // Restored 'alive' records and future-dated hires have not yet served.
+    if (p.born > w.year) continue;
     const c = p.contract;
     if (!c) continue;
+    if (p.membership.some((m) => m.kind === 'retainer'
+      && m.to === undefined && m.from > w.year)) continue;
     // A BOND BUYS NOTHING BACK (world §12, `people/bond.ts`). Loyalty here is
     // bought with wages, and a bonded servant is not paid — the wage goes
     // against the debt. So the house that solved its staffing problem with a
