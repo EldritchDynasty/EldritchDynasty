@@ -9,6 +9,7 @@ import type { ChronicleEntry, SimCtx } from './world.js';
 import { afterimageEvidence } from './afterimage.js';
 import { coreMessageAddress } from './messages.js';
 import { rungTitle } from './ascension.js';
+import { CADET_AGE } from './people/branches.js';
 
 const content = loadContent();
 
@@ -1929,8 +1930,8 @@ describe('chronological last-night purpose witnesses (#2803)', () => {
       setProseMode(ctx, mode);
       expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     }
-    // The birth-year boundary admits an actual founder again.
-    founder.born = foundedYear;
+    // A cadet charter requires the same minimum age as a real departure.
+    founder.born = foundedYear - CADET_AGE;
     expect(epilogueOf(ctx)!.purpose?.kind).toBe('branch_kept');
 
     // Death before the charter is no more credible than a future birth.
@@ -2196,5 +2197,188 @@ describe('future duplicates cannot erase earlier ascendant testimony (#2846)', (
     w.chronicle[1]!.year = w.year;
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     expect(selectEnding(ctx)).toBe(ending);
+  });
+});
+
+
+describe('the completed Chronicle starts with the founding (#2930)', () => {
+  it('excludes pre-founding pages, blanks, false attestation and embellished proof debt', () => {
+    const ctx = atTheTerm(293001);
+    const w = ctx.world;
+    const start = CAMPAIGNS.long.startYear;
+    w.ending = { id: 'forgotten', year: w.year };
+    w.ascension.best = 'god';
+    const real: ChronicleEntry = {
+      year: start, weight: 'illuminated', text: 'The first genuine page.', named: false,
+    };
+    w.chronicle = [real];
+    const selected = selectEnding(ctx);
+    w.discrepancies.set('forged_before_founding', { severity: 'total', state: 'open', provableBy: [] });
+    w.chronicle = [
+      { year: start - 1, weight: 'illuminated', named: false, rung: 'god',
+        text: 'A claimed apotheosis before the house existed.', record: 'embellish',
+        discrepancyId: 'forged_before_founding' },
+      { year: start - 1, weight: 'paragraph', text: null, named: false,
+        record: 'omit', eventId: 'the_tutors_good_years' },
+      real,
+    ];
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const reckoning = readTheChronicle(ctx);
+      expect(reckoning).toMatchObject({
+        pages: 1, blanks: 0, recorded: 0, embellished: 0,
+        attested: 'none', unsupportable: 0,
+      });
+      const view = epilogueOf(ctx)!;
+      expect(view.read.map((page) => page.text)).toEqual(['The first genuine page.']);
+      expect(view.beginning?.pages).toEqual([]);
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+    expect(w.chronicle).toHaveLength(3);
+  });
+});
+
+describe('Long Line family-purpose witnesses begin with the house (#2931)', () => {
+  it('refuses pre-founding recovered Ledger testimony but admits the founding year', () => {
+    const ctx = atTheTerm(293101);
+    const w = ctx.world;
+    const start = CAMPAIGNS.long.startYear;
+    const clause = content.clauses.find((item) => !item.known)!;
+    w.houseAmbition = 'restore_ledger';
+    w.ending = { id: 'forgotten', year: w.year };
+    w.clausesRecovered.add(clause.id);
+    const page: ChronicleEntry = {
+      year: start - 1, weight: 'illuminated', named: true,
+      title: clause.name, text: clause.text,
+    };
+    w.chronicle = [page];
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    }
+    page.year = start;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'ledger_witness', year: start, clause: clause.name,
+    });
+    expect(w.chronicle[0]).toBe(page);
+    expect(digestOf(ctx)).not.toBe(before); // Only our deliberate date edit changed the save.
+    const accepted = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ledger_witness');
+    expect(digestOf(ctx)).toBe(accepted);
+  });
+
+  it('refuses a purported demigod wait dated before the founding', () => {
+    const ctx = atTheTerm(293102);
+    const w = ctx.world;
+    const start = CAMPAIGNS.long.startYear;
+    w.houseAmbition = 'raise_ascendant';
+    w.ending = { id: 'forgotten', year: w.year };
+    const ascendant = place(ctx, { name: 'Edric', sex: 'male', age: 55 });
+    ascendant.born = start - 40; // The witness is old enough; the book is still too early.
+    const page: ChronicleEntry = {
+      id: `ledger_wait:${ascendant.id}`, year: start - 1,
+      weight: 'paragraph', named: false, rung: 'demigod',
+      text: 'Edric waited at the Ledger before the house was signed.',
+      people: [ascendant.id],
+    };
+    w.chronicle = [page];
+    const before = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(digestOf(ctx)).toBe(before);
+    page.year = start;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'ascendant_wait', person: 'Edric', year: start,
+      });
+    }
+  });
+
+  it('refuses an otherwise attributable blood rite before the campaign begins', () => {
+    const ctx = atTheTerm(293103);
+    const w = ctx.world;
+    const start = CAMPAIGNS.long.startYear;
+    w.houseAmbition = 'deepen_blood';
+    w.ending = { id: 'forgotten', year: w.year };
+    const victim = place(ctx, { name: 'Meriel', sex: 'female', age: 40 });
+    const ascendant = place(ctx, { name: 'Wystan', sex: 'male', age: 40 });
+    w.people.kill(victim.id, w.year, 'given to a rite', 'vessel_consumed');
+    victim.born = start - 30;
+    victim.died = start - 1;
+    const page: ChronicleEntry = {
+      id: 'pre-founding-vessel', year: start - 1, weight: 'paragraph',
+      eventId: 'the_vessel_rite', text: 'Meriel was offered at the rite.',
+      people: [victim.id, ascendant.id], named: false, record: 'record',
+    };
+    w.chronicle = [page];
+    w.decisionLog = [{
+      kind: 'outcome', event: 'the_vessel_rite', year: start - 1,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [victim.id], ASCENDANT: [ascendant.id] },
+    }];
+    const outcome = w.decisionLog[0]!;
+    if (outcome.kind !== 'outcome') throw new Error('expected attributed rite');
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victim.id);
+    const before = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(digestOf(ctx)).toBe(before);
+    page.year = start;
+    outcome.year = start;
+    victim.died = start;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'blood_spent', person: 'Meriel', year: start,
+      });
+    }
+  });
+});
+
+describe('cadet founding is an actual adult son leaving the seat (#2932)', () => {
+  it('rejects female, minor and pre-campaign founders while admitting age 24', () => {
+    const ctx = atTheTerm(293201);
+    const w = ctx.world;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const id = 'br_charter_integrity';
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch: id });
+    place(ctx, { name: 'Leora', sex: 'female', age: 35, branch: id });
+    place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch: id });
+    const foundedYear = w.year - 30;
+    w.branches.set(asId(id), {
+      id: asId(id), house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+    });
+    const branch = w.branches.get(asId(id))!;
+    const selected = selectEnding(ctx);
+    const original = epilogueOf(ctx)!.purpose;
+    expect(original).toMatchObject({ kind: 'branch_kept', founder: 'Edrin' });
+
+    founder.sex = 'female';
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    founder.sex = 'male';
+    founder.born = foundedYear - (CADET_AGE - 1);
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    founder.born = foundedYear - CADET_AGE;
+    expect(epilogueOf(ctx)!.purpose).toEqual(original);
+
+    const start = CAMPAIGNS.long.startYear;
+    branch.foundedYear = start - 1;
+    founder.born = start - CADET_AGE - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    branch.foundedYear = start;
+    founder.born = start - CADET_AGE;
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'branch_kept', founder: 'Edrin', year: start,
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
   });
 });
