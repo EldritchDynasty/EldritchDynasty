@@ -354,7 +354,7 @@ function hallSuccessor(
   const branch = last?.branch;
   if (!branch || branch === MAIN_BRANCH) return undefined;
   const state = w.branches.get(branch);
-  if (!state || !isActiveBranch(state)) return undefined;
+  if (!state || !isActiveBranch(state) || state.foundedYear > w.year) return undefined;
 
   const speaker = wouldSpeakFor(ctx, branch);
   if (!speaker || speaker.id === p.id || speaker.status !== 'alive') return undefined;

@@ -161,6 +161,20 @@ describe('the cast of a generation', () => {
    * `aggrieved` came to be on the panel in nine sampled generations in ten
    * while saying nothing in eight of them.
    */
+  it('does not show a future-founded aggrieved hall before its founding year (#2810)', () => {
+    const ctx = aFamily();
+    const hall = ctx.world.branches.get('branch_ash')!;
+    const current = ctx.world.year;
+    hall.foundedYear = current + 1;
+    expect(castOf(ctx).find((c) => c.role === 'aggrieved')).toBeUndefined();
+    const cousin = ctx.world.people.get(hall.founder)!;
+    expect(relevantPeople(ctx).get(cousin.id) ?? []).not.toContain('their hall holds a grievance');
+    // The same saved hall becomes relevant at, not before, the recorded founding.
+    ctx.world.year = hall.foundedYear;
+    expect(castOf(ctx).find((c) => c.role === 'aggrieved')?.hall).toBe('Ashfold');
+    expect(relevantPeople(ctx).get(cousin.id) ?? []).toContain('their hall holds a grievance');
+  });
+
   it('leaves a small grievance off the list', () => {
     const ctx = aFamily();
     const hall = ctx.world.branches.get('branch_ash')!;

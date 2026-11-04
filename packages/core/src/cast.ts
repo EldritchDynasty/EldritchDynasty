@@ -415,7 +415,7 @@ function carrier(ctx: SimCtx, r: Read): Candidate | undefined {
 function aggrieved(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
   const halls = [...w.branches.values()]
-    .filter((b) => b.extinct === undefined && b.grievance >= 24)
+    .filter((b) => b.extinct === undefined && b.foundedYear <= w.year && b.grievance >= 24)
     .sort((a, b) => b.grievance - a.grievance);
   for (const b of halls) {
     const speaker = wouldSpeakFor(ctx, b.id);
