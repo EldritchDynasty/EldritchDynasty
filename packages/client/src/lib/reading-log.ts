@@ -551,7 +551,10 @@ export function tableWorkloadWindows(
     }
   }
   advance(stop);
-  finish(stop, end && end.at <= until ? 'end' : truncated ? 'cap' : 'open');
+  // A capped log has stopped observing, even if Export later appends an
+  // 'end' marker at the cap instant. Report that censoring, not a complete end.
+  finish(stop, truncated && (!end || end.at <= until) ? 'cap'
+    : end && end.at <= until ? 'end' : 'open');
   return windows;
 }
 
