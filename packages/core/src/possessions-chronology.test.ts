@@ -102,9 +102,12 @@ describe('future-born heirloom bearers (#2834)', () => {
     // A canExpress check alone would let this person use the Eye in the past.
     const born = year + 2;
     reader.born = born;
-    const before = digestOf(ctx);
     expect(canUseHeirloom(ctx, id, reader).ok).toBe(false);
+    // Enumerating OTHER potential readers may populate their lazily derived
+    // phenotypes. Warm those read-only caches before the mutation-free use
+    // assertion; otherwise the whole-world digest observes unrelated readers.
     expect(eligibleBearers(ctx, id)).not.toContain(reader);
+    const before = digestOf(ctx);
     expect(useHeirloom(ctx, id, reader).ok).toBe(false);
     expect(heirloom.spent).toBe(false);
     expect(heirloom.usedOn).toHaveLength(0);
