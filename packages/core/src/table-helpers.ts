@@ -5,7 +5,7 @@ import type { SimCtx } from './world.js';
 export function ours(ctx: SimCtx, id: string): Person | undefined {
   const w = ctx.world;
   const p = w.people.get(id);
-  if (!p || p.status !== 'alive') return undefined;
+  if (!p || p.status !== 'alive' || p.born > w.year) return undefined;
   return w.people.household(w.playerHouse, w.year).some((q) => q.id === p.id) ? p : undefined;
 }
 

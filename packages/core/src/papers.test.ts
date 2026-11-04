@@ -126,6 +126,48 @@ describe('what a match asks for', () => {
 });
 
 describe('buying a grandmother', () => {
+  it('refuses Table and direct pedigree filing for future-born household members (#2858)', () => {
+    const ctx = testWorld(bundle);
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Future resident' });
+    const yearBorn = ctx.world.year + 3;
+    girl.born = yearBorn;
+    ctx.world.treasury = 1000;
+    const before = JSON.stringify({
+      treasury: ctx.world.treasury, pages: ctx.world.chronicle, documents: girl.lineageDocuments,
+    });
+
+    expect(order(ctx, { kind: 'pedigree', person: girl.id, grade: 'bramme' }).ok).toBe(false);
+    expect(() => filePedigree(ctx, girl, 'bramme')).toThrow('before birth');
+    expect(JSON.stringify({
+      treasury: ctx.world.treasury, pages: ctx.world.chronicle, documents: girl.lineageDocuments,
+    })).toBe(before);
+
+    ctx.world.year = yearBorn;
+    expect(order(ctx, { kind: 'pedigree', person: girl.id, grade: 'bramme' }).ok).toBe(true);
+    expect(girl.lineageDocuments).toHaveLength(1);
+  });
+
+  it('cannot expose a future-born member\'s forged pedigree until their birth year (#2858)', () => {
+    const ctx = testWorld(bundle);
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Not yet here' });
+    const doc = filePedigree(ctx, girl, 'bramme');
+    const yearBorn = ctx.world.year + 2;
+    girl.born = yearBorn;
+    const rng = { ...testRng('future-birth-exposure'), bool: (_chance: number) => true };
+    const pages = ctx.world.chronicle.length;
+    const discrepancies = ctx.world.discrepancies.size;
+
+    expect(tickPapers(ctx, rng)).toBe(0);
+    expect(doc.exposed).toBeUndefined();
+    expect(ctx.world.chronicle).toHaveLength(pages);
+    expect(ctx.world.discrepancies.size).toBe(discrepancies);
+
+    ctx.world.year = yearBorn;
+    expect(tickPapers(ctx, rng)).toBe(1);
+    expect(doc.exposed).toBe(yearBorn);
+    expect(ctx.world.discrepancies.size).toBe(discrepancies + 1);
+  });
+
   it('rejects detached snapshots without writing papers to either copy', () => {
     const ctx = testWorld(bundle);
     const living = place(ctx, { sex: 'female', age: 20, name: 'Living' });
