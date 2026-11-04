@@ -4,6 +4,7 @@ import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { RememberedPassage } from '../lib/game';
 import GlossaryText from './GlossaryText.vue';
+import { splitFirstGlossary } from '../lib/glossary';
 
 /**
  * WHAT THE YEARS DID (issue #49).
@@ -35,6 +36,12 @@ defineEmits<{ (e: 'select', id: string): void }>();
 const onTree = computed(() => new Set(
   props.halls.flatMap((hall) => hall.members.map((member) => member.id)),
 ));
+
+/** A separate explanation preserves the row's existing person-navigation button. */
+function termHelp(text: string): string {
+  const term = splitFirstGlossary(text, props.proseMode).find((segment) => segment.term);
+  return term ? `${props.proseMode === 'plainenglish' ? 'Explain' : 'About'} ${term.text}` : '';
+}
 </script>
 
 <template>
@@ -48,9 +55,10 @@ const onTree = computed(() => new Set(
              cannot be opened, but neither can an earlier line about someone
              who died or left during a multi-year jump. Keep their words. -->
         <li v-for="(line, i) in year.lines" :key="i" :class="line.kind">
-          <button v-if="line.kind !== 'death' && onTree.has(line.person)" class="row" @click="$emit('select', line.person)">
-            {{ line.text }}
-          </button>
+          <template v-if="line.kind !== 'death' && onTree.has(line.person)">
+            <button class="row" @click="$emit('select', line.person)">{{ line.text }}</button>
+            <GlossaryText v-if="termHelp(line.text)" class="passage-help" :text="termHelp(line.text)" :prose-mode="proseMode" />
+          </template>
           <template v-else>
             <!-- Non-navigable history can disclose known terms here. Keep actual
                  person-navigation rows as single buttons: no nested controls. -->
@@ -97,4 +105,5 @@ li.service { color: var(--ink-faint); }
   font: inherit; color: inherit; cursor: pointer;
 }
 .row:hover { color: var(--ink); background: none; text-decoration: underline; }
+.passage-help { margin-left: .6em; }
 </style>

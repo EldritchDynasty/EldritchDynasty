@@ -4,6 +4,7 @@ import CovertExpeditions from './CovertExpeditions.vue';
 import OutsideServices from './OutsideServices.vue';
 import TableTaskLinks from './TableTaskLinks.vue';
 import RecordedLife from './RecordedLife.vue';
+import GlossaryText from './GlossaryText.vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { LandView, TableView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
@@ -537,6 +538,7 @@ const MARRIAGE_ORDERS = [
       <p class="small dim">{{ local('The house can call a rite when its people can field it. Each call opens the authored choice and its cost.', 'You can begin a rite when enough eligible family members are available. You will see the choices and costs before proceeding.') }}</p>
       <div class="row">
         <button :disabled="!table.vesselRite.ready" @click="assemble('vesselRite')">{{ local('Call the Vessel', 'Begin the Vessel rite') }}</button>
+        <GlossaryText class="small dim" text="What is a Vessel?" :prose-mode="proseMode" />
         <span v-if="!table.vesselRite.ready" class="small rubric">{{ table.vesselRite.reason }}</span>
       </div>
       <div class="row">
@@ -588,7 +590,7 @@ const MARRIAGE_ORDERS = [
         >
           {{ local('Search the old papers', 'Search old records') }} — {{ table.ledgerSearch.fee }} crowns
         </button>
-        <p v-if="!table.ledgerSearch.ready" class="small rubric">{{ table.ledgerSearch.reason }}</p>
+        <p v-if="!table.ledgerSearch.ready" class="small rubric"><GlossaryText :text="table.ledgerSearch.reason ?? ''" :prose-mode="proseMode" /></p>
         <p v-if="refusedIn('seekClause')" class="small rubric">{{ refusedIn('seekClause') }}</p>
       </div>
     </div>
@@ -683,7 +685,7 @@ const MARRIAGE_ORDERS = [
           </button>
           <span v-if="book.restore.reason" class="small rubric">{{ book.restore.reason }}</span>
         </div>
-        <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
+        <p v-if="book.blurb" class="small dim blurb"><GlossaryText :text="book.blurb" :prose-mode="proseMode" /></p>
         <!-- A SELECT, like Places (issue #55). This was one button per reader
              per book — sixteen on turn one across two books, and it grew with
              the household — while the identical interaction was solved with a
@@ -718,7 +720,7 @@ const MARRIAGE_ORDERS = [
               {{ book.queued ? local('Broker sent', 'Broker already requested') : local('Seek this book', 'Ask broker for this book') }}
             </button>
           </div>
-          <p v-if="book.blurb" class="small dim blurb">{{ book.blurb }}</p>
+          <p v-if="book.blurb" class="small dim blurb"><GlossaryText :text="book.blurb" :prose-mode="proseMode" /></p>
         </div>
         <p v-if="refusedIn('seekBook')" class="small rubric">{{ refusedIn('seekBook') }}</p>
       </div>
@@ -735,7 +737,7 @@ const MARRIAGE_ORDERS = [
       <div v-for="duty in table.mystic.duties" :key="duty.id" class="line">
         <div class="small"><strong>{{ duty.name }}</strong> · {{ duty.workingName }} · {{ duty.place }} <span class="dim">· {{ dutyStatus(duty) }}</span></div>
         <p class="small dim">{{ duty.upkeep }} {{ local('crowns a year', 'crowns per year') }} · {{ dutyRecord(duty) }}</p>
-        <p v-if="duty.fieldTerms" class="small dim">{{ duty.fieldTerms }}</p>
+        <p v-if="duty.fieldTerms" class="small dim"><GlossaryText :text="duty.fieldTerms" :prose-mode="proseMode" /></p>
         <p v-if="duty.attended?.length" class="small dim">{{ local('Sitting with:', 'Caring for:') }} {{ duty.attended.map((w) => w.name).join(', ') }}</p>
         <p v-if="duty.paused" class="small dim">{{ local('Set down for it:', 'Reading paused:') }} {{ duty.paused.name }}, {{ duty.paused.remainingYears }} {{ duty.paused.remainingYears === 1 ? 'year' : 'years' }} {{ local('left', 'remaining') }}</p>
         <button class="small" :aria-label="local('Release', 'End duty') + ' ' + duty.name" @click="actions.order({ kind: 'mysticRelease', assignment: duty.id })">{{ local('Release', 'End duty') }}</button>
@@ -744,10 +746,10 @@ const MARRIAGE_ORDERS = [
       <label class="small dim"><input v-model="showUnlearned" type="checkbox"> {{ local('Include workings nobody has read for', 'Show workings without a trained reader') }}</label>
       <div v-for="offer in visibleDuties" :key="offer.working" class="line">
         <div class="small"><strong>{{ offer.name }}</strong> <span class="dim">· {{ offer.affinity }} · {{ offer.preparation }} {{ local('crowns to make ready', 'crowns to prepare') }}<template v-if="offer.preparationYears">, {{ offer.preparationYears }} {{ offer.preparationYears === 1 ? 'year' : 'years' }}</template> · {{ offer.upkeep }} {{ local('a year', 'per year') }}</span></div>
-        <p class="small dim blurb">{{ offer.description }}</p>
+        <p class="small dim blurb"><GlossaryText :text="offer.description" :prose-mode="proseMode" /></p>
         <p class="small dim">{{ local('Books read:', 'Required completed books:') }} {{ offer.books.join(', ') }}</p>
         <p v-if="offer.collaborator" class="small dim">{{ local('Works only beside a different paid reader keeping', 'Requires a different available, paid reader doing') }} {{ offer.collaborator }} {{ local('at the same place.', 'at the same location.') }}</p>
-        <p v-if="offer.fieldTerms" class="small dim">{{ offer.fieldTerms }}</p>
+        <p v-if="offer.fieldTerms" class="small dim"><GlossaryText :text="offer.fieldTerms" :prose-mode="proseMode" /></p>
         <p v-if="readyDuties.has(offer.working)" class="small dim available-duty">
           {{ readyDuties.get(offer.working)?.reader.name }} {{ local('can be set to it for', 'can take this assignment for') }} {{ readyDuties.get(offer.working)?.target.name }}.
           <span v-if="readyDuties.get(offer.working)?.reader.studying">

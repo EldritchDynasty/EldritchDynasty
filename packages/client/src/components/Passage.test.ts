@@ -5,7 +5,7 @@ import type { SessionView } from '@ed/core';
 import type { RememberedPassage } from '../lib/game';
 import Passage from './Passage.vue';
 
-describe('in-place glossary on non-navigable factual passage lines (#2087)', () => {
+describe('in-place glossary on factual passage lines (#1991)', () => {
   it.each(['original', 'plainenglish'] as const)(
     'keeps the %s account and person navigation intact while explaining a term',
     async (proseMode) => {
@@ -33,7 +33,18 @@ describe('in-place glossary on non-navigable factual passage lines (#2087)', () 
         expect(wrapper.get('li > button').text()).toBe('Standing improved for the child.');
         expect(wrapper.find('li > button .glossary-term').exists()).toBe(false);
 
-        const marked = wrapper.findAll('li .glossary-term');
+        const help = wrapper.get('li.birth .passage-help .glossary-term');
+        await help.trigger('click');
+        expect(wrapper.get('li.birth .glossary-definition').text()).toBe(
+          proseMode === 'original'
+            ? 'the regard the wider world gives the house.'
+            : 'How the wider world regards this family.',
+        );
+        expect(wrapper.emitted('select')).toBeUndefined();
+        await help.trigger('keydown', { key: 'Escape' });
+        expect(document.activeElement).toBe(help.element);
+
+        const marked = wrapper.findAll('li.marriage .glossary-term');
         expect(marked).toHaveLength(1);
         expect(marked[0]!.text()).toBe('Reputation');
         expect(wrapper.get('li.marriage').text()).toContain('Reputation changed again.');
