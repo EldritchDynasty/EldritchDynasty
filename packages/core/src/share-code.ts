@@ -324,6 +324,15 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
 
 // ── reading one ──────────────────────────────────────────────────────────
 
+/** A named code may advertise only names the signing itself can keep.
+ * Anonymous names are supplied later, but a name already in the wire payload
+ * must not pass preview if founding would normalize or discard it.
+ */
+function canonicalVisibleName(name: string): boolean {
+  return name === name.trim().replace(/\s+/g, ' ')
+    && !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
+}
+
 /** A payload's indices against the prologue it claims, or undefined if any is out of place. */
 function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): SharedFounding | undefined {
   const [, , , , seed, founderCode, answerCodes, heirloomAt, grudgeAt, house, sexes, friendNames] = p;
@@ -332,6 +341,18 @@ function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): Shar
   if (names !== (friendNames !== 0)) return undefined;
   if (friendNames !== 0 && friendNames.length !== sexes.length) return undefined;
   if (!names && founderCode !== 0 && founderCode.length === 3) return undefined;
+  // The payload schema checks lengths and wire types. The actual signing also
+  // rejects noncanonical/blank names and case-insensitive duplicate friends.
+  // Refuse those here, before displaying a supposedly valid founding preview.
+  if (house !== 0 && !canonicalVisibleName(house)) return undefined;
+  if (friendNames !== 0) {
+    const seen = new Set<string>();
+    for (const name of friendNames) {
+      const key = name.toLowerCase();
+      if (!canonicalVisibleName(name) || seen.has(key)) return undefined;
+      seen.add(key);
+    }
+  }
   if (answerCodes.length && answerCodes.length !== def.examination.length) return undefined;
 
   const answers: Record<string, string> = {};
