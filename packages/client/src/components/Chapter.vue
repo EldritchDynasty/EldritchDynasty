@@ -147,7 +147,7 @@ watch([() => props.beat, () => props.skipSeenProse], ([beat], [previousBeat]) =>
 .scrim {
   position: fixed; inset: 0; z-index: 20;
   background: color-mix(in srgb, var(--vellum-deep) 88%, transparent);
-  display: grid; place-items: center; padding: 40px;
+  display: grid; grid-template-rows: minmax(0, 100%); place-items: center; padding: 40px;
   padding-top: max(40px, env(safe-area-inset-top));
   padding-bottom: max(40px, env(safe-area-inset-bottom));
   padding-left: max(40px, env(safe-area-inset-left));
@@ -155,6 +155,7 @@ watch([() => props.beat, () => props.skipSeenProse], ([beat], [previousBeat]) =>
 }
 .chapter {
   max-width: 56ch; background: var(--vellum-deep);
+  min-width: 0; max-height: 100%; overflow-y: auto;
   border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
   padding: 40px 44px; text-align: center;
 }
