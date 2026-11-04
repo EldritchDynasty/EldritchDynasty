@@ -80,32 +80,39 @@ describe('future-started Mystic assignments and the library (#2833)', () => {
 });
 
 describe('future-born heirloom bearers (#2834)', () => {
-  it('does not offer or spend a held object before the bearer is born', () => {
+  it('does not offer or spend an age-unrestricted heirloom before the bearer exists', () => {
     const ctx = bootstrap(content, 2834, 1042);
     const year = ctx.world.year;
-    const bearer = ctx.world.people.household(ctx.world.playerHouse, year)
-      .find(p => year - p.born >= 20 && year - p.born <= 40)!;
-    expect(bearer).toBeDefined();
-    const id = 'portion_of_agelessness';
+    const id = 'the_unmirrored_eye';
     const heirloom = grantHeirloom(ctx, id)!;
-    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+
+    // The Eye only requires a living, font-bearing reader: unlike the
+    // portions/regalia it has NO minimum-age filter to mask the defect.
+    let bearer = ctx.world.people.household(ctx.world.playerHouse, year)
+      .find(p => canUseHeirloom(ctx, id, p).ok);
+    for (let i = 0; i < 30 && !bearer; i++) {
+      const candidate = place(ctx, { sex: 'male', age: 25, name: `Eye witness ${i}`, awakened: true });
+      if (canUseHeirloom(ctx, id, candidate).ok) bearer = candidate;
+    }
+    expect(bearer, 'a living font-bearing reader must be available for the Eye').toBeDefined();
+    const reader = bearer!;
+    expect(canUseHeirloom(ctx, id, reader).ok).toBe(true);
 
     // An inconsistent restored membership may predate the recorded birth.
-    // Even then, world-owned identity and current membership alone are not
-    // enough to spend a charge against somebody not yet alive this year.
+    // A canExpress check alone would let this person use the Eye in the past.
     const born = year + 2;
-    bearer.born = born;
+    reader.born = born;
     const before = digestOf(ctx);
-    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
-    expect(eligibleBearers(ctx, id)).not.toContain(bearer);
-    expect(useHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(canUseHeirloom(ctx, id, reader).ok).toBe(false);
+    expect(eligibleBearers(ctx, id)).not.toContain(reader);
+    expect(useHeirloom(ctx, id, reader).ok).toBe(false);
     expect(heirloom.spent).toBe(false);
     expect(heirloom.usedOn).toHaveLength(0);
     expect(digestOf(ctx)).toBe(before);
 
     ctx.world.year = born - 1;
-    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(canUseHeirloom(ctx, id, reader).ok).toBe(false);
     ctx.world.year = born;
-    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+    expect(canUseHeirloom(ctx, id, reader).ok).toBe(true);
   });
 });
