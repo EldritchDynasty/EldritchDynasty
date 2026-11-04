@@ -73,6 +73,8 @@ export const SAME_SEX_RUN = 4;
  */
 export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined {
   const w = ctx.world;
+  // Restored/imported relatives cannot be named before their own birth.
+  if (child.born > w.year) return undefined;
   const branch = child.membership[0]?.branch ?? MAIN_BRANCH;
 
   // ── The first of a new hall ─────────────────────────────────────────────
@@ -83,7 +85,9 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   // still holds.
   if (branch !== MAIN_BRANCH) {
     const state = w.branches.get(branch);
-    if (!state) return undefined;
+    // A saved hall with a future founding is not yet a cadet house. A child
+    // born before it existed is not its first post-founding child either.
+    if (!state || state.foundedYear > w.year || child.born < state.foundedYear) return undefined;
     // THE FOUNDER'S OWN FIRST CHILD, not the first child born under that
     // roof. Any child of the hall caught 17.6 a run, most of them born to
     // cousins who merely live there — and a cadet's child in a hall the
@@ -92,7 +96,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
     // the founding of a branch, which is the thing worth a name.
     if (!fatheredBy(child, state.founder)) return undefined;
     const older = w.people.children(state.founder).some((c) =>
-      c.id !== child.id && c.born > state.foundedYear);
+      c.id !== child.id && c.born > state.foundedYear && c.born <= child.born);
     return older ? undefined : msg(ctx, 'naming.worth.first_cadet_child', 'the first child of a new cadet branch');
   }
 
@@ -104,7 +108,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   const head = w.people.living().find((p) => p.castSlots.includes('head'));
   if (head && child.sex === 'male' && fatheredBy(child, head.id)) {
     const others = w.people.children(head.id).filter((c) =>
-      c.id !== child.id && c.sex === 'male' && c.status === 'alive');
+      c.id !== child.id && c.born <= child.born && c.sex === 'male' && c.status === 'alive');
     if (!others.length) return msg(ctx, 'naming.worth.heads_first_son', 'the Head has a son, and had none before today');
   }
 
@@ -114,7 +118,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
     const anyOther = w.people.all().some((p) =>
       p.id !== child.id
       && p.houseOfOrigin === w.playerHouse
-      && p.born >= since
+      && p.born >= since && p.born <= child.born
       && phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont !== null);
     if (!anyOther) {
       return msg(ctx, 'naming.worth.blood_returns', 'the first of the blood to carry it in three generations');
@@ -142,7 +146,7 @@ export function nameWorthAsking(ctx: SimCtx, child: Person): string | undefined 
   // "born in that year" caught nineteen children a run and said nothing about
   // any of them. A son born to a man in the same twelve months he buried his
   // father is a different sentence.
-  if (head && w.headSince === w.year && w.succession.length > 1
+  if (head && w.headSince === w.year && w.succession.filter((s) => s.from <= w.year).length > 1
     && fatheredBy(child, head.id)) {
     return msg(ctx, 'naming.worth.born_to_new_head', 'born to the new Head in the year he took the seal');
   }
@@ -181,7 +185,7 @@ function outsideTheLine(ctx: SimCtx, child: Person): string | undefined {
   // EVERYBODY THE LINE HAS EVER PRODUCED, dead included. "Anything the line
   // has produced" is a claim about four hundred years of a family, not about
   // the nine cousins who happen to be alive this spring.
-  const line = w.people.blood(w.playerHouse).filter((p) => p.id !== child.id);
+  const line = w.people.blood(w.playerHouse).filter((p) => p.id !== child.id && p.born <= child.born);
   if (line.length < 8) return undefined;
 
   for (const [key, expected] of ctx.genetics.expected) {
