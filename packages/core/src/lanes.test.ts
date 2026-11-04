@@ -415,7 +415,9 @@ describe('native merge queue admission', () => {
     // draft-tier success outranked the full run marking the PR ready started.
     expect(workflow).not.toContain('sort_by(.completed_at)');
     expect(workflow).toContain('sort_by(.id) | last');
-    expect(workflow).toContain('elif .status == "completed" then (.conclusion // "") else "pending" end');
+    // The selected check is now kept as JSON so admission can also read its
+    // completion time; missing and unfinished checks must still block it.
+    expect(workflow).toContain('if .status == "completed" then (.conclusion // "") elif .status then "pending" else "" end');
   });
 
   it('waits out "CI required is expected" instead of failing or giving up silently (#493)', () => {
