@@ -499,3 +499,88 @@ describe('recovered custody before birth and before capture (#2867, #2868, #2869
     expect(releaseIntruder(ctx, p.id)).toBe(false);
   });
 });
+
+
+describe('recovered custody integrity (#2920, #2921, #2922)', () => {
+  it('refuses dated-dead family and foreign captures, even when status still says alive (#2920)', () => {
+    const ctx = testWorld(content);
+    const family = place(ctx, { sex: 'female', age: 26 });
+    const intruder = place(ctx, { sex: 'male', age: 26, house: 'house_calder' });
+    const year = ctx.world.year;
+    family.died = year;
+    intruder.died = year;
+    const before = snapshot(ctx);
+
+    expect(captureFamily(ctx, family.id, CAPTOR, 25)).toBe(false);
+    expect(captureIntruder(ctx, intruder.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    // The same otherwise-eligible people can be captured while no death is recorded.
+    delete family.died;
+    delete intruder.died;
+    expect(captureFamily(ctx, family.id, CAPTOR, 25)).toBe(true);
+    expect(captureIntruder(ctx, intruder.id)).toBe(true);
+    family.died = year;
+    intruder.died = year;
+    const held = snapshot(ctx);
+
+    expect(quoteRansom(ctx, family.id)).toMatchObject({ ok: false, price: 0 });
+    expect(tableView(ctx).captives.some(c => c.person === family.id)).toBe(false);
+    expect(ransomCaptive(ctx, family.id).ok).toBe(false);
+    expect(releaseCaptive(ctx, family.id)).toBe(false);
+    expect(releaseIntruder(ctx, intruder.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(held);
+  });
+
+  it('does not apply a future death date to custody a year early (#2920)', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'female', age: 26 });
+    const year = ctx.world.year;
+    p.died = year + 1;
+
+    expect(captureFamily(ctx, p.id, CAPTOR, 25)).toBe(true);
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: true, price: 25 });
+    expect(releaseCaptive(ctx, p.id)).toBe(true);
+
+    ctx.world.year = year + 1;
+    const before = snapshot(ctx);
+    expect(captureFamily(ctx, p.id, CAPTOR, 25)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+  });
+
+  it('refuses to release an intruder held by a different house (#2921)', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 25, house: 'house_calder' });
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    const membership = currentMembership(p, ctx.world.year)!;
+    membership.house = asId(CAPTOR);
+    const before = snapshot(ctx);
+
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    membership.house = asId(ctx.world.playerHouse);
+    expect(releaseIntruder(ctx, p.id)).toBe(true);
+    expect(p.captivity).toBeUndefined();
+    expect(currentMembership(p, ctx.world.year)?.house).toBe('house_calder');
+  });
+
+  it('refuses duplicate open custody memberships before returning an intruder (#2922)', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 25, house: 'house_calder' });
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    const membership = currentMembership(p, ctx.world.year)!;
+    p.membership.push({ ...membership });
+    const before = snapshot(ctx);
+
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    p.membership.pop();
+    expect(releaseIntruder(ctx, p.id)).toBe(true);
+    expect(p.membership.filter(m => m.to === undefined)).toHaveLength(1);
+    expect(currentMembership(p, ctx.world.year)).toMatchObject({
+      house: 'house_calder',
+    });
+  });
+});
