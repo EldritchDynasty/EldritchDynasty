@@ -19,7 +19,7 @@ text, order payloads or refusal prose.
 `packages/client/src/lib/reading-log.ts` reads those events without changing
 the format, the original events, the save or the game. It segments the observer's
 timeline on a **successful Begin/share-code start** or a **displayed saved-run
-pickup**. A cancelled/failed load is not a new house. Each segment reports:
+pickup**. A cancelled/failed load is not a new house. A new run marker emitted by Vue before the Chronicle confirms pickup is held for the next window, rather than overwriting the previous house. Each segment reports:
 
 | Field | Interpretation |
 | --- | --- |
