@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   checkGateDuration,
   readGateDurations,
+  summarizeGateTimingReport,
 } from '../../../tools/gate-duration.mjs';
 
 const REPO = join(import.meta.dirname, '../../..');
@@ -108,6 +109,54 @@ describe('gate duration guard', () => {
         expect(run.stdout).toContain('NOT JUDGED');
         expect(run.stdout).toContain(`::warning::gate-duration: war has no ${availableParallelism()}-CPU baseline`);
       }
+    });
+  });
+
+  describe('full-batch timing evidence (#2528)', () => {
+    const full = {
+      version: 2, lane: 'batch', totalSeconds: 1074.333,
+      host: { cpuModel: 'AMD EPYC 9V74 80-Core Processor', logicalCpus: 4 },
+      gates: [
+        { gate: 'clauses', seconds: 72.109, ok: true },
+        { gate: 'land', seconds: 733.993, ok: true },
+        { gate: 'short-line', seconds: 97.103, ok: true },
+      ],
+    };
+
+    it('identifies the slowest executed gates and records the runner class', () => {
+      const summary = summarizeGateTimingReport(full, 'batch');
+      expect(summary).toMatchObject({
+        gateCount: 3,
+        totalSeconds: 1074.333,
+        cpuModel: 'AMD EPYC 9V74 80-Core Processor',
+        logicalCpus: 4,
+      });
+      expect(summary.slowest.map((gate) => gate.gate)).toEqual(['land', 'short-line', 'clauses']);
+      expect(full.gates.map((gate) => gate.gate)).toEqual(['clauses', 'land', 'short-line']);
+      // A report never changes the independently enforced budget.
+      expect(checkGateDuration('batch', 1074.333, readGateDurations(), 4).ok).toBe(false);
+    });
+
+    it('distinguishes proof-only zero-gate runs from real measured batches', () => {
+      expect(summarizeGateTimingReport({ ...full, gates: [], totalSeconds: 0 }, 'batch'))
+        .toMatchObject({ gateCount: 0, slowest: [] });
+    });
+
+    it('rejects wrong lanes, duplicate gates and invalid durations rather than misreporting them', () => {
+      expect(() => summarizeGateTimingReport(full, 'war')).toThrow(/wrong-lane/);
+      expect(() => summarizeGateTimingReport({
+        ...full, gates: [...full.gates, full.gates[0]],
+      }, 'batch')).toThrow(/duplicate/);
+      expect(() => summarizeGateTimingReport({
+        ...full, gates: [{ gate: 'land', seconds: Number.NaN, ok: true }],
+      }, 'batch')).toThrow(/per-gate/);
+    });
+
+    it('wires per-gate evidence into the CI guard without replacing its budget', () => {
+      const workflow = readFileSync(join(REPO, '.github/workflows/check.yml'), 'utf8');
+      expect(workflow).toContain(
+        'node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed" --timings-json gate-timings-${{ matrix.lane }}.json',
+      );
     });
   });
 
