@@ -40,7 +40,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
 
   for (const [hall, members] of halls(w, w.year)) {
     const branch = w.branches.get(hall);
-    if ((branch?.grievance ?? 0) > 0) {
+    if (branch && branch.extinct === undefined && branch.foundedYear <= w.year && branch.grievance > 0) {
       for (const person of members) {
         add(out, person.id, msg(ctx, 'relevance.hall_grievance', 'their hall holds a grievance'));
       }
@@ -73,7 +73,9 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       break;
     case 'secure_branches':
       for (const [hall, members] of halls(w, w.year)) {
-        if (hall === MAIN_BRANCH || viableCadetHall(members, w.year)) continue;
+        const branch = w.branches.get(hall);
+        if (hall === MAIN_BRANCH || !branch || branch.extinct !== undefined
+          || branch.foundedYear > w.year || viableCadetHall(members, w.year)) continue;
         // Staff living in the hall cannot preserve its bloodline; the
         // relevance cue belongs to family members who can act on this aim.
         for (const person of members.filter((p) => cadetFamilyMember(p, w.year))) {

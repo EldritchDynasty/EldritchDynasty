@@ -141,7 +141,7 @@ function returnHome(ctx: SimCtx, p: Person): void {
   currentMembership(p, w.year)!.to = w.year;
   const { from: _from, to: _to, ...home } = held.home;
   const branch = home.branch && home.branch !== MAIN_BRANCH ? w.branches.get(home.branch) : undefined;
-  p.membership.push({ ...home, branch: branch && isActiveBranch(branch) ? branch.id : MAIN_BRANCH, from: w.year });
+  p.membership.push({ ...home, branch: branch && isActiveBranch(branch) && branch.foundedYear <= w.year ? branch.id : MAIN_BRANCH, from: w.year });
   // Do not restore cast slots: a successor may have taken the seal while the
   // captive was away. Ordinary succession remains its one owner.
   for (const study of held.studies ?? []) {

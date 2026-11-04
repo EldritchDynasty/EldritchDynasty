@@ -365,6 +365,36 @@ describe('endowParcel and recallParcel (issue #91, Stage H)', () => {
     expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBeUndefined();
   });
 
+  it('refuses a future-founded hall without altering the deed, then endows it at founding (#2810)', () => {
+    const ctx = testWorld(bundle);
+    makeBranch(ctx, 'branch_future');
+    const hall = ctx.world.branches.get('branch_future')!;
+    hall.foundedYear = ctx.world.year + 3;
+    const pages = ctx.world.chronicle.length;
+    const before = heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder;
+    expect(endowParcel(ctx, 'hallowfield', 'branch_future').ok).toBe(false);
+    expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBe(before);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    ctx.world.year = hall.foundedYear - 1;
+    expect(endowParcel(ctx, 'hallowfield', 'branch_future').ok).toBe(false);
+    ctx.world.year = hall.foundedYear;
+    expect(endowParcel(ctx, 'hallowfield', 'branch_future').ok).toBe(true);
+    expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBe('branch_future');
+  });
+
+  it('recalls a corrupt future-hall endowment without charging that hall a historical grievance (#2810)', () => {
+    const ctx = testWorld(bundle);
+    makeBranch(ctx, 'branch_future');
+    expect(endowParcel(ctx, 'hallowfield', 'branch_future').ok).toBe(true);
+    const hall = ctx.world.branches.get('branch_future')!;
+    hall.grievance = 22;
+    hall.foundedYear = ctx.world.year + 4;
+    expect(recallParcel(ctx, 'hallowfield').ok).toBe(true);
+    expect(hall.grievance).toBe(22);
+    expect(heldParcels(ctx).find((p) => p.defId === 'hallowfield')?.holder).toBeUndefined();
+  });
+
   it('refuses an extinct branch — nobody is left to answer for it', () => {
     const ctx = testWorld(bundle);
     makeBranch(ctx, 'branch_a', true);

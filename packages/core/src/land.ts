@@ -587,7 +587,7 @@ export function endowParcel(ctx: SimCtx, parcel: string, branch: string): OrderR
     };
   }
   const b = w.branches.get(branch);
-  if (!b || !isActiveBranch(b)) {
+  if (!b || !isActiveBranch(b) || b.foundedYear > w.year) {
     return { ok: false, reason: msg(ctx, 'land.refuse.endow_no_hall', 'no such hall stands to hold it') };
   }
   if (state.holder === branch) return { ok: true }; // already endowed there
@@ -617,7 +617,7 @@ export function recallParcel(ctx: SimCtx, parcel: string): OrderResult {
   // Taking back a gift is not free. The caput never leaves the seat, and
   // escheat of a dead hall must not punish a hall that no longer exists.
   // Base yield measures the size of the broken promise, independent of weather.
-  if (b && isActiveBranch(b)) {
+  if (b && isActiveBranch(b) && b.foundedYear <= w.year) {
     b.grievance = Math.min(100, b.grievance + 2 + (def?.baseYield ?? 0) * 0.25);
   }
   state.holder = undefined;

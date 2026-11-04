@@ -227,6 +227,23 @@ describe('named family captivity (#1908)', () => {
     expect(currentMembership(p, ctx.world.year)?.branch).toBe(ended ? 'main' : 'cadet-test');
   });
 
+  it.each([0, 1])('restores a captive to a cadet hall only from its founding year (offset %s, #2810)', offset => {
+    const ctx = testWorld(content);
+    const year = ctx.world.year;
+    const p = place(ctx, { sex: 'female', age: 25, branch: 'future-hall' });
+    p.membership[0]!.kind = 'cadet';
+    ctx.world.branches.set('future-hall', {
+      id: asId('future-hall'), name: 'The Future Hall', house: asId(ctx.world.playerHouse),
+      founder: p.id, splitFrom: 'main', foundedYear: year + 1, grievance: 60,
+    });
+    expect(captureFamily(ctx, p.id, CAPTOR, 10)).toBe(true);
+    ctx.world.year = year + offset;
+    expect(releaseCaptive(ctx, p.id)).toBe(true);
+    expect(currentMembership(p, ctx.world.year)?.branch).toBe(offset === 0 ? 'main' : 'future-hall');
+    expect(p.membership.filter((m) => m.to === undefined)).toHaveLength(1);
+    expect(p.captivity).toBeUndefined();
+  });
+
   it('normal mortality still reaches a captive, with no resurrection or payment after death', () => {
     const ctx = testWorld(content);
     const p = place(ctx, { sex: 'female', age: 300 });
