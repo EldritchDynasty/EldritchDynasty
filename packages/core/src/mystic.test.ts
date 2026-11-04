@@ -46,7 +46,7 @@ describe('future-dated Mystic target eligibility (#2792)', () => {
     ctx.world.library.set(book, { id: book, acquiredYear: acquired, condition: 80 });
     const sex = canLearn('female', working.affinity) ? 'female' : 'male';
     const p = place(ctx, { sex, age: 30, awakened: true });
-    p.spellsKnown = working.books.map(asId);
+    p.spellsKnown = [...working.books];
     const site: SceneSite = { kind: 'book', book };
     const order = { person: p.id, working: working.id, target: site };
 
