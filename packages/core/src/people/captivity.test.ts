@@ -11,7 +11,7 @@ import { canonical, digestOf, loadGame, saveGame } from '../save.js';
 import { GameSession } from '../session.js';
 import { beginTutoring, order, tableView } from '../table.js';
 import { phase, place, testRng, testWorld } from '../testing.js';
-import { captureFamily, captureIntruder, quoteRansom, releaseCaptive } from './captivity.js';
+import { captureContractor, captureFamily, captureIntruder, quoteRansom, ransomCaptive, releaseCaptive, releaseIntruder } from './captivity.js';
 import { canTakePost, careerMortality, inBreedingPool } from './careers.js';
 import { beginStudy } from './library.js';
 import { ensureHead } from './succession.js';
@@ -369,4 +369,133 @@ describe('date-bound recovered captivity (#2829, #2830)', () => {
       }
     },
   );
+});
+
+
+describe('recovered custody before birth and before capture (#2867, #2868, #2869)', () => {
+  it('refuses to capture a future-born relative without pausing studies, tutoring or changing the save', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'female', age: 25 });
+    const birth = ctx.world.year + 2;
+    p.born = birth;
+    ctx.world.studies.push({ person: p.id, book: BOOK, completes: birth + 4 });
+    ctx.world.tutoring.push({ person: p.id, attr: 'mind', completes: birth + 3 });
+    const before = snapshot(ctx);
+
+    expect(captureFamily(ctx, p.id, CAPTOR, 27)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+    expect(p.captivity).toBeUndefined();
+
+    ctx.world.year = birth;
+    expect(captureFamily(ctx, p.id, CAPTOR, 27)).toBe(true);
+    expect(p.captivity?.since).toBe(birth);
+    expect(p.captivity?.studies).toHaveLength(1);
+    expect(p.captivity?.tutoring).toBeDefined();
+  });
+
+  it('refuses future-born foreign intruders until birth, then permits ordinary capture', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 25, house: 'house_calder' });
+    const birth = ctx.world.year + 1;
+    p.born = birth;
+    const before = snapshot(ctx);
+
+    expect(captureIntruder(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    ctx.world.year = birth;
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    expect(p.captivity?.since).toBe(birth);
+    expect(releaseIntruder(ctx, p.id)).toBe(true);
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+  });
+
+  it('applies the same pre-birth guard to paid outside field contractors', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'female', age: 30, house: 'house_calder' });
+    const year = ctx.world.year;
+    const birth = year + 2;
+    p.born = birth;
+    ctx.world.muster.commitments.push({
+      id: 'birth-bound-field', began: year, age: 'the_wars', men: 5,
+      from: {}, officers: [], credit: 0, status: 'in_the_field',
+    });
+    ctx.world.mystic.contracts.push({
+      id: 'birth-bound-hire', kind: 'hire', practitioner: p.id,
+      working: 'the_still_binding', stage: 'working',
+      started: year, ready: year, ends: birth + 4,
+      providerFee: 8, escrow: 0, worked: 0, payments: [],
+    });
+    ctx.world.mystic.assignments.push({
+      id: 'birth-bound-assignment', practitioner: p.id,
+      contract: 'birth-bound-hire', working: 'the_still_binding',
+      target: { kind: 'muster', commitment: 'birth-bound-field' }, bindings: {},
+      started: year, ready: year, paidPreparation: 0, paidThrough: year,
+      status: 'serving',
+      service: { servedYears: 0, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 0 },
+    });
+    const before = snapshot(ctx);
+
+    expect(captureContractor(ctx, p.id, CAPTOR, 12)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+    ctx.world.year = birth;
+    expect(captureContractor(ctx, p.id, CAPTOR, 12)).toBe(true);
+    expect(p.captivity?.home.house).toBe('house_calder');
+  });
+
+  it('hides future-born hostage records from ransom and release until birth', () => {
+    const ctx = testWorld(content);
+    ctx.world.treasury = 500;
+    const p = place(ctx, { sex: 'female', age: 25 });
+    const year = ctx.world.year;
+    expect(captureFamily(ctx, p.id, CAPTOR, 25)).toBe(true);
+    p.born = year + 2; // Recovered data: alive and held, though not yet born.
+    const before = snapshot(ctx);
+
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: false, price: 0 });
+    expect(tableView(ctx).captives.some(c => c.person === p.id)).toBe(false);
+    expect(ransomCaptive(ctx, p.id).ok).toBe(false);
+    expect(releaseCaptive(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    ctx.world.year = year + 2;
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: true, price: 25 });
+    expect(ransomCaptive(ctx, p.id).ok).toBe(true);
+    expect(ctx.world.treasury).toBe(475);
+    expect(p.captivity).toBeUndefined();
+    expect(ransomCaptive(ctx, p.id).ok).toBe(false);
+  });
+
+  it('does not release a future-born captured intruder before that intruder exists', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 24, house: 'house_calder' });
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    const birth = ctx.world.year + 2;
+    p.born = birth;
+    const before = snapshot(ctx);
+
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+    ctx.world.year = birth;
+    expect(releaseIntruder(ctx, p.id)).toBe(true);
+    expect(p.captivity).toBeUndefined();
+  });
+
+  it('does not release an intruder whose saved capture date lies in the future', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 24, house: 'house_calder' });
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    const releaseYear = ctx.world.year + 2;
+    p.captivity!.since = releaseYear;
+    const before = snapshot(ctx);
+
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+    ctx.world.year = releaseYear - 1;
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+    ctx.world.year = releaseYear;
+    expect(releaseIntruder(ctx, p.id)).toBe(true);
+    expect(p.captivity).toBeUndefined();
+    expect(releaseIntruder(ctx, p.id)).toBe(false);
+  });
 });
