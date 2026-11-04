@@ -62,6 +62,16 @@ export const BynameSourceS = z.discriminatedUnion('kind', [
     outcome: z.string().optional(),
     discrepancy: z.string().optional(),
   }).strict(),
+  /** The authored balance of Record pens used while this Head held the seal,
+   * sampled once when a successor takes the seat. There is no single page to
+   * cite, and these are the family's own pages, never an objective verdict. */
+  z.object({
+    kind: z.literal('reign'),
+    from: z.number(),
+    to: z.number(),
+    pen: z.enum(['record', 'omit', 'embellish', 'mixed']),
+    pages: z.number().int().min(2),
+  }).strict(),
 ]);
 export type BynameSource = z.infer<typeof BynameSourceS>;
 export type BynameSourceKind = BynameSource['kind'];
@@ -105,5 +115,5 @@ export type BynameGrant = z.infer<typeof BynameGrantS>;
  *   buried    the lie it rests on was buried — unproven, never "true"
  *   unknown   a byname with no saved source (authored, or an older save)
  */
-export const BYNAME_STANDINGS = ['attested', 'claimed', 'contested', 'buried', 'unknown'] as const;
+export const BYNAME_STANDINGS = ['attested', 'claimed', 'contested', 'buried', 'reign', 'unknown'] as const;
 export type BynameStanding = typeof BYNAME_STANDINGS[number];
