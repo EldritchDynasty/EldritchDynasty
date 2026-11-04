@@ -91,14 +91,14 @@ export function dutyPlaceOf(ctx: SimCtx, site: SceneSite, bindings: Record<strin
     case 'covert': return activeCovert(ctx, site.operation) ? { operation: site.operation } : undefined;
     case 'person': {
       const p = w.people.get(site.person);
-      const hall = p && p.status === 'alive' ? homeHall(ctx, p) : undefined;
+      const hall = aliveAtYear(ctx, p) ? homeHall(ctx, p) : undefined;
       return hall ? { hall } : undefined;
     }
     case 'parcel': return { parcel: site.parcel };
     case 'hall': {
       if (typeof site.hall === 'string') return { hall: MAIN_BRANCH };
       const anchor = w.people.get(bindings[site.hall.slot] ?? '');
-      const hall = anchor && homeHall(ctx, anchor);
+      const hall = aliveAtYear(ctx, anchor) ? homeHall(ctx, anchor) : undefined;
       return hall ? { hall } : undefined;
     }
     case 'muster': {
@@ -127,8 +127,14 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
   ]);
 }
 
-function free(ctx: SimCtx, p: Person | undefined): p is Person {
+/** An imported status can precede birth or outlive a recorded death. */
+function aliveAtYear(ctx: SimCtx, p: Person | undefined): p is Person {
   return p !== undefined && p.status === 'alive'
+    && p.born <= ctx.world.year && (p.died === undefined || p.died > ctx.world.year);
+}
+
+function free(ctx: SimCtx, p: Person | undefined): p is Person {
+  return aliveAtYear(ctx, p)
     && currentMembership(p, ctx.world.year)?.kind !== 'hostage';
 }
 
@@ -189,13 +195,21 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
     }
     case 'party': case 'elsewhere': case 'parcel': return { site, people: distinct(named(site.slots)) };
     case 'muster': {
-      if (site.commitment !== undefined && !w.muster.commitments.some(c =>
-        c.id === site.commitment && c.status === 'in_the_field' && c.began <= w.year)) return { site, people: [] };
-      return { site, people: distinct([...deployed]) };
+      // A muster scene is not a global deployment roster. Covert teams and
+      // outside service have their own scene sites, and an explicitly named
+      // commitment cannot import officers from another field.
+      const commitments = activeMuster(ctx).filter(c =>
+        site.commitment === undefined || c.id === site.commitment);
+      const ids = new Set(commitments.map(c => c.id));
+      return { site, people: distinct([
+        ...commitments.flatMap(c => c.officers),
+        ...w.mystic.assignments.filter(a => a.target.kind === 'muster'
+          && ids.has(a.target.commitment ?? '')).map(a => a.practitioner),
+      ]) };
     }
     case 'hall': {
       const anchor = typeof site.hall === 'string' ? undefined : w.people.get(soleCast(fill, site.hall.slot) ?? '');
-      if (typeof site.hall !== 'string' && (!anchor || !homeHall(ctx, anchor))) {
+      if (typeof site.hall !== 'string' && (!aliveAtYear(ctx, anchor) || !homeHall(ctx, anchor))) {
         return { site, people: [] };
       }
       const hall = anchor ? homeHall(ctx, anchor)! : MAIN_BRANCH;
