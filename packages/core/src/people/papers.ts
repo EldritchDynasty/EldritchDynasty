@@ -185,6 +185,9 @@ export function filePedigree(ctx: SimCtx, p: Person, grade: PedigreeGrade): Line
   if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) {
     throw new Error('cannot file a pedigree for a dead or detached person');
   }
+  if (p.born > ctx.world.year) {
+    throw new Error('cannot file a pedigree before birth');
+  }
 
   const doc: LineageDocument = {
     generations: PEDIGREE_COVERS[grade],
@@ -229,6 +232,8 @@ export function tickPapers(ctx: SimCtx, rng: Rng): number {
   let caught = 0;
 
   for (const p of w.people.household(w.playerHouse, w.year)) {
+    // A recovered current membership does not make someone born in a later year present.
+    if (p.born > w.year) continue;
     for (const doc of p.lineageDocuments) {
       if (!doc.forged || (doc.exposed !== undefined && doc.exposed <= w.year)) continue;
       const grade = gradeOf(doc);
