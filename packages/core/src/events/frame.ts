@@ -113,7 +113,7 @@ function readHolds(ctx: SimCtx, r: FrameRead): boolean {
     return n >= r.anyDiscrepancy.atLeast;
   }
   if ('recorded' in r) {
-    return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'record').length
+    return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'record' && d.year <= w.year).length
       >= r.recorded.atLeast;
   }
   if ('chronicled' in r) {
@@ -123,7 +123,7 @@ function readHolds(ctx: SimCtx, r: FrameRead): boolean {
     return w.chronicle.some((c) => c.eventId === r.chronicled);
   }
   if ('omitted' in r) {
-    return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'omit').length
+    return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'omit' && d.year <= w.year).length
       >= r.omitted.atLeast;
   }
   return assertNever(r);
