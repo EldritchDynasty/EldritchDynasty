@@ -76,7 +76,8 @@ function widowOfHead(ctx: SimCtx, p: Person): boolean {
     if (died !== undefined && (died < marriage.from
       || (marriage.to !== undefined && marriage.to < died))) return false;
     return ctx.world.succession.some((held) =>
-      held.person === spouse.id && held.from <= ctx.world.year);
+      held.person === spouse.id && held.from <= ctx.world.year
+      && (died === undefined || held.from <= died));
   });
 }
 
