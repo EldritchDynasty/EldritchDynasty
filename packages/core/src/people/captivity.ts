@@ -18,10 +18,19 @@ export function captureFamily(ctx: SimCtx, person: string, captor: string, ranso
 
 /** A named contracted field reader is held under the same real custody/home record. */
 export function captureContractor(ctx: SimCtx, person: string, captor: string, ransom: number): boolean {
-  const c = ctx.world.mystic.contracts.find(c => c.practitioner === person && c.stage !== 'closed' && c.providerFee > 0);
-  const duty = c && ctx.world.mystic.assignments.find(a => a.contract === c.id);
-  const commitment = duty?.target.kind === 'muster' ? duty.target.commitment : undefined;
-  if (!commitment || !ctx.world.muster.commitments.some(m => m.id === commitment && m.status === 'in_the_field')) return false;
+  const w = ctx.world;
+  // Imported future contracts, field assignments and commitments are saved
+  // history, not people presently serving in the field. Scan all eligible
+  // contracts: an earlier future row must not hide an active current one.
+  const deployed = w.mystic.contracts.some(c => {
+    if (c.practitioner !== person || c.stage === 'closed' || c.providerFee <= 0 || c.started > w.year) return false;
+    return w.mystic.assignments.some(a => {
+      if (a.contract !== c.id || a.started > w.year || a.target.kind !== 'muster') return false;
+      return w.muster.commitments.some(m =>
+        m.id === a.target.commitment && m.status === 'in_the_field' && m.began <= w.year);
+    });
+  });
+  if (!deployed) return false;
   return takeCaptive(ctx, person, captor, ransom, true);
 }
 
@@ -78,7 +87,8 @@ function captive(ctx: SimCtx, id: string): Person | undefined {
   const p = ctx.world.people.get(id);
   if (!p || p.status !== 'alive' || !p.captivity || p.captivity.since > ctx.world.year) return undefined;
   if (p.captivity.home.house !== ctx.world.playerHouse
-    && !ctx.world.mystic.contracts.some(c => c.practitioner === p.id && c.providerFee > 0)) return undefined;
+    && !ctx.world.mystic.contracts.some(c =>
+      c.practitioner === p.id && c.providerFee > 0 && c.started <= ctx.world.year)) return undefined;
   const membership = currentMembership(p, ctx.world.year);
   return membership?.kind === 'hostage' && membership.house === p.captivity.captor
     && p.membership.filter(m => m.to === undefined).length === 1 ? p : undefined;
@@ -147,9 +157,10 @@ function returnHome(ctx: SimCtx, p: Person): void {
   for (const study of held.studies ?? []) {
     if (p.spellsKnown.some(book => String(book) === study.book)) continue;
     const copy = w.library.get(study.book);
-    if (copy && copy.restoresAt === undefined && !w.studies.some(term => term.person === p.id && term.book === study.book)) {
+    if (copy && copy.acquiredYear <= w.year && copy.restoresAt === undefined
+      && !w.studies.some(term => term.person === p.id && term.book === study.book)) {
       w.studies.push({ person: p.id, book: study.book, completes: w.year + study.remainingYears });
-    } else if (!copy || copy.restoresAt !== undefined) {
+    } else if (!copy || copy.acquiredYear > w.year || copy.restoresAt !== undefined) {
       const book = ctx.content.spellbook(study.book);
       w.chronicle.push({
         year: w.year, weight: 'line', named: false, people: [p.id],
