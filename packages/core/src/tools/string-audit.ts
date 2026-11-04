@@ -444,9 +444,11 @@ function developerLiteralStarts(src: string, file?: string): Set<number> {
   }
   function visit(node: ts.Node): void {
     if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      // Constructor/callee identity, not a lexical suffix: RangeError arguments
+      // are developer diagnostics, while nested player-facing calls survive.
       const callee = node.expression;
       const diagnostic = ts.isIdentifier(callee)
-        ? /^(?:Error|assert\w*|describe|it|test|expect)$/.test(callee.text)
+        ? /^(?:Error|RangeError|assert\w*|describe|it|test|expect)$/.test(callee.text)
         : ts.isPropertyAccessExpression(callee) && ts.isIdentifier(callee.expression)
           && callee.expression.text === 'console';
       if (diagnostic) node.arguments?.forEach(mark);
