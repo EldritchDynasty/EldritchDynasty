@@ -19,13 +19,14 @@ export const MYSTIC_HIRE_YEARS = 3;
 export const MYSTIC_CLIENT_INTERVAL = 12;
 export const MYSTIC_BROKER_INTERVAL = 10;
 export const MYSTIC_PROMISE_YEARS = 20;
-const open = (c: MysticContract) => c.stage !== 'closed';
+const present = (c: MysticContract, year: number) => c.started <= year;
+const open = (c: MysticContract, year: number) => present(c, year) && c.stage !== 'closed';
 const account = (ctx: SimCtx, text: string, people: string[] = []) => ctx.world.chronicle.push({
   year: ctx.world.year, weight: 'paragraph' as const, named: true, people, text,
 });
 
 function busy(ctx: SimCtx): string | undefined {
-  return ctx.world.mystic.contracts.some(open)
+  return ctx.world.mystic.contracts.some(c => open(c, ctx.world.year))
     ? msg(ctx, 'mystic.contract.busy', 'one outside service is already committed, including its return journey') : undefined;
 }
 
@@ -98,11 +99,12 @@ export function quoteCommission(ctx: SimCtx, person: string, workingID: string, 
   const gap = practitionerGap(ctx, p, working, { outside: !isCurrentFamily(ctx, p) });
   if (gap || w.mystic.assignments.some(a => a.practitioner === p.id)) return refuse(msg(ctx, 'mystic.commission.unavailable', 'that practitioner is not available for this commission'));
   const client = knownClients(ctx).find(c => c.house === patron);
-  const obligation = promise && w.mystic.contracts.find(c => c.id === promise && c.stage === 'closed' && c.result === 'fulfilled'
+  const obligation = promise && w.mystic.contracts.find(c => present(c, w.year) && c.id === promise && c.stage === 'closed' && c.result === 'fulfilled'
     && c.patron === patron && c.working === workingID && c.renewBy !== undefined && !c.promiseAnswered);
   if (promise && !obligation) return refuse(msg(ctx, 'mystic.commission.promise_lost', 'that return obligation is no longer open'));
   if (!client && !obligation) return refuse(msg(ctx, 'mystic.commission.client', 'there is no known reachable patron for that work'));
-  const previous = w.mystic.contracts.filter(c => c.kind === 'commission' && c.patron === patron).at(-1);
+  const previous = w.mystic.contracts.filter(c => present(c, w.year) && c.kind === 'commission' && c.patron === patron)
+    .reduce<MysticContract | undefined>((latest, c) => !latest || c.started > latest.started ? c : latest, undefined);
   if (previous && w.year < previous.started + MYSTIC_CLIENT_INTERVAL) return refuse(msg(ctx, 'mystic.commission.interval', 'that house offers no new commission before {YEAR}', { YEAR: String(previous.started + MYSTIC_CLIENT_INTERVAL) }));
   if (dutyFunds(ctx, patron) < quote.income) return refuse(msg(ctx, 'mystic.commission.unfunded', 'that house has not funded this commission'));
   if (w.treasury - quote.price < DEBT_FLOOR) return refuse(msg(ctx, 'mystic.commission.cost', 'the house cannot pay the service preparation'));
@@ -166,6 +168,8 @@ export function prepareMysticContracts(ctx: SimCtx): void {
     delete state.search;
   }
   for (const c of state.contracts) {
+    // Preserve future-started contracts without letting today's phases act on them.
+    if (!present(c, w.year)) continue;
     if (c.stage === 'preparing' && w.year >= c.ready) c.stage = 'working';
     if (c.stage === 'working' && w.year > c.ends) {
       c.stage = 'returning'; c.returnsAt = c.ends + 1;
@@ -191,7 +195,7 @@ export function prepareMysticContracts(ctx: SimCtx): void {
 export function settleMysticContracts(ctx: SimCtx): void {
   const w = ctx.world;
   const serving = new Set(liveDuties(ctx, 'commission').map(row => row.a.id));
-  for (const c of w.mystic.contracts.filter(open)) {
+  for (const c of w.mystic.contracts.filter(c => open(c, w.year))) {
     if (c.stage !== 'working' || w.year < c.ready) continue;
     const a = w.mystic.assignments.find(a => a.contract === c.id);
     const working = ctx.content.mysticWorking(c.working);
@@ -213,7 +217,7 @@ export function settleMysticContracts(ctx: SimCtx): void {
       const after = relate(w, c.patron, w.playerHouse, working.benefit.favour).sentiment;
       let honoured = false;
       for (const earlier of w.mystic.contracts) {
-        if (earlier === c || earlier.patron !== c.patron || earlier.working !== c.working || earlier.renewBy === undefined || earlier.promiseAnswered) continue;
+        if (earlier === c || !present(earlier, w.year) || earlier.patron !== c.patron || earlier.working !== c.working || earlier.renewBy === undefined || earlier.promiseAnswered) continue;
         if (w.year <= earlier.renewBy || c.satisfiesPromise === earlier.id) {
           earlier.promiseAnswered = true; honoured = true;
         }
@@ -224,13 +228,14 @@ export function settleMysticContracts(ctx: SimCtx): void {
 }
 
 export function commissionIncome(ctx: SimCtx): number {
-  return ctx.world.mystic.contracts.reduce((sum,c) => sum + c.payments.filter(p => p.year === ctx.world.year).reduce((n,p) => n + p.amount, 0), 0);
+  return ctx.world.mystic.contracts.filter(c => present(c, ctx.world.year))
+    .reduce((sum,c) => sum + c.payments.filter(p => p.year === ctx.world.year).reduce((n,p) => n + p.amount, 0), 0);
 }
 
 function workingName(ctx: SimCtx, w: MysticWorkingDef): string { return proseForContentField(ctx, 'mysticWorkings', w.id, 'name', w.name); }
 
 export function outsideServicesView(ctx: SimCtx) {
-  const w = ctx.world; const occupied = w.mystic.contracts.some(open);
+  const w = ctx.world; const occupied = w.mystic.contracts.some(c => open(c, w.year));
   const professionals = w.mystic.contacts.map(id => w.people.get(id)).filter((p): p is Person => p !== undefined && p.status === 'alive');
   const hires = occupied ? [] : professionals.flatMap(p => ctx.content.mysticWorkings.filter(d => hasLearned(p,d) && d.benefit.kind !== 'commission' && d.benefit.kind !== 'covert_support')
     .flatMap(d => mysticTargets(ctx,d).map(target => {
@@ -242,18 +247,18 @@ export function outsideServicesView(ctx: SimCtx) {
   const commissions = occupied ? [] : workers.flatMap(p => ctx.content.mysticWorkings.filter(d => d.benefit.kind === 'commission' && hasLearned(p,d))
     .flatMap(d => knownClients(ctx).map(client => ({ order: { kind: 'mysticCommission' as const, person: p.id, working: d.id, patron: client.house },
       ...quoteCommission(ctx,p.id,d.id,client.house), person: p.name, working: workingName(ctx,d), patron: w.houses.get(client.house)?.name ?? client.house }))));
-  const returns = occupied ? [] : w.mystic.contracts.filter(c=>c.renewBy!==undefined&&!c.promiseAnswered&&c.patron).flatMap(c=>
+  const returns = occupied ? [] : w.mystic.contracts.filter(c=>present(c,w.year)&&c.renewBy!==undefined&&!c.promiseAnswered&&c.patron).flatMap(c=>
     workers.filter(p=>{const d=ctx.content.mysticWorking(c.working);return d&&hasLearned(p,d);}).map(p=>({
       order:{kind:'mysticReturn' as const,person:p.id,promise:c.id},...quoteCommission(ctx,p.id,c.working,c.patron!,c.id),
       person:p.name,working:workingName(ctx,ctx.content.mysticWorking(c.working)!),patron:w.houses.get(c.patron!)?.name??c.patron! })));
   return { search: quotePractitionerSearch(ctx), hires, commissions, returns,
-    contracts: w.mystic.contracts.filter(c => c.stage !== 'closed').map(c => ({ id: c.id, person: w.people.get(c.practitioner)?.name ?? c.practitioner,
+    contracts: w.mystic.contracts.filter(c => open(c, w.year)).map(c => ({ id: c.id, person: w.people.get(c.practitioner)?.name ?? c.practitioner,
       ready: c.ready, ends: c.ends, returnsAt: c.returnsAt ?? c.ends + 1, stage: c.stage, result: c.result, receipt: c.receipt, paid: c.providerFee +
         (w.mystic.assignments.find(a => a.contract === c.id)?.service.spent ?? w.mystic.services.find(a => a.contract === c.id)?.service.spent ?? 0),
       earned: c.payments.reduce((sum,p) => sum + p.amount,0) })),
-    history: w.mystic.contracts.filter(c => c.stage === 'closed').slice(-6).reverse().map(c => ({ id:c.id, receipt:c.receipt, ended:c.returnsAt,
+    history: w.mystic.contracts.filter(c => present(c, w.year) && c.stage === 'closed').slice(-6).reverse().map(c => ({ id:c.id, receipt:c.receipt, ended:c.returnsAt,
       earned:c.payments.reduce((sum,p) => sum + p.amount,0), result:c.result })),
-    promises: w.mystic.contracts.filter(c => c.renewBy !== undefined && !c.promiseAnswered).map(c => ({ id:c.id, due:c.renewBy!, overdue:c.promiseBrokenAt!==undefined,
+    promises: w.mystic.contracts.filter(c => present(c, w.year) && c.renewBy !== undefined && !c.promiseAnswered).map(c => ({ id:c.id, due:c.renewBy!, overdue:c.promiseBrokenAt!==undefined,
       patron:w.houses.get(c.patron!)?.name ?? c.patron! })),
     terms: msg(ctx, 'mystic.contract.terms', 'A broker search costs {BROKER} crowns and promises no affinity. An outside reader charges {FEE} crowns besides the working’s quoted preparation and upkeep. One outside service can be open at a time. A hire covers {TERM} working years; a commission states its funded pay and term. Travel and return occupy the named person. Their book waits by its remaining term. A completed commission promises a trained reader’s return within {PROMISE} years; that obligation belongs to the house, even after the first worker dies.',
       { BROKER:String(MYSTIC_BROKER_FEE), FEE:String(MYSTIC_PROVIDER_FEE), TERM:String(MYSTIC_HIRE_YEARS), PROMISE:String(MYSTIC_PROMISE_YEARS) }),
