@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { loadContent } from '@ed/content';
 import { isLadderRole, validateBundle, type Filter } from '@ed/schema';
 import {
-  applyEffect, bootstrap, canTakePost, careerMortality, effectiveStudyYears, evalFilter,
-  inBreedingPool, madnessCoverOf, order, phase, place, runStandingOrders, tableView, testRng,
+  applyEffect, bootstrap, canTakePost, careerMortality, effectiveStudyYears, evalCondition, evalFilter,
+  inBreedingPool, madnessCoverOf, order, phase, place, recurringGrossIncome, runStandingOrders, tableView, testRng,
   tickCareers,
 } from '@ed/core';
 
@@ -462,5 +462,45 @@ describe('career start-year boundaries (#2847, #2848, #2849)', () => {
     ctx.world.year = firstYear;
     expect(careerMortality(ctx, soldier)).toBe(ctx.content.mustCareer('military').extraMortality);
     expect(madnessCoverOf(ctx, [priest, soldier])).toBe(ctx.content.mustCareer('clergy').madnessCover);
+  });
+});
+
+
+describe('future career effects on content gates and forecasts (#2852)', () => {
+  it('does not count a future merchant in posts, tenure or cast filters before service', () => {
+    const ctx = bootstrap(bundle, 2852, 1042);
+    const merchant = place(ctx, { sex: 'male', age: 30, name: 'Not Yet Placed' });
+    const firstYear = ctx.world.year + 3;
+    merchant.career = { career: 'merchant' as never, from: firstYear };
+    const posts = { posts: { op: 'gte' as const, value: 1, career: ['merchant'] } };
+    const tenure = { postHeldFor: { career: 'merchant', op: 'gte' as const, years: 0 } };
+    const career = { career: ['merchant'] as never };
+
+    expect(evalCondition(posts, ctx)).toBe(false);
+    expect(evalCondition(tenure, ctx)).toBe(false);
+    expect(evalFilter(career, merchant, ctx, {})).toBe(false);
+    expect(merchant.career.from).toBe(firstYear);
+
+    ctx.world.year = firstYear;
+    expect(evalCondition(posts, ctx)).toBe(true);
+    expect(evalCondition(tenure, ctx)).toBe(true);
+    expect(evalFilter(career, merchant, ctx, {})).toBe(true);
+  });
+
+  it('does not promise future career income in the present-year gross forecast', () => {
+    const ctx = bootstrap(bundle, 285201, 1042);
+    const merchant = place(ctx, { sex: 'male', age: 30, name: 'Soon A Merchant' });
+    const before = recurringGrossIncome(ctx);
+    const firstYear = ctx.world.year + 2;
+    merchant.career = { career: 'merchant' as never, from: firstYear };
+
+    expect(recurringGrossIncome(ctx)).toBe(before);
+    expect(merchant.career.from).toBe(firstYear);
+    // The same saved job may count in an income quote from its actual first year.
+    ctx.world.year = firstYear;
+    const withJob = recurringGrossIncome(ctx);
+    merchant.career = undefined;
+    const withoutJob = recurringGrossIncome(ctx);
+    expect(withJob - withoutJob).toBe(ctx.content.mustCareer('merchant').income.base);
   });
 });
