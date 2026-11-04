@@ -46,7 +46,7 @@ function takeCaptive(ctx: SimCtx, person: string, captor: string, ransom: number
   const w = ctx.world;
   const p = w.people.get(person);
   const home = p && currentMembership(p, w.year);
-  if (!p || p.status !== 'alive' || p.captivity
+  if (!p || p.status !== 'alive' || p.born > w.year || p.captivity
     || !home || home.to !== undefined || p.membership.filter(m => m.to === undefined).length !== 1
     || home.house === captor || !ctx.content.house(captor)
     || !Number.isSafeInteger(ransom) || ransom < 0) return false;
@@ -77,7 +77,8 @@ function takeCaptive(ctx: SimCtx, person: string, captor: string, ransom: number
 /** Release a foreign prisoner without restoring a role somebody else now holds. */
 export function releaseIntruder(ctx: SimCtx, person: string): boolean {
   const p = ctx.world.people.get(person);
-  if (!p || p.status !== 'alive' || p.captivity?.captor !== ctx.world.playerHouse
+  if (!p || p.status !== 'alive' || p.born > ctx.world.year
+    || p.captivity?.captor !== ctx.world.playerHouse || p.captivity.since > ctx.world.year
     || p.captivity.home.house === ctx.world.playerHouse
     || currentMembership(p, ctx.world.year)?.kind !== 'hostage') return false;
   returnHome(ctx, p);
@@ -86,7 +87,8 @@ export function releaseIntruder(ctx: SimCtx, person: string): boolean {
 
 function captive(ctx: SimCtx, id: string): Person | undefined {
   const p = ctx.world.people.get(id);
-  if (!p || p.status !== 'alive' || !p.captivity || p.captivity.since > ctx.world.year) return undefined;
+  if (!p || p.status !== 'alive' || p.born > ctx.world.year
+    || !p.captivity || p.captivity.since > ctx.world.year) return undefined;
   if (p.captivity.home.house !== ctx.world.playerHouse
     && !ctx.world.mystic.contracts.some(c =>
       c.practitioner === p.id && c.providerFee > 0 && c.started <= ctx.world.year)) return undefined;
