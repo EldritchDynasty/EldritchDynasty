@@ -153,6 +153,8 @@ describe('an interlude shows its scene, then its line', () => {
   const ID = 'frame_the_page_he_does_not_turn';
   const present = (mode: 'original' | 'plainenglish', outcomes?: (o: Outcome) => Outcome) => {
     const game = newGame(bundle, { seed: 2615, proseMode: mode });
+    // This is a 1077 page: its Record decision is only evidence from that year onwards.
+    game.ctx.world.year = 1077;
     // Since #1987 this scene names the blank it reads, so give it one to name.
     game.ctx.world.chronicle.push({
       id: 'chr_blank', year: 1077, weight: 'paragraph', text: null, eventId: 'the_letters_to_the_weighers',
@@ -207,6 +209,9 @@ describe('an interlude shows its scene, then its line', () => {
 describe('a scene that reads the blanks names one', () => {
   const ID = 'frame_the_page_he_does_not_turn';
   const blank = (ctx: ReturnType<typeof bootstrap>, id: string, year: number, subject?: string) => {
+    // Fixture pages are historical evidence at the time the frame reads them.
+    // Future-dated Record choices must not unlock this year's interlude (#2741).
+    ctx.world.year = Math.max(ctx.world.year, year);
     ctx.world.chronicle.push({
       id, year, weight: 'paragraph', text: null, eventId: 'the_letters_to_the_weighers', named: false, record: 'omit',
       ...(subject ? { subject } : {}),
