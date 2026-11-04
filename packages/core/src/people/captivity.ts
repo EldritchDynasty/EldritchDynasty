@@ -6,6 +6,19 @@ import { proseForContentField } from '../prose.js';
 import { isCurrentFamily } from '../presence.js';
 import { cancelDecisionArcs } from '../events/arcs.js';
 
+/** A recovered status-alive person can still carry a death date already in force. */
+function aliveAt(ctx: SimCtx, p: Person): boolean {
+  return p.status === 'alive' && p.born <= ctx.world.year
+    && (p.died === undefined || p.died > ctx.world.year);
+}
+
+/** Ransom and direct intruder release must agree on custody before restoring it. */
+function heldAtCaptor(ctx: SimCtx, p: Person): boolean {
+  const membership = currentMembership(p, ctx.world.year);
+  return membership?.kind === 'hostage' && membership.house === p.captivity?.captor
+    && p.membership.filter(m => m.to === undefined).length === 1;
+}
+
 /** Shared by field and covert incidents. Captives stay alive in PersonStore;
  * their foreign hostage membership removes residence, not blood or mortality.
  * This function rolls nothing and never kills, seats a Head or creates a post.
@@ -46,7 +59,7 @@ function takeCaptive(ctx: SimCtx, person: string, captor: string, ransom: number
   const w = ctx.world;
   const p = w.people.get(person);
   const home = p && currentMembership(p, w.year);
-  if (!p || p.status !== 'alive' || p.born > w.year || p.captivity
+  if (!p || !aliveAt(ctx, p) || p.captivity
     || !home || home.to !== undefined || p.membership.filter(m => m.to === undefined).length !== 1
     || home.house === captor || !ctx.content.house(captor)
     || !Number.isSafeInteger(ransom) || ransom < 0) return false;
@@ -77,24 +90,22 @@ function takeCaptive(ctx: SimCtx, person: string, captor: string, ransom: number
 /** Release a foreign prisoner without restoring a role somebody else now holds. */
 export function releaseIntruder(ctx: SimCtx, person: string): boolean {
   const p = ctx.world.people.get(person);
-  if (!p || p.status !== 'alive' || p.born > ctx.world.year
+  if (!p || !aliveAt(ctx, p)
     || p.captivity?.captor !== ctx.world.playerHouse || p.captivity.since > ctx.world.year
     || p.captivity.home.house === ctx.world.playerHouse
-    || currentMembership(p, ctx.world.year)?.kind !== 'hostage') return false;
+    || !heldAtCaptor(ctx, p)) return false;
   returnHome(ctx, p);
   return true;
 }
 
 function captive(ctx: SimCtx, id: string): Person | undefined {
   const p = ctx.world.people.get(id);
-  if (!p || p.status !== 'alive' || p.born > ctx.world.year
+  if (!p || !aliveAt(ctx, p)
     || !p.captivity || p.captivity.since > ctx.world.year) return undefined;
   if (p.captivity.home.house !== ctx.world.playerHouse
     && !ctx.world.mystic.contracts.some(c =>
       c.practitioner === p.id && c.providerFee > 0 && c.started <= ctx.world.year)) return undefined;
-  const membership = currentMembership(p, ctx.world.year);
-  return membership?.kind === 'hostage' && membership.house === p.captivity.captor
-    && p.membership.filter(m => m.to === undefined).length === 1 ? p : undefined;
+  return heldAtCaptor(ctx, p) ? p : undefined;
 }
 
 export interface RansomQuote {
