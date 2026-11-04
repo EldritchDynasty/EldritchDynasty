@@ -303,3 +303,84 @@ describe('Ledger and clause public glossary vocabulary (#2611)', () => {
     }
   });
 });
+
+
+describe('six public rule terms extend the existing glossary (#2808)', () => {
+  const expected = [
+    { id: 'regency', label: 'Regency', related: ['cadet_hall', 'expresser'] },
+    { id: 'cadet_hall', label: 'cadet hall', related: ['regency'] },
+    { id: 'muster', label: 'Muster', related: ['cadet_hall'] },
+    { id: 'threshold_affinity', label: 'Threshold Arts', related: [] },
+    { id: 'expresser', label: 'expressers', related: ['vessel'] },
+    { id: 'vessel', label: 'the Vessel', related: ['expresser'] },
+  ] as const;
+
+  it('retains every saved character and marks only the first occurrence in both prose modes', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      for (const { id, label } of expected) {
+        const source = `Before ${label}, after ${label}.`;
+        const pieces = splitFirstGlossary(source, mode);
+        expect(pieces).toEqual([
+          { text: 'Before ' },
+          { text: label, term: id },
+          { text: `, after ${label}.` },
+        ]);
+        expect(pieces.map(piece => piece.text).join('')).toBe(source);
+      }
+    }
+  });
+
+  it('uses the longest standalone term and avoids word-internal matches', () => {
+    for (const mode of ['original', 'plainenglish'] as const) {
+      expect(splitFirstGlossary('the Muster was called', mode)[0])
+        .toEqual({ text: 'the Muster', term: 'muster' });
+      expect(splitFirstGlossary('the Vessel was named', mode)[0])
+        .toEqual({ text: 'the Vessel', term: 'vessel' });
+      expect(splitFirstGlossary('Threshold affinities', mode)[0])
+        .toEqual({ text: 'Threshold affinities', term: 'threshold_affinity' });
+      for (const source of [
+        'preRegency', 'regencyhouse', 'preMuster', 'Mustered',
+        'cadethall', 'expresserhood', 'preVessel', 'Vessels',
+        'preThreshold Artsmanship',
+      ]) {
+        expect(splitFirstGlossary(source, mode)).toEqual([{ text: source }]);
+      }
+    }
+  });
+
+  it('matches new Plain English labels while retaining saved Original terminology', () => {
+    expect(splitFirstGlossary('A branch household persists.', 'plainenglish')).toEqual([
+      { text: 'A ' }, { text: 'branch household', term: 'cadet_hall' }, { text: ' persists.' },
+    ]);
+    expect(splitFirstGlossary('Threshold magic was studied.', 'plainenglish')).toEqual([
+      { text: 'Threshold magic', term: 'threshold_affinity' }, { text: ' was studied.' },
+    ]);
+    expect(splitFirstGlossary('A cadet branch persists.', 'plainenglish')).toEqual([
+      { text: 'A ' }, { text: 'cadet branch', term: 'cadet_hall' }, { text: ' persists.' },
+    ]);
+    expect(splitFirstGlossary('A cadet hall persists.', 'original')).toEqual([
+      { text: 'A ' }, { text: 'cadet hall', term: 'cadet_hall' }, { text: ' persists.' },
+    ]);
+  });
+
+  it('uses authored definitions, stable related ids and labels in both registers', () => {
+    const glossary = loadBundle().glossary;
+    for (const { id, related } of expected) {
+      const term = glossary.find(entry => entry.id === id);
+      expect(term).toBeDefined();
+      expect(term?.related).toEqual([...related]);
+      for (const mode of ['original', 'plainenglish'] as const) {
+        expect(glossaryDefinition(id, mode)).toBe(term?.definition[mode]);
+        expect(term?.definition[mode].length).toBeGreaterThan(35);
+        expect(term?.aliases[mode]).toContain(term?.names[mode]);
+      }
+      for (const other of related) expect(glossary.some(entry => entry.id === other)).toBe(true);
+    }
+    expect(glossaryDefinition('regency', 'plainenglish'))
+      .toContain('A woman of the family holds the seat');
+    expect(glossaryDefinition('threshold_affinity', 'plainenglish'))
+      .toContain('book-learned magic');
+    expect(glossaryDefinition('vessel', 'original'))
+      .toContain('beyond Hierophant');
+  });
+});
