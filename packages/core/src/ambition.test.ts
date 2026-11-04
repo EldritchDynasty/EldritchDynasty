@@ -227,6 +227,27 @@ describe('house ambition (issue #210)', () => {
     expect(ambitionView(g.ctx)?.progress.current).toBe(1);
     expect(relevantPeople(g.ctx).get(blood.id) ?? []).not.toContain('keeps a thin cadet hall alive');
 
+    // Recovered household membership can predate its hall's founding charter.
+    // A future, extinct or missing charter cannot earn progress (#2814).
+    const branch = w.branches.get(branchId)!;
+    const startYear = w.year;
+    branch.foundedYear = startYear + 2;
+    expect(ambitionView(g.ctx)?.progress.current).toBe(0);
+    w.year = startYear + 1;
+    expect(ambitionView(g.ctx)?.progress.current).toBe(0);
+    w.year = startYear + 2;
+    expect(ambitionView(g.ctx)?.progress.current).toBe(1);
+
+    w.year = startYear;
+    branch.foundedYear = startYear;
+    branch.extinct = startYear;
+    expect(ambitionView(g.ctx)?.progress.current).toBe(0);
+    branch.extinct = undefined;
+    expect(ambitionView(g.ctx)?.progress.current).toBe(1);
+    w.branches.delete(branchId);
+    expect(ambitionView(g.ctx)?.progress.current).toBe(0);
+    w.branches.set(branchId, branch);
+
     // Two non-blood residents cannot earn a bloodline ambition either.
     inBranch(blood, 'retainer');
     expect(ambitionView(g.ctx)?.progress.current).toBe(0);
@@ -772,6 +793,29 @@ describe('the opening hands the player a recommended ambition (#1867 §4)', () =
       id: branchId, name: 'The river hall', house: asId(w.playerHouse), founder: speaker.id,
       splitFrom: MAIN_BRANCH, foundedYear: w.year, speaker: speaker.id, grievance: 75,
     });
+    // A restored charter cannot threaten the seat before it was founded.
+    const branch = w.branches.get(branchId)!;
+    const now = w.year;
+    branch.foundedYear = now + 2;
+    expect(recommendAmbition(ctx)?.id).toBe('restore_ledger');
+    w.year = now + 1;
+    expect(recommendAmbition(ctx)?.id).toBe('restore_ledger');
+    w.year = now + 2;
+    expect(recommendAmbition(ctx)?.reason).toBe('The river hall is close to breaking with the seat.');
+    w.year = now;
+    branch.foundedYear = now;
+
+    // A higher-grievance hall that does not exist yet cannot obscure this one.
+    const laterId = asId<BranchId>('br_ambition_not_yet_founded');
+    w.branches.set(laterId, {
+      ...branch, id: laterId, name: 'The later hall', grievance: 99, foundedYear: now + 5,
+    });
+    expect(recommendAmbition(ctx)?.reason).toBe('The river hall is close to breaking with the seat.');
+    w.year = now + 5;
+    expect(recommendAmbition(ctx)?.reason).toBe('The later hall is close to breaking with the seat.');
+    w.year = now;
+    w.branches.delete(laterId);
+
     expect(recommendAmbition(ctx)).toMatchObject({
       id: 'secure_branches', reason: 'The river hall is close to breaking with the seat.',
     });
@@ -967,6 +1011,39 @@ describe('once the house has stood on God, the ascent reads the book (#1978)', (
     // Two pages carrying one lie are one lie standing, as the reckoning counts it.
     embellish(ctx, 'lie_open');
     expect(standingEmbellishedDisputes(ctx)).toBe(1);
+  });
+
+  it('excludes future and post-ending embellished pages until their year (#2812)', () => {
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      const ctx = godHouse({ proseMode });
+      const w = ctx.world;
+      const now = w.year;
+      embellish(ctx, 'already_written');
+      embellish(ctx, 'future_claim');
+      const futurePage = w.chronicle.find((entry) => entry.discrepancyId === 'future_claim')!;
+      futurePage.year = now + 2;
+
+      expect(standingEmbellishedDisputes(ctx)).toBe(1);
+      expect(ambitionView(ctx)!.next).toContain(proseMode === 'original'
+        ? '1 embellished claim still stands disputed'
+        : '1 embellished claim is still disputed');
+      w.year = now + 1;
+      expect(standingEmbellishedDisputes(ctx)).toBe(1);
+      w.year = now + 2;
+      expect(standingEmbellishedDisputes(ctx)).toBe(2);
+
+      // A recovered save may continue its world clock past the recorded ending.
+      w.ending = { id: 'settled', year: now + 1 };
+      expect(standingEmbellishedDisputes(ctx)).toBe(1);
+      w.ending = undefined;
+      expect(standingEmbellishedDisputes(ctx)).toBe(2);
+
+      // Multiple pages still mean one open dispute, and proving it settles it.
+      w.chronicle.push({ ...futurePage, id: 'duplicate-future-claim' });
+      expect(standingEmbellishedDisputes(ctx)).toBe(2);
+      w.discrepancies.get('future_claim')!.state = 'proven';
+      expect(standingEmbellishedDisputes(ctx)).toBe(1);
+    }
   });
 
   it('keeps its earlier advice until God, and says nothing new on the Short Line', () => {
