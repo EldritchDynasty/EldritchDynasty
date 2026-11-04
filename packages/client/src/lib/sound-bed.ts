@@ -106,6 +106,8 @@ export class SoundBed {
   #documentHidden = false;
   /** A pagehide can arrive while visibilityState is still "visible". */
   #pageHidden = false;
+  /** Distinguish a new document from re-subscribing while the old page is away. */
+  #attachedDocument: object | null = null;
   #scene: DroneInput | null = null;
   #sceneKey = 'null';
   #detach: () => void = () => undefined;
@@ -185,6 +187,8 @@ export class SoundBed {
   ): () => void {
     if (this.#disposed) return () => undefined;
     this.#detach();
+    const replacingDocument = this.#attachedDocument !== doc;
+    this.#attachedDocument = doc;
     // Replacing an attachment may move a hidden page's audio to an already
     // visible document without another visibilitychange/pageshow event.
     const wasDocumentHidden = this.#documentHidden;
@@ -249,11 +253,15 @@ export class SoundBed {
     this.#documentHidden = doc.visibilityState !== 'visible';
     if (this.#documentHidden) this.hide();
     else {
-      // This visible document supersedes the previous pagehide. A host pause
-      // delivered during subscription still wins: it is a separate signal,
-      // not evidence of a foreground return.
-      this.#pageHidden = false;
-      if ((wasDocumentHidden || wasPageHidden) && !pausedDuringSubscription) {
+      // Only a DIFFERENT visible document supersedes pagehide by itself.
+      // Re-subscribing on the old page is not a foreground event: pageshow or
+      // a new gesture must still restore it. A synchronous native pause on
+      // the new subscription wins over either recovery signal.
+      const replacedHiddenPage = wasPageHidden && replacingDocument;
+      if (!wasPageHidden || replacedHiddenPage || pausedDuringSubscription) {
+        this.#pageHidden = false;
+      }
+      if ((wasDocumentHidden || replacedHiddenPage) && !pausedDuringSubscription) {
         this.show();
       }
     }
