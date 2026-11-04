@@ -254,6 +254,12 @@ watch(signingIdentity, () => {
   );
   signingStageIndex.value = 0;
   refusalSuperseded.value = false;
+  // A different signing must offer its own passive introduction unless the
+  // reader explicitly enabled fast-reveal for prose already seen. Draft reset
+  // alone left the previous campaign's completed triad on the new screen.
+  shown.value = initialPrologueShown(
+    readingStorage(), props.skipSeenProse, replayText.value, props.prologue.triad.length,
+  );
 });
 const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
 const stageReady = computed(() => {
@@ -312,7 +318,10 @@ function waitingText(): string {
 let signing = false;
 function sign(): void {
   // Keyboard submission must obey the same requirements as the disabled button.
-  if (wanted.value.length > 0 || signing) return;
+  // A queued click on the old Sign button may arrive after Back has moved
+  // the reader to an earlier stage. Hidden controls are not an authority to
+  // found a house: only the final displayed stage may submit.
+  if (signingStage.value !== 'house' || wanted.value.length > 0 || signing) return;
   refusalSuperseded.value = false;
   signing = true;
   try {
@@ -361,7 +370,7 @@ function signOnEnter(event: KeyboardEvent): void {
     <!-- Run-specific Library memory is NOT part of prologueSeenText. A reader
          may fast-reveal an old signing and still meets this new inherited voice. -->
     <aside
-      v-if="!prologue.founded && initial.inheritedVisible && prologue.inherited"
+      v-if="!prologue.founded && prologue.inherited"
       class="inherited"
       :aria-label="plain ? 'A story passed down by the family' : 'An inherited account'"
     >
@@ -510,7 +519,7 @@ function signOnEnter(event: KeyboardEvent): void {
         <!-- Keep the personal names optional and out of the required signing
              path. Native details preserve keyboard/touch disclosure and keep
              entered names mounted when the reader closes this section. -->
-        <details v-if="friends.length" class="friend-names">
+        <details v-if="friends.length" :key="signingIdentity" class="friend-names">
           <summary>{{ plain ? 'Add friends (optional)' : 'Name them, if you wish' }}</summary>
           <div class="friends-fields">
             <div v-for="(friend, i) in friends" :key="i" class="friend">
