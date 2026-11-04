@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { trackKnownRivalHead } from './people/rivals.js';
+import { advanceKnownRivalHeads } from './people/succession.js';
 import { loadContent } from '@ed/content';
 import type { RivalPerson } from '@ed/schema';
 import {
@@ -793,5 +795,134 @@ describe('recovered rival chronology (#2838, #2839, #2840)', () => {
     expect(present.every((p, i) => genomesEqual(p.genome, baseline[i]!.genome))).toBe(true);
     expect(future.every((p) => p.born === 1142 && p.died === undefined
       && p.left === undefined && p.spouse === undefined)).toBe(true);
+  });
+});
+
+ 
+describe('recovered foreign office chronology (#2896, #2897, #2899)', () => {
+  const house = 'house_marrow';
+
+  function officeScene(seed: number) {
+    const ctx = testWorld(bundle, seed, 1200);
+    const incumbent = place(ctx, {
+      name: `Marrow incumbent ${seed}`, sex: 'male', age: 55,
+      house, castSlots: ['rival'],
+    });
+    return { ctx, incumbent };
+  }
+
+  it('refuses first contact with an unborn or already-dead foreign holder (#2896)', () => {
+    const { ctx } = officeScene(2896);
+    const unborn = place(ctx, {
+      name: 'Future holder', sex: 'male', age: 23, house, castSlots: ['rival'],
+    });
+    unborn.born = 1204; // Restored current membership but a future birth.
+    const pastDead = place(ctx, {
+      name: 'Past-dead holder', sex: 'male', age: 65, house, castSlots: ['rival'],
+    });
+    pastDead.died = 1198; // A stale status flag still says alive.
+    const before = digestOf(ctx);
+
+    trackKnownRivalHead(ctx, unborn.id);
+    trackKnownRivalHead(ctx, pastDead.id);
+    expect(digestOf(ctx)).toBe(before);
+    expect(ctx.world.rivalLineages.get(house)?.office?.head).toBeUndefined();
+
+    const present = place(ctx, {
+      name: 'Present holder', sex: 'male', age: 40, house, castSlots: ['rival'],
+    });
+    trackKnownRivalHead(ctx, present.id);
+    expect(ctx.world.rivalLineages.get(house)?.office).toEqual({
+      head: present.id, history: [{ person: present.id, from: 1200 }],
+    });
+  });
+
+  it('passes an unborn child over for a living foreign successor (#2897)', () => {
+    const { ctx, incumbent } = officeScene(2897);
+    const adult = place(ctx, {
+      name: 'Living Marrow adult', sex: 'male', age: 35, house,
+    });
+    const unbornChild = place(ctx, {
+      name: 'Not yet born child', sex: 'male', age: 20, house,
+    });
+    beget(ctx, unbornChild, undefined, incumbent);
+    unbornChild.born = 1205;
+    trackKnownRivalHead(ctx, incumbent.id);
+    ctx.world.people.kill(incumbent.id, 1200, 'a fever');
+
+    advanceKnownRivalHeads(ctx);
+    const office = ctx.world.rivalLineages.get(house)!.office!;
+    expect(office.head).toBe(adult.id);
+    expect(office.history).toEqual([
+      { person: incumbent.id, from: 1200, to: 1200 },
+      { person: adult.id, from: 1200 },
+    ]);
+    expect(unbornChild.castSlots).not.toContain('rival');
+    expect(ctx.world.chronicle.at(-1)?.people).toContain(adult.id);
+  });
+
+  it('does not promote a past-dead adult with an inconsistent alive flag (#2897)', () => {
+    const { ctx, incumbent } = officeScene(28970);
+    const pastDead = place(ctx, {
+      name: 'Old Marrow relative', sex: 'female', age: 80, house,
+    });
+    pastDead.died = 1198;
+    const available = place(ctx, {
+      name: 'Living Marrow relative', sex: 'female', age: 28, house,
+    });
+    trackKnownRivalHead(ctx, incumbent.id);
+    ctx.world.people.kill(incumbent.id, 1200, 'a fever');
+
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.rivalLineages.get(house)!.office!.head).toBe(available.id);
+    expect(pastDead.castSlots).not.toContain('rival');
+  });
+
+  it('keeps a future-dead incumbent until the recorded death year (#2899)', () => {
+    const { ctx, incumbent } = officeScene(2899);
+    const successor = place(ctx, {
+      name: 'Next living foreign head', sex: 'female', age: 32, house,
+    });
+    trackKnownRivalHead(ctx, incumbent.id);
+    // Recovered late snapshot: status says dead but the historical death has
+    // not occurred yet in the resumed year.
+    incumbent.status = 'dead';
+    incumbent.died = 1203;
+    const pages = ctx.world.chronicle.length;
+    const history = () => ctx.world.rivalLineages.get(house)!.office!.history;
+
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.rivalLineages.get(house)!.office!.head).toBe(incumbent.id);
+    expect(history()).toEqual([{ person: incumbent.id, from: 1200 }]);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    ctx.world.year = 1202;
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.rivalLineages.get(house)!.office!.head).toBe(incumbent.id);
+
+    ctx.world.year = 1203;
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.rivalLineages.get(house)!.office!.head).toBe(successor.id);
+    expect(history()).toEqual([
+      { person: incumbent.id, from: 1200, to: 1203 },
+      { person: successor.id, from: 1203 },
+    ]);
+    expect(ctx.world.chronicle).toHaveLength(pages + 1);
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.chronicle).toHaveLength(pages + 1);
+  });
+
+  it('honors a past recorded death despite an obsolete alive flag (#2899)', () => {
+    const { ctx, incumbent } = officeScene(28990);
+    const successor = place(ctx, {
+      name: 'Living replacement', sex: 'female', age: 31, house,
+    });
+    trackKnownRivalHead(ctx, incumbent.id);
+    incumbent.died = 1199; // Saved date is authoritative, status is stale.
+    advanceKnownRivalHeads(ctx);
+    expect(ctx.world.rivalLineages.get(house)!.office!.head).toBe(successor.id);
+    expect(ctx.world.rivalLineages.get(house)!.office!.history.at(-1)).toEqual({
+      person: successor.id, from: 1200,
+    });
   });
 });

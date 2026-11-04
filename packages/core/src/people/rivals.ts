@@ -274,7 +274,11 @@ export function trackKnownRivalHead(ctx: SimCtx, person: string): void {
   const w = ctx.world;
   const p = w.people.get(person);
   const house = p && currentMembership(p, w.year)?.house;
-  if (!p || p.status !== 'alive' || !p.castSlots.includes('rival') || !house || house === w.playerHouse
+  // Imported presence and cast markers cannot make an unborn or already-dead
+  // foreign holder eligible for a current political office.
+  if (!p || p.status !== 'alive' || p.born > w.year
+    || (p.died !== undefined && p.died <= w.year)
+    || !p.castSlots.includes('rival') || !house || house === w.playerHouse
     || !RIVAL_LINEAGE_HOUSES.includes(house)) return;
   if (!w.rivalLineages.has(house)) growRivalLineage(ctx, house);
   const lineage = w.rivalLineages.get(house)!;
