@@ -407,7 +407,10 @@ describe('CI evidence inventory', () => {
     const job = nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
     expect(job.slice(0, job.indexOf('steps:'))).toMatch(/timeout-minutes: \d+/);
     const install = job.slice(job.indexOf('- name: install Chromium'));
-    expect(install.slice(0, install.indexOf('run: npx playwright install'))).toMatch(/timeout-minutes: \d+/);
+    expect(install.slice(0, install.indexOf('run: node tools/ci-browser.mjs'))).toMatch(/timeout-minutes: 5/);
+    expect(job).toContain("${{ runner.os }}-${{ runner.arch }}-playwright-${{ hashFiles('package-lock.json') }}");
+    expect(job).not.toContain('restore-keys:');
+    expect(job).toContain('run: npx playwright test --project=editor --project=chromium');
   });
 
 

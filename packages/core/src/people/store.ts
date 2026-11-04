@@ -111,6 +111,21 @@ export class PersonStore {
     return out;
   }
 
+  /**
+   * The mortality pass needs a count, not two arrays of every ancestor.
+   * Check liveness before membership: most people in a centuries-old store
+   * are dead. Include living archived/shade people and historical membership
+   * just like blood().filter(alive); the hot tier alone is a different query.
+   * Nothing is cached, so a death earlier in the same pass counts immediately.
+   */
+  countLivingBlood(houseId: string): number {
+    let count = 0;
+    for (const p of this.people.values()) {
+      if (p.status === 'alive' && p.membership.some((m) => m.house === houseId && m.kind === 'blood')) count++;
+    }
+    return count;
+  }
+
   /** Editor previews only. The simulation never removes a person. */
   remove(id: PersonId | string): void {
     const p = this.get(id);

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { bootstrap, place } from '@ed/core';
+import { bootstrap, place, testWorld } from '@ed/core';
+import { asId } from '@ed/schema';
 import { createWorld } from './world.js';
 
 const content = loadContent();
@@ -68,6 +69,35 @@ describe('the person store moves people between tiers', () => {
 
     expect(ctx.world.people.get(p.id)?.name).toBe('Long Dead');
     expect(ctx.world.people.mustGet(p.id).name).toBe('Long Dead');
+  });
+});
+
+describe('living blood counts (#2528)', () => {
+  it('counts across tiers and historical memberships without counting retainers or other houses', () => {
+    const ctx = testWorld(content);
+    const { people, playerHouse, year } = ctx.world;
+    const reference = () => people.blood(playerHouse).filter(p => p.status === 'alive').length;
+    const original = reference();
+    const archived = place(ctx, { sex: 'female', age: 30 });
+    people.archive(archived.id);
+    const former = place(ctx, { sex: 'male', age: 40 });
+    former.membership[0]!.to = year - 1;
+    const other = place(ctx, { sex: 'female', age: 25 });
+    other.membership = [{ house: asId('another_house'), kind: 'blood', from: year }];
+    const retainer = place(ctx, { sex: 'male', age: 30 });
+    retainer.membership[0]!.kind = 'retainer';
+    const dead = place(ctx, { sex: 'female', age: 60 });
+    people.kill(dead.id, year, 'fixture');
+
+    expect(people.countLivingBlood(playerHouse)).toBe(original + 2);
+    expect(people.countLivingBlood(playerHouse)).toBe(reference());
+    expect(people.countLivingBlood('another_house')).toBe(1);
+    expect(people.countLivingBlood('unknown_house')).toBe(0);
+    people.kill(archived.id, year, 'fixture');
+    expect(people.countLivingBlood(playerHouse)).toBe(original + 1);
+    expect(people.countLivingBlood(playerHouse)).toBe(reference());
+    people.remove(former.id);
+    expect(people.countLivingBlood(playerHouse)).toBe(original);
   });
 });
 
