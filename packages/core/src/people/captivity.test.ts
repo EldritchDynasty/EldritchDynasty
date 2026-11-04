@@ -11,7 +11,7 @@ import { canonical, digestOf, loadGame, saveGame } from '../save.js';
 import { GameSession } from '../session.js';
 import { beginTutoring, order, tableView } from '../table.js';
 import { phase, place, testRng, testWorld } from '../testing.js';
-import { captureFamily, quoteRansom, releaseCaptive } from './captivity.js';
+import { captureFamily, captureIntruder, quoteRansom, releaseCaptive } from './captivity.js';
 import { canTakePost, careerMortality, inBreedingPool } from './careers.js';
 import { beginStudy } from './library.js';
 import { ensureHead } from './succession.js';
@@ -315,4 +315,58 @@ describe('named family captivity (#1908)', () => {
     expect(ctx.world.chronicle.at(-1)!.text).toContain('Linn');
     expect(missingPlainEnglish(ctx)).toEqual([]);
   });
+});
+
+
+describe('date-bound recovered captivity (#2829, #2830)', () => {
+  it('does not expose a foreign captive for ransom solely because of a future paid contract (#2829)', () => {
+    const ctx = testWorld(content);
+    const p = place(ctx, { sex: 'male', age: 30, house: 'house_calder' });
+    expect(captureIntruder(ctx, p.id)).toBe(true);
+    const year = ctx.world.year;
+    ctx.world.mystic.contracts.push({
+      id: 'future-entitlement', kind: 'hire', practitioner: p.id,
+      working: 'the_still_binding', stage: 'closed',
+      started: year + 1, ready: year + 1, ends: year + 2,
+      providerFee: 8, escrow: 0, worked: 0, payments: [],
+    });
+    const before = snapshot(ctx);
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: false, price: 0 });
+    expect(tableView(ctx).captives).toEqual([]);
+    expect(releaseCaptive(ctx, p.id)).toBe(false);
+    expect(snapshot(ctx)).toBe(before);
+
+    ctx.world.year++;
+    expect(quoteRansom(ctx, p.id)).toMatchObject({ ok: true, price: 0 });
+    expect(tableView(ctx).captives.some(c => c.person === p.id)).toBe(true);
+    expect(releaseCaptive(ctx, p.id)).toBe(true);
+    expect(p.captivity).toBeUndefined();
+  });
+
+  it.each(['original', 'plainenglish'] as const)(
+    'does not resume a captured study against a book acquired in the future (%s, #2830)',
+    (mode) => {
+      for (const future of [false, true]) {
+        const ctx = testWorld(content);
+        ctx.prose = createProseRuntime(mode, ctx.content.bundle.proseVariants);
+        const p = place(ctx, { sex: 'female', age: 25, name: 'Linn' });
+        const year = ctx.world.year;
+        ctx.world.library.set(BOOK, {
+          id: BOOK, acquiredYear: year + (future ? 1 : 0), condition: 100,
+        });
+        ctx.world.studies.push({ person: p.id, book: BOOK, completes: year + 3 });
+        expect(captureFamily(ctx, p.id, CAPTOR, 10)).toBe(true);
+        const before = ctx.world.chronicle.length;
+        expect(releaseCaptive(ctx, p.id)).toBe(true);
+        expect(p.captivity).toBeUndefined();
+        if (future) {
+          expect(ctx.world.studies).toEqual([]);
+          expect(ctx.world.chronicle.slice(before).map(e => e.text).join('\n')).toContain('no copy');
+        } else {
+          expect(ctx.world.studies).toEqual([{ person: p.id, book: BOOK, completes: year + 3 }]);
+        }
+        expect(missingPlainEnglish(ctx)).toEqual([]);
+      }
+    },
+  );
 });
