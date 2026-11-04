@@ -189,7 +189,7 @@ describe('progressive first-session signing (#2443)', () => {
 });
 
 describe('new campaign in a retained signing component (#1984)', () => {
-  it('clears an earlier campaign's signing drafts, but preserves them on translation', async () => {
+  it("clears an earlier campaign\'s signing drafts, but preserves them on translation", async () => {
     const game = actions();
     const first = { ...prologueView(), friendsWanted: 2 };
     const wrapper = mount(Prologue, {
