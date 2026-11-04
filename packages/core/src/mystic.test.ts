@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { ALL_AFFINITIES, asId, assertNever, canLearn, type Person, type SceneSite } from '@ed/schema';
+import { ALL_AFFINITIES, asId, assertNever, canLearn, type Person, type SceneSite, type SpellbookId } from '@ed/schema';
 import { DEBT_FLOOR, economyReading } from './economy.js';
 import { rollDeath } from './people/demography.js';
 import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
@@ -46,7 +46,7 @@ describe('future-dated Mystic target eligibility (#2792)', () => {
     ctx.world.library.set(book, { id: book, acquiredYear: acquired, condition: 80 });
     const sex = canLearn('female', working.affinity) ? 'female' : 'male';
     const p = place(ctx, { sex, age: 30, awakened: true });
-    p.spellsKnown = [...working.books];
+    p.spellsKnown = working.books.map((book) => asId<SpellbookId>(book));
     const site: SceneSite = { kind: 'book', book };
     const order = { person: p.id, working: working.id, target: site };
 
