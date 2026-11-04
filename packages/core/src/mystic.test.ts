@@ -412,6 +412,46 @@ describe('real outside service and inherited promises (#1877)', () => {
     const c=ctx.world.mystic.contracts[0]!;while(c.stage!=='closed')turn(ctx);
     expect(c.result).toBe('fulfilled');expect(ctx.world.mystic.services[0]!.service.usefulYears).toBe(0);
   });
+  it('honours actual contract, duty and muster start years before contractor capture (#2828)', () => {
+    const { ctx } = world();
+    const p = professional(ctx, 'thermal');
+    const commitment = beginCommitment(ctx, 5, 'the_wars');
+    const working = bundle.bundle.mysticWorkings.find(w =>
+      w.affinity === 'thermal' && w.benefit.kind === 'field_supply')!;
+    expect(hirePractitioner(ctx, {
+      person: p.id, working: working.id,
+      target: { kind: 'muster', commitment: commitment.id },
+    }).ok).toBe(true);
+    turn(ctx);
+    expect(fieldSupplySaving(ctx, commitment)).toBeGreaterThan(0);
+    const saved = saveGame(ctx);
+    const year = ctx.world.year;
+    for (const boundary of ['contract', 'duty', 'muster'] as const) {
+      const restored = loadGame(transport(saved), bundle);
+      const contract = restored.world.mystic.contracts[0]!;
+      const duty = restored.world.mystic.assignments.find(a => a.contract === contract.id)!;
+      const muster = restored.world.muster.commitments[0]!;
+      if (boundary === 'contract') contract.started = year + 1;
+      else if (boundary === 'duty') duty.started = year + 1;
+      else muster.began = year + 1;
+
+      const before = canonical(saveGame(restored));
+      expect(captureContractor(restored, p.id, 'house_marrow', 12)).toBe(false);
+      expect(canonical(saveGame(restored))).toBe(before);
+
+      restored.world.year = year + 1;
+      expect(captureContractor(restored, p.id, 'house_marrow', 12)).toBe(true);
+    }
+
+    // An imported future contract before the real one must not mask it.
+    const mixed = loadGame(transport(saved), bundle);
+    const present = mixed.world.mystic.contracts[0]!;
+    mixed.world.mystic.contracts.unshift({
+      ...structuredClone(present), id: 'future-contract-first', started: year + 1,
+    });
+    expect(captureContractor(mixed, p.id, 'house_marrow', 12)).toBe(true);
+  });
+
   it('captures and ransoms an actual hired field reader through ordinary custody, preserving the foreign home', () => {
     const { ctx }=world();const p=professional(ctx,'thermal');
     const commitment=beginCommitment(ctx,5,'the_wars');
