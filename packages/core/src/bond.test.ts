@@ -673,3 +673,117 @@ describe('a debt advance requires a wage that can repay it (#2186)', () => {
     expect(p.contract!.debt).toBe(0);
   });
 });
+
+
+/**
+ * Bond debt belongs to the house that currently holds the servant.
+ * Recovered membership rows may describe hires or transfers not yet effective.
+ */
+describe('present-house bond boundaries (#2912, #2913, #2914)', () => {
+  it('refuses foreign and future membership bond orders without modifying their contracts', () => {
+    const ctx = testWorld(bundle);
+    const rivalHouse = ctx.content.houses.find((h) => h.id !== ctx.world.playerHouse)!.id;
+    const foreignFree = place(ctx, {
+      sex: 'male', age: 30, name: 'Foreign free retainer',
+      house: rivalHouse, contract: contract(),
+    });
+    const foreignBonded = place(ctx, {
+      sex: 'female', age: 30, name: 'Foreign bonded retainer',
+      house: rivalHouse, contract: contract({ term: 'bonded', debt: 90 }),
+    });
+    const arriving = place(ctx, {
+      sex: 'male', age: 30, name: 'Incoming retainer', contract: contract(),
+    });
+    const arrivingBonded = place(ctx, {
+      sex: 'female', age: 30, name: 'Incoming bonded retainer',
+      contract: contract({ term: 'bonded', debt: 90 }),
+    });
+    const arrivalYear = ctx.world.year + 2;
+    arriving.membership[0]!.from = arrivalYear;
+    arrivingBonded.membership[0]!.from = arrivalYear;
+    ctx.world.treasury = 500;
+    const before = JSON.stringify({
+      treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+      contracts: [foreignFree, foreignBonded, arriving, arrivingBonded].map((p) => p.contract),
+    });
+
+    expect(bindService(ctx, foreignFree, 40)).toBe(false);
+    expect(freeBond(ctx, foreignBonded)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(bindService(ctx, arriving, 40)).toBe(false);
+    expect(freeBond(ctx, arrivingBonded)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(JSON.stringify({
+      treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+      contracts: [foreignFree, foreignBonded, arriving, arrivingBonded].map((p) => p.contract),
+    })).toBe(before);
+
+    ctx.world.year = arrivalYear;
+    expect(bindService(ctx, arriving, 40)).toBe(true);
+    expect(freeBond(ctx, arrivingBonded).ok).toBe(true);
+    expect(bindService(ctx, foreignFree, 40)).toBe(false);
+    expect(freeBond(ctx, foreignBonded).ok).toBe(false);
+  });
+
+  it('lists and resents only the present house bondholders', () => {
+    const ctx = testWorld(bundle);
+    const rivalHouse = ctx.content.houses.find((h) => h.id !== ctx.world.playerHouse)!.id;
+    const freed = place(ctx, {
+      sex: 'male', age: 30, name: 'Freed now',
+      contract: contract({ term: 'bonded', debt: 90, loyalty: 50 }),
+    });
+    const witness = place(ctx, {
+      sex: 'male', age: 30, name: 'House witness',
+      contract: contract({ term: 'bonded', debt: 90, loyalty: 50 }),
+    });
+    const outsider = place(ctx, {
+      sex: 'female', age: 30, name: 'Foreign witness', house: rivalHouse,
+      contract: contract({ term: 'bonded', debt: 90, loyalty: 50 }),
+    });
+    const incoming = place(ctx, {
+      sex: 'female', age: 30, name: 'Later witness',
+      contract: contract({ term: 'bonded', debt: 90, loyalty: 50 }),
+    });
+    incoming.membership[0]!.from = ctx.world.year + 1;
+
+    expect(bondsmen(ctx).map((p) => p.id).sort()).toEqual([freed.id, witness.id].sort());
+    const result = freeBond(ctx, freed);
+    expect(result).toEqual({ ok: true, forgiven: 90, resented: 1 });
+    expect(witness.contract!.loyalty).toBe(50 - RESENTMENT_OF_FREEDOM);
+    expect(outsider.contract!.loyalty).toBe(50);
+    expect(incoming.contract!.loyalty).toBe(50);
+
+    ctx.world.year += 1;
+    expect(bondsmen(ctx).map((p) => p.id).sort()).toEqual([incoming.id, witness.id].sort());
+  });
+
+  it('services only current house debts and resumes service on the arrival year', () => {
+    const ctx = testWorld(bundle);
+    const rivalHouse = ctx.content.houses.find((h) => h.id !== ctx.world.playerHouse)!.id;
+    const local = place(ctx, {
+      sex: 'male', age: 30, name: 'House debt',
+      contract: contract({ term: 'bonded', debt: 6, wage: 6 }),
+    });
+    const foreign = place(ctx, {
+      sex: 'female', age: 30, name: 'Other debt', house: rivalHouse,
+      contract: contract({ term: 'bonded', debt: 6, wage: 6 }),
+    });
+    const incoming = place(ctx, {
+      sex: 'male', age: 30, name: 'Later debt',
+      contract: contract({ term: 'bonded', debt: 6, wage: 6 }),
+    });
+    const arrivalYear = ctx.world.year + 1;
+    incoming.membership[0]!.from = arrivalYear;
+    const pages = ctx.world.chronicle.length;
+
+    expect(serviceBonds(ctx).map((p) => p.id)).toEqual([local.id]);
+    expect(local.contract).toMatchObject({ term: 'yearly', debt: 0 });
+    expect(foreign.contract).toMatchObject({ term: 'bonded', debt: 6 });
+    expect(incoming.contract).toMatchObject({ term: 'bonded', debt: 6 });
+    expect(ctx.world.chronicle).toHaveLength(pages + 1);
+
+    ctx.world.year = arrivalYear;
+    expect(serviceBonds(ctx).map((p) => p.id)).toEqual([incoming.id]);
+    expect(foreign.contract).toMatchObject({ term: 'bonded', debt: 6 });
+    expect(incoming.contract).toMatchObject({ term: 'yearly', debt: 0 });
+    expect(ctx.world.chronicle).toHaveLength(pages + 2);
+  });
+});
