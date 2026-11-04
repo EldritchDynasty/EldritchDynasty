@@ -487,6 +487,10 @@ export function tableWorkloadWindows(
   let focused = true;
   let onBreak = false;
   let pane: string | null = null;
+  // A selected pane can remain behind the full-screen frame. Its controls
+  // are not exposed while an interlude or the last night is on screen.
+  let interlude = false;
+  let ended = false;
   let lastAt = 0;
   const newWindow = (source: TableWorkloadWindow['source'], at: number) => ({
     source, startedAt: at, campaign: null as string | null, seed: null as number | null,
@@ -505,7 +509,7 @@ export function tableWorkloadWindows(
     const span = to - lastAt;
     if (visible && focused && !onBreak) {
       current.foregroundMs += span;
-      if (pane === 'table') current.tableForegroundMs += span;
+      if (pane === 'table' && !interlude && !ended) current.tableForegroundMs += span;
     }
     lastAt = to;
   };
@@ -532,6 +536,8 @@ export function tableWorkloadWindows(
         ? null : { campaign: current.campaign, seed: current.seed });
       finish(event.at, 'pickup');
       current = newWindow('pickup', event.at);
+      interlude = false;
+      ended = false;
       if (nextRun) {
         current.campaign = nextRun.campaign;
         current.seed = nextRun.seed;
@@ -544,6 +550,8 @@ export function tableWorkloadWindows(
       && (event.verb === 'begin' || event.verb === 'beginFromShareCode')) {
       finish(event.at, 'begin');
       current = newWindow('begin', event.at);
+      interlude = false;
+      ended = false;
       awaitingPickup = false;
       pendingRun = null;
       continue;
@@ -568,12 +576,16 @@ export function tableWorkloadWindows(
         && (event.verb === 'resume' || event.verb === 'load' || event.verb === 'importSave')) {
         awaitingPickup = true;
         pendingRun = null;
-      }
-      current.hasEvidence = true;
+        // A canceled picker on the title screen says nothing about a house.
+        // Preserve an existing window, but wait for actual run evidence or
+        // the confirmed pickup before creating one.
+      } else current.hasEvidence = true;
+      if (event.verb === 'dismissInterlude') interlude = false;
       current.actions.push(event);
     } else if (event.kind === 'page' || event.kind === 'decision' || event.kind === 'interlude') {
       current.hasEvidence = true;
-    }
+      if (event.kind === 'interlude') interlude = true;
+    } else if (event.kind === 'ended') ended = true;
   }
   advance(stop);
   // A capped log has stopped observing, even if Export later appends an
@@ -597,7 +609,7 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   let last = 0;
   let foreground = 0, hidden = 0, unfocused = 0, breaks = 0;
   const end = events.find((e) => e.kind === 'end');
-  const stop = end ? end.at : until;
+  const stop = Math.max(0, Math.min(until, end?.at ?? until));
 
   const gaps: AnswerGap[] = [];
   const entries: EntryTiming[] = [];
@@ -705,7 +717,10 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   }
   advance(stop);
   finishEntry(stop);
-  close(stop, year, end?.reason ?? (truncated ? 'cap' : 'open'), true);
+  // An end marker later in the artifact cannot terminate an earlier analysis
+  // window. The requested cutoff is still open, even in a capped artifact.
+  const reason = end && end.at <= until ? end.reason : truncated && !end ? 'cap' : 'open';
+  close(stop, year, reason, true);
 
   const hours = foreground / 3_600_000;
   return {
