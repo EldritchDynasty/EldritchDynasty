@@ -688,3 +688,108 @@ describe('external relationship threads (issue #217)', () => {
     expect(record?.callback).toBe(inherited?.origin.detail);
   });
 });
+
+
+describe('recovered rival chronology (#2838, #2839, #2840)', () => {
+  it.each(['died', 'left'] as const)(
+    'keeps a current spouse married until a future %s actually occurs',
+    (marker) => {
+      const ctx = testWorld(bundle, 2838, 1042);
+      growRivalLineage(ctx, 'house_hesk');
+      const lineage = ctx.world.rivalLineages.get('house_hesk')!;
+      const wife = lineage.people.find((p) => p.sex === 'female')!;
+      const husband = lineage.people.find((p) => p.id === wife.spouse)!;
+      husband[marker] = ctx.world.year + 2;
+
+      // A future-dated loss is not today's widowhood or a Match card.
+      expect(pickRivalCandidate(ctx, 'house_hesk', 'female',
+        { min: 17, max: 45 }, testRng(`future-spouse-${marker}`))).toBeUndefined();
+
+      ctx.world.year += 1;
+      growRivalLineage(ctx, 'house_hesk');
+      expect(wife.spouse).toBe(husband.id);
+      expect(husband.spouse).toBe(wife.id);
+
+      // The event becomes effective at its recorded year even before the
+      // next yearly tick repairs the stale spouse pointer.
+      ctx.world.year += 1;
+      expect(pickRivalCandidate(ctx, 'house_hesk', 'female',
+        { min: 17, max: 45 }, testRng(`present-widow-${marker}`))).toBe(wife);
+    },
+  );
+
+  it.each(['died', 'left'] as const)(
+    'offers an unmarried rival until the future %s date and never afterwards',
+    (marker) => {
+      const ctx = testWorld(bundle, 2839, 1042);
+      growRivalLineage(ctx, 'house_hesk');
+      const lineage = ctx.world.rivalLineages.get('house_hesk')!;
+      const woman = lineage.people.find((p) => p.sex === 'female')!;
+      const husband = lineage.people.find((p) => p.id === woman.spouse)!;
+      delete woman.spouse;
+      delete husband.spouse;
+      woman[marker] = ctx.world.year + 3;
+
+      expect(pickRivalCandidate(ctx, 'house_hesk', 'female',
+        { min: 17, max: 45 }, testRng(`before-${marker}`))).toBe(woman);
+      ctx.world.year += 3;
+      expect(pickRivalCandidate(ctx, 'house_hesk', 'female',
+        { min: 17, max: 45 }, testRng(`after-${marker}`))).toBeUndefined();
+    },
+  );
+
+  it('does not treat a future-born spouse as a present rival-house partner', () => {
+    const ctx = testWorld(bundle, 2840, 1042);
+    growRivalLineage(ctx, 'house_hesk');
+    const lineage = ctx.world.rivalLineages.get('house_hesk')!;
+    const woman = lineage.people.find((p) => p.sex === 'female')!;
+    const husband = lineage.people.find((p) => p.id === woman.spouse)!;
+    husband.born = ctx.world.year + 10;
+
+    expect(pickRivalCandidate(ctx, 'house_hesk', 'female',
+      { min: 17, max: 45 }, testRng('unborn-spouse'))).toBe(woman);
+
+    ctx.world.year += 1;
+    growRivalLineage(ctx, 'house_hesk');
+    // A stale future spouse can be replaced with a real partner, but is never
+    // silently retained as today's living spouse.
+    expect(woman.spouse).not.toBe(husband.id);
+  });
+
+  it('does not let future-born records exhaust the present shadow growth cap', () => {
+    const clean = testWorld(bundle, 28401, 1042);
+    const recovered = testWorld(bundle, 28401, 1042);
+    growRivalLineage(clean, 'house_marrow');
+    growRivalLineage(recovered, 'house_marrow');
+
+    const restored = recovered.world.rivalLineages.get('house_marrow')!;
+    const genome = restored.people[0]!.genome;
+    const future = Array.from({ length: 45 }, (_, i): RivalPerson => ({
+      id: `future-rival-${i}`,
+      house: 'house_marrow',
+      sex: 'male',
+      born: 1142,
+      genome,
+    }));
+    restored.people.push(...future);
+
+    // Twenty paired years exercise outside spouses, conceptions, mortality,
+    // and the cap with identical per-world RNG streams. All future rows must
+    // be observationally inert until they have actually been born.
+    for (let year = 1043; year <= 1062; year++) {
+      clean.world.year = year;
+      recovered.world.year = year;
+      growRivalLineage(clean, 'house_marrow');
+      growRivalLineage(recovered, 'house_marrow');
+    }
+
+    const baseline = clean.world.rivalLineages.get('house_marrow')!.people;
+    const present = restored.people.filter((p) => !p.id.startsWith('future-rival-'));
+    expect(baseline.length).toBeGreaterThan(4);
+    expect(present.map((p) => p.id)).toEqual(baseline.map((p) => p.id));
+    expect(lineageShape(present)).toEqual(lineageShape(baseline));
+    expect(present.every((p, i) => genomesEqual(p.genome, baseline[i]!.genome))).toBe(true);
+    expect(future.every((p) => p.born === 1142 && p.died === undefined
+      && p.left === undefined && p.spouse === undefined)).toBe(true);
+  });
+});
