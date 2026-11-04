@@ -28,6 +28,11 @@ Run the complete route with:
 npm run test:e2e -- --project=chromium tests/e2e/demo-complete.spec.ts
 ```
 
+The shared Settled ending describes the contract's pages and required words
+without asserting three answers: the Demonstration's contract has one clause,
+while the Short Line has three. Original and Plain English keep the same
+single-beat ring substitution. Campaign rules and ending selection are unchanged.
+
 ## Evidence boundary
 
 This browser route proves an integrated path through the shipped client. It

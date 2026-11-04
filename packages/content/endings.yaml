@@ -90,12 +90,12 @@ endings:
   - id: settled
     title: The Settled Account
     opening: >-
-      The book was brought to the table with three leaves marked in the old
-      hand, and those were the leaves the other party asked for first. Each was
-      found where it ought to be. Each said what it had said when it was
-      written. The rest of the chronicle was read afterwards, because the
-      family had kept it and because a book brought to a table is read, but the
-      account had already changed while the candles were still high.
+      The book was brought to the table with the leaves of the contract
+      marked in the old hand, and those were the leaves the other party asked
+      for first. Each was found where it ought to be. Each said what it had
+      said when it was written. The rest of the chronicle was read afterwards,
+      because the family had kept it and because a book brought to a table is
+      read, but the account had already changed while the candles were still high.
 
 
       Nothing was forgiven. Nothing was mistaken for strength. The thing on the
@@ -106,9 +106,10 @@ endings:
     ring:
       beat: 3
       owed: >-
-        THE TERM, at which the shorter account was produced with every clause
-        it required. The book was read, the three answers were found in it,
-        and the hand across the table closed the account instead of the house.
+        THE TERM, at which this signing's account was produced with every
+        clause it required. The book was read, the required words were found
+        in it, and the hand across the table closed the account instead of
+        the house.
     closing: Everything after this was done by people whose debt was paid.
 
   # Long Line is the canonical wording here, including the matching Plain
@@ -254,10 +255,10 @@ proseVariants:
     plainenglish: >-
       The Debt Paid
   - address: "content:endings.yaml#endings[id=settled].opening"
-    of: "4e03742184907add"
+    of: "f61dfd861ded8aca"
     plainenglish: >-
-      The book was brought to the table with three pages marked in the old handwriting, and
-      those were the pages the other party asked for first. Each one was where it should be.
+      The book was brought to the table with the contract's pages marked in the old handwriting,
+      and those were the pages the other party asked for first. Each one was where it should be.
       Each one said what it had said when it was written. The rest of the chronicle was read
       afterwards, because the family had kept it and because a book brought to a table gets
       read. But the account had already changed while the candles were still tall.
@@ -268,11 +269,11 @@ proseVariants:
       the last line, and closed the cover. In the morning the family still had its house, its
       blood, and every problem that had not been part of the contract.
   - address: "content:endings.yaml#endings[id=settled].ring.owed"
-    of: "756fed37741443eb"
+    of: "cbbf7327b9813c6b"
     plainenglish: >-
-      THE TERM. When it came, the shorter account was produced with every clause it needed. The
-      book was read, the three answers were found in it, and the hand across the table closed
-      the account instead of the house.
+      THE TERM. When it came, the account for this signing was produced with every clause it
+      needed. The book was read, the required words were found in it, and the hand across the
+      table closed the account instead of the house.
   - address: "content:endings.yaml#endings[id=settled].closing"
     of: "a54515335b01196f"
     plainenglish: >-
