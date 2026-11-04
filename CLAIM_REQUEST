@@ -1,1 +1,1 @@
-/claim 2815 --agent chatgpt/issue-2665-frame-future-20261104-0205 --paths packages/core/src/events/frame.ts packages/core/src/frame.test.ts
+/claim check --agent chatgpt/issue-2665-frame-future-20261104-0205
