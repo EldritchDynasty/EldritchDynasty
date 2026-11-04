@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap } from './sim.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel } from './run-setup.js';
+import { assertHarnessCount, bootstrapRun, runSetupFlags, runSetupLabel } from './run-setup.js';
 
 const bundle = loadContent();
 
@@ -28,5 +28,27 @@ describe('run setup', () => {
     expect(() => runSetupFlags(['--founding=mother'])).toThrow();
     expect(runSetupLabel({})).toBe('long · authored founder');
     expect(runSetupLabel({ campaign: 'short', founding: 'blood_mother' })).toBe('short · blood_mother');
+  });
+});
+
+describe('measured-run dimension validation (#2735)', () => {
+  it('refuses zero, negative, fractional and non-finite batch sizes', () => {
+    for (const runs of [0, -1, 1.5, Number.NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+      expect(() => assertHarnessCount(runs, 'runs', 1), `runs=${runs}`)
+        .toThrow('runs must be a positive safe integer');
+    }
+  });
+
+  it('refuses non-finite, negative, fractional and unsafe year counts', () => {
+    for (const years of [-1, 0.5, Number.NaN, Infinity, -Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+      expect(() => assertHarnessCount(years, 'years', 0), `years=${years}`)
+        .toThrow('years must be a non-negative safe integer');
+    }
+  });
+
+  it('allows a positive batch and the intentional zero-year founding snapshot', () => {
+    expect(() => assertHarnessCount(1, 'runs', 1)).not.toThrow();
+    expect(() => assertHarnessCount(0, 'years', 0)).not.toThrow();
+    expect(() => assertHarnessCount(500, 'years', 0)).not.toThrow();
   });
 });
