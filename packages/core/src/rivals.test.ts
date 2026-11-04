@@ -804,6 +804,11 @@ describe('recovered foreign office chronology (#2896, #2897, #2899)', () => {
 
   function officeScene(seed: number) {
     const ctx = testWorld(bundle, seed, 1200);
+    // Bootstrap includes Marrow's founding cast. This succession witness
+    // supplies its own complete household, without an older seeded fallback.
+    for (const person of ctx.world.people.household(house, ctx.world.year)) {
+      ctx.world.people.remove(person.id);
+    }
     const incumbent = place(ctx, {
       name: `Marrow incumbent ${seed}`, sex: 'male', age: 55,
       house, castSlots: ['rival'],
