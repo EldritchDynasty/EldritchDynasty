@@ -225,6 +225,36 @@ const signingStages = computed<SigningStage[]>(() => [
   'house',
 ]);
 const signingStageIndex = ref(0);
+
+// A language switch is only a new rendering of the same signing: keep every
+// draft answer. A new campaign/signing delivered to a retained component is
+// different. Reset its local drafts rather than signing with the previous
+// founder's name, Examination answers or optional friend roster (#1984).
+// Use stable mechanical identifiers here, not translated prose.
+const signingIdentity = computed(() => JSON.stringify([
+  props.startYear,
+  props.prologue.id,
+  Boolean(props.prologue.namePrompt),
+  props.prologue.examination.map((question) => question.id),
+  props.prologue.friendsWanted,
+  Boolean(props.prologue.founded),
+]));
+watch(signingIdentity, () => {
+  founderName.value = '';
+  gender.value = null;
+  configuration.value = null;
+  configurationChosen = false;
+  answers.value = {};
+  houseName.value = '';
+  heirloom.value = '';
+  grudge.value = '';
+  friends.value = Array.from(
+    { length: props.prologue.friendsWanted },
+    () => ({ name: '', sex: 'female' as const }),
+  );
+  signingStageIndex.value = 0;
+  refusalSuperseded.value = false;
+});
 const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
 const stageReady = computed(() => {
   switch (signingStage.value) {
