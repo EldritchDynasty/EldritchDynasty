@@ -99,10 +99,10 @@ export function tickCareers(ctx: SimCtx, rng: Rng): void {
   // about all six of them at once.
   let bestYield: CareerDef['respectYield'] = 'none';
   for (const p of w.people.household(w.playerHouse, w.year)) {
-    // A recovered future commission earns no pay, Respect, growth or service time
-    // until its first year. Preserve the saved placement for that year.
-    if (!p.career || p.career.from > w.year) continue;
-    const def = ctx.content.career(p.career.career);
+    // Keep the same start-year gate for all direct and derived career effects;
+    // future saved appointments remain present in storage but not yet active.
+    if (!p.career) continue;
+    const def = careerDefOf(ctx, p);
     if (!def) continue;
 
     const income = def.income.base + (def.income.variance ? rng.range(-def.income.variance, def.income.variance) : 0);
