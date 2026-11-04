@@ -160,8 +160,8 @@ describe('physical attendance (#1868)', () => {
     unborn.born = year + 2;
     deceased.died = year;
     const fill = { PARTY: [current.id, unborn.id, deceased.id] };
-    const party = { kind: 'party', slots: ['PARTY'] } as const;
-    const visitors = { kind: 'hall', hall: 'main', visitors: ['PARTY'] } as const;
+    const party = { kind: 'party' as const, slots: ['PARTY'] };
+    const visitors = { kind: 'hall' as const, hall: 'main' as const, visitors: ['PARTY'] };
 
     expect(resolvePresence(ctx, party, fill).people).toEqual([current.id]);
     expect(resolvePresence(ctx, visitors, fill).people).not.toContain(unborn.id);
