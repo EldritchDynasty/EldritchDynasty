@@ -154,6 +154,14 @@ describe('earned bynames over played runs (#1990)', () => {
           const grant = person.byname;
           if (!grant) continue;
           const source = grant.source;
+          if (source.kind === 'reign') {
+            expect(source.to).toBe(grant.year);
+            expect(source.from).toBeLessThan(source.to);
+            expect(source.pages).toBeGreaterThanOrEqual(2);
+            expect(bynameStanding(person)).toBe('reign');
+            expect(person.epithet).toBeTruthy();
+            continue;
+          }
           expect(source.kind).toBe('record');
           expect(source.pen).toBe(pen);
           const page = pages.get(source.page);
@@ -167,7 +175,13 @@ describe('earned bynames over played runs (#1990)', () => {
         }
       }
       const batches = runs.map((run) => run.batch);
-      if (pen === 'omit') expect(total(batches, 'grants')).toBe(0);
+      // An Omit pen no longer prevents a name at a later reign handover:
+      // those are names of the *book's omissions*, not Record claim grants.
+      if (pen === 'omit') {
+        for (const { ctx } of runs) {
+          expect(ctx.world.people.all().every((p) => !p.byname || p.byname.source.kind === 'reign')).toBe(true);
+        }
+      }
       report.push(`${pen}: heads ${total(batches, 'headsNamed')}/${total(batches, 'heads')}, `
         + `other blood ${total(batches, 'relativesNamed')}/${total(batches, 'relatives')}, `
         + `grants ${total(batches, 'grants')}, contested ${total(batches, 'contested')}`);
@@ -186,6 +200,10 @@ describe('earned bynames over played runs (#1990)', () => {
       hits: total(writing, 'headsNamed'), n: total(writing, 'heads'), floor: 0.04,
       what: 'Heads who earned a byname under a pen that writes one',
     });
+    // The second source is granted by actual completed reigns, even when
+    // every Record choice is Omit; no other relatives gain this source.
+    const namedHeads = writing.reduce((n, run) => n + run.headsNamed, 0);
+    expect(namedHeads).toBeGreaterThan(0);
     console.log(`bynames over ${SEEDS.length} × ${YEARS}-year Long Lines — ${report.join('; ')}`);
   });
 });
