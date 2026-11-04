@@ -16,7 +16,7 @@ import { knownToExpress, phenotypeOf } from './people/factory.js';
 import { headNamesake } from './people/naming.js';
 import { formOf } from './people/grammar.js';
 import { visibleRecordView } from './record.js';
-import { bynameView, type BynameView } from './byname.js';
+import { bynameView, visibleEpithet, type BynameView } from './byname.js';
 import { chronicleReading, generationChangesOf, type GenerationChanges } from './people/generation-changes.js';
 export type { GenerationChange, GenerationChangeKind, GenerationChanges } from './people/generation-changes.js';
 import { loadGame, saveGame } from './save.js';
@@ -888,10 +888,11 @@ export class GameSession {
         const p = w.people.get(held.person);
         const said = p ? visibleRecordView(this.ctx, p.id, household) : undefined;
         const byname = p ? bynameView(p, w.year) : undefined;
+        const epithet = p ? visibleEpithet(p, w.year) : undefined;
         return {
           person: held.person,
           name: held.name,
-          ...(p?.epithet ? { epithet: p.epithet } : {}),
+          ...(epithet ? { epithet } : {}),
           ...(byname ? { byname } : {}),
           from: held.from,
           ...(held.to !== undefined ? { to: held.to } : {}),
@@ -1133,7 +1134,8 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
           },
           drift: view.divergence.size > 0,
         };
-        if (p.epithet !== undefined) m.epithet = p.epithet;
+        const epithet = visibleEpithet(p, w.year);
+        if (epithet !== undefined) m.epithet = epithet;
         const byname = bynameView(p, w.year);
         if (byname) m.byname = byname;
         if (succession.heir === p.id) m.succession = 'heir';
@@ -1177,8 +1179,9 @@ export function viewOf(ctx: SimCtx, chronicleLines = VIEW_CHRONICLE_LINES): Sess
     .flatMap((id) => {
       const person = w.people.get(id);
       const byname = person ? bynameView(person, w.year) : undefined;
+      const epithet = person ? visibleEpithet(person, w.year) : undefined;
       return person ? [{ id: String(id), name: person.name,
-        ...(person.epithet ? { epithet: person.epithet } : {}),
+        ...(epithet ? { epithet } : {}),
         ...(byname ? { byname } : {}),
       }] : [];
     });
