@@ -1079,4 +1079,48 @@ describe('a Record page earns a byname for the one person it names (#1990)', () 
     expect(result.byname?.text).toBe(docket.bynames?.record?.text);
     expect(session.view().halls.flatMap((h) => h.members).find((m) => m.id === child.id)?.byname?.standing).toBe('attested');
   });
+
+  it('does not award a name using a Chronicle page dated in the future (#2800)', () => {
+    const ctx = bootstrap(bundle, 2800, 1042);
+    const child = place(ctx, { sex: 'female', age: 9 });
+    ctx.world.chronicle.push({
+      id: 'future_page', year: 1043, weight: 'paragraph', text: 'not yet written', named: false,
+    });
+    applyRecord(ctx, bynamed(), 'future_page', 'record', { CHILD: child.id });
+    expect(child.epithet).toBeUndefined();
+    expect(child.byname).toBeUndefined();
+
+    ctx.world.year = 1043;
+    applyRecord(ctx, bynamed(), 'future_page', 'record', { CHILD: child.id });
+    expect(child.byname).toMatchObject({ year: 1043, source: { page: 'future_page' } });
+  });
+
+  it('hides future saved bynames on all current public reading surfaces (#2800)', () => {
+    const session = newGame(bundle, { seed: 2801 });
+    const w = session.ctx.world;
+    const head = w.people.get(session.line()[0]!.person)!;
+    const child = place(session.ctx, { sex: 'female', age: 9 });
+    const year = w.year;
+    for (const person of [head, child]) {
+      person.epithet = 'the Not-Yet-Named';
+      person.byname = {
+        source: { kind: 'record', event: 'waking_early', pen: 'record', page: 'future_grant' },
+        year: year + 2,
+      };
+    }
+    w.chronicle.push({
+      id: 'current_mention', year, weight: 'paragraph', text: 'A current account.', named: false,
+      people: [child.id],
+    });
+    const present = session.view();
+    expect(session.line()[0]).not.toHaveProperty('epithet');
+    expect(present.halls.flatMap((h) => h.members).find((m) => m.id === child.id)).not.toHaveProperty('epithet');
+    expect(present.chroniclePeople.find((p) => p.id === child.id)).not.toHaveProperty('epithet');
+
+    w.year += 2;
+    const due = session.view();
+    expect(session.line()[0]).toHaveProperty('epithet', 'the Not-Yet-Named');
+    expect(due.halls.flatMap((h) => h.members).find((m) => m.id === child.id)).toHaveProperty('epithet', 'the Not-Yet-Named');
+    expect(due.chroniclePeople.find((p) => p.id === child.id)).toHaveProperty('epithet', 'the Not-Yet-Named');
+  });
 });
