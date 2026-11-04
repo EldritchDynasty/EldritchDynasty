@@ -42,7 +42,8 @@ function activeMuster(ctx: SimCtx) {
 export function covertParticipants(ctx: SimCtx, operation: string): string[] {
   const o = activeCovert(ctx, operation);
   return o ? [...new Set([o.plan.operative, ...o.crew, ...ctx.world.mystic.assignments
-    .filter(a => a.target.kind === 'covert' && a.target.operation === operation).map(a => a.practitioner)])] : [];
+    .filter(a => a.target.kind === 'covert' && a.target.operation === operation
+      && a.started <= ctx.world.year).map(a => a.practitioner)])] : [];
 }
 
 export function covertReservation(ctx: SimCtx, person: string): string | undefined {
@@ -75,7 +76,7 @@ export function dutyPlaces(ctx: SimCtx): Map<string, DutyPlace> {
   const w = ctx.world;
   const out = new Map<string, DutyPlace>();
   for (const a of w.mystic.assignments) {
-    if (a.status === 'suspended') continue;
+    if (a.status === 'suspended' || a.started > w.year) continue;
     const place = dutyPlaceOf(ctx, a.target, a.bindings);
     if (place) out.set(a.practitioner, place);
   }
@@ -118,7 +119,7 @@ export function deployedPeople(ctx: SimCtx): Set<string> {
     ...active.flatMap(c => c.officers),
     // Travel, unpaid service and recovery do not teleport somebody home.
     ...ctx.world.mystic.assignments.filter(a => a.target.kind === 'muster'
-      && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
+      && a.started <= ctx.world.year && commitments.has(a.target.commitment ?? '')).map(a => a.practitioner),
     ...ctx.world.covert.operations.filter(o =>
       o.stage !== 'closed' && o.plan.preparedAt <= ctx.world.year)
       .flatMap(o => covertParticipants(ctx, o.plan.id)),
@@ -204,7 +205,7 @@ export function resolvePresence(ctx: SimCtx, site: SceneSite, fill: SlotFill): S
       return { site, people: distinct([
         ...commitments.flatMap(c => c.officers),
         ...w.mystic.assignments.filter(a => a.target.kind === 'muster'
-          && ids.has(a.target.commitment ?? '')).map(a => a.practitioner),
+          && a.started <= w.year && ids.has(a.target.commitment ?? '')).map(a => a.practitioner),
       ]) };
     }
     case 'hall': {
