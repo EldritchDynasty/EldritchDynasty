@@ -115,7 +115,8 @@ export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: Mys
   const ownCovertDuty = reserved !== undefined && site?.kind === 'covert' && site.operation === reserved;
   if (reserved && !ownCovertDuty) return 'deployed';
   const ownFieldDuty = site?.kind === 'muster' && isFieldWorking(working)
-    && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field');
+    && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field'
+      && c.began <= w.year);
   if (deployedPeople(ctx).has(p.id) && !ownFieldDuty && !ownCovertDuty && !ownServiceDuty) return 'deployed';
   if (p.career && ctx.content.career(p.career.career)?.resident !== 'home') return 'away_post';
   return undefined;
@@ -135,7 +136,8 @@ export function targetGap(
       return c.stage === 'returning' ? 'not_resident' : undefined;
     }
     case 'library_care': {
-      if (house !== ctx.world.playerHouse || site.kind !== 'book' || !ctx.world.library.has(site.book)) return 'target_lost';
+      if (house !== ctx.world.playerHouse || site.kind !== 'book'
+        || (ctx.world.library.get(site.book)?.acquiredYear ?? Infinity) > ctx.world.year) return 'target_lost';
       return ctx.world.library.get(site.book)?.restoresAt === undefined ? undefined : 'not_resident';
     }
     case 'convalescence': case 'teaching': {
@@ -155,7 +157,8 @@ export function targetGap(
     }
     case 'covert_support': {
       if (site.kind !== 'covert') return 'target_lost';
-      const o = ctx.world.covert.operations.find(o => o.plan.id === site.operation && o.stage !== 'closed');
+      const o = ctx.world.covert.operations.find(o => o.plan.id === site.operation
+        && o.stage !== 'closed' && o.plan.preparedAt <= ctx.world.year);
       return !o || house !== ctx.world.playerHouse ? 'target_lost' : o.stage === 'returning' ? 'not_resident' : undefined;
     }
     case 'household_protection': {
@@ -192,7 +195,8 @@ export function targetGap(
     }
     case 'field_care': case 'field_supply': case 'field_watch': case 'field_concealment':
       return site.kind === 'muster' && ctx.world.muster.commitments.some(c =>
-        c.id === site.commitment && c.status === 'in_the_field') ? undefined : 'target_lost';
+        c.id === site.commitment && c.status === 'in_the_field'
+        && c.began <= ctx.world.year) ? undefined : 'target_lost';
     default: return assertNever(b, 'mystic benefit');
   }
 }
@@ -423,7 +427,9 @@ export function tickMystic(ctx: SimCtx): void {
   const w = ctx.world;
   delete w.mystic.reservedUpkeep;
   let reserved = 0;
-  for (const c of w.muster.commitments) if (c.status === 'in_the_field') prepareFieldOpposition(ctx, c.id);
+  for (const c of w.muster.commitments) {
+    if (c.status === 'in_the_field' && c.began <= w.year) prepareFieldOpposition(ctx, c.id);
+  }
   for (const a of [...w.mystic.assignments]) {
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
@@ -869,7 +875,7 @@ export function tickFieldAccount(ctx: SimCtx, c: Commitment): void {
 function prepareFieldOpposition(ctx: SimCtx, commitment: string): void {
   const w = ctx.world;
   const c = w.muster.commitments.find(c => c.id === commitment && c.status === 'in_the_field');
-  if (!c || !w.mystic.assignments.some(a => dutyHouse(ctx, a) === w.playerHouse
+  if (!c || c.began > w.year || !w.mystic.assignments.some(a => dutyHouse(ctx, a) === w.playerHouse
     && a.target.kind === 'muster' && a.target.commitment === c.id)) return;
   if (!c.opponent) {
     const houseOf = (endpoint: string): string | undefined => {
