@@ -259,6 +259,40 @@ describe('a scheduled event actually arrives', () => {
     expect(ctx.world.scheduled).toEqual([{ event: String(target.id), year: 1049 }]);
   });
 
+  for (const { event, floor } of [
+    { event: 'the_fourth_yssene_clause', floor: 1291 },
+    { event: 'the_mason_reaches_the_turn', floor: 1330 },
+  ]) {
+    it(`keeps the early ${event} promise until its authored date, including after save/resume (#2627)`, () => {
+      const ctx = bootstrap(content, 1042, 1542);
+      // Older saves can already have spent years trying an impossible early
+      // promise. The first calendar read must repair its patience anchor.
+      ctx.world.year = 1127;
+      ctx.world.scheduled.push({
+        event, year: 1127, first: 1127, cause: { year: 1126, page: 'the_original_account' },
+      });
+
+      phase('ambient', ctx);
+      expect(ctx.world.scheduled.find((s) => s.event === event)).toEqual({
+        event, year: floor, cause: { year: 1126, page: 'the_original_account' },
+      });
+
+      const resumed = loadGame(saveGame(ctx), content);
+      resumed.world.year = floor - 1;
+      phase('ambient', resumed);
+      expect(resumed.world.scheduled.find((s) => s.event === event)?.year).toBe(floor);
+
+      // The knowledge/flag is deliberately absent: even at the calendar
+      // opening the scene still has to satisfy its ordinary conditions.
+      resumed.world.year = floor;
+      phase('ambient', resumed);
+      expect(resumed.world.scheduled.find((s) => s.event === event)).toMatchObject({
+        event, year: floor + 5, first: floor,
+        cause: { year: 1126, page: 'the_original_account' },
+      });
+    });
+  }
+
   it('it does not fire early, and it is off the calendar once it has', () => {
     const ctx = bootstrap(content, 1042, 1042);
     const target = anAmbientEvent();

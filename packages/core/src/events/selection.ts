@@ -2,6 +2,7 @@ import type { Condition, EventTemplate, Frequency, Modifier } from '@ed/schema';
 import { FREQUENCY_PROFILES, assertNever, canTemplateFire, eventInCampaign, frequencyWeight, templateRationAllows } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from '../world.js';
 import { evalCondition } from './conditions.js';
+import { earliestCalendarYear } from './schedule-window.js';
 import { resolveSlots, type SlotFill } from './slots.js';
 import type { Rng } from '../rng.js';
 import { activeAgeIds } from '../ages/scheduler.js';
@@ -334,6 +335,18 @@ function forcedCandidates(ctx: SimCtx, rng: Rng): Candidate[] {
       (w.frequency.templateFires[e.id] ?? 0) > 0
       || out.some((candidate) => candidate.event.id === e.id)
     )) continue;
+
+    // A calendar gate is a promise's earliest possible due year, not forty
+    // years of failed retries. Defer old and new saved schedules alike, and
+    // start SCHEDULE_PATIENCE only once the authored date actually opens.
+    // The ordinary condition/cast check below still decides whether it fires.
+    const floor = earliestCalendarYear(e.conditions);
+    if (floor !== undefined && w.year < floor) {
+      const deferred = { ...s, year: floor };
+      delete deferred.first;
+      w.scheduled.push(deferred);
+      continue;
+    }
 
     // A schedule guarantees another opportunity, not permission to bypass the
     // author's conditions. In particular, a follow-up due in generation three
