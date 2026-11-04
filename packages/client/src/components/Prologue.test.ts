@@ -77,6 +77,13 @@ async function answerFounder(wrapper: VueWrapper, gender = 0, name = 'Daveed'): 
   await buttons[gender]!.trigger('click');
 }
 
+async function continueSigning(wrapper: VueWrapper): Promise<void> {
+  const button = wrapper.get('.signing-navigation button.primary');
+  expect(button.isVisible()).toBe(true);
+  expect(button.attributes('disabled')).toBeUndefined();
+  await button.trigger('click');
+}
+
 function answerButton(wrapper: VueWrapper, question: number, answer = 1) {
   const label = `Answer ${question}.${answer}`;
   const button = wrapper.findAll('.examination button').find((candidate) => candidate.text().includes(label));
@@ -417,9 +424,11 @@ describe('founding submit single-flight (#1484)', () => {
     try {
       await revealChoices(wrapper);
       await answerFounder(wrapper);
+      await continueSigning(wrapper);
       for (let question = 1; question <= 4; question += 1) {
         await answerButton(wrapper, question).trigger('click');
       }
+      await continueSigning(wrapper);
       await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
       await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
       const house = wrapper.get('input[aria-label="Name the house"]');
@@ -468,9 +477,11 @@ describe('optional friends at signing (#1984)', () => {
     try {
       await revealChoices(wrapper);
       await answerFounder(wrapper);
+      await continueSigning(wrapper);
       for (let question = 1; question <= 4; question += 1) {
         await answerButton(wrapper, question).trigger('click');
       }
+      await continueSigning(wrapper);
       await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
       await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
       await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
@@ -497,9 +508,11 @@ describe('optional friends at signing (#1984)', () => {
   async function readyToSign(wrapper: VueWrapper): Promise<void> {
     await revealChoices(wrapper);
     await answerFounder(wrapper);
+    await continueSigning(wrapper);
     for (let question = 1; question <= 4; question += 1) {
       await answerButton(wrapper, question).trigger('click');
     }
+    await continueSigning(wrapper);
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
     await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
@@ -595,6 +608,7 @@ describe('The Examination (#343)', () => {
 
     const founder = wrapper.get('input[aria-label="Name the founder"]');
     expect(founder.attributes('maxlength')).toBe(String(FOUNDER_NAME_MAX));
+    await continueSigning(wrapper);
 
     expect(wrapper.text()).toContain('Situation 1');
     expect(wrapper.text()).toContain('Situation 4');
@@ -649,6 +663,11 @@ describe('The Examination (#343)', () => {
     });
     await revealChoices(wrapper);
     await answerFounder(wrapper);
+    await continueSigning(wrapper);
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+    }
+    await continueSigning(wrapper);
     const house = wrapper.get('input[aria-label="Name the house"]');
     await house.setValue('House Ash');
 
@@ -657,9 +676,6 @@ describe('The Examination (#343)', () => {
     await house.trigger('keydown', { key: 'Enter' });
     expect(game.found).not.toHaveBeenCalled();
 
-    for (let question = 1; question <= 4; question += 1) {
-      await answerButton(wrapper, question).trigger('click');
-    }
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
 
@@ -689,18 +705,23 @@ describe('The Examination (#343)', () => {
     await answerFounder(wrapper);
 
     await wrapper.get('input[aria-label="Name the founder"]').setValue('Alys');
+    await continueSigning(wrapper);
+    expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+    expect(wrapper.text()).toContain('an answer to each Examination question');
+
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+      if (question < 4) {
+        expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+      }
+    }
+    await continueSigning(wrapper);
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
     await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
 
     const sign = wrapper.get('button.sign');
-    expect(sign.attributes('disabled')).toBeDefined();
-    expect(wrapper.text()).toContain('an answer to each Examination question');
-
-    for (let question = 1; question <= 4; question += 1) {
-      await answerButton(wrapper, question).trigger('click');
-    }
-
+    expect(sign.isVisible()).toBe(true);
     expect(sign.attributes('disabled')).toBeUndefined();
     await sign.trigger('click');
 
@@ -744,6 +765,7 @@ describe('founding identity only when the prompt is visible (#1984)', () => {
         for (let question = 1; question <= 4; question += 1) {
           await answerButton(wrapper, question).trigger('click');
         }
+        await continueSigning(wrapper);
         await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
         await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
         await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
@@ -770,9 +792,10 @@ describe('founding identity only when the prompt is visible (#1984)', () => {
 });
 
 describe('who signed', () => {
-  async function ready(wrapper: VueWrapper): Promise<void> {
-    await revealChoices(wrapper);
+  async function completeRemainingSigning(wrapper: VueWrapper): Promise<void> {
+    await continueSigning(wrapper);
     for (let question = 1; question <= 4; question += 1) await answerButton(wrapper, question).trigger('click');
+    await continueSigning(wrapper);
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
     await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
@@ -782,7 +805,8 @@ describe('who signed', () => {
 
   it('waits for a name and both answers, and says so', async () => {
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
-    await ready(wrapper);
+    await revealChoices(wrapper);
+    expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
     expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
     expect(wrapper.text()).toContain('what you are called');
     expect(wrapper.text()).toContain('who signed it');
@@ -796,13 +820,14 @@ describe('who signed', () => {
     expect(wrapper.text()).not.toContain('who signed it');
 
     await wrapper.get('input[aria-label="Name the founder"]').setValue('Ysolt Gearithy');
+    await completeRemainingSigning(wrapper);
     expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
   });
 
   it('pre-selects the body for a woman, keeps a nonbinary founder\'s own choice, and lets anyone change it', async () => {
     const game = actions();
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 } });
-    await ready(wrapper);
+    await revealChoices(wrapper);
 
     await answerFounder(wrapper, 1);
     expect(pressed(wrapper)).toEqual(['false', 'true']);
@@ -811,6 +836,7 @@ describe('who signed', () => {
     await wrapper.findAll('.founding-configuration button')[0]!.trigger('click');
     expect(pressed(wrapper)).toEqual(['true', 'false']);
 
+    await completeRemainingSigning(wrapper);
     await wrapper.get('button.sign').trigger('click');
     expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
       founder: { name: 'Daveed', gender: 'nonbinary', configuration: 'blood_father' },
@@ -821,7 +847,7 @@ describe('who signed', () => {
     const game = actions();
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 } });
     try {
-      await ready(wrapper);
+      await revealChoices(wrapper);
       await answerFounder(wrapper, 0);
       expect(pressed(wrapper), 'a man starts with the suggested blood father').toEqual(['true', 'false']);
 
@@ -839,6 +865,7 @@ describe('who signed', () => {
       await answerFounder(wrapper, 2);
       expect(pressed(wrapper), 'later gender changes do not erase the chosen blood mother').toEqual(['false', 'true']);
 
+      await completeRemainingSigning(wrapper);
       await wrapper.get('button.sign').trigger('click');
       expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
         founder: { name: 'Daveed', gender: 'nonbinary', configuration: 'blood_mother' },
@@ -850,7 +877,7 @@ describe('who signed', () => {
 
   it('asks a nonbinary founder to choose when nothing is chosen yet', async () => {
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 } });
-    await ready(wrapper);
+    await revealChoices(wrapper);
     await answerFounder(wrapper, 2);
     expect(pressed(wrapper)).toEqual(['false', 'false']);
     expect(wrapper.text()).not.toContain('who signed it');
@@ -1351,9 +1378,11 @@ describe('signing the founding with an input method (#1296)', () => {
     });
     await revealChoices(wrapper);
     await answerFounder(wrapper);
+    await continueSigning(wrapper);
     for (let question = 1; question <= 4; question += 1) {
       await answerButton(wrapper, question).trigger('click');
     }
+    await continueSigning(wrapper);
     await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
     await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
     const house = wrapper.get('input[aria-label="Name the house"]');
@@ -1403,15 +1432,10 @@ describe('signing the founding with an input method (#1296)', () => {
   });
 
   it('still refuses an ordinary Enter while the founding is incomplete', async () => {
-    const game = actions();
-    const wrapper = mount(Prologue, {
-      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
-    });
-    await revealChoices(wrapper);
-    await answerFounder(wrapper);
-    const house = wrapper.get('input[aria-label="Name the house"]');
-    await house.setValue('House Ash');
+    const { game, wrapper, house } = await completedFounding();
+    await house.setValue('   ');
 
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
     house.element.dispatchEvent(enterKey(false));
     expect(game.found).not.toHaveBeenCalled();
     wrapper.unmount();
@@ -1487,10 +1511,13 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
       expect(wrapper.get('.waiting').text()).toContain('Before signing, provide');
       expect((wrapper.get('input[aria-label="Enter the founder name"]').element as HTMLInputElement).value).toBe('Daveed');
 
+      await continueSigning(wrapper);
       for (let q = 1; q <= 4; q += 1) await answerButton(wrapper, q).trigger('click');
+      await continueSigning(wrapper);
       await wrapper.findAll('button').find((b) => b.text().includes('The Seal'))!.trigger('click');
       await wrapper.findAll('button').find((b) => b.text().includes('House Marrow'))!.trigger('click');
       await wrapper.get('input[aria-label="Enter the family name"]').setValue('House Ash');
+      (wrapper.get('details.friend-names').element as HTMLDetailsElement).open = true;
       await wrapper.get('.friend input').setValue('Lena');
       await wrapper.findAll('.friend .sex button')[1]!.trigger('click'); // male
       expect(wrapper.text()).toContain('First given.');
@@ -1596,9 +1623,11 @@ describe('founding refusal follows submitted inputs (#2360)', () => {
       expect(wrapper.get('.rubric').text()).toContain('The second signing was refused.');
 
       await answerFounder(wrapper);
+      await continueSigning(wrapper);
       for (let question = 1; question <= 4; question += 1) {
         await answerButton(wrapper, question).trigger('click');
       }
+      await continueSigning(wrapper);
       await wrapper.findAll('button').find((button) => button.text().includes('The Seal'))!.trigger('click');
       await wrapper.findAll('button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
       await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
@@ -1619,6 +1648,7 @@ describe('founding refusal follows submitted inputs (#2360)', () => {
       await wrapper.setProps({ refused: null });
       await wrapper.setProps({ refused: 'A new reason from the parent.' });
       expect(wrapper.get('.rubric').text()).toContain('A new reason from the parent.');
+      await wrapper.get('.signing-navigation button').trigger('click');
       await answerButton(wrapper, 1, 2).trigger('click');
       expect(wrapper.find('.rubric').exists()).toBe(false);
 
