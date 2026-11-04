@@ -321,6 +321,11 @@ const RENT_DISCONTENT: Record<RentPolicy, number> = { customary: 0, hard: 0.25, 
 const IMPROVE_YEARS = 4;
 const IMPROVE_YIELD_GAIN = 2;
 
+/** A recovered future-dated project is not underway before its ordinary term begins. */
+function improvementUnderway(completes: Year, now: Year): boolean {
+  return completes - IMPROVE_YEARS <= now;
+}
+
 /** Start a term of improvement — drainage, mostly, world §5's own word for what half these farms need. */
 export function beginImprovement(ctx: SimCtx, parcel: string): OrderResult {
   const w = ctx.world;
@@ -335,7 +340,7 @@ export function beginImprovement(ctx: SimCtx, parcel: string): OrderResult {
   const found = liveStateOf(ctx, parcel);
   if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.improve_not_held', 'the house does not hold it') };
   const [id] = found;
-  if (w.landImprovements.some((imp) => imp.parcel === id)) {
+  if (w.landImprovements.some((imp) => imp.parcel === id && improvementUnderway(imp.completes, w.year))) {
     return { ok: false, reason: msg(ctx, 'land.refuse.improve_underway', 'already being improved') };
   }
 
@@ -658,7 +663,9 @@ export function escheatBranchLand(ctx: SimCtx, branch: string): void {
  */
 export function nameParcel(ctx: SimCtx, parcel: string, name: string): OrderResult {
   const w = ctx.world;
-  const found = liveStateOf(ctx, parcel) ?? (w.parcels.has(parcel) ? [parcel, w.parcels.get(parcel)!] as const : undefined);
+  const byId = w.parcels.get(parcel);
+  const found = liveStateOf(ctx, parcel)
+    ?? (byId && byId.heldSince <= w.year ? [parcel, byId] as const : undefined);
   if (!found) return { ok: false, reason: msg(ctx, 'land.refuse.rename_not_held', 'the house does not hold it') };
   const [, state] = found;
   const trimmed = name.trim();
@@ -755,7 +762,11 @@ function lostView(ctx: SimCtx, l: LandView['lost'][number]): LandView['lost'][nu
 
 export function landView(ctx: SimCtx): LandView {
   const w = ctx.world;
-  const improving = new Map(w.landImprovements.map((imp) => [imp.parcel, imp.completes]));
+  const improving = new Map(
+    w.landImprovements
+      .filter((imp) => improvementUnderway(imp.completes, w.year))
+      .map((imp) => [imp.parcel, imp.completes]),
+  );
 
   const held: LandView['held'] = [];
   for (const [id, state] of w.parcels) {
@@ -815,6 +826,6 @@ export function landView(ctx: SimCtx): LandView {
 
   return {
     treasury: Math.round(w.treasury), rentsPolicy: w.rentsPolicy, held, market,
-    lost: w.lostParcels.map((l) => lostView(ctx, l)),
+    lost: w.lostParcels.filter((l) => l.year <= w.year).map((l) => lostView(ctx, l)),
   };
 }
