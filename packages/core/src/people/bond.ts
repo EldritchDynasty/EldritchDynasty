@@ -61,12 +61,12 @@ export function isBonded(p: Person): boolean {
  * else's bond while leaving the actual world-owned contract untouched.
  */
 function currentServant(ctx: SimCtx, p: Person): boolean {
-  return p.status === 'alive' && ctx.world.people.get(p.id) === p;
+  return p.status === 'alive' && p.born <= ctx.world.year && ctx.world.people.get(p.id) === p;
 }
 
 /** Everyone the house is currently holding by debt. */
 export function bondsmen(ctx: SimCtx): Person[] {
-  return ctx.world.people.living().filter(isBonded);
+  return ctx.world.people.living().filter((p) => p.born <= ctx.world.year && isBonded(p));
 }
 
 /**
