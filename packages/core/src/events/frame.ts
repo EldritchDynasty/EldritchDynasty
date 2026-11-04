@@ -120,7 +120,7 @@ function readHolds(ctx: SimCtx, r: FrameRead): boolean {
     // The entry survives every Record option — `applyRecord` rewrites what the
     // page SAYS and never removes it, so an omission is a dated blank with the
     // event id still on it. That is the point: the guardian reads the blank.
-    return w.chronicle.some((c) => c.eventId === r.chronicled);
+    return w.chronicle.some((c) => c.eventId === r.chronicled && c.year <= w.year);
   }
   if ('omitted' in r) {
     return w.decisionLog.filter((d) => d.kind === 'record' && d.option === 'omit' && d.year <= w.year).length
@@ -229,8 +229,9 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
 export function pageToCite(ctx: SimCtx, e: EventTemplate): ChronicleEntry | undefined {
   if (!e.reads.some(frameReadBindsPage)) return undefined;
   const w = ctx.world;
-  const cited = new Set(w.frame.entries.flatMap((f) => (f.cites ? [f.cites.page] : [])));
-  const blanks = w.chronicle.filter((c) => c.record === 'omit' && c.id !== undefined);
+  const cited = new Set(w.frame.entries.filter((f) => f.year <= w.year)
+    .flatMap((f) => (f.cites ? [f.cites.page] : [])));
+  const blanks = w.chronicle.filter((c) => c.record === 'omit' && c.id !== undefined && c.year <= w.year);
   return blanks.find((c) => !cited.has(c.id!)) ?? blanks.at(-1);
 }
 
