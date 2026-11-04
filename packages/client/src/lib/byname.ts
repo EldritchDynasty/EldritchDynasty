@@ -21,6 +21,7 @@ export function bynameTag(standing: BynameStanding, plain: boolean): string | un
   switch (standing) {
     case 'attested':
     case 'unknown': return undefined;
+    case 'reign': return plain ? 'named for the reign’s pages' : 'by the book of that reign';
     case 'claimed': return plain ? 'from a more favourable account' : 'as the house improved it';
     case 'contested': return 'discrepancy proven';
     case 'buried': return 'dispute buried';
@@ -44,6 +45,9 @@ export function bynameNote(byname: BynameView, plain: boolean): string {
     case 'buried': return plain
       ? `Byname from a more favourable account written in ${year}. The dispute was not answered.`
       : `Written into the book in ${year}, on a page the house improved; the doubt was buried, not answered.`;
+    case 'reign': return plain
+      ? `This byname was given in ${year} for the pages the house wrote during this person's reign. It does not say those pages were true.`
+      : `Named in ${year} for the book kept under this person's seal; the pages are the house's account, not a verdict.`;
     case 'unknown': return plain
       ? 'Byname of unrecorded origin.'
       : 'An old byname; the book does not say where it came from.';
