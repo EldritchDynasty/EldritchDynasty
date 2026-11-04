@@ -109,7 +109,12 @@ export function chapterOf(ctx: SimCtx, ended: EndedAge): ChapterView | undefined
   // `w.founding?.year` — the latter is absent on every world nobody signed a
   // prologue for (the harness, the digest, every gate), and the founder's own
   // succession entry is written at bootstrap, unconditionally (`sim.ts`).
-  const founded = w.succession[0]?.from ?? w.year;
+  // Imported succession rows may be reordered. The earliest accession, not
+  // the first stored row, is the house's founding boundary.
+  const founded = w.succession.reduce<number | undefined>(
+    (earliest, entry) => earliest === undefined ? entry.from : Math.min(earliest, entry.from),
+    undefined,
+  ) ?? w.year;
 
   // The most recent OTHER closing strictly before this one. Two closings
   // sharing a year were 0 of 96 in the measurement above; if content ever
@@ -158,7 +163,10 @@ function verdictFor(ctx: SimCtx, from: number, to: number): ChapterLine[] {
   const told = w.chronicle
     .filter((e): e is ChronicleEntry & { text: string } =>
       e.year > from && e.year <= to && e.weight !== 'line' && e.text !== null)
-    .sort((a, b) => (CHRONICLE_RANK[a.weight] ?? 3) - (CHRONICLE_RANK[b.weight] ?? 3));
+    // Weight still sets consequence. Inside a weight, actual page chronology
+    // wins over imported storage order; stable sort preserves same-year ties.
+    .sort((a, b) => (CHRONICLE_RANK[a.weight] ?? 3) - (CHRONICLE_RANK[b.weight] ?? 3)
+      || a.year - b.year);
 
   const lines: ChapterLine[] = told.map((e) => ({ text: e.text }));
   if (lines.length >= MIN_VERDICT_LINES) return lines;
@@ -171,7 +179,9 @@ function verdictFor(ctx: SimCtx, from: number, to: number): ChapterLine[] {
   // book and into the succession record and the people store directly.
   const blood = w.people.blood(w.playerHouse);
 
-  for (const s of w.succession) {
+  // Recovered succession arrays are not guaranteed to be in accession order.
+  // Sort a copy so the persisted ledger is never rewritten by a read-model.
+  for (const s of [...w.succession].sort((a, b) => a.from - b.from)) {
     if (s.from > from && s.from <= to) {
       lines.push({ text: msg(ctx, 'chapter.seal', '{PERSON} took the seal.', { PERSON: s.name }) });
     }
@@ -200,7 +210,9 @@ function verdictFor(ctx: SimCtx, from: number, to: number): ChapterLine[] {
       { RESPECT: w.respect }) });
   }
   if (lines.length < MIN_VERDICT_LINES) {
-    const living = blood.filter((p) => p.status === 'alive').length;
+    // This is the count when this chapter closed, not today's life status.
+    // Later births and deaths must not rewrite an earlier chapter's verdict.
+    const living = blood.filter((p) => p.born <= to && (p.died === undefined || p.died > to)).length;
     lines.push({ text: msg(ctx, 'chapter.living', '{COUNT} of the blood were living when it ended.',
       { COUNT: String(living) }) });
   }
