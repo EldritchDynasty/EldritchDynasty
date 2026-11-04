@@ -19,6 +19,21 @@ const bundle = loadContent();
  * the buying is catchable. The numbers a run produces live in the balance log.
  */
 describe('what the record can show', () => {
+  it('never counts a repeated mother as another generation of maternal record (#2916)', () => {
+    const ctx = testWorld(bundle);
+    const self = place(ctx, { sex: 'female', age: 40, name: 'Self-ancestor' });
+    self.claimedParents = { ...self.claimedParents, mother: self.id };
+    expect(maternalDepth(ctx, self.id)).toBe(0);
+
+    const grandmother = place(ctx, { sex: 'female', age: 65, name: 'Circular grandmother' });
+    const daughter = place(ctx, { sex: 'female', age: 25, name: 'Circular daughter' });
+    beget(ctx, daughter, grandmother);
+    grandmother.claimedParents = { ...grandmother.claimedParents, mother: daughter.id };
+
+    expect(maternalDepth(ctx, daughter.id)).toBe(1);
+    expect(maternalDepth(ctx, grandmother.id)).toBe(1);
+  });
+
   it('walks the claimed maternal line, not the blood', () => {
     const ctx = testWorld(bundle);
     const gran = place(ctx, { sex: 'female', age: 70, name: 'Gran' });
@@ -126,6 +141,39 @@ describe('what a match asks for', () => {
 });
 
 describe('buying a grandmother', () => {
+  it('keeps a recovered future-born person\'s filed papers unavailable until birth (#2917)', () => {
+    const ctx = testWorld(bundle);
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Future document holder' });
+    const document = filePedigree(ctx, girl, 'caster');
+    const born = ctx.world.year + 2;
+    girl.born = born;
+
+    expect(papersHeld(ctx, girl)).toBe(0);
+    expect(girl.lineageDocuments).toContain(document);
+    ctx.world.year = born - 1;
+    expect(papersHeld(ctx, girl)).toBe(0);
+    ctx.world.year = born;
+    expect(papersHeld(ctx, girl)).toBe(FULL_PEDIGREE);
+  });
+
+  it('refuses direct filing for outsiders and not-yet-joined residents (#2918)', () => {
+    const ctx = testWorld(bundle);
+    const foreign = place(ctx, { sex: 'female', age: 24, name: 'Foreign petitioner', house: 'the_church' });
+    const incoming = place(ctx, { sex: 'female', age: 20, name: 'Future arrival' });
+    const arrival = ctx.world.year + 2;
+    incoming.membership[0]!.from = arrival;
+
+    expect(() => filePedigree(ctx, foreign, 'bramme')).toThrow('outside the house');
+    expect(() => filePedigree(ctx, incoming, 'bramme')).toThrow('outside the house');
+    expect(foreign.lineageDocuments).toEqual([]);
+    expect(incoming.lineageDocuments).toEqual([]);
+    expect(order(ctx, { kind: 'pedigree', person: foreign.id, grade: 'bramme' }).ok).toBe(false);
+
+    ctx.world.year = arrival;
+    expect(filePedigree(ctx, incoming, 'bramme').generations).toBe(2);
+    expect(incoming.lineageDocuments).toHaveLength(1);
+  });
+
   it('refuses Table and direct pedigree filing for future-born household members (#2858)', () => {
     const ctx = testWorld(bundle);
     const girl = place(ctx, { sex: 'female', age: 20, name: 'Future resident' });
