@@ -1,0 +1,8 @@
+verdict: ok
+exit: 0
+request: /claim 2665 --agent chatgpt/issue-2665-frame-future-20261104-0205 --paths packages/core/src/events/frame.ts packages/core/src/frame.test.ts
+request-commit: fdbc81643baabea3b1daa18f534e5efc15ed48f6
+
+held: 2665 → chatgpt/issue-2665-frame-future-20261104-0205 (lane code)
+  land it with: Closes #2665
+  the janitor retires the claims and deletes the branch behind that.
