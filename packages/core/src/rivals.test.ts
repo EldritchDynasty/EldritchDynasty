@@ -788,6 +788,8 @@ describe('recovered rival chronology (#2838, #2839, #2840)', () => {
     expect(baseline.length).toBeGreaterThan(4);
     expect(present.map((p) => p.id)).toEqual(baseline.map((p) => p.id));
     expect(lineageShape(present)).toEqual(lineageShape(baseline));
+    // Future rows also must not mint any phantom ids in today's lineage.
+    expect(recovered.world.counters.rival).toBe(clean.world.counters.rival);
     expect(present.every((p, i) => genomesEqual(p.genome, baseline[i]!.genome))).toBe(true);
     expect(future.every((p) => p.born === 1142 && p.died === undefined
       && p.left === undefined && p.spouse === undefined)).toBe(true);
