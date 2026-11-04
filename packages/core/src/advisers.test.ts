@@ -368,3 +368,105 @@ describe('stable adviser prose (#641)', () => {
     expect(() => msg(ctx, key, entry.text)).toThrow('Missing {NAME}');
   });
 });
+
+describe('adviser recovered-record chronology (#2934, #2935, #2936)', () => {
+  it.each([
+    ['clergy', 'priest'],
+    ['merchant', 'broker'],
+    ['scholar', 'reader'],
+    ['military', 'soldier'],
+  ] as const)('does not treat a future %s career as a current %s (#2934)', (career, lens) => {
+    const ctx = testWorld(contentBundle, 2934);
+    clearLiving(ctx);
+    const adviser = place(ctx, {
+      sex: 'male', age: 40, name: 'An Unappointed Relative', career: { career },
+    });
+    const today = ctx.world.year;
+    adviser.career!.from = today + 2;
+
+    const currentLens = () => adviceFor(ctx, 'tree', adviser.id, 1)[0]?.lens;
+    expect(currentLens()).toBe('close_kin');
+    ctx.world.year = today + 1;
+    expect(currentLens()).toBe('close_kin');
+    ctx.world.year = today + 2;
+    expect(currentLens()).toBe(lens);
+  });
+
+  it.each(['original', 'plainenglish'] as const)(
+    'offers no counsel from a recorded death, but retains it before death (%s, #2935)',
+    (mode) => {
+      const ctx = testWorld(contentBundle, 2935);
+      clearLiving(ctx);
+      setProseMode(ctx, mode);
+      const person = place(ctx, {
+        sex: 'male', age: 40, name: 'A Household Reader', career: { career: 'scholar' },
+      });
+      const now = ctx.world.year;
+      const who = () => adviceFor(ctx, 'tree', person.id, 1).map((a) => a.adviser.id);
+
+      person.died = now + 1;
+      expect(who()).toEqual([person.id]); // A recovered future death is not a death yet.
+      person.died = now;
+      expect(who()).toEqual([]); // Status may still incorrectly say 'alive'.
+      person.died = now - 2;
+      expect(who()).toEqual([]);
+      person.died = undefined;
+      person.born = now + 1;
+      expect(who()).toEqual([]); // Even an inconsistent hot membership cannot advise unborn.
+    },
+  );
+
+  it('recognises a widow only after her marriage and her spouse’s effective death (#2936)', () => {
+    const ctx = testWorld(contentBundle, 2936);
+    clearLiving(ctx);
+    const widow = place(ctx, {
+      sex: 'female', age: 43, name: 'A Prospective Widow', career: { career: 'clergy' },
+    });
+    const spouse = place(ctx, { sex: 'male', age: 46, name: 'The Former Head' });
+    marry(ctx, widow, spouse);
+    const today = ctx.world.year;
+    ctx.world.succession.push({
+      person: spouse.id, name: spouse.name, from: today - 10, to: today - 3,
+    });
+    spouse.status = 'dead';
+    const lens = () => adviceFor(ctx, 'tree', widow.id, 1)[0]?.lens;
+
+    spouse.died = today + 2;
+    expect(lens()).toBe('priest');
+    ctx.world.year = today + 2;
+    expect(lens()).toBe('old_head');
+
+    ctx.world.year = today;
+    spouse.died = undefined; // Legacy records may omit the death year.
+    const marriage = widow.marriages.find((m) => m.spouse === spouse.id)!;
+    marriage.from = today + 3;
+    expect(lens()).toBe('priest');
+    ctx.world.year = today + 3;
+    expect(lens()).toBe('old_head');
+
+    ctx.world.year = today;
+    marriage.from = today - 10;
+    marriage.to = today - 3; // The marriage ended before the death.
+    spouse.died = today - 1;
+    expect(lens()).toBe('priest');
+  });
+
+  it('does not favour an adviser for a marriage that has not started (#2936)', () => {
+    const ctx = testWorld(contentBundle, 2936);
+    clearLiving(ctx);
+    const target = place(ctx, { sex: 'male', age: 23, name: 'The Subject' });
+    const older = place(ctx, {
+      sex: 'male', age: 48, name: 'Future Spouse', career: { career: 'scholar' },
+    });
+    const younger = place(ctx, {
+      sex: 'male', age: 44, name: 'Unrelated Reader', career: { career: 'scholar' },
+    });
+    const today = ctx.world.year;
+    older.marriages.push({ spouse: target.id, from: today + 3 });
+    const first = () => adviceFor(ctx, 'tree', target.id, 1)[0]?.adviser.id;
+
+    expect(first()).toBe(younger.id); // Equal reader lenses: the younger speaks.
+    ctx.world.year = today + 3;
+    expect(first()).toBe(older.id); // Now the spouse's interest has actually begun.
+  });
+});
