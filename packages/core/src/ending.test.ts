@@ -172,8 +172,9 @@ describe('a creditor cannot read future Chronicle pages (#2656)', () => {
     const before = digestOf(ctx);
     const view = epilogueOf(ctx)!;
 
-    expect(view.read.slice(-2).map((page) => [page.year, page.text])).toEqual([
+    expect(view.read.map((page) => [page.year, page.text])).toEqual([
       [year - 1, 'An earlier recovered clause.'],
+      ...baseline.read.map((page) => [page.year, page.text]),
       [year, null],
     ]);
     expect(view.read).toHaveLength(baseline.read.length + 2);
@@ -2076,5 +2077,124 @@ describe('chronological last-night purpose witnesses (#2803)', () => {
     expect(view.beginning?.pages).toHaveLength(1);
     expect(view.read.map((p) => p.id)).toEqual(['late-opening-page']);
     expect(view.reckoning.pages).toBe(1);
+  });
+});
+
+
+describe('Chronicle chronology in last-night projections (#2842, #2843, #2844)', () => {
+  it('quotes the latest thirty dated pages, not the final thirty storage positions (#2842)', () => {
+    const ctx = atTheTerm(284201);
+    const w = ctx.world;
+    w.ending = { id: 'forgotten', year: w.year };
+    const pages: ChronicleEntry[] = Array.from({ length: 34 }, (_, i) => ({
+      year: 1400 + i,
+      weight: 'illuminated',
+      text: 'Page ' + i,
+      named: false,
+    }));
+    // The newest page was imported first, while an unwritten page follows the lot.
+    w.chronicle = [pages[33]!, ...pages.slice(0, 33), {
+      year: w.year + 1, weight: 'illuminated', text: 'Not yet written', named: false,
+    }];
+    const ending = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const view = epilogueOf(ctx)!;
+
+    expect(view.read.map((p) => p.text)).toEqual(pages.slice(-30).map((p) => p.text));
+    expect(view.read.map((p) => p.year)).toEqual(pages.slice(-30).map((p) => p.year));
+    expect(view.reckoning.pages).toBe(pages.length);
+    expect(selectEnding(ctx)).toBe(ending);
+    expect(digestOf(ctx)).toBe(before);
+    view.read[0]!.text = 'A rewritten copy';
+    expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('reads saved opening-arc testimony in year order, retaining same-year page order (#2843)', () => {
+    const ctx = atTheTerm(284301);
+    const w = ctx.world;
+    w.ending = { id: 'forgotten', year: w.year };
+    const earlier: ChronicleEntry = {
+      id: 'opening-early', year: 1043, eventId: 'the_tutors_good_years',
+      weight: 'paragraph', text: null, named: false, record: 'omit',
+    };
+    const later: ChronicleEntry = {
+      id: 'opening-late', year: 1046, eventId: 'three_names_in_the_day_book',
+      weight: 'paragraph', text: 'The late page.', named: false, record: 'embellish',
+    };
+    const sameYear: ChronicleEntry = {
+      id: 'opening-same-year', year: 1046, eventId: 'the_tutors_good_years',
+      weight: 'paragraph', text: 'Another page from the same year.', named: false,
+    };
+    w.chronicle = [later, sameYear, earlier];
+    const ending = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const view = epilogueOf(ctx)!;
+
+    expect(view.beginning?.pages.map((p) => p.id)).toEqual([
+      'opening-early', 'opening-late', 'opening-same-year',
+    ]);
+    expect(view.beginning?.pages[0]!.text).toBeNull();
+    expect(view.beginning?.pages[1]!.record).toBe('embellish');
+    expect(selectEnding(ctx)).toBe(ending);
+    expect(digestOf(ctx)).toBe(before);
+    view.beginning!.pages[0]!.text = 'A new claim';
+    expect(w.chronicle[2]!.text).toBeNull();
+  });
+
+  it('dates the first highest-rung testimony, regardless of storage order (#2844)', () => {
+    const ctx = atTheTerm(284401);
+    const w = ctx.world;
+    w.chronicle = [];
+    forge(ctx, 'hierophant', 1530);
+    forge(ctx, 'hierophant', 1510);
+    forge(ctx, 'adept', 1500);
+    w.ascension.best = 'hierophant';
+    const ending = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const reading = readTheChronicle(ctx);
+
+    expect(reading.attested).toBe('hierophant');
+    expect(reading.attestedYear).toBe(1510);
+    expect(reading.substantiated).toBe('hierophant');
+    expect(selectEnding(ctx)).toBe(ending);
+    expect(digestOf(ctx)).toBe(before);
+    expect(w.chronicle.map((entry) => entry.year)).toEqual([1530, 1510, 1500]);
+  });
+});
+
+
+describe('future duplicates cannot erase earlier ascendant testimony (#2846)', () => {
+  it('ignores future copies but still rejects two present-year copies of one wait', () => {
+    const ctx = atTheTerm(284601);
+    const w = ctx.world;
+    w.houseAmbition = 'raise_ascendant';
+    w.ending = { id: 'forgotten', year: w.year };
+    const ascendant = place(ctx, { name: 'Edric', sex: 'male', age: 55 });
+    const page: ChronicleEntry = {
+      id: 'ledger_wait:' + ascendant.id,
+      year: w.year - 10,
+      weight: 'paragraph',
+      title: 'The Ledger Stayed Open',
+      text: 'Edric was ageless, but the Ledger remained unfinished.',
+      named: false,
+      rung: 'demigod',
+      people: [ascendant.id],
+    };
+    w.chronicle = [page, { ...page, year: w.year + 1 }];
+    const ending = selectEnding(ctx);
+    const before = digestOf(ctx);
+
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'ascendant_wait',
+      person: 'Edric',
+      year: page.year,
+    });
+    expect(selectEnding(ctx)).toBe(ending);
+    expect(digestOf(ctx)).toBe(before);
+
+    // Both rows now exist at collection, so their shared ID is ambiguous.
+    w.chronicle[1]!.year = w.year;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(ending);
   });
 });

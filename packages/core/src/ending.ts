@@ -274,7 +274,12 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   let attestedYear: number | undefined;
 
   // Imported or inconsistent future pages are not yet part of the account.
-  const readableEntries = w.chronicle.filter((entry) => entry.year <= lastNightYear(w));
+  // Recovered saves can hold valid pages out of storage order. Read by year,
+  // preserving the original insertion order for pages written in one year.
+  // Sorting this filtered copy never reorders the persisted Chronicle.
+  const readableEntries = w.chronicle
+    .filter((entry) => entry.year <= lastNightYear(w))
+    .sort((a, b) => a.year - b.year);
   for (const entry of readableEntries) {
     if (entry.text === null) blanks += 1;
     else pages += 1;
@@ -568,6 +573,7 @@ function openingPages(ctx: SimCtx): ChronicleEntry[] {
   return ctx.world.chronicle
     .filter((e) => e.year <= lastNightYear(ctx.world)
       && e.eventId !== undefined && events.has(e.eventId))
+    .sort((a, b) => a.year - b.year)
     .map((entry) => structuredClone(entry));
 }
 
@@ -692,7 +698,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     for (const page of pages) {
       // A duplicate ID cannot tell which account the page identifies. A
       // second account of the same wait is not independent corroboration.
-      if (w.chronicle.filter((entry) => entry.id === page.id).length !== 1) continue;
+      // A duplicate from a year after collection cannot discredit the
+      // uniquely witnessed page that was already in the book.
+      if (w.chronicle.filter((entry) => entry.id === page.id && entry.year <= readYear).length !== 1) continue;
       const person = w.people.get(page.people![0]!);
       if (!person || person.houseOfOrigin !== w.playerHouse
         || person.born > page.year
@@ -790,6 +798,9 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
   const read = w.chronicle
     .filter((e) => e.year <= lastNightYear(w)
       && (e.text === null || e.record === 'embellish' || e.weight === 'illuminated'))
+    // The last thirty dated pages, not the last thirty array slots in a
+    // recovered book. Stable ties retain the order written within a year.
+    .sort((a, b) => a.year - b.year)
     .slice(-EPILOGUE_PAGES)
     .map((entry) => structuredClone(entry));
 
