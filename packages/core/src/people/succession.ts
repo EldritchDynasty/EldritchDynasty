@@ -39,11 +39,18 @@ export function advanceKnownRivalHeads(ctx: SimCtx): void {
     const office = lineage.office;
     if (!office?.head) continue;
     const previous = w.people.get(office.head);
-    if (previous && previous.status !== 'dead') continue;
+    // A restored status flag may describe a death from a future (or past)
+    // snapshot. The dated death, when present, defines the present boundary:
+    // do not vacate a future-dead incumbent early or retain a past-dead one.
+    const incumbentPresent = previous && previous.born <= w.year
+      && (previous.died === undefined ? previous.status !== 'dead' : previous.died > w.year);
+    if (incumbentPresent) continue;
     const children = new Set(previous ? w.people.children(previous.id).map(p => p.id) : []);
     const next = w.people.household(lineage.house, w.year).filter(p => {
       const m = currentMembership(p, w.year);
-      return p.status === 'alive' && m?.house === lineage.house && (m.kind === 'blood' || m.kind === 'cadet');
+      return p.status === 'alive' && p.born <= w.year
+        && (p.died === undefined || p.died > w.year)
+        && m?.house === lineage.house && (m.kind === 'blood' || m.kind === 'cadet');
     }).sort((a, b) => Number(!children.has(a.id)) - Number(!children.has(b.id)) || a.born - b.born || a.id.localeCompare(b.id))[0];
     const held = [...office.history].reverse().find(h => h.to === undefined);
     if (held) held.to = w.year;
