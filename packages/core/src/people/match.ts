@@ -1,5 +1,5 @@
 import type { CharacterTemplate, Person, Sex, Year } from '@ed/schema';
-import { ageAt, MAIN_BRANCH } from '@ed/schema';
+import { MAIN_BRANCH } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { hashSeed, makeRng, type Rng } from '../rng.js';
 import { DEBT_FLOOR } from '../economy.js';
@@ -479,7 +479,7 @@ function counts(year: Year, p: Person): boolean {
     && p.marriages.some((marriage) => marriage.from <= observedThrough)
     // A life ended before the childbearing window closed is not a completed line.
     // Checking today's year would count every long-dead young wife as barren.
-    && ageAt(p, observedThrough) >= CHILDBEARING.to;
+    && (observedThrough - p.born) >= CHILDBEARING.to;
 }
 
 /**

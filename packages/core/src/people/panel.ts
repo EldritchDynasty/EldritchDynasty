@@ -1,5 +1,5 @@
 import type { PanelKin, Person, Sex, Year } from '@ed/schema';
-import { ageAt, assertNever } from '@ed/schema';
+import { assertNever } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from '../world.js';
 import type { LineCensus, MatchCard } from './match.js';
 import { bloodWomenOf, lineWomen } from './match.js';
@@ -159,7 +159,7 @@ function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: str
         kin,
         borne: kids.length,
         // A future death cannot prove this child has survived to adulthood today.
-        grown: kids.filter((k) => ageAt(k, Math.min(k.died ?? w.year, w.year)) >= GROWN).length,
+        grown: kids.filter((k) => (Math.min(k.died ?? w.year, w.year) - k.born) >= GROWN).length,
       };
     });
 }
