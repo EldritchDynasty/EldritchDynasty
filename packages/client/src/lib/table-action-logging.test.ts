@@ -24,8 +24,10 @@ describe('Table workload observation windows (#1992)', () => {
       { at: 50, kind: 'break', on: false },
       { at: 60, kind: 'pane', pane: 'house' },
       { at: 70, kind: 'year', year: 1048 },
+      // Real App.vue order: load action -> pre-flush run -> Chronicle pickup.
+      { at: 75, kind: 'action', verb: 'load', act: 'start' },
+      { at: 79, kind: 'run', campaign: 'long', seed: 42 },
       { at: 80, kind: 'pickup' },
-      { at: 81, kind: 'run', campaign: 'long', seed: 42 },
       { at: 81, kind: 'year', year: 1110 },
       { at: 85, kind: 'pane', pane: 'table' },
       action(90, 'muster', 'withdraw', 'attempted'),
@@ -79,6 +81,24 @@ describe('Table workload observation windows (#1992)', () => {
     ]);
     expect(windows[0]!.endedBy).toBe('begin');
     expect(windows[1]!.source).toBe('begin');
+  });
+
+  it('inherits the public run marker when a same-seed load produces no new run event', () => {
+    const events: ReadingLogEvent[] = [
+      { at: 0, kind: 'run', campaign: 'short', seed: 17 },
+      { at: 1, kind: 'year', year: 1042 },
+      { at: 2, kind: 'action', verb: 'resume', act: 'start' },
+      { at: 3, kind: 'pickup' },
+      { at: 4, kind: 'year', year: 1050 },
+    ];
+    const windows = tableWorkloadWindows(events, 5);
+    expect(windows).toHaveLength(2);
+    expect(windows[0]).toMatchObject({
+      campaign: 'short', seed: 17, source: 'initial', endedBy: 'pickup',
+    });
+    expect(windows[1]).toMatchObject({
+      campaign: 'short', seed: 17, source: 'pickup', firstObservedYear: 1050,
+    });
   });
 
   it('uses the same event-cap/end boundary as export, without counting later activity', () => {
