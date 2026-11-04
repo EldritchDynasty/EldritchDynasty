@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId } from '@ed/schema';
 import { beginCommitment } from './muster.js';
-import { assignDuty } from './mystic.js';
+import { assignDuty, tickMystic } from './mystic.js';
 import { addGrudge, relate } from './people/relationships.js';
 import { place, testWorld } from './testing.js';
 import type { SimCtx } from './world.js';
@@ -57,5 +57,36 @@ describe('field Mystic opponents respect grudge chronology (#2731)', () => {
     grudge.originYear = 1110;
     relate(ctx.world, ENEMY, ctx.world.playerHouse, -10);
     expect(fieldWatch(ctx)).toBe(ENEMY);
+  });
+});
+
+/** A recovered future deployment can carry a previously-saved field reader. */
+describe('future-start recovered Mystic opposition (#2903)', () => {
+  it('does not mobilize a foreign opponent before the saved muster begins', () => {
+    const ctx = fieldWorld(1100);
+    expect(fieldWatch(ctx)).toBeUndefined();
+    const commitment = ctx.world.muster.commitments.at(-1)!;
+    commitment.began = 1105;
+    addGrudge(ctx, ENEMY, ctx.world.playerHouse,
+      { severity: 80, inheritance: 'house_wide' }, 'current_quarrel');
+
+    // The existing player assignment is recovered from a later save. The
+    // yearly opposition pass precedes duty eligibility checks: the latter
+    // must not retroactively create an enemy before the first field year.
+    tickMystic(ctx);
+    expect(commitment.opponent).toBeUndefined();
+    expect(ctx.world.mystic.assignments.some(a => a.house === ENEMY)).toBe(false);
+  });
+
+  it('still selects that opponent after a current-year deployment begins', () => {
+    const ctx = fieldWorld(1105);
+    expect(fieldWatch(ctx)).toBeUndefined();
+    const commitment = ctx.world.muster.commitments.at(-1)!;
+    expect(commitment.began).toBe(ctx.world.year);
+    addGrudge(ctx, ENEMY, ctx.world.playerHouse,
+      { severity: 80, inheritance: 'house_wide' }, 'current_quarrel');
+
+    tickMystic(ctx);
+    expect(commitment.opponent).toBe(ENEMY);
   });
 });
