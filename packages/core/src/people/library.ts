@@ -35,7 +35,7 @@ export function spellbookDef(ctx: SimCtx, id: string): SpellbookDef | undefined 
 
 /** Completed knowledge belongs to the reader, independently of the physical copy. */
 export function knowsAffinity(ctx: SimCtx, p: Person, affinity: string): boolean {
-  return p.status === 'alive' && canLearn(p.sex, affinity)
+  return p.status === 'alive' && p.born <= ctx.world.year && canLearn(p.sex, affinity)
     && p.spellsKnown.some((id) => spellbookDef(ctx, id)?.affinity === affinity);
 }
 
@@ -185,8 +185,12 @@ export function restorationQuote(ctx: SimCtx, id: string): RestorationQuote | un
   if (missing === 0) {
     return { fee, years, returns, ok: false, reason: msg(ctx, 'library.restore.pristine', 'the copy needs no repair') };
   }
-  if (ctx.world.studies.some((study) => study.book === id
-    && ctx.world.people.get(study.person)?.status === 'alive')) {
+  if (ctx.world.studies.some((study) => {
+    if (study.book !== id) return false;
+    const reader = ctx.world.people.get(study.person);
+    // A recovered future-born person cannot occupy the physical copy today.
+    return reader?.status === 'alive' && reader.born <= ctx.world.year;
+  })) {
     return { fee, years, returns, ok: false, reason: msg(ctx, 'library.restore.reading', 'someone is still reading this copy') };
   }
   return { fee, years, returns, ok: true };
@@ -344,7 +348,10 @@ export function gainSpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): boolea
  * read it.
  */
 function anybodyHasRead(ctx: SimCtx, book: string): boolean {
-  return ctx.world.people.all().some((q) => q.spellsKnown.some((b) => String(b) === book));
+  // Historic readers (including the dead) still count, but an imported
+  // future-born spell holder has not read anything by today's date.
+  return ctx.world.people.all().some((q) =>
+    q.born <= ctx.world.year && q.spellsKnown.some((b) => String(b) === book));
 }
 
 /** A person forgets, or is stripped of, one book — the shelf copy is untouched. */
@@ -395,7 +402,10 @@ export function conditionDrag(ctx: SimCtx, id: string): number {
  * reader the field was always described as having.
  */
 export function effectiveStudyYears(ctx: SimCtx, p: Person, def: SpellbookDef): number {
-  const career = p.career && ctx.content.career(p.career.career);
+  // Recovered future appointments grant no Scholar speed or Age boost yet.
+  const career = p.career && p.career.from <= ctx.world.year
+    ? ctx.content.career(p.career.career)
+    : undefined;
   // An Age magnifies a benefit the post ALREADY owns; it does not invent a
   // study benefit for Military, Clergy, Merchant or Advocate.
   const ageFactor = (career?.studySpeed ?? 1) < 1
