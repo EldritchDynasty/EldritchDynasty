@@ -6,6 +6,7 @@ import {
 import type { ChronicleEntry, SimCtx } from './world.js';
 import { castIn, type SlotFill } from './events/fill.js';
 import { renderProse } from './prose.js';
+import { msg } from './messages.js';
 
 /**
  * EARNED BYNAMES (issue #1990). Contract: `docs/BYNAME-CONTRACT.md`.
@@ -132,6 +133,54 @@ export function eligibleByname(
 }
 
 /**
+ * One alternate byname source (#2287): the family's Record pen balance over
+ * a completed Head's reign. Only the real succession commit can grant it.
+ * Future pages and the incoming Head's own pages cannot enter this count;
+ * it reports the family's writing, never a judgement of objective virtue.
+ */
+export function grantReignByname(
+  ctx: SimCtx,
+  reign: { person: Person['id']; from: Year },
+): void {
+  const w = ctx.world;
+  const person = w.people.get(reign.person);
+  if (!person || person.epithet !== undefined || person.byname !== undefined
+    || !Number.isFinite(reign.from) || reign.from >= w.year) return;
+
+  const counts: Record<BynamePen | 'omit', number> = { record: 0, omit: 0, embellish: 0 };
+  for (const page of w.chronicle) {
+    if (page.year < reign.from || page.year >= w.year) continue;
+    switch (page.record) {
+      case 'record':
+      case 'omit':
+      case 'embellish': counts[page.record]++; break;
+      case undefined: break;
+      default: return assertNever(page.record);
+    }
+  }
+  const pages = counts.record + counts.omit + counts.embellish;
+  if (pages < 2) return;
+  const pen: 'record' | 'omit' | 'embellish' | 'mixed' =
+    counts.record > pages / 2 ? 'record'
+    : counts.omit > pages / 2 ? 'omit'
+    : counts.embellish > pages / 2 ? 'embellish' : 'mixed';
+  const title = (() => {
+    switch (pen) {
+      case 'record': return msg(ctx, 'byname.reign.record', 'of the Open Leaves');
+      case 'omit': return msg(ctx, 'byname.reign.omit', 'of the Unturned Pages');
+      case 'embellish': return msg(ctx, 'byname.reign.embellish', 'of the Gilded Leaves');
+      case 'mixed': return msg(ctx, 'byname.reign.mixed', 'of the Divided Book');
+      default: return assertNever(pen);
+    }
+  })();
+  person.epithet = title;
+  person.byname = {
+    source: { kind: 'reign', from: reign.from, to: w.year, pen, pages },
+    year: w.year,
+  };
+}
+
+/**
  * A lie was proven or buried. Stamp it on the ONE byname whose telling that
  * settlement addressed: the latest embellished page carrying this authored
  * discrepancy id, because each Embellish of the same id reopens the shared
@@ -165,6 +214,7 @@ function restsOn(grant: BynameGrant, discrepancy: string, page: string): boolean
   const source = grant.source;
   switch (source.kind) {
     case 'record': return source.pen === 'embellish' && source.discrepancy === discrepancy && source.page === page;
+    case 'reign': return false;
     default: return assertNever(source.kind);
   }
 }
@@ -203,6 +253,7 @@ export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>, asOfY
         default: return assertNever(pen);
       }
     }
+    case 'reign': return 'reign';
     default: return assertNever(source.kind);
   }
 }
@@ -239,6 +290,7 @@ export function bynameView(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?
       ...(grant.settled && (asOfYear === undefined || grant.settled.year <= asOfYear)
         ? { settledYear: grant.settled.year } : {}),
     };
+    case 'reign': return { text: epithet, standing, year: grant.year };
     default: return assertNever(source.kind);
   }
 }
