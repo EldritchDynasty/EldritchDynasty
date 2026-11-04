@@ -220,7 +220,15 @@ describe('new campaign in a retained signing component (#1984)', () => {
       // Starting a different campaign while this component is retained must
       // not carry a founder, earlier questions, house choices or named friends.
       await wrapper.setProps({ startYear: 1200, prologue: { ...first, friendsWanted: 1 } });
+      // An earlier campaign's completed triad cannot silently reveal the
+      // next one when Skip seen prose is off, even in a retained component.
+      expect(wrapper.find('.signing-progress').exists()).toBe(false);
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      for (const label of ['Read the first part', 'Read the second part', 'Read the third part']) {
+        await wrapper.findAll('button').find((button) => button.text() === label)!.trigger('click');
+      }
       expect(wrapper.get('.signing-progress').text()).toContain('Step 1 of 3');
+      expect((wrapper.get('details.friend-names').element as HTMLDetailsElement).open).toBe(false);
       expect((wrapper.get('input[aria-label="Enter the founder name"]').element as HTMLInputElement).value).toBe('');
       expect(wrapper.findAll('.identity button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
       expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
@@ -246,6 +254,69 @@ describe('new campaign in a retained signing component (#1984)', () => {
         founder: { name: 'Beatrice', gender: 'woman', configuration: 'blood_mother' },
         friends: [],
       }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
+
+describe('signing transitions stay in their own screen (#1984)', () => {
+  it('does not accept a stale Sign click after Back has moved to the Examination', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      attachTo: document.body,
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      await answerFounder(wrapper);
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+
+      await wrapper.get('.signing-navigation button').trigger('click');
+      expect(wrapper.get('.examination').isVisible()).toBe(true);
+      // A queued event may still target the old button before the browser
+      // removes it. All fields are valid, but this is not the signing stage.
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).not.toHaveBeenCalled();
+
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('shows new run-specific inherited prose when the retained signing gains it', async () => {
+    const game = actions();
+    const first = prologueView();
+    const wrapper = mount(Prologue, {
+      props: { prologue: first, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      expect(wrapper.find('.inherited').exists()).toBe(false);
+      await wrapper.setProps({
+        startYear: 1200,
+        prologue: {
+          ...first, id: 'another_signing',
+          inherited: {
+            houseName: 'House Ash', teller: 'The chronicler', bias: 'A partial account',
+            line: 'An earlier house recorded this', text: 'A remembered debt.',
+          },
+        },
+      });
+      expect(wrapper.get('.inherited').text()).toContain('A remembered debt.');
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      expect(wrapper.find('.signing-progress').exists()).toBe(false);
     } finally {
       wrapper.unmount();
     }
