@@ -1,0 +1,9 @@
+verdict: ok
+exit: 0
+request: /claim 2755 --agent chatgpt/issue-2755-covert-chronology-nov04 --paths packages/core/src/covert-operations.ts packages/core/src/covert.test.ts packages/core/src/presence.ts
+request-commit: d08e8042bbbca464619a2873ccd8880d23440812
+
+held: 2755 → chatgpt/issue-2755-covert-chronology-nov04 (lane code)
+  land it with: Closes #2755
+  the janitor retires the claims and deletes the branch behind that.
+  ⚠ chatgpt/issue-2727-future-operative-grudge-20261104 declared overlapping paths on 2727: packages/core/src/covert-operations.ts, packages/core/src/covert-operation-chronology.test.ts
