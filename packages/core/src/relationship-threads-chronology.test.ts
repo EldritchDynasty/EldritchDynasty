@@ -105,6 +105,20 @@ describe('recovered external relationship facts are only active in their own yea
     expect(externalThreadFor(ctx, 'house_hesk')).toBeUndefined();
     ctx.world.year = 1053;
     expect(externalThreadFor(ctx, 'house_hesk')?.pressures.some((f) => f.kind === 'courtship')).toBe(true);
+
+    // A recovered future death or departure must not erase today's Match memory.
+    rival.born = 1020;
+    rival.died = 1055;
+    ctx.world.year = 1054;
+    expect(externalThreadFor(ctx, 'house_hesk')?.pressures.some((f) => f.kind === 'courtship')).toBe(true);
+    ctx.world.year = 1055;
+    expect(externalThreadFor(ctx, 'house_hesk')).toBeUndefined();
+    rival.died = undefined;
+    rival.left = 1057;
+    ctx.world.year = 1056;
+    expect(externalThreadFor(ctx, 'house_hesk')?.pressures.some((f) => f.kind === 'courtship')).toBe(true);
+    ctx.world.year = 1057;
+    expect(externalThreadFor(ctx, 'house_hesk')).toBeUndefined();
   });
 
   it('does not name an unjoined or unborn married-in relative until the boundary (#2890)', () => {
@@ -122,6 +136,15 @@ describe('recovered external relationship facts are only active in their own yea
     ctx.world.year = 1057;
     expect(family()).toBe(true);
     expect(spouse.membership.at(-1)?.from).toBe(1052);
+
+    // Saved death status can refer to a loss later than the year now being read.
+    spouse.born = 1020;
+    spouse.status = 'dead';
+    spouse.died = 1060;
+    ctx.world.year = 1059;
+    expect(family()).toBe(true);
+    ctx.world.year = 1060;
+    expect(family()).toBe(false);
   });
 
   it('waits for a carried secret, then retains pressure until an actual telling (#2891)', () => {
