@@ -60,3 +60,29 @@ export function checkGateDuration(
   config?: GateDurationConfig,
   cpus?: number,
 ): GateDurationResult;
+
+/** Structured output from the batch gate runner, for diagnostic display only. */
+export interface GateTimingReport {
+  version: number;
+  lane: string;
+  totalSeconds: number;
+  host?: {
+    cpuModel?: string;
+    logicalCpus?: number;
+  };
+  gates: Array<{ gate: string; seconds: number; ok: boolean }>;
+}
+
+export interface GateTimingSummary {
+  gateCount: number;
+  totalSeconds: number;
+  slowest: GateTimingReport['gates'];
+  cpuModel: string;
+  logicalCpus: number | string;
+}
+
+/** Never changes the verdict returned by checkGateDuration. */
+export function summarizeGateTimingReport(
+  report: GateTimingReport,
+  lane: string,
+): GateTimingSummary;
