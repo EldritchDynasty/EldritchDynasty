@@ -258,6 +258,11 @@ function attests(entry: ChronicleEntry): boolean {
   return entry.text !== null && !entry.greyed;
 }
 
+/** A completed account cannot acquire later testimony if an imported save advances the clock. */
+function lastNightYear(w: WorldState): number {
+  return Math.min(w.year, w.ending?.year ?? w.year);
+}
+
 export function readTheChronicle(ctx: SimCtx): Reckoning {
   const w = ctx.world;
 
@@ -269,7 +274,7 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   let attestedYear: number | undefined;
 
   // Imported or inconsistent future pages are not yet part of the account.
-  const readableEntries = w.chronicle.filter((entry) => entry.year <= w.year);
+  const readableEntries = w.chronicle.filter((entry) => entry.year <= lastNightYear(w));
   for (const entry of readableEntries) {
     if (entry.text === null) blanks += 1;
     else pages += 1;
@@ -561,7 +566,7 @@ function openingPages(ctx: SimCtx): ChronicleEntry[] {
   if (!arc) return [];
   const events = new Set(arc.nodes.map((n) => String(n.event)));
   return ctx.world.chronicle
-    .filter((e) => e.year <= ctx.world.year
+    .filter((e) => e.year <= lastNightYear(ctx.world)
       && e.eventId !== undefined && events.has(e.eventId))
     .map((entry) => structuredClone(entry));
 }
@@ -573,7 +578,8 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
   const ambition = ambitionView(ctx);
   return {
     founder: founder.name,
-    ...(w.guardianSince !== undefined ? { guardianSince: w.guardianSince } : {}),
+    ...(w.guardianSince !== undefined && w.guardianSince <= lastNightYear(w)
+      ? { guardianSince: w.guardianSince } : {}),
     pages: openingPages(ctx),
     ...(ambition
       ? { ambition: { name: ambition.name, progress: ambition.progress.label, status: ambition.status } }
@@ -599,6 +605,7 @@ function purposePersonName(person: { name: string; epithet?: string }): string {
  */
 function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose | undefined {
   const w = ctx.world;
+  const readYear = lastNightYear(w);
   if (w.campaign !== 'long') return undefined;
   if (w.houseAmbition === 'restore_ledger') {
     // A recovered counter alone proves no surviving testimony: the opening
@@ -617,7 +624,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       const matches = w.chronicle.filter((entry) =>
         entry.weight === 'illuminated' && entry.named && !entry.greyed
         // A page from a later year is not yet testimony at collection.
-        && entry.year <= w.year
+        && entry.year <= readYear
         && entry.record === undefined
         && ((entry.title === clause.name && entry.text === clause.text)
           || (entry.title === plain.name && entry.text === plain.text)));
@@ -633,19 +640,23 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     // supplies the consequence. Selecting an ambition alone proves neither.
     // Do not infer a rescue or attribute a named Chronicle page to this branch:
     // older founding pages have no person/branch ID to support such a join.
-    const residents = halls(w, w.year);
+    const residents = halls(w, readYear);
     const branches = activeBranches(w)
-      .filter((branch) => branch.house === w.playerHouse)
+      .filter((branch) => branch.house === w.playerHouse && branch.foundedYear <= readYear)
       .sort((a, b) => a.foundedYear - b.foundedYear
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     for (const branch of branches) {
       const family = residents.get(branch.id) ?? [];
-      if (!viableCadetHall(family, w.year)) continue;
+      if (!viableCadetHall(family, readYear)) continue;
       const founder = w.people.get(branch.founder);
-      if (!founder || founder.houseOfOrigin !== w.playerHouse) continue;
+      // Restored founding rows must not credit a hall to somebody who had not
+      // been born (or had already died) when its charter was signed.
+      if (!founder || founder.houseOfOrigin !== w.playerHouse
+        || founder.born > branch.foundedYear
+        || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
       const survivor = family
         .filter((person) => person.status === 'alive'
-          && person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, w.year))
+          && person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
         .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
       if (!survivor) continue;
       return {
@@ -676,14 +687,16 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         && page.record === undefined
         && page.text !== null
         && !page.greyed
-        && page.year <= w.year;
+        && page.year <= readYear;
     }).sort((a, b) => a.year - b.year || (a.id! < b.id! ? -1 : a.id! > b.id! ? 1 : 0));
     for (const page of pages) {
       // A duplicate ID cannot tell which account the page identifies. A
       // second account of the same wait is not independent corroboration.
       if (w.chronicle.filter((entry) => entry.id === page.id).length !== 1) continue;
       const person = w.people.get(page.people![0]!);
-      if (!person || person.houseOfOrigin !== w.playerHouse) continue;
+      if (!person || person.houseOfOrigin !== w.playerHouse
+        || person.born > page.year
+        || (person.died !== undefined && person.died < page.year)) continue;
       return {
         kind: 'ascendant_wait',
         person: purposePersonName(person),
@@ -701,7 +714,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   if (!spent || spent.source.text === null) return undefined;
   // Afterimage can include anybody named in a rite; only an actual member
   // of this house's blood can be counted as the cost of its bloodline aim.
-  if (ctx.world.people.get(spent.person)?.houseOfOrigin !== ctx.world.playerHouse) return undefined;
+  const victim = w.people.get(spent.person);
+  if (!victim || victim.houseOfOrigin !== w.playerHouse || victim.born > spent.source.year) return undefined;
   const pages = ctx.world.chronicle.filter((page) =>
     page.year === spent.source.year
     && page.text === spent.source.text
@@ -712,7 +726,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // A greyed page is lost; a page dated after collection has not yet
   // happened. Neither can testify to a family cost at this last night.
   // Other purpose witnesses reject future pages for the same reason.
-  if (page.greyed || page.year > w.year) return undefined;
+  if (page.greyed || page.year > readYear) return undefined;
   return {
     kind: 'blood_spent',
     person: purposePersonName(spent),
@@ -774,7 +788,7 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
   // Entries include nested claims, people and cause data, so spreading only
   // the array or its entries would still let a view rewrite the book.
   const read = w.chronicle
-    .filter((e) => e.year <= w.year
+    .filter((e) => e.year <= lastNightYear(w)
       && (e.text === null || e.record === 'embellish' || e.weight === 'illuminated'))
     .slice(-EPILOGUE_PAGES)
     .map((entry) => structuredClone(entry));
