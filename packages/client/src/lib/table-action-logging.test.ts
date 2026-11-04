@@ -97,7 +97,7 @@ describe('Table workload observation windows (#1992)', () => {
     const windows = tableWorkloadWindows(events, 500, true);
     expect(windows).toHaveLength(1);
     expect(windows[0]).toMatchObject({
-      source: 'initial', endedBy: 'end', startedAt: 0, endedAt: 40,
+      source: 'initial', endedBy: 'cap', startedAt: 0, endedAt: 40,
       foregroundMs: 30, tableForegroundMs: 30,
     });
     expect(windows[0]!.actions.orders).toMatchObject([
@@ -106,6 +106,9 @@ describe('Table workload observation windows (#1992)', () => {
     expect(tableWorkloadWindows(events, 15)[0]).toMatchObject({
       endedBy: 'open', endedAt: 15, foregroundMs: 15, tableForegroundMs: 15,
     });
+    // An explicitly exported, untruncated log ends normally; truncation
+    // describes the observation limit even when the terminal reason is export.
+    expect(tableWorkloadWindows(events, 500, false)[0]!.endedBy).toBe('end');
     expect(JSON.stringify(events)).toBe(eventsBefore);
   });
 });
