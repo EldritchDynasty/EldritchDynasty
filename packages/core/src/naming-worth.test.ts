@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
   NAMESAKE_EXPECTATION, assizePressure, beget, ensureHead, headNamesake, nameWorthAsking,
-  namesakeBurden, place, testRng, testWorld,
+  namesakeBurden, phenotypeOf, place, testRng, testWorld,
 } from '@ed/core';
 import { asId, proseOriginalHash, type PersonId } from '@ed/schema';
 import type { SimCtx } from '@ed/core';
@@ -296,5 +296,118 @@ describe('why a name is worth asking, in the reader\'s setting (#779)', () => {
     } as never);
     expect(nameWorthAsking(hall, bear(hall, founder, mother, 'male', 'Of The East', 'branch_east')))
       .toBe('first child of the new branch');
+  });
+});
+
+
+describe('naming honours respect the current world year (#2797, #2798)', () => {
+  it('does not let an unborn son hide the Head’s first living son', () => {
+    const { ctx, head, wife } = withHead(279701);
+    for (const sibling of ctx.world.people.children(head.id)) {
+      if (sibling.sex === 'male') sibling.status = 'dead';
+    }
+    const unborn = bear(ctx, head, wife, 'male', 'Son of next spring');
+    unborn.born = ctx.world.year + 1;
+    const newborn = bear(ctx, head, wife, 'male', 'First living son');
+
+    expect(nameWorthAsking(ctx, unborn), 'an unborn child cannot be named yet').toBeUndefined();
+    expect(nameWorthAsking(ctx, newborn)).toBe('the Head has a son, and had none before today');
+
+    unborn.born = ctx.world.year;
+    expect(nameWorthAsking(ctx, newborn)).not.toBe('the Head has a son, and had none before today');
+  });
+
+  it('does not let an unborn carrier end today’s blood drought', () => {
+    const ctx = testWorld(bundle, 279702, 1042);
+    const w = ctx.world;
+    // The founding generation is historical at this restored year.
+    w.year += 100;
+    const carrier = (name: string) => {
+      for (let n = 0; n < 96; n += 1) {
+        const p = place(ctx, { sex: 'female', age: 0, name: name + n });
+        if (phenotypeOf(p, ctx.genetics, w.year).eldritch.carriedFont !== null) return p;
+        p.born = w.year - 100;
+      }
+      throw new Error('no deterministic female carrier in the player house');
+    };
+    const unborn = carrier('Later carrier');
+    unborn.born = w.year + 1;
+    const newborn = carrier('Current carrier');
+
+    expect(nameWorthAsking(ctx, newborn))
+      .toBe('the first of the blood to carry it in three generations');
+    unborn.born = w.year;
+    expect(nameWorthAsking(ctx, newborn))
+      .not.toBe('the first of the blood to carry it in three generations');
+  });
+
+  it('does not name a hall before founding or let unborn siblings steal its first child', () => {
+    const ctx = testWorld(bundle, 279801, 1042);
+    const w = ctx.world;
+    const founder = place(ctx, { sex: 'male', age: 30, name: 'Founder of Tomorrow', branch: 'branch_tomorrow' });
+    const mother = place(ctx, { sex: 'female', age: 28, name: 'Mother of Tomorrow', branch: 'branch_tomorrow' });
+    w.branches.set('branch_tomorrow' as never, {
+      id: 'branch_tomorrow', name: 'Tomorrow Hall', house: w.playerHouse,
+      founder: founder.id, splitFrom: 'main', foundedYear: w.year + 1,
+      grievance: 0, contentment: 0, extinct: false,
+    } as never);
+    const preFounding = bear(ctx, founder, mother, 'female', 'Before the roof', 'branch_tomorrow');
+    expect(nameWorthAsking(ctx, preFounding)).toBeUndefined();
+
+    w.year += 1;
+    // A previously born child cannot retroactively become a post-founding child.
+    expect(nameWorthAsking(ctx, preFounding)).toBeUndefined();
+    const futureSibling = bear(ctx, founder, mother, 'female', 'Next year’s child', 'branch_tomorrow');
+    futureSibling.born = w.year + 1;
+    const first = bear(ctx, founder, mother, 'female', 'First under the roof', 'branch_tomorrow');
+    expect(nameWorthAsking(ctx, first)).toBe('the first child of a new cadet branch');
+
+    futureSibling.born = w.year;
+    expect(nameWorthAsking(ctx, first))
+      .not.toBe('the first child of a new cadet branch');
+  });
+
+  it('requires a past headship before naming a new Head’s child', () => {
+    const { ctx, head, wife } = withHead(279802);
+    const w = ctx.world;
+    // Already having a son keeps the first-son reason from masking this rule.
+    bear(ctx, head, wife, 'male', 'Earlier son');
+    const newborn = bear(ctx, head, wife, 'male', 'Child of this reign');
+    w.headSince = w.year;
+    const current = { person: head.id, name: head.name, from: w.year };
+    w.succession = [
+      current,
+      { person: asId<PersonId>('future_head'), name: 'A future Head', from: w.year + 1 },
+    ];
+
+    expect(nameWorthAsking(ctx, newborn))
+      .not.toBe('born to the new Head in the year he took the seal');
+    w.succession = [
+      { person: asId<PersonId>('former_head'), name: 'The former Head', from: w.year - 1, to: w.year },
+      current,
+    ];
+    expect(nameWorthAsking(ctx, newborn))
+      .toBe('born to the new Head in the year he took the seal');
+  });
+
+  it('measures a newborn’s exceptional attribute against born relatives, not future outliers', () => {
+    const ctx = testWorld(bundle, 279703, 1042);
+    for (let i = 0; i < 8; i += 1) {
+      place(ctx, { sex: 'female', age: 30, name: 'Earlier family ' + i });
+    }
+    const newborn = place(ctx, { sex: 'female', age: 0, name: 'Exceptional child' });
+    newborn.acquired.strength = 10000;
+    newborn.phenotype = undefined;
+    const baseline = nameWorthAsking(ctx, newborn);
+    expect(baseline).toBe('strength well outside anything the line has produced');
+
+    const unborn = place(ctx, { sex: 'female', age: 0, name: 'Future prodigy' });
+    unborn.born = ctx.world.year + 1;
+    unborn.acquired.strength = 100000;
+    unborn.phenotype = undefined;
+    expect(nameWorthAsking(ctx, newborn)).toBe(baseline);
+
+    unborn.born = ctx.world.year;
+    expect(nameWorthAsking(ctx, newborn)).not.toBe(baseline);
   });
 });
