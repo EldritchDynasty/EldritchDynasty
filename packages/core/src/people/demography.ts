@@ -269,7 +269,7 @@ export function thinBloodMortality(ctx: SimCtx, p: Person): number {
   // threshold is therefore always the cap itself once it applies at all.
   // Asked first because it is free, and the count below walks every person.
   if (w.bloodHighWater < MORTALITY_BUFFER_LINE) return 1;
-  const line = w.people.blood(w.playerHouse).filter((q) => q.status === 'alive').length;
+  const line = w.people.countLivingBlood(w.playerHouse);
   if (line >= MORTALITY_BUFFER_LINE) return 1;
 
   // SUPERLINEAR, because the buffer does not run out linearly. A house of six

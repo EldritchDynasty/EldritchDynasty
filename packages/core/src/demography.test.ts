@@ -81,6 +81,19 @@ describe('a line with nobody left to lose', () => {
     expect(thinBloodMortality(wide, pw)).toBeGreaterThan(1);
   });
 
+  it('uses each immediately preceding death without caching the annual blood count (#2528)', () => {
+    const ctx = lineOf(10);
+    const people = ctx.world.people;
+    const subject = people.living().find(p => p.name === 'Line 1')!;
+    const first = people.living().find(p => p.name === 'Line 2')!;
+    const second = people.living().find(p => p.name === 'Line 3')!;
+    expect(thinBloodMortality(ctx, subject)).toBe(1);
+    people.kill(first.id, ctx.world.year, 'fixture');
+    expect(thinBloodMortality(ctx, subject)).toBe(1 + 22 * (1 / 10) ** 2);
+    people.kill(second.id, ctx.world.year, 'fixture');
+    expect(thinBloodMortality(ctx, subject)).toBe(1 + 22 * (2 / 10) ** 2);
+  });
+
   /**
    * THE REGIME THE ORIGINAL SUITE NEVER TESTED (issue #132). Every fixture
    * above sets `was` to 20 or 30, which pins `threshold` at
