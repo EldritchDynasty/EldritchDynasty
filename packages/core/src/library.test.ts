@@ -1330,3 +1330,34 @@ describe('inherited Library excludes lost and omitted Chronicle leaves (#2460)',
     expect(seedLibraryMemories(recipient.ctx, [entirelyLost!])).toEqual([]);
   });
 });
+
+describe('future-born saved readers cannot reserve a book at the binder (#2872)', () => {
+  it('ignores unborn study rows today, but respects current readers and the birth-year boundary', () => {
+    const ctx = bootstrap(bundle, 2872, 1042);
+    ctx.world.library.clear();
+    ctx.world.studies = [];
+    const id = 'lesser_workings_of_life';
+    const copy = acquireLibraryCopy(ctx, id)!;
+    copy.condition = 40;
+    const futureReader = place(ctx, { sex: 'female', age: 25, awakened: true });
+    const currentReader = place(ctx, { sex: 'female', age: 25, awakened: true });
+    futureReader.born = ctx.world.year + 8;
+    ctx.world.studies.push({
+      person: futureReader.id, book: id, completes: futureReader.born + 5,
+    });
+
+    const before = restorationQuote(ctx, id);
+    expect(before?.ok).toBe(true);
+    expect(before?.reason).toBeUndefined();
+
+    ctx.world.studies.push({
+      person: currentReader.id, book: id, completes: ctx.world.year + 10,
+    });
+    expect(restorationQuote(ctx, id)?.reason).toBe('someone is still reading this copy');
+    ctx.world.studies.pop();
+
+    ctx.world.year = futureReader.born;
+    expect(restorationQuote(ctx, id)?.reason).toBe('someone is still reading this copy');
+    expect(copy.restoresAt).toBeUndefined();
+  });
+});
