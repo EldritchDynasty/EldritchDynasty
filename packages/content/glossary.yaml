@@ -62,8 +62,8 @@ glossary:
       original: Regency
       plainenglish: Regency
     aliases:
-      original: [Regency, regency]
-      plainenglish: [Regency, regency]
+      original: [Regency]
+      plainenglish: [Regency]
     definition:
       original: a woman of the blood holds the house's seat when no eligible expressing male succeeds.
       plainenglish: A woman of the family holds the seat when no eligible man who can express Eldritch Power succeeds.
@@ -75,7 +75,7 @@ glossary:
       original: cadet hall
       plainenglish: branch household
     aliases:
-      original: [cadet hall, cadet halls, Cadet hall, Cadet halls, cadet branch, cadet branches]
+      original: [cadet hall, cadet halls, cadet branch, cadet branches]
       plainenglish: [branch household, branch households, cadet hall, cadet halls, cadet branch, cadet branches]
     definition:
       original: a separate hall founded by a relative, still belonging to the house's bloodline.
@@ -114,8 +114,8 @@ glossary:
       original: expresser
       plainenglish: expresser
     aliases:
-      original: [expresser, expressers, Expresser, Expressers]
-      plainenglish: [expresser, expressers, Expresser, Expressers]
+      original: [expresser, expressers]
+      plainenglish: [expresser, expressers]
     definition:
       original: a man whose inherited blood can express Eldritch Power, whether awakened or not.
       plainenglish: A man with inherited capacity for Eldritch Power, even if he has not awakened.
