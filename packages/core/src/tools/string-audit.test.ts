@@ -512,6 +512,43 @@ describe('the string-source audit (issue #276)', () => {
     expect(found).toEqual(['X was born, and named.', 'The house paid, and did not say why.']);
   });
 
+  it('classifies constructor RangeError diagnostics, including multiline and template arguments (#2805)', () => {
+    const source = [
+      "const before = 'The family kept a signed account.';",
+      'throw new RangeError(',
+      '  \x60The harness count ${runs} must be a safe integer.\x60,',
+      ');',
+      "const after = 'The creditor read the signed account.';",
+      "RangeError('This count is also for developers only.');",
+      "const visible = notifyPlayer('The family read the open letter.');",
+    ].join('\n');
+    const rows = plainEnglishCoreWorkItems('run-setup.ts', source);
+    expect(rows.map((r) => [r.address, r.text])).toEqual([
+      ['core:run-setup.ts#literal[1]', 'The family kept a signed account.'],
+      ['core:run-setup.ts#literal[3]', 'The creditor read the signed account.'],
+      ['core:run-setup.ts#literal[5]', 'The family read the open letter.'],
+    ]);
+  });
+
+  it('keeps prose nested in RangeError, keyed Originals and unrelated exception types (#2805)', () => {
+    const source = [
+      "new RangeError(writeChronicle('The family preserved its last letter.'));",
+      "new RangeError(() => 'The creditor kept the second letter.');",
+      "new RangeError(msg(ctx, 'range.visible', 'The family heard the final reply.'));",
+      "new CustomRangeError('The house read a third letter.');",
+      "showPlayer('The player saw a fourth letter.');",
+    ].join('\n');
+    const rows = plainEnglishCoreWorkItems('example.ts', source);
+    expect(rows.map((r) => r.text)).toEqual([
+      'The family preserved its last letter.',
+      'The creditor kept the second letter.',
+      'The family heard the final reply.',
+      'The house read a third letter.',
+      'The player saw a fourth letter.',
+    ]);
+    expect(rows[2]?.address).toBe(coreMessageAddress('range.visible'));
+  });
+
   it('excludes multiline console arguments without renumbering neighbouring narrative (#1443)', () => {
     const source = [
       "const before = 'The house kept its book.';",

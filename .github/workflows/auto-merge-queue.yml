@@ -137,6 +137,7 @@ jobs:
             # visible, causing a permanent missed enqueue because there is no
             # later retry event.
             required="success"
+            green_at="$(jq -r '.workflow_run.updated_at // empty' "$GITHUB_EVENT_PATH")"
           else
             # The NEWEST "CI required" run decides, and only once it has
             # finished. Sorting by completed_at put a still-running check
@@ -145,9 +146,14 @@ jobs:
             # just started (#493). A pending required check may also not exist
             # yet; the enqueue step below treats GitHub's "is expected" refusal
             # on this event as not-yet-eligible for that reason.
-            required="$(
-              gh api               --header 'Accept: application/vnd.github+json'               --header 'X-GitHub-Api-Version: 2026-03-10'               "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100"               --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last | if . == null then "" elif .status == "completed" then (.conclusion // "") else "pending" end'
+            # Keep the success timestamp as well as its verdict: a green
+            # check older than the last failed merge group is stale evidence.
+            check_json="$(
+              gh api "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100" \
+                --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last // {}'
             )"
+            required="$(jq -r 'if .status == "completed" then (.conclusion // "") elif .status then "pending" else "" end' <<<"$check_json")"
+            green_at="$(jq -r '.completed_at // empty' <<<"$check_json")"
           fi
 
           if [[ "$required" != "success" ]]; then
@@ -160,6 +166,36 @@ jobs:
           echo "number=$pr_number" >> "$GITHUB_OUTPUT"
           echo "head=$head" >> "$GITHUB_OUTPUT"
           echo "node=$node_id" >> "$GITHUB_OUTPUT"
+          echo "green_at=$green_at" >> "$GITHUB_OUTPUT"
+
+      # The workflow's PR head is untrusted: run the admission policy from
+      # main, not from code supplied by an unmerged pull request.
+      - name: Check out the trusted native queue guard
+        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          sparse-checkout: tools
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'
+        with:
+          node-version-file: .nvmrc
+
+      - name: Reject stale failed merge-group PR heads
+        id: queue-guard
+        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          GREEN_AT: ${{ steps.pr.outputs.green_at }}
+        run: |
+          if node tools/merge-queue-guard.mjs; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "allowed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # An org-level variable does not reach a private repository on the Free
       # plan, and the token action's own error does not say so. Say it here.
@@ -175,7 +211,7 @@ jobs:
           fi
 
       - name: Mint merge-queue GitHub App token
-        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'
+        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native' && steps.queue-guard.outputs.allowed == 'true'
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
@@ -191,7 +227,7 @@ jobs:
           permission-contents: write
 
       - name: Add pull request to native merge queue
-        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native'
+        if: steps.pr.outputs.eligible == 'true' && env.LANDING_MODE == 'native' && steps.queue-guard.outputs.allowed == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -410,6 +446,16 @@ jobs:
           permission-pull-requests: write
           permission-contents: write
 
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          sparse-checkout: tools
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
       - name: Reconcile eligible PRs against the green main
         shell: bash
         env:
@@ -447,10 +493,21 @@ jobs:
 
             head="$(jq -r '.head.sha' <<<"$pr")"
             node="$(jq -r '.node_id' <<<"$pr")"
-            required="$(gh api "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100" \
-              --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last | if . == null then "" elif .status == "completed" then (.conclusion // "") else "pending" end')"
+            check_json="$(gh api "/repos/$GITHUB_REPOSITORY/commits/$head/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.name == "CI required")] | sort_by(.id) | last // {}')"
+            required="$(jq -r 'if .status == "completed" then (.conclusion // "") else "pending" end' <<<"$check_json")"
+            green_at="$(jq -r '.completed_at // empty' <<<"$check_json")"
             if [[ "$required" != "success" || -z "$node" ]]; then
               echo "PR #$number has no completed green exact-head CI required check."
+              continue
+            fi
+
+            # The synthetic merge-group check may have failed AFTER this old
+            # successful PR check. No unchanged head may re-enter until CI
+            # produces newer green evidence. API errors fail closed.
+            if ! PR_NUMBER="$number" GREEN_AT="$green_at" \
+              node tools/merge-queue-guard.mjs; then
+              echo "PR #$number has stale or unverifiable integration evidence; leaving unqueued."
               continue
             fi
 
