@@ -1892,3 +1892,189 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 });
+
+
+/**
+ * Recovered saves can carry records that make an impossible historical claim:
+ * the house may have a named page for someone who was not even born when it
+ * was written. The last night cannot promote such a page to an attributed
+ * family accomplishment or a credible cost (#2803, child of #1983).
+ */
+describe('chronological last-night purpose witnesses (#2803)', () => {
+  it('will not credit a cadet founding to an as-yet unborn or already dead founder', () => {
+    const ctx = atTheTerm(280301);
+    const w = ctx.world;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const branch = asId('br_premature_charter');
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+    place(ctx, { name: 'Leora', sex: 'female', age: 32, branch });
+    place(ctx, { name: 'Brenna', sex: 'female', age: 28, branch });
+    const foundedYear = w.year - 30;
+    w.branches.set(branch, {
+      id: branch, house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+    });
+
+    const ending = selectEnding(ctx);
+    const start = digestOf(ctx);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'branch_kept', founder: 'Edrin', year: foundedYear,
+    });
+    expect(digestOf(ctx)).toBe(start);
+
+    founder.born = foundedYear + 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    }
+    // The birth-year boundary admits an actual founder again.
+    founder.born = foundedYear;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('branch_kept');
+
+    // Death before the charter is no more credible than a future birth.
+    founder.died = foundedYear - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    founder.died = undefined;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('branch_kept');
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
+  it('refuses an ascendant-wait page dated before its named person existed', () => {
+    const ctx = atTheTerm(280302);
+    const w = ctx.world;
+    w.houseAmbition = 'raise_ascendant';
+    w.ending = { id: 'forgotten', year: w.year };
+    const ascendant = place(ctx, { name: 'Edric', sex: 'male', age: 55 });
+    const recorded = w.year - 18;
+    w.chronicle = [{
+      id: 'ledger_wait:' + ascendant.id, year: recorded, weight: 'paragraph',
+      title: 'The Ledger Stayed Open',
+      text: 'Edric stopped growing older, but the Ledger remained.',
+      people: [ascendant.id], named: false, rung: 'demigod',
+    }];
+
+    const ending = selectEnding(ctx);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'ascendant_wait', person: 'Edric', year: recorded,
+    });
+    ascendant.born = recorded + 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    }
+    ascendant.born = recorded;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ascendant_wait');
+    ascendant.died = recorded - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    ascendant.died = undefined;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ascendant_wait');
+
+    // A late surviving page cannot enter a book collected a year earlier,
+    // even if an inconsistent imported save has advanced world.year.
+    w.ending.year = recorded - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.ending.year = recorded;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ascendant_wait');
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
+  it('refuses a sacrifice from before the named blood relative was born', () => {
+    const ctx = atTheTerm(280303);
+    const w = ctx.world;
+    w.houseAmbition = 'deepen_blood';
+    w.ending = { id: 'forgotten', year: w.year };
+    const vessel = place(ctx, { name: 'Meriel', sex: 'female', age: 40 });
+    const ascendant = place(ctx, { name: 'Wystan', sex: 'male', age: 40 });
+    w.chronicle = [{
+      id: 'rite-born-later', year: w.year, weight: 'paragraph',
+      eventId: 'the_vessel_rite', text: 'The house gave Meriel to the rite.',
+      people: [vessel.id, ascendant.id], named: false, record: 'record',
+    }];
+    w.decisionLog = [{
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year,
+      choiceId: 'speak_the_name', outcomeId: 'taken',
+      fill: { VESSEL: [vessel.id], ASCENDANT: [ascendant.id] },
+    }];
+    w.people.kill(vessel.id, w.year, 'given to the rite', 'vessel_consumed');
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(vessel.id);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'blood_spent', person: 'Meriel' });
+    const ending = selectEnding(ctx);
+
+    // A legacy death mark and a matching page/outcome are not enough if the
+    // subject was unborn when this supposed sacrifice occurred.
+    vessel.born = w.year + 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    }
+    vessel.born = w.year;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+    w.ending.year = w.year - 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.ending.year = w.year;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('blood_spent');
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
+  it('does not recognize Ledger testimony written after the actual ending', () => {
+    const ctx = atTheTerm(280304);
+    const w = ctx.world;
+    w.houseAmbition = 'restore_ledger';
+    w.ending = { id: 'forgotten', year: w.year };
+    const clause = content.clauses.find((c) => !c.known)!;
+    w.clausesRecovered.add(clause.id);
+    const recorded = w.year - 3;
+    w.chronicle = [{
+      id: 'clause-after-term', year: recorded, weight: 'illuminated',
+      title: clause.name, text: clause.text, named: true,
+    }];
+    const ending = selectEnding(ctx);
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('ledger_witness');
+
+    w.ending.year = recorded - 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const before = digestOf(ctx);
+      const view = epilogueOf(ctx)!;
+      expect(view.purpose).toBeUndefined();
+      expect(view.read).toEqual([]);
+      expect(view.reckoning.pages).toBe(0);
+      expect(digestOf(ctx)).toBe(before);
+    }
+    w.ending.year = recorded;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'ledger_witness', year: recorded, text: clause.text,
+    });
+    expect(epilogueOf(ctx)!.reckoning.pages).toBe(1);
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
+  it('keeps future opening pages and a future guardian crossing out of the completed reading', () => {
+    const ctx = atTheTerm(280305);
+    const w = ctx.world;
+    const term = w.year - 4;
+    w.ending = { id: 'forgotten', year: term };
+    w.guardianSince = term + 1;
+    w.chronicle = [{
+      id: 'late-opening-page', year: term + 1, weight: 'illuminated',
+      eventId: 'the_tutors_good_years', named: true,
+      text: 'A page written after collection.',
+    }];
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const view = epilogueOf(ctx)!;
+      expect(view.beginning?.guardianSince).toBeUndefined();
+      expect(view.beginning?.pages).toEqual([]);
+      expect(view.read).toEqual([]);
+      expect(view.reckoning.pages).toBe(0);
+    }
+
+    w.ending.year = term + 1;
+    const view = epilogueOf(ctx)!;
+    expect(view.beginning?.guardianSince).toBe(term + 1);
+    expect(view.beginning?.pages).toHaveLength(1);
+    expect(view.read.map((p) => p.id)).toEqual(['late-opening-page']);
+    expect(view.reckoning.pages).toBe(1);
+  });
+});
