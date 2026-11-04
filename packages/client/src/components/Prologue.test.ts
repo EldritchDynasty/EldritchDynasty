@@ -188,6 +188,70 @@ describe('progressive first-session signing (#2443)', () => {
   });
 });
 
+describe('new campaign in a retained signing component (#1984)', () => {
+  it('clears an earlier campaign's signing drafts, but preserves them on translation', async () => {
+    const game = actions();
+    const first = { ...prologueView(), friendsWanted: 2 };
+    const wrapper = mount(Prologue, {
+      props: { prologue: first, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      await answerFounder(wrapper);
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
+      disclosure.open = true;
+      await nextTick();
+      await wrapper.get('input[aria-label="Name the first friend"]').setValue('Mara');
+
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.signing-progress').text()).toContain('Step 3 of 3');
+      expect((wrapper.get('input[aria-label="Enter the family name"]').element as HTMLInputElement).value).toBe('House Ash');
+      expect((wrapper.get('input[aria-label="Name friend 1"]').element as HTMLInputElement).value).toBe('Mara');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+
+      // Starting a different campaign while this component is retained must
+      // not carry a founder, earlier questions, house choices or named friends.
+      await wrapper.setProps({ startYear: 1200, prologue: { ...first, friendsWanted: 1 } });
+      expect(wrapper.get('.signing-progress').text()).toContain('Step 1 of 3');
+      expect((wrapper.get('input[aria-label="Enter the founder name"]').element as HTMLInputElement).value).toBe('');
+      expect(wrapper.findAll('.identity button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+      expect(wrapper.findAll('.examination button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect((wrapper.get('input[aria-label="Enter the family name"]').element as HTMLInputElement).value).toBe('');
+      expect(wrapper.findAll('.friend')).toHaveLength(1);
+      expect((wrapper.get('input[aria-label="Name friend 1"]').element as HTMLInputElement).value).toBe('');
+
+      await wrapper.get('input[aria-label="Enter the founder name"]').setValue('Beatrice');
+      await wrapper.findAll('.identity button')[1]!.trigger('click');
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await wrapper.get('.signing-navigation button.primary').trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Enter the family name"]').setValue('House New');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledTimes(1);
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        houseName: 'House New',
+        founder: { name: 'Beatrice', gender: 'woman', configuration: 'blood_mother' },
+        friends: [],
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('held Enter in newborn naming (#1471)', () => {
   it('ignores auto-repeated Enter without hiding a deliberate naming submission', async () => {
     const name = vi.fn(() => true);
