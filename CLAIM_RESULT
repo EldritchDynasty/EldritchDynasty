@@ -1,10 +1,10 @@
 verdict: ok
 exit: 0
-request: /claim 2816 --agent chatgpt/issue-2665-frame-future-20261104-0205 --paths packages/core/src/events/frame.ts packages/core/src/frame.test.ts
-request-commit: ccdc70075808f08e9c46ac675c621029720119e9
+request: /claim check --agent chatgpt/issue-2665-frame-future-20261104-0205
+request-commit: 0560d7c4c49b66fa8c48fcf8cd88801a896af344
 
-held: 2816 → chatgpt/issue-2665-frame-future-20261104-0205 (lane code)
-  land it with: Closes #2665, closes #2815, closes #2816
-  the janitor retires the claims and deletes the branch behind that.
-  ⚠ chatgpt/issue-2665-frame-future-20261104-0205 declared overlapping paths on 2665: packages/core/src/events/frame.ts, packages/core/src/frame.test.ts
-  ⚠ chatgpt/issue-2665-frame-future-20261104-0205 declared overlapping paths on 2815: packages/core/src/events/frame.ts, packages/core/src/frame.test.ts
+holding 2665 (lane code, 11m)
+holding 2815 (lane code, 6m)
+holding 2816 (lane code, 1m)
+landing commit needs: Closes #2665, closes #2815, closes #2816
+18 other claim(s) open, none overlapping the 6 path(s) your claim declares.
