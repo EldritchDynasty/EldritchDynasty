@@ -789,7 +789,7 @@ jobs:
             npm run gates -- --lane ${{ matrix.lane }} --timings-json gate-timings-${{ matrix.lane }}.json
           fi
           elapsed=$(( $(date +%s) - started ))
-          node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed"
+          node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed" --timings-json gate-timings-${{ matrix.lane }}.json
       - name: produce trusted main gate proofs
         id: gate-proofs
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
