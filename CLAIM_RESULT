@@ -1,0 +1,8 @@
+verdict: FAILED
+exit: 1
+request: /claim 2875 --agent chatgpt/land-chronology-2875-2877-20261105 --paths packages/core/src/land.ts packages/core/src/land.test.ts
+request-commit: 346432b517ee3fcbff1144233ff472f2defb08f7
+
+DENIED — 2875 is held by chatgpt/land-recovered-chronology-20261105-0441, 1m ago.
+  they are writing: packages/core/src/land.ts, packages/core/src/land.test.ts
+  pick another issue. Do not work it in parallel.
