@@ -209,6 +209,8 @@ describe('physical attendance (#1868)', () => {
     const second = place(ctx, { sex: 'male', age: 30 });
     const operative = place(ctx, { sex: 'male', age: 30 });
     const contractor = place(ctx, { sex: 'male', age: 30 });
+    const readerFirst = place(ctx, { sex: 'male', age: 30 });
+    const readerSecond = place(ctx, { sex: 'female', age: 30 });
     w.muster.commitments.push(
       { id: 'first', began: w.year, age: 'the_wars', men: 10, from: {}, officers: [first.id], credit: 0, status: 'in_the_field' },
       { id: 'second', began: w.year, age: 'the_wars', men: 10, from: {}, officers: [second.id], credit: 0, status: 'in_the_field' },
@@ -231,14 +233,32 @@ describe('physical attendance (#1868)', () => {
       started: w.year, ready: w.year + 1, ends: w.year + 3,
       providerFee: 0, escrow: 0, worked: 0, payments: [],
     });
-    expect([...deployedPeople(ctx)].sort()).toEqual([first.id, second.id, operative.id, contractor.id].sort());
-    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id, second.id].sort());
-    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'first' }, {}).people).toEqual([first.id]);
-    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people).toEqual([second.id]);
+    // Recovered standing Mystic field duties must travel with their own field.
+    const fieldDuty = (id: string, practitioner: string, commitment: string) => ({
+      id, practitioner, working: 'the_still_binding',
+      target: { kind: 'muster' as const, commitment }, bindings: {},
+      started: w.year, ready: w.year, paidPreparation: 0, paidThrough: w.year,
+      status: 'serving' as const,
+      service: { servedYears: 0, usefulYears: 0, livesKept: 0, yieldKept: 0, spent: 0 },
+    });
+    w.mystic.assignments.push(
+      fieldDuty('watch_first', readerFirst.id, 'first'),
+      fieldDuty('watch_second', readerSecond.id, 'second'),
+    );
+    expect([...deployedPeople(ctx)].sort()).toEqual([
+      first.id, second.id, operative.id, contractor.id, readerFirst.id, readerSecond.id,
+    ].sort());
+    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([
+      first.id, second.id, readerFirst.id, readerSecond.id,
+    ].sort());
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'first' }, {}).people)
+      .toEqual([first.id, readerFirst.id].sort());
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people)
+      .toEqual([second.id, readerSecond.id].sort());
     expect(resolvePresence(ctx, { kind: 'muster', commitment: 'missing' }, {}).people).toEqual([]);
 
     w.muster.commitments[1]!.began = w.year + 1;
-    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id]);
+    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id, readerFirst.id].sort());
     expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people).toEqual([]);
     w.muster.commitments[0]!.status = 'settled';
     expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([]);
