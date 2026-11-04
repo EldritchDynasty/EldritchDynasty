@@ -631,6 +631,10 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   // A first Begin is not a house-to-house transition: the player may have
   // spent time at the title screen before any house existed.
   let hasHouse = false;
+  // A saved-run pickup's run identity is observed before its Chronicle confirms
+  // the boundary. Do not assign that tentative run to an unfinished signing,
+  // or invent a preceding house when the reader was only on the title screen.
+  let pickupPending = false;
 
   const advance = (to: number) => {
     const span = Math.max(0, Math.min(to, stop) - last);
@@ -662,7 +666,9 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'year': year = e.year; hasHouse = true; break;
       case 'pickup':
         // A resumed house cannot complete the signing of an earlier new house.
+        // Its preceding run marker described the incoming house, not this entry.
         finishEntry(e.at);
+        pickupPending = false;
         // A successful saved-run pickup ends the old answer gap. Its carried
         // pages cannot answer a question from the house shown before the load.
         if (hasHouse) {
@@ -682,7 +688,10 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         break;
       }
       case 'action':
+        if (e.act === 'start' && PICKUPS.has(e.verb)) pickupPending = true;
         if (e.act === 'start' && (e.verb === 'begin' || e.verb === 'beginFromShareCode')) {
+          // An ordinary new house supersedes even a pending/failed pickup.
+          pickupPending = false;
           finishEntry(e.at);
           entry = { startedAt: e.at, foregroundAt: foreground, campaign: null,
             // An accepted share code starts a house already founded; the ordinary Begin does not.
@@ -708,6 +717,10 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         }
         break;
       case 'run':
+        // App.vue can emit the loaded run's campaign/seed *before* Chronicle
+        // establishes a successful pickup. Keep the old entry's campaign and
+        // title-screen gap intact until that boundary is confirmed.
+        if (pickupPending) break;
         hasHouse = true;
         if (entry) entry.campaign = e.campaign;
         break;
