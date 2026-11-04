@@ -145,12 +145,15 @@ function successorTo(w: WorldState, id: string, mode: Grudge['inheritance']): st
   if (!p) return undefined;
 
   const byAge = (xs: Person[]) => [...xs].sort((a, b) => a.born - b.born);
-  const alive = (xs: Person[]) => xs.filter((x) => x.status === 'alive');
+  // Recovered saves can mark a person alive before their recorded birth.
+  // Such a person cannot yet carry an ancestor's quarrel.
+  const alive = (xs: Person[]) => xs.filter((x) => x.status === 'alive' && x.born <= w.year);
 
   const heir = () => byAge(alive(w.people.children(p.id)))[0];
   const blood = () => byAge(alive(w.people.siblings(p.id)))[0];
   const house = () => byAge(
-    w.people.living().filter((q) => q.houseOfOrigin === p.houseOfOrigin && q.id !== p.id),
+    w.people.living().filter((q) => q.born <= w.year
+      && q.houseOfOrigin === p.houseOfOrigin && q.id !== p.id),
   )[0];
 
   const chain = mode === 'heir_only' ? [heir]
@@ -373,7 +376,8 @@ export function bitterestAgainst(w: WorldState, houseId: string): PersonId | und
     const holder = w.people.get(rel.from) ?? (w.houses.has(rel.from)
       ? w.people.household(rel.from, w.year).sort((a, b) => a.born - b.born || (a.id < b.id ? -1 : 1))[0]
       : undefined);
-    if (!holder || holder.status !== 'alive') continue;
+    // A future-born holder must not appear in a present-year event cast.
+    if (!holder || holder.status !== 'alive' || holder.born > w.year) continue;
     for (const g of rel.grudges) {
       if (g.originYear > w.year) continue;
       if (!worst || g.severity > worst.severity) worst = { id: holder.id, severity: g.severity };
@@ -413,7 +417,8 @@ export function tickFamilyQuarrels(ctx: SimCtx): Grudge[] {
     if (b.grievance < GRIEVANCE_QUARREL) continue;
 
     const speaker = b.speaker ? w.people.get(b.speaker) : undefined;
-    if (!speaker || speaker.status !== 'alive' || speaker.id === head.id) continue;
+    // Branch speaker references may survive imports before their birth year.
+    if (!speaker || speaker.status !== 'alive' || speaker.born > w.year || speaker.id === head.id) continue;
 
     // One standing quarrel per hall, deepened rather than duplicated. A hall
     // that stays aggrieved gets angrier; it does not get a second grudge every

@@ -423,3 +423,32 @@ describe('loyalty is earned and spent', () => {
     expect(authored.contract!.loyalty).toBe(before);
   });
 });
+
+
+describe('recovered retainer chronology (#2861)', () => {
+  it('does not drift a future-born servant\'s contract before birth', () => {
+    const { ctx, servant } = staffed({ loyalty: 50 });
+    const w = ctx.world;
+    servant.born = w.year + 2;
+    const beforePages = w.chronicle.length;
+    driftLoyalty(ctx);
+    expect(servant.contract?.loyalty).toBe(50);
+    expect(w.chronicle).toHaveLength(beforePages);
+
+    w.year = servant.born;
+    driftLoyalty(ctx);
+    expect(servant.contract?.loyalty).toBe(50.5);
+  });
+
+  it('does not drift a future-dated retainer hire before its start', () => {
+    const { ctx, servant } = staffed({ loyalty: 50 });
+    const w = ctx.world;
+    servant.membership[0]!.from = w.year + 2;
+    driftLoyalty(ctx);
+    expect(servant.contract?.loyalty).toBe(50);
+
+    w.year = servant.membership[0]!.from;
+    driftLoyalty(ctx);
+    expect(servant.contract?.loyalty).toBe(50.5);
+  });
+});
