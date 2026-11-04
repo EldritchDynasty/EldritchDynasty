@@ -1114,3 +1114,77 @@ describe('parcel prose reaches the land panel in the reader\'s wording (#876)', 
     expect(landView(ctx).lost.at(-1)).toMatchObject({ name: 'Gallows Acre', place: PLAIN.place });
   });
 });
+
+describe('recovered land chronology (#2875, #2876, #2877)', () => {
+  it('does not name future-held ground or write an early Chronicle page; permits naming at possession', () => {
+    const ctx = testWorld(bundle);
+    const year = ctx.world.year;
+    const parcel = 'prc_future_renaming';
+    ctx.world.parcels.set(parcel, { id: parcel, heldSince: year + 3, name: 'Unpossessed ground' });
+    const pages = ctx.world.chronicle.length;
+
+    expect(nameParcel(ctx, parcel, 'Too early').ok).toBe(false);
+    expect(ctx.world.parcels.get(parcel)?.name).toBe('Unpossessed ground');
+    expect(ctx.world.chronicle).toHaveLength(pages);
+    expect(landView(ctx).held.some((p) => p.parcel === parcel)).toBe(false);
+
+    ctx.world.year = year + 3;
+    expect(nameParcel(ctx, parcel, 'Held ground').ok).toBe(true);
+    expect(ctx.world.parcels.get(parcel)?.name).toBe('Held ground');
+    expect(ctx.world.chronicle).toHaveLength(pages + 1);
+    expect(landView(ctx).held.find((p) => p.parcel === parcel)?.name).toBe('Held ground');
+  });
+
+  it('does not show losses dated after the current year, preserving history and its order', () => {
+    const ctx = testWorld(bundle);
+    const year = ctx.world.year;
+    ctx.world.lostParcels.push(
+      { defId: 'sowerhay', name: 'Past holding', place: 'Sowerhay', year: year - 1, by: 'A' },
+      { defId: 'sowerhay', name: 'Future holding', place: 'Sowerhay', year: year + 2, by: 'B' },
+      { defId: 'sowerhay', name: 'Present holding', place: 'Sowerhay', year, by: 'C' },
+    );
+    const stored = structuredClone(ctx.world.lostParcels);
+    const pages = ctx.world.chronicle.length;
+
+    expect(landView(ctx).lost.map((l) => l.name)).toEqual(['Past holding', 'Present holding']);
+    expect(ctx.world.lostParcels).toEqual(stored);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    ctx.world.year = year + 1;
+    expect(landView(ctx).lost.map((l) => l.name)).toEqual(['Past holding', 'Present holding']);
+    ctx.world.year = year + 2;
+    expect(landView(ctx).lost.map((l) => l.name)).toEqual(['Past holding', 'Future holding', 'Present holding']);
+    expect(ctx.world.lostParcels).toEqual(stored);
+  });
+
+  it('ignores a saved future drainage term until its start without blocking a current term', () => {
+    const ctx = testWorld(bundle);
+    const year = ctx.world.year;
+    const [id] = [...ctx.world.parcels.entries()].find(([, p]) => p.defId === 'hallowfield')!;
+    const futureStart = year + 9;
+    const futureCompletion = futureStart + 4;
+    ctx.world.landImprovements.push({ parcel: id, completes: futureCompletion });
+    const stored = structuredClone(ctx.world.landImprovements);
+    const pages = ctx.world.chronicle.length;
+
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.improving).toBeUndefined();
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.canImprove).toBe(true);
+    expect(ctx.world.landImprovements).toEqual(stored);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    expect(beginImprovement(ctx, 'hallowfield').ok).toBe(true);
+    expect(ctx.world.landImprovements).toHaveLength(2);
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.improving).toBe(year + 4);
+    expect(beginImprovement(ctx, 'hallowfield').ok).toBe(false);
+
+    ctx.world.year = year + 4;
+    tickLandImprovements(ctx);
+    expect(ctx.world.landImprovements).toEqual(stored);
+
+    ctx.world.year = futureStart - 1;
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.improving).toBeUndefined();
+    ctx.world.year = futureStart;
+    expect(landView(ctx).held.find((p) => p.parcel === 'hallowfield')?.improving).toBe(futureCompletion);
+    expect(beginImprovement(ctx, 'hallowfield').ok).toBe(false);
+  });
+});
