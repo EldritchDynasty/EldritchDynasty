@@ -1,8 +1,6 @@
-verdict: FAILED
-exit: 1
-request: /claim check --agent chatgpt/issue-2755-covert-chronology-nov04
-request-commit: aaa6e298b24f57bf834e0975439b2d264c9d1a75
+verdict: ok
+exit: 0
+request: /claim release 2755 --agent chatgpt/issue-2755-covert-chronology-nov04
+request-commit: 6a1b58fc1a64dc085d86ab9b72af13aa22dd6dfc
 
-holding 2755 (lane code, 0m)
-  ⚠ chatgpt/issue-2727-future-operative-grudge-20261104 (2727) is writing the same paths: packages/core/src/covert-operations.ts
-landing commit needs: Closes #2755
+released: 2755
