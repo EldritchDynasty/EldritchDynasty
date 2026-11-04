@@ -161,8 +161,9 @@ function currentFamilyConnections(builders: Map<string, Builder>, ctx: SimCtx): 
       .filter((m) => String(m.house) === w.playerHouse && m.kind === 'married_in' && m.from <= w.year)
       .sort((a, b) => a.from - b.from)[0];
     if (!joined) continue;
-    const connected = person.status === 'alive'
-      || w.people.children(person.id).some((child) => child.status === 'alive' && child.born <= w.year);
+    const connected = person.status === 'alive' || (person.died !== undefined && person.died > w.year)
+      || w.people.children(person.id).some((child) => child.born <= w.year
+        && (child.status === 'alive' || (child.died !== undefined && child.died > w.year)));
     if (!connected) continue;
     addFact(builders, ctx, house, {
       kind: 'family',
@@ -217,8 +218,8 @@ function currentCourtships(builders: Map<string, Builder>, ctx: SimCtx): void {
     for (const person of lineage.people) {
       const met = person.courtship;
       if (!met || met.offered > ctx.world.year || person.born > ctx.world.year) continue;
-      const actionable = person.died === undefined
-        && person.left === undefined
+      const actionable = (person.died === undefined || person.died > ctx.world.year)
+        && (person.left === undefined || person.left > ctx.world.year)
         && person.spouse === undefined;
       if (!actionable) continue;
       addFact(builders, ctx, house, {
