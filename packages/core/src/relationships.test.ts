@@ -982,6 +982,13 @@ describe('recovered future-born grudge participants (#2859, #2860)', () => {
   it('keeps a house-wide quarrel with its dead holder until a future heir is born (#2859)', () => {
     const { ctx, us, them } = feuding(2859);
     const w = ctx.world;
+    // A house-wide feud can pass to any living housemate. Remove the seeded
+    // Marrow cast so the unborn child really is the only possible successor.
+    for (const person of w.people.all()) {
+      if (person.houseOfOrigin === them.houseOfOrigin && person.id !== them.id) {
+        w.people.remove(person.id);
+      }
+    }
     const son = place(ctx, { sex: 'male', age: 20, name: 'Not yet born', house: 'house_marrow' });
     beget(ctx, son, undefined, them);
     son.born = w.year + 2; // A restored alive row dated after the current year.
@@ -1014,6 +1021,11 @@ describe('recovered future-born grudge participants (#2859, #2860)', () => {
   it('does not let a not-yet-born cadet speaker start the family quarrel (#2860)', () => {
     const { ctx, us } = feuding(28602);
     const w = ctx.world;
+    // The founding Head already holds the seat; make this fixture's target
+    // the sole Head before checking the speaker's directional grudge.
+    for (const person of w.people.all()) {
+      person.castSlots = person.castSlots.filter((slot) => slot !== 'head');
+    }
     us.castSlots.push('head');
     const speaker = place(ctx, { sex: 'male', age: 30, name: 'Future speaker' });
     const branch: BranchState = {
