@@ -312,9 +312,7 @@ function waitingText(): string {
 let signing = false;
 function sign(): void {
   // Keyboard submission must obey the same requirements as the disabled button.
-  // The final stage must be visibly current. A stale Enter after Back must
-  // not sign the previous complete draft while its house input is hiding.
-  if (signingStage.value !== 'house' || wanted.value.length > 0 || signing) return;
+  if (wanted.value.length > 0 || signing) return;
   refusalSuperseded.value = false;
   signing = true;
   try {
