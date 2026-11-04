@@ -26,8 +26,9 @@ export function captureContractor(ctx: SimCtx, person: string, captor: string, r
     if (c.practitioner !== person || c.stage === 'closed' || c.providerFee <= 0 || c.started > w.year) return false;
     return w.mystic.assignments.some(a => {
       if (a.contract !== c.id || a.started > w.year || a.target.kind !== 'muster') return false;
+      const commitment = a.target.commitment;
       return w.muster.commitments.some(m =>
-        m.id === a.target.commitment && m.status === 'in_the_field' && m.began <= w.year);
+        m.id === commitment && m.status === 'in_the_field' && m.began <= w.year);
     });
   });
   if (!deployed) return false;
