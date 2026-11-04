@@ -65,9 +65,18 @@ function surfaceOf(d: PendingDecision): AdviceSurface {
 
 function widowOfHead(ctx: SimCtx, p: Person): boolean {
   return p.marriages.some((marriage) => {
+    // Recovered saves can carry the next marriage or death in advance.
+    // Widowhood is an account of a real marriage and an effective death,
+    // not either record's eventual status.
+    if (marriage.from > ctx.world.year) return false;
     const spouse = ctx.world.people.get(marriage.spouse);
-    return spouse?.status === 'dead'
-      && ctx.world.succession.some((held) => held.person === spouse.id && held.from <= ctx.world.year);
+    if (!spouse || spouse.born > ctx.world.year) return false;
+    const died = spouse.died;
+    if (died === undefined ? spouse.status !== 'dead' : died > ctx.world.year) return false;
+    if (died !== undefined && (died < marriage.from
+      || (marriage.to !== undefined && marriage.to < died))) return false;
+    return ctx.world.succession.some((held) =>
+      held.person === spouse.id && held.from <= ctx.world.year);
   });
 }
 
@@ -77,6 +86,8 @@ function lensOf(
   d?: PendingDecision,
 ): { lens: AdviserLens; cares: () => string } | undefined {
   const role = p.contract?.role;
+  // A saved future post must not lend today's advice its professional authority.
+  const career = p.career && p.career.from <= ctx.world.year ? p.career.career : undefined;
   const subject = formOf(p, 'they');
   const possessive = formOf(p, 'their');
 
@@ -103,15 +114,15 @@ function lensOf(
     return { lens: 'old_head', cares };
   }
 
-  if (p.career?.career === 'clergy') return { lens: 'priest', cares: () => msg(ctx, 'adviser.cares.priest', "the Church is the institution {SUBJECT} serves", { SUBJECT: subject }) };
-  if (p.career?.career === 'merchant' || p.career?.career === 'factor' || p.career?.career === 'court') {
+  if (career === 'clergy') return { lens: 'priest', cares: () => msg(ctx, 'adviser.cares.priest', "the Church is the institution {SUBJECT} serves", { SUBJECT: subject }) };
+  if (career === 'merchant' || career === 'factor' || career === 'court') {
     return { lens: 'broker', cares: () => msg(ctx, 'adviser.cares.broker', "{POSSESSIVE} post is made of bargains, standing and other houses", { POSSESSIVE: possessive }) };
   }
   if (role === 'steward') return { lens: 'steward', cares: () => msg(ctx, 'adviser.cares.steward', "{SUBJECT} keeps the house and its accounts", { SUBJECT: subject }) };
-  if (p.career?.career === 'military' || role === 'guard') {
+  if (career === 'military' || role === 'guard') {
     return { lens: 'soldier', cares: () => msg(ctx, 'adviser.cares.soldier', "{POSSESSIVE} work prices risk in bodies", { POSSESSIVE: possessive }) };
   }
-  if (p.career?.career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
+  if (career === 'scholar' || role === 'archivist' || role === 'chronicler' || role === 'tutor') {
     return { lens: 'reader', cares: () => msg(ctx, 'adviser.cares.reader', "{SUBJECT} lives by what can be read, remembered and proved", { SUBJECT: subject }) };
   }
 
@@ -129,7 +140,7 @@ function relatedBonus(ctx: SimCtx, p: Person, d?: PendingDecision): number {
   const subject = ctx.world.people.get(d.subject.id);
   if (!subject) return 0;
   if (subject.claimedParents.mother === p.id || subject.claimedParents.father === p.id) return 4;
-  if (p.marriages.some((m) => m.spouse === subject.id)) return 4;
+  if (p.marriages.some((m) => m.spouse === subject.id && m.from <= ctx.world.year)) return 4;
   return 0;
 }
 
@@ -138,7 +149,7 @@ function helpSubjectBonus(ctx: SimCtx, p: Person, surface: AdviserSurface, subje
   const target = ctx.world.people.get(subject);
   if (!target) return 0;
   if (target.claimedParents.mother === p.id || target.claimedParents.father === p.id) return 4;
-  if (p.marriages.some((m) => m.spouse === target.id)) return 4;
+  if (p.marriages.some((m) => m.spouse === target.id && m.from <= ctx.world.year)) return 4;
   return 0;
 }
 
@@ -150,7 +161,9 @@ function advisers(
 ): Adviser[] {
   const order = SURFACE_LENS[surface];
   return ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
-    .filter((p) => p.status === 'alive' && ctx.world.year - p.born >= 15)
+    .filter((p) => p.status === 'alive' && p.born <= ctx.world.year
+      && (p.died === undefined || p.died > ctx.world.year)
+      && ctx.world.year - p.born >= 15)
     .flatMap((person) => {
       const found = lensOf(ctx, person, d);
       if (!found) return [];
