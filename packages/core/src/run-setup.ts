@@ -38,7 +38,7 @@ export function bootstrapRun(source: ContentBundle | Content, seed: number, setu
 /** Reject unbounded or misleading harness dimensions before a measured run. */
 export function assertHarnessCount(value: number, name: 'runs' | 'years', minimum: number): void {
   if (!Number.isSafeInteger(value) || value < minimum) {
-    throw new RangeError(`${name} must be a ${minimum === 0 ? 'non-negative' : 'positive'} safe integer`);
+    throw new Error(`${name} must be a ${minimum === 0 ? 'non-negative' : 'positive'} safe integer`);
   }
 }
 
