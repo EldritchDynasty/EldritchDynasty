@@ -74,6 +74,30 @@ describe('byname settlement respects the present Chronicle year (#2673)', () => 
     expect(child.byname?.settled).toEqual({ state: 'proven', year: 1043 });
   });
 
+  it('does not show an earned name before the year of its Record grant (#2800)', () => {
+    const ctx = testWorld(content, 2800, 1042);
+    const relative = place(ctx, { sex: 'female', age: 20 });
+    telling(ctx, relative, 'future_written_name', 1044);
+    const before = structuredClone(relative.byname);
+
+    for (const year of [1042, 1043]) {
+      expect(bynameStanding(relative, year)).toBeUndefined();
+      expect(bynameView(relative, year)).toBeUndefined();
+    }
+    for (const year of [1044, 1045]) {
+      expect(bynameStanding(relative, year)).toBe('claimed');
+      expect(bynameView(relative, year)).toEqual({
+        text: 'the Early-Woken', standing: 'claimed', year: 1044, page: 'future_written_name',
+      });
+    }
+    expect(bynameStanding(relative)).toBe('claimed'); // unbounded historical API
+    expect(relative.byname).toEqual(before); // projection is read-only
+
+    const legacy = place(ctx, { sex: 'male', age: 21 });
+    legacy.epithet = 'the Elder';
+    expect(bynameView(legacy, 1042)).toEqual({ text: 'the Elder', standing: 'unknown' });
+  });
+
   it('does not reveal a future settlement in current-year byname views (#2715)', () => {
     const ctx = testWorld(content, 2715, 1042);
     const relative = place(ctx, { sex: 'male', age: 25 });
