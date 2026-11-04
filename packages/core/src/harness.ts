@@ -13,7 +13,7 @@ import { inRegency } from './world.js';
 import { phenotypeOf } from './people/factory.js';
 import { activeBranches, halls } from './people/branches.js';
 import { CAMPAIGN_YEARS, END_YEAR } from './campaign.js';
-import { bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
+import { assertHarnessCount, bootstrapRun, runSetupFlags, runSetupLabel, type RunSetup } from './run-setup.js';
 
 export interface RunStats {
   seed: number;
@@ -102,6 +102,7 @@ export interface RunStats {
 }
 
 export function runOnce(seed: number, years: number, setup: RunSetup = {}): RunStats {
+  assertHarnessCount(years, 'years', 0);
   const bundle = loadContent();
   const ctx = bootstrapRun(bundle, seed, setup);
 
@@ -215,6 +216,8 @@ export function runOnce(seed: number, years: number, setup: RunSetup = {}): RunS
 const round = (n: number) => Math.round(n * 10) / 10;
 
 export function batch(runs: number, years: number, setup: RunSetup = {}): void {
+  assertHarnessCount(runs, 'runs', 1);
+  assertHarnessCount(years, 'years', 0);
   const bundle = loadContent();
   const issues = validateBundle(bundle);
   const errors = issues.filter((i) => i.level === 'error');

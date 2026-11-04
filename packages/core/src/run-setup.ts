@@ -35,6 +35,13 @@ export function bootstrapRun(source: ContentBundle | Content, seed: number, setu
   return bootstrap(source, seed, campaignDef(campaign).startYear, campaign, [], signing);
 }
 
+/** Reject unbounded or misleading harness dimensions before a measured run. */
+export function assertHarnessCount(value: number, name: 'runs' | 'years', minimum: number): void {
+  if (!Number.isSafeInteger(value) || value < minimum) {
+    throw new RangeError(`${name} must be a ${minimum === 0 ? 'non-negative' : 'positive'} safe integer`);
+  }
+}
+
 /** `--campaign=short` and `--founding=blood_mother`, validated against the schema's own vocabulary. */
 export function runSetupFlags(args: readonly string[]): RunSetup {
   const flag = (name: string) => args.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];
