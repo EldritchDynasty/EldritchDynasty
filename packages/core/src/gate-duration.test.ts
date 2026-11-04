@@ -145,7 +145,7 @@ describe('gate duration guard', () => {
     it('rejects wrong lanes, duplicate gates and invalid durations rather than misreporting them', () => {
       expect(() => summarizeGateTimingReport(full, 'war')).toThrow(/wrong-lane/);
       expect(() => summarizeGateTimingReport({
-        ...full, gates: [...full.gates, full.gates[0]],
+        ...full, gates: [...full.gates, full.gates[0]!],
       }, 'batch')).toThrow(/duplicate/);
       expect(() => summarizeGateTimingReport({
         ...full, gates: [{ gate: 'land', seconds: Number.NaN, ok: true }],
