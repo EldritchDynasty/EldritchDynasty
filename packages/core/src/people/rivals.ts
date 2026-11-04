@@ -85,8 +85,11 @@ function seedFounders(ctx: SimCtx, houseId: string, rng: Rng): RivalPerson[] {
   return people;
 }
 
-function livingRival(p: RivalPerson): boolean {
-  return p.died === undefined && p.left === undefined;
+/** Recovered lineage dates describe when somebody existed, not merely whether a marker is set. */
+function livingRival(p: RivalPerson, year: number): boolean {
+  return p.born <= year
+    && (p.died === undefined || p.died > year)
+    && (p.left === undefined || p.left > year);
 }
 
 /** A dead or departed partner cannot continue to bar a rival from marriage. */
@@ -112,7 +115,9 @@ export function growRivalLineage(ctx: SimCtx, houseId: string): void {
     return;
   }
 
-  const living = lineage.people.filter(livingRival);
+  // Future-born records occupy no present household slot and cannot consume
+  // the soft growth cap. Future departures and deaths have not happened yet.
+  const living = lineage.people.filter((p) => livingRival(p, w.year));
 
   // MORTALITY. A flat, age-rising hazard rather than the player's own
   // vitality model: this population owns no attributes and no health, and
@@ -124,7 +129,7 @@ export function growRivalLineage(ctx: SimCtx, houseId: string): void {
     if (rng.bool(Math.min(0.9, hazard))) p.died = w.year;
   }
 
-  const survivors = living.filter((p) => p.died === undefined);
+  const survivors = living.filter((p) => p.died === undefined || p.died > w.year);
   // Reuse this year's survivors instead of scanning the entire ancestral
   // history for every spouse. Rebuild after mortality so a death this year
   // opens the same marriage before any remarriage draw (#1641).
@@ -180,7 +185,7 @@ export function growRivalLineage(ctx: SimCtx, houseId: string): void {
     for (const mother of survivors) {
       if (mother.sex !== 'female' || !mother.spouse) continue;
       const father = byId.get(mother.spouse);
-      if (!father || father.died !== undefined) continue;
+      if (!father || !livingRival(father, w.year)) continue;
       const age = w.year - mother.born;
       if (age < MARRY_FROM || age > CHILDBEARING_TO) continue;
       if (!rng.bool(ANNUAL_BIRTH_CHANCE)) continue;
@@ -231,9 +236,9 @@ export function pickRivalCandidate(
   const w = ctx.world;
   // A loaded or externally changed lineage can still have a stale spouse
   // link before its next yearly tick. Read current liveness once per hand.
-  const livingIds = new Set(lineage.people.filter(livingRival).map((p) => p.id));
+  const livingIds = new Set(lineage.people.filter((p) => livingRival(p, w.year)).map((p) => p.id));
   const candidates = lineage.people.filter((p) => {
-    if (p.sex !== sex || hasLivingSpouse(livingIds, p) || !livingRival(p)) return false;
+    if (p.sex !== sex || hasLivingSpouse(livingIds, p) || !livingRival(p, w.year)) return false;
     const age = w.year - p.born;
     return age >= Math.max(MARRY_FROM, ageRange.min) && age <= ageRange.max;
   });
