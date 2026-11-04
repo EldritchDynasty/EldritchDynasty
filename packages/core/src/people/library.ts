@@ -226,13 +226,16 @@ export function canStudySpellbook(ctx: SimCtx, p: Person, def: SpellbookDef): Ca
   // An old snapshot with the same id is not that person: letting it pass can
   // create a ghost study or acquire a shelf copy for someone the world never
   // taught. Dead and guardian records cannot take up new books either.
-  if (p.status !== 'alive' || ctx.world.people.get(p.id) !== p) return { ok: false };
+  // A restored person whose recorded birth is still in the future cannot read
+  // or receive a completed book in this year, even if marked alive and awoken.
+  if (p.status !== 'alive' || p.born > ctx.world.year || ctx.world.people.get(p.id) !== p) return { ok: false };
   if (p.captivity) return { ok: false, reason: msg(ctx, 'library.refuse.captive', 'they are held away from the house') };
   if (covertReservation(ctx, p.id)) return { ok: false, reason: msg(ctx, 'library.refuse.expedition', 'they are away with an expedition') };
   if (serviceReservation(ctx, p.id)) return { ok: false, reason: msg(ctx, 'library.refuse.service', 'they are committed to an outside service') };
   // A standing Mystic duty is the reader's one intensive occupation (#1873).
   // Their book waits in `world.mystic.pauses` and resumes when the duty ends.
-  if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id)) {
+  // Future-dated imported duty orders do not occupy the reader before they start.
+  if (ctx.world.mystic.assignments.some((a) => a.practitioner === p.id && a.started <= ctx.world.year)) {
     return { ok: false, reason: msg(ctx, 'library.refuse.on_duty', 'they are keeping a Mystic duty') };
   }
   const shelfCopy = ctx.world.library.get(def.id);
