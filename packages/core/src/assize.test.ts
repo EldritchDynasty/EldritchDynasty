@@ -8,7 +8,7 @@ import {
 import type { SimCtx } from '@ed/core';
 import {
   COLLATERAL_BILL, COLLATERAL_KEPT, FOUNDING_YEARS, KEEP_AT, KEEP_FROM, KEEP_YEARS,
-  collateralDue, collateralKept, collateralKeeps, keepTheCollateral,
+  collateralDue, collateralKept, collateralKeeps, keepTheCollateral, tickAssize,
 } from './assize.js';
 import { afterimageEvidence } from './afterimage.js';
 import { DEBT_FLOOR } from './economy.js';
@@ -500,5 +500,83 @@ describe('save and resume around the keeping', () => {
     expect(resumed.world.treasury).toBe(ctx.world.treasury);
     expect(resumed.world.chronicle.at(-1)!.text).toBe(ctx.world.chronicle.at(-1)!.text);
     expect(resumed.world.assize.fired).toEqual(ctx.world.assize.fired);
+  });
+});
+
+/**
+ * Recovered Assize chronology (#2863, #2864, #2865).
+ *
+ * Imported state can retain future-dated people and prior Assize fields.
+ * Those rows remain stored, but cannot count as a person or a sitting today.
+ * Each fixture keeps the RNG fixed and explicitly crosses the relevant year.
+ */
+describe('recovered Assize chronology (#2863, #2864, #2865)', () => {
+  it('does not count a future-born living blood relative until their birth year (#2863)', () => {
+    const ctx = testWorld(bundle, 2863);
+    const year = ctx.world.year;
+    const child = place(ctx, { sex: 'male', age: 20, name: 'Future blood' });
+    const withChild = measureFortune(ctx);
+    expect(withChild.blood).toBeLessThan(1); // Blood must not hit the cap in this fixture.
+
+    child.born = year + 2; // A restored, alive but future-dated person.
+    const beforeBirth = measureFortune(ctx);
+    expect(beforeBirth.blood).toBeCloseTo(withChild.blood - 1 / 28, 10);
+    expect(beforeBirth.score).toBeLessThan(withChild.score);
+    expect(child.status).toBe('alive');
+    expect(child.born).toBe(year + 2);
+
+    ctx.world.year = year + 1;
+    expect(measureFortune(ctx).blood).toBeCloseTo(beforeBirth.blood, 10);
+    ctx.world.year = year + 2;
+    expect(measureFortune(ctx).blood).toBeCloseTo(withChild.blood, 10);
+  });
+
+  function strongHouse(seed: number): SimCtx {
+    const ctx = testWorld(bundle, seed);
+    ctx.world.treasury = 9000;
+    ctx.world.respect = 'exalted';
+    for (let i = 0; i < 28; i++) place(ctx, {
+      sex: i % 2 ? 'male' : 'female', age: 24 + (i % 12),
+    });
+    expect(assizePressure(ctx)).toBeGreaterThan(0.45);
+    return ctx;
+  }
+
+  it('does not let a future-dated last sitting disable the present sitting (#2864)', () => {
+    const ctx = strongHouse(2864);
+    const year = ctx.world.year;
+    ctx.world.assize.lastSitting = year + 40;
+    const from = ctx.world.chronicle.length;
+
+    const first = tickAssize(ctx, fixedRoll(0.1));
+    expect(first.acted).toBeDefined();
+    expect(ctx.world.assize.lastSitting).toBe(year);
+    expect(ctx.world.chronicle.length).toBeGreaterThan(from);
+
+    // An actual new sitting now enforces the usual twelve-year interval.
+    ctx.world.year = year + 11;
+    expect(tickAssize(ctx, fixedRoll(0.1)).acted).toBeUndefined();
+    expect(ctx.world.assize.lastSitting).toBe(year);
+  });
+
+  it('ignores a future response cooldown, then honours a real current one (#2865)', () => {
+    const ctx = strongHouse(2865);
+    const year = ctx.world.year;
+    const chosen = 'the_assessors_call';
+    ctx.world.assize.lastSitting = year - 100;
+
+    // Block every alternate response by a genuinely current cooldown.
+    for (const response of ASSIZE_RESPONSES.filter(r => r.arm === 'resents')) {
+      ctx.world.assize.fired[response.id] = response.id === chosen ? year + 80 : year;
+    }
+    const first = tickAssize(ctx, fixedRoll(0.1));
+    expect(first.acted?.id).toBe(chosen);
+    expect(ctx.world.assize.fired[chosen]).toBe(year);
+
+    // Ignore the sitting throttle here to isolate the per-response cooldown:
+    // the saved future event was replaced by an actual current-year receipt.
+    ctx.world.assize.lastSitting = year - 100;
+    expect(tickAssize(ctx, fixedRoll(0.1)).acted).toBeUndefined();
+    expect(ctx.world.assize.fired[chosen]).toBe(year);
   });
 });
