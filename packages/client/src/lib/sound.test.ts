@@ -1314,6 +1314,56 @@ describe('the bed decides when the house may be heard', () => {
     expect(pausedPage.count()).toBe(0);
   });
 
+  it('restores an unlocked Age after pagehide reattaches to an already-visible page (#2924)', () => {
+    const { e, page: oldPage, bed } = bedOnBoard();
+    oldPage.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    // A pagehide can arrive before visibilityState changes. The replacement
+    // may already be visible before attaching and emit no pageshow event.
+    oldPage.fire('win:pagehide');
+    expect(oldPage.doc.visibilityState).toBe('visible');
+    expect(bed.audible).toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+
+    const replacement = fakePage();
+    bed.attach(replacement.doc, replacement.win);
+    expect(oldPage.count(), 'replacing the page leaked old listeners').toBe(0);
+    expect(bed.audible, 'a visible replacement stayed pagehide-muted').toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+    expect(replacement.count()).toBe(0);
+  });
+
+  it('lets a synchronous native pause veto pagehide replacement recovery (#2924)', () => {
+    const { e, page: oldPage, bed } = bedOnBoard();
+    oldPage.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    oldPage.fire('win:pagehide');
+
+    const replacement = fakePage();
+    bed.attach(replacement.doc, replacement.win, (pause) => {
+      pause(); // The new host is not in the foreground yet.
+      return () => undefined;
+    });
+    expect(bed.audible, 'page replacement overrode a native pause').toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+
+    // A later replacement is not a foreground notification either.
+    const nextPage = fakePage();
+    bed.attach(nextPage.doc, nextPage.win);
+    expect(bed.audible, 'a stale pagehide flag overrode the native pause').toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+    nextPage.fire('win:pointerdown'); // Host with no resume hook: gesture fallback.
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+    expect(oldPage.count()).toBe(0);
+    expect(replacement.count()).toBe(0);
+    expect(nextPage.count()).toBe(0);
+  });
+
   it('honours a native pause delivered synchronously while registering listeners (#1986)', () => {
     const e = fakeEngine();
     const page = fakePage();
