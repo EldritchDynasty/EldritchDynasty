@@ -54,3 +54,82 @@ glossary:
       original: one term of the house's founding bargain, entered in the Record when recovered.
       plainenglish: One part of the family's agreement, recorded when the family discovers it.
     related: [ledger]
+
+  # The seal may remain with the bloodline when no eligible male heir can
+  # succeed. Define the public institution, not any person's hidden aptitude.
+  - id: regency
+    names:
+      original: Regency
+      plainenglish: Regency
+    aliases:
+      original: [Regency, regency]
+      plainenglish: [Regency, regency]
+    definition:
+      original: a woman of the blood holds the house's seat when no eligible expressing male succeeds.
+      plainenglish: A woman of the family holds the seat when no eligible man who can express Eldritch Power succeeds.
+    related: [cadet_hall, expresser]
+
+  # Cadet households are still part of the bloodline, not rival Houses.
+  - id: cadet_hall
+    names:
+      original: cadet hall
+      plainenglish: branch household
+    aliases:
+      original: [cadet hall, cadet halls, Cadet hall, Cadet halls, cadet branch, cadet branches]
+      plainenglish: [branch household, branch households, cadet hall, cadet halls, cadet branch, cadet branches]
+    definition:
+      original: a separate hall founded by a relative, still belonging to the house's bloodline.
+      plainenglish: A relative's separate household, still part of the same family.
+    related: [regency]
+
+  # The muster is a military commitment, not a generic test of bravery.
+  - id: muster
+    names:
+      original: Muster
+      plainenglish: Muster
+    aliases:
+      original: [Muster, the Muster]
+      plainenglish: [Muster, the Muster]
+    definition:
+      original: the call for the house to commit men or resources to military service.
+      plainenglish: A demand for the family to provide people or resources for a war.
+    related: [cadet_hall]
+
+  # Mystic study is learned from books; this is not Eldritch expression.
+  - id: threshold_affinity
+    names:
+      original: Threshold affinity
+      plainenglish: Threshold magic
+    aliases:
+      original: [Threshold affinity, Threshold affinities, Threshold Art, Threshold Arts]
+      plainenglish: [Threshold magic, Threshold affinities, Threshold affinity, Threshold Arts]
+    definition:
+      original: a learned Mystic affinity of life, death, light or darkness, open to women and men.
+      plainenglish: One of the four kinds of book-learned magic that women and men may both study.
+    related: []
+
+  # What the blood permits is not proof that any named man has awakened.
+  - id: expresser
+    names:
+      original: expresser
+      plainenglish: expresser
+    aliases:
+      original: [expresser, expressers, Expresser, Expressers]
+      plainenglish: [expresser, expressers, Expresser, Expressers]
+    definition:
+      original: a man whose inherited blood can express Eldritch Power, whether awakened or not.
+      plainenglish: A man with inherited capacity for Eldritch Power, even if he has not awakened.
+    related: [vessel]
+
+  # Name the public rung without giving away its costs or success odds.
+  - id: vessel
+    names:
+      original: Vessel
+      plainenglish: Vessel
+    aliases:
+      original: [the Vessel, Vessel]
+      plainenglish: [the Vessel, Vessel]
+    definition:
+      original: the Ascension rung beyond Hierophant, reached by more than power alone.
+      plainenglish: A step on the Ascension ladder after Hierophant; power by itself is not enough.
+    related: [expresser]
