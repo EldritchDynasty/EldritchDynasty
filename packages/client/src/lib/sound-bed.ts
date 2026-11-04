@@ -104,6 +104,8 @@ export class SoundBed {
   #away = false;
   /** A gesture may resume a paused host, but must never wake a hidden document. */
   #documentHidden = false;
+  /** A pagehide can arrive while visibilityState is still "visible". */
+  #pageHidden = false;
   #scene: DroneInput | null = null;
   #sceneKey = 'null';
   #detach: () => void = () => undefined;
@@ -148,6 +150,7 @@ export class SoundBed {
     if (this.#disposed || this.#documentHidden) return;
     this.#unlocked = true;
     this.#away = false;
+    this.#pageHidden = false;
     this.#settle();
     if (this.audible) this.engine.wake();
   }
@@ -185,6 +188,7 @@ export class SoundBed {
     // Replacing an attachment may move a hidden page's audio to an already
     // visible document without another visibilitychange/pageshow event.
     const wasDocumentHidden = this.#documentHidden;
+    const wasPageHidden = this.#pageHidden;
     // Ambient: mixes with whatever the player is already listening to, and
     // obeys a phone's silent switch, where the engine supports saying so.
     // `auto` is the only value replaced; a host that chose already chose.
@@ -204,9 +208,16 @@ export class SoundBed {
       // Prerendered or unknown host states are not permission to start audio.
       this.#documentHidden = doc.visibilityState !== 'visible';
       if (this.#documentHidden) this.hide();
-      else this.show();
+      else {
+        this.#pageHidden = false;
+        this.show();
+      }
     };
-    const hide = () => { if (active) this.hide(); };
+    const hide = () => {
+      if (!active) return;
+      this.#pageHidden = true;
+      this.hide();
+    };
     // A pageshow can arrive before visibilitychange while the page remains
     // hidden (for example when a tab is restored in the background).
     const show = () => visibility();
@@ -237,11 +248,14 @@ export class SoundBed {
     // A real visibilitychange, pageshow or a fresh user gesture can resume.
     this.#documentHidden = doc.visibilityState !== 'visible';
     if (this.#documentHidden) this.hide();
-    else if (wasDocumentHidden && !pausedDuringSubscription) {
-      // The new document is already visible. Restore an unlocked bed muted
-      // only by the old document's visibility, without waiting for an event
-      // that the new document may never dispatch.
-      this.show();
+    else {
+      // This visible document supersedes the previous pagehide. A host pause
+      // delivered during subscription still wins: it is a separate signal,
+      // not evidence of a foreground return.
+      this.#pageHidden = false;
+      if ((wasDocumentHidden || wasPageHidden) && !pausedDuringSubscription) {
+        this.show();
+      }
     }
     // A former attachment may still have its cleanup callback in a caller.
     // Calling that stale callback must neither tear down nor forget a newer
