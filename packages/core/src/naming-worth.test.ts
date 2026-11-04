@@ -357,6 +357,7 @@ describe('naming honours respect the current world year (#2797, #2798)', () => {
     w.year += 1;
     // A previously born child cannot retroactively become a post-founding child.
     expect(nameWorthAsking(ctx, preFounding)).toBeUndefined();
+    w.year += 1; // The first child now arrives after, not during, the founding year.
     const futureSibling = bear(ctx, founder, mother, 'female', 'Next year’s child', 'branch_tomorrow');
     futureSibling.born = w.year + 1;
     const first = bear(ctx, founder, mother, 'female', 'First under the roof', 'branch_tomorrow');
