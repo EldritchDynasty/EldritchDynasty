@@ -1559,3 +1559,44 @@ describe('localised Match futures (#986)', () => {
   });
 });
 
+
+describe('recovered Match census chronology (#2879)', () => {
+  it('counts children only once their birth has occurred', () => {
+    const ctx = testWorld(bundle, 2879, 1200);
+    const mother = place(ctx, { sex: 'female', age: 60, name: 'Present mother' });
+    const father = place(ctx, { sex: 'male', age: 62, name: 'Present father' });
+    marry(ctx, mother, father);
+    const born = place(ctx, { sex: 'female', age: 20, name: 'Present daughter' });
+    const future = place(ctx, { sex: 'male', age: 1, name: 'Future son' });
+    beget(ctx, born, mother, father);
+    beget(ctx, future, mother, father);
+    future.born = 1205; // An inconsistent recovered pedigree, not a birth today.
+
+    const cen = lineCensus(ctx);
+    expect(cen.borne.get(mother.id)?.map((p) => p.id)).toEqual([born.id]);
+    expect(cen.counted.has(mother.id)).toBe(true);
+    expect(cen.mean).toBe(1);
+  });
+
+  it('requires a past marriage and a completed lifetime as of the current year', () => {
+    const ctx = testWorld(bundle, 28790, 1200);
+    const futureWife = place(ctx, { sex: 'female', age: 60, name: 'Later bride' });
+    marry(ctx, futureWife, place(ctx, { sex: 'male', age: 60, name: 'Later groom' }));
+    futureWife.marriages[0]!.from = 1205;
+    expect(lineCensus(ctx).counted.has(futureWife.id)).toBe(false);
+    futureWife.marriages[0]!.from = 1170;
+    expect(lineCensus(ctx).counted.has(futureWife.id)).toBe(true);
+
+    const young = place(ctx, { sex: 'female', age: 25, name: 'Young future-deceased' });
+    marry(ctx, young, place(ctx, { sex: 'male', age: 26, name: 'Young husband' }));
+    young.died = 1255;
+    expect(lineCensus(ctx).counted.has(young.id)).toBe(false);
+
+    const historic = place(ctx, { sex: 'female', age: 70, name: 'Historic elder' });
+    marry(ctx, historic, place(ctx, { sex: 'male', age: 72, name: 'Historic husband' }));
+    historic.marriages[0]!.from = 1160;
+    historic.died = 1180;
+    historic.status = 'dead';
+    expect(lineCensus(ctx).counted.has(historic.id)).toBe(true);
+  });
+});

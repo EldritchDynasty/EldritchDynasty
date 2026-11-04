@@ -151,14 +151,15 @@ function issueRows(ctx: SimCtx, women: Person[], cen: LineCensus, motherId?: str
     .filter((p) => cen.counted.has(p.id))
     .slice(0, ROWS)
     .map((p) => {
-      const kids = cen.borne.get(p.id) ?? [];
+      const kids = (cen.borne.get(p.id) ?? []).filter((child) => child.born <= w.year);
       const kin: PanelKin = p.id === motherId ? 'mother' : motherId ? 'sister' : 'house';
       return {
         name: p.name,
         relation: kinPhrase(ctx, kin, subjectSex),
         kin,
         borne: kids.length,
-        grown: kids.filter((k) => ageAt(k, k.died ?? w.year) >= GROWN).length,
+        // A future death cannot prove this child has survived to adulthood today.
+        grown: kids.filter((k) => ageAt(k, Math.min(k.died ?? w.year, w.year)) >= GROWN).length,
       };
     });
 }
@@ -247,7 +248,10 @@ function wakingRows(ctx: SimCtx, rows: { p: Person; kin: PanelKin; near: number 
     // Stop at the cut rather than slicing after it, so a phrase is rendered
     // (and a Plain English miss reported) only for a row the panel shows.
     if (out.length >= ROWS) break;
-    if (!p.awakening.awakened || p.awakening.year === undefined) continue;
+    // Recovered saves may label a not-yet-born witness alive, or preserve
+    // an awakening whose date lies beyond the card's current year.
+    if (p.born > ctx.world.year || !p.awakening.awakened || p.awakening.year === undefined
+      || p.awakening.year > ctx.world.year || p.awakening.year < p.born) continue;
     if (seen.has(p.id)) continue;
     seen.add(p.id);
     out.push({
@@ -370,6 +374,9 @@ function pagesAbout(ctx: SimCtx, house: string): ChronicleEntry[] {
   const w = ctx.world;
   const out: ChronicleEntry[] = [];
   for (const e of w.chronicle) {
+    // A future page is not yet in the family's book and cannot introduce a
+    // page-linked tale into the marriage market either.
+    if (e.year > w.year) continue;
     const claims = e.claims ?? [];
     if (!claims.length) continue;
     const hit = claims.some((c) => w.people.get(c.person)?.houseOfOrigin === house);
@@ -416,7 +423,10 @@ function readSaid(ctx: SimCtx, house: string, pages: ChronicleEntry[]): PanelSay
 
   const take = (t: { id: string; teller: string; bias: string; text: string }): void => {
     const state = w.tales.get(t.id);
-    if (!state?.circulating || seen.has(t.id)) return;
+    // Imported flags are not authoritative about a tale whose event and
+    // circulation are both dated after this year's Match.
+    if (!state?.circulating || state.bornYear > w.year
+      || state.circulatesFrom > w.year || seen.has(t.id)) return;
     seen.add(t.id);
     out.push({ tale: t.id, ...proseForTale(ctx, t) });
   };

@@ -471,11 +471,15 @@ export interface LineCensus {
  * not finished. A woman who never married was never asked.
  */
 function counts(year: Year, p: Person): boolean {
+  // Imported deaths and marriages may be dated after the year being read.
+  // Evidence stops at the earlier of today and an actual past death.
+  const observedThrough = Math.min(p.died ?? year, year);
   return p.sex === 'female'
-    && p.marriages.length > 0
+    && p.born <= year
+    && p.marriages.some((marriage) => marriage.from <= observedThrough)
     // A life ended before the childbearing window closed is not a completed line.
     // Checking today's year would count every long-dead young wife as barren.
-    && ageAt(p, p.died ?? year) >= CHILDBEARING.to;
+    && ageAt(p, observedThrough) >= CHILDBEARING.to;
 }
 
 /**
@@ -496,6 +500,9 @@ export function lineCensus(ctx: SimCtx): LineCensus {
   const all = w.people.all();
 
   for (const p of all) {
+    // A saved person may have a future birth and a fully populated pedigree.
+    // The Match cannot yet count that child as someone a woman has borne.
+    if (p.born > w.year) continue;
     const mother = p.claimedParents.mother;
     if (!mother) continue;
     const kids = borne.get(mother);
