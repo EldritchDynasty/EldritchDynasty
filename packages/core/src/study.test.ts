@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
   applyEffect, beginStudy, bootstrap, effectiveStudyYears, loadGame, phase, place,
-  runYears, saveGame, spellbookDef,
+  runYears, saveGame, spellbookDef, knowsAffinity,
 } from '@ed/core';
 import { asId } from '@ed/schema';
 
@@ -344,5 +344,47 @@ describe('a scheduled event actually arrives', () => {
       ctx.world.scheduled.some((s) => s.event === String(uncastable.id)),
       'past SCHEDULE_PATIENCE it stops asking',
     ).toBe(false);
+  });
+});
+
+describe('recovered future appointments and future-born Mystic readers (#2850, #2871)', () => {
+  it('uses ordinary study speed until a saved Scholar post begins, including its Age bonus', () => {
+    const ctx = bootstrap(content, 2850, 1042);
+    const def = book(ctx);
+    const plain = place(ctx, { sex: 'female', age: 20, name: 'Plain Reader', awakened: true });
+    const futureScholar = place(ctx, { sex: 'female', age: 20, name: 'Future Scholar', awakened: true });
+    const now = ctx.world.year;
+    futureScholar.career = { career: asId('scholar'), from: now + 4 };
+
+    const ordinaryYears = effectiveStudyYears(ctx, plain, def);
+    expect(effectiveStudyYears(ctx, futureScholar, def)).toBe(ordinaryYears);
+    expect(beginStudy(ctx, futureScholar, def)).toBe(true);
+    expect(studyOf(ctx, futureScholar.id)[0]!.completes).toBe(now + ordinaryYears);
+
+    ctx.world.year = now + 4;
+    expect(effectiveStudyYears(ctx, futureScholar, def))
+      .toBeLessThan(effectiveStudyYears(ctx, plain, def));
+    // The already-quoted in-flight study retains its original completion date.
+    expect(studyOf(ctx, futureScholar.id)[0]!.completes).toBe(now + ordinaryYears);
+  });
+
+  it('excludes a future-born spell holder from present Mystic proof and first-reading precedent', () => {
+    const ctx = bootstrap(content, 2871, 1042);
+    const def = book(ctx);
+    const futureReader = place(ctx, { sex: 'female', age: 20, name: 'Future Reader', awakened: true });
+    const presentReader = place(ctx, { sex: 'female', age: 20, name: 'Present Reader', awakened: true });
+    futureReader.spellsKnown.push(asId(LIFE));
+    futureReader.born = ctx.world.year + def.studyYears + 9;
+
+    expect(knowsAffinity(ctx, futureReader, 'life')).toBe(false);
+    expect(beginStudy(ctx, presentReader, def)).toBe(true);
+    ctx.world.year = studyOf(ctx, presentReader.id)[0]!.completes;
+    const report = phase('library', ctx);
+    expect(report.studiesFinished.map((s) => s.name)).toContain('Present Reader');
+    expect(ctx.world.chronicle.filter((entry) => entry.text?.includes('Nobody in the house')))
+      .toHaveLength(1);
+
+    ctx.world.year = futureReader.born;
+    expect(knowsAffinity(ctx, futureReader, 'life')).toBe(true);
   });
 });
