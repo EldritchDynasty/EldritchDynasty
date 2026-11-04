@@ -103,7 +103,8 @@ export function maternalDepth(ctx: SimCtx, personId: string | undefined): number
     if (!p || p.born > ctx.world.year) break;
     const mother = p.claimedParents.mother;
     const ancestor = mother ? ctx.world.people.get(mother) : undefined;
-    if (!ancestor || ancestor.born > ctx.world.year) break;
+    // A repeated mother is evidence of a cycle, not another valid generation.
+    if (!ancestor || ancestor.born > ctx.world.year || seen.has(mother)) break;
     depth += 1;
     at = mother;
   }
@@ -155,6 +156,8 @@ export function papersDemanded(dowry: number, kinship: number, deepBlood: number
  * better off, which is the opposite of the trade the prices are for.
  */
 export function papersHeld(ctx: SimCtx, p: Person): number {
+  // A restored future-born person cannot present filed documents today.
+  if (p.born > ctx.world.year) return 0;
   const shown = maternalDepth(ctx, p.id);
   const filed = p.lineageDocuments
     .filter((d) => d.exposed === undefined || d.exposed > ctx.world.year)
@@ -187,6 +190,9 @@ export function filePedigree(ctx: SimCtx, p: Person, grade: PedigreeGrade): Line
   }
   if (p.born > ctx.world.year) {
     throw new Error('cannot file a pedigree before birth');
+  }
+  if (ctx.world.people.householdOf(p.id, ctx.world.year) !== ctx.world.playerHouse) {
+    throw new Error('cannot file a pedigree for someone outside the house');
   }
 
   const doc: LineageDocument = {
