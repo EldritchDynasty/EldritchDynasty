@@ -215,7 +215,7 @@ function restsOn(grant: BynameGrant, discrepancy: string, page: string): boolean
   switch (source.kind) {
     case 'record': return source.pen === 'embellish' && source.discrepancy === discrepancy && source.page === page;
     case 'reign': return false;
-    default: return assertNever(source.kind);
+    default: return assertNever(source);
   }
 }
 
@@ -254,7 +254,7 @@ export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>, asOfY
       }
     }
     case 'reign': return 'reign';
-    default: return assertNever(source.kind);
+    default: return assertNever(source);
   }
 }
 
@@ -291,6 +291,6 @@ export function bynameView(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?
         ? { settledYear: grant.settled.year } : {}),
     };
     case 'reign': return { text: epithet, standing, year: grant.year };
-    default: return assertNever(source.kind);
+    default: return assertNever(source);
   }
 }
