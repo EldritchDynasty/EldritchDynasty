@@ -408,3 +408,64 @@ describe('authored Discrepancy disclosure and Standing relation (#2603)', () => 
     }
   });
 });
+
+
+describe('new public terms preserve touch and keyboard disclosure (#2808)', () => {
+  it('opens an authored three-level Regency → expresser → Vessel chain and restores Escape focus', async () => {
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      const text = 'Regency held the house.';
+      const wrapper = render(text, proseMode);
+      const primary = wrapper.get('button.glossary-term');
+      expect(primary.text()).toBe('Regency');
+      expect(primary.attributes('aria-expanded')).toBe('false');
+
+      await primary.trigger('click');
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(1);
+      const expresser = wrapper.findAll('button.glossary-term')
+        .find(button => button.text() === 'expresser');
+      expect(expresser).toBeDefined();
+      await expresser!.trigger('click');
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(2);
+
+      const vessel = wrapper.findAll('button.glossary-term')
+        .find(button => button.text() === 'Vessel');
+      expect(vessel).toBeDefined();
+      await vessel!.trigger('click');
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(3);
+      // The third level has neither a fourth-level button nor a cycle to expresser.
+      expect(wrapper.findAll('button.glossary-term')).toHaveLength(4); // Regency, cadet hall, expresser, Vessel
+
+      const inner = wrapper.findAll('[role="note"]')[2]!;
+      (inner.element as HTMLElement).focus();
+      await inner.trigger('keydown', { key: 'Escape' });
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(2);
+      expect(document.activeElement).toBe(vessel!.element);
+
+      const middle = wrapper.findAll('[role="note"]')[1]!;
+      (middle.element as HTMLElement).focus();
+      await middle.trigger('keydown', { key: 'Escape' });
+      expect(wrapper.findAll('[role="note"]')).toHaveLength(1);
+      expect(document.activeElement).toBe(expresser!.element);
+
+      const outer = wrapper.findAll('[role="note"]')[0]!;
+      (outer.element as HTMLElement).focus();
+      await outer.trigger('keydown', { key: 'Escape' });
+      expect(wrapper.find('[role="note"]').exists()).toBe(false);
+      expect(document.activeElement).toBe(primary.element);
+      expect(wrapper.text()).toBe(text);
+    }
+  });
+
+  it('discloses a Threshold definition in Plain English without adding extra buttons', async () => {
+    const source = 'Threshold magic was mentioned, then Threshold magic again.';
+    const wrapper = render(source, 'plainenglish');
+    expect(wrapper.findAll('button.glossary-term')).toHaveLength(1);
+    expect(wrapper.get('button.glossary-term').text()).toBe('Threshold magic');
+    await wrapper.get('button.glossary-term').trigger('click');
+    expect(wrapper.get('[role="note"]').text()).toContain('book-learned magic');
+    expect(wrapper.findAll('[role="note"]')).toHaveLength(1);
+    await wrapper.get('button.glossary-term').trigger('click');
+    expect(wrapper.find('[role="note"]').exists()).toBe(false);
+    expect(wrapper.text()).toBe(source);
+  });
+});
