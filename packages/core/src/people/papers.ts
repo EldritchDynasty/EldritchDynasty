@@ -104,7 +104,7 @@ export function maternalDepth(ctx: SimCtx, personId: string | undefined): number
     const mother = p.claimedParents.mother;
     const ancestor = mother ? ctx.world.people.get(mother) : undefined;
     // A repeated mother is evidence of a cycle, not another valid generation.
-    if (!ancestor || ancestor.born > ctx.world.year || seen.has(mother)) break;
+    if (!mother || !ancestor || ancestor.born > ctx.world.year || seen.has(mother)) break;
     depth += 1;
     at = mother;
   }
