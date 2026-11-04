@@ -342,6 +342,12 @@ export class Sound {
   private droneKey = '';
   /** Only one asynchronous resume at a time per device, even before state changes to running. */
   private resuming: AudioContext | null = null;
+  /**
+   * A one-shot's scheduled stop may be minutes away in wall time after a host
+   * suspends its audio clock. Keep the exact sources and graph cleanups here so
+   * mute, zero volume, pause and disposal can retire them immediately.
+   */
+  private readonly activeCues = new Map<AudioScheduledSourceNode, () => void>();
   private readonly ctors: readonly Ctor[];
 
   #muted = true;
@@ -370,8 +376,10 @@ export class Sound {
     this.attempt(() => {
       if (this.out) this.out.gain.value = value ? 0 : this.#volume;
     });
-    if (value) this.stopDrone(0);
-    else if (this.lastDrone) this.setDrone(this.lastDrone);
+    if (value) {
+      this.stopCues();
+      this.stopDrone(0);
+    } else if (this.lastDrone) this.setDrone(this.lastDrone);
   }
 
   /**
@@ -393,8 +401,10 @@ export class Sound {
     // A direct Sound user (including tools outside SoundBed) must not keep an
     // inaudible drone running at zero volume. Restore only the latest scene
     // once the reader raises the level; don't create an engine for silence.
-    if (this.#volume === 0) this.stopDrone(0);
-    else if (wasSilent && !this.#muted && this.lastDrone) this.setDrone(this.lastDrone);
+    if (this.#volume === 0) {
+      this.stopCues();
+      this.stopDrone(0);
+    } else if (wasSilent && !this.#muted && this.lastDrone) this.setDrone(this.lastDrone);
   }
 
   /**
@@ -518,6 +528,7 @@ export class Sound {
     // Suspending freezes AudioContext.currentTime immediately. Even a 20ms
     // scheduled stop remains pending until the clock wakes, when the old drone
     // could overlap the new one. End it at currentTime before suspending.
+    this.stopCues();
     this.stopDrone(0);
     this.attempt(() => {
       const ctx = this.context;
@@ -540,6 +551,7 @@ export class Sound {
 
   /** Let go of the audio thread entirely. A closed context cannot finish a scheduled fade. */
   close() {
+    this.stopCues();
     // Closing freezes the clock, so a deferred stop/onended can never finish.
     // Cut the drone graph now rather than retaining it behind a closed device.
     this.stopDrone(0);
@@ -600,6 +612,7 @@ export class Sound {
   }
 
   private fail(): void {
+    this.stopCues();
     this.#failed = true;
     this.drone = null;
     this.droneKey = '';
@@ -608,6 +621,19 @@ export class Sound {
     this.out = null;
     this.resuming = null;
     try { quietly(context?.close?.()); } catch { /* already gone */ }
+  }
+
+  /**
+   * End a cue before the audio clock freezes or a muted output is reopened.
+   * A host may have invalidated the node already; disconnection must remain
+   * best-effort and must never turn a player action into a throw.
+   */
+  private stopCues(): void {
+    const now = this.context?.currentTime ?? 0;
+    for (const [source, dispose] of this.activeCues) {
+      try { source.stop(now); } catch { /* an ended/invalidated source is already silent */ }
+      dispose();
+    }
   }
 
   private attempt(work: () => void) {
@@ -628,8 +654,10 @@ export class Sound {
 
       // Graph first, so nothing is ever started into nowhere.
       let node: AudioNode = source;
+      let filter: BiquadFilterNode | null = null;
       if (v.filter) {
         const f = ctx.createBiquadFilter();
+        filter = f;
         f.type = v.filter.type;
         f.frequency.setValueAtTime(v.filter.freq, t0);
         if (v.filter.q !== undefined) f.Q.setValueAtTime(v.filter.q, t0);
@@ -668,6 +696,18 @@ export class Sound {
         gain.gain.exponentialRampToValueAtTime(Math.max(v.gain * 0.001, 1e-4), end);
         gain.gain.linearRampToValueAtTime(0, end + 0.01);
         source.stop(end + 0.02);
+
+        // Web Audio retains connected graphs while a source is scheduled.
+        // Retire every one-shot voice after its actual end, not merely its
+        // envelope. The same cleanup cuts it early on mute/host pause/close.
+        const dispose = () => {
+          if (!this.activeCues.delete(source)) return;
+          try { source.disconnect(); } catch { /* invalidated device */ }
+          try { filter?.disconnect(); } catch { /* invalidated device */ }
+          try { gain.disconnect(); } catch { /* invalidated device */ }
+        };
+        this.activeCues.set(source, dispose);
+        source.onended = dispose;
       }
 
       made.push(source);
