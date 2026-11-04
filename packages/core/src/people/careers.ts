@@ -16,7 +16,9 @@ import { msg } from '../messages.js';
  */
 
 export function careerDefOf(ctx: SimCtx, p: Person): CareerDef | undefined {
-  return p.career ? ctx.content.career(p.career.career) : undefined;
+  // A restored future post is not a post the person holds this year.
+  return p.career && p.career.from <= ctx.world.year
+    ? ctx.content.career(p.career.career) : undefined;
 }
 
 /**
@@ -97,7 +99,9 @@ export function tickCareers(ctx: SimCtx, rng: Rng): void {
   // about all six of them at once.
   let bestYield: CareerDef['respectYield'] = 'none';
   for (const p of w.people.household(w.playerHouse, w.year)) {
-    if (!p.career) continue;
+    // A recovered future commission earns no pay, Respect, growth or service time
+    // until its first year. Preserve the saved placement for that year.
+    if (!p.career || p.career.from > w.year) continue;
     const def = ctx.content.career(p.career.career);
     if (!def) continue;
 

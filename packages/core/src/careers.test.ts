@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadContent } from '@ed/content';
 import { isLadderRole, validateBundle, type Filter } from '@ed/schema';
 import {
@@ -398,5 +398,69 @@ describe('a post is a man\'s, at all three doors', () => {
       }
     }
     expect(checked, 'no authored placement was examined, so this proved nothing').toBeGreaterThan(4);
+  });
+});
+
+
+/** Future-dated careers can survive in imported saves; they are not active service. */
+describe('career start-year boundaries (#2847, #2848, #2849)', () => {
+  it('withholds future wages, Respect rolls, attribute growth and career traits until service begins', () => {
+    const ctx = bootstrap(bundle, 2847, 1042);
+    const merchant = place(ctx, { sex: 'male', age: 30, name: 'Future Merchant' });
+    const courtier = place(ctx, { sex: 'male', age: 30, name: 'Future Courtier' });
+    const soldier = place(ctx, { sex: 'male', age: 30, name: 'Future Soldier' });
+    const firstYear = ctx.world.year + 2;
+    merchant.career = { career: 'merchant' as never, from: firstYear };
+    courtier.career = { career: 'court' as never, from: firstYear };
+    soldier.career = { career: 'military' as never, from: firstYear };
+    const beforeTreasury = ctx.world.treasury;
+    const rng = testRng('future-post-start');
+    const rollRespect = vi.spyOn(rng, 'bool').mockReturnValue(true);
+
+    tickCareers(ctx, rng);
+    expect(ctx.world.treasury).toBe(beforeTreasury);
+    expect(courtier.acquired.charm ?? 0).toBe(0);
+    expect([...soldier.traits].map(String)).not.toContain('hardened_by_the_line');
+    expect(rollRespect).not.toHaveBeenCalled();
+    expect(merchant.career?.from).toBe(firstYear);
+
+    ctx.world.year = firstYear;
+    tickCareers(ctx, rng);
+    expect(ctx.world.treasury).toBeGreaterThan(beforeTreasury);
+    expect(courtier.acquired.charm ?? 0).toBeGreaterThan(0);
+    expect(rollRespect).toHaveBeenCalledTimes(1);
+    expect([...soldier.traits].map(String)).not.toContain('hardened_by_the_line');
+
+    ctx.world.year = firstYear + 10;
+    tickCareers(ctx, testRng('future-post-traits'));
+    expect([...soldier.traits].map(String)).toContain('hardened_by_the_line');
+  });
+
+  it('keeps a future clergyman in the present breeding pool, then excludes him in his first year', () => {
+    const ctx = bootstrap(bundle, 2848, 1042);
+    const priest = place(ctx, { sex: 'male', age: 25, name: 'Soon Ordained' });
+    const firstYear = ctx.world.year + 1;
+    priest.career = { career: 'clergy' as never, from: firstYear };
+
+    expect(inBreedingPool(ctx, priest)).toBe(true);
+    expect(priest.career?.from).toBe(firstYear);
+    ctx.world.year = firstYear;
+    expect(inBreedingPool(ctx, priest)).toBe(false);
+  });
+
+  it('does not apply future military death risk or clergy Madness cover before their start year', () => {
+    const ctx = bootstrap(bundle, 2849, 1042);
+    const soldier = place(ctx, { sex: 'male', age: 30, name: 'Future Officer' });
+    const priest = place(ctx, { sex: 'male', age: 30, name: 'Future Priest' });
+    const firstYear = ctx.world.year + 2;
+    soldier.career = { career: 'military' as never, from: firstYear };
+    priest.career = { career: 'clergy' as never, from: firstYear };
+
+    expect(careerMortality(ctx, soldier)).toBe(0);
+    expect(madnessCoverOf(ctx, [priest, soldier])).toBe(0);
+    expect(soldier.career?.from).toBe(firstYear);
+    ctx.world.year = firstYear;
+    expect(careerMortality(ctx, soldier)).toBe(ctx.content.mustCareer('military').extraMortality);
+    expect(madnessCoverOf(ctx, [priest, soldier])).toBe(ctx.content.mustCareer('clergy').madnessCover);
   });
 });
