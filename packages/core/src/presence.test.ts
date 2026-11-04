@@ -150,4 +150,98 @@ describe('physical attendance (#1868)', () => {
     expect(atHome()).toBe(true);
   });
 
+  it('admits scene participants only between their birth and effective death', () => {
+    const ctx = testWorld(content);
+    const current = place(ctx, { sex: 'male', age: 30 });
+    const unborn = place(ctx, { sex: 'female', age: 30 });
+    const deceased = place(ctx, { sex: 'male', age: 30 });
+    const year = ctx.world.year;
+    // Recovered data may disagree with status; life dates still govern the scene.
+    unborn.born = year + 2;
+    deceased.died = year;
+    const fill = { PARTY: [current.id, unborn.id, deceased.id] };
+    const party = { kind: 'party', slots: ['PARTY'] } as const;
+    const visitors = { kind: 'hall', hall: 'main', visitors: ['PARTY'] } as const;
+
+    expect(resolvePresence(ctx, party, fill).people).toEqual([current.id]);
+    expect(resolvePresence(ctx, visitors, fill).people).not.toContain(unborn.id);
+    expect(resolvePresence(ctx, visitors, fill).people).not.toContain(deceased.id);
+    expect(resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}).people).not.toContain(unborn.id);
+    expect(resolvePresence(ctx, { kind: 'hall', hall: 'main' }, {}).people).not.toContain(deceased.id);
+
+    ctx.world.year = year + 2;
+    expect(resolvePresence(ctx, party, fill).people).toEqual([current.id, unborn.id].sort());
+    // A death recorded in the future is not an earlier absence.
+    deceased.died = year + 3;
+    expect(resolvePresence(ctx, party, fill).people).toEqual([current.id, unborn.id, deceased.id].sort());
+    ctx.world.year = year + 3;
+    expect(resolvePresence(ctx, party, fill).people).not.toContain(deceased.id);
+  });
+
+  it('does not expose a hall through an unborn or effectively deceased anchor', () => {
+    const ctx = testWorld(content);
+    const year = ctx.world.year;
+    const resident = place(ctx, { sex: 'male', age: 30 });
+    const unborn = place(ctx, { sex: 'female', age: 30 });
+    const deceased = place(ctx, { sex: 'male', age: 30 });
+    unborn.born = year + 1;
+    deceased.died = year;
+
+    const hall = { kind: 'hall', hall: { slot: 'ANCHOR' } } as const;
+    for (const anchor of [unborn, deceased]) {
+      expect(resolvePresence(ctx, hall, { ANCHOR: anchor.id })).toEqual({ site: hall, people: [] });
+      expect(dutyPlaceOf(ctx, hall, { ANCHOR: anchor.id })).toBeUndefined();
+      expect(dutyPlaceOf(ctx, { kind: 'person', person: anchor.id }, {})).toBeUndefined();
+    }
+    expect(resolvePresence(ctx, hall, { ANCHOR: resident.id }).people).toContain(resident.id);
+    expect(dutyPlaceOf(ctx, hall, { ANCHOR: resident.id })).toEqual({ hall: 'main' });
+    expect(dutyPlaceOf(ctx, { kind: 'person', person: resident.id }, {})).toEqual({ hall: 'main' });
+
+    ctx.world.year = year + 1;
+    expect(resolvePresence(ctx, hall, { ANCHOR: unborn.id }).people).toContain(unborn.id);
+    expect(dutyPlaceOf(ctx, { kind: 'person', person: unborn.id }, {})).toEqual({ hall: 'main' });
+  });
+
+  it('scopes muster attendance to the named active field, excluding other deployments', () => {
+    const ctx = testWorld(content);
+    const w = ctx.world;
+    const first = place(ctx, { sex: 'male', age: 30 });
+    const second = place(ctx, { sex: 'male', age: 30 });
+    const operative = place(ctx, { sex: 'male', age: 30 });
+    const contractor = place(ctx, { sex: 'male', age: 30 });
+    w.muster.commitments.push(
+      { id: 'first', began: w.year, age: 'the_wars', men: 10, from: {}, officers: [first.id], credit: 0, status: 'in_the_field' },
+      { id: 'second', began: w.year, age: 'the_wars', men: 10, from: {}, officers: [second.id], credit: 0, status: 'in_the_field' },
+    );
+    w.covert.operations.push({
+      opportunity: 'other_place', targetHouse: 'house_marrow',
+      targetMembershipFrom: w.year, purpose: 'settle_grudge',
+      plan: {
+        id: 'elsewhere', sponsor: operative.id, operative: operative.id, target: first.id,
+        motive: { kind: 'grudge', grudge: 'old_quarrel' },
+        site: { kind: 'covert', operation: 'elsewhere' }, bindings: {},
+        preparation: 'hasty', preparedAt: w.year, attemptYear: w.year + 2, paidCrowns: 20,
+      },
+      stage: 'preparing', defence: { guards: [], response: 'ordinary', paidCrowns: 0 },
+      enemyWarned: false, crew: [], supportService: [],
+    });
+    w.mystic.contracts.push({
+      id: 'outside', kind: 'commission', practitioner: contractor.id,
+      working: 'the_still_binding', stage: 'preparing',
+      started: w.year, ready: w.year + 1, ends: w.year + 3,
+      providerFee: 0, escrow: 0, worked: 0, payments: [],
+    });
+    expect([...deployedPeople(ctx)].sort()).toEqual([first.id, second.id, operative.id, contractor.id].sort());
+    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id, second.id].sort());
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'first' }, {}).people).toEqual([first.id]);
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people).toEqual([second.id]);
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'missing' }, {}).people).toEqual([]);
+
+    w.muster.commitments[1]!.began = w.year + 1;
+    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id]);
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people).toEqual([]);
+    w.muster.commitments[0]!.status = 'settled';
+    expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([]);
+  });
+
 });
