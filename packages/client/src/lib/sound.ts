@@ -565,15 +565,19 @@ export class Sound {
   /** A resume may be pending while state is still suspended/interrupted.
    * Coalesce gestures and cues until it settles, but never cache a rejected attempt.
    */
+  private isRunningNow(context: AudioContext): boolean {
+    return context.state === 'running';
+  }
+
   private resumeIfNeeded(context: AudioContext): void {
-    if (context.state === 'running' || this.resuming === context) return;
+    if (this.isRunningNow(context) || this.resuming === context) return;
     const pending = context.resume?.();
     if (!pending) return;
     // Some engines enter 'running' synchronously, even though resume() returns
     // a promise. Do not keep a stale in-flight guard over a *later* suspension
     // in the same event turn (pagehide -> pageshow, or host pause -> gesture).
     // Only a device still suspended/interrupted needs coalescing.
-    if (context.state !== 'running') {
+    if (!this.isRunningNow(context)) {
       this.resuming = context;
       const clear = () => {
         if (this.resuming === context) this.resuming = null;
