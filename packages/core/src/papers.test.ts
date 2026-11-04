@@ -419,11 +419,14 @@ describe('and getting caught', () => {
     const ctx = testWorld(bundle);
     const girl = place(ctx, { sex: 'female', age: 20, name: 'Girl' });
     const doc = filePedigree(ctx, girl, 'caster');
-    doc.exposed = 1300;
+    // The persisted repudiation occurred before the save's current year.
+    // A future exposure should remain valid until its date instead.
+    const exposedYear = ctx.world.year - 1;
+    doc.exposed = exposedYear;
 
     const back = loadGame(saveGame(ctx), bundle);
     const reloaded = back.world.people.get(girl.id)!;
-    expect(reloaded.lineageDocuments[0]?.exposed).toBe(1300);
+    expect(reloaded.lineageDocuments[0]?.exposed).toBe(exposedYear);
     expect(papersHeld(back, reloaded)).toBe(0);
   });
 });
