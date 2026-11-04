@@ -4,7 +4,7 @@ import { bootstrap, stepYear } from './sim.js';
 import { outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
 import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
-  frameDue, frameOverdue, framePool, inline, lastAnswerYear, pageToCite, presentFrame,
+  frameDue, frameOverdue, framePool, frameReadHolds, inline, lastAnswerYear, pageToCite, presentFrame,
 } from './events/frame.js';
 import { applyRecord } from './events/decisions.js';
 import { GLIMPSE_TAG, answerPages, answerYears, answers, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
@@ -17,6 +17,77 @@ import { resolveSlots } from './events/slots.js';
 import { place, testWorld } from './testing.js';
 
 const bundle = loadContent();
+
+/**
+ * A recovered Record decision may be dated later than the current world year.
+ * The frame cannot quote a decision the house has yet to make (#2741).
+ * Both pool selection and direct presentation share the same read predicate.
+ */
+describe('frame Record reads exclude future decisions (#2741)', () => {
+  const events = {
+    record: 'frame_the_grates_and_the_hour',
+    omit: 'frame_the_page_he_does_not_turn',
+  } as const;
+
+  for (const mode of ['original', 'plainenglish'] as const) {
+    for (const option of ['record', 'omit'] as const) {
+      it(`${mode}: ${option} becomes evidence only in its recorded year`, () => {
+        const ctx = newGame(bundle, { seed: 2741, proseMode: mode }).ctx;
+        const year = ctx.world.year;
+        const later = year + 3;
+        const id = events[option];
+        const real = ctx.content.events.find((e) => e.id === id)!;
+        if (real.interaction.kind !== 'narration') throw new Error(`${id} is no longer narration`);
+
+        // Use the shipped gate and event, but a slot-free rendering fixture:
+        // eligibility, rather than a randomly available listener, is tested.
+        const scene = {
+          ...real,
+          slots: {},
+          body: 'The page is read.',
+          interaction: {
+            kind: 'narration' as const,
+            outcomes: real.interaction.outcomes.map((outcome) => ({
+              ...outcome, text: 'The reading is heard.',
+            })),
+          },
+        };
+        const read = option === 'record'
+          ? { recorded: { atLeast: 1 } }
+          : { omitted: { atLeast: 1 } };
+        const inPool = () => framePool(ctx).some((e) => e.id === id);
+        ctx.world.decisionLog.push({
+          kind: 'record', year: later, event: 'the_letters_to_the_weighers', option,
+        });
+
+        expect(frameReadHolds(ctx, read)).toBe(false);
+        expect(inPool()).toBe(false);
+        expect(presentFrame(ctx, scene, makeRng(2741))).toBeUndefined();
+        expect(ctx.world.frame.entries).toEqual([]);
+
+        ctx.world.year = later - 1;
+        expect(frameReadHolds(ctx, read)).toBe(false);
+        expect(inPool()).toBe(false);
+
+        ctx.world.year = later;
+        expect(frameReadHolds(ctx, read)).toBe(true);
+        expect(inPool()).toBe(true);
+        expect(presentFrame(ctx, scene, makeRng(2741))?.year).toBe(later);
+
+        // The same dated decision continues to count after its year.
+        ctx.world.year = later + 1;
+        expect(frameReadHolds(ctx, read)).toBe(true);
+
+        const current = newGame(bundle, { seed: 2742, proseMode: mode }).ctx;
+        current.world.decisionLog.push({
+          kind: 'record', year: current.world.year, event: 'the_letters_to_the_weighers', option,
+        });
+        expect(frameReadHolds(current, read)).toBe(true);
+      });
+    }
+  }
+});
+
 
 /**
  * THE PAGE, NOT THE LIE (issue #41's coverage failure).
