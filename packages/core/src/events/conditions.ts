@@ -138,12 +138,14 @@ export function evalCondition(c: Condition | undefined, ctx: SimCtx, scope: Eval
   // ── Posts and schooling (issue #126) ────────────────────────────────────
   if ('posts' in c) {
     const held = w.people.household(w.playerHouse, w.year)
-      .filter((p) => p.career !== undefined && (!c.posts.career || c.posts.career.includes(String(p.career.career))));
+      .filter((p) => p.career !== undefined && p.career.from <= w.year
+        && (!c.posts.career || c.posts.career.includes(String(p.career.career))));
     return compare(held.length, c.posts.op, c.posts.value);
   }
   if ('postHeldFor' in c) {
     const holders = w.people.household(w.playerHouse, w.year)
-      .filter((p) => p.career !== undefined && String(p.career.career) === c.postHeldFor.career);
+      .filter((p) => p.career !== undefined && p.career.from <= w.year
+        && String(p.career.career) === c.postHeldFor.career);
     if (!holders.length) return false;
     const longest = Math.max(...holders.map((p) => w.year - p.career!.from));
     return compare(longest, c.postHeldFor.op, c.postHeldFor.years);
@@ -202,7 +204,8 @@ export function evalFilter(f: Filter, p: Person, ctx: SimCtx, bound: SlotFill, r
   if ('age' in f) return compare(w.year - p.born, f.age.op, f.age.value);
   if ('status' in f) return f.status.includes(p.status);
   if ('membership' in f) return p.membership.some((m) => f.membership.includes(m.kind) && m.to === undefined);
-  if ('career' in f) return p.career !== undefined && f.career.includes(p.career.career);
+  if ('career' in f) return p.career !== undefined && p.career.from <= w.year
+    && f.career.includes(p.career.career);
   if ('awakened' in f) return p.awakening.awakened === f.awakened;
   // World §12. Read off the contract rather than a membership kind: a bond is a
   // TERM of service, not a class of person, and this world has no second kind.

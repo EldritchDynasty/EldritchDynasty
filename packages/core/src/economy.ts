@@ -5,7 +5,7 @@ import { assizeFavour } from './assize.js';
 import { attr } from './people/factory.js';
 import { isBonded } from './people/bond.js';
 import { activeBranches, hall } from './people/branches.js';
-import { madnessCoverOf } from './people/careers.js';
+import { careerDefOf, madnessCoverOf } from './people/careers.js';
 import { landIncome } from './land.js';
 import { musterUpkeep } from './muster.js';
 import { mysticUpkeep } from './mystic.js';
@@ -354,7 +354,7 @@ export function economyReading(ctx: SimCtx): EconomyReport {
 export function recurringGrossIncome(ctx: SimCtx): number {
   const r = economyReading(ctx);
   const career = ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)
-    .reduce((sum, p) => sum + Math.max(0, p.career ? ctx.content.career(p.career.career)?.income.base ?? 0 : 0), 0);
+    .reduce((sum, p) => sum + Math.max(0, careerDefOf(ctx, p)?.income.base ?? 0), 0);
   return r.income + r.tithe + r.labour + Math.max(0, r.resource) + career;
 }
 
