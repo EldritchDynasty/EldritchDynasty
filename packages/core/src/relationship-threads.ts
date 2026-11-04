@@ -156,13 +156,13 @@ function currentFamilyConnections(builders: Map<string, Builder>, ctx: SimCtx): 
   const w = ctx.world;
   for (const person of w.people.all()) {
     const house = String(person.houseOfOrigin);
-    if (house === w.playerHouse) continue;
+    if (house === w.playerHouse || person.born > w.year) continue;
     const joined = person.membership
-      .filter((m) => String(m.house) === w.playerHouse && m.kind === 'married_in')
+      .filter((m) => String(m.house) === w.playerHouse && m.kind === 'married_in' && m.from <= w.year)
       .sort((a, b) => a.from - b.from)[0];
     if (!joined) continue;
     const connected = person.status === 'alive'
-      || w.people.children(person.id).some((child) => child.status === 'alive');
+      || w.people.children(person.id).some((child) => child.status === 'alive' && child.born <= w.year);
     if (!connected) continue;
     addFact(builders, ctx, house, {
       kind: 'family',
@@ -216,7 +216,7 @@ function currentCourtships(builders: Map<string, Builder>, ctx: SimCtx): void {
   for (const [house, lineage] of ctx.world.rivalLineages) {
     for (const person of lineage.people) {
       const met = person.courtship;
-      if (!met) continue;
+      if (!met || met.offered > ctx.world.year || person.born > ctx.world.year) continue;
       const actionable = person.died === undefined
         && person.left === undefined
         && person.spouse === undefined;
@@ -301,7 +301,8 @@ function currentRecords(builders: Map<string, Builder>, ctx: SimCtx): void {
 
 function currentSecrets(builders: Map<string, Builder>, ctx: SimCtx): void {
   for (const secret of ctx.world.looseSecrets) {
-    if (secret.told !== undefined) continue;
+    // A future carrier or telling is not a present fact in a recovered save.
+    if (secret.since > ctx.world.year || (secret.told !== undefined && secret.told <= ctx.world.year)) continue;
     addFact(builders, ctx, secret.house, {
       kind: 'secret',
       year: secret.since,
@@ -316,7 +317,7 @@ function currentSecrets(builders: Map<string, Builder>, ctx: SimCtx): void {
 function currentAuctions(builders: Map<string, Builder>, ctx: SimCtx): void {
   const w = ctx.world;
   for (const lot of w.auction.upcoming) {
-    if (lot.saleYear < w.year) continue;
+    if (lot.saleYear < w.year || lot.announcedYear > w.year) continue;
     addFact(builders, ctx, lot.house, {
       kind: 'auction',
       year: lot.announcedYear,
@@ -328,6 +329,7 @@ function currentAuctions(builders: Map<string, Builder>, ctx: SimCtx): void {
   }
 
   for (const promise of w.marriagePromises) {
+    if (promise.year > w.year) continue;
     addFact(builders, ctx, promise.toHouse, {
       kind: 'marriage_promise',
       year: promise.year,
@@ -460,7 +462,7 @@ function historicalOrigins(
   }
 
   for (const secret of w.looseSecrets) {
-    if (secret.told === undefined || !wants(secret.house)) continue;
+    if (secret.since > w.year || secret.told === undefined || secret.told > w.year || !wants(secret.house)) continue;
     addFact(builders, ctx, secret.house, {
       kind: 'secret',
       year: secret.since,
