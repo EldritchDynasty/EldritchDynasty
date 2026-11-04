@@ -89,6 +89,42 @@ describe('a bond is a debt, and the debt holds', () => {
   });
 });
 
+describe('recovered future-born bond holders (#2854)', () => {
+  it('does not bind, free, list, or service a servant before birth; allows the birth-year boundary', () => {
+    const ctx = testWorld(bundle);
+    const debtor = place(ctx, {
+      sex: 'male', age: 30, name: 'Future debtor',
+      contract: contract({ term: 'bonded', debt: 90 }),
+    });
+    const recruit = place(ctx, {
+      sex: 'female', age: 30, name: 'Future recruit', contract: contract(),
+    });
+    const birthYear = ctx.world.year + 3;
+    debtor.born = birthYear;
+    recruit.born = birthYear;
+    const before = JSON.stringify({
+      debtor: debtor.contract, recruit: recruit.contract,
+      treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+    });
+
+    expect(bondsmen(ctx)).not.toContain(debtor);
+    expect(bindService(ctx, recruit, 40)).toBe(false);
+    expect(freeBond(ctx, debtor)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(serviceBonds(ctx)).not.toContain(debtor);
+    expect(JSON.stringify({
+      debtor: debtor.contract, recruit: recruit.contract,
+      treasury: ctx.world.treasury, chronicle: ctx.world.chronicle,
+    })).toBe(before);
+
+    ctx.world.year = birthYear;
+    expect(bondsmen(ctx)).toContain(debtor);
+    expect(bindService(ctx, recruit, 40)).toBe(true);
+    expect(serviceBonds(ctx)).not.toContain(debtor);
+    expect(debtor.contract?.debt).toBe(84);
+    expect(freeBond(ctx, debtor).ok).toBe(true);
+  });
+});
+
 describe('bond mutations require the living world-owned servant (#1212)', () => {
   it('a detached record cannot spend treasury or put a phantom bond in the Chronicle', () => {
     const ctx = testWorld(bundle);

@@ -48,6 +48,24 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(false);
   });
 
+  it('does not reserve a granddaughter before her recovered birth year (#2855)', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year = promise.year + 1;
+    const { girl } = granddaughter(ctx, head, 'Not Yet Born');
+    const birthYear = ctx.world.year + 4;
+    girl.born = birthYear;
+    const before = structuredClone(promise);
+    const pages = ctx.world.chronicle.length;
+
+    phase('promises', ctx);
+    expect(promise).toEqual(before);
+    expect(ctx.world.chronicle).toHaveLength(pages);
+
+    ctx.world.year = birthYear;
+    phase('promises', ctx);
+    expect(promise.girl).toBe(girl.id);
+  });
+
   it('ignores a future saved reservation in the current marriage market and pledge phase', () => {
     const { ctx, head, promise } = wonPledge();
     ctx.world.year += 1;

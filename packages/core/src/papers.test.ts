@@ -32,6 +32,27 @@ describe('what the record can show', () => {
     expect(maternalDepth(ctx, gran.id)).toBe(0);
   });
 
+  it('does not count a claimed maternal ancestor before her recovered birth year (#2856)', () => {
+    const ctx = testWorld(bundle);
+    const grandmother = place(ctx, { sex: 'female', age: 70, name: 'Grandmother' });
+    const mother = place(ctx, { sex: 'female', age: 45, name: 'Mother' });
+    const girl = place(ctx, { sex: 'female', age: 20, name: 'Girl' });
+    beget(ctx, mother, grandmother);
+    beget(ctx, girl, mother);
+    expect(maternalDepth(ctx, girl.id)).toBe(2);
+
+    const birthYear = ctx.world.year + 3;
+    grandmother.born = birthYear;
+    const before = structuredClone(girl.claimedParents);
+    expect(maternalDepth(ctx, girl.id)).toBe(1);
+    expect(papersHeld(ctx, girl)).toBe(1);
+    expect(girl.claimedParents).toEqual(before);
+
+    ctx.world.year = birthYear;
+    expect(maternalDepth(ctx, girl.id)).toBe(2);
+    expect(papersHeld(ctx, girl)).toBe(2);
+  });
+
   it('stops at the first woman whose own mother the record cannot name', () => {
     const ctx = testWorld(bundle);
     // The married-in wife: she exists, her mother never did as far as this

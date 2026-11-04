@@ -15,11 +15,12 @@ export const PLEDGE_COLLECTION_AGE = 18;
 
 /** A reservation blocks every ordinary marriage door, including a direct wedding. */
 export function marriagePledge(ctx: SimCtx, person: Person): MarriagePromise | undefined {
+  if (person.born > ctx.world.year) return undefined;
   return ctx.world.marriagePromises.find((promise) => promise.girl === person.id && promise.year <= ctx.world.year);
 }
 
 function claimedGranddaughter(ctx: SimCtx, girl: Person, promise: MarriagePromise): boolean {
-  if (girl.sex !== 'female' || girl.status !== 'alive' || girl.born <= promise.year
+  if (girl.sex !== 'female' || girl.status !== 'alive' || girl.born > ctx.world.year || girl.born <= promise.year
     || girl.marriages.some((m) => m.to === undefined)
     || girl.houseOfOrigin !== ctx.world.playerHouse
     || ctx.world.people.householdOf(girl.id, ctx.world.year) !== ctx.world.playerHouse

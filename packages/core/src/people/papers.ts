@@ -100,8 +100,10 @@ export function maternalDepth(ctx: SimCtx, personId: string | undefined): number
     if (seen.has(at)) break;
     seen.add(at);
     const p = ctx.world.people.get(at);
-    const mother = p?.claimedParents.mother;
-    if (!mother || !ctx.world.people.get(mother)) break;
+    if (!p || p.born > ctx.world.year) break;
+    const mother = p.claimedParents.mother;
+    const ancestor = mother ? ctx.world.people.get(mother) : undefined;
+    if (!ancestor || ancestor.born > ctx.world.year) break;
     depth += 1;
     at = mother;
   }
