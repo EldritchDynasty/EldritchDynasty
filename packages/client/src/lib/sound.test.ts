@@ -197,6 +197,8 @@ function param(value = 0) {
 }
 
 class FakeSource {
+  disconnected = 0;
+  disconnect() { this.disconnected++; }
   started: number | undefined;
   stopped: number | undefined;
   frequency = param();
@@ -233,6 +235,7 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
     sampleRate = 100;
     destination = {};
     sources: FakeSource[] = [];
+    filters: { disconnected: number; disconnect(): void }[] = [];
     gains: { gain: ReturnType<typeof param>; disconnected: number; disconnect(): void }[] = [];
     calls: string[] = [];
     buffers: unknown[] = [];
@@ -258,7 +261,15 @@ function fakeEngine(options: { refuse?: boolean; reject?: boolean; refuseGain?: 
       this.buffers.push(buffer);
       return buffer;
     }
-    createBiquadFilter() { return { type: '', frequency: param(), Q: param(), connect: <T>(to: T) => to }; }
+    createBiquadFilter() {
+      const filter = {
+        type: '', frequency: param(), Q: param(), disconnected: 0,
+        connect: <T>(to: T) => to,
+        disconnect() { this.disconnected++; },
+      };
+      this.filters.push(filter);
+      return filter;
+    }
     resume() { return this.settle('resume', 'running'); }
     suspend() { return this.settle('suspend', 'suspended'); }
     close() {
@@ -400,6 +411,109 @@ describe('the player, over a fake engine', () => {
     expect(ctx.sources).toHaveLength(cueScore('page').voices.length + droneScore(WARM)!.voices.length);
     expect(ctx.sources.every((source) => source.started !== undefined)).toBe(true);
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+  });
+
+  it('disconnects every finished cue voice and filter, keeping the shared output alive (#2908)', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page');
+    const ctx = e.made[0]!;
+    const output = ctx.gains[0]!;
+    const page = [...ctx.sources];
+    const filters = [...ctx.filters];
+    const cueGains = ctx.gains.slice(1);
+    expect(page).toHaveLength(2);
+    expect(filters).toHaveLength(2);
+    expect(cueGains).toHaveLength(2);
+
+    page[0]!.finish();
+    expect(page[0]!.disconnected).toBe(1);
+    expect(filters[0]!.disconnected).toBe(1);
+    expect(cueGains[0]!.disconnected).toBe(1);
+    expect(cueGains[1]!.disconnected, 'ending one voice disconnected its sibling').toBe(0);
+    page[1]!.finish();
+    page[0]!.finish(); // a duplicate ended event must be harmless
+    expect(page[0]!.disconnected).toBe(1);
+    expect(page[1]!.disconnected).toBe(1);
+    expect(filters[1]!.disconnected).toBe(1);
+    expect(cueGains[1]!.disconnected).toBe(1);
+    expect(output.disconnected, 'a cue disconnected the common output').toBe(0);
+
+    const previous = ctx.sources.length;
+    s.cue('bell'); // tonal sources have no filter, but still own per-voice gains
+    const bell = ctx.sources.slice(previous);
+    expect(bell).toHaveLength(cueScore('bell').voices.length);
+    for (const source of bell) source.finish();
+    expect(bell.every((source) => source.disconnected === 1)).toBe(true);
+    expect(ctx.gains.slice(1 + cueGains.length).every((gain) => gain.disconnected === 1)).toBe(true);
+    expect(output.disconnected).toBe(0);
+  });
+
+  it('cuts previously scheduled cues before a quick unmute or zero-volume recovery (#2909)', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('bell');
+    const ctx = e.made[0]!;
+    const old = [...ctx.sources];
+    s.muted = true;
+    expect(old.every((source) => source.stopped === ctx.currentTime && source.disconnected === 1),
+      'muting left bell voices able to reappear').toBe(true);
+
+    s.muted = false;
+    expect(old.every((source) => source.stopped === ctx.currentTime)).toBe(true);
+    s.cue('boon');
+    const newer = ctx.sources.slice(old.length);
+    s.volume = 0;
+    expect(newer.every((source) => source.stopped === ctx.currentTime && source.disconnected === 1),
+      'zero volume left a cue scheduled to ring after the slider rises').toBe(true);
+    s.volume = 0.5;
+    const before = ctx.sources.length;
+    s.cue('plain');
+    expect(ctx.sources.length).toBe(before + 1);
+    expect(ctx.gains[0]!.disconnected).toBe(0);
+  });
+
+  it('retires one-shot cues before host suspension and closure freeze the audio clock (#2910)', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page');
+    const ctx = e.made[0]!;
+    const paused = [...ctx.sources];
+    s.suspend();
+    expect(ctx.calls).toContain('suspend');
+    expect(paused.every((source) => source.stopped === ctx.currentTime && source.disconnected === 1),
+      'old page sounds were left pending on the suspended audio clock').toBe(true);
+    expect(ctx.filters.every((filter) => filter.disconnected === 1)).toBe(true);
+
+    s.wake();
+    s.cue('seal');
+    const beforeClose = ctx.sources.slice(paused.length);
+    s.close();
+    expect(ctx.calls).toContain('close');
+    expect(beforeClose.every((source) => source.stopped === ctx.currentTime && source.disconnected === 1),
+      'close left one-shot sounds connected to a frozen device').toBe(true);
+    s.cue('plain');
+    expect(e.made).toHaveLength(2);
+    expect(e.made[1]).not.toBe(ctx);
+  });
+
+  it('ignores invalidated cue graph disconnections and still allows new sounds', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.cue('page');
+    const ctx = e.made[0]!;
+    ctx.sources[0]!.disconnect = () => { throw new Error('InvalidStateError: source released'); };
+    ctx.filters[0]!.disconnect = () => { throw new Error('InvalidStateError: filter released'); };
+    ctx.gains[1]!.disconnect = () => { throw new Error('InvalidStateError: gain released'); };
+    expect(() => s.muted = true).not.toThrow();
+    expect(s.available).toBe(true);
+    s.muted = false;
+    expect(() => s.cue('seal')).not.toThrow();
+    expect(ctx.sources).toHaveLength(2 + cueScore('seal').voices.length);
   });
 
   it('reuses page noise within a context, but makes a new buffer for a replacement context', () => {
