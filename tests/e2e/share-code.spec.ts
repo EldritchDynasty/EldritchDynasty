@@ -1,7 +1,8 @@
 import { execFileSync } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { loadBundle } from '@ed/content';
-import { newGame } from '@ed/core';
+import { canonical, closeTheLedger, newGame, newGameFromShareCode, readShareCode } from '@ed/core';
 import { ACCESSIBILITY_STORAGE_KEY } from '../../packages/client/src/lib/accessibility';
 
 /**
@@ -158,3 +159,83 @@ test('share-code name refusals follow the current prose mode without a second im
 
   expect(await page.evaluate(() => localStorage.getItem('ed:save:autosave'))).toBeNull();
 });
+
+for (const scenario of [
+  { mode: 'original', width: 1400 },
+  { mode: 'plainenglish', width: 390 },
+] as const) {
+  test(`ending image code imports the complete founding after a clipboard refusal (${scenario.mode}) #1995`, async ({ page, browser }) => {
+    const { game: sender, choice } = makeFounded(1997, 'House Image', { founder: 'Élodie 雪', friend: '蘭花 Vale' });
+    const anonymous = sender.shareCode({ build });
+    expect(anonymous.ok).toBe(true);
+    if (!anonymous.ok) throw new Error('No image code');
+    // Build a completed fixture through the production finalization function.
+    sender.ctx.world.year = sender.view().campaign.endYear;
+    closeTheLedger(sender.ctx);
+    await page.setViewportSize({ width: scenario.width, height: 900 });
+    await page.addInitScript(({ save, key, mode }) => {
+      localStorage.setItem('ed:save:autosave', JSON.stringify(save));
+      localStorage.setItem(key, JSON.stringify({ proseMode: mode, showEverythingFromStart: true }));
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+        writeText: async () => { throw new DOMException('Clipboard denied', 'NotAllowedError'); },
+      } });
+      document.execCommand = () => false;
+      HTMLCanvasElement.prototype.toBlob = callback => callback(null);
+    }, { save: sender.save(), key: ACCESSIBILITY_STORAGE_KEY, mode: scenario.mode });
+    await page.goto('/');
+    await page.locator('main.start button.primary').click();
+    const textCode = page.locator('#share-code');
+    await expect(textCode).toHaveValue(anonymous.code);
+    await page.locator('.share-names input').check();
+    const named = await textCode.inputValue();
+    expect(named).not.toBe(anonymous.code);
+    const readNamed = readShareCode(named, content, { build });
+    expect(readNamed.ok && readNamed.founding.houseName).toBe(choice.houseName);
+    await page.getByRole('button', { name: scenario.mode === 'original' ? 'Copy the code' : 'Copy code', exact: true }).click();
+    await expect(page.locator('.share-copy [role="status"]')).toContainText(scenario.mode === 'original' ? 'copy did not take' : 'Could not copy');
+    await textCode.focus();
+    expect(await textCode.evaluate(node => node.selectionEnd! - node.selectionStart!)).toBe(named.length);
+
+    const pending = page.waitForEvent('download');
+    await page.getByRole('button', { name: scenario.mode === 'original' ? 'Save the house afterimage' : 'Save ending image', exact: true }).click();
+    const download = await pending;
+    expect(download.suggestedFilename()).toMatch(/\.svg$/);
+    const svg = await readFile(await download.path(), 'utf8');
+    const exported = await page.evaluate(source => {
+      const xml = new DOMParser().parseFromString(source, 'image/svg+xml');
+      const rows = Array.from(xml.querySelectorAll('text'));
+      const first = rows.findIndex(row => row.textContent?.startsWith('ED1.'));
+      return rows.slice(first).map(row => row.textContent ?? '')
+        .filter(text => /^[A-Za-z0-9._-]+$/.test(text)).join('');
+    }, svg);
+    expect(exported, 'image export leaked the named code or truncated its payload').toBe(anonymous.code);
+    const readImage = readShareCode(exported, content, { build });
+    expect(readImage.ok && readImage.founding.missing).toEqual(['founder', 'house', 'friends']);
+
+    // The recipient has an independent Library and no sender autosave. Import
+    // the actual exported bytes through Start, then compare the entire save
+    // with the same production founding path under fixed recipient settings.
+    const recipient = await browser.newContext({ viewport: { width: scenario.width, height: 900 } });
+    try {
+      const next = await recipient.newPage();
+      await next.addInitScript(({ key, mode }) => {
+        localStorage.setItem(key, JSON.stringify({ proseMode: mode, showEverythingFromStart: true }));
+      }, { key: ACCESSIBILITY_STORAGE_KEY, mode: scenario.mode });
+      await next.goto(page.url());
+      await next.getByRole('button', { name: scenario.mode === 'original' ? 'Advanced' : 'Advanced options', exact: true }).click();
+      await next.locator('#share-code-in').fill(exported);
+      await next.locator('#share-house').fill(choice.houseName);
+      await next.locator('#share-founder').fill(choice.founder.name);
+      await next.locator('#share-friend-0').fill(choice.friends[0]!.name);
+      await next.getByRole('button', { name: scenario.mode === 'original' ? 'Sign from this code' : 'Start from this code', exact: true }).click();
+      await expect(next.locator('main.prologue')).toBeVisible();
+      const expected = newGameFromShareCode(exported, content, {
+        build, proseMode: scenario.mode,
+        names: { house: choice.houseName, founder: choice.founder.name, friends: [choice.friends[0]!.name] },
+      });
+      if (!expected.ok) throw new Error('Exported founding was refused');
+      const actual = await next.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!));
+      expect(canonical(actual)).toBe(canonical(expected.session.save()));
+    } finally { await recipient.close(); }
+  });
+}

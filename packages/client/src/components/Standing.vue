@@ -289,8 +289,8 @@ const muster = computed(() => {
             > ({{ signed(moved.discontent) }})</span>
           </dd>
         </div>
-        <div>
-          <dt>{{ plain ? 'Recovered clauses' : 'Ledger' }}</dt>
+        <div class="standing-glossary-row">
+          <dt><GlossaryText :text="plain ? 'Recovered clauses' : 'Ledger'" :prose-mode="proseMode" /></dt>
           <dd>
             <span :class="{ delta: moved && moved.clauses > 0 }">
               {{ view.clausesRecovered }}/{{ view.clausesTotal }} clauses recovered</span><span

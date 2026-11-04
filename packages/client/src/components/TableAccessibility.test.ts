@@ -37,6 +37,32 @@ function fixture(boughtBack = false): TableView {
 describe('Table destinations and read-only navigation (#1941)', () => {
   const land = { market: [], held: [], rentsPolicy: 'customary' } as unknown as LandView;
 
+  it.each(['original', 'plainenglish'] as const)('explains rites and book vocabulary without submitting an order in %s (#1991)', async (proseMode) => {
+    const table = fixture();
+    table.shelf = [{ book: 'primer', name: 'Primer', blurb: 'Threshold affinity can be learned here.', years: 2, readers: [] }] as unknown as TableView['shelf'];
+    const before = structuredClone(table);
+    const order = vi.fn();
+    const w = mount(GameTable, {
+      attachTo: document.body,
+      props: { table, land, proseMode, actions: { order } as unknown as GameActions, refusal: null, receipt: null, showEverything: true },
+    });
+    try {
+      expect(w.find('button button').exists()).toBe(false);
+      const vessel = w.get('#table-greatWork .glossary-term');
+      await vessel.trigger('click');
+      expect(w.get('#table-greatWork .glossary-definition').text()).toContain('Hierophant');
+      expect(order).not.toHaveBeenCalled();
+      await vessel.trigger('keydown', { key: 'Escape' });
+      expect(document.activeElement).toBe(vessel.element);
+      const book = w.get('#table-shelf .glossary-term');
+      expect(book.text()).toBe('Threshold affinity');
+      await book.trigger('click');
+      expect(w.get('#table-shelf .glossary-definition').text()).toContain(proseMode === 'original' ? 'Mystic' : 'book-learned');
+      expect(order).not.toHaveBeenCalled();
+      expect(table).toEqual(before);
+    } finally { w.unmount(); }
+  });
+
   it('keeps task navigation for an HTML button from an embedded document realm (#2513)', async () => {
     const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);

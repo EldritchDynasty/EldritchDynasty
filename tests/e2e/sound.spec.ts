@@ -179,6 +179,36 @@ test('pagehide and pageshow pause and restore the same Chromium audio context (#
   expect(errors).toEqual([]);
 });
 
+test('a rapid background and return leaves the real audio clock running (#1986)', async ({ page }) => {
+  const errors = await open(page, { showEverythingFromStart: true, sound: true });
+  await page.getByRole('button', { name: 'Continue the last sitting', exact: true }).click();
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  const before = await heard(page);
+
+  // Both lifecycle events can arrive before Web Audio finishes suspending.
+  await page.evaluate(async () => {
+    const context = (window as unknown as { __heard: { context: AudioContext } }).__heard.context;
+    const transitions: Promise<void>[] = [];
+    for (const method of ['suspend', 'resume'] as const) {
+      const original = context[method].bind(context);
+      context[method] = () => {
+        const pending = original();
+        transitions.push(pending);
+        return pending;
+      };
+    }
+    window.dispatchEvent(new Event('pagehide'));
+    window.dispatchEvent(new Event('pageshow'));
+    // Observe the settled clock, not a transient running state before a queued
+    // suspension has completed on the browser's audio thread.
+    await Promise.all(transitions);
+  });
+  await expect.poll(async () => (await heard(page)).state).toBe('running');
+  await expect.poll(async () => (await heard(page)).started).toBeGreaterThan(before.started);
+  expect((await heard(page)).made).toBe(before.made);
+  expect(errors).toEqual([]);
+});
+
 test('zero volume keeps Chromium silent until the reader raises it (#1986)', async ({ page }) => {
   const errors = await open(page, { showEverythingFromStart: true, sound: true, soundVolume: 0 });
 

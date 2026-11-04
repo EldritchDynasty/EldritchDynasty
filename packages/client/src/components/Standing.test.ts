@@ -195,7 +195,7 @@ describe('Standing legibility (#356)', () => {
     try {
       const control = wrapper.get('.house-ledger .glossary-term');
       expect(control.element.tagName).toBe('BUTTON');
-      expect(wrapper.findAll('.house-ledger .glossary-text')).toHaveLength(1);
+      expect(wrapper.findAll('.house-ledger .glossary-text')).toHaveLength(2);
       expect(control.text()).toBe(mode === 'original' ? 'Standing' : 'Reputation');
       expect(control.attributes('aria-expanded')).toBe('false');
       expect(wrapper.find('.glossary-definition').exists()).toBe(false);
@@ -233,7 +233,7 @@ describe('Standing legibility (#356)', () => {
       ]),
     }, { attachTo: document.body });
     try {
-      const buttons = wrapper.findAll('.house-ledger .glossary-term');
+      const buttons = wrapper.findAll('.house-ledger > div:nth-child(2) .glossary-term');
       expect(buttons).toHaveLength(2);
       await buttons[0]!.trigger('click');
       await buttons[1]!.trigger('click');

@@ -130,6 +130,7 @@ async function onKeydown(event: KeyboardEvent): Promise<void> {
         >
           {{ glossaryDefinition(id, proseMode) }}
           <span v-if="relatedAt(id, depth).length" class="glossary-related">
+            <span>{{ proseMode === 'plainenglish' ? 'Related terms: ' : 'Related: ' }}</span>
             <button
               v-for="related in relatedAt(id, depth)"
               :key="related.id"
@@ -159,6 +160,5 @@ async function onKeydown(event: KeyboardEvent): Promise<void> {
 }
 .glossary-definition::before { content: '— '; }
 .glossary-related { margin-left: .4em; }
-.glossary-related::before { content: 'Related: '; }
 .glossary-related button + button { margin-left: .35em; }
 </style>
