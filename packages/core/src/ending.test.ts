@@ -1906,13 +1906,13 @@ describe('chronological last-night purpose witnesses (#2803)', () => {
     const w = ctx.world;
     w.houseAmbition = 'secure_branches';
     w.ending = { id: 'forgotten', year: w.year };
-    const branch = asId('br_premature_charter');
+    const branch = 'br_premature_charter';
     const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
     place(ctx, { name: 'Leora', sex: 'female', age: 32, branch });
     place(ctx, { name: 'Brenna', sex: 'female', age: 28, branch });
     const foundedYear = w.year - 30;
-    w.branches.set(branch, {
-      id: branch, house: asId(w.playerHouse), name: 'The Orchard Hall',
+    w.branches.set(asId(branch), {
+      id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
       founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
     });
 
