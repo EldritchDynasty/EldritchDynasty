@@ -257,6 +257,12 @@ describe('physical attendance (#1868)', () => {
       .toEqual([second.id, readerSecond.id].sort());
     expect(resolvePresence(ctx, { kind: 'muster', commitment: 'missing' }, {}).people).toEqual([]);
 
+    // A recovered future-start duty must not place its reader in the field early.
+    w.mystic.assignments[0]!.started = w.year + 1;
+    expect(deployedPeople(ctx).has(readerFirst.id)).toBe(false);
+    expect(resolvePresence(ctx, { kind: 'muster', commitment: 'first' }, {}).people).toEqual([first.id]);
+    w.mystic.assignments[0]!.started = w.year;
+
     w.muster.commitments[1]!.began = w.year + 1;
     expect(resolvePresence(ctx, { kind: 'muster' }, {}).people).toEqual([first.id, readerFirst.id].sort());
     expect(resolvePresence(ctx, { kind: 'muster', commitment: 'second' }, {}).people).toEqual([]);
