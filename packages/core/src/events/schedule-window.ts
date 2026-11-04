@@ -1,4 +1,4 @@
-import type { Condition } from '@ed/schema';
+import { assertNever, type Condition } from '@ed/schema';
 
 /**
  * The earliest calendar year a condition could possibly hold.
@@ -40,8 +40,11 @@ export function earliestCalendarYear(condition: Condition | undefined): number |
       case 'gte': return Math.ceil(value);
       case 'gt': return Math.floor(value) + 1;
       case 'eq': return Number.isInteger(value) ? value : undefined;
-      // Upper bounds, inequality and negation do not establish a lower bound.
-      default: return undefined;
+      // Upper bounds and inequality do not establish a lower bound.
+      case 'lt':
+      case 'lte':
+      case 'ne': return undefined;
+      default: return assertNever(op, 'schedule calendar comparison');
     }
   }
 
