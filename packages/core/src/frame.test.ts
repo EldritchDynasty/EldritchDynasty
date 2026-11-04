@@ -110,7 +110,7 @@ describe('a frame read on the record itself', () => {
     expect(inPool(ctx), 'nothing has been written yet').toBe(false);
 
     ctx.world.chronicle.push({
-      year: 1200, weight: 'page', text: 'Two of three, and everyone present saw it.',
+      year: 1042, weight: 'page', text: 'Two of three, and everyone present saw it.',
       eventId: SOURCE, named: true, record: 'record',
     });
     expect(inPool(ctx)).toBe(true);
@@ -124,9 +124,21 @@ describe('a frame read on the record itself', () => {
   it('counts a dated blank as a page', () => {
     const ctx = bootstrap(bundle, 4242, 1042);
     ctx.world.chronicle.push({
-      year: 1200, weight: 'page', text: null, eventId: SOURCE, named: false, record: 'omit',
+      year: 1042, weight: 'page', text: null, eventId: SOURCE, named: false, record: 'omit',
     });
     expect(inPool(ctx)).toBe(true);
+  });
+
+  it('does not read future testimony until its year arrives', () => {
+    const ctx = bootstrap(bundle, 4242, 1042);
+    ctx.world.chronicle.push({
+      year: 1043, weight: 'page', text: 'Not written until next year.',
+      eventId: SOURCE, named: true, record: 'record',
+    });
+
+    expect(inPool(ctx), 'a future page cannot unlock a current interlude').toBe(false);
+    ctx.world.year = 1043;
+    expect(inPool(ctx), 'the same page is valid when its year arrives').toBe(true);
   });
 
   it('is not satisfied by some other event writing a page', () => {
@@ -238,6 +250,26 @@ describe('a scene that reads the blanks names one', () => {
     expect(pageToCite(ctx, e)?.id, 'every blank named: the newest').toBe('chr_b');
   });
 
+  it('does not retire a blank on the strength of a future frame reading (#2816)', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_first', 1077, 'the first omission');
+    blank(ctx, 'chr_second', 1100, 'the second omission');
+    const e = scene(ctx, NAMING);
+
+    // A recovered future interlude carries a valid citation of the first
+    // blank, but a current reading cannot remember that future naming.
+    ctx.world.year = 1200;
+    const future = presentFrame(ctx, e, makeRng(1));
+    expect(future?.cites).toEqual({ page: 'chr_first', year: 1077 });
+    ctx.world.year = 1100;
+    expect(pageToCite(ctx, e)?.id, 'the future citation has not happened yet').toBe('chr_first');
+
+    // Once the frame's date arrives, its citation does count and the next
+    // presently eligible blank is the first not yet named.
+    ctx.world.year = 1200;
+    expect(pageToCite(ctx, e)?.id).toBe('chr_second');
+  });
+
   it('cites nothing when its words name no page, and binds nothing for a count read', () => {
     const ctx = bootstrap(bundle, 1987, 1042);
     blank(ctx, 'chr_a', 1077, 'the letters');
@@ -250,9 +282,58 @@ describe('a scene that reads the blanks names one', () => {
   it('shows nothing rather than a raw token when there is no blank to name', () => {
     const ctx = bootstrap(bundle, 1987, 1042);
     // The read holds on the docket's log, but no page in the book carries an id.
-    ctx.world.decisionLog.push({ kind: 'record', year: 1077, event: 'the_letters_to_the_weighers', option: 'omit' });
+    ctx.world.decisionLog.push({ kind: 'record', year: 1042, event: 'the_letters_to_the_weighers', option: 'omit' });
+    expect(frameReadHolds(ctx, { omitted: { atLeast: 1 } })).toBe(true);
     expect(presentFrame(ctx, scene(ctx, NAMING), makeRng(1))).toBeUndefined();
     expect(ctx.world.frame.entries).toEqual([]);
+  });
+
+  it('ignores a future omission when naming the present one (#2815)', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    ctx.world.year = 1077;
+    // Saved pages need not be sorted. The future one arrives first to catch
+    // accidental first-page selection and premature frame citations.
+    ctx.world.chronicle.push(
+      {
+        id: 'chr_future', year: 1122, weight: 'paragraph', text: null,
+        eventId: 'the_letters_to_the_weighers', named: false, record: 'omit',
+        subject: 'the unwritten account',
+      },
+      {
+        id: 'chr_present', year: 1077, weight: 'paragraph', text: null,
+        eventId: 'the_letters_to_the_weighers', named: false, record: 'omit',
+        subject: 'the present account',
+      },
+    );
+    ctx.world.decisionLog.push({ kind: 'record', year: 1077, event: 'the_letters_to_the_weighers', option: 'omit' });
+    const e = scene(ctx, NAMING);
+    expect(frameReadHolds(ctx, { omitted: { atLeast: 1 } })).toBe(true);
+    expect(pageToCite(ctx, e)?.id).toBe('chr_present');
+    const entry = presentFrame(ctx, e, makeRng(1));
+    expect(entry?.cites).toEqual({ page: 'chr_present', year: 1077 });
+    expect(entry?.body).toContain('1077');
+    expect(entry?.body).not.toContain('1122');
+
+    ctx.world.year = 1122;
+    expect(pageToCite(ctx, e)?.id).toBe('chr_future');
+  });
+
+  it('does not print a future-only blank despite a present omission (#2815)', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    ctx.world.year = 1077;
+    ctx.world.decisionLog.push({ kind: 'record', year: 1077, event: 'the_letters_to_the_weighers', option: 'omit' });
+    ctx.world.chronicle.push({
+      id: 'chr_future', year: 1122, weight: 'paragraph', text: null,
+      eventId: 'the_letters_to_the_weighers', named: false, record: 'omit',
+      subject: 'a page not yet written',
+    });
+    const e = scene(ctx, NAMING);
+    expect(frameReadHolds(ctx, { omitted: { atLeast: 1 } })).toBe(true);
+    expect(pageToCite(ctx, e)).toBeUndefined();
+    expect(presentFrame(ctx, e, makeRng(1))).toBeUndefined();
+    expect(ctx.world.frame.entries).toEqual([]);
+    ctx.world.year = 1122;
+    expect(pageToCite(ctx, e)?.id).toBe('chr_future');
   });
 
   it('keeps the docket\'s subject on the blank at the commit, and survives a save', () => {
