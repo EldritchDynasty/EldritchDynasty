@@ -492,9 +492,14 @@ export function tableWorkloadWindows(
     source, startedAt: at, campaign: null as string | null, seed: null as number | null,
     firstYear: null as number | null, lastYear: null as number | null,
     foregroundMs: 0, tableForegroundMs: 0, actions: [] as ReadingLogEvent[],
-    hasEvidence: false,
+    hasEvidence: source !== 'initial',
   });
   let current = newWindow('initial', 0);
+  // Vue's pre-flush run watcher fires before the Chronicle watcher confirms
+  // a saved-run pickup. Hold that run marker until the pickup boundary; a
+  // cancelled/refused pickup must not replace the previous house's identity.
+  let awaitingPickup = false;
+  let pendingRun: { campaign: string; seed: number } | null = null;
   const advance = (at: number) => {
     const to = Math.max(lastAt, Math.min(at, stop));
     const span = to - lastAt;
@@ -521,14 +526,26 @@ export function tableWorkloadWindows(
     if (event.at > stop) break;
     advance(event.at);
     if (event.kind === 'pickup') {
+      // Reuse the previous run identity when the loaded world has the same
+      // public campaign/seed (so Vue emitted no distinct run marker).
+      const nextRun = pendingRun ?? (current.campaign === null || current.seed === null
+        ? null : { campaign: current.campaign, seed: current.seed });
       finish(event.at, 'pickup');
       current = newWindow('pickup', event.at);
+      if (nextRun) {
+        current.campaign = nextRun.campaign;
+        current.seed = nextRun.seed;
+      }
+      awaitingPickup = false;
+      pendingRun = null;
       continue;
     }
     if (event.kind === 'action' && event.act === 'start'
       && (event.verb === 'begin' || event.verb === 'beginFromShareCode')) {
       finish(event.at, 'begin');
       current = newWindow('begin', event.at);
+      awaitingPickup = false;
+      pendingRun = null;
       continue;
     }
     if (event.kind === 'visible') visible = event.visible;
@@ -536,14 +553,22 @@ export function tableWorkloadWindows(
     else if (event.kind === 'break') onBreak = event.on;
     else if (event.kind === 'pane') pane = event.pane;
     else if (event.kind === 'run') {
-      current.hasEvidence = true;
-      current.campaign = event.campaign;
-      current.seed = event.seed;
+      if (awaitingPickup) pendingRun = { campaign: event.campaign, seed: event.seed };
+      else {
+        current.hasEvidence = true;
+        current.campaign = event.campaign;
+        current.seed = event.seed;
+      }
     } else if (event.kind === 'year') {
       current.hasEvidence = true;
       if (current.firstYear === null) current.firstYear = event.year;
       current.lastYear = event.year;
     } else if (event.kind === 'action') {
+      if (event.act === 'start'
+        && (event.verb === 'resume' || event.verb === 'load' || event.verb === 'importSave')) {
+        awaitingPickup = true;
+        pendingRun = null;
+      }
       current.hasEvidence = true;
       current.actions.push(event);
     } else if (event.kind === 'page' || event.kind === 'decision' || event.kind === 'interlude') {
