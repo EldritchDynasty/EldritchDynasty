@@ -16,6 +16,7 @@ import { answerGenerationQuestion, chooseGenerationQuestion } from '../generatio
 import { ambitionAtHandover } from '../ambition.js';
 import { characterProse } from './character-prose.js';
 import { msg } from '../messages.js';
+import { grantReignByname } from '../byname.js';
 
 /**
  * Succession, and keeping the recurring cast filled.
@@ -248,6 +249,9 @@ function seatHead(ctx: SimCtx, next: Person): boolean {
     // once at the handover so a later year cannot rewrite it.
     const ambition = ambitionAtHandover(ctx);
     if (ambition) sitting.ambition = ambition;
+    // The finished reign's pen balance is committed once at the real handover,
+    // never recomputed from a later Chronicle or awarded while a save loads.
+    grantReignByname(ctx, sitting);
     sitting.to = w.year;
   }
   const question = chooseGenerationQuestion(ctx, sitting?.question);
