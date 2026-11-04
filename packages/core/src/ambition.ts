@@ -1,7 +1,6 @@
 import {
   MAIN_BRANCH,
   assertNever,
-  isActiveBranch,
   RUNG_ORDER,
   isLadderRole,
   slotTokens,
@@ -11,7 +10,7 @@ import {
 } from '@ed/schema';
 import { isRegent, type SimCtx } from './world.js';
 import { livingBlood, thinLineAt } from './generation.js';
-import { branchOf, halls, viableCadetHall } from './people/branches.js';
+import { activeBranches, branchOf, halls, viableCadetHall } from './people/branches.js';
 import { visibleAscensionRanking, rungTitle } from './ascension.js';
 import { campaignDef } from './campaign.js';
 import { msg } from './messages.js';
@@ -616,7 +615,11 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   }
 
   if (id === 'secure_branches') {
-    const viable = [...halls(w, w.year)].filter(([hall, people]) => hall !== MAIN_BRANCH && viableCadetHall(people, w.year)).length;
+    // Membership rows from a restored world may point at a hall before its
+    // charter exists. Occupants alone cannot make it a viable cadet hall.
+    const foundedHalls = new Set<string>(activeBranches(w).map((branch) => branch.id));
+    const viable = [...halls(w, w.year)].filter(([hall, people]) =>
+      hall !== MAIN_BRANCH && foundedHalls.has(hall) && viableCadetHall(people, w.year)).length;
     const target = w.campaign === 'short' ? 1 : 2;
     return {
       ...shown,
@@ -756,8 +759,12 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
  */
 export function standingEmbellishedDisputes(ctx: SimCtx): number {
   const w = ctx.world;
+  // A recovered page dated after today (or a stored ending) is not yet part
+  // of the book this house can defend.
+  const throughYear = Math.min(w.year, w.ending?.year ?? w.year);
   const ids = new Set(w.chronicle.flatMap((entry) =>
-    entry.record === 'embellish' && entry.discrepancyId ? [entry.discrepancyId] : []));
+    entry.year <= throughYear && entry.record === 'embellish' && entry.discrepancyId
+      ? [entry.discrepancyId] : []));
   return [...ids].filter((id) => w.discrepancies.get(id)?.state === 'open').length;
 }
 
@@ -812,8 +819,8 @@ export function recommendAmbition(ctx: SimCtx): AmbitionRecommendation | undefin
       : msg(ctx, 'ambition.recommend.ledger', 'The Ledger is {COUNT} clauses from whole.', { COUNT: String(remaining) }));
   }
 
-  const troubled = [...w.branches.values()]
-    .filter((b) => isActiveBranch(b) && b.grievance >= 60)
+  const troubled = activeBranches(w)
+    .filter((b) => b.grievance >= 60)
     .sort((a, b) => b.grievance - a.grievance || a.id.localeCompare(b.id))[0];
   if (troubled) {
     return pick('secure_branches', msg(ctx, 'ambition.recommend.branch',
