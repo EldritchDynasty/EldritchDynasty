@@ -485,6 +485,33 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(problemOf(forge(code, (p) => { p[11] = 0; }))).toEqual({ kind: 'damaged' });
   });
 
+  it('refuses forged named codes with house names the signing would normalize or discard', () => {
+    const named = codeOf(founded(), { names: true });
+    for (const house of ['  The House of Salt  ', '\u200B', ' \u200D \u2060 ']) {
+      const damaged = forge(named, (payload) => { payload[9] = house; });
+      expect(problemOf(damaged)).toEqual({ kind: 'damaged' });
+    }
+    expect(readShareCode(named, content, { build: BUILD }).ok).toBe(true);
+  });
+
+  it('refuses forged named codes with noncanonical or invisible friend names', () => {
+    const named = codeOf(founded(), { names: true });
+    for (const friend of ['  Corven Pike', '\u200D', '  \u2060 \u200B ']) {
+      const damaged = forge(named, (payload) => {
+        payload[11] = ['Iona Vale', friend, 'Edda Rook'];
+      });
+      expect(problemOf(damaged)).toEqual({ kind: 'damaged' });
+    }
+  });
+
+  it('refuses forged named codes with duplicate friend names ignoring case', () => {
+    const named = codeOf(founded(), { names: true });
+    const damaged = forge(named, (payload) => {
+      payload[11] = ['Iona Vale', 'iona vale', 'Edda Rook'];
+    });
+    expect(problemOf(damaged)).toEqual({ kind: 'damaged' });
+  });
+
   it('refuses a code from another edition, and says which part differs', () => {
     expect(problemOf(code, 'other-build')).toEqual({ kind: 'other_edition', differs: ['build'] });
     expect(problemOf(forge(code, (p) => { p[0] = 1; })))
