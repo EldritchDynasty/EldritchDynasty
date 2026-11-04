@@ -81,7 +81,8 @@ function grantFromPen(ctx: SimCtx, commit: RecordBynameCommit, pen: BynamePen): 
   const w = ctx.world;
   const earned = eligibleByname(ctx, commit.event, pen, commit.fill, commit.claims, commit.address);
   // Cheap checks first: most Record commits author no byname at all.
-  if (!earned || !w.chronicle.some((entry) => entry.id === commit.page)) return undefined;
+  if (!earned || !w.chronicle.some((entry) => entry.id === commit.page
+    && entry.year <= w.year && entry.record === pen)) return undefined;
   const { person, text } = earned;
   person.epithet = text;
   person.byname = {
@@ -173,8 +174,14 @@ function restsOn(grant: BynameGrant, discrepancy: string, page: string): boolean
  * never off live hidden state. `undefined` means the person has no byname.
  * An optional present-year boundary hides settlements that have yet to happen.
  */
+/** Historical readers must not publish a name whose Record grant has not happened yet. */
+export function visibleEpithet(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): string | undefined {
+  if (asOfYear !== undefined && person.byname !== undefined && person.byname.year > asOfYear) return undefined;
+  return person.epithet;
+}
+
 export function bynameStanding(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): BynameStanding | undefined {
-  if (person.epithet === undefined) return undefined;
+  if (visibleEpithet(person, asOfYear) === undefined) return undefined;
   const grant = person.byname;
   if (!grant) return 'unknown';
   const source = grant.source;
@@ -218,13 +225,14 @@ export interface BynameView {
 
 export function bynameView(person: Pick<Person, 'epithet' | 'byname'>, asOfYear?: Year): BynameView | undefined {
   const standing = bynameStanding(person, asOfYear);
-  if (standing === undefined || person.epithet === undefined) return undefined;
+  const epithet = visibleEpithet(person, asOfYear);
+  if (standing === undefined || epithet === undefined) return undefined;
   const grant = person.byname;
-  if (!grant) return { text: person.epithet, standing };
+  if (!grant) return { text: epithet, standing };
   const source = grant.source;
   switch (source.kind) {
     case 'record': return {
-      text: person.epithet,
+      text: epithet,
       standing,
       year: grant.year,
       page: source.page,
