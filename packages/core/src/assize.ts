@@ -98,7 +98,7 @@ export function measureFortune(ctx: SimCtx): Fortune {
   // to say "this family is ending" no matter what happened to the family.
   // A house down to two of its own with eight servants read as half healthy.
   const blood = clamp01(
-    w.people.blood(w.playerHouse).filter((p) => p.status === 'alive').length / (HEALTHY_HALL * 2),
+    w.people.blood(w.playerHouse).filter((p) => p.status === 'alive' && p.born <= w.year).length / (HEALTHY_HALL * 2),
   );
   const ledger = ctx.content.clauses.length
     ? clamp01(w.clausesRecovered.size / ctx.content.clauses.length)
@@ -371,7 +371,10 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
   const pressure = assizePressure(ctx);
   w.assize.pressure = pressure;
 
-  if (w.year - w.assize.lastSitting < ASSIZE_INTERVAL) return { pressure, ...done };
+  // Restored future sittings have not happened yet and must not veto today.
+  if (w.assize.lastSitting <= w.year && w.year - w.assize.lastSitting < ASSIZE_INTERVAL) {
+    return { pressure, ...done };
+  }
 
   const arm: AssizeArm | undefined = pressure >= RESENTS_AT ? 'resents'
     : pressure <= STEADIES_AT ? 'steadies'
@@ -380,7 +383,8 @@ export function tickAssize(ctx: SimCtx, rng: Rng): AssizeReport {
   const open = ASSIZE_RESPONSES.filter((r) => {
     if (r.arm !== arm) return false;
     const last = w.assize.fired[r.id];
-    if (last !== undefined && w.year - last < r.cooldown) return false;
+    // An imported future occurrence cannot be today's cooldown history.
+    if (last !== undefined && last <= w.year && w.year - last < r.cooldown) return false;
     return r.when ? r.when(ctx) : true;
   });
   if (!open.length) return { pressure, ...done };
