@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { loadContent } from '@ed/content';
 import { isLadderRole, validateBundle, type Filter } from '@ed/schema';
 import {
-  applyEffect, bootstrap, canTakePost, careerMortality, effectiveStudyYears, evalCondition, evalFilter,
+  applyEffect, bootstrap, canTakePost, careerDefOf, careerMortality, effectiveStudyYears, evalCondition, evalFilter,
   inBreedingPool, madnessCoverOf, order, phase, place, recurringGrossIncome, runStandingOrders, tableView, testRng,
   tickCareers,
 } from '@ed/core';
@@ -443,9 +443,11 @@ describe('career start-year boundaries (#2847, #2848, #2849)', () => {
     priest.career = { career: 'clergy' as never, from: firstYear };
 
     expect(inBreedingPool(ctx, priest)).toBe(true);
+    expect(careerDefOf(ctx, priest)).toBeUndefined();
     expect(priest.career?.from).toBe(firstYear);
     ctx.world.year = firstYear;
     expect(inBreedingPool(ctx, priest)).toBe(false);
+    expect(careerDefOf(ctx, priest)?.id).toBe('clergy');
   });
 
   it('does not apply future military death risk or clergy Madness cover before their start year', () => {
