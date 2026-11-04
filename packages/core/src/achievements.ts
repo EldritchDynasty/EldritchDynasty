@@ -279,7 +279,9 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
 
   // A finished run cannot earn (or lose) an achievement from a decision dated
   // after its own ending, even if an imported log contains future rows.
-  const records = save.decisionLog.filter((entry) => entry.kind === 'record' && entry.year <= save.ending!.year);
+  const records = save.decisionLog
+    .filter((entry) => entry.kind === 'record')
+    .filter((entry) => entry.year <= save.ending!.year);
   if (records.length) {
     add('record_never_embellished', records.every((entry) => entry.option !== 'embellish'));
     add('record_never_truthful', records.every((entry) => entry.option !== 'record'));
