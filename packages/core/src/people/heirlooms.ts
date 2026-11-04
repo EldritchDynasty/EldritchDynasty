@@ -109,7 +109,9 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
   // A stale copy with a familiar id can otherwise pass a filter that the
   // world-owned person would fail. Nor can the house spend its own heirloom
   // on a rival's resident: a target filter only narrows the household.
-  if (ctx.world.people.get(bearer.id) !== bearer
+  // A recovered future birth does not become a present bearer merely because
+  // an inconsistent membership record already lists the person in this hall.
+  if (bearer.born > ctx.world.year || ctx.world.people.get(bearer.id) !== bearer
     || ctx.world.people.householdOf(bearer.id, ctx.world.year) !== ctx.world.playerHouse) {
     return { ok: false, reason: wrongBearerReason() };
   }
