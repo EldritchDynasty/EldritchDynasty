@@ -441,6 +441,120 @@ function tableActionsOf(events: readonly ReadingLogEvent[], stop: number): Table
   return { orders: rows(orders), muster: rows(muster), delegation: rows(delegation) };
 }
 
+
+/**
+ * A bounded observation window for one house as seen by this device. This is
+ * not a "generation": the reading log cannot prove a Head's complete tenure.
+ * A Begin or a displayed saved-run pickup ends the prior window, even when
+ * both houses use the same seed, year or Chronicle page ids.
+ */
+export interface TableWorkloadWindow {
+  source: 'initial' | 'begin' | 'pickup';
+  endedBy: 'begin' | 'pickup' | 'end' | 'open' | 'cap';
+  startedAt: number;
+  endedAt: number;
+  campaign: string | null;
+  seed: number | null;
+  firstObservedYear: number | null;
+  lastObservedYear: number | null;
+  /** Difference between observed year markers, NOT years exposed or a complete tenure. */
+  observedYearDelta: number | null;
+  /** All visible, focused, unbroken time during this window. */
+  foregroundMs: number;
+  /** Only foreground time while the player had the Table pane selected. */
+  tableForegroundMs: number;
+  /** Attempts and terminal results for this window only; unfinished is censored. */
+  actions: TableActionSummary;
+}
+
+/**
+ * Re-analyze existing ed-reading-log/12 artifacts without changing their
+ * format, events, saved games or export contract (#1992).
+ *
+ * A start attempt is not a boundary: Begin is logged only after success, and
+ * a saved-run pickup only when its first Chronicle window is displayed.
+ * Prior Table activity is never silently attributed to the next house.
+ */
+export function tableWorkloadWindows(
+  events: readonly ReadingLogEvent[],
+  until: number,
+  truncated = false,
+): TableWorkloadWindow[] {
+  const end = events.find((e) => e.kind === 'end');
+  const stop = Math.max(0, Math.min(until, end?.at ?? until));
+  const windows: TableWorkloadWindow[] = [];
+  let visible = true;
+  let focused = true;
+  let onBreak = false;
+  let pane: string | null = null;
+  let lastAt = 0;
+  const newWindow = (source: TableWorkloadWindow['source'], at: number) => ({
+    source, startedAt: at, campaign: null as string | null, seed: null as number | null,
+    firstYear: null as number | null, lastYear: null as number | null,
+    foregroundMs: 0, tableForegroundMs: 0, actions: [] as ReadingLogEvent[],
+    hasEvidence: false,
+  });
+  let current = newWindow('initial', 0);
+  const advance = (at: number) => {
+    const to = Math.max(lastAt, Math.min(at, stop));
+    const span = to - lastAt;
+    if (visible && focused && !onBreak) {
+      current.foregroundMs += span;
+      if (pane === 'table') current.tableForegroundMs += span;
+    }
+    lastAt = to;
+  };
+  const finish = (at: number, endedBy: TableWorkloadWindow['endedBy']) => {
+    // Do not invent a house for exposure on a title screen before Begin.
+    if (!current.hasEvidence && current.tableForegroundMs === 0) return;
+    windows.push({
+      source: current.source, endedBy, startedAt: current.startedAt, endedAt: at,
+      campaign: current.campaign, seed: current.seed,
+      firstObservedYear: current.firstYear, lastObservedYear: current.lastYear,
+      observedYearDelta: current.firstYear === null || current.lastYear === null
+        ? null : Math.max(0, current.lastYear - current.firstYear),
+      foregroundMs: current.foregroundMs, tableForegroundMs: current.tableForegroundMs,
+      actions: tableActionsOf(current.actions, at),
+    });
+  };
+  for (const event of events) {
+    if (event.at > stop) break;
+    advance(event.at);
+    if (event.kind === 'pickup') {
+      finish(event.at, 'pickup');
+      current = newWindow('pickup', event.at);
+      continue;
+    }
+    if (event.kind === 'action' && event.act === 'start'
+      && (event.verb === 'begin' || event.verb === 'beginFromShareCode')) {
+      finish(event.at, 'begin');
+      current = newWindow('begin', event.at);
+      continue;
+    }
+    if (event.kind === 'visible') visible = event.visible;
+    else if (event.kind === 'focus') focused = event.focused;
+    else if (event.kind === 'break') onBreak = event.on;
+    else if (event.kind === 'pane') pane = event.pane;
+    else if (event.kind === 'run') {
+      current.hasEvidence = true;
+      current.campaign = event.campaign;
+      current.seed = event.seed;
+    } else if (event.kind === 'year') {
+      current.hasEvidence = true;
+      if (current.firstYear === null) current.firstYear = event.year;
+      current.lastYear = event.year;
+    } else if (event.kind === 'action') {
+      current.hasEvidence = true;
+      current.actions.push(event);
+    } else if (event.kind === 'page' || event.kind === 'decision' || event.kind === 'interlude') {
+      current.hasEvidence = true;
+    }
+  }
+  advance(stop);
+  finish(stop, end && end.at <= until ? 'end' : truncated ? 'cap' : 'open');
+  return windows;
+}
+
 /**
  * Fold the events into the three clocks. Exported so a researcher's analysis
  * and the artifact's own summary are the same arithmetic.
