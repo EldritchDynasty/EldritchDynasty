@@ -13,6 +13,23 @@ const WORDS = {
 const content = loadContent();
 
 describe('ending prose is truthful about each campaign term (#2206)', () => {
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`reads the Demonstration's one-clause settlement without inventing three answers (${mode})`, () => {
+      const ctx = testWorld(content, 1979, CAMPAIGNS.demo.endYear);
+      ctx.world.campaign = 'demo';
+      ctx.world.ending = { id: 'settled', year: CAMPAIGNS.demo.endYear };
+      setProseVariants(ctx, content.proseVariants);
+      setProseMode(ctx, mode);
+
+      const view = epilogueOf(ctx)!;
+      expect(view.id).toBe('settled');
+      expect(view.reckoning.clausesTotal).toBe(1);
+      const prose = [view.opening, ...view.ring.map(beat => beat.owed)].join(' ');
+      expect(prose).not.toMatch(/three (?:leaves|pages|answers)/);
+      expect(view.ring[2]!.owed).toContain('every clause');
+    });
+  }
+
   for (const campaign of Object.values(CAMPAIGNS)) {
     for (const mode of ['original', 'plainenglish'] as const) {
       it(`renders every ending for ${campaign.id} in ${mode} without stating the wrong term`, () => {
