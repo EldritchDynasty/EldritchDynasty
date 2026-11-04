@@ -2215,8 +2215,10 @@ describe('the completed Chronicle starts with the founding (#2930)', () => {
     const selected = selectEnding(ctx);
     w.discrepancies.set('forged_before_founding', { severity: 'total', state: 'open', provableBy: [] });
     w.chronicle = [
-      { year: start - 1, weight: 'illuminated', named: false, rung: 'god',
-        text: 'A claimed apotheosis before the house existed.', record: 'embellish',
+      { year: start - 1, weight: 'paragraph', named: false, rung: 'god',
+        text: 'A claimed apotheosis before the house existed.' },
+      { year: start - 1, weight: 'illuminated', named: false, record: 'embellish',
+        text: 'An embellished accusation before the house existed.',
         discrepancyId: 'forged_before_founding' },
       { year: start - 1, weight: 'paragraph', text: null, named: false,
         record: 'omit', eventId: 'the_tutors_good_years' },
@@ -2236,7 +2238,7 @@ describe('the completed Chronicle starts with the founding (#2930)', () => {
       expect(selectEnding(ctx)).toBe(selected);
     }
     expect(digestOf(ctx)).toBe(before);
-    expect(w.chronicle).toHaveLength(3);
+    expect(w.chronicle).toHaveLength(4);
   });
 });
 
@@ -2307,6 +2309,7 @@ describe('Long Line family-purpose witnesses begin with the house (#2931)', () =
     const ascendant = place(ctx, { name: 'Wystan', sex: 'male', age: 40 });
     w.people.kill(victim.id, w.year, 'given to a rite', 'vessel_consumed');
     victim.born = start - 30;
+    ascendant.born = start - 30; // Every named actor existed by the claimed rite.
     victim.died = start - 1;
     const page: ChronicleEntry = {
       id: 'pre-founding-vessel', year: start - 1, weight: 'paragraph',
