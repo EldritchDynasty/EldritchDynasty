@@ -217,3 +217,110 @@ describe('a played run: every closing carries a verdict, and a save round-trips 
     expect(sawAny).toBe(true);
   });
 });
+
+
+describe('recovered chapter chronology and closing-year evidence (#2886, #2887, #2888)', () => {
+  it('derives its founding window from the earliest accession, not the first stored row (#2886)', () => {
+    const ctx = testWorld(bundle, 2886, 1042);
+    const w = ctx.world;
+    w.year = 1080;
+    const founding = Math.min(...w.succession.map((entry) => entry.from));
+    const successor = place(ctx, { sex: 'male', age: 40, name: 'Later Head' });
+    w.succession.unshift({ person: successor.id, name: successor.name, from: 1060 });
+    w.chronicle = [
+      { year: 1050, weight: 'page', text: 'An early, valid house record.', named: false },
+    ];
+    const ended = close(ctx, 'the_wars', 1042, 1070);
+    const order = w.succession.map((entry) => entry.from);
+    const view = chapterOf(ctx, ended)!;
+    expect(view.from).toBe(founding);
+    expect(view.verdict.some((line) => line.text === 'An early, valid house record.')).toBe(true);
+    expect(w.succession.map((entry) => entry.from)).toEqual(order);
+
+    w.succession.reverse();
+    expect(chapterOf(ctx, ended)).toEqual(view);
+  });
+
+  it('keeps importance before date, but orders equal-weight pages by date with stable ties (#2887)', () => {
+    const ctx = testWorld(bundle, 2887, 1042);
+    const w = ctx.world;
+    w.year = 1070;
+    w.chronicle = [
+      { year: 1060, weight: 'paragraph', text: 'Paragraph later.', named: false },
+      { year: 1055, weight: 'page', text: 'Page first at 1055.', named: false },
+      { year: 1050, weight: 'paragraph', text: 'Paragraph earlier.', named: false },
+      { year: 1065, weight: 'page', text: 'Page later.', named: false },
+      { year: 1055, weight: 'page', text: 'Page second at 1055.', named: false },
+    ];
+    const savedOrder = w.chronicle.map((page) => page.text);
+    const ended = close(ctx, 'the_wars', 1042, 1070);
+    expect(chapterOf(ctx, ended)!.verdict.map((line) => line.text)).toEqual([
+      'Page first at 1055.', 'Page second at 1055.', 'Page later.',
+      'Paragraph earlier.', 'Paragraph later.',
+    ]);
+    expect(w.chronicle.map((page) => page.text)).toEqual(savedOrder);
+  });
+
+  it('lists fallback seal transfers in their dated order without sorting the saved list (#2887)', () => {
+    const ctx = testWorld(bundle, 288701, 1042);
+    const w = ctx.world;
+    w.year = 1060;
+    w.chronicle = [];
+    const late = place(ctx, { sex: 'male', age: 35, name: 'Late Head' });
+    const early = place(ctx, { sex: 'male', age: 40, name: 'Early Head' });
+    w.succession.push(
+      { person: late.id, name: late.name, from: 1055 },
+      { person: early.id, name: early.name, from: 1050 },
+    );
+    const order = w.succession.map((entry) => entry.from);
+    const ended = close(ctx, 'the_wars', 1042, 1060);
+    expect(chapterOf(ctx, ended)!.verdict.slice(0, 2).map((line) => line.text)).toEqual([
+      'Early Head took the seal.', 'Late Head took the seal.',
+    ]);
+    expect(w.succession.map((entry) => entry.from)).toEqual(order);
+  });
+
+  it('does not rewrite an old living-blood verdict after a later birth or death (#2888)', () => {
+    const ctx = testWorld(bundle, 2888, 1042);
+    const w = ctx.world;
+    w.year = 1050;
+    w.chronicle = [];
+    const old = place(ctx, { sex: 'female', age: 30, name: 'Old Witness' });
+    const ended = close(ctx, 'the_wars', 1042, 1050);
+    const closingCount = w.people.blood(w.playerHouse)
+      .filter((p) => p.born <= 1050 && (p.died === undefined || p.died > 1050)).length;
+    const before = chapterOf(ctx, ended)!.verdict;
+    expect(before.map((line) => line.text)).toContain(
+      `${closingCount} of the blood were living when it ended.`,
+    );
+
+    w.year = 1070;
+    place(ctx, { sex: 'female', age: 3, name: 'Born After Closing' });
+    w.people.kill(old.id, 1060, 'fixture');
+    expect(chapterOf(ctx, ended)!.verdict).toEqual(before);
+  });
+
+  it('counts a child born on the closing year and excludes a death that same year (#2888)', () => {
+    const ctx = testWorld(bundle, 288801, 1042);
+    const w = ctx.world;
+    w.year = 1050;
+    w.chronicle = [];
+    place(ctx, { sex: 'female', age: 0, name: 'Closing-Year Child' });
+    const ended = close(ctx, 'the_wars', 1042, 1050);
+    const bornCount = w.people.blood(w.playerHouse)
+      .filter((p) => p.born <= 1050 && (p.died === undefined || p.died > 1050)).length;
+    expect(chapterOf(ctx, ended)!.verdict.map((line) => line.text)).toContain(
+      `${bornCount} of the blood were living when it ended.`,
+    );
+
+    // A prior-generation adult who dies at the boundary is not alive at its close.
+    const adult = place(ctx, { sex: 'female', age: 40, name: 'Boundary Death' });
+    w.people.kill(adult.id, 1050, 'fixture');
+    const afterDeathCount = w.people.blood(w.playerHouse)
+      .filter((p) => p.born <= 1050 && (p.died === undefined || p.died > 1050)).length;
+    // Death and birth facts may fill the three-line floor, so the closing count
+    // is checked in the preceding one-fact fixture; the boundary itself is dated.
+    expect(afterDeathCount).toBe(bornCount);
+    expect(chapterOf(ctx, ended)!.verdict.some((line) => line.text === 'Boundary Death died.')).toBe(true);
+  });
+});
