@@ -701,3 +701,106 @@ describe('two accounts of one house, and the panel picks neither', () => {
     expect(Object.keys(said!).sort()).toEqual(['bias', 'tale', 'teller', 'text']);
   });
 });
+
+
+describe('recovered Match-panel evidence chronology (#2880–#2882)', () => {
+  it('hides unborn witnesses and future awakenings in both the live and dealt reads', () => {
+    const ctx = testWorld(content, 2880, 1200);
+    const father = place(ctx, { sex: 'male', age: 55, name: 'Future waking', awakened: true });
+    const daughter = place(ctx, { sex: 'female', age: 20, name: 'Daughter' });
+    beget(ctx, daughter, undefined, father);
+    const read = () => {
+      const card = cardFor(daughter);
+      readPanel(ctx, card, census());
+      return card.panel.woken.map((row) => row.name);
+    };
+    father.awakening.year = 1202;
+    expect(read()).not.toContain(father.name);
+    expect(visibleWakings(ctx, daughter).map((row) => row.name)).not.toContain(father.name);
+
+    father.awakening.year = 1195;
+    expect(read()).toContain(father.name);
+    expect(visibleWakings(ctx, daughter).map((row) => row.name)).toContain(father.name);
+
+    father.born = 1201;
+    expect(read()).not.toContain(father.name);
+    expect(visibleWakings(ctx, daughter).map((row) => row.name)).not.toContain(father.name);
+  });
+
+  it('quotes only Chronicle pages which have actually been written', () => {
+    const ctx = testWorld(content, 2881, 1200);
+    const witness = place(ctx, { sex: 'male', age: 40, name: 'Marrow witness', house: 'house_marrow' });
+    const claim = () => [{ kind: 'deed' as const, person: witness.id, text: 'marriage evidence' }];
+    ctx.world.chronicle.push(
+      { year: 1198, weight: 'page', named: false, text: 'Past testimony.', claims: claim() },
+      { year: 1210, weight: 'page', named: false, text: 'Future testimony.', claims: claim() },
+    );
+    const card = cardFor(witness);
+    readPanel(ctx, card, census());
+    expect(card.panel.ourBook.map((page) => page.text)).toEqual(['Past testimony.']);
+    expect(ctx.world.chronicle.slice(-2).map((page) => page.year)).toEqual([1198, 1210]);
+  });
+
+  it('rejects a prematurely circulating tale even if its recovered flag says true', () => {
+    const ctx = testWorld(content, 28811, 1200);
+    const tale = content.tale('marrow_chronicle_fragment_1188')!;
+    const state = { bornYear: 1205, circulatesFrom: 1208, circulating: true, mutations: 0 };
+    ctx.world.tales.set(tale.id, state);
+    const witness = place(ctx, { sex: 'male', age: 40, name: 'Marrow subject', house: 'house_marrow' });
+    const read = () => {
+      const card = cardFor(witness);
+      readPanel(ctx, card, census());
+      return card.panel.said.map((row) => row.tale);
+    };
+    expect(read()).not.toContain(tale.id);
+    state.bornYear = 1188;
+    expect(read()).not.toContain(tale.id);
+    state.circulatesFrom = 1190;
+    expect(read()).toContain(tale.id);
+  });
+
+  it('a future page cannot make a page-linked tale relevant before that page exists', () => {
+    const ctx = testWorld(content, 28812, 1200);
+    const tale = content.tale('ballad_of_the_thumb_sized_bottle')!;
+    expect(tale.houses).toEqual([]); // Only the page's event link can reach this house.
+    ctx.world.tales.set(tale.id, { bornYear: 1188, circulatesFrom: 1190, circulating: true, mutations: 0 });
+    const witness = place(ctx, { sex: 'male', age: 40, name: 'Page witness', house: 'house_marrow' });
+    const page = {
+      year: 1210, weight: 'page' as const, named: false,
+      text: 'A page not yet written.', eventId: tale.about,
+      claims: [{ kind: 'deed' as const, person: witness.id, text: 'house account' }],
+    };
+    ctx.world.chronicle.push(page);
+    const read = () => {
+      const card = cardFor(witness);
+      readPanel(ctx, card, census());
+      return card.panel.said.map((row) => row.tale);
+    };
+    expect(read()).not.toContain(tale.id);
+    page.year = 1195;
+    expect(read()).toContain(tale.id);
+  });
+
+  it('does not count adulthood reached only by a future death or an unborn child', () => {
+    const ctx = testWorld(content, 2882, 1200);
+    const mother = place(ctx, { sex: 'female', age: 60, name: 'Census mother' });
+    const father = place(ctx, { sex: 'male', age: 62, name: 'Census father' });
+    marry(ctx, mother, father);
+    const candidate = place(ctx, { sex: 'female', age: 20, name: 'Candidate daughter' });
+    const adult = place(ctx, { sex: 'male', age: 25, name: 'Grown son' });
+    const infant = place(ctx, { sex: 'male', age: 8, name: 'Future adult' });
+    const unborn = place(ctx, { sex: 'female', age: 0, name: 'Unborn daughter' });
+    for (const p of [candidate, adult, infant, unborn]) beget(ctx, p, mother, father);
+    adult.died = 1195; // Already reached twenty.
+    infant.died = 1214; // Will reach adulthood, but has not today.
+    unborn.born = 1203;
+    const cen = census();
+    cen.counted.add(mother.id);
+    cen.borne.set(mother.id, [candidate, adult, infant, unborn]);
+    const card = cardFor(candidate);
+    readPanel(ctx, card, cen);
+    const row = card.panel.issue.find((item) => item.name === mother.name);
+    expect(row?.borne).toBe(3);
+    expect(row?.grown).toBe(2);
+  });
+});
