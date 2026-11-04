@@ -449,6 +449,15 @@ describe('adviser recovered-record chronology (#2934, #2935, #2936)', () => {
     marriage.to = today - 3; // The marriage ended before the death.
     spouse.died = today - 1;
     expect(lens()).toBe('priest');
+
+    // A corrupt later office must not turn an earlier death into a Head's widow.
+    marriage.from = today - 15;
+    marriage.to = undefined;
+    spouse.died = today - 5;
+    const held = ctx.world.succession.find((record) => record.person === spouse.id)!;
+    held.from = today - 2;
+    held.to = today - 1;
+    expect(lens()).toBe('priest');
   });
 
   it('does not favour an adviser for a marriage that has not started (#2936)', () => {
