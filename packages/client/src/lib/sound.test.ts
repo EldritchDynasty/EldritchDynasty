@@ -1327,6 +1327,11 @@ describe('the bed decides when the house may be heard', () => {
     expect(bed.audible).toBe(false);
     expect(humming(ctx)).toHaveLength(0);
 
+    // Re-subscribing on that *same* still-visible page is not a return.
+    bed.attach(oldPage.doc, oldPage.win);
+    expect(bed.audible, 'same-page reattachment unmuted a background page').toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+
     const replacement = fakePage();
     bed.attach(replacement.doc, replacement.win);
     expect(oldPage.count(), 'replacing the page leaked old listeners').toBe(0);
