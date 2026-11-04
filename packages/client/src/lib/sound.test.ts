@@ -1332,6 +1332,7 @@ describe('the bed decides when the house may be heard', () => {
     expect(oldPage.count(), 'replacing the page leaked old listeners').toBe(0);
     expect(bed.audible, 'a visible replacement stayed pagehide-muted').toBe(true);
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    expect(e.made, 'restoring on attachment opened a second audio device').toHaveLength(1);
     bed.dispose();
     expect(replacement.count()).toBe(0);
   });
