@@ -8,7 +8,7 @@ import { proseForClause, renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 import { ambitionView } from './ambition.js';
-import { activeBranches, cadetFamilyMember, halls, viableCadetHall } from './people/branches.js';
+import { CADET_AGE, activeBranches, cadetFamilyMember, halls, viableCadetHall } from './people/branches.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -263,6 +263,12 @@ function lastNightYear(w: WorldState): number {
   return Math.min(w.year, w.ending?.year ?? w.year);
 }
 
+/** A recovered book has a beginning as well as an end. Neither earlier
+ * testimony nor later testimony can belong to this campaign's reckoning. */
+function inBookTerm(w: WorldState, year: number): boolean {
+  return year >= campaignDef(w.campaign).startYear && year <= lastNightYear(w);
+}
+
 export function readTheChronicle(ctx: SimCtx): Reckoning {
   const w = ctx.world;
 
@@ -278,7 +284,7 @@ export function readTheChronicle(ctx: SimCtx): Reckoning {
   // preserving the original insertion order for pages written in one year.
   // Sorting this filtered copy never reorders the persisted Chronicle.
   const readableEntries = w.chronicle
-    .filter((entry) => entry.year <= lastNightYear(w))
+    .filter((entry) => inBookTerm(w, entry.year))
     .sort((a, b) => a.year - b.year);
   for (const entry of readableEntries) {
     if (entry.text === null) blanks += 1;
@@ -571,7 +577,7 @@ function openingPages(ctx: SimCtx): ChronicleEntry[] {
   if (!arc) return [];
   const events = new Set(arc.nodes.map((n) => String(n.event)));
   return ctx.world.chronicle
-    .filter((e) => e.year <= lastNightYear(ctx.world)
+    .filter((e) => inBookTerm(ctx.world, e.year)
       && e.eventId !== undefined && events.has(e.eventId))
     .sort((a, b) => a.year - b.year)
     .map((entry) => structuredClone(entry));
@@ -630,7 +636,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       const matches = w.chronicle.filter((entry) =>
         entry.weight === 'illuminated' && entry.named && !entry.greyed
         // A page from a later year is not yet testimony at collection.
-        && entry.year <= readYear
+        && inBookTerm(w, entry.year)
         && entry.record === undefined
         && ((entry.title === clause.name && entry.text === clause.text)
           || (entry.title === plain.name && entry.text === plain.text)));
@@ -648,7 +654,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     // older founding pages have no person/branch ID to support such a join.
     const residents = halls(w, readYear);
     const branches = activeBranches(w)
-      .filter((branch) => branch.house === w.playerHouse && branch.foundedYear <= readYear)
+      .filter((branch) => branch.house === w.playerHouse && inBookTerm(w, branch.foundedYear))
       .sort((a, b) => a.foundedYear - b.foundedYear
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     for (const branch of branches) {
@@ -657,8 +663,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       const founder = w.people.get(branch.founder);
       // Restored founding rows must not credit a hall to somebody who had not
       // been born (or had already died) when its charter was signed.
-      if (!founder || founder.houseOfOrigin !== w.playerHouse
-        || founder.born > branch.foundedYear
+      if (!founder || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
+        || branch.foundedYear - founder.born < CADET_AGE
         || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
       const survivor = family
         .filter((person) => person.status === 'alive'
@@ -693,7 +699,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         && page.record === undefined
         && page.text !== null
         && !page.greyed
-        && page.year <= readYear;
+        && inBookTerm(w, page.year);
     }).sort((a, b) => a.year - b.year || (a.id! < b.id! ? -1 : a.id! > b.id! ? 1 : 0));
     for (const page of pages) {
       // A duplicate ID cannot tell which account the page identifies. A
@@ -734,7 +740,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // A greyed page is lost; a page dated after collection has not yet
   // happened. Neither can testify to a family cost at this last night.
   // Other purpose witnesses reject future pages for the same reason.
-  if (page.greyed || page.year > readYear) return undefined;
+  if (page.greyed || !inBookTerm(w, page.year)) return undefined;
   return {
     kind: 'blood_spent',
     person: purposePersonName(spent),
@@ -796,7 +802,7 @@ export function epilogueOf(ctx: SimCtx): EpilogueView | undefined {
   // Entries include nested claims, people and cause data, so spreading only
   // the array or its entries would still let a view rewrite the book.
   const read = w.chronicle
-    .filter((e) => e.year <= lastNightYear(w)
+    .filter((e) => inBookTerm(w, e.year)
       && (e.text === null || e.record === 'embellish' || e.weight === 'illuminated'))
     // The last thirty dated pages, not the last thirty array slots in a
     // recovered book. Stable ties retain the order written within a year.
