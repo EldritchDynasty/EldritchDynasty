@@ -69,18 +69,74 @@ export function checkGateDuration(lane, seconds, config = readGateDurations(), c
   };
 }
 
+/**
+ * Describe the actual gates run, not the nominal lane. A 0/0 proof-reuse
+ * success is not timing evidence for a full 12-gate batch (#2528).
+ *
+ * This is diagnostic only: the budget and its 1.25× enforcement remain in
+ * checkGateDuration and never depend on this optional report.
+ */
+export function summarizeGateTimingReport(report, lane) {
+  if (report?.version !== 2 || report.lane !== lane || !Array.isArray(report.gates)
+    || !Number.isFinite(report.totalSeconds) || report.totalSeconds < 0) {
+    throw new Error('gate-duration: malformed or wrong-lane gate timing report');
+  }
+  const seen = new Set();
+  for (const row of report.gates) {
+    if (!row || typeof row.gate !== 'string' || !row.gate
+      || seen.has(row.gate) || !Number.isFinite(row.seconds) || row.seconds < 0
+      || typeof row.ok !== 'boolean') {
+      throw new Error('gate-duration: invalid or duplicate per-gate timing');
+    }
+    seen.add(row.gate);
+  }
+  const slowest = [...report.gates].sort((a, b) => b.seconds - a.seconds
+    || a.gate.localeCompare(b.gate)).slice(0, 3);
+  return {
+    gateCount: report.gates.length,
+    totalSeconds: report.totalSeconds,
+    slowest,
+    cpuModel: report.host?.cpuModel || 'unknown CPU',
+    logicalCpus: report.host?.logicalCpus ?? 'unknown',
+  };
+}
+
 function human(seconds) {
   return seconds < 90 ? `${seconds.toFixed(0)}s` : `${(seconds / 60).toFixed(1)}m`;
 }
 
 function main() {
-  const [mode, lane, rawSeconds] = process.argv.slice(2);
-  if (mode !== '--check' || !lane || rawSeconds === undefined) {
-    console.error('usage: node tools/gate-duration.mjs --check <lane> <elapsed-seconds>');
+  const [mode, lane, rawSeconds, ...options] = process.argv.slice(2);
+  const timingsFile = options.length === 2 && options[0] === '--timings-json' && options[1]
+    ? options[1] : undefined;
+  if (mode !== '--check' || !lane || rawSeconds === undefined
+    || (options.length > 0 && !timingsFile)) {
+    console.error('usage: node tools/gate-duration.mjs --check <lane> <elapsed-seconds> [--timings-json <file>]');
     process.exitCode = 2;
     return;
   }
 
+  // Report a comparable evidence count and the dominant costs even on a
+  // failing budget. The optional report must not weaken or veto the guard.
+  if (timingsFile) {
+    try {
+      const summary = summarizeGateTimingReport(JSON.parse(readFileSync(timingsFile, 'utf8')), lane);
+      console.log(
+        `gate-duration: evidence ${summary.gateCount} executed gates, ${human(summary.totalSeconds)} reported; ` +
+        `${summary.cpuModel} × ${summary.logicalCpus} logical CPUs`,
+      );
+      if (summary.gateCount === 0) {
+        console.log('gate-duration: proof-only 0/0 run is NOT a full-batch timing comparison');
+      }
+      for (const gate of summary.slowest) {
+        const share = summary.totalSeconds > 0
+          ? ` (${(100 * gate.seconds / summary.totalSeconds).toFixed(1)}% of executed-gate time)` : '';
+        console.log(`gate-duration: slow gate ${gate.gate} ${human(gate.seconds)}${share}`);
+      }
+    } catch (error) {
+      console.log(`::warning::gate-duration: cannot read timing diagnostic ${timingsFile}: ${error.message}`);
+    }
+  }
   const result = checkGateDuration(lane, Number(rawSeconds));
   if (!result.judged) {
     console.log(
