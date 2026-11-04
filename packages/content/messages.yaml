@@ -4389,3 +4389,15 @@ proseVariants:
     of: e4befda047737d1c
     plainenglish: "{CAPTOR} received {PRICE} crowns to release {PERSON}. The receipt
       records the practitioner’s original household."
+  - address: "core:messages#byname.reign.record"
+    of: "d90ccdebae8a14f7"
+    plainenglish: "of the Recorded Pages"
+  - address: "core:messages#byname.reign.omit"
+    of: "c5853644ef534088"
+    plainenglish: "of the Unwritten Pages"
+  - address: "core:messages#byname.reign.embellish"
+    of: "504a6aac673bb198"
+    plainenglish: "of the Improved Pages"
+  - address: "core:messages#byname.reign.mixed"
+    of: "64ec5e6585f9e589"
+    plainenglish: "of the Mixed Pages"
