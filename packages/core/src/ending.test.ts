@@ -2287,8 +2287,12 @@ describe('Long Line family-purpose witnesses begin with the house (#2931)', () =
       people: [ascendant.id],
     };
     w.chronicle = [page];
+    // Settle the ordinary first-read genome materialization before measuring
+    // whether the new purpose projection changes the saved account.
+    const selected = selectEnding(ctx);
     const before = digestOf(ctx);
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(selected);
     expect(digestOf(ctx)).toBe(before);
     page.year = start;
     for (const mode of ['original', 'plainenglish'] as const) {
@@ -2325,8 +2329,11 @@ describe('Long Line family-purpose witnesses begin with the house (#2931)', () =
     const outcome = w.decisionLog[0]!;
     if (outcome.kind !== 'outcome') throw new Error('expected attributed rite');
     expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victim.id);
+    // As above, the general reckoning may materialize the ascendant's genome.
+    const selected = selectEnding(ctx);
     const before = digestOf(ctx);
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    expect(selectEnding(ctx)).toBe(selected);
     expect(digestOf(ctx)).toBe(before);
     page.year = start;
     outcome.year = start;
