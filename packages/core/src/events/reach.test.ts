@@ -28,6 +28,7 @@ import { sentimentBetween } from '../people/relationships.js';
 import { bootstrap } from '../sim.js';
 import { viewOf } from '../session.js';
 import { gainSpellbook } from '../people/library.js';
+import { DEBT_FLOOR } from '../economy.js';
 import { attr } from '../people/factory.js';
 
 const content = indexContent(loadContent());
@@ -110,6 +111,56 @@ const OUTCOME_WITNESS_MANIFEST = join(
 );
 const declaredOutcomeKeys = new Set(declaredOutcomes(content).keys());
 const witnessedOutcomeKeys = new Set<string>();
+
+describe('the two-room dilemma through the live docket (#1982)', () => {
+  for (const mode of ['original', 'plainenglish'] as const) {
+    for (const row of [
+      { choice: 'keep_the_book_open', outcome: 'reading_kept', stale: false },
+      { choice: 'keep_the_book_open', outcome: 'reading_no_longer_open', stale: true },
+      { choice: 'move_the_chair', outcome: 'watch_begun', stale: false },
+      { choice: 'move_the_chair', outcome: 'watch_no_longer_possible', stale: true },
+    ]) {
+      it(`${mode}: ${row.outcome} commits after casting, including stale availability`, () => {
+        const ctx = testWorld(content, 1982);
+        setProseVariants(ctx, content.proseVariants);
+        setProseMode(ctx, mode);
+        ctx.world.treasury = 400;
+        const p = place(ctx, { sex: 'female', age: 30, awakened: true, name: 'Amice' });
+        p.spellsKnown.push(asId('lesser_workings_of_life'));
+        ctx.world.studies.push({ person: p.id, book: 'lesser_workings_of_death', completes: ctx.world.year + 3 });
+        const event = content.mustEvent('the_reader_has_two_rooms');
+        const res = resolveSlots(event, ctx, makeRng(1982));
+        expect(res.ok).toBe(true);
+        expect(res.fill.READER).toBe(p.id);
+        const pending = queueChoice(ctx, event, event.body, res.fill, res.playerCast);
+        if (row.stale) {
+          if (row.choice === 'move_the_chair') ctx.world.treasury = DEBT_FLOOR;
+          else ctx.world.studies = [];
+        }
+        const result = resolveChoice(ctx, pending.id, row.choice, makeRng(1982));
+        expect(result.ok, result.reason).toBe(true);
+        expect(result.resolved?.outcome.id).toBe(row.outcome);
+        // These refusals happen AFTER a valid cast, so the ordinary pre-cast
+        // witness helper cannot build them. Credit only this exact real commit.
+        expect(ctx.world.decisionLog.some(d => d.kind === 'outcome' && d.event === event.id
+          && d.choiceId === row.choice && d.outcomeId === row.outcome)).toBe(true);
+        const key = outcomeKey(event.id, row.choice, row.outcome);
+        expect(declaredOutcomeKeys.has(key)).toBe(true);
+        witnessedOutcomeKeys.add(key);
+        if (!row.stale) {
+          ctx.world.year += 5;
+          phase('mystic', ctx);
+          const step = dueArcSteps(ctx, makeRng(1982)).find(s => s.instance.arc.includes(event.id))!;
+          const returned = executeOutcomeWitness(ctx, content.mustEvent(step.node.event), {
+            expectedOutcomeId: 'remembered', rng: makeRng(1982), arcStep: step,
+          });
+          expect(returned.ok, returned.reason).toBe(true);
+        }
+        expect(missingPlainEnglish(ctx)).toEqual([]);
+      });
+    }
+  }
+});
 
 function executeOutcomeWitness(
   ...args: Parameters<typeof executeOutcomeWitnessRaw>

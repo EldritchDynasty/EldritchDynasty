@@ -897,6 +897,7 @@ events:
     weight: 30
     repeatable: true
     cooldownYears: 150
+    preferUnnamedPage: true
     tags: [frame, baseline, record]
     purposes: [advance_clause, establish_magic_rule, force_record_choice]
     # A page nobody agrees about needs the family to have left one — this is

@@ -20,6 +20,7 @@ import { settleBynames } from '../byname.js';
 import type { EvalScope } from './scope.js';
 import { beginTutoring } from '../table.js';
 import { cancelDecisionArcs } from './arcs.js';
+import { assignDutyTerm } from '../mystic.js';
 import {
   addOfficer, beginCommitment, reinforceCommitment, setPosition, settleCommitment, withdrawCommitment,
 } from '../muster.js';
@@ -310,6 +311,13 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
       // catch this falling through and doing nothing. The auction needs it.
       if (eff.op === 'transfer') { transferHeirloom(ctx, eff.heirloom); break; }
       assertNever(eff.op, 'heirloom op');
+    }
+    case 'mystic_duty': {
+      if (!scope.page) break;
+      for (const p of resolveTargets(eff.target, ctx, fill)) {
+        assignDutyTerm(ctx, p, eff.working, eff.years, scope.page);
+      }
+      break;
     }
     // The Library (§12). Physical wear/removal ignore the person target;
     // `lose` alone erases learned knowledge and leaves the copy on its shelf.

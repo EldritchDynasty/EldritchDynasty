@@ -227,6 +227,7 @@ function scoreOf(e: Effect): number {
      * rather than outcomes it grades.
      */
     case 'muster':
+    case 'mystic_duty':
       return 0;
 
     /**

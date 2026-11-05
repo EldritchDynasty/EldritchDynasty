@@ -7,6 +7,7 @@ import { genomeOf, phenotypeOf } from '../people/factory.js';
 import { ELDRITCH_GIFT, ELDRITCH_REACH } from '../genetics/expression.js';
 import { grantHeirloom } from '../people/heirlooms.js';
 import { START_YEAR } from '../campaign.js';
+import { beginStudy } from '../people/library.js';
 
 /**
  * TEST FAMILIES (issue #22) — hand-crafted fixtures at the edges of the
@@ -253,6 +254,17 @@ function fortyMemberSprawl(source: ContentBundle | Content): SimCtx {
   const taughtPupil = place(ctx, { sex: 'female', age: 17, name: 'Sprawl Taught Pupil' });
   taughtPupil.taught.push('mind');
   ctx.world.stewardYear = { taught: [], opened: [], placed: [commission.id] };
+
+  // Study and paid practice are different uses of a relative's time (#1982).
+  // None of the six static households otherwise has any unfinished reading.
+  const study = ctx.content.spellbook('lesser_workings_of_death');
+  if (study && ctx.content.spellbook('lesser_workings_of_life')) {
+    const reader = place(ctx, { sex: 'female', age: 30, name: 'Sprawl Green Hand', awakened: true });
+    reader.spellsKnown.push(asId('lesser_workings_of_life'));
+    reader.acquired.mind = 100;
+    reader.acquired.death = 100;
+    beginStudy(ctx, reader, study);
+  }
 
   return ctx;
 }

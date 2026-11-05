@@ -257,6 +257,8 @@ export const EffectS = z.discriminatedUnion('kind', [
   // `lose` forgets learned spells. `remove_copy` removes the physical book
   // and unfinished readings; like physical degradation, it ignores target.
   z.object({ kind: z.literal('spellbook'), op: z.enum(['gain', 'study', 'lose', 'degrade', 'remove_copy', 'acquire_copy']), target: TargetS, book: z.string() }),
+  /** A finite household duty, paid and exclusive through the ordinary Mystic lifecycle. */
+  z.object({ kind: z.literal('mystic_duty'), target: TargetS, working: z.string(), years: z.number().int().min(1).max(20) }),
   /**
    * Writes `Person.career`. `leave` clears the post without naming one (the
    * `career` field is ignored); `assign` requires it. Income, Respect accrual
@@ -882,6 +884,8 @@ export const EventTemplateS = z.object({
    * `FrameReadS`. Frame-only; every other tier leaves this empty.
    */
   reads: z.array(FrameReadS).default([]),
+  /** Prefer this eligible interlude at a due cut while its bound blank is unnamed. */
+  preferUnnamedPage: z.boolean().optional(),
 
   body: z.string(),
   /** Required when arc bindings may be dead by the time this node fires. */

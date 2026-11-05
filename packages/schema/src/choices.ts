@@ -88,6 +88,7 @@ export function categoryOf(kind: Effect['kind']): ChoiceCategory | 'memory' {
     case 'marriage':
     case 'heirloom':
     case 'spellbook':
+    case 'mystic_duty':
     case 'land':
     case 'muster':
     case 'rite':

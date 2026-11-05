@@ -1,0 +1,214 @@
+# #1982: an existing unfinished study and real, exclusive household practice.
+# One decision, four paid years, automatic release. Both returns keep the
+# initiating person and page; a personal commitment never passes to an heir.
+events:
+  - id: the_reader_has_two_rooms
+    title: One Reader, Two Rooms
+    tier: family
+    frequency: common
+    weight: 65
+    repeatable: false
+    tags: [library, study, mystic, family]
+    purposes: [establish_magic_rule, change_relationship, worldbuild_through_action]
+    conditions:
+      all:
+        - { arcCanFinish: inline_the_reader_has_two_rooms__reading_kept }
+        - { arcCanFinish: inline_the_reader_has_two_rooms__watch_begun }
+    slots:
+      HEAD: { role: head }
+      READER:
+        role: family_member
+        filters:
+          - { membership: [blood] }
+          - { relation: not, of: HEAD }
+          - { studying: true }
+          - { canKeepDuty: { working: sickroom_watch } }
+    body: >-
+      At Ardwen the night bell can be heard through the library wall. {READER}
+      has an unfinished book and the learning to keep a sickroom in {READER.their}
+      own hall. {HEAD} must choose where the years go. Four years of watch,
+      beginning next year, would put the book down with its remaining work kept;
+      twelve crowns to prepare, then four for each year the watch can be paid.
+      Keeping the book open leaves those beds without the care this reader could have given.
+      There is one chair to move.
+    interaction:
+      kind: choice
+      choices:
+        - id: keep_the_book_open
+          label: Let {READER} continue the book. Leave the sickroom watch unfilled.
+          outcomes:
+            - id: reading_kept
+              weight: 100
+              onlyIf: { slot: READER, filters: [{ studying: true }] }
+              text: >-
+                {READER} takes the lamp upstairs. No watch is assigned by this
+                decision, and the reading keeps the years already given to it.
+                The bell can still be heard through the wall.
+              effects:
+                - { kind: relationship, from: { slot: READER }, to: head, sentiment: 12 }
+              next:
+                event: the_readers_open_book_returns
+                after: { minYears: 5, maxYears: 5 }
+                keep: [READER]
+            - id: reading_no_longer_open
+              weight: 100
+              onlyIf: { slot: READER, filters: [{ not: { studying: true } }] }
+              text: The book is no longer being read. The order comes too late, and the household has heard it contradicted.
+              effects: [{ kind: respect, delta: -1 }]
+        - id: move_the_chair
+          label: Give {READER} four paid years of sickroom watch; pause the unfinished book.
+          outcomes:
+            - id: watch_begun
+              weight: 100
+              onlyIf:
+                slot: READER
+                filters:
+                  - all:
+                      - { studying: true }
+                      - { canKeepDuty: { working: sickroom_watch } }
+              text: >-
+                {READER} marks the place and closes the book. The house pays to
+                prepare the watch. The unfinished learning will wait through the
+                term, with no years of reading lost and none gained while serving.
+                The chair goes downstairs.
+              effects:
+                - { kind: mystic_duty, target: { slot: READER }, working: sickroom_watch, years: 4 }
+              next:
+                event: the_readers_sickroom_term_returns
+                after: { minYears: 5, maxYears: 5 }
+                keep: [READER]
+            - id: watch_no_longer_possible
+              weight: 100
+              onlyIf:
+                slot: READER
+                filters:
+                  - not:
+                      all:
+                        - { studying: true }
+                        - { canKeepDuty: { working: sickroom_watch } }
+              text: The reader or the promised work is no longer available. No fee is taken, but the household has heard an order it cannot carry out.
+              effects: [{ kind: respect, delta: -1 }]
+
+  - id: the_readers_open_book_returns
+    title: The Chair Left Upstairs
+    tier: family
+    frequency: common
+    tags: [library, family, consequence]
+    purposes: [establish_magic_rule, change_relationship, worldbuild_through_action]
+    slots:
+      READER:
+        role: family_member
+        bind: arc
+        onMissing: continue_absent
+    body: >-
+      {READER} hears the night bell again. Five years ago the house left the
+      reading uninterrupted rather than assigning the sickroom watch. Other
+      orders may have changed the years since; that choice is still on its page.
+      The chair has a mark on the floor.
+    absentBody: >-
+      The reader named on the earlier page is no longer here. The house once
+      left that person's book open instead of assigning the sickroom watch.
+      Nobody inherits the unfinished reading by inheriting the chair.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: remembered
+          weight: 100
+          text: The household kept the choice. It did not keep the years.
+
+  - id: the_readers_sickroom_term_returns
+    title: The Chair Brought Back
+    tier: family
+    frequency: common
+    tags: [library, mystic, family, consequence]
+    purposes: [establish_magic_rule, change_relationship, worldbuild_through_action]
+    slots:
+      READER:
+        role: family_member
+        bind: arc
+        onMissing: continue_absent
+    body: >-
+      The term assigned to {READER} has run out. Its account keeps only the
+      years that could be paid and served; a closed watch promises no further
+      care. Any surviving unfinished book can be taken up again, unless another
+      commitment has claimed the reader. The chair is free.
+    absentBody: >-
+      The reader named on the earlier page is no longer here. The sickroom
+      term has ended, and its account keeps only the
+      service actually given. Nobody takes the dead person's place by taking
+      the chair.
+    interaction:
+      kind: narration
+      outcomes:
+        - id: remembered
+          weight: 100
+          text: The book has waited. The household could not.
+
+
+proseVariants:
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].title
+    of: 2f0d4ec0d0e28304
+    plainenglish: One Reader, Two Jobs
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].body
+    of: d721db89cece7c0d
+    plainenglish: "At Ardwen, {READER} is studying a book and already knows enough Life magic
+      to care for people in {READER.their} hall. {HEAD} must choose. Continuing study
+      leaves the sickroom watch unfilled. Taking the watch pauses the unfinished study
+      without losing its remaining work. The watch starts next year and ends after four
+      years: twelve crowns to prepare, then four for each year of paid service. One person
+      cannot do both jobs at once."
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].label
+    of: 3454e893ba72082f
+    plainenglish: Let {READER} continue studying. Do not assign the sickroom watch.
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].outcomes[id=reading_kept].text
+    of: 4980ff164e16f49a
+    plainenglish: "{READER} continues the unfinished study. This decision assigns no sickroom
+      care. The bell can still be heard upstairs."
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].outcomes[id=reading_no_longer_open].text
+    of: 00af4bbc29af8f98
+    plainenglish: The study is no longer active. Nothing is assigned, and the failed order
+      costs standing.
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=move_the_chair].label
+    of: aa26ad08373c1604
+    plainenglish: Assign {READER} four paid years of sickroom care and pause the study.
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=move_the_chair].outcomes[id=watch_begun].text
+    of: 47b033cd8c3fa6a1
+    plainenglish: "{READER} pauses the unfinished study and takes the sickroom duty. The house
+      pays the preparation fee. Remaining study time is preserved until the duty ends."
+  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=move_the_chair].outcomes[id=watch_no_longer_possible].text
+    of: 4217000d25187511
+    plainenglish: The reader or work is no longer available. No fee is paid and no duty
+      begins. The failed order costs standing.
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_open_book_returns].title
+    of: 1df5ce29a27521a5
+    plainenglish: The Reading Chosen
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_open_book_returns].body
+    of: bb8b7feb161339d7
+    plainenglish: Five years ago the house let {READER} continue studying instead of assigning
+      sickroom care. Later orders may have changed that plan. This page recalls the
+      original decision, not a promise that the book was finished. The chair left a mark.
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_open_book_returns].absentBody
+    of: f366d68d827469d1
+    plainenglish: The original reader is no longer here. The house chose that person's study
+      over sickroom care. The unfinished study does not pass to a replacement. The chair
+      is empty.
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_open_book_returns].interaction.outcomes[id=remembered].text
+    of: 133188ae30126862
+    plainenglish: The earlier page keeps the choice and the person it concerned.
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_sickroom_term_returns].title
+    of: 8f489c4bd6c41d9f
+    plainenglish: The Care Term Ends
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_sickroom_term_returns].body
+    of: 55634a104f096cec
+    plainenglish: "{READER}'s assigned care term has ended. Its account records only paid
+      service actually given. The original duty provides no more care. Remaining study can
+      resume if the book survives and no other duty occupies the reader. The chair is
+      free."
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_sickroom_term_returns].absentBody
+    of: 5e8336be431adeb2
+    plainenglish: The original reader is no longer here. The care term is over. The account
+      retains only the service given. Nobody replaces the reader in this personal
+      commitment.
+  - address: content:events/competing_commitments.yaml#events[id=the_readers_sickroom_term_returns].interaction.outcomes[id=remembered].text
+    of: 536852c9d4641acd
+    plainenglish: The house chose care and delayed the unfinished study.

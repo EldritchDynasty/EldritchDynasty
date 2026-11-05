@@ -311,6 +311,10 @@ export type Filter =
    * directly — no state of its own to drift from it.
    */
   | { inTerm: boolean }
+  /** An unfinished book, rather than a volume merely owned or already learned. */
+  | { studying: boolean }
+  /** The production quote for one household duty in this person's current hall. */
+  | { canKeepDuty: { working: string } }
   | { all: Filter[] }
   | { any: Filter[] }
   | { not: Filter };
@@ -380,6 +384,8 @@ export const FilterS: z.ZodType<Filter> = z.lazy(() =>
     z.object({ exceeds: z.object({ of: z.string(), on: z.enum(['power', 'affinities', 'mind']) }) }),
     z.object({ taught: z.object({ attr: z.string().optional() }) }),
     z.object({ inTerm: z.boolean() }),
+    z.object({ studying: z.boolean() }),
+    z.object({ canKeepDuty: z.object({ working: z.string() }) }),
     z.object({ all: z.array(FilterS) }),
     z.object({ any: z.array(FilterS) }),
     z.object({ not: FilterS }),

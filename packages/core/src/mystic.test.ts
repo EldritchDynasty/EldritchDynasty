@@ -23,6 +23,13 @@ import { libraryCare } from './mystic-civilian.js';
 import { attr } from './people/factory.js';
 import { newGame, resumeGame } from './session.js';
 import { replay } from './replay.js';
+import { commitOutcome, queueChoice, resolveChoice } from './events/decisions.js';
+import { dueArcSteps } from './events/arcs.js';
+import { evalCondition, evalFilter } from './events/conditions.js';
+import { renderBody, resolveSlots } from './events/slots.js';
+import { makeRng } from './rng.js';
+import { campaignDef } from './campaign.js';
+import { missingPlainEnglish, setProseMode, setProseVariants } from './prose.js';
 
 /**
  * #1866 B / #1873 — the Life/Terra pilot's merge-blocking mechanism claims.
@@ -33,6 +40,133 @@ const bundle = loadContent();
 const SEAT: SceneSite = { kind: 'hall', hall: 'main' };
 const FARM = 'hallowfield';
 const farmSite: SceneSite = { kind: 'parcel', parcel: FARM, slots: ['WARDEN'] };
+
+describe('one reader, two commitments (#1982)', () => {
+  const root = 'the_reader_has_two_rooms';
+  const study = 'lesser_workings_of_death';
+  function dilemma(mode: 'original' | 'plainenglish' = 'original') {
+    const { ctx, infant } = world();
+    setProseVariants(ctx, bundle.proseVariants);
+    setProseMode(ctx, mode);
+    const p = reader(ctx, 'female', ['lesser_workings_of_life'], 'Amice');
+    p.acquired.death = 100 - attr(p, 'death', ctx.genetics, ctx.world.year);
+    if (p.phenotype) p.phenotype.dirty = true;
+    ctx.world.library.set(study, { id: study, acquiredYear: ctx.world.year, condition: 100 });
+    ctx.world.studies.push({ person: p.id, book: study, completes: ctx.world.year + 3 });
+    const event = ctx.content.mustEvent(root);
+    const fill = { HEAD: ctx.world.people.living().find(p => p.castSlots.includes('head'))!.id, READER: p.id };
+    expect(resolveSlots(event, ctx, makeRng(1982)).ok).toBe(true);
+    const pending = queueChoice(ctx, event, event.body, fill, []);
+    return { ctx, p, infant, event, fill, pending, began: ctx.world.year };
+  }
+  function answer(f: ReturnType<typeof dilemma>, choice = 'move_the_chair') {
+    const result = resolveChoice(f.ctx, f.pending.id, choice, makeRng(1982));
+    if (!result.ok || !result.resolved) throw new Error(result.reason);
+    expect(missingPlainEnglish(f.ctx)).toEqual([]);
+    return result.resolved;
+  }
+  for (const mode of ['original', 'plainenglish'] as const) {
+    it(`${mode}: keeping the book assigns no care; the return keeps this exact person and page`, () => {
+      const f = dilemma(mode);
+      const result = answer(f, 'keep_the_book_open');
+      expect(result.outcome.id).toBe('reading_kept');
+      expect(f.ctx.world.studies).toMatchObject([{ person: f.p.id, completes: f.began + 3 }]);
+      expect(f.ctx.world.mystic.assignments).toEqual([]);
+      const arc = [...f.ctx.world.arcs.values()].find(a => a.arc.includes(root))!;
+      expect(arc.bindings.READER).toBe(f.p.id);
+      expect(arc.cause).toEqual({ page: result.entryId, year: f.began });
+      f.ctx.world.year = f.began + 5;
+      const step = dueArcSteps(f.ctx, makeRng(1982)).find(s => s.instance.id === arc.id)!;
+      const event = f.ctx.content.mustEvent(step.node.event);
+      if (event.interaction.kind !== 'narration') throw Error('return is not narration');
+      const returned = commitOutcome(f.ctx, event, event.interaction.outcomes[0]!, step.fill, undefined, makeRng(1982), step);
+      expect(f.ctx.world.chronicle.find(c => c.id === returned.entryId)?.cause?.page).toBe(result.entryId);
+    });
+    it(`${mode}: care pauses the real study, buys four service years, and expires once across resume`, () => {
+      const f = dilemma(mode);
+      const result = answer(f);
+      expect(result.outcome.id).toBe('watch_begun');
+      const duty = f.ctx.world.mystic.assignments[0]!;
+      expect(duty.term).toEqual({ until: f.began + 5, page: result.entryId, year: f.began });
+      expect(f.ctx.world.studies).toEqual([]);
+      expect(f.ctx.world.mystic.pauses).toMatchObject([{ person: f.p.id, remainingYears: 3, assignment: duty.id }]);
+      expect(beginStudy(f.ctx, f.p, f.ctx.content.spellbook(study)!)).toBe(false);
+      expect(assignDuty(f.ctx, { person: f.p.id, working: 'sickroom_watch', target: SEAT }).ok).toBe(false);
+      expect(f.ctx.world.treasury).toBe(388);
+      const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(f.ctx))), bundle);
+      // Reading preference belongs to the host, not the simulation save.
+      setProseVariants(resumed, bundle.proseVariants);
+      setProseMode(resumed, mode);
+      for (const ctx of [f.ctx, resumed]) {
+        for (let year = f.began + 1; year <= f.began + 4; year++) {
+          ctx.world.year = year;
+          phase('mystic', ctx);
+          expect(lifeCareFor(ctx, ctx.world.people.mustGet(f.infant.id))).toBeDefined();
+          expect(ctx.world.studies).toEqual([]);
+          phase('economy', ctx);
+        }
+        ctx.world.year = f.began + 5;
+        phase('mystic', ctx);
+        expect(ctx.world.mystic.assignments).toEqual([]);
+        expect(ctx.world.mystic.services[0]?.service.servedYears).toBe(4);
+        expect(ctx.world.mystic.services[0]?.service.spent).toBe(28);
+        expect(ctx.world.studies).toEqual([{ person: f.p.id, book: study, completes: ctx.world.year - 1 + 3 }]);
+        expect(ctx.world.chronicle.some(c => c.cause?.page === result.entryId)).toBe(true);
+        const entries = ctx.world.chronicle.length;
+        phase('mystic', ctx);
+        expect(ctx.world.chronicle).toHaveLength(entries);
+      }
+      expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(f.ctx)));
+    });
+  }
+  it('turns a stale unaffordable care choice into a real refusal without a charge or reservation', () => {
+    const f = dilemma();
+    f.ctx.world.treasury = DEBT_FLOOR;
+    const result = answer(f);
+    expect(result.outcome.id).toBe('watch_no_longer_possible');
+    expect(f.ctx.world.treasury).toBe(DEBT_FLOOR);
+    expect(f.ctx.world.mystic.assignments).toEqual([]);
+    expect(f.ctx.world.studies).toHaveLength(1);
+    expect([...f.ctx.world.arcs.values()].some(a => a.arc.includes(root))).toBe(false);
+  });
+  it('closes personal care after death and renders the absent return without a replacement', () => {
+    const f = dilemma();
+    answer(f);
+    f.ctx.world.people.kill(f.p.id, f.began + 1, 'test');
+    f.ctx.world.year = f.began + 1;
+    phase('mystic', f.ctx);
+    expect(f.ctx.world.mystic.assignments).toEqual([]);
+    expect(f.ctx.world.studies).toEqual([]);
+    f.ctx.world.year = f.began + 5;
+    const step = dueArcSteps(f.ctx, makeRng(1982)).find(s => s.instance.arc.includes(root))!;
+    expect(step).toBeDefined();
+    expect(step.fill.READER).toBe(f.p.id);
+    expect(step.absent).toBe(true);
+    expect(renderBody(f.ctx.content.mustEvent(step.node.event).absentBody!, step.fill, f.ctx)).not.toMatch(/\{READER/);
+  });
+  it('does not let the old return release a new duty after an early withdrawal', () => {
+    const f = dilemma();
+    answer(f);
+    expect(order(f.ctx, { kind: 'mysticRelease', assignment: f.ctx.world.mystic.assignments[0]!.id }).ok).toBe(true);
+    expect(assignDuty(f.ctx, { person: f.p.id, working: 'sickroom_watch', target: SEAT }).ok).toBe(true);
+    const replacement = f.ctx.world.mystic.assignments[0]!.id;
+    f.ctx.world.year = f.began + 5;
+    phase('mystic', f.ctx);
+    const step = dueArcSteps(f.ctx, makeRng(1982)).find(s => s.instance.arc.includes(root))!;
+    const event = f.ctx.content.mustEvent(step.node.event);
+    if (event.interaction.kind !== 'narration') throw Error('return is not narration');
+    commitOutcome(f.ctx, event, event.interaction.outcomes[0]!, step.fill, undefined, makeRng(1982), step);
+    expect(f.ctx.world.mystic.assignments.map(a => a.id)).toEqual([replacement]);
+  });
+  it('does not offer a late promise and reads an already-busy reader as unavailable', () => {
+    const f = dilemma();
+    expect(evalFilter({ studying: true }, f.p, f.ctx, {})).toBe(true);
+    answer(f);
+    expect(evalFilter({ canKeepDuty: { working: 'sickroom_watch' } }, f.p, f.ctx, {})).toBe(false);
+    f.ctx.world.year = campaignDef(f.ctx.world.campaign).endYear - 4;
+    expect(evalCondition(f.event.conditions, f.ctx)).toBe(false);
+  });
+});
 
 describe('future-dated Mystic target eligibility (#2792)', () => {
   it('does not allow a library custodian to be assigned before the copy is acquired', () => {

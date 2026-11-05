@@ -226,6 +226,19 @@ export interface MysticQuote {
 
 export interface MysticOrder { person: string; working: string; target: SceneSite; bindings?: Record<string, string>; contract?: string; outside?: boolean }
 
+/** Authored household duties use the same real hall and quote as Table orders. */
+export function householdDutyOrder(ctx: SimCtx, p: Person, working: string): MysticOrder {
+  return { person: p.id, working, target: { kind: 'hall', hall: { slot: 'PRACTITIONER' } }, bindings: { PRACTITIONER: p.id } };
+}
+
+export function assignDutyTerm(ctx: SimCtx, p: Person, working: string, years: number, page: string): OrderResult {
+  const result = assignDuty(ctx, householdDutyOrder(ctx, p, working));
+  if (!result.ok) return result;
+  const assignment = ctx.world.mystic.assignments.find(a => a.practitioner === p.id)!;
+  assignment.term = { until: assignment.ready + years, page, year: ctx.world.year };
+  return result;
+}
+
 export function dutyTerms(ctx: SimCtx, working: MysticWorkingDef) {
   return { preparation: working.preparation.crowns, ready: ctx.world.year + 1 + working.preparation.years, upkeep: working.upkeep };
 }
@@ -369,6 +382,11 @@ function endDuty(ctx: SimCtx, a: MysticAssignment, lastTurned: number, withdrawn
   }
   w.mystic.assignments = w.mystic.assignments.filter((x) => x !== a);
   resumeDutyStudies(ctx, a.id, lastTurned, dutyHouse(ctx, a));
+  if (a.term && dutyHouse(ctx, a) === w.playerHouse) {
+    const account = w.mystic.services.find(s => s.id === a.id)!;
+    w.chronicle.push({ year: w.year, weight: 'line', named: false, people: [a.practitioner],
+      text: account.account, cause: { page: a.term.page, year: a.term.year } });
+  }
 }
 
 /** Intensive work shares one remaining-term ledger, including an operative's journey. */
@@ -432,6 +450,11 @@ export function tickMystic(ctx: SimCtx): void {
     if (c.status === 'in_the_field' && c.began <= w.year) prepareFieldOpposition(ctx, c.id);
   }
   for (const a of [...w.mystic.assignments]) {
+    if (a.term && w.year >= a.term.until) {
+      // Expiry precedes reservation: the completed term buys no fifth year.
+      finishFieldDuty(ctx, a, w.year - 1);
+      continue;
+    }
     const working = workingDef(ctx, a.working);
     const p = w.people.get(a.practitioner);
     const gap = !working ? 'target_lost'

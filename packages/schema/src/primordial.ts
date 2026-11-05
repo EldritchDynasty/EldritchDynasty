@@ -73,7 +73,7 @@ export function effectHarmPolicy(e: Effect): HarmCategory | undefined {
     case 'flag': case 'relationship': case 'chronicle': case 'knowledge':
     case 'rumour': case 'clause': case 'branch':
     case 'recast': case 'rite': case 'schedule': case 'arc': case 'arc_flag':
-    case 'forge_lineage': case 'tutor': case 'muster': return undefined;
+    case 'forge_lineage': case 'tutor': case 'muster': case 'mystic_duty': return undefined;
     default: return assertNever(e, 'primordial harm policy');
   }
 }

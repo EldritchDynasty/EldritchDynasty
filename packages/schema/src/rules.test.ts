@@ -4,6 +4,48 @@ import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD
 
 const content = loadContent();
 
+describe('finite household duty authoring (#1982)', () => {
+  const fixture = () => {
+    const event = structuredClone(content.bundle.events.find(e => e.id === 'the_reader_has_two_rooms')!);
+    if (event.interaction.kind === 'narration') throw Error('missing dilemma');
+    const outcome = event.interaction.choices.find(c => c.id === 'move_the_chair')!.outcomes.find(o => o.id === 'watch_begun')!;
+    const bundle = { ...content.bundle, events: content.bundle.events.map(e => e.id === event.id ? event : e) };
+    return { event, outcome, bundle };
+  };
+  it('requires the actual duty quote on the effect target, including nested positive conjunctions', () => {
+    const f = fixture();
+    expect(runRule('mystic/duty', f.bundle)).toEqual([]);
+    f.event.slots.READER!.filters = [{ studying: true }];
+    delete f.outcome.onlyIf;
+    expect(runRule('mystic/duty', f.bundle).some(i => i.message.includes('canKeepDuty'))).toBe(true);
+    f.outcome.onlyIf = { slot: 'READER', filters: [{ not: { canKeepDuty: { working: 'sickroom_watch' } } }] };
+    expect(runRule('mystic/duty', f.bundle).some(i => i.message.includes('canKeepDuty'))).toBe(true);
+  });
+  it('rejects unknown or non-household workings before an effect can silently refuse', () => {
+    const f = fixture();
+    const effect = f.outcome.effects.find(e => e.kind === 'mystic_duty')!;
+    if (effect.kind !== 'mystic_duty') throw Error('missing duty');
+    effect.working = 'not_a_working';
+    expect(runRule('refs/known', f.bundle).some(i => i.message.includes('unknown Mystic working'))).toBe(true);
+    effect.working = 'the_field_infirmary';
+    expect(runRule('refs/known', f.bundle).some(i => i.message.includes('not a household duty'))).toBe(true);
+    f.event.slots.READER!.filters.push({ canKeepDuty: { working: 'unknown_quote' } });
+    expect(runRule('refs/known', f.bundle).some(i => i.message.includes('unknown_quote'))).toBe(true);
+  });
+});
+
+describe('named-page frame priority (#2632)', () => {
+  it('requires a frame scene that actually binds and names a page', () => {
+    const event = structuredClone(content.bundle.events.find(e => e.id === 'frame_the_page_he_does_not_turn')!);
+    const check = () => runRule('frame/shape', { ...content.bundle, events: [event] });
+    expect(check()).toEqual([]);
+    event.body = 'The creditor counts the blanks.';
+    expect(check().some(i => i.message.includes('page token'))).toBe(true);
+    event.tier = 'family';
+    expect(check().some(i => i.message.includes('frame-only'))).toBe(true);
+  });
+});
+
 describe('captivity identifies an actual outside captor (#1876)', () => {
   it.each(['unknown_house', 'house_gearithy'])('rejects %s as a captor', captor => {
     const event = EventTemplateS.parse({ id: 'captivity_validation', title: 'A captive', tier: 'family',

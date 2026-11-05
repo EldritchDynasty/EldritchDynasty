@@ -181,7 +181,17 @@ export function selectFrame(ctx: SimCtx, rng: Rng): EventTemplate | undefined {
 
   const pool = framePool(ctx);
   if (pool.length) {
-    const chosen = rng.weighted(pool, (e) => e.weight);
+    // Spend an already-due cut on a blank the frame has not yet named (#2632).
+    // The cadence, campaign/reads gates and template cooldown remain in force.
+    // Once named, a blank earns no further priority; citation history already
+    // persists across saves, so this needs no second delivery ledger.
+    const cited = new Set(ctx.world.frame.entries.filter(f => f.year <= ctx.world.year)
+      .flatMap(f => f.cites ? [f.cites.page] : []));
+    const unnamed = pool.filter(e => {
+      const page = pageToCite(ctx, e);
+      return e.preferUnnamedPage === true && page?.id !== undefined && !cited.has(page.id);
+    });
+    const chosen = rng.weighted(unnamed.length ? unnamed : pool, (e) => e.weight);
     if (chosen) ctx.observeSelection?.({ kind: 'selected', year: ctx.world.year,
       candidates: [{ event: String(chosen.id), source: 'frame' }] });
     return chosen;

@@ -23,6 +23,7 @@ compile error until it is handled.
 | `awakening` | `target: Target` `forced: boolean?` |
 | `heirloom` | `op: grant\|use\|transfer = "grant"` `heirloom: string` `to: string?` |
 | `spellbook` | `op: gain\|study\|lose\|degrade\|remove_copy\|acquire_copy` `target: Target` `book: string` |
+| `mystic_duty` | `target: Target` `working: string` `years: number` |
 | `career` | `target: Target` `op: assign\|leave = "assign"` `career: string?` |
 | `bond` | `target: Target` `op: bind\|free` `marks: number = 100` |
 | `marriage` | `op: "end"` `target: Target` |
@@ -124,6 +125,8 @@ one person at a time.
 | `exceeds` | `exceeds: {of, on}` |
 | `taught` | `taught: {attr}` |
 | `inTerm` | `inTerm: boolean` |
+| `studying` | `studying: boolean` |
+| `canKeepDuty` | `canKeepDuty: {working}` |
 | `all` | `all: Filter[]` |
 | `any` | `any: Filter[]` |
 | `not` | `not: Filter` |
@@ -251,6 +254,7 @@ Run one with `runRule(id, bundle)`. Source: `schema/src/validate.ts`.
 
 | rule | what it is for |
 |---|---|
+| `mystic/duty` | A finite household duty names one quoted reader, so its committed work cannot silently refuse. |
 | `glossary/refs` | Glossary ids and aliases are unique, and related terms resolve. |
 | `ids/unique` | Two events with one id means one of them is unreachable, and save files name both. |
 | `primordial/coverage` | Every potentially major ordinary outcome has a material, non-recursive authored response and paired feedback. |
