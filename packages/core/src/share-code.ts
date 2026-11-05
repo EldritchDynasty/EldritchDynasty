@@ -345,7 +345,7 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // founder identity. Check it before the exhaustive wire switches, which
   // otherwise throw, and in both privacy modes: omitting a bad name must not
   // turn an unrepresentable founding into a seemingly valid share code.
-  if (founder && (!FounderIdentityS.safeParse(founder).success
+  if (founder !== undefined && (!FounderIdentityS.safeParse(founder).success
     || (founder.name !== undefined
       && (founder.name.length > PERSON_NAME_MAX || !validFounderName(founder.name))))) {
     return { ok: false, unavailable: 'unrepresentable' };
@@ -354,7 +354,7 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     ...editionOf(ctx.content, opts.build),
     campaignLetter(w.campaign),
     w.seed,
-    !founder ? 0 : names && founder.name !== undefined
+    founder === undefined ? 0 : names && founder.name !== undefined
       ? [genderLetter(founder.gender), bodyLetter(founder.configuration), founder.name]
       : [genderLetter(founder.gender), bodyLetter(founder.configuration)],
     answers,

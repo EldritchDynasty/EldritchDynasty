@@ -691,6 +691,12 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     // programmatically altered signing log may violate their closed enums or
     // name limit; neither an anonymous nor a named export may throw.
     const malformed = [
+      // Falsy but present runtime values must not be mistaken for an omitted
+      // founder and exported as the authored default in either privacy mode.
+      { label: 'null founder', value: null },
+      { label: 'false founder', value: false },
+      { label: 'zero founder', value: 0 },
+      { label: 'empty-string founder', value: '' },
       { label: 'unknown gender', value: { ...SIGNED.founder, gender: 'other' } },
       { label: 'unknown founding body', value: { ...SIGNED.founder, configuration: 'blood_ancestor' } },
       { label: 'non-text name', value: { ...SIGNED.founder, name: 42 } },
