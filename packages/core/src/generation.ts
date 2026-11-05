@@ -17,8 +17,15 @@ type Candidate = GenerationQuestion & { score: number; say: () => string };
 const openDiscrepancies = (ctx: SimCtx): number =>
   [...ctx.world.discrepancies.values()].filter((d) => d.state === 'open').length;
 
+/** Imported saves can disagree between the status flag and recorded life dates. */
+function aliveAt(ctx: SimCtx, person: Person): boolean {
+  return person.status === 'alive'
+    && person.born <= ctx.world.year
+    && (person.died === undefined || person.died > ctx.world.year);
+}
+
 export const livingBlood = (ctx: SimCtx): Person[] =>
-  ctx.world.people.blood(ctx.world.playerHouse).filter((p) => p.status === 'alive');
+  ctx.world.people.blood(ctx.world.playerHouse).filter((p) => aliveAt(ctx, p));
 
 /**
  * How few living blood make a thin line. One threshold, shared with the
@@ -56,7 +63,7 @@ export function chooseGenerationQuestion(
   previous?: GenerationQuestion,
 ): GenerationQuestion | undefined {
   const w = ctx.world;
-  const head = w.people.living().find((p) => p.castSlots.includes('head'));
+  const head = w.people.living().find((p) => p.castSlots.includes('head') && aliveAt(ctx, p));
   if (!head) return undefined;
 
   const candidates: Candidate[] = [];
@@ -110,7 +117,8 @@ export function chooseGenerationQuestion(
   }
 
   const troubled = [...w.branches.values()]
-    .filter((b) => b.extinct === undefined && b.foundedYear <= w.year && b.grievance >= 60)
+    .filter((b) => b.foundedYear <= w.year
+      && (b.extinct === undefined || b.extinct > w.year) && b.grievance >= 60)
     .sort((a, b) => b.grievance - a.grievance)[0];
   if (troubled) {
     candidates.push({
@@ -130,7 +138,7 @@ export function chooseGenerationQuestion(
 
   const daughter = blood
     .filter((p) => p.sex === 'female' && w.year - p.born >= 16 && w.year - p.born <= 38
-      && !p.marriages.some((m) => m.to === undefined))
+      && !p.marriages.some((m) => m.from <= w.year && (m.to === undefined || m.to > w.year)))
     .sort((a, b) => a.born - b.born)[0];
   if (daughter) {
     candidates.push(candidate(
@@ -166,7 +174,7 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
 
   switch (q.kind) {
     case 'unstable_heir': {
-      if (!subject || subject.status !== 'alive') {
+      if (!subject || !aliveAt(ctx, subject)) {
         return q.subjectName !== undefined
           ? msg(ctx, 'generation.answer.heir_died', '{HEIR} did not live to take the seal.', { HEIR: q.subjectName })
           : msg(ctx, 'generation.answer.heir_died_unnamed', 'The heir did not live to take the seal.');
@@ -207,7 +215,8 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
     }
     case 'branch': {
       const branch = q.subject ? w.branches.get(q.subject) : undefined;
-      if (!branch) {
+      if (!branch || branch.foundedYear > w.year
+        || (branch.extinct !== undefined && branch.extinct <= w.year)) {
         return q.subjectName !== undefined
           ? msg(ctx, 'generation.answer.branch_gone', '{BRANCH} did not remain a standing cadet hall.', { BRANCH: q.subjectName })
           : msg(ctx, 'generation.answer.branch_gone_unnamed', 'The troubled hall did not remain a standing cadet hall.');
@@ -217,7 +226,7 @@ export function answerGenerationQuestion(ctx: SimCtx, q: GenerationQuestion): st
         { BRANCH: branch.name, GRIEVANCE: String(Math.round(branch.grievance)), BASELINE: String(Math.round(q.baseline)) });
     }
     case 'match': {
-      if (!subject || subject.status !== 'alive') {
+      if (!subject || !aliveAt(ctx, subject)) {
         return q.subjectName !== undefined
           ? msg(ctx, 'generation.answer.daughter_died', '{DAUGHTER} did not live to make that marriage.', { DAUGHTER: q.subjectName })
           : msg(ctx, 'generation.answer.daughter_died_unnamed', 'The daughter did not live to make that marriage.');
