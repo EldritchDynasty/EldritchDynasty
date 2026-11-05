@@ -268,7 +268,7 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   if (bestAt !== undefined && bestAt > endYear) {
     best = RUNGS.reduce((highest, rung, index) => {
       const reached = save.ascension.reachedAt[rung];
-      return reached !== undefined && reached <= endYear ? index : highest;
+      return reached !== undefined && reached <= endYear && index <= best ? index : highest;
     }, 0);
   }
   for (const [rung, id] of [
