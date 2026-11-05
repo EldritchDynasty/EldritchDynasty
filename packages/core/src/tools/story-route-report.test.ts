@@ -104,6 +104,38 @@ describe('story-route promises (#1946)', () => {
     expect(ctx.observeAppliedRecord).toBe(previousReceipt);
   });
 
+  it('observes a choice-specific Record override, not the unscheduled fallback', () => {
+    const bundle = structuredClone(content.bundle);
+    const authoring = bundle.events.find(event => event.id === 'the_heralds_visitation')!;
+    const override = { ...structuredClone(authoring.record!), id: 'the_short_descent' };
+    override.options.record.effects.push({ kind: 'schedule', event: 'the_cellar_shelf_is_found', inYears: 4 });
+    authoring.recordByChoice = [...(authoring.recordByChoice ?? []).filter(row => row.id !== override.id), override];
+    // This witness checks the choice-specific override, not an outcome-specific successor.
+    authoring.recordByOutcome = [];
+    const source = indexContent(bundle);
+    expect(routeLaunchers(source, ['the_cellar_shelf_is_found']).some(launcher =>
+      launcher.event === 'the_heralds_visitation' && launcher.recordOption === 'record')).toBe(true);
+    const ctx = testWorld(source, 194612);
+    const observer = new StoryRouteObserver(ctx, ['the_cellar_shelf_is_found']);
+    const event = source.mustEvent('the_heralds_visitation');
+    const slots = resolveSlots(event, ctx, testRng('override-route-cast'));
+    if (!slots.ok) throw new Error('override-route witness cannot cast');
+    const pending = queueChoice(ctx, event, event.body, slots.fill, []);
+    const choice = resolveChoice(ctx, pending.id, 'the_short_descent', testRng('override-route-answer'));
+    expect(choice.ok, choice.reason).toBe(true);
+    const page = choice.resolved!.entryId;
+    const record = ctx.world.pendingDecisions.find(decision => decision.kind === 'record' && decision.entryId === page);
+    if (!record || record.kind !== 'record') throw new Error('override-route Record missing');
+    expect(resolveRecord(ctx, record.id, 'record').ok).toBe(true);
+    const [promise] = observer.finish().filter(entry => entry.target === 'the_cellar_shelf_is_found');
+    expect(promise).toMatchObject({
+      launcher: 'the_heralds_visitation|record:record', launchPage: page,
+      dueYear: ctx.world.year + 4, queued: true,
+    });
+    expect(ctx.world.scheduled.some(schedule => schedule.event === 'the_cellar_shelf_is_found'
+      && schedule.cause?.page === page)).toBe(true);
+  });
+
   it('does not invent a Record-option promise when a different pen was selected', () => {
     const bundle = structuredClone(content.bundle);
     const authored = bundle.events.find(event => event.id === 'the_heralds_visitation')!;

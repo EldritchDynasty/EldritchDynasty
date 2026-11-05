@@ -58,14 +58,25 @@ export function routeLaunchers(content: Content, targets: readonly string[]): Ro
         if (target && targets.includes(target)) out.push({ ...base, target, mechanism: { arc: id } });
       }
     }
-    // Record / Omit / Embellish can schedule a separate follow-up after the
-    // event's outcome. The pen is an actual commit, not a speculative outcome.
-    for (const option of ['record', 'omit', 'embellish'] as const) {
-      for (const effect of event.record?.options[option].effects ?? []) {
-        if (effect.kind === 'schedule' && targets.includes(effect.event)) {
-          out.push({ event: String(event.id), outcome: `record:${option}`, recordOption: option,
-            target: effect.event, mechanism: { schedule: effect.inYears } });
-        }
+    // Discover *potential* Record-option schedules from all authored accounts:
+    // the fallback, choice/outcome overrides and primordial responses. Runtime
+    // observation below uses only the one block the engine actually committed.
+    const records = [
+      ...(event.record ? [event.record] : []),
+      ...(event.recordByChoice ?? []),
+      ...(event.recordByOutcome ?? []),
+      ...branches.flatMap(branch => branch.outcomes.flatMap(outcome =>
+        outcome.primordial?.record ? [outcome.primordial.record] : [])),
+    ];
+    const seen = new Set<string>();
+    for (const block of records) for (const option of ['record', 'omit', 'embellish'] as const) {
+      for (const effect of block.options[option].effects) {
+        if (effect.kind !== 'schedule' || !targets.includes(effect.event)) continue;
+        const key = `${option}|${effect.event}|${effect.inYears}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ event: String(event.id), outcome: `record:${option}`, recordOption: option,
+          target: effect.event, mechanism: { schedule: effect.inYears } });
       }
     }
   }
@@ -105,7 +116,7 @@ export class StoryRouteObserver {
   private pendingLaunches = new WeakMap<OutcomeObservation, RoutePromise[]>();
   private previous: Pick<SimCtx, 'observeOutcome' | 'observeAppliedOutcome' | 'observeAppliedRecord' | 'observeSelection'>;
 
-  constructor(private ctx: SimCtx, targets: readonly string[] = STORY_ROUTE_IDS) {
+  constructor(private ctx: SimCtx, private targets: readonly string[] = STORY_ROUTE_IDS) {
     this.launchers = routeLaunchers(ctx.content, targets);
     this.previous = { observeOutcome: ctx.observeOutcome, observeAppliedOutcome: ctx.observeAppliedOutcome,
       observeAppliedRecord: ctx.observeAppliedRecord, observeSelection: ctx.observeSelection };
@@ -150,13 +161,19 @@ export class StoryRouteObserver {
     // The same event can write several pages in one year. An event/year pair
     // is insufficient; the already-committed page identifies this pen's act.
     const written = w.chronicle.some(entry => entry.id === page && entry.eventId === event.id && entry.record === option);
-    for (const launcher of this.launchers) {
-      if (launcher.event !== event.id || launcher.recordOption !== option) continue;
-      if (!('schedule' in launcher.mechanism)) continue;
+    // Read the exact selected Record block supplied by recordEventForChoice,
+    // not this.launchers' *possible* fallback/choice/outcome branches. A pen
+    // committed in another branch must never count as a scheduled promise.
+    for (const effect of event.record?.options[option].effects ?? []) {
+      if (effect.kind !== 'schedule' || !this.targets.includes(effect.event)) continue;
+      const launcher: RouteLauncher = {
+        event: String(event.id), outcome: `record:${option}`, recordOption: option,
+        target: effect.event, mechanism: { schedule: effect.inYears },
+      };
       const promise: RoutePromise = {
         target: launcher.target, launcher: `${event.id}|record:${option}`, year: w.year,
         ...(written ? { launchPage: page } : {}),
-        dueYear: w.year + launcher.mechanism.schedule, originalCast: structuredClone(fill),
+        dueYear: w.year + effect.inYears, originalCast: structuredClone(fill),
         queued: written && w.scheduled.some(scheduled => scheduled.event === launcher.target
           && scheduled.cause?.page === page && scheduled.cause.year === w.year),
         status: 'not_yet_observed', waits: [], missing: [],
