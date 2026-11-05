@@ -187,6 +187,23 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(accepted.ok && saved(accepted.session)).toBe(saved(founded()));
   });
 
+  it('refuses surplus recipient friend names instead of silently discarding them (#1995)', () => {
+    const names = SIGNED.friends.map((friend) => friend.name);
+    const code = codeOf(founded());
+    expect(newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: { house: SIGNED.houseName, friends: [...names, 'Extra Friend'] },
+    })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+
+    // A roster of zero friends is still an exact roster, not a request for
+    // arbitrary extra people whose names the game would ignore.
+    const noFriends = codeOf(founded({ ...SIGNED, friends: [] }));
+    expect(newGameFromShareCode(noFriends, content, {
+      build: BUILD,
+      names: { house: SIGNED.houseName, friends: ['Extra Friend'] },
+    })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+  });
+
   it('asks for a missing house name when the supplied name is invisible-only (#1995)', () => {
     const code = codeOf(founded()); // An anonymous code still needs a visible house name.
     const friends = SIGNED.friends.map((friend) => friend.name);
