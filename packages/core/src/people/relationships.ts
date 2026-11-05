@@ -420,16 +420,18 @@ export function tickFamilyQuarrels(ctx: SimCtx): Grudge[] {
   const made: Grudge[] = [];
 
   const seat = w.people.household(w.playerHouse, w.year);
-  const head = seat.find((p) => p.castSlots.includes('head'));
+  const head = seat.find((p) => p.castSlots.includes('head') && livingAt(p, w.year));
   if (!head) return made;
 
   for (const b of w.branches.values()) {
-    if (b.extinct !== undefined || b.recalled !== undefined) continue;
+    // An imported branch can carry its future extinction or recall in advance.
+    if (b.foundedYear > w.year || (b.extinct !== undefined && b.extinct <= w.year)
+      || (b.recalled !== undefined && b.recalled <= w.year)) continue;
     if (b.grievance < GRIEVANCE_QUARREL) continue;
 
     const speaker = b.speaker ? w.people.get(b.speaker) : undefined;
     // Branch speaker references may survive imports before their birth year.
-    if (!speaker || speaker.status !== 'alive' || speaker.born > w.year || speaker.id === head.id) continue;
+    if (!speaker || !livingAt(speaker, w.year) || speaker.id === head.id) continue;
 
     // One standing quarrel per hall, deepened rather than duplicated. A hall
     // that stays aggrieved gets angrier; it does not get a second grudge every
