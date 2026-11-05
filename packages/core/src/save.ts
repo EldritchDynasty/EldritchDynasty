@@ -153,7 +153,12 @@ export function saveGame(ctx: SimCtx): SavedGame {
   };
 
   saved.contentSources = referencedContentSources(saved, ctx.content);
-  return saved;
+  // Projection above converts Maps, Sets and genomes to the save vocabulary.
+  // Detach the whole result at this boundary: queued native writes must retain
+  // the year AND every nested record from this instant, and a host editing its
+  // copy must never edit the world. One graph copy also covers future fields
+  // without a growing list of per-field alias exceptions (#3041).
+  return structuredClone(saved);
 }
 
 /**

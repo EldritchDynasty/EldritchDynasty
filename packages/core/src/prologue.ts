@@ -255,7 +255,14 @@ export function prologueView(ctx: SimCtx): PrologueView | undefined {
   };
   const inherited = inheritedRumour(ctx, def);
   if (inherited) view.inherited = inherited;
-  if (w.founding) view.founded = { ...w.founding };
+  // The public read promises these four facts. Spreading the saved record
+  // also exposed its live answer map, outside that contract (#3040).
+  if (w.founding) view.founded = {
+    houseName: w.founding.houseName,
+    heirloom: w.founding.heirloom,
+    grudge: w.founding.grudge,
+    year: w.founding.year,
+  };
   if (w.friends.length) view.friends = w.friends.map((f) => ({ name: f.name, sex: f.sex }));
   return view;
 }
