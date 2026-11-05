@@ -645,6 +645,66 @@ describe('the player, over a fake engine', () => {
     expect(output.disconnected).toBe(0);
   });
 
+  it('cuts every older fading Age before the audio clock freezes', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const first = [...ctx.sources];
+    const firstGain = ctx.gains[1]!;
+
+    sound.setDrone(COLD);
+    const second = ctx.sources.slice(first.length);
+    const secondGain = ctx.gains[2]!;
+    sound.setDrone({ registers: ['institutional'], frame: false });
+    const third = ctx.sources.slice(first.length + second.length);
+    const currentGain = ctx.gains[3]!;
+
+    expect(firstGain.disconnected).toBe(0);
+    expect(secondGain.disconnected).toBe(0);
+    expect(first.every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+    expect(second.every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+
+    // Neither older fade is this.drone any more. Both must be retired before
+    // suspend freezes currentTime and later foreground playback resumes.
+    sound.suspend();
+    expect(ctx.calls).toContain('suspend');
+    expect([...first, ...second, ...third].every((source) => source.stopped === ctx.currentTime),
+      'an older Age can return after foregrounding').toBe(true);
+    expect([firstGain, secondGain, currentGain].map((gain) => gain.disconnected)).toEqual([1, 1, 1]);
+    for (const source of [...first, ...second]) source.finish();
+    expect([firstGain, secondGain].map((gain) => gain.disconnected),
+      'an old ended callback disconnected the same graph twice').toEqual([1, 1]);
+    expect(ctx.gains[0]!.disconnected, 'suspending cut the shared output').toBe(0);
+  });
+
+  it.each(['mute', 'zero volume', 'suspend', 'close'] as const)(
+    'cuts a pending ordinary fade on %s even with no current drone',
+    (action) => {
+      const e = fakeEngine();
+      const sound = new Sound(e.ctor);
+      sound.muted = false;
+      sound.setDrone(WARM);
+      const ctx = e.made[0]!;
+      const fading = [...ctx.sources];
+      const gain = ctx.gains[1]!;
+      sound.setDrone(null); // stops playing, but the old graph is still fading
+      expect(fading.every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+      expect(gain.disconnected).toBe(0);
+
+      switch (action) {
+        case 'mute': sound.muted = true; break;
+        case 'zero volume': sound.volume = 0; break;
+        case 'suspend': sound.suspend(); break;
+        case 'close': sound.close(); break;
+      }
+      expect(fading.every((source) => source.stopped === ctx.currentTime),
+        'a detached fade remained scheduled after the device was silenced').toBe(true);
+      expect(gain.disconnected).toBe(1);
+    },
+  );
+
   it('ignores gain-disconnect failure from a host that has already invalidated its output', () => {
     const e = fakeEngine();
     const sound = new Sound(e.ctor);
