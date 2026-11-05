@@ -34,6 +34,13 @@ describe('share code import name prompts (#1995)', () => {
     expect(shareCodeProblem(incomplete, 'original'))
       .toBe('This house lacks the names it needs before it may begin.');
     expect(shareCodeProblem(incomplete, 'original')).not.toContain('undefined');
+    // Native/foreign adapters are runtime values despite typed client hooks.
+    const missingList = { kind: 'names_needed' } as ShareCodeProblem;
+    const invalidList = { kind: 'names_needed', missing: ['raw user text'] } as unknown as ShareCodeProblem;
+    expect(shareCodeProblem(missingList, 'plainenglish'))
+      .toBe('This founding still needs names before it can begin.');
+    expect(shareCodeProblem(invalidList, 'original'))
+      .toBe('This house lacks the names it needs before it may begin.');
   });
 
   it('describes malformed platform name inputs in both reading modes', () => {
@@ -103,6 +110,10 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
       .toBe('This code was made with a different version of the game. It would not start the same family, so it cannot be used.');
     expect(shareCodeProblem(incomplete, 'original'))
       .toBe('That code was made by another edition of the game. It would not begin the same house, so it is not offered.');
+    const malformed = { kind: 'other_edition', differs: ['untrusted field'] } as unknown as ShareCodeProblem;
+    const absent = { kind: 'other_edition' } as ShareCodeProblem;
+    expect(shareCodeProblem(malformed, 'original')).toBe(shareCodeProblem(incomplete, 'original'));
+    expect(shareCodeProblem(absent, 'plainenglish')).toBe(shareCodeProblem(incomplete, 'plainenglish'));
   });
 
   it('identifies the incompatible edition fields rather than offering a divergent founding', () => {
