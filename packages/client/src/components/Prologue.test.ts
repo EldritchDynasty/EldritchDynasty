@@ -1860,3 +1860,63 @@ describe('founding refusal follows submitted inputs (#2360)', () => {
     }
   });
 });
+
+
+describe('same-year campaigns and signing observation (#1984)', () => {
+  it('resets uncommitted drafts when a different run reuses the same start year and option ids', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue: prologueView(), actions: game, refused: null,
+        startYear: 1042, runIdentity: 'short:41',
+      },
+    });
+    try {
+      await revealChoices(wrapper);
+      await answerFounder(wrapper, 0, 'Daveed');
+      await continueSigning(wrapper);
+      await answerButton(wrapper, 1).trigger('click');
+      expect(wrapper.get('.examination button.on').exists()).toBe(true);
+
+      // The new house has identical authored signing ids and starts in 1042.
+      // Neither the year nor a translated label can distinguish its drafts.
+      await wrapper.setProps({ runIdentity: 'long:41' });
+      expect(wrapper.find('.signing-progress').exists()).toBe(false);
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      await revealChoices(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect((wrapper.get('input[aria-label="Name the founder"]').element as HTMLInputElement).value).toBe('');
+      expect(wrapper.findAll('.identity button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+      expect(wrapper.findAll('.examination button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(game.found).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('reports only bounded stage labels after the triad and on accepted navigation', async () => {
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: actions(), refused: null, startYear: 1042 },
+    });
+    try {
+      expect(wrapper.emitted('stage')).toBeUndefined();
+      await revealChoices(wrapper);
+      expect(wrapper.emitted('stage')).toEqual([['founder']]);
+      await answerFounder(wrapper, 1, 'Private Founder Name');
+      await continueSigning(wrapper);
+      expect(wrapper.emitted('stage')).toEqual([['founder'], ['examination']]);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await continueSigning(wrapper);
+      expect(wrapper.emitted('stage')).toEqual([['founder'], ['examination'], ['house']]);
+      expect(JSON.stringify(wrapper.emitted('stage'))).not.toContain('Private Founder Name');
+      // Back is a new visit to a section, not a founding action.
+      await wrapper.get('.signing-navigation button').trigger('click');
+      expect(wrapper.emitted('stage')?.at(-1)).toEqual(['examination']);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});

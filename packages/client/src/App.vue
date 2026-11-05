@@ -87,6 +87,10 @@ const readingLog = typeof window !== 'undefined' && readingLogRequested(window.l
   )
   : null;
 const readingLogOn = ref(readingLog !== null);
+/** Coarse, opt-in section exposure for the #1984 first-session study. */
+function observeSigningStage(stage: 'founder' | 'examination' | 'house'): void {
+  readingLog?.note({ kind: 'pane', pane: `signing:${stage}` });
+}
 const readingBreak = ref(false);
 /**
  * THE SOUND BED (#1986): §24's page, seal and bell, the outcome's boon, blow
@@ -613,6 +617,8 @@ const yearAndBirths = computed(() => {
     :actions="actions"
     :refused="refused"
     :start-year="view.campaign.startYear"
+    :run-identity="[view.campaign.id, view.seed].join(':')"
+    @stage="observeSigningStage"
     :skip-seen-prose="accessibility.skipSeenProse"
     :prose-mode="accessibility.proseMode"
   />

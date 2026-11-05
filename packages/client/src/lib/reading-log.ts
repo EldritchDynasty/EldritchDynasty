@@ -37,7 +37,7 @@ export const READING_LOG_MAX_EVENTS = 20_000;
 /** What the notice says, word for word — the switch is not informed consent without it. */
 export const READING_LOG_NOTICE =
   'Reading log is on. On this device only, it records which pages and decisions are shown, the in-game year, '
-  + 'when this window is in front, which panel is open, which buttons you press, whether founding was accepted or refused and whether entry returned, Record/Omit/Embellish modes, generated decision ids and results, whether family choices and Matches were accepted or refused, and Table/Muster/delegation categories and results. It records no text you type, '
+  + 'when this window is in front, which panel is open, which buttons you press, whether founding was accepted or refused, which signing section you reach, and whether entry returned, Record/Omit/Embellish modes, generated decision ids and results, whether family choices and Matches were accepted or refused, and Table/Muster/delegation categories and results. It records no text you type, '
   + 'is not part of your saved game, and leaves this device only if you export it.';
 
 export const READING_LOG_CAVEATS = [
@@ -55,6 +55,7 @@ export const READING_LOG_CAVEATS = [
   'Choose and Match record acceptance or refusal from their returned result, not an attempted click. Other answer verbs without a returned outcome remain attempts only; a Match refusal may include an unavailable card.',
   'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
   'Signing markers distinguish a founding attempt from accepted, refused or thrown results; enter returning is not proof a meaningful family decision was taken. Names, founder answers and refusal reasons are never recorded.',
+  'Signing-section pane markers name only founder, examination or house; their timestamps are exposure boundaries, not evidence of comprehension or a completed section.',
   'An entry timing starts at a successful Begin, not at recorder activation. Its first accepted gameplay command is only a candidate family decision: an observer must verify the command was consequential. Incomplete or interrupted entries are censored, not abandoned.',
   'seen marks a decision whose authored scene this device had shown before; revisit marks a page already shown in this log; '
     + 'carried marks a page already in the chronicle when a saved run was picked up. Revisits and carried pages answer nothing.',

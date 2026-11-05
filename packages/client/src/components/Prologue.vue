@@ -12,6 +12,8 @@ const props = withDefaults(defineProps<{
   startYear: number;
   skipSeenProse?: boolean;
   proseMode?: ProseMode;
+  /** Stable mechanics identity for a particular run, even when campaigns share the same signing. */
+  runIdentity?: string;
 }>(), {
   skipSeenProse: false,
 });
@@ -235,6 +237,7 @@ const wanted = computed(() => {
 /** A presentation-only candidate for #2443 / #1984. All drafts stay in refs:
  * backing up and moving forward never calls a GameSession action. */
 type SigningStage = 'founder' | 'examination' | 'house';
+const emit = defineEmits<{ stage: [stage: SigningStage] }>();
 const signingStages = computed<SigningStage[]>(() => [
   ...(props.prologue.namePrompt ? ['founder' as const] : []),
   ...(props.prologue.examination.length ? ['examination' as const] : []),
@@ -249,6 +252,7 @@ const signingStageIndex = ref(0);
 // Use stable mechanical identifiers here, not translated prose.
 const signingIdentity = computed(() => JSON.stringify([
   props.startYear,
+  props.runIdentity ?? null,
   props.prologue.id,
   Boolean(props.prologue.namePrompt),
   props.prologue.examination.map((question) => [question.id, question.answers.map((answer) => answer.id)]),
@@ -280,6 +284,10 @@ watch(signingIdentity, () => {
   );
 });
 const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
+/** Research-only stage markers. No entered names, answers, or simulation commands leave this component. */
+watch([shown, signingStage], ([beats, stage]) => {
+  if (!props.prologue.founded && beats >= props.prologue.triad.length) emit('stage', stage);
+}, { immediate: true, flush: 'post' });
 const stageReady = computed(() => {
   switch (signingStage.value) {
     case 'founder':
