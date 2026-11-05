@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ReadingLog, summarize, tableWorkloadWindows, type ReadingLogEvent } from './reading-log.js';
+import { ReadingLog, recordActions, summarize, tableWorkloadWindows, type ReadingLogEvent } from './reading-log.js';
+import type { GameActions } from './game.js';
 
 const action = (
   at: number, verb: 'order' | 'muster', category: 'study' | 'marriages' | 'withdraw',
@@ -9,6 +10,33 @@ const action = (
   : { at, kind: 'action', verb, act: 'muster', category: 'withdraw', status };
 
 describe('Table workload observation windows (#1992)', () => {
+  it('does not let a throwing native then getter break a saved-run action', () => {
+    const log = new ReadingLog(
+      () => 0,
+      { sha: 'local', platform: 'native' },
+      '2026-11-05T00:00:00.000Z',
+      { visible: true, focused: true },
+    );
+    // A native adapter can return a foreign thenable; its throwing accessor
+    // is not a refusal by the game and must not be probed by the observer twice.
+    let inspected = 0;
+    const opaque = {
+      get then(): never {
+        inspected++;
+        throw new Error('host Promise proxy invalidated');
+      },
+    };
+    const actions = recordActions({
+      resume: () => opaque,
+    } as unknown as GameActions, log);
+    expect(actions.resume()).toBe(opaque);
+    expect(inspected).toBe(1);
+    log.chronicle([{ id: 'p1', year: 1042, eventId: 'scene_1' }]);
+    const page = log.events.find((event) => event.kind === 'page');
+    expect(page).toBeDefined();
+    if (page?.kind === 'page') expect(page.carried).toBeUndefined();
+  });
+
   it('ignores stale Table-pane exposure before a successful Begin or pickup', () => {
     const titleOnly: ReadingLogEvent[] = [
       { at: 0, kind: 'visible', visible: true },
