@@ -258,6 +258,8 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     || typeof founding.houseName !== 'string'
     || !Array.isArray(founding.friends)
     || !Array.isArray(w.friends)
+    || w.friends.some((friend) => !friend || typeof friend.name !== 'string'
+      || (friend.sex !== 'male' && friend.sex !== 'female'))
     || founding.friends.some((friend) => !friend || typeof friend.name !== 'string'
       || (friend.sex !== 'male' && friend.sex !== 'female'))
     || !persisted.answers || typeof persisted.answers !== 'object'
