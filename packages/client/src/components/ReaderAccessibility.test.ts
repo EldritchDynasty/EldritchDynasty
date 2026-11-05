@@ -1,12 +1,15 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { computed, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import type { ProseMode } from '@ed/schema';
 import type { SessionView } from '@ed/core';
 import ReadingSettings from './ReadingSettings.vue';
 import Member from './Member.vue';
+import Start from './Start.vue';
+import type { GameActions } from '../lib/game';
+import type { SaveSummary } from '../platform';
 import Cast from './Cast.vue';
 import { ageLabel } from '../lib/age';
 import { SHORTCUTS, shortcutFor, shortcutHelp } from '../lib/keys';
@@ -230,4 +233,124 @@ describe('sound volume slider (#2641)', () => {
       }
     },
   );
+});
+
+// Start's save-overwrite confirmation is a reader-safety boundary; retain
+// these host-race regressions in the existing measured client DOM suite.
+/** Real Start component, with the host catalogue controlled at each read. */
+function actionsWithSavesForDemo(saves: SaveSummary[] = []): GameActions {
+  return {
+    begin: vi.fn(),
+    listSaves: vi.fn(async () => saves),
+    resume: vi.fn(async () => true),
+    load: vi.fn(async () => true),
+    importSave: vi.fn(async () => true),
+    exportSave: vi.fn(async () => true),
+    deleteDemoSave: vi.fn(async () => undefined),
+    clearLibrary: vi.fn(async () => undefined),
+    deleteLibraryRun: vi.fn(async () => undefined),
+    retryLibrary: vi.fn(async () => undefined),
+  } as unknown as GameActions;
+}
+const flushDemo = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+describe('Demonstration launch checks the current host catalogue (#1979)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'warns before replacing a Demo created after Start mounted (%s)',
+    async (proseMode) => {
+      const actions = actionsWithSavesForDemo();
+      const w = mount(Start, { props: { actions, resumable: false, proseMode } });
+      try {
+        await flushDemo();
+        expect(actions.listSaves).toHaveBeenCalledTimes(1);
+        await w.get('input[value="demo"]').setValue(true);
+
+        // A second tab/native host has written a valid demo since mount.
+        vi.mocked(actions.listSaves).mockResolvedValueOnce([{ slot: 'demo-autosave', year: 1062 }]);
+        await w.get('.primary-row button[data-begin]').trigger('click');
+        await flushDemo();
+
+        expect(actions.listSaves).toHaveBeenCalledTimes(2);
+        expect(actions.begin).not.toHaveBeenCalled();
+        expect(w.get('.demo-saved').text()).toContain('1062');
+        const confirm = w.get('.demo-overwrite-confirm');
+        expect(confirm.text()).toContain(proseMode === 'plainenglish'
+          ? 'replace your saved demonstration' : 'replace that checkpoint');
+        await confirm.get('button.confirm-overwrite').trigger('click');
+        expect(actions.begin).toHaveBeenCalledOnce();
+        expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'demo');
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('treats a failed fresh host listing as a possible saved Demo', async () => {
+    const actions = actionsWithSavesForDemo();
+    const w = mount(Start, { props: { actions, resumable: false, proseMode: 'plainenglish' } });
+    try {
+      await flushDemo();
+      await w.get('input[value="demo"]').setValue(true);
+      vi.mocked(actions.listSaves).mockRejectedValueOnce(new Error('host temporarily offline'));
+      await w.get('.primary-row button[data-begin]').trigger('click');
+      await flushDemo();
+
+      expect(actions.begin).not.toHaveBeenCalled();
+      expect(w.get('.save-list-error[role="alert"]').text()).toContain('Could not list your saved games');
+      const confirm = w.get('.demo-overwrite-confirm');
+      expect(confirm.text()).toContain('Starting a demonstration may replace an existing one');
+      await confirm.get('button.confirm-overwrite').trigger('click');
+      expect(actions.begin).toHaveBeenCalledOnce();
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('keeps a slow Demo preflight single-flight and abandons a changed campaign', async () => {
+    const actions = actionsWithSavesForDemo();
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flushDemo();
+      await w.get('input[value="demo"]').setValue(true);
+      let release!: (saves: SaveSummary[]) => void;
+      vi.mocked(actions.listSaves).mockImplementationOnce(
+        () => new Promise<SaveSummary[]>((resolve) => { release = resolve; }),
+      );
+
+      const begin = w.get('.primary-row button[data-begin]').element as HTMLButtonElement;
+      begin.click();
+      begin.click();
+      await flushDemo();
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+      expect(actions.begin).not.toHaveBeenCalled();
+      expect(begin.disabled).toBe(true);
+
+      // The reader selects a different campaign before the host responds.
+      await w.get('input[value="short"]').setValue(true);
+      release([]);
+      await flushDemo();
+      expect(actions.begin).not.toHaveBeenCalled();
+      await w.get('.primary-row button[data-begin]').trigger('click');
+      expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'short');
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('launches an absent Demo exactly once after a successful fresh listing', async () => {
+    const actions = actionsWithSavesForDemo();
+    const w = mount(Start, { props: { actions, resumable: false } });
+    try {
+      await flushDemo();
+      await w.get('input[value="demo"]').setValue(true);
+      await w.get('.primary-row button[data-begin]').trigger('click');
+      await flushDemo();
+      expect(actions.listSaves).toHaveBeenCalledTimes(2);
+      expect(actions.begin).toHaveBeenCalledOnce();
+      expect(actions.begin).toHaveBeenCalledWith(expect.any(Number), 'demo');
+      expect(w.find('.demo-overwrite-confirm').exists()).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
 });
