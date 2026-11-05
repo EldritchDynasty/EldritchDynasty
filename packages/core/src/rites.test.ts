@@ -752,8 +752,12 @@ describe('broader adviser voices', () => {
     const widow = place(ctx, { sex: 'female', age: 50, name: 'Lady Orra' });
     const former = place(ctx, { sex: 'male', age: 55, name: 'Lord Orra' });
     marry(ctx, widow, former);
+    const marriedYear = ctx.world.year - 25;
+    widow.marriages.find((marriage) => marriage.spouse === former.id)!.from = marriedYear;
+    former.marriages.find((marriage) => marriage.spouse === widow.id)!.from = marriedYear;
     former.status = 'dead';
     former.died = ctx.world.year - 1;
+    expect(marriedYear).toBeLessThan(former.died);
     ctx.world.succession.push({
       person: former.id,
       name: former.name,
