@@ -975,12 +975,23 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // from another JavaScript realm. `instanceof Promise` rejects those
       // and can leave a refused pickup classified as carried history.
       // Observe any thenable without replacing the original caller's result.
+      // A native bridge can return a thenable whose `then` accessor throws.
+      // The recorder must not change a successful verb into a failure merely
+      // by inspecting that host-controlled result. Treat the pickup's observer
+      // state as unconfirmed and return the EXACT object to the caller.
+      let thenable = false;
       if (pickupGeneration !== null && result !== null
-        && (typeof result === 'object' || typeof result === 'function')
-        && typeof (result as PromiseLike<unknown>).then === 'function') {
+        && (typeof result === 'object' || typeof result === 'function')) {
+        try {
+          thenable = typeof (result as PromiseLike<unknown>).then === 'function';
+        } catch {
+          log.pickUpFailed(pickupGeneration);
+        }
+      }
+      if (thenable) {
         void Promise.resolve(result as PromiseLike<unknown>).then(
-          (ok) => { if (ok !== true) log.pickUpFailed(pickupGeneration); },
-          () => log.pickUpFailed(pickupGeneration),
+          (ok) => { if (ok !== true) log.pickUpFailed(pickupGeneration!); },
+          () => log.pickUpFailed(pickupGeneration!),
         );
       }
       return result;
