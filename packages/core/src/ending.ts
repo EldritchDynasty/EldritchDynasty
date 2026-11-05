@@ -1,5 +1,5 @@
 import type { EndingDef, EndingId, Person, Rung } from '@ed/schema';
-import { assertNever, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
+import { assertNever, currentMembership, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
@@ -9,7 +9,7 @@ import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 import { ambitionView } from './ambition.js';
 import { visibleEpithet } from './byname.js';
-import { CADET_AGE, activeBranches, cadetFamilyMember, halls, viableCadetHall } from './people/branches.js';
+import { CADET_AGE, cadetFamilyMember, viableCadetHall } from './people/branches.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
 // The value itself lives in campaign.ts so pacing code does not depend on endings.
@@ -658,15 +658,36 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     // supplies the consequence. Selecting an ambition alone proves neither.
     // Do not infer a rescue or attribute a named Chronicle page to this branch:
     // older founding pages have no person/branch ID to support such a join.
-    const residents = halls(w, readYear);
-    const branches = activeBranches(w)
-      .filter((branch) => branch.house === w.playerHouse && inBookTerm(w, branch.foundedYear))
+    // The epilogue is a reading AT collection, including in recovered worlds
+    // that have subsequently acquired newer deaths or an extinct hall. The
+    // ordinary halls() query only sees people living NOW (PersonStore.hot),
+    // even if passed an older membership year. That loses an actual survivor
+    // of the last night when a later save advances past collection.
+    const residents = new Map<string, Person[]>();
+    for (const person of w.people.all()) {
+      if (person.born > readYear) continue;
+      // Only alive-at-collection people can keep a hall. A later death can
+      // archive somebody today but must not rewrite who was there then.
+      if (person.died === undefined
+        ? person.status !== 'alive'
+        : person.died <= readYear) continue;
+      const membership = currentMembership(person, readYear);
+      if (!membership || membership.house !== w.playerHouse || !membership.branch) continue;
+      const people = residents.get(membership.branch) ?? [];
+      people.push(person);
+      residents.set(membership.branch, people);
+    }
+    const branches = [...w.branches.values()]
+      .filter((branch) => branch.house === w.playerHouse
+        && inBookTerm(w, branch.foundedYear)
+        // An extinction after collection is not an extinct hall at collection.
+        && (branch.extinct === undefined || branch.extinct > readYear))
       .sort((a, b) => a.foundedYear - b.foundedYear
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     for (const branch of branches) {
       // Recovered memberships may predate a person's actual birth. A child
       // born after collection cannot make a hall viable on the last night.
-      const family = (residents.get(branch.id) ?? []).filter((person) => person.born <= readYear);
+      const family = residents.get(branch.id) ?? [];
       if (!viableCadetHall(family, readYear)) continue;
       const founder = w.people.get(branch.founder);
       // Restored founding rows must not credit a hall to somebody who had not
@@ -675,8 +696,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         || branch.foundedYear - founder.born < CADET_AGE
         || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
       const survivor = family
-        .filter((person) => person.status === 'alive'
-          && person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
+        .filter((person) => person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
         .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
       if (!survivor) continue;
       return {
