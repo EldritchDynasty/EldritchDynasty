@@ -386,7 +386,7 @@ that produced it.
 
 ## Table action outcome summary (#2526)
 
-With `?reading-log=1` enabled, export `ed-reading-log/12` and read
+With `?reading-log=1` enabled, export `ed-reading-log/13` and read
 `summary.tableActions` for bounded per-category totals:
 `orders`, `muster`, and `delegation`. Each row reports `attempts`,
 `accepted`, `refused`, `threw`, `returned`, and `unfinished`.
@@ -485,7 +485,7 @@ treat fewer clicks or this instrumentation as an observed improvement.
 the accepted action that qualifies as the first family decision (for example,
 a particular first marriage acceptance) and the action's visible consequence.
 Use the same definition for baseline and candidate. The exported
-`ed-reading-log/12` artifact's `summary.entries` supplies a *candidate* first
+`ed-reading-log/13` artifact's `summary.entries` supplies a *candidate* first
 accepted command, not an automatic classification of its meaning. The command's
 `verb` can be `choose`, `match`, `order`, `muster` or `record`; an
 accepted `choose` can be a story decision rather than the intended family
