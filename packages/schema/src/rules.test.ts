@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD_RITE_FAILED, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type Outcome, type SigningQuestion } from '@ed/schema';
+import { asId, assertNever, auditChoices, CONTENT_RULES, effectSignature, EventTemplateS, GOD_RITE_FAILED, indexContent, inlineArcId, outcomeSignature, runRule, SigningQuestionS, SigningTermS, validateBundle, type ContentBundle, type Outcome, type SigningQuestion } from '@ed/schema';
 
 const content = loadContent();
 
@@ -31,6 +31,37 @@ describe('finite household duty authoring (#1982)', () => {
     expect(runRule('refs/known', f.bundle).some(i => i.message.includes('not a household duty'))).toBe(true);
     f.event.slots.READER!.filters.push({ canKeepDuty: { working: 'unknown_quote' } });
     expect(runRule('refs/known', f.bundle).some(i => i.message.includes('unknown_quote'))).toBe(true);
+  });
+  it.each(['heirloom', 'record', 'choice-record', 'outcome-record', 'primordial-record'] as const)(
+    'refuses a duty in an unsupported %s context', (context) => {
+      const f = fixture();
+      const effect = structuredClone(f.outcome.effects.find(e => e.kind === 'mystic_duty')!);
+      const record = structuredClone(content.bundle.events.find(e => e.record)!.record!);
+      record.options.record.effects = [effect];
+      switch (context) {
+        case 'heirloom':
+          f.bundle.heirlooms = [{ ...content.bundle.heirlooms[0]!, effects: [effect] }];
+          break;
+        case 'record': f.event.record = record; break;
+        case 'choice-record': f.event.recordByChoice = [{ id: 'move_the_chair', ...record }]; break;
+        case 'outcome-record': f.event.recordByOutcome = [{ id: 'move_the_chair/watch_begun', ...record }]; break;
+        case 'primordial-record': {
+          const ordinary = content.bundle.events.flatMap(e => e.interaction.kind === 'narration'
+            ? e.interaction.outcomes : e.interaction.choices.flatMap(c => c.outcomes));
+          f.outcome.primordial = { ...structuredClone(ordinary.find(o => o.primordial)!.primordial!), record };
+          break;
+        }
+        default: assertNever(context);
+      }
+      expect(runRule('mystic/duty', f.bundle).some(i => /initiating page|later Record answer/.test(i.message))).toBe(true);
+    });
+  it('requires the player availability check rather than an automatic or narrated commitment', () => {
+    const f = fixture();
+    if (f.event.interaction.kind === 'narration') throw Error('missing choice');
+    f.event.interaction.decidedBy = 'chance';
+    expect(runRule('mystic/duty', f.bundle).some(i => i.message.includes('live availability'))).toBe(true);
+    f.event.interaction = { kind: 'narration', outcomes: [f.outcome] };
+    expect(runRule('mystic/duty', f.bundle).some(i => i.message.includes('live availability'))).toBe(true);
   });
 });
 

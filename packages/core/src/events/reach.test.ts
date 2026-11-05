@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
 import { previewPrimordial, rollPrimordial } from './primordial.js';
-import { asId, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge, type ArcDecision } from '@ed/schema';
+import { asId, ProseModeS, THRESHOLD_AFFINITIES, FREQUENCY_PROFILES, indexContent, isLadderRole, type ActiveAge, type ArcDecision } from '@ed/schema';
 import { makeRng, streamFor, type Rng } from '../rng.js';
 import { canonical, loadGame, saveGame } from '../save.js';
 import { marry, phase, place, testWorld } from '../testing.js';
@@ -22,7 +22,7 @@ import { grantHeirloom } from '../people/heirlooms.js';
 import { ambientPool, selectEvents } from './selection.js';
 import { grantParcel, heldAcres, landIncome, seizeParcel } from '../land.js';
 import { TEST_FAMILIES } from '../tools/testFamilies.js';
-import { campaignDef } from '../campaign.js';
+import { campaignDef, FULL_CAMPAIGN_IDS } from '../campaign.js';
 import { missingPlainEnglish, proseForEventBody, setProseMode, setProseVariants } from '../prose.js';
 import { sentimentBetween } from '../people/relationships.js';
 import { bootstrap } from '../sim.js';
@@ -125,7 +125,7 @@ describe('the cellar promise at collection (#1946)', () => {
       expect(result.ok, result.reason).toBe(true);
     });
   }
-  it.each(['long', 'short'] as const)('offers the one-year discovery only while it can return (%s)', (campaign) => {
+  it.each(FULL_CAMPAIGN_IDS)('offers the one-year discovery only while it can return (%s)', (campaign) => {
     const ctx = fixture(1946);
     ctx.world.generation = 5;
     ctx.world.campaign = campaign;
@@ -152,7 +152,7 @@ describe('the cellar promise at collection (#1946)', () => {
 });
 
 describe('the two-room dilemma through the live docket (#1982)', () => {
-  for (const mode of ['original', 'plainenglish'] as const) {
+  for (const mode of ProseModeS.options) {
     for (const row of [
       { choice: 'keep_the_book_open', outcome: 'reading_kept' },
       { choice: 'move_the_chair', outcome: 'watch_begun' },

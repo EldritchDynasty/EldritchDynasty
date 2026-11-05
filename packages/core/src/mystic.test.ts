@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { ALL_AFFINITIES, asId, assertNever, canLearn, type Person, type SceneSite, type SpellbookId } from '@ed/schema';
+import { ALL_AFFINITIES, ProseModeS, asId, assertNever, canLearn, type Person, type ProseMode, type SceneSite, type SpellbookId } from '@ed/schema';
 import { DEBT_FLOOR, economyReading } from './economy.js';
 import { rollDeath } from './people/demography.js';
 import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
@@ -24,6 +24,7 @@ import { attr } from './people/factory.js';
 import { newGame, resumeGame } from './session.js';
 import { replay } from './replay.js';
 import { commitOutcome, queueChoice, resolveChoice } from './events/decisions.js';
+import { applyEffect } from './events/effects.js';
 import { dueArcSteps } from './events/arcs.js';
 import { evalCondition, evalFilter } from './events/conditions.js';
 import { renderBody, resolveSlots } from './events/slots.js';
@@ -44,7 +45,7 @@ const farmSite: SceneSite = { kind: 'parcel', parcel: FARM, slots: ['WARDEN'] };
 describe('one reader, two commitments (#1982)', () => {
   const root = 'the_reader_has_two_rooms';
   const study = 'lesser_workings_of_death';
-  function dilemma(mode: 'original' | 'plainenglish' = 'original') {
+  function dilemma(mode: ProseMode = 'original') {
     const { ctx, infant } = world();
     setProseVariants(ctx, bundle.proseVariants);
     setProseMode(ctx, mode);
@@ -65,7 +66,7 @@ describe('one reader, two commitments (#1982)', () => {
     expect(missingPlainEnglish(f.ctx)).toEqual([]);
     return result.resolved;
   }
-  for (const mode of ['original', 'plainenglish'] as const) {
+  for (const mode of ProseModeS.options) {
     it(`${mode}: keeping the book assigns no care; the return keeps this exact person and page`, () => {
       const f = dilemma(mode);
       const result = answer(f, 'keep_the_book_open');
@@ -131,12 +132,16 @@ describe('one reader, two commitments (#1982)', () => {
     expect(canonical({ ...saveGame(f.ctx), savedAt: '' })).toBe(before);
     expect(answer(f, 'keep_the_book_open').outcome.id).toBe('reading_kept');
   });
-  it.each(['dead', 'captive'] as const)('closes personal care when the reader is %s and returns without a replacement', (fate) => {
+  it.each(['dead', 'captive', 'missing'] as const)('closes personal care when the reader is %s and returns without a replacement', (fate) => {
     const f = dilemma();
     answer(f);
     f.ctx.world.year = f.began + 1;
-    if (fate === 'dead') f.ctx.world.people.kill(f.p.id, f.ctx.world.year, 'test');
-    else expect(captureFamily(f.ctx, f.p.id, 'house_marrow', 50)).toBe(true);
+    switch (fate) {
+      case 'dead': f.ctx.world.people.kill(f.p.id, f.ctx.world.year, 'test'); break;
+      case 'captive': expect(captureFamily(f.ctx, f.p.id, 'house_marrow', 50)).toBe(true); break;
+      case 'missing': applyEffect({ kind: 'status', target: { slot: 'READER' }, status: 'missing' }, f.ctx, f.fill); break;
+      default: assertNever(fate);
+    }
     phase('mystic', f.ctx);
     expect(lifeCareFor(f.ctx, f.infant)).toBeUndefined();
     expect(f.ctx.world.studies).toEqual([]);
@@ -146,9 +151,10 @@ describe('one reader, two commitments (#1982)', () => {
     const step = dueArcSteps(f.ctx, makeRng(1982)).find(s => s.instance.arc.includes(root))!;
     expect(step).toBeDefined();
     expect(step.fill.READER).toBe(f.p.id);
-    expect(step.absent).toBe(fate === 'dead');
+    expect(step.absent).toBe(fate !== 'captive');
     const returned = f.ctx.content.mustEvent(step.node.event);
     expect(renderBody(step.absent ? returned.absentBody! : returned.body, step.fill, f.ctx)).not.toMatch(/\{READER/);
+    if (fate === 'missing') expect(returned.absentBody).not.toMatch(/\bdead\b/);
   });
   it('does not let the old return release a new duty after an early withdrawal', () => {
     const f = dilemma();

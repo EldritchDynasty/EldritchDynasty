@@ -123,12 +123,23 @@ describe('the carried genomic expression (#1641)', () => {
       const alleles = ctx.genetics.table.xAlleles[i]!;
       g.sex[0][i] = alleles.reduce((best, a, at) => a.effect > alleles[best]!.effect ? at : best, 0);
     }
+    for (const i of ctx.genetics.table.channelIndices) {
+      const alleles = ctx.genetics.table.autosomalAlleles[i]!;
+      const least = alleles.reduce((best, a, at) => a.effect < alleles[best]!.effect ? at : best, 0);
+      g.autosomal[0][i] = least;
+      g.autosomal[1][i] = least;
+    }
     p.phenotype = undefined;
     const ph = phenotypeOf(p, ctx.genetics, ctx.world.year);
     expect(ph.eldritch.canExpress).toBe(true);
+    // Build overflow and an unclamped adult body; no fortunate genome is needed.
+    p.acquired.strength = -(ph.attrs.get('strength') ?? 0);
+    p.acquired.max_age = 400;
     p.madness = (ph.attrs.get('mind') ?? 0) + 20;
     ph.dirty = true;
     const before = phenotypeOf(p, ctx.genetics, ctx.world.year).attrs.get('health')!;
+    expect(before).toBeGreaterThan(0);
+    expect(before).toBeLessThan(100);
     if (source === 'annual') expect(accrueMadness(p, ctx.genetics, ctx.world.year)).toBeGreaterThan(0);
     else applyEffect({ kind: 'madness', target: { slot: 'P' }, delta: 4 }, ctx, { P: p.id });
     expect(cached(p, ctx)).toEqual(fresh(p, ctx));

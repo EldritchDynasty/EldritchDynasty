@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { EventTemplateS, SlotSpecS, indexContent, outcomesOf, type ContentBundle } from '@ed/schema';
+import { EffectS, EventTemplateS, SlotSpecS, indexContent, outcomesOf, type ContentBundle } from '@ed/schema';
 import { playGateBatch } from './tools/gate-batch.js';
 import {
   COMMAND_GATES, GATES, TELEMETRY_GATES, LANES, gateHost, gateTimingJson, gatesInLane, gatesInLaneAfterReuse, laneMatrix,
@@ -236,7 +236,7 @@ describe('the gates pass the shipped game', () => {
     const { ok, lines } = gateVocabularyReach(content, { runs: 2, years: 5 });
     const out = lines.join('\n');
     expect(ok, out).toBe(true);
-    expect(out).toMatch(/30 Effect kinds — 30 authored/);
+    expect(out).toContain(`${EffectS.options.length} Effect kinds — ${EffectS.options.length} authored`);
     expect(out).not.toContain('owed, and pinned');
   });
 
@@ -246,7 +246,7 @@ describe('the gates pass the shipped game', () => {
     const { ok, lines } = gateVocabularyReachTelemetry(content, { runs: 2, years: 5 });
     const out = lines.join('\n');
     expect(ok, out).toBe(true);
-    expect(out).toMatch(/30 Effect kinds — 30 authored/);
+    expect(out).toContain(`${EffectS.options.length} Effect kinds — ${EffectS.options.length} authored`);
     expect(out).not.toContain('owed, and pinned');
     expect(out).not.toContain('schedule is authored now');
   });
@@ -960,6 +960,8 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
    * hierophant share rose (9.8% to 21.3%) and the 32-run gate still passed.
    * 4×400, 4×500 and 6×400 do not carry it; 12×300 does.
    */
+  // Reduced cohorts below exercise verdict branches. The affirmative shipped
+  // population check uses the configured cohort in ladder.slow.test.ts.
   const cheap = { runs: 12, years: 300, every: 50 } as const;
   /**
    * Four of the same runs, sampled half as often. The three tests that hand the
@@ -1000,43 +1002,6 @@ describe('gate 9 asks whether anybody can clear the ladder', () => {
     expect(ladderPolicyMatrix(content, options)).toEqual(first);
   });
 
-  it('passes the shipped ladder, and says what share clears each floor', () => {
-    const { ok, lines } = gateLadderScales(content, cheap);
-    const out = lines.join('\n');
-    expect(ok, out).toBe(true);
-    expect(out).toMatch(/wants mind 70/);
-    expect(out).toMatch(/#378 diagnostic — sampled Madness by progression route/);
-    expect(out).toMatch(/none\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
-    expect(out).toMatch(/vessel\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
-    expect(out).toMatch(/great_rite\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
-    expect(out).toMatch(/unmaking\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
-    expect(out).toMatch(/#378 diagnostic — resolved Madness-progression decisions across batch/);
-    for (const event of [
-      'the_drowning',
-      'the_vessel_rite',
-      'the_great_rite',
-      'the_second_name',
-      'the_second_widening',
-      'the_unmaking',
-    ]) {
-      expect(out).toMatch(new RegExp(`${event}\\s+resolved\\s+\\d+ ·`));
-    }
-    expect(out).toMatch(/#378 diagnostic — top distinct sampled Madness holders per run/);
-
-    // The diagnostic must not let one long-lived man occupy all three rows
-    // merely because the 25/50-year sampler saw him repeatedly.
-    for (const seed of [5000, 5007]) {
-      const rows = lines.filter((line) => line.includes(`seed ${seed} #`));
-      const ids = rows.map((line) => /\bid ([^ ]+)/.exec(line)?.[1]);
-      expect(rows.length, `no Madness provenance rows for seed ${seed}`).toBeGreaterThan(0);
-      expect(ids.every(Boolean), `seed ${seed} emitted a provenance row without a person id`).toBe(true);
-      expect(new Set(ids).size, `seed ${seed} repeated one holder in its top rows`).toBe(ids.length);
-    }
-  });
-
-  // Straight after the shipped-ladder test, on purpose: gate 9 memoizes ONE
-  // batch, and `uncapped` in between would evict the twelve-run `cheap` batch
-  // and make this replay it.
   it('reports the real power floors it is judging', () => {
     const { lines } = gateLadderScales(content, cheap);
     expect(lines.join('\n')).toMatch(/wants power 50/);

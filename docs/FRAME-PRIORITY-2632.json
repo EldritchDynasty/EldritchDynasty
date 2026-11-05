@@ -1,0 +1,1102 @@
+{
+  "version": 1,
+  "date": "2026-11-06",
+  "runtime": "4da4cd1f",
+  "campaign": "short",
+  "seedStart": 198700,
+  "seedStep": 1,
+  "runsPerPolicy": 400,
+  "method": "Same current runtime in all three columns. Control removes the three commitment events and the omission priority marker. Priority removes only the three events. Combined is the candidate. A return cites the exact first altered page, with first-Omit houses as denominator; median is among returns. Interlude mix includes all 400 houses per column, including early line breaks.",
+  "columns": [
+    {
+      "variant": "control",
+      "policy": "chronicler",
+      "runs": 400,
+      "omitSources": 206,
+      "interludeReturns": 146,
+      "medianYears": 39,
+      "within25": 52,
+      "missedBroken": 12,
+      "missedTerm": 48,
+      "noInterlude": 4,
+      "totalInterludes": 1642,
+      "interludeMix": [
+        {
+          "event": "frame_the_grates_and_the_hour",
+          "count": 362,
+          "perRun": 0.905
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 292,
+          "perRun": 0.73
+        },
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 259,
+          "perRun": 0.6475
+        },
+        {
+          "event": "frame_the_hour_the_clocks_agree",
+          "count": 221,
+          "perRun": 0.5525
+        },
+        {
+          "event": "frame_what_the_table_was",
+          "count": 184,
+          "perRun": 0.46
+        },
+        {
+          "event": "frame_the_ninth_name_unspoken",
+          "count": 97,
+          "perRun": 0.2425
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 48,
+          "perRun": 0.12
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 36,
+          "perRun": 0.09
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 22,
+          "perRun": 0.055
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 22,
+          "perRun": 0.055
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 20,
+          "perRun": 0.05
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 17,
+          "perRun": 0.0425
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 11,
+          "perRun": 0.0275
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 10,
+          "perRun": 0.025
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 5,
+          "perRun": 0.0125
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_rule_of_two",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_keeping_of_it",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-control.json",
+      "sha256": "659c1cc4c93cd19797ca3d11f9bf42f6764d2b7c0012a40ae69bb0ea1611b36e"
+    },
+    {
+      "variant": "control",
+      "policy": "omit",
+      "runs": 400,
+      "omitSources": 399,
+      "interludeReturns": 373,
+      "medianYears": 27,
+      "within25": 183,
+      "missedBroken": 26,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1488,
+      "interludeMix": [
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 650,
+          "perRun": 1.625
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 522,
+          "perRun": 1.305
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 83,
+          "perRun": 0.2075
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 48,
+          "perRun": 0.12
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 30,
+          "perRun": 0.075
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 29,
+          "perRun": 0.0725
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 27,
+          "perRun": 0.0675
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 27,
+          "perRun": 0.0675
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 22,
+          "perRun": 0.055
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 7,
+          "perRun": 0.0175
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_read_out_in_a_hall_at_cawdry",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 2,
+          "perRun": 0.005
+        }
+      ],
+      "rawFile": "current-frame-control.json",
+      "sha256": "659c1cc4c93cd19797ca3d11f9bf42f6764d2b7c0012a40ae69bb0ea1611b36e"
+    },
+    {
+      "variant": "control",
+      "policy": "embellish",
+      "runs": 400,
+      "omitSources": 0,
+      "interludeReturns": 0,
+      "medianYears": null,
+      "within25": 0,
+      "missedBroken": 0,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1406,
+      "interludeMix": [
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 927,
+          "perRun": 2.3175
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 99,
+          "perRun": 0.2475
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 58,
+          "perRun": 0.145
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 40,
+          "perRun": 0.1
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 37,
+          "perRun": 0.0925
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 34,
+          "perRun": 0.085
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 29,
+          "perRun": 0.0725
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 28,
+          "perRun": 0.07
+        },
+        {
+          "event": "frame_the_keeping_of_it",
+          "count": 20,
+          "perRun": 0.05
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 17,
+          "perRun": 0.0425
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 13,
+          "perRun": 0.0325
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_nine_libraries",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_rule_of_two",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_two_of_three",
+          "count": 1,
+          "perRun": 0.0025
+        },
+        {
+          "event": "frame_read_out_in_a_hall_at_cawdry",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-control.json",
+      "sha256": "659c1cc4c93cd19797ca3d11f9bf42f6764d2b7c0012a40ae69bb0ea1611b36e"
+    },
+    {
+      "variant": "priority",
+      "policy": "chronicler",
+      "runs": 400,
+      "omitSources": 206,
+      "interludeReturns": 201,
+      "medianYears": 28,
+      "within25": 95,
+      "missedBroken": 3,
+      "missedTerm": 2,
+      "noInterlude": 4,
+      "totalInterludes": 1642,
+      "interludeMix": [
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 493,
+          "perRun": 1.2325
+        },
+        {
+          "event": "frame_the_grates_and_the_hour",
+          "count": 318,
+          "perRun": 0.795
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 255,
+          "perRun": 0.6375
+        },
+        {
+          "event": "frame_the_hour_the_clocks_agree",
+          "count": 194,
+          "perRun": 0.485
+        },
+        {
+          "event": "frame_what_the_table_was",
+          "count": 140,
+          "perRun": 0.35
+        },
+        {
+          "event": "frame_the_ninth_name_unspoken",
+          "count": 71,
+          "perRun": 0.1775
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 31,
+          "perRun": 0.0775
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 28,
+          "perRun": 0.07
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 13,
+          "perRun": 0.0325
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 11,
+          "perRun": 0.0275
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_rule_of_two",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-priority.json",
+      "sha256": "92ba236f8f7debb8c7a013ff1b8523cd70580b844dc7992660cd524336719236"
+    },
+    {
+      "variant": "priority",
+      "policy": "omit",
+      "runs": 400,
+      "omitSources": 399,
+      "interludeReturns": 386,
+      "medianYears": 20.5,
+      "within25": 216,
+      "missedBroken": 13,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1489,
+      "interludeMix": [
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 724,
+          "perRun": 1.81
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 494,
+          "perRun": 1.235
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 70,
+          "perRun": 0.175
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 44,
+          "perRun": 0.11
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 26,
+          "perRun": 0.065
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 25,
+          "perRun": 0.0625
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 24,
+          "perRun": 0.06
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 21,
+          "perRun": 0.0525
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 3,
+          "perRun": 0.0075
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_read_out_in_a_hall_at_cawdry",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-priority.json",
+      "sha256": "92ba236f8f7debb8c7a013ff1b8523cd70580b844dc7992660cd524336719236"
+    },
+    {
+      "variant": "priority",
+      "policy": "embellish",
+      "runs": 400,
+      "omitSources": 0,
+      "interludeReturns": 0,
+      "medianYears": null,
+      "within25": 0,
+      "missedBroken": 0,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1406,
+      "interludeMix": [
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 927,
+          "perRun": 2.3175
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 99,
+          "perRun": 0.2475
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 58,
+          "perRun": 0.145
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 40,
+          "perRun": 0.1
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 37,
+          "perRun": 0.0925
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 34,
+          "perRun": 0.085
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 29,
+          "perRun": 0.0725
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 28,
+          "perRun": 0.07
+        },
+        {
+          "event": "frame_the_keeping_of_it",
+          "count": 20,
+          "perRun": 0.05
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 18,
+          "perRun": 0.045
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 17,
+          "perRun": 0.0425
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 13,
+          "perRun": 0.0325
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_nine_libraries",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_rule_of_two",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_two_of_three",
+          "count": 1,
+          "perRun": 0.0025
+        },
+        {
+          "event": "frame_read_out_in_a_hall_at_cawdry",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-priority.json",
+      "sha256": "92ba236f8f7debb8c7a013ff1b8523cd70580b844dc7992660cd524336719236"
+    },
+    {
+      "variant": "combined",
+      "policy": "chronicler",
+      "runs": 400,
+      "omitSources": 208,
+      "interludeReturns": 203,
+      "medianYears": 28,
+      "within25": 93,
+      "missedBroken": 5,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1611,
+      "interludeMix": [
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 484,
+          "perRun": 1.21
+        },
+        {
+          "event": "frame_the_grates_and_the_hour",
+          "count": 320,
+          "perRun": 0.8
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 264,
+          "perRun": 0.66
+        },
+        {
+          "event": "frame_the_hour_the_clocks_agree",
+          "count": 190,
+          "perRun": 0.475
+        },
+        {
+          "event": "frame_what_the_table_was",
+          "count": 120,
+          "perRun": 0.3
+        },
+        {
+          "event": "frame_the_ninth_name_unspoken",
+          "count": 82,
+          "perRun": 0.205
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 39,
+          "perRun": 0.0975
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 20,
+          "perRun": 0.05
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 11,
+          "perRun": 0.0275
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 10,
+          "perRun": 0.025
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 10,
+          "perRun": 0.025
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 8,
+          "perRun": 0.02
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 6,
+          "perRun": 0.015
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 1,
+          "perRun": 0.0025
+        },
+        {
+          "event": "frame_read_out_in_a_hall_at_cawdry",
+          "count": 1,
+          "perRun": 0.0025
+        },
+        {
+          "event": "frame_the_keeping_of_it",
+          "count": 1,
+          "perRun": 0.0025
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-combined.json",
+      "sha256": "ebb3e2a51f91759198e0f7772cfd8eabf13782e4e3e44252ceff9bde4e3564a5"
+    },
+    {
+      "variant": "combined",
+      "policy": "omit",
+      "runs": 400,
+      "omitSources": 398,
+      "interludeReturns": 389,
+      "medianYears": 20,
+      "within25": 220,
+      "missedBroken": 9,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1468,
+      "interludeMix": [
+        {
+          "event": "frame_the_page_he_does_not_turn",
+          "count": 717,
+          "perRun": 1.7925
+        },
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 508,
+          "perRun": 1.27
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 63,
+          "perRun": 0.1575
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 29,
+          "perRun": 0.0725
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 26,
+          "perRun": 0.065
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 22,
+          "perRun": 0.055
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 21,
+          "perRun": 0.0525
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 19,
+          "perRun": 0.0475
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 12,
+          "perRun": 0.03
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 12,
+          "perRun": 0.03
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 7,
+          "perRun": 0.0175
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 5,
+          "perRun": 0.0125
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 2,
+          "perRun": 0.005
+        },
+        {
+          "event": "frame_the_missing_third_returns",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-combined.json",
+      "sha256": "ebb3e2a51f91759198e0f7772cfd8eabf13782e4e3e44252ceff9bde4e3564a5"
+    },
+    {
+      "variant": "combined",
+      "policy": "embellish",
+      "runs": 400,
+      "omitSources": 0,
+      "interludeReturns": 0,
+      "medianYears": null,
+      "within25": 0,
+      "missedBroken": 0,
+      "missedTerm": 0,
+      "noInterlude": 4,
+      "totalInterludes": 1368,
+      "interludeMix": [
+        {
+          "event": "frame_the_weight_of_a_sentence",
+          "count": 953,
+          "perRun": 2.3825
+        },
+        {
+          "event": "frame_the_long_gallery",
+          "count": 89,
+          "perRun": 0.2225
+        },
+        {
+          "event": "frame_the_short_minute",
+          "count": 45,
+          "perRun": 0.1125
+        },
+        {
+          "event": "frame_the_seal_still_west",
+          "count": 34,
+          "perRun": 0.085
+        },
+        {
+          "event": "frame_the_west_house_again",
+          "count": 31,
+          "perRun": 0.0775
+        },
+        {
+          "event": "frame_the_copy_that_was_short",
+          "count": 30,
+          "perRun": 0.075
+        },
+        {
+          "event": "frame_the_northern_house",
+          "count": 24,
+          "perRun": 0.06
+        },
+        {
+          "event": "frame_the_cost_not_written",
+          "count": 23,
+          "perRun": 0.0575
+        },
+        {
+          "event": "frame_the_drowning_remembered",
+          "count": 22,
+          "perRun": 0.055
+        },
+        {
+          "event": "frame_nothing_worth_the_ink",
+          "count": 19,
+          "perRun": 0.0475
+        },
+        {
+          "event": "frame_the_bought_silence",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_the_keeping_of_it",
+          "count": 16,
+          "perRun": 0.04
+        },
+        {
+          "event": "frame_what_the_ring_cost",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_what_the_ledger_says_of_the_seal",
+          "count": 14,
+          "perRun": 0.035
+        },
+        {
+          "event": "frame_the_second_time",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_the_rule_of_two",
+          "count": 9,
+          "perRun": 0.0225
+        },
+        {
+          "event": "frame_one_word_and_eight_days",
+          "count": 7,
+          "perRun": 0.0175
+        },
+        {
+          "event": "frame_the_short_account",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_nine_libraries",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_index_in_another_hand",
+          "count": 4,
+          "perRun": 0.01
+        },
+        {
+          "event": "frame_the_missing_third_returns",
+          "count": 1,
+          "perRun": 0.0025
+        }
+      ],
+      "rawFile": "current-frame-combined.json",
+      "sha256": "ebb3e2a51f91759198e0f7772cfd8eabf13782e4e3e44252ceff9bde4e3564a5"
+    }
+  ],
+  "finalAuthoredContentHash": "9db37e60e01ee82c08bfa012aacd525d535108e24eb90aede91d2a97f59d7cc7",
+  "postMeasurementNote": "After measurement, two prose-only fields were clarified: leaving existing commitments is coherent on a stale docket, and an absent reader is not asserted dead. Original/Plain English fingerprints were reviewed together. No weights, eligibility, delays, effects, IDs or policy changed. Later authoring validation rejects unsupported finite-duty contexts. Exact final-head preflight/CI validates these changes."
+}
