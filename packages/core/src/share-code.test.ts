@@ -162,6 +162,31 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       .toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['friends'] } });
   });
 
+  it('refuses invalid host-supplied name types before constructing a new run', () => {
+    // Host plugins, saved deep links and JavaScript callers are not constrained
+    // by the TypeScript SharedNames interface. A malformed value must not
+    // throw during .trim() or silently become an incomplete founding.
+    const code = codeOf(founded());
+    const invalid = [
+      { house: 42, friends: SIGNED.friends.map((friend) => friend.name) },
+      { house: SIGNED.houseName, friends: ['Iona Vale', 3, 'Edda Rook'] },
+      { founder: { value: 'Maud' }, house: SIGNED.houseName },
+      { house: SIGNED.houseName, friends: Array.from({ length: MAX_FRIENDS + 1 }, (_, i) => `Friend ${i}`) },
+      ['not', 'an', 'object'],
+      null,
+    ];
+    for (const names of invalid) {
+      expect(() => newGameFromShareCode(code, content, { build: BUILD, names: names as never })).not.toThrow();
+      expect(newGameFromShareCode(code, content, { build: BUILD, names: names as never }))
+        .toEqual({ ok: false, problem: { kind: 'refused', reason: 'Share-code names must be text, with no more than five friends.' } });
+    }
+    const accepted = newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: { founder: SIGNED.founder.name, house: SIGNED.houseName, friends: SIGNED.friends.map((friend) => friend.name) },
+    });
+    expect(accepted.ok && saved(accepted.session)).toBe(saved(founded()));
+  });
+
   it('asks for a missing house name when the supplied name is invisible-only (#1995)', () => {
     const code = codeOf(founded()); // An anonymous code still needs a visible house name.
     const friends = SIGNED.friends.map((friend) => friend.name);
