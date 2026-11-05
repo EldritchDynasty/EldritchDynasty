@@ -161,9 +161,10 @@ function currentFamilyConnections(builders: Map<string, Builder>, ctx: SimCtx): 
       .filter((m) => String(m.house) === w.playerHouse && m.kind === 'married_in' && m.from <= w.year)
       .sort((a, b) => a.from - b.from)[0];
     if (!joined) continue;
-    const connected = person.status === 'alive' || (person.died !== undefined && person.died > w.year)
-      || w.people.children(person.id).some((child) => child.born <= w.year
-        && (child.status === 'alive' || (child.died !== undefined && child.died > w.year)));
+    const living = (p: typeof person) => (p.died === undefined || p.died > w.year)
+      && (p.status === 'alive' || (p.died !== undefined && p.died > w.year));
+    const connected = living(person)
+      || w.people.children(person.id).some((child) => child.born <= w.year && living(child));
     if (!connected) continue;
     addFact(builders, ctx, house, {
       kind: 'family',
@@ -186,7 +187,8 @@ function recentOutcomeHistory(builders: Map<string, Builder>, ctx: SimCtx): void
   const floor = w.year - RECENT_CONTACT_YEARS;
   for (let i = w.decisionLog.length - 1; i >= 0; i -= 1) {
     const logged = w.decisionLog[i]!;
-    if (logged.year < floor) break;
+    // Imported logs need not retain chronological storage order.
+    if (logged.year < floor || logged.year > w.year) continue;
     if (logged.kind !== 'outcome') continue;
     const event = ctx.content.event(logged.event);
     if (!event?.purposes.includes('change_relationship')) continue;
