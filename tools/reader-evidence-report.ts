@@ -133,8 +133,8 @@ function validatedEvents(input: unknown, index: number): {
     previous = event.at;
   }
   const events = artifact.events as ReadingLogEvent[];
-  const final = events[events.length - 1];
-  if (final.kind !== 'end' || !['exported', 'stopped', 'unloaded'].includes(final.reason)) {
+  const final = events.at(-1);
+  if (!final || final.kind !== 'end' || !['exported', 'stopped', 'unloaded'].includes(final.reason)) {
     fail('missing terminal event; cannot infer exposure after the last event');
   }
   if (events.slice(0, -1).some((e) => e.kind === 'end')) fail('multiple terminal events');
