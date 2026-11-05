@@ -144,6 +144,35 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(imported.ok && saved(imported.session)).toBe(saved(original));
   });
 
+  it('keeps a complete named founding authoritative over unused recipient founder input (#3039)', () => {
+    for (const name of [undefined, '', '   ', 'Maud Gearithy']) {
+      const original = founded({
+        ...SIGNED,
+        founder: {
+          gender: 'woman', configuration: 'blood_mother',
+          ...(name !== undefined ? { name } : {}),
+        },
+      });
+      const code = codeOf(original, { names: true });
+      const read = readShareCode(code, content, { build: BUILD });
+      expect(read.ok && read.founding.missing).toEqual([]);
+      const continued = resumeGame(original.save(), content);
+      continued.advance(1);
+      for (const stale of ['Previous Founder', '\u200B', 'N'.repeat(PERSON_NAME_MAX + 1)]) {
+        const imported = newGameFromShareCode(code, content, { build: BUILD, names: { founder: stale } });
+        expect(imported.ok).toBe(true);
+        if (!imported.ok) continue;
+        expect(saved(imported.session)).toBe(saved(original));
+        const resumed = resumeGame(imported.session.save(), content);
+        expect(saved(resumed)).toBe(saved(original));
+        imported.session.advance(1);
+        resumed.advance(1);
+        expect(saved(imported.session)).toBe(saved(continued));
+        expect(saved(imported.session)).toBe(saved(resumed));
+      }
+    }
+  });
+
   it('leaves every typed name out unless asked, and says which the recipient supplies', () => {
     const code = codeOf(founded());
     const payload = payloadOf(code);

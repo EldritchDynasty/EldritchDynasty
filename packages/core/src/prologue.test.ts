@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import { HouseIdS, proseOriginalAt, proseOriginalHash, type SigningTerm } from '@ed/schema';
 import {
-  CAMPAIGNS, HOUSE_NAME_MAX, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
+  CAMPAIGNS, HOUSE_NAME_MAX, canonical, foundHouse, grudgeAgainstUs, heldHeirlooms, loadGame, newGame,
   missingPlainEnglish, prologueView, resumeGame, saveGame, setProseMode, setProseVariants, testWorld, viewOf,
   type SimCtx,
 } from '@ed/core';
@@ -62,6 +62,39 @@ function examinationBundle(given: SigningTerm[], owed: SigningTerm[]) {
  * a field nothing reads, and looks exactly like a prologue that works.
  */
 describe('the prologue', () => {
+  for (const proseMode of ['original', 'plainenglish'] as const) {
+    it(`detaches the entire founded read in fresh and resumed ${proseMode} sessions (#3040)`, () => {
+      const original = newGame(content, { seed: 3040, proseMode });
+      const offered = original.prologue()!;
+      const answers = Object.fromEntries(offered.examination.map((q) => [q.id, q.answers[0]!.id]));
+      expect(original.found({
+        ...CHOICE, answers, friends: [{ name: 'A friend', sex: 'female' }],
+      }).ok).toBe(true);
+      for (const game of [original, resumeGame(original.save(), content, { proseMode })]) {
+        const read = game.prologue()!;
+        const expected = structuredClone(read);
+        const before = canonical(game.save());
+        const code = game.shareCode({ names: true });
+        expect(code.ok).toBe(true);
+        const question = read.examination[0]!;
+        expect(read.founded).not.toHaveProperty('answers');
+        read.founded!.houseName = 'A local draft';
+        read.friends![0]!.name = 'A local friend';
+        question.answers[0]!.says = 'A local answer';
+        read.triad[0]!.given = 'A local beginning';
+        read.heirlooms[0]!.name = 'A local heirloom';
+        read.grudges[0]!.houseName = 'A local rival';
+
+        expect(game.prologue()).toEqual(expected);
+        expect(canonical(game.save())).toBe(before);
+        expect(game.shareCode({ names: true })).toEqual(code);
+        const retained = structuredClone(read);
+        game.ctx.world.founding!.answers[question.id] = 'a_later_world_answer';
+        expect(read).toEqual(retained);
+      }
+    });
+  }
+
   it('offers the triad, both choices, and the objects behind them', () => {
     const view = prologueView(testWorld(content))!;
 

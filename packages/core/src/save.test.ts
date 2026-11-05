@@ -10,10 +10,26 @@ import { pendingArc as buildPendingArc } from './fixtures/pending-arc.fixture.js
 import {
   CAMPAIGNS, END_YEAR, LIBRARY_VOICE_FORMS, addGrudge, beget, bootstrap, closeTheLedger, digest, digestOf, foundHouse, libraryClaimsContradict, libraryRunOf, loadGame, place, replay, runYears,
   saveGame, SaveFormatError, stepYear, viewOf, order, resolveChoice, resolveRecord, testRng,
-  canonical, commitOutcome, dueArcSteps, queueChoice, startArc, testWorld,
+  canonical, commitOutcome, dueArcSteps, newGame, queueChoice, resumeGame, startArc, testWorld,
 } from '@ed/core';
 
 const content = loadContent();
+
+/** Follow object identity through the runtime graph, including Maps/Sets. */
+function objectPaths(root: unknown): Map<object, string> {
+  const paths = new Map<object, string>();
+  const visit = (value: unknown, path: string): void => {
+    if (!value || typeof value !== 'object' || paths.has(value)) return;
+    paths.set(value, path);
+    if (value instanceof Map || value instanceof Set) {
+      [...value.entries()].forEach((entry, index) => visit(entry, `${path}[${index}]`));
+    } else {
+      for (const [key, child] of Object.entries(value)) visit(child, `${path}.${key}`);
+    }
+  };
+  visit(root, '$');
+  return paths;
+}
 
 /**
  * A PLAYTHROUGH IS TEN HOURS AND HAD NO SAVE.
@@ -25,6 +41,49 @@ const content = loadContent();
  * healthy.
  */
 describe('a run survives being written down', () => {
+  it('shares no mutable objects with the live world, pending content or another save (#3041)', () => {
+    const { ctx, pending } = buildPendingArc(content);
+    expect(pending.kind).toBe('choice');
+    const live = objectPaths([ctx.world, ...ctx.world.people.all()]);
+    const saved = saveGame(ctx);
+    const paths = objectPaths(saved);
+    const shared = [...paths].filter(([object]) => live.has(object)).map(([, path]) => path);
+    expect(shared).toEqual([]);
+    const other = objectPaths(saveGame(ctx));
+    expect([...other].filter(([object]) => paths.has(object)).map(([, path]) => path)).toEqual([]);
+  });
+
+  it('keeps a saved public session fixed through later play and isolates host edits (#3041)', () => {
+    const game = newGame(content, { seed: 3041, campaign: 'short', decider: 'chronicler' });
+    const signing = game.prologue()!;
+    expect(game.found({
+      houseName: 'House Snapshot', heirloom: signing.heirlooms[0]!.heirloom,
+      grudge: signing.grudges[0]!.house,
+      answers: Object.fromEntries(signing.examination.map((q) => [q.id, q.answers[0]!.id])),
+    }).ok).toBe(true);
+    const saved = game.save();
+    const expected = canonical(saved);
+    const resumed = resumeGame(saved, content, { decider: 'chronicler' });
+    game.advance(2);
+    expect(game.year).toBeGreaterThan(saved.year);
+    expect(canonical(saved)).toBe(expected);
+    expect(canonical(resumed.save())).toBe(expected);
+    resumed.advance(2);
+    expect(canonical(resumed.save())).toBe(canonical(game.save()));
+    const replayed = replay(content, saved.decisionLog, saved.seed, saved.year, 0, saved.campaign);
+    expect(canonical(saveGame(replayed))).toBe(expected);
+
+    const live = canonical(game.save());
+    const person = saved.people[0]!;
+    person.acquired.mind = 999;
+    person.awakening.awakened = !person.awakening.awakened;
+    person.membership[0]!.from -= 1;
+    saved.chronicle[0]!.text = 'A host edited an old snapshot';
+    saved.counters.person += 100;
+    saved.decisionLog.length = 0;
+    expect(canonical(game.save())).toBe(live);
+  });
+
   /**
    * The saved format is a contract, not merely a number. This fixture makes a
    * version bump deliberate: `SAVE_FORMAT` can move only alongside a save

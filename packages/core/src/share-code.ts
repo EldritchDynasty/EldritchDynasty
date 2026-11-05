@@ -569,6 +569,10 @@ export function newGameFromShareCode(
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
   const given = parsedNames.data;
+  // A complete named code also owns an absent founder-name answer. Only an
+  // anonymous code asks the recipient for one; stale input must neither change
+  // that complete founding nor cause its unused name to fail validation (#3039).
+  const recipientFounder = f.missing.includes('founder') ? given.founder : undefined;
   // Anonymous codes encode an exact friend roster. Extra supplied names must
   // not disappear silently while the import claims to honour the recipient's
   // founding; this also applies to a code with no friends at all.
@@ -578,8 +582,8 @@ export function newGameFromShareCode(
   // A recipient may leave the founder answer blank, but not submit an
   // invisible-only name in place of one. Check before newGame so import
   // remains atomic and agrees with staged signing's visible-name rule.
-  if (f.founder && f.founder.name === undefined && given.founder !== undefined) {
-    const supplied = given.founder.trim();
+  if (recipientFounder !== undefined) {
+    const supplied = recipientFounder.trim();
     if (supplied.length > PERSON_NAME_MAX || !validFounderName(supplied)) {
       return { ok: false, problem: { kind: 'invalid_names' } };
     }
@@ -610,7 +614,7 @@ export function newGameFromShareCode(
   // leave blank. An authored founder (no founder payload) is not a missing
   // name: caller-provided, possibly stale input must not turn it into a
   // different signing behind the code's back.
-  const founderName = f.founder?.name ?? given.founder?.trim();
+  const founderName = f.founder?.name ?? recipientFounder?.trim();
   // An explicit empty name is a real signing answer in the decision log:
   // blank leaves the authored person's name, but it is still recorded. A
   // named code must preserve that answer byte-for-byte to reproduce its save.

@@ -3,7 +3,8 @@ import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadBundle, loadContent } from '@ed/content';
-import { ACHIEVEMENT_CATALOG, bootstrap, digestOf, loadGame, runYears, saveGame } from '@ed/core';
+import { ACHIEVEMENT_CATALOG, bootstrap, canonical, digestOf, loadGame, newGame, resumeGame, runYears, saveGame } from '@ed/core';
+import type { SavedGame } from '@ed/schema';
 import { proseOriginalHash } from '@ed/schema';
 import { coreMessageAddress } from '../../core/src/messages.js';
 import { Directory, Encoding } from '@capacitor/filesystem';
@@ -230,6 +231,51 @@ describe('autosave mutation ordering', () => {
     await turnQueue();
 
     expect(host.saves.get('autosave')).toBe(second.save);
+    expect(game.saveStatus.value).toBe('saved');
+  });
+
+  it('retains each complete snapshot while a slow host delays serialization (#3041)', async () => {
+    const content = loadContent();
+    const { host, writes } = deferred();
+    const game = createGame(content, host);
+    const reference = newGame(content, { seed: 3041, campaign: 'short' });
+    game.actions.begin(3041);
+    await turnQueue();
+    expect(writes).toHaveLength(1);
+    const initial = canonical(writes[0]!.save);
+    expect(initial).toBe(canonical(reference.save()));
+
+    const signing = game.prologue.value!;
+    const choice = {
+      houseName: 'House Snapshot', heirloom: signing.heirlooms[0]!.heirloom,
+      grudge: signing.grudges[0]!.house,
+      answers: Object.fromEntries(signing.examination.map((q) => [q.id, q.answers[0]!.id])),
+    };
+    expect(game.actions.found(choice).ok).toBe(true);
+    expect(reference.found(choice).ok).toBe(true);
+    const founded = canonical(reference.save());
+    game.actions.advance(1);
+    reference.advance(1);
+    const advanced = canonical(reference.save());
+
+    // Both later intents are still queued. A native host may serialize only
+    // when its bridge call completes, so even the in-flight value must be fixed.
+    expect(writes).toHaveLength(1);
+    expect(canonical(writes[0]!.save)).toBe(initial);
+    writes[0]!.resolve();
+    await turnQueue();
+    expect(writes).toHaveLength(2);
+    expect(canonical(writes[1]!.save)).toBe(founded);
+    const checkpoint = writes[1]!.save as SavedGame;
+    expect(canonical(resumeGame(checkpoint, content).save())).toBe(founded);
+    expect(checkpoint.decisionLog.every((row) => row.year <= checkpoint.year)).toBe(true);
+    writes[1]!.resolve();
+    await turnQueue();
+    await vi.waitFor(() => expect(writes).toHaveLength(3));
+    expect(canonical(writes[2]!.save)).toBe(advanced);
+    writes[2]!.resolve();
+    await turnQueue();
+    expect(canonical(host.saves.get('autosave'))).toBe(advanced);
     expect(game.saveStatus.value).toBe('saved');
   });
 
