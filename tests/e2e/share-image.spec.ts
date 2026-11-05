@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { loadBundle } from '@ed/content';
-import { newGame, readShareCode } from '@ed/core';
+import { closeTheLedger, newGame, readShareCode } from '@ed/core';
 
 /**
  * THE CODE ON A REAL PLATE (#1995).
@@ -220,6 +220,83 @@ for (const mode of ['original', 'plainenglish'] as const) {
     }
     const read = readShareCode(code, loadBundle());
     if (!read.ok) expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    expect(errors).toEqual([]);
+  });
+}
+
+
+/**
+ * SVG fallback round-trips are covered in share-code.spec.ts; exercise the
+ * ordinary PNG Afterimage path with real Chromium font metrics too (#1995).
+ * Opting into a *named text code* must never change the anonymous image code.
+ */
+function completedAfterimageSave() {
+  const game = newGame(loadBundle(), { seed: 1998, campaign: 'short' });
+  const signing = game.prologue()!;
+  expect(game.found({
+    houseName: 'House Plate',
+    heirloom: signing.heirlooms[0]!.heirloom,
+    grudge: signing.grudges[0]!.house,
+    answers: Object.fromEntries(signing.examination.map(
+      question => [question.id, question.answers[0]!.id])),
+    founder: { name: 'Élodie 雪', gender: 'woman', configuration: 'blood_mother' },
+    friends: [{ name: '蘭花 Vale', sex: 'female' }],
+  }).ok).toBe(true);
+  game.ctx.world.year = game.view().campaign.endYear;
+  closeTheLedger(game.ctx);
+  return game.save();
+}
+
+for (const mode of ['original', 'plainenglish'] as const) {
+  test('Afterimage PNG paints a complete anonymous code within the column (' + mode + ') #1995', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    await page.addInitScript(({ save, mode }) => {
+      localStorage.setItem('ed:save:autosave', JSON.stringify(save));
+      localStorage.setItem('eldritch-dynasty:reading', JSON.stringify({ proseMode: mode }));
+      const painted: Painted[] = [];
+      (window as unknown as { __afterimagePainted: Painted[] }).__afterimagePainted = painted;
+      const fill = CanvasRenderingContext2D.prototype.fillText;
+      CanvasRenderingContext2D.prototype.fillText = function (text: string, x: number, y: number, max?: number) {
+        painted.push({ text, font: this.font, x, width: this.measureText(text).width });
+        return max === undefined ? fill.call(this, text, x, y) : fill.call(this, text, x, y, max);
+      };
+    }, { save: completedAfterimageSave(), mode });
+    await page.goto('/');
+    await page.locator('main.start button.primary').click();
+    await expect(page.locator('main.ending')).toBeVisible();
+
+    const anonymous = await page.locator('#share-code').inputValue();
+    expect(anonymous).toMatch(/^ED1\./);
+    await page.locator('.share-names input').check();
+    expect(await page.locator('#share-code').inputValue()).not.toBe(anonymous);
+
+    const pending = page.waitForEvent('download');
+    await page.getByRole('button', { name: mode === 'plainenglish'
+      ? 'Save ending image' : 'Save the house afterimage', exact: true }).click();
+    expect((await pending).suggestedFilename()).toMatch(/\.png$/);
+
+    const painted = await page.evaluate(() =>
+      (window as unknown as { __afterimagePainted: Painted[] }).__afterimagePainted);
+    const heading = mode === 'plainenglish'
+      ? 'SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)'
+      : 'THE SAME BEGINNING · NAMES WITHHELD';
+    const label = painted.findIndex(row => row.text === heading);
+    expect(label, 'the Afterimage labels its code').toBeGreaterThan(-1);
+    const remainder = painted.slice(label + 1);
+    const footer = remainder.findIndex(row => row.text.startsWith('Eldritch Dynasty ·'));
+    expect(footer, 'the image footer follows the code').toBeGreaterThan(-1);
+    const lines = remainder.slice(0, footer);
+    expect(lines.length).toBeGreaterThan(0);
+    expect(lines.map(row => row.text).join('')).toBe(anonymous);
+
+    for (const line of lines) {
+      expect(line.font).toContain('monospace');
+      expect(line.x + line.width, 'code exceeds image width').toBeLessThanOrEqual(1200 - 64);
+    }
+    const read = readShareCode(anonymous, loadBundle());
+    if (read.ok) expect(read.founding.missing).toEqual(['founder', 'house', 'friends']);
+    else expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
     expect(errors).toEqual([]);
   });
 }
