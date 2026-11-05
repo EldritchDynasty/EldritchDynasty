@@ -695,6 +695,16 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (!founder || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
         || branch.foundedYear - founder.born < CADET_AGE
         || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
+      // A saved charter names its founder, but a recovered membership history
+      // may explicitly place that person under another roof on that date.
+      // Do not turn contradictory evidence into a credited family purpose.
+      // Older saves without membership at the founding year still retain the
+      // charter as their available evidence.
+      const charterMembership = currentMembership(founder, branch.foundedYear);
+      if (charterMembership
+        && (charterMembership.house !== w.playerHouse
+          || charterMembership.branch !== branch.id
+          || (charterMembership.kind !== 'blood' && charterMembership.kind !== 'cadet'))) continue;
       const survivor = family
         .filter((person) => person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
         .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
