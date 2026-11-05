@@ -1181,3 +1181,71 @@ describe('feud recovery chronology (#2981, #2982, #2983)', () => {
     expect(grudge.echoedIn).toBe(ctx.world.year);
   });
 });
+
+
+describe('family quarrel participants and cadet years (#2985)', () => {
+  function grievance(seed: number) {
+    const { ctx, us } = feuding(seed);
+    // Make the Head under test the only Head, as the existing #2860 mechanism test does.
+    for (const p of ctx.world.people.all()) {
+      p.castSlots = p.castSlots.filter((slot) => slot !== 'head');
+    }
+    us.castSlots.push('head');
+    const speaker = place(ctx, { sex: 'male', age: 30, name: 'Aggrieved cadet' });
+    const branch: BranchState = {
+      id: 'br_saved_quarrel' as BranchState['id'], name: 'The saved hall',
+      house: ctx.world.playerHouse as BranchState['house'], founder: speaker.id,
+      splitFrom: 'main', foundedYear: ctx.world.year - 10,
+      speaker: speaker.id, grievance: 90,
+    };
+    ctx.world.branches.set(branch.id, branch);
+    return { ctx, us, speaker, branch };
+  }
+
+  it('does not let an effectively deceased saved Head create a feud (#2985)', () => {
+    const { ctx, us, speaker } = grievance(29851);
+    us.died = ctx.world.year;
+    expect(us.status).toBe('alive');
+    const pages = ctx.world.chronicle.length;
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(0);
+    expect(edge(ctx.world, speaker.id, us.id)).toBeUndefined();
+    expect(ctx.world.chronicle).toHaveLength(pages);
+  });
+
+  it('does not let an effectively deceased saved speaker create a feud (#2985)', () => {
+    const { ctx, us, speaker, branch } = grievance(29852);
+    speaker.died = ctx.world.year;
+    expect(speaker.status).toBe('alive');
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(0);
+    expect(edge(ctx.world, speaker.id, us.id)).toBeUndefined();
+    expect(branch.grievance).toBe(90);
+  });
+
+  it('holds a future-founded cadet quarrel until its actual founding year (#2985)', () => {
+    const { ctx, us, speaker, branch } = grievance(29853);
+    const firstYear = ctx.world.year;
+    branch.foundedYear = firstYear + 3;
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(0);
+    expect(edge(ctx.world, speaker.id, us.id)).toBeUndefined();
+    ctx.world.year = firstYear + 3;
+    expect(tickFamilyQuarrels(ctx)).toHaveLength(1);
+    expect(edge(ctx.world, speaker.id, us.id)?.grudges).toHaveLength(1);
+  });
+
+  it('honours only effective extinction and recall, not their future saved years (#2985)', () => {
+    for (const field of ['extinct', 'recalled'] as const) {
+      const { ctx, us, speaker, branch } = grievance(field === 'extinct' ? 29854 : 29855);
+      branch[field] = ctx.world.year + 3;
+      expect(tickFamilyQuarrels(ctx)).toHaveLength(1);
+      expect(edge(ctx.world, speaker.id, us.id)?.grudges).toHaveLength(1);
+
+      // An independently recovered branch on the effective boundary cannot
+      // begin another quarrel; build it anew to avoid its first standing grudge.
+      const later = grievance(field === 'extinct' ? 29856 : 29857);
+      later.branch[field] = later.ctx.world.year + 3;
+      later.ctx.world.year += 3;
+      expect(tickFamilyQuarrels(later.ctx)).toHaveLength(0);
+      expect(edge(later.ctx.world, later.speaker.id, later.us.id)).toBeUndefined();
+    }
+  });
+});
