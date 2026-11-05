@@ -123,16 +123,20 @@ function validatedEvents(input: unknown, index: number): {
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail('expected an object');
   const artifact = input as Partial<ReadingLogArtifact>;
   if (artifact.format !== READING_LOG_FORMAT) fail('unsupported format; ed-reading-log/12 required');
-  if (typeof artifact.truncated !== 'boolean') fail('missing cap state');
-  if (!Array.isArray(artifact.events) || artifact.events.length < 3
-    || artifact.events.length > READING_LOG_MAX_EVENTS + 1) fail('invalid event count');
+  const truncated = artifact.truncated;
+  if (typeof truncated !== 'boolean') fail('missing cap state');
+  const rawEvents = artifact.events;
+  if (!Array.isArray(rawEvents)) fail('invalid event count');
+  if (rawEvents.length < 3 || rawEvents.length > READING_LOG_MAX_EVENTS + 1) {
+    fail('invalid event count');
+  }
   let previous = 0;
-  for (const event of artifact.events) {
+  for (const event of rawEvents) {
     if (!event || typeof event !== 'object' || typeof event.kind !== 'string'
       || !Number.isFinite(event.at) || event.at < previous) fail('invalid event timeline');
     previous = event.at;
   }
-  const events = artifact.events as ReadingLogEvent[];
+  const events = rawEvents as ReadingLogEvent[];
   const final = events.at(-1);
   if (!final || final.kind !== 'end' || !['exported', 'stopped', 'unloaded'].includes(final.reason)) {
     fail('missing terminal event; cannot infer exposure after the last event');
@@ -141,7 +145,7 @@ function validatedEvents(input: unknown, index: number): {
   const rawSha = artifact.build?.sha;
   const buildSha = typeof rawSha === 'string' && /^[0-9a-f]{7,40}$/i.test(rawSha)
     ? rawSha : 'unknown';
-  return { events, truncated: artifact.truncated, buildSha };
+  return { events, truncated, buildSha };
 }
 
 /**
