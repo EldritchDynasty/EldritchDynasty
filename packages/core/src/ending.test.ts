@@ -1650,6 +1650,50 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
   });
 
+  it('records a different lost hall without assigning it an unproven cause', () => {
+    const { ctx } = foundedHall();
+    const w = ctx.world;
+    const lostBranch = asId('br_ash_hall');
+    const lostFounder = place(ctx, { name: 'Orrin', sex: 'male', age: 68, branch: lostBranch });
+    const lost = {
+      id: lostBranch, house: asId(w.playerHouse), name: 'The Ash Hall',
+      founder: lostFounder.id, splitFrom: MAIN_BRANCH,
+      foundedYear: w.year - 30, extinct: w.year - 7, grievance: 0,
+    };
+    w.branches.set(lostBranch, lost);
+    w.people.kill(lostFounder.id, w.year - 7, 'old age');
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    const expected = { name: 'The Ash Hall', year: w.year - 7 };
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'branch_kept', branch: 'The Orchard Hall', lostHall: expected,
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // The collected book cannot credit losses in the future or before a charter.
+    lost.extinct = w.year + 2;
+    expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
+    lost.extinct = lost.foundedYear - 1;
+    expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
+    lost.extinct = w.year - 7;
+    lost.foundedYear = w.year + 1;
+    expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
+    lost.foundedYear = w.year - 30;
+    lost.house = asId('another-house');
+    expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
+
+    // The ending year, rather than a later save's current year, is the boundary.
+    lost.house = asId(w.playerHouse);
+    w.year += 5;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'branch_kept', lostHall: expected,
+    });
+  });
+
   it('shows only bynames earned by collection for branch founders and survivors', () => {
     const { ctx, founder, relative } = foundedHall();
     const year = ctx.world.year;
