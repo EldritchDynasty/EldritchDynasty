@@ -1095,6 +1095,32 @@ describe('the bed decides when the house may be heard', () => {
     expect(ctx.gains[0]!.gain.value).toBe(0.5);
   });
 
+  it('fails closed on malformed persisted sound preferences from native hosts (#1986)', () => {
+    const { e, page, bed } = bedOnBoard();
+    // Storage bridges can return JSON values that violate their TypeScript seam.
+    // None may throw while Start mounts or open a device after the first gesture.
+    const malformed: unknown[] = [
+      null, undefined, false, 1, 'on', [], {},
+      { on: true }, { on: true, volume: '1' },
+      { on: true, volume: Number.NaN },
+    ];
+    for (const value of malformed) {
+      expect(() => bed.prefer(value as Parameters<SoundBed['prefer']>[0])).not.toThrow();
+      page.fire('win:pointerdown');
+      bed.cue('bell');
+      expect(bed.audible).toBe(false);
+      expect(e.made, 'an invalid preference opened an audio device').toHaveLength(0);
+    }
+
+    // A later valid setting can recover the current Age without remounting.
+    bed.prefer({ on: true, volume: 0.25 });
+    expect(bed.audible).toBe(true);
+    expect(e.made).toHaveLength(1);
+    expect(heldPitches(e.made[0]!)).toEqual(pitchesOf(WARM));
+    expect(e.made[0]!.gains[0]!.gain.value).toBe(0.25);
+    bed.dispose();
+  });
+
   it('treats zero volume as mute without opening a silent audio device', () => {
     const { e, page, bed } = bedOnBoard();
     bed.prefer({ on: true, volume: 0 });
