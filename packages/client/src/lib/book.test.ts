@@ -196,6 +196,20 @@ describe('wrapping', () => {
     expect(svg.indexOf('>First</text>')).toBeLessThan(svg.indexOf('>Second</text>'));
   });
 
+  it('preserves Unicode line and paragraph separators in exported images (#1995)', () => {
+    expect(wrap('First\u2028Second\u2029Third', 'x', 200, monospace))
+      .toEqual(['First', 'Second', 'Third']);
+    // A blank Unicode separator is still a blank paragraph, like a newline.
+    expect(wrap('\u2028', 'x', 200, monospace)).toEqual(['', '']);
+
+    const rows = plateRows([entry({ text: 'First\u2028\u2029Second' })], monospace);
+    expect(rows.map((row) => row.text)).toEqual(['1200', 'First', '', 'Second']);
+    const svg = plateSvg(rows, 'House', 'A chronicle');
+    expect(svg).toContain('>First</text>');
+    expect(svg).toContain('>Second</text>');
+    expect(svg.indexOf('>First</text>')).toBeLessThan(svg.indexOf('>Second</text>'));
+  });
+
   it('splits oversized unbroken tokens so a Chronicle plate does not clip them (#1166)', () => {
     const word = 'supercalifragilistic';
     const rows = wrap(word, 'x', 12, monospace);
