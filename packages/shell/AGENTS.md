@@ -41,6 +41,14 @@ npm run build:mod-editor # Windows Mod Editor (#75): build editor, package the s
                           # Authenticode and refuse to upload unsigned bytes.
 ```
 
+After building the Windows game, run
+`node packages/shell/scripts/windows-player-smoke.mjs` from the repository root
+for the real audio, share-code, clipboard and cold-resume checks (#2996).
+It requires the matching source checkout and creates a private temporary profile;
+`--smoke-player` refuses to start without its profile and nonce. It does not
+enable the native synthetic-command bridge. See
+[the player smoke](../../docs/WINDOWS-PLAYER-SMOKE.md) for evidence and limits.
+
 The three development launch commands go through `scripts/electron.mjs`. Some
 Node-hosted tools export `ELECTRON_RUN_AS_NODE=1` for their own process; passing
 that flag through makes Electron behave as Node and fail before it can create a

@@ -56,6 +56,9 @@ const DEV_SERVER = process.env.ED_DEV_SERVER;
 const MOD_EDITOR = process.env.ED_MOD_EDITOR === '1' || process.argv.includes('--mod-editor');
 const NATIVE_SMOKE = process.argv.includes('--smoke-save') ? 'save'
   : process.argv.includes('--smoke-resume') ? 'resume' : null;
+// Interactive packaged-host checks use the same private-profile requirement,
+// without enabling the synthetic save/resume command transport.
+const PLAYER_SMOKE = process.argv.includes('--smoke-player');
 
 let steamAchievements;
 let steamModuleError;
@@ -86,10 +89,10 @@ if (app.isPackaged) {
   // split the two applications at the filesystem seam they exist to share.
   // The installed-artifact smoke uses a private profile shared across two
   // executable processes. Never let diagnostic runs mutate a player's saves.
-  if (NATIVE_SMOKE && (!process.env.ED_SMOKE_PROFILE || !process.env.ED_SMOKE_NONCE)) {
+  if ((NATIVE_SMOKE || PLAYER_SMOKE) && (!process.env.ED_SMOKE_PROFILE || !process.env.ED_SMOKE_NONCE)) {
     throw new Error('native smoke requires an isolated profile and nonce');
   }
-  const profile = NATIVE_SMOKE
+  const profile = NATIVE_SMOKE || PLAYER_SMOKE
     ? resolve(process.env.ED_SMOKE_PROFILE)
     : desktopUserData(app.getPath('appData'));
   mkdirSync(profile, { recursive: true });
