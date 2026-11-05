@@ -1876,7 +1876,7 @@ describe('same-year campaigns and signing observation (#1984)', () => {
       await answerFounder(wrapper, 0, 'Daveed');
       await continueSigning(wrapper);
       await answerButton(wrapper, 1).trigger('click');
-      expect(wrapper.get('.examination button.on').exists()).toBe(true);
+      expect(wrapper.find('.examination button.on').exists()).toBe(true);
 
       // The new house has identical authored signing ids and starts in 1042.
       // Neither the year nor a translated label can distinguish its drafts.
