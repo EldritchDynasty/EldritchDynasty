@@ -179,6 +179,27 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(lines.some((entry) => entry.text!.endsWith('The pledge was broken.'))).toBe(true);
   });
 
+  it('reselects a living granddaughter when the reserved girl reaches her recorded death (#2943)', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl: first } = granddaughter(ctx, head, 'First creditor candidate');
+    ctx.world.year += 1;
+    const { girl: second } = granddaughter(ctx, head, 'Living creditor candidate');
+    const deathYear = ctx.world.year + 1;
+
+    // Recovered status can disagree with the historical death date.
+    first.died = deathYear;
+    expect(first.status).toBe('alive');
+    phase('promises', ctx);
+    expect(promise.girl).toBe(first.id); // A death in the future is not a death today.
+
+    ctx.world.year = deathYear;
+    phase('promises', ctx);
+    expect(promise.girl).toBe(second.id);
+    expect(promise.year).toBe(1045); // Reassignment never renews the old debt.
+    expect(first.status).toBe('alive'); // Read the date; do not rewrite the save.
+  });
+
   it('reserves only a future granddaughter named by claimed parentage', () => {
     const { ctx, head, promise } = wonPledge();
     const { girl: sameYear } = granddaughter(ctx, head, 'Before the pledge');
@@ -220,6 +241,28 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(ctx.world.chronicle.some((e) => e.text?.includes(girl.name) && e.text.includes(groom.name)
       && e.text.includes(head.name) && e.text.includes(String(promise.year)))).toBe(true);
     expectHealthyWorld(ctx);
+  });
+
+  it('does not wed a creditor granddaughter to a recovered groom whose death is already recorded (#2944)', () => {
+    const { ctx, head, promise } = wonPledge();
+    ctx.world.year += 1;
+    const { girl } = granddaughter(ctx, head);
+    phase('promises', ctx);
+    ctx.world.year = girl.born + 18;
+
+    const deceased = place(ctx, {
+      sex: 'male', age: 35, name: 'Recorded dead groom', house: promise.toHouse,
+    });
+    const surviving = place(ctx, {
+      sex: 'male', age: 25, name: 'Surviving creditor groom', house: promise.toHouse,
+    });
+    deceased.died = ctx.world.year; // Still incorrectly flagged alive in this restored state.
+    expect(deceased.status).toBe('alive');
+
+    phase('promises', ctx);
+    expect(girl.marriages).toEqual([{ spouse: surviving.id, from: ctx.world.year }]);
+    expect(deceased.marriages).toEqual([]);
+    expect(ctx.world.marriagePromises).toEqual([]);
   });
 
   it('mints a creditor groom through the existing template door only when she can marry', () => {
