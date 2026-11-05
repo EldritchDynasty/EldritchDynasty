@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import {
   summarize, type EntryTiming, type ReadingLogArtifact, type ReadingLogEvent,
 } from '../packages/client/src/lib/reading-log.js';
-import { reportReadingLogs } from './reader-evidence-report.js';
+import { reportReadingLogs, type ReaderEvidenceReport } from './reader-evidence-report.js';
 
 /**
  * Research-only reductions of existing consented reading logs (#1945, #1984, #1992).
@@ -51,7 +51,7 @@ export interface CampaignMetrics {
 
 export interface ReaderCohortMetrics {
   format: 'ed-reader-cohort-metrics/1';
-  inputFormat: 'ed-reading-log/12';
+  inputFormat: ReaderEvidenceReport['sourceFormat'];
   inputLogs: number;
   /** Hex build SHAs are retained to identify incompatible builds; no file names or seeds. */
   builds: string[];
@@ -184,7 +184,7 @@ export function reportReaderCohort(inputs: readonly unknown[]): ReaderCohortMetr
   const completeAnswerRows = answerRows.filter((gap) => !gap.censored);
   return {
     format: 'ed-reader-cohort-metrics/1',
-    inputFormat: 'ed-reading-log/12',
+    inputFormat: validated.sourceFormat,
     inputLogs: validated.inputLogs,
     builds,
     mixedBuilds: builds.length > 1,
