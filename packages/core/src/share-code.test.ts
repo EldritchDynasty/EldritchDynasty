@@ -689,6 +689,7 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
       { ...original, houseName: 'Another House' },
       { ...original, heirloom: 'portion_of_agelessness' },
       { ...original, grudge: 'house_marrow' },
+      { ...original, answers: { ...original.answers, the_ford: 'changed_record' } },
       { ...original, year: original.year + 1 },
     ]) {
       pristine.ctx.world.founding = changed;
