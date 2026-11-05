@@ -887,28 +887,34 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       if (verb === 'order') {
         const category = readingLogTableCategory(observedActionField(args[0], 'kind'));
         const event = { kind: 'action' as const, verb, act: 'table' as const, category };
+        const generation = log.startGeneration;
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['order']>;
           const status = observedTableOutcome(result);
-          if (status) log.note({ ...event, status });
+          // A nested Begin or pickup may switch houses before this verb returns.
+          // Never credit the old outcome to a new house's attempt.
+          if (status && log.startGeneration === generation) log.note({ ...event, status });
           return result;
         } catch (error) {
-          log.note({ ...event, status: 'threw' });
+          if (log.startGeneration === generation) log.note({ ...event, status: 'threw' });
           throw error;
         }
       }
       if (verb === 'muster') {
         const category = readingLogMusterCategory(observedActionField(args[0], 'op'));
         const event = { kind: 'action' as const, verb, act: 'muster' as const, category };
+        const generation = log.startGeneration;
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['muster']>;
           const status = observedTableOutcome(result);
-          if (status) log.note({ ...event, status });
+          // A nested Begin or pickup may switch houses before this verb returns.
+          // Never credit the old outcome to a new house's attempt.
+          if (status && log.startGeneration === generation) log.note({ ...event, status });
           return result;
         } catch (error) {
-          log.note({ ...event, status: 'threw' });
+          if (log.startGeneration === generation) log.note({ ...event, status: 'threw' });
           throw error;
         }
       }
@@ -918,15 +924,16 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
           category: verb === 'delegateChoice' ? 'choice' as const : 'record' as const,
           change: args[1] === null ? 'clear' as const : 'set' as const,
         };
+        const generation = log.startGeneration;
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args);
           // Neither delegation verb returns a success flag. "returned"
           // means only that the call finished, not that a setting changed.
-          log.note({ ...event, status: 'returned' });
+          if (log.startGeneration === generation) log.note({ ...event, status: 'returned' });
           return result;
         } catch (error) {
-          log.note({ ...event, status: 'threw' });
+          if (log.startGeneration === generation) log.note({ ...event, status: 'threw' });
           throw error;
         }
       }
