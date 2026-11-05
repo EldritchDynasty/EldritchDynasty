@@ -250,7 +250,19 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // Recovered saves can disagree with their historical decision log. A share
   // code promises the actual founding, not whichever log row happens to come
   // first. Ambiguous duplicate founding rows are not a reproducible answer.
+  // Loaded saves are schema-checked, but restored/programmatically amended
+  // worlds can have corrupt founding rows. Export is a read-only UI operation:
+  // fail closed here rather than throwing from trim(), normaliseFriends() or
+  // Object.entries() and taking down the ending/share screen.
   if (foundings.length !== 1 || !persisted
+    || typeof founding.houseName !== 'string'
+    || !Array.isArray(founding.friends)
+    || !Array.isArray(w.friends)
+    || founding.friends.some((friend) => !friend || typeof friend.name !== 'string'
+      || (friend.sex !== 'male' && friend.sex !== 'female'))
+    || !persisted.answers || typeof persisted.answers !== 'object'
+    || Array.isArray(persisted.answers)
+    || Object.values(persisted.answers).some((answer) => typeof answer !== 'string')
     || persisted.year !== founding.year
     || persisted.houseName !== founding.houseName
     || persisted.heirloom !== founding.heirloom
@@ -301,6 +313,11 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
 
   const signings = w.decisionLog.filter((row) => row.kind === 'signing');
   const signing = signings[0];
+  if (signing && (!signing.answers || typeof signing.answers !== 'object'
+    || Array.isArray(signing.answers)
+    || Object.values(signing.answers).some((answer) => typeof answer !== 'string'))) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const given = signing?.answers ?? {};
   // The signing is a once-only founding answer. A stray historical row, a
   // duplicate, or an answer disagreeing with persisted founding state cannot
