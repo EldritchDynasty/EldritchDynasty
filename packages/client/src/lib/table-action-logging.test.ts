@@ -9,6 +9,34 @@ const action = (
   : { at, kind: 'action', verb, act: 'muster', category: 'withdraw', status };
 
 describe('Table workload observation windows (#1992)', () => {
+  it('ignores stale Table-pane exposure before a successful Begin or pickup', () => {
+    const titleOnly: ReadingLogEvent[] = [
+      { at: 0, kind: 'visible', visible: true },
+      { at: 0, kind: 'focus', focused: true },
+      { at: 2, kind: 'pane', pane: 'table' },
+      { at: 10, kind: 'action', verb: 'resume', act: 'start' },
+      // The save picker is cancelled; no Chronicle pickup or public run.
+      { at: 45, kind: 'pane', pane: 'house' },
+    ];
+    expect(tableWorkloadWindows(titleOnly, 50)).toEqual([]);
+
+    const started: ReadingLogEvent[] = [
+      ...titleOnly.slice(0, -1),
+      { at: 25, kind: 'action', verb: 'begin', act: 'start' },
+      { at: 25, kind: 'pane', pane: 'house' },
+      { at: 30, kind: 'run', campaign: 'short', seed: 62 },
+      { at: 30, kind: 'year', year: 1042 },
+      { at: 40, kind: 'pane', pane: 'table' },
+      { at: 55, kind: 'pane', pane: 'house' },
+    ];
+    const windows = tableWorkloadWindows(started, 60);
+    expect(windows).toHaveLength(1);
+    expect(windows[0]).toMatchObject({
+      source: 'begin', startedAt: 25, endedAt: 60,
+      campaign: 'short', seed: 62, foregroundMs: 35, tableForegroundMs: 15,
+    });
+  });
+
   it('splits successful new starts and displayed pickups, attributing orders to their own house', () => {
     const events: ReadingLogEvent[] = [
       { at: 0, kind: 'visible', visible: true },
