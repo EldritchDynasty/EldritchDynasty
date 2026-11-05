@@ -664,7 +664,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       .sort((a, b) => a.foundedYear - b.foundedYear
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     for (const branch of branches) {
-      const family = residents.get(branch.id) ?? [];
+      // Recovered memberships may predate a person's actual birth. A child
+      // born after collection cannot make a hall viable on the last night.
+      const family = (residents.get(branch.id) ?? []).filter((person) => person.born <= readYear);
       if (!viableCadetHall(family, readYear)) continue;
       const founder = w.people.get(branch.founder);
       // Restored founding rows must not credit a hall to somebody who had not
@@ -712,7 +714,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       // second account of the same wait is not independent corroboration.
       // A duplicate from a year after collection cannot discredit the
       // uniquely witnessed page that was already in the book.
-      if (w.chronicle.filter((entry) => entry.id === page.id && entry.year <= readYear).length !== 1) continue;
+      // A duplicated ID before founding is not part of this house's book.
+      // Apply the same campaign bounds used to select the witnessed page.
+      if (w.chronicle.filter((entry) => entry.id === page.id && inBookTerm(w, entry.year)).length !== 1) continue;
       const person = w.people.get(page.people![0]!);
       if (!person || person.houseOfOrigin !== w.playerHouse
         || person.born > page.year
