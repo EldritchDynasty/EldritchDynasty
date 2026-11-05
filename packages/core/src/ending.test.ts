@@ -2584,3 +2584,51 @@ describe('cadet founding is an actual adult son leaving the seat (#2932)', () =>
     expect(digestOf(ctx)).toBe(before);
   });
 });
+
+describe('the credited cadet charter matches surviving founder membership evidence (#1983)', () => {
+  it('rejects a documented different hall, house or membership kind without inventing a new ending', () => {
+    const ctx = atTheTerm(198312);
+    const w = ctx.world;
+    const branch = 'br_charter_testimony';
+    const foundedYear = w.year - 30;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+    place(ctx, { name: 'Leora', sex: 'female', age: 35, branch });
+    place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch });
+    w.branches.set(asId(branch), {
+      id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+    });
+
+    const ending = selectEnding(ctx);
+    const legacy = epilogueOf(ctx)!.purpose;
+    // Old saves lacking dated founder membership can still use the saved charter.
+    expect(legacy).toMatchObject({ kind: 'branch_kept', founder: 'Edrin' });
+
+    const open = founder.membership.find((membership) => membership.to === undefined)!;
+    founder.membership = [{ ...open, from: foundedYear, branch: 'br_unrelated' }];
+    const recorded = founder.membership[0]!;
+    const rejects = () => {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(ending);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    };
+
+    rejects(); // The charter's purported author lived in another hall.
+    recorded.branch = branch;
+    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+    recorded.kind = 'ward';
+    rejects(); // Residence alone did not permit a cadet charter.
+    recorded.kind = 'blood';
+    recorded.house = asId('other-house');
+    rejects(); // Another house cannot found this player's branch.
+    recorded.house = asId(w.playerHouse);
+    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+});
