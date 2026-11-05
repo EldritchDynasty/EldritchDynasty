@@ -484,3 +484,59 @@ describe('adviser recovered-record chronology (#2934, #2935, #2936)', () => {
     expect(first()).toBe(older.id); // Now the spouse's interest has actually begun.
   });
 });
+
+describe('plausible historical adviser succession (#2992)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'rejects pre-birth or inverted former-Head tenures in %s',
+    (mode) => {
+      const ctx = testWorld(contentBundle, 2992);
+      clearLiving(ctx);
+      setProseMode(ctx, mode);
+      const adviser = place(ctx, {
+        sex: 'male', age: 48, name: 'The Candidate', career: { career: 'clergy' },
+      });
+      const tenure = {
+        person: adviser.id, name: adviser.name,
+        from: adviser.born - 10, to: adviser.born - 5,
+      };
+      ctx.world.succession.push(tenure);
+      const lens = () => adviceFor(ctx, 'tree', adviser.id, 1)[0]?.lens;
+
+      expect(lens()).toBe('priest');
+      tenure.from = adviser.born;
+      tenure.to = ctx.world.year - 2;
+      expect(lens()).toBe('old_head');
+      tenure.to = tenure.from - 1;
+      expect(lens()).toBe('priest');
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
+    'does not make a widow of someone whose spouse held an impossible pre-birth tenure in %s',
+    (mode) => {
+      const ctx = testWorld(contentBundle, 29922);
+      clearLiving(ctx);
+      setProseMode(ctx, mode);
+      const widow = place(ctx, {
+        sex: 'female', age: 40, name: 'The Witness', career: { career: 'clergy' },
+      });
+      const spouse = place(ctx, { sex: 'male', age: 46, name: 'The Spouse' });
+      marry(ctx, widow, spouse);
+      const now = ctx.world.year;
+      widow.marriages.find((m) => m.spouse === spouse.id)!.from = now - 10;
+      spouse.status = 'dead';
+      spouse.died = now;
+      const tenure = {
+        person: spouse.id, name: spouse.name,
+        from: spouse.born - 6, to: spouse.born - 1,
+      };
+      ctx.world.succession.push(tenure);
+      const lens = () => adviceFor(ctx, 'tree', widow.id, 1)[0]?.lens;
+
+      expect(lens()).toBe('priest');
+      tenure.from = now - 8;
+      tenure.to = now - 2;
+      expect(lens()).toBe('old_head');
+    },
+  );
+});

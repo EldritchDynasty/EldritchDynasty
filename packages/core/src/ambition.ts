@@ -637,7 +637,10 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   }
 
   if (id === 'deepen_blood') {
-    const livingBlood = w.people.living().filter((p) => p.houseOfOrigin === w.playerHouse).length;
+    // A recovered status flag can predate birth or outlive the recorded death.
+    const livingBlood = w.people.living().filter((p) =>
+      p.houseOfOrigin === w.playerHouse && p.born <= w.year
+      && (p.died === undefined || p.died > w.year)).length;
     const target = w.campaign === 'short' ? 10 : 14;
     return {
       ...shown,
@@ -665,7 +668,9 @@ export function ambitionView(ctx: SimCtx): HouseAmbitionView | undefined {
   // Honor that plan only while the named person is still a visible candidate,
   // without inferring expression from a genome the player cannot inspect (#2404).
   const prepared = ranked.find(({ person }) => person === w.scion) ?? foremost;
-  const head = w.people.living().find((p) => p.castSlots.includes('head'));
+  // Do not credit a recovered unborn/deceased seal-holder with today's Regency.
+  const head = w.people.living().find((p) => p.castSlots.includes('head')
+    && p.born <= w.year && (p.died === undefined || p.died > w.year));
   const regent = head && isRegent(w, head) ? head : undefined;
   const rungs = {
     HELD: rungTitle(ctx, w.ascension.rung), BEST: rungTitle(ctx, w.ascension.best), HORIZON: rungTitle(ctx, targetRung),

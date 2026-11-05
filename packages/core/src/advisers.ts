@@ -63,6 +63,12 @@ function surfaceOf(d: PendingDecision): AdviceSurface {
   return eventHasRite(d) ? 'rite' : 'choice';
 }
 
+/** Recovered succession rows must describe a tenure that could have begun in life. */
+function plausibleTenure(held: { from: number; to?: number }, born: number, throughYear: number): boolean {
+  return held.from >= born && held.from <= throughYear
+    && (held.to === undefined || held.to >= held.from);
+}
+
 function widowOfHead(ctx: SimCtx, p: Person): boolean {
   return p.marriages.some((marriage) => {
     // Recovered saves can carry the next marriage or death in advance.
@@ -76,8 +82,8 @@ function widowOfHead(ctx: SimCtx, p: Person): boolean {
     if (died !== undefined && (died < marriage.from
       || (marriage.to !== undefined && marriage.to < died))) return false;
     return ctx.world.succession.some((held) =>
-      held.person === spouse.id && held.from <= ctx.world.year
-      && (died === undefined || held.from <= died));
+      held.person === spouse.id
+      && plausibleTenure(held, spouse.born, died ?? ctx.world.year));
   });
 }
 
@@ -103,7 +109,7 @@ function lensOf(
   }
 
   const heldSeal = ctx.world.succession.some((held) =>
-    held.person === p.id && held.from <= ctx.world.year
+    held.person === p.id && plausibleTenure(held, p.born, ctx.world.year)
     && held.to !== undefined && held.to <= ctx.world.year);
   const regent = isRegent(ctx.world, p) && p.castSlots.includes('head');
   if (heldSeal || regent || widowOfHead(ctx, p)) {

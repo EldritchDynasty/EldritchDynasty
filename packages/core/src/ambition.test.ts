@@ -1198,3 +1198,55 @@ describe('present-year relevance from recovered saves (#2947–#2949)', () => {
     expect(later.get(dead.id) ?? []).not.toContain(grievance);
   });
 });
+
+describe('ambition recovered-date readings (#2990, #2991)', () => {
+  it('counts only born and effectively living player blood in the ambition (#2990)', () => {
+    const ctx = testWorld(content, 2990);
+    const w = ctx.world;
+    for (const p of w.people.all()) p.status = 'dead';
+    const person = place(ctx, { sex: 'male', age: 22, name: 'The dated blood' });
+    expect(person.houseOfOrigin).toBe(w.playerHouse);
+    w.houseAmbition = 'deepen_blood';
+    const count = () => ambitionView(ctx)?.progress.current;
+
+    expect(count()).toBe(1);
+    const now = w.year;
+    person.born = now + 2;
+    expect(count()).toBe(0); // A future birth is not a living person yet.
+    w.year = now + 2;
+    expect(count()).toBe(1); // The exact birth year is included.
+    person.died = w.year;
+    expect(person.status).toBe('alive'); // Imported status can be stale.
+    expect(count()).toBe(0); // Death is effective in the recorded year.
+    person.died = w.year + 1;
+    expect(count()).toBe(1);
+    w.year += 1;
+    expect(count()).toBe(0);
+  });
+
+  it('ignores a future-born or already-deceased Regent when explaining ascent (#2991)', () => {
+    const ctx = testWorld(content, 2991);
+    const w = ctx.world;
+    const founder = w.people.get(w.narrator!)!;
+    founder.castSlots = founder.castSlots.filter((slot) => slot !== 'head');
+    const regent = place(ctx, {
+      sex: 'female', age: 40, name: 'The dated Regent', castSlots: ['head'],
+    });
+    w.houseAmbition = 'raise_ascendant';
+    const advice = () => ambitionView(ctx)?.next ?? '';
+    const baselineBorn = regent.born;
+    const now = w.year;
+
+    expect(advice()).toContain('While The dated Regent keeps the seal');
+    regent.born = now + 1;
+    expect(advice()).not.toContain('The dated Regent keeps the seal');
+    regent.born = baselineBorn;
+    regent.died = now;
+    expect(regent.status).toBe('alive');
+    expect(advice()).not.toContain('The dated Regent keeps the seal');
+    regent.died = now + 1;
+    expect(advice()).toContain('While The dated Regent keeps the seal');
+    w.year = now + 1;
+    expect(advice()).not.toContain('The dated Regent keeps the seal');
+  });
+});
