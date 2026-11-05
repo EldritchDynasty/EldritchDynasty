@@ -51,7 +51,7 @@ function play(seed: number, answer: RecordOption): ReadStats {
         }
       }
 
-      if (decision.kind === 'record' && answer !== 'automatic') resolveRecord(ctx, decision.id, answer);
+      if (decision.kind === 'record') resolveRecord(ctx, decision.id, answer);
       else autoResolveDecision(ctx, decision, rng);
     }
 
@@ -118,7 +118,7 @@ function playForBynames(seed: number, answer: RecordOption | 'automatic'): { ctx
     while (ctx.world.pendingDecisions.length) {
       if (guard++ > 500) throw new Error('decision queue did not drain');
       const decision = ctx.world.pendingDecisions[0]!;
-      if (decision.kind === 'record') resolveRecord(ctx, decision.id, answer);
+      if (decision.kind === 'record' && answer !== 'automatic') resolveRecord(ctx, decision.id, answer);
       else autoResolveDecision(ctx, decision, rng);
     }
     if (ctx.world.year === before) break;
