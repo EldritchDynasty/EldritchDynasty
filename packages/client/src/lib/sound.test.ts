@@ -1816,6 +1816,101 @@ describe('a played session hears the committed moments, and only those', () => {
     expect(attempted).toEqual(['page', 'bell', 'seal']);
   });
 
+  it('commits turns when optional year or docket reads fail before or after the action (#1986)', () => {
+    const game = createGame(bundle, memoryPlatform());
+    let year = 1042;
+    let docket = 0;
+    let yearReads = 0;
+    let docketReads = 0;
+    let failYearAt: number | null = 1;
+    let failDocketAt: number | null = 2;
+    const heard: Cue[] = [];
+    const actions = soundActions({
+      ...game.actions,
+      advance: () => { year++; docket++; },
+    } as GameActions, { cue: (cue) => heard.push(cue) }, {
+      year: () => {
+        if (++yearReads === failYearAt) throw new Error('year observer unavailable');
+        return year;
+      },
+      docket: () => {
+        if (++docketReads === failDocketAt) throw new Error('docket observer unavailable');
+        return docket;
+      },
+      outcome: () => null,
+    });
+
+    // The before-year and after-docket snapshots fail independently.
+    expect(() => actions.advance(1)).not.toThrow();
+    expect(year).toBe(1043);
+    expect(docket).toBe(1);
+    expect(heard).toEqual([]);
+
+    // Reverse the failures: neither missing snapshot may fabricate a cue.
+    yearReads = docketReads = 0;
+    failYearAt = 2;
+    failDocketAt = 1;
+    expect(() => actions.advance(1)).not.toThrow();
+    expect(year).toBe(1044);
+    expect(docket).toBe(2);
+    expect(heard).toEqual([]);
+
+    // An observer working again must not be permanently silenced.
+    yearReads = docketReads = 0;
+    failYearAt = failDocketAt = null;
+    expect(() => actions.advance(1)).not.toThrow();
+    expect(year).toBe(1045);
+    expect(docket).toBe(3);
+    expect(heard).toEqual(['page', 'bell']);
+  });
+
+  it('preserves committed answers when an optional outcome observation fails (#1986)', () => {
+    const game = createGame(bundle, memoryPlatform());
+    let outcome: Outcome | null = null;
+    let outcomeReads = 0;
+    let failAt: number | null = 1;
+    let accepted = 0;
+    let rejectAction = false;
+    const heard: Cue[] = [];
+    const actions = soundActions({
+      ...game.actions,
+      choose: () => {
+        if (rejectAction) throw new Error('game action rejected');
+        accepted++;
+        outcome = { kind: 'choice', valence: 'boon' };
+        return true;
+      },
+    } as GameActions, { cue: (cue) => heard.push(cue) }, {
+      year: () => 1042,
+      docket: () => 0,
+      outcome: () => {
+        if (++outcomeReads === failAt) throw new Error('outcome observer unavailable');
+        return outcome;
+      },
+    });
+
+    expect(() => actions.choose('event', 'answer', {}, 'answer')).not.toThrow();
+    expect(accepted).toBe(1);
+    expect(heard).toEqual([]);
+
+    outcomeReads = 0;
+    failAt = 2;
+    expect(() => actions.choose('event', 'answer', {}, 'answer')).not.toThrow();
+    expect(accepted).toBe(2);
+    expect(heard).toEqual([]);
+
+    outcomeReads = 0;
+    failAt = null;
+    expect(actions.choose('event', 'answer', {}, 'answer')).toBe(true);
+    expect(accepted).toBe(3);
+    expect(heard).toEqual(['boon']);
+
+    // Genuine simulation errors are not sound errors and still propagate.
+    rejectAction = true;
+    expect(() => actions.choose('event', 'answer', {}, 'answer')).toThrow('game action rejected');
+    expect(accepted).toBe(3);
+  });
+
   it('pages, bells and seals where §24 puts them, and chimes each choice by its valence', () => {
     const game = createGame(bundle, memoryPlatform());
     const heard: Cue[] = [];
