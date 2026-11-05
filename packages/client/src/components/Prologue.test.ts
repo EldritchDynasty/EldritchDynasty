@@ -609,6 +609,31 @@ describe('queued signing focus after a run switch (#1984)', () => {
     }
   });
 
+  it('does not mark unshown prose as read when a stale reveal click follows founding', async () => {
+    const prologue = prologueView();
+    const key = seenProseKey('prologue', prologueSeenText(
+      prologue.opening, prologue.triad, prologue.thesis,
+    ));
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: actions(), refused: null, startYear: 1042 },
+    });
+    try {
+      for (const label of ['The first thing', 'The second thing']) {
+        await wrapper.findAll('button').find((button) => button.text() === label)!.trigger('click');
+      }
+      expect(hasSeenProse(window.localStorage, key)).toBe(false);
+      const staleButton = wrapper.get('button.on').element as HTMLButtonElement;
+      // A state change can precede the DOM patch that removes the button.
+      // The old click cannot silently complete an unread opening.
+      const founded = wrapper.setProps({ prologue: { ...prologue, founded: true } });
+      staleButton.click();
+      await founded;
+      expect(hasSeenProse(window.localStorage, key)).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('does not steal focus from the new run after old stage navigation', async () => {
     const prologue = prologueView();
     rememberSeenProse(window.localStorage, seenProseKey(
