@@ -25,8 +25,8 @@ import { parseRecordOption, type GameActions } from './game.js';
  *     says the next answer had not come YET, not that it never would.
  */
 
-/** 12: opt-in Table action outcome summaries, with censored incomplete attempts. */
-export const READING_LOG_FORMAT = 'ed-reading-log/12';
+/** 13: explicit failed-pickup boundaries, preserving prior-house observation. */
+export const READING_LOG_FORMAT = 'ed-reading-log/13';
 
 /** `?reading-log=1` turns it on for this page load, and nothing else does. */
 export const READING_LOG_QUERY = 'reading-log';
@@ -48,6 +48,7 @@ export const READING_LOG_CAVEATS = [
   'Beginning another house censors the old answer gap: page ids and game-year gaps do not carry across houses.',
   'The first gap starts at the log, not at an answer, and the first after a resumed save starts at the resume: neither is a whole answer-to-answer interval.',
   'The first Chronicle window after a successful saved-run pickup is carried history; the prior house gap is censored, not continued into the loaded save.',
+  'A pickup-failed marker means the selected save was not loaded: tentative incoming run/year markers are discarded, and the current house continues without a new-run boundary.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
   'Table action summary counts only terminal results paired with an attempt in the same window; unmatched terminals are ignored, and unfinished attempts may be interrupted, capped or have an unreadable outcome. None is a refusal.',
@@ -112,6 +113,7 @@ export type ReadingLogEvent =
   | { at: number; kind: 'prose'; mode: string }
   | { at: number; kind: 'run'; campaign: string; seed: number }
   | { at: number; kind: 'pickup' }
+  | { at: number; kind: 'pickup-failed' }
   | { at: number; kind: 'year'; year: number }
   | { at: number; kind: 'page'; year: number; page: string; event?: string; answer?: ReadingAnswerKind; revisit?: true; carried?: true }
   | { at: number; kind: 'interlude'; year: number; event: string; answer: 'interlude'; revisit?: true }
@@ -333,9 +335,12 @@ export class ReadingLog {
   pickUpFailed(generation: number): void {
     // The old import/load may finish after another pickup has begun (or a
     // new game has started). Its failure cannot erase that newer boundary.
-    if (generation === this.#startGeneration) {
+    if (generation === this.#startGeneration && this.#pickingUp) {
       this.#pickingUp = false;
       this.#pendingPickupYear = null;
+      // The projection must learn that a tentative pickup was abandoned. A
+      // completed older attempt cannot cancel a newer one (generation guard).
+      this.note({ kind: 'pickup-failed' });
     }
   }
 
@@ -396,7 +401,7 @@ function stateKey(event: Untimed<ReadingLogEvent>): [string, string] | null {
     case 'prose': return ['prose', event.mode];
     case 'year': return ['year', String(event.year)];
     case 'run': return ['run', `${event.campaign}:${event.seed}`];
-    case 'page': case 'interlude': case 'decision': case 'action': case 'pickup': case 'ended': case 'end':
+    case 'page': case 'interlude': case 'decision': case 'action': case 'pickup': case 'pickup-failed': case 'ended': case 'end':
       return null;
     default: return assertNever(event);
   }
@@ -543,6 +548,14 @@ export function tableWorkloadWindows(
   for (const event of events) {
     if (event.at > stop) break;
     advance(event.at);
+    if (event.kind === 'pickup-failed') {
+      // A failed import/load/resume never switched houses. Tentative public
+      // identity and year updates must not leak into this house's summary.
+      awaitingPickup = false;
+      pendingRun = null;
+      pendingYear = null;
+      continue;
+    }
     if (event.kind === 'pickup') {
       // Reuse the previous run identity when the loaded world has the same
       // public campaign/seed (so Vue emitted no distinct run marker).
@@ -689,6 +702,11 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'focus': focused = e.focused; break;
       case 'break': onBreak = e.on; break;
       case 'year': year = e.year; hasHouse = true; break;
+      case 'pickup-failed':
+        // A failed pickup is not a boundary. Continue the existing gap and
+        // any unfinished signing without inventing a newly loaded house.
+        pickupPending = false;
+        break;
       case 'pickup':
         // A resumed house cannot complete the signing of an earlier new house.
         // Its preceding run marker described the incoming house, not this entry.
