@@ -654,12 +654,14 @@ describe('the player, over a fake engine', () => {
     const first = [...ctx.sources];
     const firstGain = ctx.gains[1]!;
 
+    const secondGainIndex = ctx.gains.length;
     sound.setDrone(COLD);
     const second = ctx.sources.slice(first.length);
-    const secondGain = ctx.gains[2]!;
+    const secondGain = ctx.gains[secondGainIndex]!;
+    const currentGainIndex = ctx.gains.length;
     sound.setDrone({ registers: ['institutional'], frame: false });
     const third = ctx.sources.slice(first.length + second.length);
-    const currentGain = ctx.gains[3]!;
+    const currentGain = ctx.gains[currentGainIndex]!;
 
     expect(firstGain.disconnected).toBe(0);
     expect(secondGain.disconnected).toBe(0);
