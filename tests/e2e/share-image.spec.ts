@@ -300,3 +300,111 @@ for (const mode of ['original', 'plainenglish'] as const) {
     expect(errors).toEqual([]);
   });
 }
+
+
+/**
+ * The Afterimage uses its own exporter: Chronicle SVG coverage cannot prove
+ * this path preserves the anonymous code when bitmap output is unavailable.
+ * Exercise both failure seams with actual Chromium glyph metrics and ensure
+ * temporary SVG measurement probes are retired (#1995).
+ */
+for (const mode of ['original', 'plainenglish'] as const) {
+  for (const fallback of ['PNG encoder refusal', 'Canvas 2D unavailable'] as const) {
+    test('Afterimage SVG preserves its anonymous founding after ' + fallback + ' (' + mode + ') #1995', async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', error => errors.push(error.message));
+      await page.addInitScript(({ save, mode, fallback }) => {
+        localStorage.setItem('ed:save:autosave', JSON.stringify(save));
+        localStorage.setItem('eldritch-dynasty:reading', JSON.stringify({ proseMode: mode }));
+        if (fallback === 'Canvas 2D unavailable') {
+          Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', {
+            configurable: true, value: () => null,
+          });
+        } else {
+          HTMLCanvasElement.prototype.toBlob = function (callback: BlobCallback) {
+            callback(null);
+          };
+        }
+      }, { save: completedAfterimageSave(), mode, fallback });
+      await page.goto('/');
+      await page.locator('main.start button.primary').click();
+      await expect(page.locator('main.ending')).toBeVisible();
+
+      const anonymous = await page.locator('#share-code').inputValue();
+      expect(anonymous).toMatch(/^ED1\./);
+      await page.locator('.share-names input').check();
+      expect(await page.locator('#share-code').inputValue()).not.toBe(anonymous);
+
+      const pending = page.waitForEvent('download');
+      await page.getByRole('button', { name: mode === 'plainenglish'
+        ? 'Save ending image' : 'Save the house afterimage', exact: true }).click();
+      const download = await pending;
+      expect(download.suggestedFilename()).toMatch(/\.svg$/);
+      const source = await readFile(await download.path(), 'utf8');
+
+      const exported = await page.evaluate(({ source, mode }) => {
+        const xml = new DOMParser().parseFromString(source, 'image/svg+xml');
+        const texts = Array.from(xml.querySelectorAll('text'));
+        const heading = mode === 'plainenglish'
+          ? 'SHARE CODE FOR THIS STARTING POINT (NAMES NOT INCLUDED)'
+          : 'THE SAME BEGINNING · NAMES WITHHELD';
+        const labelIndex = texts.findIndex(node => node.textContent === heading);
+        const footerIndex = texts.findIndex((node, i) => i > labelIndex
+          && (node.textContent ?? '').startsWith('Eldritch Dynasty ·'));
+        const codeRows = labelIndex < 0 || footerIndex < 0
+          ? [] : texts.slice(labelIndex + 1, footerIndex);
+
+        const strayProbes = document.querySelectorAll('svg[aria-hidden="true"][style*="-10000px"]').length;
+        const gauge = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const probe = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        gauge.style.cssText = 'position:absolute;left:-10000px;top:-10000px;visibility:hidden';
+        gauge.append(probe);
+        document.body.append(gauge);
+        try {
+          return {
+            parseErrors: xml.querySelectorAll('parsererror').length,
+            title: xml.querySelector('title')?.textContent ?? '',
+            description: xml.querySelector('desc')?.textContent ?? '',
+            labelIndex,
+            footerIndex,
+            strayProbes,
+            lines: codeRows.map(node => {
+              const text = node.textContent ?? '';
+              const font = node.getAttribute('font-family') ?? '';
+              probe.style.font = String(Number(node.getAttribute('font-size'))) + 'px ' + font;
+              probe.textContent = text;
+              return {
+                text, font, x: Number(node.getAttribute('x')),
+                width: probe.getComputedTextLength(),
+              };
+            }),
+          };
+        } finally {
+          gauge.remove();
+        }
+      }, { source, mode });
+
+      expect(exported.parseErrors).toBe(0);
+      expect(exported.title).toContain('House Plate');
+      expect(exported.labelIndex).toBeGreaterThan(-1);
+      expect(exported.footerIndex).toBeGreaterThan(exported.labelIndex);
+      expect(exported.strayProbes, 'measurement probe must be removed').toBe(0);
+      expect(exported.lines.length).toBeGreaterThan(0);
+
+      const code = exported.lines.map(line => line.text).join('');
+      expect(code, 'the SVG reassembles the unchanged anonymous share code').toBe(anonymous);
+      expect(exported.description).toContain(anonymous);
+      expect(exported.description).not.toContain('Élodie');
+      expect(exported.description).not.toContain('蘭花');
+      for (const line of exported.lines) {
+        expect(line.font).toContain('monospace');
+        expect(line.width).toBeGreaterThan(0);
+        expect(line.x + line.width, 'SVG code exceeds image column').toBeLessThanOrEqual(1200 - 64);
+      }
+      const read = readShareCode(code, loadBundle());
+      if (read.ok) expect(read.founding.missing).toEqual(['founder', 'house', 'friends']);
+      else expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+      expect(errors).toEqual([]);
+    });
+  }
+}
