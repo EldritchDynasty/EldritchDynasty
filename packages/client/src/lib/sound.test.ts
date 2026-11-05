@@ -1509,6 +1509,47 @@ describe('the bed decides when the house may be heard', () => {
     expect(page.count(), 'host refusal leaked browser listeners').toBe(0);
   });
 
+  it('keeps working when an embedded WebView refuses individual DOM listeners', () => {
+    const e = fakeEngine();
+    const page = fakePage();
+    const bed = new SoundBed(new Sound(e.ctor));
+    const doc = {
+      get visibilityState() { return page.doc.visibilityState; },
+      addEventListener(type: string, listener: () => void) {
+        if (type === 'visibilitychange') throw new Error('visibility hook not supported');
+        page.doc.addEventListener(type, listener);
+      },
+      removeEventListener(type: string, listener: () => void) {
+        page.doc.removeEventListener(type, listener);
+      },
+    };
+    const win = {
+      addEventListener(type: string, listener: () => void) {
+        if (type === 'pointerdown') throw new Error('pointer hook not supported');
+        page.win.addEventListener(type, listener);
+      },
+      removeEventListener(type: string, listener: () => void) {
+        page.win.removeEventListener(type, listener);
+        if (type === 'touchend') throw new Error('host refuses removal');
+      },
+    };
+    expect(() => bed.attach(doc, win)).not.toThrow();
+    bed.prefer({ on: true, volume: 1 });
+    bed.scene(WARM);
+    page.fire('win:click');
+    expect(bed.audible, 'a surviving gesture should still unlock sound').toBe(true);
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    page.fire('win:pagehide');
+    expect(bed.audible).toBe(false);
+    page.fire('win:pageshow');
+    expect(bed.audible).toBe(true);
+    expect(() => bed.dispose()).not.toThrow();
+    expect(page.count(), 'a failed unsubscribe prevented cleanup of later listeners').toBe(0);
+    expect(ctx.calls).toContain('close');
+  });
+
   it('closes audio and removes browser listeners when host pause unsubscribe throws', () => {
     const e = fakeEngine();
     const page = fakePage();
