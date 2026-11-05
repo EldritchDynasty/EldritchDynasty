@@ -287,8 +287,10 @@ watch(signingIdentity, () => {
   );
 });
 const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
-/** Research-only stage markers. No entered names, answers, or simulation commands leave this component. */
-watch([shown, signingStage], ([beats, stage]) => {
+/** Research-only stage markers. No entered names, answers, or simulation commands leave this component.
+ * Include the run's signing identity: a new fast-revealed signing may start on
+ * the same stage with the same beat count, but it still needs its own marker. */
+watch([shown, signingStage, signingIdentity], ([beats, stage]) => {
   if (!props.prologue.founded && beats >= props.prologue.triad.length) emit('stage', stage);
 }, { immediate: true, flush: 'post' });
 const stageReady = computed(() => {
