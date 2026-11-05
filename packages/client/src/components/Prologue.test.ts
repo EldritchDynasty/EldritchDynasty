@@ -769,8 +769,24 @@ describe('optional friends at signing (#1984)', () => {
           ? 'a visible name for each named friend' : 'a visible name for every friend you chose to name');
         expect(game.found).not.toHaveBeenCalled();
 
+        // The optional section may be collapsed after an invisible-only name.
+        // Signing must remain blocked, but the closed summary must reveal
+        // exactly where the reader can correct that hidden blocker.
+        const disclosure = wrapper.get('details.friend-names').element as HTMLDetailsElement;
+        disclosure.open = false;
+        await nextTick();
+        expect(disclosure.open).toBe(false);
+        const summary = wrapper.get('details.friend-names summary');
+        expect(summary.text()).toContain(proseMode === 'plainenglish'
+          ? 'Open to correct 1 friend name' : 'One friend name needs correcting');
+        expect(summary.find('[role="status"]').exists()).toBe(true);
+        expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+        disclosure.open = true;
+        await nextTick();
+
         await friend.setValue('Ma\u200Dra');
         expect(friend.attributes('aria-invalid')).toBe('false');
+        expect(summary.find('[role="status"]').exists()).toBe(false);
         expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
         await wrapper.get('button.sign').trigger('click');
         expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
