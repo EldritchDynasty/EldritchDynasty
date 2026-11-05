@@ -212,6 +212,105 @@ describe('achievements (issue #323)', () => {
     ]));
   });
 
+  it('recognizes regency and cadet seal dates only through the actual term (#2939)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    const woman = save.people[0]!;
+    woman.sex = 'female';
+    save.succession.push({
+      person: woman.id, name: woman.name, from: term + 1, to: term + 2,
+    });
+    // Use the same minimal recovered-branch fixture as the persisted-facts test.
+    (save.branches as Array<{ heldSeal?: number }>).push({ heldSeal: term + 1 });
+
+    const before = structuredClone(save);
+    const future = earnedAchievements(save);
+    expect(future).not.toContain('regency_survived');
+    expect(future).not.toContain('cadet_took_seal');
+    expect(save).toEqual(before);
+
+    // Same-year evidence is real, and a regency is only survived if it ended.
+    const reign = save.succession.at(-1)!;
+    reign.from = term - 1;
+    reign.to = term;
+    save.branches.at(-1)!.heldSeal = term;
+    const atTerm = earnedAchievements(save);
+    expect(atTerm).toContain('regency_survived');
+    expect(atTerm).toContain('cadet_took_seal');
+
+    // An imported inverted tenure must not award a completed regency.
+    reign.from = term;
+    reign.to = term - 1;
+    expect(earnedAchievements(save)).not.toContain('regency_survived');
+    expect(earnedAchievements(save)).toContain('cadet_took_seal');
+  });
+
+  it('ignores not-yet-begun Musters when awarding settled and withdrawn achievements (#2940)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    save.muster.commitments.push({
+      id: 'future_muster', began: term + 1, age: 'wars', men: 12, from: { main: 12 },
+      officers: [], position: 'standard', credit: 5, status: 'settled',
+    });
+    expect(earnedAchievements(save)).not.toContain('muster_settled_under_banner');
+    expect(earnedAchievements(save)).not.toContain('muster_withdrew_every_time');
+
+    const commitment = save.muster.commitments[0]!;
+    commitment.began = term;
+    expect(earnedAchievements(save)).toContain('muster_settled_under_banner');
+    commitment.status = 'withdrawn';
+    expect(earnedAchievements(save)).toContain('muster_withdrew_every_time');
+    expect(earnedAchievements(save)).not.toContain('muster_settled_under_banner');
+
+    // A future settled engagement cannot revoke a record of withdrawing from
+    // every commitment that actually existed by this ending.
+    save.muster.commitments.push({
+      id: 'another_future_muster', began: term + 1, age: 'wars', men: 5,
+      from: { main: 5 }, officers: [], position: 'standard', credit: 2, status: 'settled',
+    });
+    expect(earnedAchievements(save)).toContain('muster_withdrew_every_time');
+    expect(earnedAchievements(save)).not.toContain('muster_settled_under_banner');
+
+    save.muster.commitments[1]!.began = term;
+    expect(earnedAchievements(save)).not.toContain('muster_withdrew_every_time');
+    expect(earnedAchievements(save)).toContain('muster_settled_under_banner');
+  });
+
+  it('requires each of the five returned names to have been spent by the ending (#2940)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    save.friends = Array.from({ length: 5 }, (_, i) => ({
+      name: 'Friend ' + (i + 1), sex: 'female' as const,
+      dueFrom: 1042 + i, spentIn: term,
+    }));
+    expect(earnedAchievements(save)).toContain('five_names_returned');
+
+    save.friends[0]!.spentIn = term + 1;
+    expect(earnedAchievements(save)).not.toContain('five_names_returned');
+    save.friends[0]!.spentIn = term;
+    delete save.friends[1]!.spentIn;
+    expect(earnedAchievements(save)).not.toContain('five_names_returned');
+  });
+
+  it('does not let a post-term refusal revoke a completed Match achievement (#2941)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    save.decisionLog.push({
+      kind: 'match', year: term, subject: save.people[0]!.id, card: null, spouse: 'outsider',
+    });
+    save.bearing.acts.push({ kind: 'refused_a_hand', year: term + 1 });
+    const before = structuredClone(save);
+    expect(earnedAchievements(save)).toContain('match_never_refused');
+    expect(save).toEqual(before);
+
+    save.bearing.acts[0]!.year = term;
+    expect(earnedAchievements(save)).not.toContain('match_never_refused');
+    save.bearing.acts[0]!.year = term - 1;
+    expect(earnedAchievements(save)).not.toContain('match_never_refused');
+    save.bearing.acts[0]!.kind = 'kept_her_back';
+    expect(earnedAchievements(save)).toContain('match_never_refused');
+  });
+
   it('uses the existing Library of Houses for the cross-run all-endings achievement', () => {
     const save = finished();
     save.campaign = 'long';
