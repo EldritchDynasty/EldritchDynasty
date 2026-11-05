@@ -327,7 +327,8 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // otherwise throw, and in both privacy modes: omitting a bad name must not
   // turn an unrepresentable founding into a seemingly valid share code.
   if (founder && (!FounderIdentityS.safeParse(founder).success
-    || (founder.name !== undefined && founder.name.length > PERSON_NAME_MAX))) {
+    || (founder.name !== undefined
+      && (founder.name.length > PERSON_NAME_MAX || !validFounderName(founder.name))))) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
   const payload: Payload = [
@@ -364,6 +365,16 @@ function canonicalVisibleName(name: string): boolean {
     && !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
 }
 
+/** An explicitly blank founder answer is part of the signing log and may
+ * reproduce the authored founder. Invisible-only *nonblank* answers are not:
+ * they look like an answered name but display no name in either reading mode.
+ * Unlike house/friend names, a founder answer is kept byte-for-byte, including
+ * spaces, so do not normalize it here.
+ */
+function validFounderName(name: string): boolean {
+  return !name.trim() || !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
+}
+
 /** A payload's indices against the prologue it claims, or undefined if any is out of place. */
 function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): SharedFounding | undefined {
   const [, , , , seed, founderCode, answerCodes, heirloomAt, grudgeAt, house, sexes, friendNames] = p;
@@ -372,6 +383,7 @@ function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): Shar
   if (names !== (friendNames !== 0)) return undefined;
   if (friendNames !== 0 && friendNames.length !== sexes.length) return undefined;
   if (!names && founderCode !== 0 && founderCode.length === 3) return undefined;
+  if (founderCode !== 0 && founderCode.length === 3 && !validFounderName(founderCode[2])) return undefined;
   // The payload schema checks lengths and wire types. The actual signing also
   // rejects noncanonical/blank names and case-insensitive duplicate friends.
   // Refuse those here, before displaying a supposedly valid founding preview.
@@ -534,6 +546,15 @@ export function newGameFromShareCode(
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
   const given = parsedNames.data;
+  // A recipient may leave the founder answer blank, but not submit an
+  // invisible-only name in place of one. Check before newGame so import
+  // remains atomic and agrees with staged signing's visible-name rule.
+  if (f.founder && f.founder.name === undefined && given.founder !== undefined) {
+    const supplied = given.founder.trim();
+    if (supplied.length > PERSON_NAME_MAX || !validFounderName(supplied)) {
+      return { ok: false, problem: { kind: 'invalid_names' } };
+    }
+  }
   const houseName = f.houseName ?? given.house?.trim() ?? '';
   const friendNames = f.friends.map((friend, i) => friend.name ?? given.friends?.[i]?.trim() ?? '');
   // Unlike manual signing's optional friends, a shared roster is required:
