@@ -1,3 +1,4 @@
+import { reportReaderCohort } from '../../../../tools/reader-cohort-metrics.js';
 import { describe, expect, it } from 'vitest';
 import { reportReadingLogs } from '../../../../tools/reader-evidence-report.js';
 
@@ -100,5 +101,97 @@ describe('offline reading and Table evidence report (#1945, #1992)', () => {
     expect(report.logs[0]?.windows[0]?.campaign).toBe('unknown');
     expect(report.logs[0]?.buildSha).toBe('unknown');
     expect(JSON.stringify(report)).not.toContain('private-');
+  });
+});
+
+
+describe('cohort timing and Table rate reductions (#1945, #1984, #1992)', () => {
+  function completedHouse() {
+    return log([
+      { at: 0, kind: 'visible', visible: true },
+      { at: 0, kind: 'focus', focused: true },
+      { at: 100, kind: 'action', verb: 'begin', act: 'start' },
+      { at: 100, kind: 'run', campaign: 'short', seed: 612345789 },
+      { at: 100, kind: 'year', year: 1042 },
+      { at: 200, kind: 'action', verb: 'found', act: 'signing', status: 'accepted' },
+      { at: 300, kind: 'action', verb: 'enter', act: 'signing', status: 'returned' },
+      { at: 400, kind: 'pane', pane: 'table' },
+      { at: 500, kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'attempted' },
+      { at: 500, kind: 'action', verb: 'order', act: 'table', category: 'unknown', status: 'accepted' },
+      { at: 600, kind: 'action', verb: 'choose', act: 'answer', status: 'attempted' },
+      { at: 600, kind: 'action', verb: 'choose', act: 'answer', status: 'accepted' },
+      { at: 600, kind: 'page', year: 1042, page: 'private-first-page', answer: 'glimpse' },
+      { at: 800, kind: 'year', year: 1045 },
+      { at: 800, kind: 'page', year: 1045, page: 'private-second-page', answer: 'clause' },
+      { at: 1100, kind: 'end', reason: 'exported' },
+    ]);
+  }
+
+  it('quantifies completed entry and answer exposure separately from censored waits', () => {
+    const result = reportReaderCohort([completedHouse()]);
+    expect(result.format).toBe('ed-reader-cohort-metrics/1');
+    expect(result.entries).toMatchObject({ completed: 1, censored: 0 });
+    expect(result.entries.completedForegroundMs).toEqual({
+      count: 1, min: 500, median: 500, p90: 500, max: 500,
+    });
+    expect(result.answerGaps).toMatchObject({
+      completed: 1, censored: 1,
+      completedForegroundMs: { count: 1, median: 200 },
+      censoredForegroundLowerBoundMs: { count: 1, median: 300 },
+      completedGameYears: { count: 1, median: 3 },
+    });
+    const short = result.campaigns.find((row) => row.campaign === 'short');
+    expect(short).toMatchObject({
+      observedWindows: 1, entries: { completed: 1, censored: 0 },
+      manualTableAttempts: 1, manualTableAccepted: 1,
+      manualTableRefused: 0, manualTableUnfinished: 0, delegationAttempts: 0,
+    });
+    expect(short?.tableForegroundMs).toBeGreaterThan(0);
+    expect(short?.attemptsPerTableForegroundHourEstimate).toBeGreaterThan(0);
+
+    const text = JSON.stringify(result);
+    for (const privateValue of ['private-first-page', 'private-second-page', '612345789']) {
+      expect(text).not.toContain(privateValue);
+    }
+  });
+
+  it('preserves censored entry exposure and null Table rates without a denominator', () => {
+    const partial = log([
+      { at: 0, kind: 'visible', visible: true },
+      { at: 0, kind: 'focus', focused: true },
+      { at: 200, kind: 'action', verb: 'begin', act: 'start' },
+      { at: 200, kind: 'run', campaign: 'demo', seed: 4 },
+      { at: 280, kind: 'action', verb: 'found', act: 'signing', status: 'refused' },
+      { at: 430, kind: 'end', reason: 'exported' },
+    ]);
+    const result = reportReaderCohort([partial]);
+    expect(result.entries).toMatchObject({
+      completed: 0, censored: 1,
+      completedForegroundMs: { count: 0, median: null, p90: null },
+      censoredForegroundLowerBoundMs: { count: 1, median: 230 },
+    });
+    expect(result.campaigns.find((row) => row.campaign === 'demo')).toMatchObject({
+      tableForegroundMs: 0, attemptsPerTableForegroundHourEstimate: null,
+      entries: { completed: 0, censored: 1 },
+    });
+  });
+
+  it('marks multiple builds but never invents a distinct-person sample size', () => {
+    const a = completedHouse();
+    const b = log(completedHouse().events, { build: { sha: '1234567abcdef', platform: 'test' } });
+    const result = reportReaderCohort([a, b]);
+    expect(result.inputLogs).toBe(2);
+    expect(result.builds).toEqual(['1234567abcdef', 'abcdef012345']);
+    expect(result.mixedBuilds).toBe(true);
+    expect(result.entries.completed).toBe(2);
+    expect(result.caveats.join(' ')).toMatch(/participant/);
+  });
+
+  it('retains evidence-report validation instead of interpreting malformed exports', () => {
+    expect(() => reportReaderCohort([])).toThrow(/At least one/);
+    expect(() => reportReaderCohort([log(completedHouse().events, { format: 'ed-reading-log/11' })]))
+      .toThrow(/unsupported format/);
+    expect(() => reportReaderCohort([log(completedHouse().events.slice(0, -1))]))
+      .toThrow(/terminal event/);
   });
 });
