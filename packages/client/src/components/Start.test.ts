@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import { nextTick } from 'vue';
+import { defineComponent, h, nextTick } from 'vue';
 import Start from './Start.vue';
 import Chapter from './Chapter.vue';
 import Naming from './Naming.vue';
@@ -218,6 +218,44 @@ describe('Start seed fallback without Web Crypto (#2637)', () => {
 });
 
 describe('campaign choice (#66)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'keeps campaign radio selections independent across retained Start screens (%s, #3051)',
+    async (proseMode) => {
+      const oldActions = spyActions();
+      const currentActions = spyActions();
+      const host = mount(defineComponent({
+        setup: () => () => h('div', [
+          h(Start, { key: 'old', actions: oldActions, resumable: false, proseMode }),
+          h(Start, { key: 'current', actions: currentActions, resumable: false, proseMode }),
+        ]),
+      }), { attachTo: document.body });
+      try {
+        await flush();
+        const [old, current] = host.findAllComponents(Start);
+        const radio = (screen: typeof old, campaign: string) =>
+          screen!.get(`input[type="radio"][value="${campaign}"]`).element as HTMLInputElement;
+        expect(radio(old, 'short').checked).toBe(true);
+        expect(radio(current, 'short').checked).toBe(true);
+
+        radio(current, 'long').click();
+        await nextTick();
+        expect(radio(old, 'short').checked).toBe(true);
+        expect(radio(current, 'long').checked).toBe(true);
+        await current!.get('.primary-row button[data-begin]').trigger('click');
+        await old!.get('.primary-row button[data-begin]').trigger('click');
+        expect(currentActions.begin).toHaveBeenCalledExactlyOnceWith(expect.any(Number), 'long');
+        expect(oldActions.begin).toHaveBeenCalledExactlyOnceWith(expect.any(Number), 'short');
+
+        radio(old, 'long').click();
+        await nextTick();
+        expect(radio(old, 'long').checked).toBe(true);
+        expect(radio(current, 'long').checked).toBe(true);
+      } finally {
+        host.unmount();
+      }
+    },
+  );
+
   it('describes the Long Line summit as a difficult goal, not a guaranteed route (#1978)', async () => {
     for (const proseMode of ['original', 'plainenglish'] as const) {
       const w = mount(Start, {
@@ -467,6 +505,57 @@ describe('the Demonstration front door (#2063)', () => {
   });
 });
 
+describe('Demonstration deletion and delayed save-list retries (#3049)', () => {
+  it.each(['success', 'failure'] as const)(
+    'keeps Retry out of a pending deletion and restores it after %s',
+    async (outcome) => {
+      const slot = 'demo-chapter-old';
+      const actions = spyActions([{ slot, year: 1056 }]);
+      vi.mocked(actions.listSaves)
+        .mockResolvedValueOnce([{ slot, year: 1056 }])
+        .mockRejectedValueOnce(new Error('demo preflight listing failed'))
+        .mockResolvedValueOnce(outcome === 'success' ? [] : [{ slot, year: 1056 }]);
+      let finish!: () => void;
+      vi.mocked(actions.deleteDemoSave).mockImplementationOnce(() => new Promise<void>((resolve, reject) => {
+        finish = () => outcome === 'success' ? resolve() : reject(new Error('delete failed'));
+      }));
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        // A saved chapter does not prove that a demo autosave exists. The
+        // Begin preflight can fail while retaining the chapter's recovery row.
+        await w.get('input[value="demo"]').setValue(true);
+        await w.get('.primary-row button[data-begin]').trigger('click');
+        await flush();
+        expect(actions.listSaves).toHaveBeenCalledTimes(2);
+        const retry = w.get('.save-list-error button');
+        await w.get(`button[data-demo-remove-slot="${slot}"]`).trigger('click');
+        (w.get('.demo-delete-confirm .confirm-remove').element as HTMLButtonElement).click();
+        expect(actions.deleteDemoSave).toHaveBeenCalledExactlyOnceWith(slot);
+        // A queued click must obey the same guard even before Vue repaints.
+        retry.element.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        expect(actions.listSaves).toHaveBeenCalledTimes(2);
+        await flush();
+        expect(retry.attributes('disabled')).toBeDefined();
+
+        finish();
+        await flush();
+        expect(w.find('.demo-saved').exists()).toBe(outcome === 'failure');
+        expect(retry.attributes('disabled')).toBeUndefined();
+        await retry.trigger('click');
+        await flush();
+        expect(actions.listSaves).toHaveBeenCalledTimes(3);
+        expect(w.find('.save-list-error').exists()).toBe(false);
+        expect(w.find('.demo-saved').exists()).toBe(outcome === 'failure');
+        expect(actions.begin).not.toHaveBeenCalled();
+      } finally {
+        finish?.();
+        w.unmount();
+      }
+    },
+  );
+});
+
 describe('Demonstration deletion focus after asynchronous hosts (#2573)', () => {
   it('does not steal focus from another live control after a delayed deletion', async () => {
     const actions = spyActions([{ slot: 'demo-autosave', year: 1062 }]);
@@ -487,7 +576,7 @@ describe('Demonstration deletion focus after asynchronous hosts (#2573)', () => 
       expect(actions.deleteDemoSave).toHaveBeenCalledWith('demo-autosave');
 
       // The reader has moved to a different live control while the host waits.
-      const long = w.get('input[name="campaign"][value="long"]');
+      const long = w.get('input[type="radio"][value="long"]');
       (long.element as HTMLInputElement).focus();
       expect(document.activeElement).toBe(long.element);
       finish();
@@ -1100,6 +1189,52 @@ describe('named save exports are single-flight per slot (#1510)', () => {
 
 /** The newest named save action owns the shared refusal row (#1469). */
 describe('out-of-order named save actions (#1469)', () => {
+  it.each([
+    ['refused', false], ['rejected', false], ['refused', true], ['rejected', true],
+  ] as const)(
+    'keeps newer demo deletion feedback after an older export is %s (deleted=%s, #3050)',
+    async (outcome, deleted) => {
+      const actions = spyActions([
+        { slot: 'chapter-full', year: 1100 },
+        { slot: 'demo-chapter-old', year: 1056 },
+      ]);
+      let finish!: () => void;
+      vi.mocked(actions.exportSave).mockImplementationOnce(() => new Promise<boolean>((resolve, reject) => {
+        finish = () => outcome === 'refused' ? resolve(false) : reject(new Error('older export failed'));
+      }));
+      if (!deleted) vi.mocked(actions.deleteDemoSave).mockRejectedValueOnce(new Error('newer deletion failed'));
+      const w = mount(Start, { props: { actions, resumable: false } });
+      try {
+        await flush();
+        const exportButton = w.get('.saved button[aria-label^="Copy out"]');
+        await exportButton.trigger('click');
+        await w.get('button[data-demo-remove-slot="demo-chapter-old"]').trigger('click');
+        await w.get('.demo-delete-confirm .confirm-remove').trigger('click');
+        await flush();
+        if (deleted) expect(w.find('.demo-saved').exists()).toBe(false);
+        else expect(w.get('.demo-saved .save-action-error').text()).toContain('could not be removed');
+
+        finish();
+        await flush();
+        if (deleted) expect(w.find('.demo-saved').exists()).toBe(false);
+        else expect(w.get('.demo-saved .save-action-error').text()).toContain('could not be removed');
+        expect(w.find('.saved .save-action-error').exists()).toBe(false);
+        expect(exportButton.attributes('disabled')).toBeUndefined();
+        if (!deleted) {
+          // The authoritative deletion failure remains actionable.
+          await w.get('.demo-delete-confirm .confirm-remove').trigger('click');
+          await flush();
+          expect(actions.deleteDemoSave).toHaveBeenCalledTimes(2);
+        }
+        expect(w.find('.demo-saved').exists()).toBe(false);
+        expect(w.find('.save-action-error').exists()).toBe(false);
+      } finally {
+        finish?.();
+        w.unmount();
+      }
+    },
+  );
+
   it.each(['refused', 'rejected'] as const)(
     'does not let an older %s export move the newest failed export to another row',
     async (olderOutcome) => {
@@ -2951,7 +3086,7 @@ describe('asynchronous Library focus ownership (#2577)', () => {
 
       // The host is still clearing the Library. The reader has moved back to
       // a campaign choice, which the eventual host reply must not steal.
-      const radio = w.get('input[name="campaign"][value="long"]').element as HTMLInputElement;
+      const radio = w.get('input[type="radio"][value="long"]').element as HTMLInputElement;
       radio.focus();
       expect(document.activeElement).toBe(radio);
       finish();
