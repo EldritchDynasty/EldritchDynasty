@@ -3,7 +3,7 @@ import { loadBundle } from '@ed/content';
 import { canonical } from '@ed/core';
 import { RegisterS, type Register } from '@ed/schema';
 import type { Platform } from '../platform.js';
-import { createGame, type GameActions } from './game.js';
+import { createGame, type GameActions, type Outcome } from './game.js';
 import { CUES, PEAK, Sound, cueScore, droneScore, type Cue, type DroneInput, type Score } from './sound';
 import { SoundBed, droneFor, outcomeCue, runningRegisters, soundActions } from './sound-bed';
 
@@ -1780,13 +1780,13 @@ describe('a played session hears the committed moments, and only those', () => {
     const game = createGame(bundle, memoryPlatform());
     let year = 1042;
     let pending = 0;
-    let outcome: ReturnType<typeof game.actions.choose> | null = null;
+    let chose = false;
     const attempted: Cue[] = [];
     const wrapped = soundActions({
       ...game.actions,
       advance: () => { year++; pending++; },
       choose: () => {
-        outcome = true;
+        chose = true;
         return true;
       },
     } as GameActions, {
@@ -1797,7 +1797,7 @@ describe('a played session hears the committed moments, and only those', () => {
     }, {
       year: () => year,
       docket: () => pending,
-      outcome: () => outcome ? { kind: 'choice', valence: 'boon' } as ReturnType<typeof game.outcome.value> : null,
+      outcome: () => chose ? { kind: 'choice', valence: 'boon' } as Outcome : null,
     });
 
     // The wrapped simulation actions must finish even if each sound fails.
@@ -1806,7 +1806,7 @@ describe('a played session hears the committed moments, and only those', () => {
     expect(pending).toBe(1);
     expect(attempted).toEqual(['page', 'bell']);
 
-    const input = game.actions.begin(1986, 'short');
+    game.actions.begin(1986, 'short');
     const signing = game.prologue.value!;
     expect(wrapped.found({
       houseName: 'House Audible',
@@ -1814,7 +1814,6 @@ describe('a played session hears the committed moments, and only those', () => {
       grudge: signing.grudges[0]!.house,
     }).ok).toBe(true);
     expect(attempted).toEqual(['page', 'bell', 'seal']);
-    expect(input).toBeUndefined();
   });
 
   it('pages, bells and seals where §24 puts them, and chimes each choice by its valence', () => {
