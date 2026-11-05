@@ -452,6 +452,10 @@ export function readShareCode(
   source: ContentBundle | Content,
   opts: { build?: string } = {},
 ): ReadShareCodeResult {
+  // QR/clipboard/native bridges are runtime inputs, even when their TypeScript
+  // adapters promise a string. Refuse malformed values before reading .length
+  // or invoking string methods; a bad paste must not throw out of Start.
+  if (typeof code !== 'string') return { ok: false, problem: { kind: 'not_a_code' } };
   // Exported images can yield aggressively wrapped codes, with indentation
   // between even individual characters. Allow up to three separator characters
   // per code character, while bounding raw input before normalization so a
