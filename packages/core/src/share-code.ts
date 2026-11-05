@@ -586,6 +586,15 @@ export function newGameFromShareCode(
   }
   const houseName = f.houseName ?? given.house?.trim() ?? '';
   const friendNames = f.friends.map((friend, i) => friend.name ?? given.friends?.[i]?.trim() ?? '');
+  // The normal signing checks lengths before mutating its world, but a share
+  // import must reject an oversized recipient name before even constructing a
+  // fresh GameSession. Normalize exactly as foundHouse/normaliseFriends do:
+  // whitespace padding alone must not make a valid name too long.
+  const signingLength = (name: string) => name.trim().replace(/\s+/g, ' ').length;
+  if (signingLength(houseName) > HOUSE_NAME_MAX
+    || friendNames.some((name) => signingLength(name) > FRIEND_NAME_MAX)) {
+    return { ok: false, problem: { kind: 'invalid_names' } };
+  }
   // Unlike manual signing's optional friends, a shared roster is required:
   // every encoded friend must receive a visible name. The founding validator
   // skips invisible-only optional names, which would silently shorten an
