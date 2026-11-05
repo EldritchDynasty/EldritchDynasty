@@ -1107,3 +1107,94 @@ describe('bloodline relevance dates marriages (#2766)', () => {
     });
   }
 });
+
+
+describe('present-year relevance from recovered saves (#2947–#2949)', () => {
+  it('excludes a recorded death from unmarried blood relevance only when due (#2947)', () => {
+    const ctx = testWorld(content, 2947, 1042);
+    const w = ctx.world;
+    const living = place(ctx, { sex: 'female', age: 25, name: 'Living Blood Candidate' });
+    const deceased = place(ctx, { sex: 'female', age: 25, name: 'Recorded Dead Blood Candidate' });
+    const later = place(ctx, { sex: 'female', age: 25, name: 'Later Death Blood Candidate' });
+    deceased.died = w.year;
+    later.died = w.year + 1;
+    w.houseAmbition = 'deepen_blood';
+
+    const cue = 'unmarried, of the blood';
+    const now = relevantPeople(ctx);
+    expect(now.get(living.id)).toContain(cue);
+    expect(now.get(deceased.id) ?? []).not.toContain(cue);
+    expect(now.get(later.id)).toContain(cue);
+
+    w.year += 1;
+    expect(relevantPeople(ctx).get(later.id) ?? []).not.toContain(cue);
+  });
+
+  it('does not tag unborn or effectively dead Ledger readers (#2948)', () => {
+    const ctx = testWorld(content, 2948, 1042);
+    const w = ctx.world;
+    const live = place(ctx, { sex: 'male', age: 31, name: 'Current Archivist' });
+    const unborn = place(ctx, { sex: 'female', age: -3, name: 'Unborn Archivist' });
+    const dead = place(ctx, { sex: 'male', age: 35, name: 'Deceased Archivist' });
+    const later = place(ctx, { sex: 'female', age: 30, name: 'Later Dead Chronicler' });
+    for (const p of [live, unborn, dead, later]) {
+      p.contract = {
+        role: p === later ? 'chronicler' : 'archivist',
+        term: 'yearly', wage: 6, loyalty: 60, boundTo: p.id,
+        onEmployerDeath: 'passes_to_heir', debt: 0, knowsSecrets: [],
+      };
+    }
+    dead.died = w.year;
+    later.died = w.year + 1;
+    w.houseAmbition = 'restore_ledger';
+
+    const cue = "the house's reader of the Ledger";
+    const now = relevantPeople(ctx);
+    expect(now.get(live.id)).toContain(cue);
+    expect(now.get(unborn.id) ?? []).not.toContain(cue);
+    expect(now.get(dead.id) ?? []).not.toContain(cue);
+    expect(now.get(later.id)).toContain(cue);
+
+    w.year += 1;
+    expect(relevantPeople(ctx).get(later.id) ?? []).not.toContain(cue);
+  });
+
+  it('ignores unborn and effectively dead residents for cadet relevance (#2949)', () => {
+    const ctx = testWorld(content, 2949, 1042);
+    const w = ctx.world;
+    const living = place(ctx, { sex: 'male', age: 24, name: 'Current Cadet' });
+    const unborn = place(ctx, { sex: 'male', age: -2, name: 'Future Cadet' });
+    const dead = place(ctx, { sex: 'female', age: 28, name: 'Dead Cadet' });
+    dead.died = w.year;
+
+    const branchId = asId<BranchId>('br_relevance_present_year');
+    w.branches.set(branchId, {
+      id: branchId, name: 'The second hall', house: asId(w.playerHouse),
+      founder: living.id, splitFrom: MAIN_BRANCH, foundedYear: w.year,
+      speaker: living.id, grievance: 2,
+    });
+    for (const p of [living, unborn, dead]) {
+      const membership = p.membership.find((m) => m.to === undefined);
+      if (!membership) throw new Error('test resident lacks a current membership');
+      membership.branch = branchId;
+      membership.kind = 'cadet';
+    }
+    w.houseAmbition = 'secure_branches';
+
+    const grievance = 'their hall holds a grievance';
+    const thin = 'keeps a thin cadet hall alive';
+    const now = relevantPeople(ctx);
+    expect(now.get(living.id)).toContain(grievance);
+    expect(now.get(living.id)).toContain(thin);
+    expect(now.get(unborn.id) ?? []).not.toContain(grievance);
+    expect(now.get(unborn.id) ?? []).not.toContain(thin);
+    expect(now.get(dead.id) ?? []).not.toContain(grievance);
+    expect(now.get(dead.id) ?? []).not.toContain(thin);
+
+    w.year += 2;
+    const later = relevantPeople(ctx);
+    expect(later.get(unborn.id)).toContain(grievance);
+    expect(later.get(living.id) ?? []).not.toContain(thin);
+    expect(later.get(dead.id) ?? []).not.toContain(grievance);
+  });
+});
