@@ -2702,15 +2702,15 @@ const SIGNED = {
   friends: [{ name: 'Iona Vale', sex: 'female' as const }, { name: 'Corven Pike', sex: 'male' as const }],
 };
 
-async function senderCode(names = false): Promise<{ code: string; saved: unknown }> {
+async function senderCode(names = false, campaign: 'short' | 'demo' = 'short'): Promise<{ code: string; saved: unknown }> {
   const host = sharePlatform();
   const sender = createGame(content, host);
-  sender.actions.begin(199510, 'short');
+  sender.actions.begin(199510, campaign);
   expect(sender.actions.found(SIGNED).ok).toBe(true);
   await flush();
   const made = sender.actions.shareCode(names);
   if (!made.ok) throw new Error(made.unavailable);
-  return { code: made.code, saved: host.saves.get('autosave') };
+  return { code: made.code, saved: host.saves.get(campaign === 'demo' ? 'demo-autosave' : 'autosave') };
 }
 
 async function openAdvanced(w: ReturnType<typeof mount>): Promise<void> {
@@ -2825,6 +2825,136 @@ describe('the front door begins from a share code', () => {
     await w.findAll('button').find((b) => b.text() === 'Sign from this code')!.trigger('click');
     await flush();
     expect(canonical(host.saves.get('autosave'))).toBe(canonical(saved));
+  });
+
+  it.each(['original', 'plainenglish'] as const)(
+    'confirms before a shared Demo replaces a saved Demo (%s, #1979)',
+    async (proseMode) => {
+      const { code } = await senderCode(true, 'demo');
+      const host = sharePlatform();
+      const previous = createGame(content, host);
+      previous.actions.begin(1979007, 'demo');
+      expect(previous.actions.found(SIGNED).ok).toBe(true);
+      await flush();
+      const keptDemo = host.saves.get('demo-autosave');
+      previous.actions.begin(1979008, 'short');
+      await flush();
+      const keptFull = host.saves.get('autosave');
+
+      const recipient = createGame(content, host);
+      const w = mount(Start, { attachTo: document.body, props: { actions: recipient.actions, resumable: true, proseMode } });
+      try {
+        await openAdvanced(w);
+        await w.get('#share-code-in').setValue(code);
+        const begin = w.get('button[data-begin-share]');
+        await begin.trigger('click');
+        await flush();
+        const prompt = w.get('.share-demo-overwrite-confirm');
+        expect(prompt.attributes('role')).toBe('group');
+        expect(prompt.text()).toMatch(/(replace your saved demonstration|replace the last sitting)/);
+        expect(document.activeElement).toBe(prompt.get('button.confirm-overwrite').element);
+        expect(recipient.view.value).toBeNull();
+        expect(host.saves.get('demo-autosave')).toEqual(keptDemo);
+        expect(host.saves.get('autosave')).toEqual(keptFull);
+
+        await prompt.findAll('button').find((button) => button.text() === 'Cancel')!.trigger('click');
+        await flush();
+        expect(w.find('.share-demo-overwrite-confirm').exists()).toBe(false);
+        expect(document.activeElement).toBe(begin.element);
+        expect(host.saves.get('demo-autosave')).toEqual(keptDemo);
+
+        await begin.trigger('click');
+        await w.get('.share-demo-overwrite-confirm .confirm-overwrite').trigger('click');
+        await flush();
+        expect(recipient.view.value?.campaign.id).toBe('demo');
+        expect(host.saves.get('autosave')).toEqual(keptFull);
+        expect(host.saves.get('demo-autosave')).not.toEqual(keptDemo);
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
+  it('rechecks the host before shared Demo start instead of trusting its mount-time catalogue (#1979)', async () => {
+    const { code } = await senderCode(true, 'demo');
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false } });
+    try {
+      await openAdvanced(w);
+      await w.get('#share-code-in').setValue(code);
+      expect(w.find('.demo-saved').exists()).toBe(false);
+      const newDemo = { campaign: 'demo', marker: 'another tab saved this' };
+      host.saves.set('demo-autosave', newDemo);
+      await w.get('button[data-begin-share]').trigger('click');
+      await flush();
+      expect(w.get('.share-demo-overwrite-confirm').exists()).toBe(true);
+      expect(recipient.view.value).toBeNull();
+      expect(host.saves.get('demo-autosave')).toEqual(newDemo);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('refuses to launch an earlier shared Demo code when the host recheck is slow (#1979)', async () => {
+    const { code } = await senderCode(true, 'demo');
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false } });
+    try {
+      await openAdvanced(w);
+      await w.get('#share-code-in').setValue(code);
+      let finish!: (saves: SaveSummary[]) => void;
+      host.listSaves = vi.fn(() => new Promise<SaveSummary[]>((resolve) => { finish = resolve; }));
+      await w.get('button[data-begin-share]').trigger('click');
+      await w.get('#share-code-in').setValue('');
+      finish([]);
+      await flush();
+      expect(recipient.view.value).toBeNull();
+      expect(w.find('.share-demo-overwrite-confirm').exists()).toBe(false);
+      expect(host.saves.has('demo-autosave')).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('starts a shared Demo when the rechecked namespace is empty (#1979)', async () => {
+    const { code } = await senderCode(true, 'demo');
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false } });
+    try {
+      await openAdvanced(w);
+      await w.get('#share-code-in').setValue(code);
+      await w.get('button[data-begin-share]').trigger('click');
+      await flush();
+      expect(w.find('.share-demo-overwrite-confirm').exists()).toBe(false);
+      expect(recipient.view.value?.campaign.id).toBe('demo');
+      expect(host.saves.get('demo-autosave')).toMatchObject({ campaign: 'demo' });
+      expect(host.saves.has('autosave')).toBe(false);
+    } finally {
+      w.unmount();
+    }
+  });
+
+  it('warns about unknown save state before shared Demo start (#1979)', async () => {
+    const { code } = await senderCode(true, 'demo');
+    const host = sharePlatform();
+    const recipient = createGame(content, host);
+    const w = mount(Start, { props: { actions: recipient.actions, resumable: false, proseMode: 'plainenglish' } });
+    try {
+      await flush();
+      await w.findAll('button').find((button) => button.text() === 'Advanced options')!.trigger('click');
+      await w.get('#share-code-in').setValue(code);
+      host.listSaves = vi.fn(async () => { throw new Error('offline'); });
+      await w.get('button[data-begin-share]').trigger('click');
+      await flush();
+      expect(w.get('.share-demo-overwrite-confirm').text()).toContain('Saved games could not be checked');
+      expect(recipient.view.value).toBeNull();
+      expect(host.saves.has('demo-autosave')).toBe(false);
+    } finally {
+      w.unmount();
+    }
   });
 
   it('says why a damaged code is refused, in the reader\'s mode, and offers nothing to begin', async () => {
