@@ -673,6 +673,9 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   // the boundary. Do not assign that tentative run to an unfinished signing,
   // or invent a preceding house when the reader was only on the title screen.
   let pickupPending = false;
+  // A loaded year's watcher can run before the Chronicle confirms the pickup.
+  // Keep that tentative year out of the old house's answer gap until confirmed.
+  let pickupYear: number | null = null;
 
   const advance = (to: number) => {
     const span = Math.max(0, Math.min(to, stop) - last);
@@ -701,11 +704,15 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
       case 'visible': visible = e.visible; break;
       case 'focus': focused = e.focused; break;
       case 'break': onBreak = e.on; break;
-      case 'year': year = e.year; hasHouse = true; break;
+      case 'year':
+        if (pickupPending) pickupYear = e.year;
+        else { year = e.year; hasHouse = true; }
+        break;
       case 'pickup-failed':
         // A failed pickup is not a boundary. Continue the existing gap and
         // any unfinished signing without inventing a newly loaded house.
         pickupPending = false;
+        pickupYear = null;
         break;
       case 'pickup':
         // A resumed house cannot complete the signing of an earlier new house.
@@ -719,7 +726,8 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
           open = { at: e.at, year: null, kind: 'start', foreground, decisions: 0 };
         }
         hasHouse = true;
-        year = null;
+        year = pickupYear;
+        pickupYear = null;
         break;
       case 'decision': hasHouse = true; decisions++; open.decisions++; break;
       case 'page': case 'interlude': {
@@ -731,10 +739,14 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
         break;
       }
       case 'action':
-        if (e.act === 'start' && PICKUPS.has(e.verb)) pickupPending = true;
+        if (e.act === 'start' && PICKUPS.has(e.verb)) {
+          pickupPending = true;
+          pickupYear = null;
+        }
         if (e.act === 'start' && (e.verb === 'begin' || e.verb === 'beginFromShareCode')) {
           // An ordinary new house supersedes even a pending/failed pickup.
           pickupPending = false;
+          pickupYear = null;
           finishEntry(e.at);
           entry = { startedAt: e.at, foregroundAt: foreground, campaign: null,
             // An accepted share code starts a house already founded; the ordinary Begin does not.
