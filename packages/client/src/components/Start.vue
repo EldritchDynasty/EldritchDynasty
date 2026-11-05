@@ -147,10 +147,12 @@ const libraryIsReady = computed(() => props.libraryReady ?? true);
  * Zero is a valid deterministic seed; do not replace invalid input silently.
  */
 const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0 && seed.value <= 0xffffffff);
+/** The initial save catalogue may be stale when another tab/device host wrote a Demo. */
+const checkingDemoBeforeBegin = ref(false);
 /** A pending host restore owns the session until it settles. */
 /** Do not snapshot inherited houses while an asynchronous Library mutation is unsettled. */
 const mayBegin = computed(() => libraryIsReady.value && validSeed.value
-  && !selectingRun.value && !libraryBusy.value
+  && !selectingRun.value && !libraryBusy.value && !checkingDemoBeforeBegin.value
   // An unresolved host listing cannot tell us whether beginning a Demo would
   // replace an existing demo autosave. Full campaigns need not wait for it.
   && (campaign.value !== 'demo' || !listingSaves.value));
@@ -174,16 +176,37 @@ function beginNow(): void {
   }
 }
 
-function begin(): void {
+function requestDemoOverwriteConfirmation(): void {
+  confirmingDemoOverwrite.value = true;
+  void nextTick(() => startRoot.value?.querySelector<HTMLButtonElement>('.demo-overwrite-confirm .confirm-overwrite')?.focus());
+}
+
+async function begin(): Promise<void> {
   if (!mayBegin.value || beginning) return;
-  if (campaign.value === 'demo' && demoOverwriteRisk.value) {
-    // The separate Demo namespace prevents replacing a full campaign, but an
-    // ordinary Begin would still overwrite an unfinished Demonstration.
-    confirmingDemoOverwrite.value = true;
-    void nextTick(() => startRoot.value?.querySelector<HTMLButtonElement>('.demo-overwrite-confirm .confirm-overwrite')?.focus());
+  if (campaign.value !== 'demo') { beginNow(); return; }
+  if (demoOverwriteRisk.value) {
+    requestDemoOverwriteConfirmation();
     return;
   }
-  beginNow();
+
+  // Start's mount-time list is only a snapshot. Another tab or a native host
+  // may have written a Demo since it was read. Re-check before the first
+  // unconfirmed write, and treat a failed read as possible existing data.
+  // Hold the same-render latch while awaiting the host so repeated clicks
+  // cannot begin twice or race a pending selection.
+  beginning = true;
+  checkingDemoBeforeBegin.value = true;
+  try {
+    await refreshSaves();
+  } finally {
+    checkingDemoBeforeBegin.value = false;
+    beginning = false;
+  }
+  // The reader may have selected a different campaign or entered a host
+  // operation while this read was in flight. Never launch an old selection.
+  if (campaign.value !== 'demo' || !mayBegin.value) return;
+  if (demoOverwriteRisk.value) requestDemoOverwriteConfirmation();
+  else beginNow();
 }
 
 function confirmBeginDemo(): void {
