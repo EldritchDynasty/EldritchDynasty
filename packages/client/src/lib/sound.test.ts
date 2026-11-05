@@ -1601,6 +1601,13 @@ describe('the bed decides when the house may be heard', () => {
       .not.toContain('suspend');
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
 
+    // A stale native callback must not leave a hidden hostPaused flag behind.
+    // An ordinary hide/show of the current attachment must still recover.
+    bed.hide();
+    expect(bed.audible).toBe(false);
+    bed.show();
+    expect(bed.audible, 'stale native pause prevented the active attachment resuming').toBe(true);
+
     page.fire('win:pagehide'); // the current attachment must still work
     expect(bed.audible).toBe(false);
     expect(ctx.calls).toContain('suspend');
