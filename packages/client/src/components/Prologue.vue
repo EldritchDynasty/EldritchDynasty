@@ -180,9 +180,15 @@ function on(): void {
       props.prologue.triad.length,
     );
   } finally {
-    // Successive deliberate reveals remain possible after the new beat is
-    // actually displayed. Match the other single-flight controls in this view.
-    void nextTick(() => { revealing = false; });
+    // The final reveal removes its button. Move focus to the first visible
+    // signing heading rather than abandoning keyboard and screen-reader readers
+    // on a detached control. Earlier beats retain their focused button.
+    void nextTick(() => {
+      revealing = false;
+      if (!props.prologue.founded && shown.value >= props.prologue.triad.length) {
+        focusSigningStageHeading();
+      }
+    });
   }
 }
 
@@ -285,6 +291,13 @@ const stageReady = computed(() => {
   }
 });
 
+function focusSigningStageHeading(): void {
+  const heading = signingStage.value === 'founder' ? 'founder-section-heading'
+    : signingStage.value === 'examination' ? 'examination-heading'
+      : 'house-section-heading';
+  document.getElementById(heading)?.focus();
+}
+
 let navigatingSigning = false;
 function moveSigningStage(direction: -1 | 1): void {
   // A second click on the DOM's stale Back/Continue button must not advance
@@ -298,10 +311,7 @@ function moveSigningStage(direction: -1 | 1): void {
   // readers a predictable target instead of dropping focus to the document.
   void nextTick(() => {
     try {
-      const heading = signingStage.value === 'founder' ? 'founder-section-heading'
-        : signingStage.value === 'examination' ? 'examination-heading'
-          : 'house-section-heading';
-      document.getElementById(heading)?.focus();
+      focusSigningStageHeading();
     } finally {
       navigatingSigning = false;
     }
