@@ -1877,7 +1877,7 @@ describe('a played session hears the committed moments, and only those', () => {
       choose: () => {
         if (rejectAction) throw new Error('game action rejected');
         accepted++;
-        outcome = { kind: 'choice', valence: 'boon' };
+        outcome = { kind: 'choice', valence: 'boon', said: 'Answer', text: 'A boon.' };
         return true;
       },
     } as GameActions, { cue: (cue) => heard.push(cue) }, {
