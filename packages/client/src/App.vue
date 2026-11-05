@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { createGame, type GameActions } from './lib/game';
+import { createGame, resumeRecapRequested, withAcceptedPickup, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import { createProseModeSelector } from './lib/prose-selection';
 import { appShellCopy, clockBlockers, frozenLine, frozenNoticeShown } from './lib/app-shell-copy';
@@ -27,6 +27,7 @@ import Book from './components/Book.vue';
 import Plat from './components/Plat.vue';
 import Line from './components/Line.vue';
 import ReadingSettings from './components/ReadingSettings.vue';
+import ResumeRecap from './components/ResumeRecap.vue';
 import { shortcutHelp, isControl, isField, isGlossaryFocus, shortcutFor } from './lib/keys';
 import { LEGEND, markSays } from './lib/marks';
 import {
@@ -106,6 +107,14 @@ const actions = soundActions(
  * the family, the orders the house is under, or what the world is saying about
  * it. A panel competing with the docket for the same column would lose.
  */
+/** A recap is reader-local and appears only on an accepted pickup. Never a modal or a saved field. */
+const resumeRecap = ref(false);
+const recapExperiment = typeof window !== 'undefined' && resumeRecapRequested(window.location.search);
+const startActions: GameActions = withAcceptedPickup(actions, () => {
+  resumeRecap.value = recapExperiment && Boolean(view.value && openingSeen.value && !ended.value);
+});
+watch(view, (next) => { if (!next) resumeRecap.value = false; });
+
 const pane = ref<'house' | 'table' | 'abroad' | 'chronicle'>('house');
 
 /** Reading choices are local to this device and must not alter a saved world. */
@@ -416,6 +425,7 @@ function openLine(): void {
  * what App.vue itself opened.
  */
 function leaveToStart(): void {
+  resumeRecap.value = false;
   bookOpen.value = null;
   bookFocus.value = undefined;
   bookPerson.value = undefined;
@@ -578,7 +588,7 @@ const yearAndBirths = computed(() => {
 
   <Start
     v-if="!view"
-    :actions="actions"
+    :actions="startActions"
     :resumable="resumable"
     :library="library"
     :library-ready="libraryReady"
@@ -614,6 +624,13 @@ const yearAndBirths = computed(() => {
   </template>
 
   <template v-else>
+    <ResumeRecap
+      v-if="resumeRecap && (view.generationArc?.question || view.ambition || docket.length)"
+      :view="view"
+      :pending="docket.length"
+      :prose-mode="accessibility.proseMode"
+      @dismiss="resumeRecap = false"
+    />
     <Standing
       :view="view"
       :prose-mode="accessibility.proseMode"

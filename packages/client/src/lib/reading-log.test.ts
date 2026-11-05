@@ -3,7 +3,7 @@ import { watch } from 'vue';
 import { loadBundle } from '@ed/content';
 import { canonical } from '@ed/core';
 import type { Platform } from '../platform.js';
-import { createGame } from './game.js';
+import { createGame, withAcceptedPickup } from './game.js';
 import {
   READING_LOG_MAX_EVENTS, READING_LOG_NOTICE, ReadingLog, attachReadingLog, readingLogRequested, recordActions, summarize,
 } from './reading-log.js';
@@ -1376,4 +1376,34 @@ describe('watching changes nothing it watches', () => {
     expect(JSON.stringify(observed.events)).not.toContain('nothing');
   });
 
+});
+
+
+describe('recap telemetry boundary (#1985)', () => {
+  it.each(['resume', 'load', 'importSave'] as const)(
+    'a successful %s offers only a UI recap, without inventing an answer or replaying a page',
+    async (verb) => {
+      const l = log();
+      l.note({ kind: 'run', campaign: 'short', seed: 1985 });
+      const page = { id: 'remembered', year: 1184, answer: 'glimpse' as const };
+      l.chronicle([page]);
+      const before = l.events.filter(e => e.kind === 'page').length;
+      let shown = 0;
+      const recorded = recordActions({
+        [verb]: () => Promise.resolve(true),
+      } as unknown as Parameters<typeof recordActions>[0], l);
+      const recap = withAcceptedPickup(recorded, () => { shown++; });
+      expect(await (recap[verb] as (...args: unknown[]) => Promise<unknown>)('private-slot')).toBe(true);
+      expect(shown).toBe(1);
+      // The pickup is observed when the restored Chronicle first appears,
+      // not when the asynchronous load returns. Its page is carried history.
+      l.chronicle([page]);
+      expect(l.events.filter(e => e.kind === 'pickup')).toHaveLength(1);
+      expect(l.events.filter(e => e.kind === 'page')).toHaveLength(before + 1);
+      expect(l.events.filter(e => e.kind === 'page').at(-1)).toMatchObject({
+        page: 'remembered', carried: true,
+      });
+      expect(l.artifact().summary.answers).toBe(1);
+    },
+  );
 });

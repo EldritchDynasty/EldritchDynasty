@@ -5,9 +5,10 @@ import { nextTick } from 'vue';
 import Start from './Start.vue';
 import Chapter from './Chapter.vue';
 import Naming from './Naming.vue';
+import ResumeRecap from './ResumeRecap.vue';
 import { canonical, type SessionView } from '@ed/core';
 import { loadContent } from '@ed/content';
-import { CAMPAIGN_CHOICES, createGame, type GameActions, type ChapterBeat } from '../lib/game';
+import { CAMPAIGN_CHOICES, createGame, resumeRecapRequested, withAcceptedPickup, type GameActions, type ChapterBeat } from '../lib/game';
 import type { Platform, SaveSummary } from '../platform';
 import type { RunLibrary } from '@ed/schema';
 import { hasSeenProse, rememberSeenProse, seenProseKey } from '../lib/accessibility';
@@ -3011,5 +3012,105 @@ describe('asynchronous Library focus ownership (#2577)', () => {
     } finally {
       w.unmount();
     }
+  });
+});
+
+
+function snapshot(overrides: Record<string, unknown> = {}): SessionView {
+  return {
+    houseName: 'House Ash',
+    year: 1321,
+    generation: 7,
+    generationArc: { question: 'Whom shall the new head protect?' },
+    ambition: { name: 'Preserve the line', next: 'Keep a cadet hall safe.' },
+    ...overrides,
+  } as unknown as SessionView;
+}
+
+describe('resume recap opt-in', () => {
+  it('requires one exact experiment switch and never enables the unobserved feature by default', () => {
+    expect(resumeRecapRequested('')).toBe(false);
+    expect(resumeRecapRequested('?reading-log=1')).toBe(false);
+    expect(resumeRecapRequested('?resume-recap=0')).toBe(false);
+    expect(resumeRecapRequested('?resume-recap=true')).toBe(false);
+    expect(resumeRecapRequested('?resume-recap=1&resume-recap=1')).toBe(false);
+    expect(resumeRecapRequested('?resume-recap=1&resume-recap=0')).toBe(false);
+    expect(resumeRecapRequested('?reading-log=1&resume-recap=1')).toBe(true);
+  });
+});
+
+describe('voluntary resume recap (#1985)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'shows only public current facts, never a supposed intention (%s)', async (proseMode) => {
+      const view = snapshot();
+      const before = structuredClone(view);
+      const w = mount(ResumeRecap, { props: { view, pending: 2, proseMode } });
+      try {
+        expect(w.get('summary').text()).toBe(proseMode === 'original'
+          ? 'Where the house stands' : 'See where things stand');
+        expect(w.get('details').attributes('open')).toBeUndefined();
+        expect(w.text()).toContain('House Ash');
+        expect(w.text()).toContain('Whom shall the new head protect?');
+        expect(w.text()).toContain('Preserve the line');
+        expect(w.text()).toContain('2 decisions');
+        expect(w.text()).toContain(proseMode === 'original'
+          ? 'not a memory of your intended course' : 'not a record of what you planned');
+        expect(view).toEqual(before);
+        await w.get('button').trigger('click');
+        expect(w.emitted('dismiss')).toEqual([[]]);
+      } finally { w.unmount(); }
+    },
+  );
+
+  it('omits unsupported facts and updates when the current save changes', async () => {
+    const w = mount(ResumeRecap, { props: {
+      view: snapshot({ generationArc: undefined, ambition: undefined }),
+      pending: 1, proseMode: 'plainenglish',
+    } });
+    try {
+      expect(w.text()).not.toContain('Current family question');
+      expect(w.text()).not.toContain('Goal being tracked');
+      expect(w.text()).toContain('One decision is waiting');
+      await w.setProps({ view: snapshot({ generationArc: undefined, ambition: undefined, houseName: 'House Elm' }), pending: 0 });
+      expect(w.text()).toContain('House Elm');
+      expect(w.text()).not.toContain('One decision is waiting');
+    } finally { w.unmount(); }
+  });
+
+  it('opens a recap only after a successful rolling, named or imported pickup', async () => {
+    const notify = vi.fn();
+    const actions = {
+      resume: vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true),
+      load: vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true),
+      importSave: vi.fn().mockResolvedValueOnce('cancelled')
+        .mockResolvedValueOnce('unavailable').mockResolvedValueOnce(false).mockResolvedValueOnce(true),
+    } as unknown as GameActions;
+    const decorated = withAcceptedPickup(actions, notify);
+    expect(await decorated.resume()).toBe(false);
+    expect(await decorated.load('missing')).toBe(false);
+    expect(await decorated.importSave()).toBe('cancelled');
+    expect(await decorated.importSave()).toBe('unavailable');
+    expect(await decorated.importSave()).toBe(false);
+    expect(notify).not.toHaveBeenCalled();
+    expect(await decorated.resume()).toBe(true);
+    expect(await decorated.load('named')).toBe(true);
+    expect(await decorated.importSave()).toBe(true);
+    expect(notify).toHaveBeenCalledTimes(3);
+    expect(actions.load).toHaveBeenCalledWith('named');
+  });
+
+  it('never announces a rejected or throwing host read', async () => {
+    const notify = vi.fn();
+    const failure = new Error('host refusal');
+    const actions = {
+      resume: () => Promise.reject(failure),
+      load: () => Promise.reject(failure),
+      importSave: () => Promise.reject(failure),
+    } as unknown as GameActions;
+    const decorated = withAcceptedPickup(actions, notify);
+    await expect(decorated.resume()).rejects.toBe(failure);
+    await expect(decorated.load('slot')).rejects.toBe(failure);
+    await expect(decorated.importSave()).rejects.toBe(failure);
+    expect(notify).not.toHaveBeenCalled();
   });
 });
