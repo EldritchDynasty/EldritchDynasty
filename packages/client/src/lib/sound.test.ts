@@ -1197,6 +1197,89 @@ describe('the bed decides when the house may be heard', () => {
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
   });
 
+  it('a duplicate visible event does not override a native pause (#2951)', () => {
+    const { e, page, bed, pause } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    pause();
+    expect(bed.audible).toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+
+    // Some webviews remain "visible" throughout a native background pause.
+    // A redundant visibilitychange cannot stand in for a foreground event.
+    page.fire('doc:visibilitychange');
+    expect(bed.audible, 'duplicate visible event revived native-paused audio').toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+    page.fire('win:pageshow');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+  });
+
+  it('a new visible document does not bypass an unresolved native pause (#2952)', () => {
+    const { e, page: oldPage, bed, pause } = bedOnBoard();
+    oldPage.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    pause();
+    expect(humming(ctx)).toHaveLength(0);
+
+    // A native webview can replace its document without a corresponding
+    // foreground notification. Unlike plain pagehide (#2924), native pause
+    // must survive even when the replacement document is already visible.
+    const replacement = fakePage();
+    bed.attach(replacement.doc, replacement.win);
+    expect(oldPage.count()).toBe(0);
+    expect(bed.audible, 'document replacement revived native-paused audio').toBe(false);
+    replacement.fire('doc:visibilitychange'); // redundant visible signal
+    expect(bed.audible).toBe(false);
+    const before = ctx.sources.length;
+    bed.cue('bell');
+    expect(ctx.sources).toHaveLength(before);
+
+    replacement.fire('win:pointerdown'); // actual player return
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+    expect(replacement.count()).toBe(0);
+  });
+
+  it('samples live visibility for gestures when webview events go missing (#2953)', () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+
+    // Visibility silently changed: a queued event must not play in a hidden
+    // tab merely because no visibilitychange event arrived.
+    page.doc.visibilityState = 'hidden';
+    page.fire('win:click');
+    expect(bed.audible).toBe(false);
+    expect(humming(ctx)).toHaveLength(0);
+    const before = ctx.sources.length;
+    bed.cue('page');
+    expect(ctx.sources).toHaveLength(before);
+
+    // A fresh real gesture also recovers the live visible document without
+    // requiring the webview to dispatch a missed pageshow.
+    page.doc.visibilityState = 'visible';
+    page.fire('win:click');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+
+    const faultyPage = fakePage();
+    Object.defineProperty(faultyPage.doc, 'visibilityState', {
+      get() { throw new Error('visibility inaccessible'); },
+    });
+    const silent = new SoundBed(new Sound(e.ctor));
+    silent.attach(faultyPage.doc, faultyPage.win);
+    silent.prefer({ on: true, volume: 1 });
+    silent.scene(WARM);
+    expect(() => faultyPage.fire('win:click')).not.toThrow();
+    expect(silent.audible, 'throwing visibility getter unlocked audio').toBe(false);
+    expect(e.made, 'throwing visibility getter opened a second audio device').toHaveLength(1);
+    silent.dispose();
+  });
+
   it('lets the frame kill the drone, and closing it restores the Ages', () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:pointerdown');
