@@ -64,6 +64,8 @@ describe('annual bodily condition', () => {
     const w = ctx.world;
     const living = place(ctx, { sex: 'female', age: 28, name: 'Present Resident' });
     const unborn = place(ctx, { sex: 'female', age: -2, name: 'Not Yet Here' });
+    // Imported records can carry a residence beginning before birth.
+    unborn.membership[0]!.from = w.year;
     const deceased = place(ctx, { sex: 'female', age: 35, name: 'Already Gone' });
     deceased.died = w.year; // The imported status flag still says alive.
     const present = w.people.household(w.playerHouse, w.year)
@@ -87,6 +89,7 @@ describe('annual bodily condition', () => {
     const ctx = testWorld(content, 2959, 1042);
     const w = ctx.world;
     const newborn = place(ctx, { sex: 'female', age: -1, name: 'Tomorrow' });
+    newborn.membership[0]!.from = w.year; // Recovered, contradictory pre-birth residence.
     const dying = place(ctx, { sex: 'female', age: 28, name: 'Final Living Year' });
     dying.died = w.year + 1;
     const beforeBirth = structuredClone(newborn.acquired);
