@@ -56,7 +56,7 @@ for (const scenario of [
     const { full } = await openWithSaves(page, scenario.mode);
 
     await expect(page.getByRole('group', { name: scenario.group })).toBeVisible();
-    const short = page.locator('input[name="campaign"][value="short"]');
+    const short = page.getByRole('radio', { name: /A Short Line/ });
     const demo = page.getByRole('radio', { name: /A Demonstration/ });
     await expect(short).toBeChecked();
     await expect(demo).not.toBeChecked();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, useId } from 'vue';
 import { CAMPAIGN_CHOICES, isDemoSaveSlot, type GameActions } from '../lib/game';
 import type { SaveSummary } from '../platform';
 import type { LibraryRun, ProseMode, RunLibrary } from '@ed/schema';
@@ -37,6 +37,9 @@ const emit = defineEmits<{
 }>();
 
 const campaign = ref(CAMPAIGN_CHOICES[0].id);
+// Retained Start views must not share a native radio group: the browser can
+// otherwise uncheck another view without changing its selected campaign ref.
+const campaignGroup = `${useId()}-campaign`;
 const selectedCampaign = computed(() => CAMPAIGN_CHOICES.find((c) => c.id === campaign.value) ?? CAMPAIGN_CHOICES[0]);
 /** Local interface wording only; never rewrite existing saves or Library pages. */
 const plain = computed(() => props.proseMode === 'plainenglish');
@@ -278,7 +281,9 @@ function survivingPage(run: LibraryRun): string | undefined {
 
 async function refreshSaves(): Promise<void> {
   // The retry button and a synthetic stale click must use the same guard.
-  if (listingSaves.value) return;
+  // Let the pending removal settle before requesting catalogue recovery.
+  // Deletion likewise waits for any active listing below.
+  if (listingSaves.value || deletingDemoSlot.value !== null) return;
   listingSaves.value = true;
   try {
     saves.value = await props.actions.listSaves(true);
@@ -419,6 +424,9 @@ async function deleteDemo(slot: string): Promise<void> {
     || !libraryIsReady.value || selectingRun.value || beginning || libraryBusy.value
     || listingSaves.value || exportingSlots.value.has(slot)) return;
   deletingDemoSlot.value = slot;
+  // Deletion owns the shared feedback now; an older export of another slot
+  // must not replace its failure, or publish after a successful removal.
+  ++saveActionRevision;
   saveActionError.value = null;
   try {
     await props.actions.deleteDemoSave(slot);
@@ -579,7 +587,7 @@ onMounted(() => { void refreshSaves(); });
     <fieldset class="campaigns">
       <legend class="label">{{ plain ? 'Choose the length of your game' : 'The length of the line' }}</legend>
       <label v-for="choice in CAMPAIGN_CHOICES" :key="choice.id" class="campaign panel">
-        <input v-model="campaign" type="radio" name="campaign" :value="choice.id" @change="confirmingDemoOverwrite = false" />
+        <input v-model="campaign" type="radio" :name="campaignGroup" :value="choice.id" @change="confirmingDemoOverwrite = false" />
         <span>
           <strong>{{ choice.name }}{{ plain ? (choice.id === 'short' ? ' (shorter campaign)' : choice.id === 'long' ? ' (longer campaign)' : '') : '' }}</strong>
           <span class="dim small">
@@ -755,7 +763,7 @@ onMounted(() => { void refreshSaves(); });
 
     <div v-if="saveListError" class="save-list-error" role="alert">
       <p class="rubric small">{{ displayError(saveListError) }}</p>
-      <button class="quiet small" :disabled="listingSaves" @click="refreshSaves()">{{ listingSaves ? 'Retrying…' : (plain ? 'Reload saved games' : 'Retry saved runs') }}</button>
+      <button class="quiet small" :disabled="listingSaves || deletingDemoSlot !== null" @click="refreshSaves()">{{ listingSaves ? 'Retrying…' : (plain ? 'Reload saved games' : 'Retry saved runs') }}</button>
     </div>
 
     <div class="row">
