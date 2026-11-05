@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { nextTick } from 'vue';
+import { defineComponent, h, nextTick } from 'vue';
 import type { PrologueView, SessionView } from '@ed/core';
 import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
@@ -117,7 +117,7 @@ describe('progressive first-session signing (#2443)', () => {
       await nextTick();
       expect(wrapper.get('.signing-progress').text()).toContain('2 of 3');
       expect(wrapper.get('.examination').isVisible()).toBe(true);
-      expect(document.activeElement).toBe(wrapper.get('#examination-heading').element);
+      expect(document.activeElement).toBe(wrapper.get('.examination .stage-title').element);
       // No player command runs merely by advancing between sections.
       expect(game.found).not.toHaveBeenCalled();
       expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
@@ -129,7 +129,7 @@ describe('progressive first-session signing (#2443)', () => {
       await nextTick();
       expect(wrapper.get('.signing-progress').text()).toContain('3 of 3');
       expect(wrapper.get('.house-section').isVisible()).toBe(true);
-      expect(document.activeElement).toBe(wrapper.get('#house-section-heading').element);
+      expect(document.activeElement).toBe(wrapper.get('.house-section .stage-title').element);
 
       await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
       await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
@@ -469,24 +469,40 @@ describe('Prologue beat pacing (#1561)', () => {
 });
 
 describe('signing focus belongs to its own mounted instance (#1984)', () => {
-  it('does not move focus into an older signing with duplicate heading ids', async () => {
+  it('assigns unique stage ids and focus when an older signing remains in the same app', async () => {
     const props = { prologue: prologueView(), refused: null, startYear: 1042 };
-    const old = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
-    const current = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
+    const Host = defineComponent({
+      setup: () => () => h('div', [
+        h(Prologue, { ...props, actions: actions(), key: 'old' }),
+        h(Prologue, { ...props, actions: actions(), key: 'current' }),
+      ]),
+    });
+    const host = mount(Host, { attachTo: document.body });
     try {
-      // Both instances must have a heading: the regression concerns duplicate
-      // live IDs, not an older signing still on its opening screen.
-      await revealChoices(old);
-      await revealChoices(current);
+      const [old, current] = host.findAllComponents(Prologue);
+      expect(old).toBeDefined();
+      expect(current).toBeDefined();
+      await revealChoices(old!);
+      await revealChoices(current!);
       await nextTick();
-      const oldHeading = old.get('#founder-section-heading').element;
-      const currentHeading = current.get('#founder-section-heading').element;
-      expect(document.querySelectorAll('#founder-section-heading')).toHaveLength(2);
+      const stages = ['.founder-section', '.examination', '.house-section'];
+      for (const selector of stages) {
+        const oldSection = old!.get(selector);
+        const currentSection = current!.get(selector);
+        const oldHeading = oldSection.get('.stage-title').element as HTMLElement;
+        const currentHeading = currentSection.get('.stage-title').element as HTMLElement;
+        expect(oldHeading.id).toBeTruthy();
+        expect(currentHeading.id).toBeTruthy();
+        expect(oldHeading.id).not.toBe(currentHeading.id);
+        expect(oldSection.attributes('aria-labelledby')).toBe(oldHeading.id);
+        expect(currentSection.attributes('aria-labelledby')).toBe(currentHeading.id);
+      }
+      const oldHeading = old!.get('.founder-section .stage-title').element;
+      const currentHeading = current!.get('.founder-section .stage-title').element;
       expect(document.activeElement).toBe(currentHeading);
       expect(document.activeElement).not.toBe(oldHeading);
     } finally {
-      current.unmount();
-      old.unmount();
+      host.unmount();
     }
   });
 });
@@ -494,9 +510,9 @@ describe('signing focus belongs to its own mounted instance (#1984)', () => {
 describe('first signing focus after opening (#1984)', () => {
   it('focuses the first available signing heading when the final reveal removes its button', async () => {
     const scenarios = [
-      { heading: '#founder-section-heading', prologue: prologueView() },
-      { heading: '#examination-heading', prologue: { ...prologueView(), namePrompt: '' } },
-      { heading: '#house-section-heading', prologue: { ...prologueView(), namePrompt: '', examination: [] } },
+      { heading: '.founder-section .stage-title', prologue: prologueView() },
+      { heading: '.examination .stage-title', prologue: { ...prologueView(), namePrompt: '' } },
+      { heading: '.house-section .stage-title', prologue: { ...prologueView(), namePrompt: '', examination: [] } },
     ];
     for (const proseMode of ['original', 'plainenglish'] as const) {
       for (const scenario of scenarios) {
@@ -698,13 +714,13 @@ describe('optional friends at signing (#1984)', () => {
       const friendsIndex = sections.findIndex((section) => section.classes('friends'));
       expect(houseIndex).toBeGreaterThan(-1);
       expect(friendsIndex).toBe(houseIndex + 1);
-      expect(wrapper.get('.founder-section').attributes('aria-labelledby')).toBe('founder-section-heading');
-      expect(wrapper.get('#founder-section-heading').text()).toBe('Who signs the book');
+      expect(wrapper.get('.founder-section').attributes('aria-labelledby')).toBe((wrapper.get('.founder-section .stage-title').element as HTMLElement).id);
+      expect(wrapper.get('.founder-section .stage-title').text()).toBe('Who signs the book');
       // Keep the three consequential house choices in one named section;
       // this is presentation only, not a change to founding prerequisites.
       const houseSection = wrapper.get('.house-section');
-      expect(houseSection.attributes('aria-labelledby')).toBe('house-section-heading');
-      expect(wrapper.get('#house-section-heading').text()).toBe('What the house will carry');
+      expect(houseSection.attributes('aria-labelledby')).toBe((wrapper.get('.house-section .stage-title').element as HTMLElement).id);
+      expect(wrapper.get('.house-section .stage-title').text()).toBe('What the house will carry');
       const houseChoices = houseSection.findAll('section.choice');
       expect(houseChoices).toHaveLength(3);
       expect(houseChoices[0]!.text()).toContain('The Seal');
@@ -722,8 +738,8 @@ describe('optional friends at signing (#1984)', () => {
 
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('details.friend-names summary').text()).toBe('Add friends (optional)');
-      expect(wrapper.get('#founder-section-heading').text()).toBe('About the founder');
-      expect(wrapper.get('#house-section-heading').text()).toBe('House name and commitments');
+      expect(wrapper.get('.founder-section .stage-title').text()).toBe('About the founder');
+      expect(wrapper.get('.house-section .stage-title').text()).toBe('House name and commitments');
       expect(disclosure.open).toBe(false);
     } finally {
       wrapper.unmount();
