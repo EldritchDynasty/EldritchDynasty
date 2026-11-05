@@ -445,7 +445,12 @@ describe('adviser recovered-record chronology (#2934, #2935, #2936)', () => {
     expect(lens()).toBe('old_head');
 
     ctx.world.year = today;
+    marriage.from = today;
+    spouse.died = today - 1; // A marriage recorded after his death cannot make a widow.
+    expect(lens()).toBe('priest');
     marriage.from = today - 10;
+    expect(lens()).toBe('old_head');
+
     marriage.to = today - 3; // The marriage ended before the death.
     spouse.died = today - 1;
     expect(lens()).toBe('priest');
