@@ -206,11 +206,11 @@ const wanted = computed(() => {
     if (!gender.value) out.push('who signed it');
     if (!configuration.value) out.push('whose blood the house carries');
   }
-  if (props.prologue.examination.some((question) => !answers.value[question.id])) {
+  if (props.prologue.examination.some((question) => !question.answers.some((answer) => answer.id === answers.value[question.id]))) {
     out.push('an answer to each Examination question');
   }
-  if (!heirloom.value) out.push('the thing you asked for by name');
-  if (!grudge.value) out.push('who paid for the rest of it');
+  if (!props.prologue.heirlooms.some((option) => option.heirloom === heirloom.value)) out.push('the thing you asked for by name');
+  if (!props.prologue.grudges.some((option) => option.house === grudge.value)) out.push('who paid for the rest of it');
   if (!houseName.value.trim()) out.push('what the family will be called');
   return out;
 });
@@ -235,7 +235,9 @@ const signingIdentity = computed(() => JSON.stringify([
   props.startYear,
   props.prologue.id,
   Boolean(props.prologue.namePrompt),
-  props.prologue.examination.map((question) => question.id),
+  props.prologue.examination.map((question) => [question.id, question.answers.map((answer) => answer.id)]),
+  props.prologue.heirlooms.map((option) => option.heirloom),
+  props.prologue.grudges.map((option) => option.house),
   props.prologue.friendsWanted,
   Boolean(props.prologue.founded),
 ]));
@@ -267,7 +269,7 @@ const stageReady = computed(() => {
     case 'founder':
       return Boolean(founderName.value.trim() && gender.value && configuration.value);
     case 'examination':
-      return props.prologue.examination.every((question) => Boolean(answers.value[question.id]));
+      return props.prologue.examination.every((question) => question.answers.some((answer) => answer.id === answers.value[question.id]));
     case 'house':
       return wanted.value.length === 0;
   }
