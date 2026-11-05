@@ -93,7 +93,8 @@ export function spendForeign(ctx: SimCtx, house: string, crowns: number): void {
 export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: MysticWorkingDef,
   assignment?: DutyContext): MysticGap | undefined {
   const w = ctx.world;
-  if (!p || (p.status !== 'alive' && p.status !== 'missing')) return 'dead';
+  if (!p || (p.status !== 'alive' && p.status !== 'missing')
+    || (p.died !== undefined && p.died <= w.year)) return 'dead';
   if (currentMembership(p, w.year)?.kind === 'hostage') return 'hostage';
   const house = dutyHouse(ctx, assignment);
   const membership = currentMembership(p, w.year);
@@ -118,7 +119,7 @@ export function practitionerGap(ctx: SimCtx, p: Person | undefined, working: Mys
     && w.muster.commitments.some(c => c.id === site.commitment && c.status === 'in_the_field'
       && c.began <= w.year);
   if (deployedPeople(ctx).has(p.id) && !ownFieldDuty && !ownCovertDuty && !ownServiceDuty) return 'deployed';
-  if (p.career && ctx.content.career(p.career.career)?.resident !== 'home') return 'away_post';
+  if (p.career && p.career.from <= w.year && ctx.content.career(p.career.career)?.resident !== 'home') return 'away_post';
   return undefined;
 }
 
@@ -146,7 +147,7 @@ export function targetGap(
       if (!p || p.status !== 'alive' || !isFamilyOf(ctx, p, house)) return 'target_lost';
       if (!resolvePresence(ctx, site, {}).people.includes(p.id)) return 'not_resident';
       if (b.kind === 'convalescence') return (p.acquired.health ?? 0) < 0 || (p.fieldRecoveryUntil ?? 0) > ctx.world.year ? undefined : 'no_need';
-      const study = ctx.world.studies.find(s => s.person === p.id);
+      const study = ctx.world.studies.find(s => s.person === p.id && s.completes > ctx.world.year);
       if (!study) return 'no_need';
       return practitioner && !practitioner.spellsKnown.some(id => String(id) === study.book) ? 'unlearned' : undefined;
     }
