@@ -268,6 +268,65 @@ describe('new campaign in a retained signing component (#1984)', () => {
 });
 
 
+describe('revised founding choices in a retained signing (#1984)', () => {
+  it('discards stale answer and house selections when mechanical option ids change', async () => {
+    const game = actions();
+    const original = { ...prologueView(), namePrompt: '' };
+    const wrapper = mount(Prologue, {
+      props: { prologue: original, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 2');
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await continueSigning(wrapper);
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+
+      // A content revision can retain the same page/question IDs while changing
+      // the choices. The old selections must not silently sign the new list.
+      const changed = {
+        ...original,
+        examination: original.examination.map((question) => ({
+          ...question,
+          answers: question.answers.map((answer) => ({ ...answer, id: `new_${answer.id}` })),
+        })),
+        heirlooms: [{ ...original.heirlooms[0]!, heirloom: 'new_seal' }],
+        grudges: [{ ...original.grudges[0]!, house: 'house_new_marrow' }],
+      };
+      await wrapper.setProps({ prologue: changed });
+      expect(wrapper.find('.signing-progress').exists()).toBe(false);
+      await revealChoices(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 2');
+      expect(wrapper.findAll('.examination button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+      expect((wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement).value).toBe('');
+      expect(wrapper.findAll('.house-section button').every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(game.found).not.toHaveBeenCalled();
+
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await continueSigning(wrapper);
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House New');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledTimes(1);
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        houseName: 'House New', heirloom: 'new_seal', grudge: 'house_new_marrow',
+        answers: expect.objectContaining({ question_1: 'new_answer_1_1' }),
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('signing transitions stay in their own screen (#1984)', () => {
   it('does not accept a stale Sign click after Back has moved to the Examination', async () => {
     const game = actions();
