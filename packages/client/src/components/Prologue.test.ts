@@ -783,6 +783,14 @@ describe('optional friends at signing (#1984)', () => {
         expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
         disclosure.open = true;
         await nextTick();
+        const second = wrapper.get(proseMode === 'plainenglish'
+          ? 'input[aria-label="Name friend 2"]' : 'input[aria-label="Name the second friend"]');
+        await second.setValue('\u200B');
+        expect(summary.text()).toContain(proseMode === 'plainenglish'
+          ? 'Open to correct 2 friend names' : '2 friend names need correcting');
+        await second.setValue('');
+        expect(summary.text()).toContain(proseMode === 'plainenglish'
+          ? 'Open to correct 1 friend name' : 'One friend name needs correcting');
 
         await friend.setValue('Ma\u200Dra');
         expect(friend.attributes('aria-invalid')).toBe('false');
