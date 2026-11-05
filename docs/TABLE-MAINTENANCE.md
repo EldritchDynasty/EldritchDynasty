@@ -8,7 +8,7 @@
 ## Scope and current evidence
 
 The player client already records bounded categories for Table `order`,
-`muster`, and choice/Record delegation in `ed-reading-log/12`. Each attempt
+`muster`, and choice/Record delegation in `ed-reading-log/13`. Each attempt
 has an observed terminal outcome where one exists. `order` and `muster`
 return accepted/refused results; delegation reports **returned**, not proof that
 a policy changed. An interrupted or capped attempt is **unfinished**, not a
@@ -19,7 +19,7 @@ text, order payloads or refusal prose.
 `packages/client/src/lib/reading-log.ts` reads those events without changing
 the format, the original events, the save or the game. It segments the observer's
 timeline on a **successful Begin/share-code start** or a **displayed saved-run
-pickup**. A cancelled/failed load is not a new house. A new run marker emitted by Vue before the Chronicle confirms pickup is held for the next window, rather than overwriting the previous house. Each segment reports:
+pickup**. A cancelled/failed load is not a new house. Since format 13, a failed-pickup marker also clears speculative run/year identity for subsequent observations; earlier format 12 exports cannot record that explicit refusal. A new run marker emitted by Vue before the Chronicle confirms pickup is held for the next window, rather than overwriting the previous house. Each segment reports:
 
 | Field | Interpretation |
 | --- | --- |
@@ -41,7 +41,7 @@ Example analysis of an explicitly exported artifact:
 ```ts
 import { tableWorkloadWindows } from '../packages/client/src/lib/reading-log.js';
 
-// `artifact` is a voluntarily exported ed-reading-log/12 object.
+// `artifact` is a voluntarily exported ed-reading-log/13 object.
 const windows = tableWorkloadWindows(
   artifact.events,
   artifact.events.at(-1)?.at ?? 0,
