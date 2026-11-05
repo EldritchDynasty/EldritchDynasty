@@ -210,6 +210,8 @@ export const MysticAssignmentS = z.object({
   bindings: z.record(z.string(), z.string()),
   started: z.number(),
   ready: z.number(),
+  /** Authored finite service; absent on existing, open-ended Table assignments. */
+  term: z.object({ until: z.number(), page: z.string(), year: z.number() }).strict().optional(),
   paidPreparation: z.number().nonnegative(),
   /** The last year whose upkeep was reserved. Benefits read this, never a cached morning. */
   paidThrough: z.number(),

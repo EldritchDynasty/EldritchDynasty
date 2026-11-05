@@ -870,6 +870,9 @@ const knownReferences: ValidationRule = {
     };
     const knownKnowledgeFilter = (f: Record<string, unknown>, at: string) => {
       if ('knows' in f) knownAttribute((f.knows as { affinity: string }).affinity, at, true);
+      if ('canKeepDuty' in f && !content.bundle.mysticWorkings.some(w => w.id === (f.canKeepDuty as { working: string }).working)) {
+        issues.push(err(this.id, at, `unknown Mystic working '${(f.canKeepDuty as { working: string }).working}'`));
+      }
     };
     for (const h of content.heirlooms) {
       walkFilters(h.target, (f) => knownKnowledgeFilter(f, `heirloom:${h.id}`));
@@ -915,6 +918,13 @@ const knownReferences: ValidationRule = {
           }
           if (eff.kind === 'spellbook' && !content.spellbook(eff.book)) {
             issues.push(err(this.id, `${at}/${o.id}`, `unknown spellbook '${eff.book}'`));
+          }
+          if (eff.kind === 'mystic_duty') {
+            const working = content.bundle.mysticWorkings.find(w => w.id === eff.working);
+            if (!working) issues.push(err(this.id, `${at}/${o.id}`, `unknown Mystic working '${eff.working}'`));
+            else if (working.benefit.kind !== 'life_care' && working.benefit.kind !== 'household_protection' && working.benefit.kind !== 'household_provision') {
+              issues.push(err(this.id, `${at}/${o.id}`, `Mystic working '${eff.working}' is not a household duty`));
+            }
           }
           if (eff.kind === 'status' && eff.captivity) {
             if (eff.status !== 'missing') issues.push(err(this.id, `${at}/${o.id}`, 'captivity requires missing status'));
@@ -1996,6 +2006,9 @@ const frameShape: ValidationRule = {
       const at = `event:${e.id}`;
 
       if (e.tier !== 'frame') {
+        if (e.preferUnnamedPage !== undefined) {
+          issues.push(err(this.id, at, 'preferUnnamedPage is frame-only'));
+        }
         if (e.reads.length) {
           issues.push(err(this.id, at, `'reads' is frame-only; this event is tier '${e.tier}'`));
         }
@@ -2004,6 +2017,10 @@ const frameShape: ValidationRule = {
 
       if (e.reads.length === 0) {
         issues.push(err(this.id, at, 'a frame event declares no reads — it has nothing to react to'));
+      }
+      if (e.preferUnnamedPage && (!e.reads.some(frameReadBindsPage)
+        || !slotTokens(e.body).some(t => t.form === undefined && (FRAME_PAGE_TOKENS as readonly string[]).includes(t.slot)))) {
+        issues.push(err(this.id, at, 'preferUnnamedPage needs a page-binding read and a page token in the body'));
       }
       if (e.conditions) {
         issues.push(err(this.id, at, 'the frame gates on reads, not conditions — conditions read live household state, which the frame never looks at'));
@@ -2810,7 +2827,29 @@ const glossaryReferences: ValidationRule = {
   },
 };
 
+const finiteMysticDuty: ValidationRule = {
+  id: 'mystic/duty',
+  about: 'A finite household duty names one quoted reader, so its committed work cannot silently refuse.',
+  check(content) {
+    const issues: Issue[] = [];
+    for (const e of content.events) for (const o of allOutcomes(e)) for (const effect of o.effects) {
+      if (effect.kind !== 'mystic_duty') continue;
+      const slot = typeof effect.target === 'object' && 'slot' in effect.target ? effect.target.slot : undefined;
+      const spec = slot === undefined ? undefined : e.slots[slot];
+      const admits = (filters: Filter[]): boolean => filters.some(f =>
+        ('canKeepDuty' in f && f.canKeepDuty.working === effect.working) || ('all' in f && admits(f.all)));
+      const guard = o.onlyIf;
+      const filters = [...(spec?.filters ?? []), ...(guard && guard.slot === slot ? guard.filters : [])];
+      if (!spec || spec.optional || spec.count || !admits(filters)) {
+        issues.push(err(this.id, `event:${e.id}/${o.id}`, 'a Mystic duty needs one required slot gated by canKeepDuty for the same working'));
+      }
+    }
+    return issues;
+  },
+};
+
 export const CONTENT_RULES: readonly ValidationRule[] = [
+  finiteMysticDuty,
   glossaryReferences,
   uniqueIds,
   primordialCoverage,

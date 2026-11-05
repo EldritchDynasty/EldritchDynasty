@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap, stepYear } from './sim.js';
 import { outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
 import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
-  frameDue, frameOverdue, framePool, frameReadHolds, inline, lastAnswerYear, pageToCite, presentFrame,
+  frameDue, frameOverdue, framePool, frameReadHolds, inline, lastAnswerYear, pageToCite, presentFrame, selectFrame,
 } from './events/frame.js';
 import { applyRecord } from './events/decisions.js';
 import { GLIMPSE_TAG, answerPages, answerYears, answers, clauseYears, glimpseYears, isGlimpse } from './events/answers.js';
@@ -235,6 +235,55 @@ describe('a scene that reads the blanks names one', () => {
     return { ...real, slots: {}, body };
   };
   const NAMING = 'The page of {PAGE_YEAR} says nothing about {PAGE_SUBJECT}.';
+
+  it('uses a due cut to name an unnamed blank, including after save/resume (#2632)', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_first', 1100, 'the first omission');
+    ctx.world.decisionLog.push({ kind: 'record', year: 1090, event: 'the_letters_to_the_weighers', option: 'record' });
+    ctx.world.year = 1200;
+    ctx.world.frame.lastFired = 1090;
+    // A future reading cannot retire today's priority.
+    ctx.world.frame.entries.push({ year: 1300, eventId: ID, outcomeId: 'only', text: 'later', cites: { page: 'chr_first', year: 1100 } });
+    expect(framePool(ctx).length).toBeGreaterThan(1);
+    expect(selectFrame(ctx, makeRng(3))?.id).toBe(ID);
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), bundle);
+    expect(selectFrame(resumed, makeRng(3))?.id).toBe(ID);
+    const shown = presentFrame(ctx, scene(ctx, NAMING), makeRng(3))!;
+    expect(shown.cites?.page).toBe('chr_first');
+    expect(ctx.world.frame.entries.filter(f => f.year <= 1200 && f.cites?.page === 'chr_first')).toHaveLength(1);
+  });
+
+  it('honours the minimum gap and the omission scene cooldown even for an unnamed blank (#2632)', () => {
+    const ctx = bootstrap(bundle, 1987, 1042);
+    blank(ctx, 'chr_first', 1100);
+    ctx.world.decisionLog.push({ kind: 'record', year: 1090, event: 'the_letters_to_the_weighers', option: 'record' });
+    ctx.world.year = 1200;
+    ctx.world.frame.lastFired = 1199;
+    expect(selectFrame(ctx, makeRng(1))).toBeUndefined();
+    ctx.world.frame.lastFired = 1090;
+    ctx.world.frame.firedAt[ID] = 1190;
+    expect(framePool(ctx).some(e => e.id === ID)).toBe(false);
+    expect(selectFrame(ctx, makeRng(1))?.id).not.toBe(ID);
+  });
+
+  it('returns named blanks to the ordinary pool and schedules identically in both prose modes (#2632)', () => {
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      const ctx = newGame(bundle, { seed: 2632, proseMode }).ctx;
+      blank(ctx, 'chr_first', 1100);
+      ctx.world.decisionLog.push({ kind: 'record', year: 1090, event: 'the_letters_to_the_weighers', option: 'record' });
+      ctx.world.year = 1200;
+      ctx.world.frame.lastFired = 1090;
+      const rng = makeRng(2632);
+      const draw = vi.spyOn(rng, 'weighted');
+      expect(selectFrame(ctx, rng)?.id).toBe(ID);
+      expect(draw.mock.calls[0]?.[0]).toHaveLength(1);
+      ctx.world.frame.entries.push({ year: 1190, eventId: ID, outcomeId: 'only', text: 'already read', cites: { page: 'chr_first', year: 1100 } });
+      draw.mockClear();
+      selectFrame(ctx, rng);
+      expect(draw.mock.calls[0]?.[0].length).toBeGreaterThan(1);
+      expect(missingPlainEnglish(ctx)).toEqual([]);
+    }
+  });
 
   it('binds the earliest unnamed blank, then the next, then the newest once all are named', () => {
     const ctx = bootstrap(bundle, 1987, 1042);

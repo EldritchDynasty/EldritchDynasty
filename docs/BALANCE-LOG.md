@@ -17225,3 +17225,52 @@ The original "within 25 years" and "≥ 85% for chronicler" need a cadence or pr
 - **Timing:** the floor is `FRAME_MIN_GAP_YEARS = 45`. The first interlude often lands just before the house's first Omit, at about 41–55 years elapsed against about 50 for the choice.
 
 **Not measured:** Long Line, reading time and comprehension. A naming interlude is a return the player *can* trace. Whether players do trace it still needs observed sessions.
+## 2026-11-05 — #1982 / #2632: commitments and named-blank delivery
+
+**Scope and source.** Branch `codex/commitments-frame-ci`, based on
+`b6239261ef51fa65cfeaedca21844e37b75c083b`. The new bounded family dilemma and
+the frame-priority experiment are measured separately before considering their
+combined result. No player study is claimed.
+
+**Current choice audit.** The baseline has 438 choice/dispatch events and 907
+choices; the candidate has 439 and 909. Both have zero converging pairs,
+prose-only choices or choices whose only non-resource effect is unread memory.
+Resource-only choices remain 207, and wholly resource-only events remain 34.
+The existing library choice structure (`the_book_comes_down`,
+`the_threshold_year`) discusses a reader's lost future, but does not itself
+invoke the paid, exclusive duty which competes with study. The prototype
+`the_reader_has_two_rooms` uses that already-shipped constraint.
+
+| Decision | Immediate benefit | Future given up or delayed | Return |
+| --- | --- | --- | --- |
+| Continue this relative's unfinished book | Existing study continues; the reader's relationship improves | This decision supplies no sickroom watch | Five years later, the page recalls that exact person and choice without claiming the book was completed |
+| Assign the same relative a sickroom term | Ordinary learned Life care, prepared for 12 crowns, then 4 per paid service year | Study pauses immediately; remaining work is kept while the reader cannot study or hold another duty | Four possible service years begin next year; the original assignment expires before a fifth upkeep reservation, and eligible surviving study resumes |
+
+This is one Docket choice and two kept-person returns, not another recurring
+Table task. The finite duty uses the existing quote, payment, presence,
+pause/resume, mortality benefit and closure functions. It writes the exact
+initiating page into its optional saved term and closure backlink. Old duties
+without a term stay open-ended. The ordinary arc also retains the exact person
+and launching page. A dead or absent reader is never replaced; early release
+and a later new duty cannot make the old return release that new assignment.
+Unavailable or unaffordable stale answers have explicit guarded refusals.
+`arcCanFinish` prevents promises beyond either campaign's remaining clock.
+Original and Plain English are authored together in the hashed catalogue.
+
+**Frame intervention.** Choose #2632's priority lever. At an already-due cut,
+prefer an eligible scene that will actually print an unnamed blank's page
+tokens. Once cited, that blank earns no priority. Existing reads, campaign
+rules, minimum 45-year gap, ordinary yearly roll, template cooldowns and the
+existing overdue fallback remain. There is no once-per-blank cadence exception.
+Citation history already persists, so no additional frame state is stored.
+
+**Declared comparison.** Keep #1987's Short-Line sample: seeds `198700+i`,
+`i=0..399`, authored founder, and chronicler, forced-Omit and forced-Embellish
+policies. Retain baseline, isolated frame-priority and combined columns. Count
+an interlude return only when it cites the exact first altered page; the Omit
+denominator is houses whose first alteration was Omit. Keep all failures and
+censored endings. Report interlude mix and no-interlude share, then run the
+existing fire, corrected outcome-reach, endings and density checks without
+changing their bars. Automated reach does not establish attachment, reading
+time, comprehension or enjoyment.
+

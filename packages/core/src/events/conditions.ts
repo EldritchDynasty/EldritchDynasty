@@ -14,6 +14,7 @@ import { heldAcres, heldParcels } from '../land.js';
 import { livingBlood } from '../ending.js';
 import { campaignDef, campaignProgress } from '../campaign.js';
 import { minimumArcYears } from './arc-reach.js';
+import { householdDutyOrder, quoteDuty } from '../mystic.js';
 
 /**
  * `scope` carries what the world does not know: which substory is asking. Only
@@ -284,6 +285,9 @@ export function evalFilter(f: Filter, p: Person, ctx: SimCtx, bound: SlotFill, r
   if ('taught' in f) return f.taught.attr !== undefined ? p.taught.includes(f.taught.attr) : p.taught.length > 0;
   // MID-TERM RIGHT NOW, as against `taught`'s "ever completed one".
   if ('inTerm' in f) return w.tutoring.some((t) => t.person === p.id) === f.inTerm;
+  if ('studying' in f) return (p.status === 'alive' && p.born <= w.year
+    && w.studies.some((s) => s.person === p.id && s.completes > w.year)) === f.studying;
+  if ('canKeepDuty' in f) return quoteDuty(ctx, householdDutyOrder(ctx, p, f.canKeepDuty.working)).ok;
 
   // A filter kind nothing handles used to pass, which means a slot spec written
   // against it cast ANYONE. Same default, same cost, same fix as above.
