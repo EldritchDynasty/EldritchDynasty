@@ -59,10 +59,13 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'damaged':
       return plain ? 'Part of this code is missing or wrong. Copy the whole code again.' : 'Part of the code is missing or miscopied. Copy it again, whole.';
     case 'other_edition': {
+      // A malformed bridge/old client may omit the detailed differences.
+      // A refusal must remain useful without inventing a specific mismatch.
       const parts = problem.differs.map((p) => editionPart(p, plain)).join(', ');
+      const detail = parts ? ` (${parts})` : '';
       return plain
-        ? `This code was made with a different version of the game (${parts}). It would not start the same family, so it cannot be used.`
-        : `That code was made by another edition of the game (${parts}). It would not begin the same house, so it is not offered.`;
+        ? `This code was made with a different version of the game${detail}. It would not start the same family, so it cannot be used.`
+        : `That code was made by another edition of the game${detail}. It would not begin the same house, so it is not offered.`;
     }
     case 'demonstration':
       return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code belongs to a Demonstration house, not a full Line. It cannot begin this one.';
@@ -71,6 +74,13 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
         ? 'Names for a share code must be text, with no more than five friends.'
         : 'The names offered for this code must be words, and no more than five friends may be named.';
     case 'names_needed': {
+      // A missing/empty list cannot yield a valid prompt with a missing noun.
+      // Do not turn a refusal into an apparent success or echo code text.
+      if (problem.missing.length === 0) {
+        return plain
+          ? 'This founding still needs names before it can begin.'
+          : 'This house lacks the names it needs before it may begin.';
+      }
       // 'friends' is one missing-name category but can mean several people.
       // Counting categories would misleadingly ask for only one name.
       if (problem.missing.length === 1 && problem.missing[0] === 'friends') {
