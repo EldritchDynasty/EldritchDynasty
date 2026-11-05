@@ -268,6 +268,39 @@ describe('new campaign in a retained signing component (#1984)', () => {
 });
 
 
+describe('signing observation across retained runs (#1984)', () => {
+  it('marks each new run when already-seen prose opens at the same signing stage', async () => {
+    const prologue = prologueView();
+    const replayText = prologueSeenText(prologue.opening, prologue.triad, prologue.thesis);
+    rememberSeenProse(window.localStorage, seenProseKey('prologue', replayText));
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: {
+        prologue, actions: game, refused: null, startYear: 1042,
+        skipSeenProse: true, runIdentity: 'short:41',
+      },
+    });
+    try {
+      await nextTick();
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect(wrapper.emitted('stage')).toEqual([['founder']]);
+
+      // This new run has the same authored page, year and initial stage.
+      // A marker keyed only by shown beats/stage would silently miss it.
+      await wrapper.setProps({ runIdentity: 'long:41' });
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect(wrapper.emitted('stage')).toEqual([['founder'], ['founder']]);
+
+      // Translation is not a new run and must not inflate the cohort.
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.emitted('stage')).toEqual([['founder'], ['founder']]);
+      expect(game.found).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('revised founding choices in a retained signing (#1984)', () => {
   it('discards stale answer and house selections when mechanical option ids change', async () => {
     const game = actions();
