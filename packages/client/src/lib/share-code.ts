@@ -66,6 +66,10 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     }
     case 'demonstration':
       return plain ? 'This code is from the demo. Demo codes cannot start a full game.' : 'That code belongs to a Demonstration house, not a full Line. It cannot begin this one.';
+    case 'invalid_names':
+      return plain
+        ? 'Names for a share code must be text, with no more than five friends.'
+        : 'The names offered for this code must be words, and no more than five friends may be named.';
     case 'names_needed': {
       // 'friends' is one missing-name category but can mean several people.
       // Counting categories would misleadingly ask for only one name.
