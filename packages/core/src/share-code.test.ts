@@ -786,6 +786,77 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
       .toEqual({ ok: false, unavailable: 'unrepresentable' });
   });
 
+  it('fails closed when recovered founding records contain malformed runtime values (#1995)', () => {
+    // Invalid older/programmatic state must not crash the Chronicle or ending
+    // share-code button. JSON-based save validation normally rejects these,
+    // but a read-only projection must not assume every in-memory row is sound.
+    const cases: { label: string; damage: (s: GameSession) => void }[] = [
+      {
+        label: 'a non-text house name in both copies of the founding',
+        damage: (s) => {
+          const row = s.ctx.world.decisionLog.find((entry) => entry.kind === 'founding');
+          if (!row || !s.ctx.world.founding) throw new Error('missing founding');
+          row.houseName = null as never;
+          s.ctx.world.founding.houseName = null as never;
+        },
+      },
+      {
+        label: 'a missing logged friends list',
+        damage: (s) => {
+          const row = s.ctx.world.decisionLog.find((entry) => entry.kind === 'founding');
+          if (!row) throw new Error('missing founding row');
+          row.friends = null as never;
+        },
+      },
+      {
+        label: 'a missing live friends list',
+        damage: (s) => { s.ctx.world.friends = null as never; },
+      },
+      {
+        label: 'missing persisted answers',
+        damage: (s) => {
+          if (!s.ctx.world.founding) throw new Error('missing founding');
+          s.ctx.world.founding.answers = null as never;
+        },
+      },
+      {
+        label: 'non-text persisted answer',
+        damage: (s) => {
+          if (!s.ctx.world.founding) throw new Error('missing founding');
+          s.ctx.world.founding.answers = { the_ford: 123 } as never;
+        },
+      },
+      {
+        label: 'missing signing answers even when the persisted set is empty',
+        damage: (s) => {
+          const row = s.ctx.world.decisionLog.find((entry) => entry.kind === 'signing');
+          if (!row || !s.ctx.world.founding) throw new Error('missing signing');
+          row.answers = null as never;
+          s.ctx.world.founding.answers = {};
+        },
+      },
+    ];
+    for (const { label, damage } of cases) {
+      const s = founded();
+      damage(s);
+      const before = JSON.stringify({
+        decisions: s.ctx.world.decisionLog,
+        founding: s.ctx.world.founding,
+        friends: s.ctx.world.friends,
+      });
+      for (const names of [false, true]) {
+        expect(() => s.shareCode({ build: BUILD, names }), `${label} / names=${names}`).not.toThrow();
+        expect(s.shareCode({ build: BUILD, names }), `${label} / names=${names}`)
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+      expect(JSON.stringify({
+        decisions: s.ctx.world.decisionLog,
+        founding: s.ctx.world.founding,
+        friends: s.ctx.world.friends,
+      })).toBe(before);
+    }
+  });
+
   it('uses only a single same-year signing that agrees with persisted answers (#2966)', () => {
     const invalid = { ok: false, unavailable: 'unrepresentable' };
     const misplaced = founded();
