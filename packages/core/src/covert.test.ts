@@ -31,6 +31,7 @@ import { tickAssize } from './assize.js';
 import { tickRelationships } from './people/relationships.js';
 import { commitDuty } from './mystic.js';
 import { covertOperationsView } from './covert-operations.js';
+import { covertReservation, deployedPeople, resolvePresence } from './presence.js';
 
 describe('committed offensive expeditions (#1876)', () => {
   const start = 1042;
@@ -60,6 +61,207 @@ describe('committed offensive expeditions (#1876)', () => {
     ctx.world.year++; tickMystic(ctx); tickEconomy(ctx); tickCovertOperations(ctx); advanceKnownRivalHeads(ctx);
   }
   const transport = <T>(value: T): T => JSON.parse(JSON.stringify(value));
+
+  it('does not activate a saved future expedition before its preparation year', () => {
+    const { ctx, operative, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const future = ctx.world.covert.operations[0]!;
+    future.plan.preparedAt = start + 10;
+    future.plan.attemptYear = start + 12;
+    const original = transport(future);
+    const treasury = ctx.world.treasury;
+
+    expect(covertOpportunities(ctx).map(o => o.id)).toContain(order.opportunity);
+    const view = covertOperationsView(ctx);
+    expect(view.current).toEqual([]);
+    expect(view.history).toEqual([]);
+    expect(view.offers.some(o => o.ok && o.order.opportunity === order.opportunity
+      && o.order.operative === operative.id)).toBe(true);
+    expect(covertReservation(ctx, operative.id)).toBeUndefined();
+    expect(deployedPeople(ctx).has(operative.id)).toBe(false);
+    expect(resolvePresence(ctx, { kind: 'covert', operation: future.plan.id }, {}).people).toEqual([]);
+    expect(quoteCovertOperation(ctx, order).ok).toBe(true);
+    expect(withdrawCovertOperation(ctx, future.plan.id).ok).toBe(false);
+    tickCovertOperations(ctx);
+    expect(future).toEqual(original);
+    expect(ctx.world.treasury).toBe(treasury);
+
+    // Even a restored returning stage with an inconsistent past return cannot
+    // close its service account before the expedition has begun.
+    future.stage = 'returning';
+    future.returnsAt = start - 1;
+    const returning = transport(future);
+    const pages = transport(ctx.world.chronicle);
+    tickCovertOperations(ctx);
+    expect(future).toEqual(returning);
+    expect(ctx.world.chronicle).toEqual(pages);
+    future.stage = 'preparing';
+    delete future.returnsAt;
+
+    // The very same imported record becomes present without rewriting it.
+    ctx.world.year = future.plan.preparedAt;
+    expect(covertOpportunities(ctx).map(o => o.id)).not.toContain(order.opportunity);
+    expect(covertOperationsView(ctx).current.map(o => o.id)).toEqual([future.plan.id]);
+    expect(covertReservation(ctx, operative.id)).toBe(future.plan.id);
+    expect(deployedPeople(ctx).has(operative.id)).toBe(true);
+    expect(resolvePresence(ctx, { kind: 'covert', operation: future.plan.id }, {}).people).toContain(operative.id);
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+    expect(withdrawCovertOperation(ctx, future.plan.id).ok).toBe(true);
+    expect(future).toMatchObject({ stage: 'returning', result: 'withdrawn' });
+  });
+
+  it('calculates cooldown from the latest present preparation even with unordered saved rows', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const future = ctx.world.covert.operations[0]!;
+    future.plan.preparedAt = start + 20;
+    future.plan.attemptYear = start + 22;
+    const older = transport(future);
+    older.plan.id = 'cop_older';
+    older.opportunity = 'older:consumed';
+    older.plan.preparedAt = start - 30;
+    older.stage = 'closed';
+    const recent = transport(future);
+    recent.plan.id = 'cop_recent';
+    recent.opportunity = 'recent:consumed';
+    recent.plan.preparedAt = start - 2;
+    recent.stage = 'closed';
+    // Neither the last array row nor the last historical row is the newest past date.
+    ctx.world.covert.operations = [recent, older, future];
+    const before = transport(ctx.world.covert.operations);
+    expect(quoteCovertOperation(ctx, order)).toMatchObject({ ok: false });
+    ctx.world.year = start + 9; // eleven years since the latest real preparation
+    expect(quoteCovertOperation(ctx, order).ok).toBe(false);
+    ctx.world.year = start + 10; // the exact twelve-year cooldown boundary
+    expect(quoteCovertOperation(ctx, order).ok).toBe(true);
+    expect(ctx.world.covert.operations).toEqual(before);
+    ctx.world.year = start;
+    ctx.world.covert.operations = [older, future];
+    expect(quoteCovertOperation(ctx, order).ok).toBe(true);
+    expect(covertOpportunities(ctx).map(o => o.id)).toContain(order.opportunity);
+  });
+
+  it('hides future inquiry hearings until both the operation and hearing have happened (#2826)', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const operation = ctx.world.covert.operations[0]!;
+    operation.exposure = {
+      year: start, actor: operation.plan.operative, witnesses: [], basis: 'testimony',
+      heardAt: start + 5, receipt: 'a future hearing',
+    };
+    const before = transport(operation);
+    expect(covertOperationsView(ctx).cases).toEqual([]);
+    expect(operation).toEqual(before);
+    ctx.world.year = start + 4;
+    expect(covertOperationsView(ctx).cases).toEqual([]);
+    ctx.world.year = start + 5;
+    expect(covertOperationsView(ctx).cases).toEqual([{
+      id: operation.plan.id, year: start + 5, receipt: 'a future hearing',
+    }]);
+    expect(operation).toEqual(before);
+    ctx.world.year = start;
+
+    operation.exposure.heardAt = start;
+    expect(covertOperationsView(ctx).cases).toEqual([{
+      id: operation.plan.id, year: start, receipt: 'a future hearing',
+    }]);
+
+    operation.plan.preparedAt = start + 2;
+    expect(covertOperationsView(ctx).cases).toEqual([]);
+    ctx.world.year = start + 2;
+    expect(covertOperationsView(ctx).cases).toHaveLength(1);
+  });
+
+
+  it('does not show a recovered hearing before the underlying exposure exists (#2826)', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const operation = ctx.world.covert.operations[0]!;
+    operation.exposure = {
+      year: start + 4, actor: operation.plan.operative, witnesses: [], basis: 'testimony',
+      heardAt: start + 1, receipt: 'a hearing recorded before its evidence',
+    };
+    const before = transport(operation);
+    ctx.world.year = start + 1;
+    expect(covertOperationsView(ctx).cases).toEqual([]);
+    ctx.world.year = start + 3;
+    expect(covertOperationsView(ctx).cases).toEqual([]);
+    ctx.world.year = start + 4;
+    expect(covertOperationsView(ctx).cases).toEqual([{
+      id: operation.plan.id, year: start + 1, receipt: 'a hearing recorded before its evidence',
+    }]);
+    expect(operation).toEqual(before);
+  });
+
+  it('orders the last six closed expeditions by return year, not saved row order (#2827)', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const base = transport(ctx.world.covert.operations[0]!);
+    const returns = [start - 4, start - 1, start - 8, start - 6, start + 3,
+      start - 2, start - 7, start - 3, start - 5];
+    const rows = returns.map((year, i) => ({
+      ...transport(base), stage: 'closed' as const,
+      plan: { ...transport(base.plan), id: `cop_saved_${i}`, preparedAt: year - 3 },
+      resolvedAt: year - 1, returnsAt: year,
+    }));
+    // Present but out-of-order history includes an impossible future return.
+    // Two accounts with equal return years have a deterministic id tie-break.
+    const same = transport(rows[1]!);
+    same.plan.id = 'cop_same';
+    rows.push(same);
+    ctx.world.covert.operations = rows;
+    const before = transport(rows);
+    expect(covertOperationsView(ctx).history.map(o => o.id)).toEqual([
+      'cop_same', 'cop_saved_1', 'cop_saved_5',
+      'cop_saved_7', 'cop_saved_0', 'cop_saved_8',
+    ]);
+    expect(ctx.world.covert.operations).toEqual(before);
+  });
+
+
+  it('keeps a future-resolved closed account out of earlier history even with an old return date (#2827)', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const operation = ctx.world.covert.operations[0]!;
+    operation.stage = 'closed';
+    operation.plan.preparedAt = start - 10;
+    operation.resolvedAt = start + 6;
+    operation.returnsAt = start - 1;
+    const before = transport(operation);
+    expect(covertOperationsView(ctx).history.map(o => o.id)).not.toContain(operation.plan.id);
+    ctx.world.year = start + 5;
+    expect(covertOperationsView(ctx).history.map(o => o.id)).not.toContain(operation.plan.id);
+    ctx.world.year = start + 6;
+    expect(covertOperationsView(ctx).history.map(o => o.id)).toContain(operation.plan.id);
+    expect(operation).toEqual(before);
+  });
+
+  it('reveals a closed account on its return year and supports older completion dates (#2827)', () => {
+    const { ctx, order } = scene();
+    expect(prepareCovertOperation(ctx, order).ok).toBe(true);
+    const returned = ctx.world.covert.operations[0]!;
+    returned.stage = 'closed';
+    returned.plan.preparedAt = start - 3;
+    returned.resolvedAt = start - 1;
+    returned.returnsAt = start + 1;
+    const resolved = transport(returned);
+    resolved.plan.id = 'cop_resolved';
+    delete resolved.returnsAt;
+    const prepared = transport(resolved);
+    prepared.plan.id = 'cop_prepared';
+    delete prepared.resolvedAt;
+    // Older saved rows may lack a return date or both optional completion dates.
+    ctx.world.covert.operations = [prepared, returned, resolved];
+    const before = transport(ctx.world.covert.operations);
+    expect(covertOperationsView(ctx).history.map(o => o.id)).toEqual([
+      resolved.plan.id, prepared.plan.id,
+    ]);
+    ctx.world.year = start + 1;
+    expect(covertOperationsView(ctx).history.map(o => o.id)).toEqual([
+      returned.plan.id, resolved.plan.id, prepared.plan.id,
+    ]);
+    expect(ctx.world.covert.operations).toEqual(before);
+  });
 
   it('commits an actual known person, real payment and a consumed opportunity, once', () => {
     const { ctx, target, operative, order } = scene();
