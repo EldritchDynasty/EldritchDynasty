@@ -1655,13 +1655,14 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     const w = ctx.world;
     const lostBranch = asId('br_ash_hall');
     const lostFounder = place(ctx, { name: 'Orrin', sex: 'male', age: 68, branch: lostBranch });
+    const lostFounderId = asId(String(lostFounder.id));
     const lost = {
       id: lostBranch, house: asId(w.playerHouse), name: 'The Ash Hall',
-      founder: lostFounder.id, splitFrom: MAIN_BRANCH,
+      founder: lostFounderId, splitFrom: MAIN_BRANCH,
       foundedYear: w.year - 30, extinct: w.year - 7, grievance: 0,
     };
     w.branches.set(lostBranch, lost);
-    w.people.kill(lostFounder.id, w.year - 7, 'old age');
+    w.people.kill(lostFounderId, w.year - 7, 'old age');
     const selected = selectEnding(ctx);
     const before = digestOf(ctx);
     const expected = { name: 'The Ash Hall', year: w.year - 7 };
