@@ -495,6 +495,14 @@ export interface SharedNames {
   friends?: readonly string[];
 }
 
+/** A platform adapter may supply unknown values at runtime despite the TypeScript seam.
+ * Refuse invalid user text before constructing a new simulation session. */
+const SharedNamesS = z.object({
+  founder: z.string().optional(),
+  house: z.string().optional(),
+  friends: z.array(z.string()).max(MAX_FRIENDS).optional(),
+});
+
 export interface ShareCodeStart {
   build?: string;
   names?: SharedNames;
@@ -520,7 +528,11 @@ export function newGameFromShareCode(
   const read = readShareCode(code, source, { build: opts.build });
   if (!read.ok) return read;
   const f = read.founding;
-  const given = opts.names ?? {};
+  const parsedNames = SharedNamesS.safeParse(opts.names ?? {});
+  if (!parsedNames.success) {
+    return { ok: false, problem: { kind: 'refused', reason: 'Share-code names must be text, with no more than five friends.' } };
+  }
+  const given = parsedNames.data;
   const houseName = f.houseName ?? given.house?.trim() ?? '';
   const friendNames = f.friends.map((friend, i) => friend.name ?? given.friends?.[i]?.trim() ?? '');
   // Unlike manual signing's optional friends, a shared roster is required:
