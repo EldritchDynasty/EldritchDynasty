@@ -231,6 +231,35 @@ describe('Table workload observation windows (#1992)', () => {
   });
 });
 
+describe('failed saved-run pickup evidence boundaries (#1992)', () => {
+  it('keeps the previous house after a refused load despite speculative run/year markers', () => {
+    const events: ReadingLogEvent[] = [
+      { at: 0, kind: 'run', campaign: 'short', seed: 41 },
+      { at: 1, kind: 'year', year: 1042 },
+      { at: 2, kind: 'action', verb: 'load', act: 'start' },
+      { at: 3, kind: 'run', campaign: 'long', seed: 99 },
+      { at: 4, kind: 'year', year: 1200 },
+      { at: 5, kind: 'pickup-failed' },
+      { at: 6, kind: 'year', year: 1048 },
+      action(7, 'order', 'study', 'attempted'),
+      action(8, 'order', 'study', 'accepted'),
+    ];
+    const original = JSON.stringify(events);
+    const windows = tableWorkloadWindows(events, 10);
+    expect(windows).toHaveLength(1);
+    expect(windows[0]).toMatchObject({
+      source: 'initial', campaign: 'short', seed: 41,
+      firstObservedYear: 1042, lastObservedYear: 1048,
+      observedYearDelta: 6,
+    });
+    expect(windows[0]?.actions.orders).toMatchObject([
+      { category: 'study', attempts: 1, accepted: 1, unfinished: 0 },
+    ]);
+    expect(summarize(events, 10).gaps.some((gap) => gap.to.kind === 'new-run')).toBe(false);
+    expect(JSON.stringify(events)).toBe(original);
+  });
+});
+
 describe('historical reading summary cutoffs (#2894)', () => {
   const events: ReadingLogEvent[] = [
     { at: 0, kind: 'year', year: 1042 },
