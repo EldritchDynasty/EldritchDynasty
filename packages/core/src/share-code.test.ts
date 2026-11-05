@@ -469,6 +469,19 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(problemOf(code.replace(/^ED1/, 'ED2'))).toEqual({ kind: 'unsupported_version', version: '2' });
   });
 
+  it('refuses non-string QR and native clipboard inputs without throwing or founding (#1995)', () => {
+    // UI and native adapters are untrusted at runtime even when declared string.
+    // Do not coerce values: an array containing a valid code is still not a code.
+    const malformed: unknown[] = [null, undefined, false, 123, {}, [code], new String(code)];
+    for (const value of malformed) {
+      const supplied = value as unknown as string;
+      const refusal = { ok: false, problem: { kind: 'not_a_code' } };
+      expect(readShareCode(supplied, content, { build: BUILD })).toEqual(refusal);
+      expect(newGameFromShareCode(supplied, content, { build: BUILD })).toEqual(refusal);
+    }
+    expect(readShareCode(code, content, { build: BUILD }).ok).toBe(true);
+  });
+
   it('refuses a truncated or mistyped code as damaged, never as a different founding', () => {
     expect(problemOf(code.slice(0, -12))).toEqual({ kind: 'damaged' });
     const body = code.split('.')[1]!;
