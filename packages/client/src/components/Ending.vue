@@ -306,6 +306,14 @@ async function saveAfterimage(): Promise<void> {
           The house had meant to secure its branches. In {{ epilogue.purpose.year }}, {{ epilogue.purpose.founder }} founded {{ epilogue.purpose.branch }}. At collection {{ epilogue.purpose.person }} yet lived beneath that separate roof, with family beside them. The house can name what remains; it cannot name from this alone the hand that preserved it.
         </template>
       </p>
+      <p v-if="epilogue.purpose.lostHall" class="small dim">
+        <template v-if="plain">
+          The branch ledger also records that {{ epilogue.purpose.lostHall.name }} ended in {{ epilogue.purpose.lostHall.year }}, before this reckoning. The record cannot say which decision caused that loss.
+        </template>
+        <template v-else>
+          Yet not every roof held. The branch ledger names {{ epilogue.purpose.lostHall.name }} as lost in {{ epilogue.purpose.lostHall.year }}; it names no hand that brought it down.
+        </template>
+      </p>
     </section>
 
     <!-- The named witness is a surviving page from the family's own book,
