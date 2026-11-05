@@ -1776,6 +1776,47 @@ function playSession(
 }
 
 describe('a played session hears the committed moments, and only those', () => {
+  it('keeps committed verbs and subsequent cues when an optional audio sink throws (#1986)', () => {
+    const game = createGame(bundle, memoryPlatform());
+    let year = 1042;
+    let pending = 0;
+    let outcome: ReturnType<typeof game.actions.choose> | null = null;
+    const attempted: Cue[] = [];
+    const wrapped = soundActions({
+      ...game.actions,
+      advance: () => { year++; pending++; },
+      choose: () => {
+        outcome = true;
+        return true;
+      },
+    } as GameActions, {
+      cue: (cue) => {
+        attempted.push(cue);
+        throw new Error('AudioContext output disappeared');
+      },
+    }, {
+      year: () => year,
+      docket: () => pending,
+      outcome: () => outcome ? { kind: 'choice', valence: 'boon' } as ReturnType<typeof game.outcome.value> : null,
+    });
+
+    // The wrapped simulation actions must finish even if each sound fails.
+    expect(() => wrapped.advance(1)).not.toThrow();
+    expect(year).toBe(1043);
+    expect(pending).toBe(1);
+    expect(attempted).toEqual(['page', 'bell']);
+
+    const input = game.actions.begin(1986, 'short');
+    const signing = game.prologue.value!;
+    expect(wrapped.found({
+      houseName: 'House Audible',
+      heirloom: signing.heirlooms[0]!.heirloom,
+      grudge: signing.grudges[0]!.house,
+    }).ok).toBe(true);
+    expect(attempted).toEqual(['page', 'bell', 'seal']);
+    expect(input).toBeUndefined();
+  });
+
   it('pages, bells and seals where §24 puts them, and chimes each choice by its valence', () => {
     const game = createGame(bundle, memoryPlatform());
     const heard: Cue[] = [];
