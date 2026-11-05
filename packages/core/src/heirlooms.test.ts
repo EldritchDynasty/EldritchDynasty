@@ -133,6 +133,25 @@ describe('applying an heirloom is generic', () => {
     expect(granted.acquiredYear).toBe(ctx.world.year);
   });
 
+  it('rejects a status-alive heirloom bearer already dead on the recorded calendar (#2945)', () => {
+    const ctx = bootstrap(bundle, 2945, 1042);
+    const bearer = someone(ctx);
+    const id = 'the_ninefold_seal';
+    const recordedDeath = ctx.world.year;
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+    bearer.died = recordedDeath;
+    expect(bearer.status).toBe('alive');
+
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(eligibleBearers(ctx, id)).not.toContain(bearer);
+    const before = digestOf(ctx);
+    expect(useHeirloom(ctx, id, bearer).ok).toBe(false);
+    expect(digestOf(ctx)).toBe(before);
+
+    bearer.died = recordedDeath + 1;
+    expect(canUseHeirloom(ctx, id, bearer).ok).toBe(true);
+  });
+
   it('does not present or spend a future-acquired heirloom before its year (#2697)', () => {
     const ctx = bootstrap(bundle, 1042, 1042);
     const bearer = someone(ctx);

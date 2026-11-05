@@ -97,7 +97,7 @@ export function canUseHeirloom(ctx: SimCtx, id: string, bearer: Person): UseChec
     return { ok: false, reason: msg(ctx, 'heirloom.refuse.no_uses_left', 'it is spent') };
   }
 
-  if (bearer.status !== 'alive') {
+  if (bearer.status !== 'alive' || (bearer.died !== undefined && bearer.died <= ctx.world.year)) {
     return { ok: false, reason: msg(ctx, 'heirloom.refuse.dead', 'it is no use to the dead') };
   }
 

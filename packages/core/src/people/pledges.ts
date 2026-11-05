@@ -20,7 +20,8 @@ export function marriagePledge(ctx: SimCtx, person: Person): MarriagePromise | u
 }
 
 function claimedGranddaughter(ctx: SimCtx, girl: Person, promise: MarriagePromise): boolean {
-  if (girl.sex !== 'female' || girl.status !== 'alive' || girl.born > ctx.world.year || girl.born <= promise.year
+  if (girl.sex !== 'female' || girl.status !== 'alive' || (girl.died !== undefined && girl.died <= ctx.world.year)
+    || girl.born > ctx.world.year || girl.born <= promise.year
     || girl.marriages.some((m) => m.to === undefined)
     || girl.houseOfOrigin !== ctx.world.playerHouse
     || ctx.world.people.householdOf(girl.id, ctx.world.year) !== ctx.world.playerHouse
@@ -53,6 +54,8 @@ function breakPledge(ctx: SimCtx, promise: MarriagePromise, reason: string): voi
 function creditorGroom(ctx: SimCtx, promise: MarriagePromise, rng: Rng): Person | undefined {
   const w = ctx.world;
   const present = w.people.living().filter((p) => p.sex === 'male'
+    // A restored status flag can be stale even after a recorded death.
+    && (p.died === undefined || p.died > w.year)
     && w.people.householdOf(p.id, w.year) === promise.toHouse
     && eligibleToMarry(ctx, p) && !p.castSlots.includes('head')
     && w.withheld[p.id] === undefined && !marriagePledge(ctx, p))
