@@ -405,9 +405,9 @@ export function soundActions<A extends GameActions>(
   }
 
   function answered<T>(answer: () => T): T {
-    const before = sample(read.outcome);
+    const before = sample(() => read.outcome());
     const result = answer();
-    const after = sample(read.outcome);
+    const after = sample(() => read.outcome());
     if (before.ok && after.ok && after.value && after.value !== before.value) {
       try { cueSafely(outcomeCue(after.value)); }
       catch { /* a malformed optional sound observation cannot undo an answer */ }
@@ -418,11 +418,11 @@ export function soundActions<A extends GameActions>(
   return {
     ...actions,
     advance(years, opts) {
-      const year = sample(read.year);
-      const waiting = sample(read.docket);
+      const year = sample(() => read.year());
+      const waiting = sample(() => read.docket());
       actions.advance(years, opts);
-      const nextYear = sample(read.year);
-      const nextWaiting = sample(read.docket);
+      const nextYear = sample(() => read.year());
+      const nextWaiting = sample(() => read.docket());
       if (year.ok && nextYear.ok && nextYear.value !== year.value) cueSafely('page');
       if (waiting.ok && nextWaiting.ok && nextWaiting.value > waiting.value) cueSafely('bell');
     },
