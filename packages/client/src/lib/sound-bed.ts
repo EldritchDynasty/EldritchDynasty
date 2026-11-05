@@ -126,10 +126,15 @@ export class SoundBed {
     if (this.#disposed) return;
     // Fail closed on corrupt values before the bed decides whether to open
     // an audio device; the engine's own setter enforces the same limit.
-    const volume = Number.isFinite(preference.volume)
-      ? Math.min(1, Math.max(0, preference.volume)) : 0;
-    // Runtime inputs may come from imperfect host/storage adapters; only literal true may turn sound on.
-    this.#preference = { on: preference.on === true, volume };
+    // A native preference adapter can return malformed data despite its typed
+    // interface (including null after a corrupt storage read). Never throw
+    // during Start/Reading settings mount or wake audio for such a value.
+    const supplied = preference && typeof preference === 'object' ? preference : null;
+    const requestedVolume = supplied?.volume;
+    const volume = typeof requestedVolume === 'number' && Number.isFinite(requestedVolume)
+      ? Math.min(1, Math.max(0, requestedVolume)) : 0;
+    // Only a literal true with a valid, positive volume may turn sound on.
+    this.#preference = { on: supplied?.on === true, volume };
     this.engine.volume = volume;
     this.#settle();
   }
