@@ -258,10 +258,23 @@ export class SoundBed {
       this.#hostPaused = false;
       this.show();
     };
-    for (const type of GESTURES) win.addEventListener(type, gesture, true);
-    doc.addEventListener('visibilitychange', visibility);
-    win.addEventListener('pagehide', hide);
-    win.addEventListener('pageshow', show);
+    // Some embedded WebViews refuse a particular DOM listener. A failed
+    // registration must not break the game or strand earlier registrations.
+    // Keep the rest (especially a surviving gesture) and remove only listeners
+    // that actually attached when the component is replaced or disposed.
+    const attached: { target: Listened; type: string; listener: () => void; capture: boolean }[] = [];
+    const listen = (target: Listened, type: string, listener: () => void, capture = false) => {
+      try {
+        target.addEventListener(type, listener, capture);
+        attached.push({ target, type, listener, capture });
+      } catch {
+        // Unavailable browser hook: another gesture/host lifecycle path may work.
+      }
+    };
+    for (const type of GESTURES) listen(win, type, gesture, true);
+    listen(doc, 'visibilitychange', visibility);
+    listen(win, 'pagehide', hide);
+    listen(win, 'pageshow', show);
     // Native hosts can refuse an optional pause subscription synchronously.
     // Browser visibility and gesture handling must still attach, and the
     // returned detach must still remove those listeners.
@@ -305,10 +318,10 @@ export class SoundBed {
       if (detached) return;
       detached = true;
       active = false;
-      for (const type of GESTURES) win.removeEventListener(type, gesture, true);
-      doc.removeEventListener('visibilitychange', visibility);
-      win.removeEventListener('pagehide', hide);
-      win.removeEventListener('pageshow', show);
+      for (const { target, type, listener, capture } of attached) {
+        try { target.removeEventListener(type, listener, capture); }
+        catch { /* A broken host unsubscribe must not strand the other listeners. */ }
+      }
       try {
         unpause();
       } catch {
