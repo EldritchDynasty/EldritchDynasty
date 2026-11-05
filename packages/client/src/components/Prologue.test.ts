@@ -474,12 +474,16 @@ describe('signing focus belongs to its own mounted instance (#1984)', () => {
     const old = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
     const current = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
     try {
-      for (let i = 0; i < 3; i += 1) {
-        await current.get('button.on').trigger('click');
-      }
+      // Both instances must have a heading: the regression concerns duplicate
+      // live IDs, not an older signing still on its opening screen.
+      await revealChoices(old);
+      await revealChoices(current);
       await nextTick();
-      expect(document.activeElement).toBe(current.get('#founder-section-heading').element);
-      expect(document.activeElement).not.toBe(old.get('#founder-section-heading').element);
+      const oldHeading = old.get('#founder-section-heading').element;
+      const currentHeading = current.get('#founder-section-heading').element;
+      expect(document.querySelectorAll('#founder-section-heading')).toHaveLength(2);
+      expect(document.activeElement).toBe(currentHeading);
+      expect(document.activeElement).not.toBe(oldHeading);
     } finally {
       current.unmount();
       old.unmount();
