@@ -340,6 +340,12 @@ describe('achievements (issue #323)', () => {
     // Old saves may have a high-water rung without a matching timestamp.
     delete save.ascension.reachedAt.god;
     expect(earnedAchievements(save)).toContain('ladder_god');
+
+    // An inconsistent higher past stamp must not exceed the saved best rung.
+    save.ascension.best = 'adept';
+    save.ascension.reachedAt = { adept: term + 1, hierophant: term - 1 };
+    expect(earnedAchievements(save)).not.toContain('ladder_hierophant');
+    expect(earnedAchievements(save)).not.toContain('ladder_adept');
   });
 
   it('rejects recovered regencies before birth or after the regent died (#2987)', () => {
