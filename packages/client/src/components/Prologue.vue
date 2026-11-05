@@ -291,11 +291,14 @@ const stageReady = computed(() => {
   }
 });
 
+const signingRoot = ref<HTMLElement | null>(null);
 function focusSigningStageHeading(): void {
   const heading = signingStage.value === 'founder' ? 'founder-section-heading'
     : signingStage.value === 'examination' ? 'examination-heading'
       : 'house-section-heading';
-  document.getElementById(heading)?.focus();
+  // During a retained/switching screen, an older mounted signing can carry
+  // the same static heading IDs. Focus only the instance whose stage moved.
+  signingRoot.value?.querySelector<HTMLElement>(`#${heading}`)?.focus();
 }
 
 let navigatingSigning = false;
@@ -387,7 +390,7 @@ function signOnEnter(event: KeyboardEvent): void {
 </script>
 
 <template>
-  <main class="prologue">
+  <main ref="signingRoot" class="prologue">
     <p v-if="!prologue.founded" class="opening">{{ prologue.opening }}</p>
 
     <!-- Run-specific Library memory is NOT part of prologueSeenText. A reader
