@@ -1,4 +1,5 @@
 import type { ChronicleEntry, SimCtx } from './world.js';
+import { visibleEpithet } from './byname.js';
 
 /** A recoverable visible account, never an inferred account of what really happened. */
 export interface AfterimageSource {
@@ -46,7 +47,14 @@ const sourceOf = (page: ChronicleEntry): AfterimageSource => ({
  */
 export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   const w = ctx.world;
+  // The Afterimage is a last-night projection. Unfinished worlds can still
+  // be inspected by authoring/tests with synthetic Chronicle histories whose
+  // pages lie beyond the test clock; never censor those diagnostic inventories.
+  // Once a house has an ending, only evidence available by that year may be
+  // quoted, counted, or used to attribute outcomes.
+  const throughYear = w.ending ? w.year : Infinity;
   const pages = w.chronicle.map((page, index) => ({ page, index }))
+    .filter(({ page }) => page.year <= throughYear)
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
   // Legacy/imported omissions may retain old text. Their words are not
@@ -70,9 +78,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   const mention = (id: string, source: AfterimageSource): void => {
     const p = w.people.get(id);
     if (!p) return;
+    const epithet = visibleEpithet(p, throughYear);
     const reading = people.get(id) ?? {
       person: id, name: p.name,
-      ...(p.epithet ? { epithet: p.epithet } : {}),
+      ...(epithet ? { epithet } : {}),
       sources: [],
     };
     reading.sources.push(source);
@@ -113,7 +122,8 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         if (!p || p.died !== decision.year || !page.people?.includes(id)) continue;
         if (effect.rite === 'vessel' && p.status !== 'vessel_consumed') continue;
         if (effect.rite === 'unmaking' && p.status !== 'dead') continue;
-        const witnessed = { person: id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}), source: sourceOf(page) };
+        const epithet = visibleEpithet(p, throughYear);
+        const witnessed = { person: id, name: p.name, ...(epithet ? { epithet } : {}), source: sourceOf(page) };
         if (!spent || page.year < spent.source.year) spent = witnessed;
         // The Afterimage may rightly lead with an outsider, but that must not
         // hide a later blood-relative sacrifice from the bloodline reckoning.
@@ -130,7 +140,8 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
 
   const brush = w.succession.flatMap((reign) => {
     const q = reign.question;
-    return q?.kind === 'thin_line' && q.text && Number.isFinite(q.baseline)
+    return reign.from <= throughYear && q?.kind === 'thin_line' && q.opened <= throughYear
+      && q.text && Number.isFinite(q.baseline)
       ? [{ count: q.baseline, source: { year: q.opened, text: q.text } }]
       : [];
   }).sort((a, b) => a.count - b.count || a.source.year - b.source.year)[0];
@@ -138,7 +149,13 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     && page.discrepancyId && w.discrepancies.get(page.discrepancyId)?.state === 'open');
   const blank = pages.find((page) => page.text === null);
   const line: NonNullable<AfterimageEvidence['line']> = [];
-  const lastHead = w.succession.at(-1)?.person;
+  // Recovered succession rows need not be stored in tenure order. Choose the
+  // latest admissible start year, retaining the later stored entry for ties.
+  const lastHead = w.succession.reduce<(typeof w.succession)[number] | undefined>(
+    (latest, reign) => reign.from <= throughYear && (!latest || reign.from >= latest.from)
+      ? reign : latest,
+    undefined,
+  )?.person;
   const ancestors = lastHead ? [String(lastHead)] : [];
   const seen = new Set<string>();
   while (ancestors.length) {
@@ -149,8 +166,9 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     if (!p) continue;
     // Exactly session.ts's record.parents projection. No true parentage,
     // phenotype or inferred missing ancestor crosses the seam.
+    const epithet = visibleEpithet(p, throughYear);
     line.push({
-      id, name: p.name, ...(p.epithet ? { epithet: p.epithet } : {}),
+      id, name: p.name, ...(epithet ? { epithet } : {}),
       head: id === lastHead, record: { parents: { ...p.claimedParents } },
     });
     for (const parent of [p.claimedParents.father, p.claimedParents.mother]) {
