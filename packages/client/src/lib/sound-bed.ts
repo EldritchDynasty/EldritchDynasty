@@ -283,6 +283,9 @@ export class SoundBed {
     let subscribing = true;
     try {
       unpause = onPause?.(() => {
+        // Native callbacks may already be queued when unsubscribed. Like the
+        // browser listeners, an obsolete attachment cannot pause its successor.
+        if (!active) return;
         // Only a synchronous host pause can veto the initial visible sample.
         if (subscribing) pausedDuringSubscription = true;
         this.#hostPaused = true;
