@@ -306,3 +306,59 @@ test('mislabeled named demonstration and full-campaign slots are refused without
   await expect(demos.getByRole('button', { name: 'Export saved demonstration demo-chapter-fixture' })).toBeVisible();
   await expect(fullRuns.getByRole('button', { name: 'Export saved game chapter-other' })).toBeVisible();
 });
+
+
+for (const mode of ['original', 'plainenglish'] as const) {
+  test(`starting another Demonstration requires confirmation before overwriting its checkpoint (${mode}) #1979`, async ({ page }) => {
+    const { full, demo } = await openWithSaves(page, mode, { demo: true });
+    const errors: string[] = [];
+    page.on('pageerror', error => errors.push(error.message));
+    const existingDemo = await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'));
+
+    await page.getByRole('radio', { name: /A Demonstration/ }).check();
+    const begin = page.getByRole('button', {
+      name: mode === 'original' ? 'Begin a new signing' : 'Start a new game',
+      exact: true,
+    });
+    await begin.click();
+
+    const confirmation = page.getByRole('group', {
+      name: mode === 'original' ? 'Confirm replacing the Demonstration' : 'Confirm replacing the saved demonstration',
+    });
+    await expect(confirmation).toBeVisible();
+    const affirmative = confirmation.getByRole('button', {
+      name: mode === 'original' ? 'Yes, begin another Demonstration' : 'Yes, start a new demonstration',
+      exact: true,
+    });
+    await expect(affirmative).toBeFocused();
+    await expect(confirmation).toContainText(mode === 'original' ? 'replace that checkpoint' : 'replace your saved demonstration');
+    expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBe(existingDemo);
+
+    // Cancelling leaves the saved line intact, restores keyboard focus, and
+    // never begins an unseen session on the reader's behalf.
+    await confirmation.getByRole('button', { name: 'Cancel' }).click();
+    await expect(confirmation).toHaveCount(0);
+    await expect(begin).toBeFocused();
+    expect(await page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).toBe(existingDemo);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+
+    // A campaign selection change invalidates the earlier confirmation. An
+    // old affirmative click must not authorize a different launch.
+    await begin.click();
+    await expect(confirmation).toBeVisible();
+    await page.getByRole('radio', { name: /A Short Line/ }).check();
+    await expect(confirmation).toHaveCount(0);
+    await page.getByRole('radio', { name: /A Demonstration/ }).check();
+    await begin.click();
+    await expect(confirmation).toBeVisible();
+
+    await affirmative.click();
+    await expect(page.locator('main.prologue')).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem('ed:save:demo-autosave'))).not.toBe(existingDemo);
+    const written = await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:demo-autosave')!));
+    expect(written.campaign).toBe('demo');
+    expect(written).not.toEqual(demo);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!))).toEqual(full);
+    expect(errors).toEqual([]);
+  });
+}
