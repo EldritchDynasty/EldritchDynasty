@@ -161,6 +161,7 @@ export type ShareCodeProblem =
   | { kind: 'other_edition'; differs: ('format' | 'content' | 'build')[] }
   | { kind: 'demonstration' }
   | { kind: 'names_needed'; missing: SharedName[] }
+  | { kind: 'invalid_names' }
   | { kind: 'refused'; reason: string };
 
 /**
@@ -530,7 +531,7 @@ export function newGameFromShareCode(
   const f = read.founding;
   const parsedNames = SharedNamesS.safeParse(opts.names === undefined ? {} : opts.names);
   if (!parsedNames.success) {
-    return { ok: false, problem: { kind: 'refused', reason: 'Share-code names must be text, with no more than five friends.' } };
+    return { ok: false, problem: { kind: 'invalid_names' } };
   }
   const given = parsedNames.data;
   const houseName = f.houseName ?? given.house?.trim() ?? '';
