@@ -813,6 +813,18 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
         damage: (s) => { s.ctx.world.friends = null as never; },
       },
       {
+        label: 'a null live friend entry',
+        damage: (s) => { s.ctx.world.friends[0] = null as never; },
+      },
+      {
+        label: 'a null logged friend entry',
+        damage: (s) => {
+          const row = s.ctx.world.decisionLog.find((entry) => entry.kind === 'founding');
+          if (!row) throw new Error('missing founding row');
+          row.friends[0] = null as never;
+        },
+      },
+      {
         label: 'missing persisted answers',
         damage: (s) => {
           if (!s.ctx.world.founding) throw new Error('missing founding');
