@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, type VueWrapper } from '@vue/test-utils';
-import { defineComponent, h, nextTick } from 'vue';
+import { defineComponent, h, nextTick, reactive } from 'vue';
 import type { PrologueView, SessionView } from '@ed/core';
 import { hasSeenProse, prologueSeenText, rememberSeenProse, seenProseKey } from '../lib/accessibility';
 import { FOUNDER_NAME_MAX, type ChapterBeat, type GameActions } from '../lib/game';
@@ -610,7 +610,7 @@ describe('queued signing focus after a run switch (#1984)', () => {
   });
 
   it('does not mark unshown prose as read when a stale reveal click follows founding', async () => {
-    const prologue = prologueView();
+    const prologue = reactive(prologueView());
     const key = seenProseKey('prologue', prologueSeenText(
       prologue.opening, prologue.triad, prologue.thesis,
     ));
@@ -625,9 +625,10 @@ describe('queued signing focus after a run switch (#1984)', () => {
       const staleButton = wrapper.get('button.on').element as HTMLButtonElement;
       // A state change can precede the DOM patch that removes the button.
       // The old click cannot silently complete an unread opening.
-      const founded = wrapper.setProps({ prologue: { ...prologue, founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 } } });
+      // Mutate the reactive view before Vue patches the old visible control.
+      prologue.founded = { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 };
       staleButton.click();
-      await founded;
+      await nextTick();
       expect(hasSeenProse(window.localStorage, key)).toBe(false);
     } finally {
       wrapper.unmount();
