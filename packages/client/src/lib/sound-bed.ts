@@ -396,22 +396,35 @@ export function soundActions<A extends GameActions>(
     catch { /* the player keeps the accepted action; sound falls silent */ }
   }
 
+  // Observing an optional cue is not part of a game action. A stale or
+  // invalidated view may throw on either side of a committed verb; in that case
+  // skip only the cue whose before/after evidence is unavailable.
+  function sample<T>(reader: () => T): { ok: true; value: T } | { ok: false } {
+    try { return { ok: true, value: reader() }; }
+    catch { return { ok: false }; }
+  }
+
   function answered<T>(answer: () => T): T {
-    const before = read.outcome();
+    const before = sample(read.outcome);
     const result = answer();
-    const after = read.outcome();
-    if (after && after !== before) cueSafely(outcomeCue(after));
+    const after = sample(read.outcome);
+    if (before.ok && after.ok && after.value && after.value !== before.value) {
+      try { cueSafely(outcomeCue(after.value)); }
+      catch { /* a malformed optional sound observation cannot undo an answer */ }
+    }
     return result;
   }
 
   return {
     ...actions,
     advance(years, opts) {
-      const year = read.year();
-      const waiting = read.docket();
+      const year = sample(read.year);
+      const waiting = sample(read.docket);
       actions.advance(years, opts);
-      if (read.year() !== year) cueSafely('page');
-      if (read.docket() > waiting) cueSafely('bell');
+      const nextYear = sample(read.year);
+      const nextWaiting = sample(read.docket);
+      if (year.ok && nextYear.ok && nextYear.value !== year.value) cueSafely('page');
+      if (waiting.ok && nextWaiting.ok && nextWaiting.value > waiting.value) cueSafely('bell');
     },
     found(choice) {
       const result = actions.found(choice);
