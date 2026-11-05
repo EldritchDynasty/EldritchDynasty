@@ -578,6 +578,76 @@ describe('first signing focus after opening (#1984)', () => {
   });
 });
 
+describe('queued signing focus after a run switch (#1984)', () => {
+  it('does not focus the replacement signing from the previous run\'s final reveal', async () => {
+    const prologue = prologueView();
+    const game = actions();
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    const wrapper = mount(Prologue, {
+      attachTo: document.body,
+      props: {
+        prologue, actions: game, refused: null, startYear: 1042,
+        runIdentity: 'first', skipSeenProse: false,
+      },
+    });
+    try {
+      for (const label of ['The first thing', 'The second thing']) {
+        await wrapper.findAll('button').find((button) => button.text() === label)!.trigger('click');
+      }
+      outside.focus();
+      // The last click remembers the text. The next run can skip it, so the
+      // previous reveal's queued focus must not target its new signing.
+      (wrapper.get('button.on').element as HTMLButtonElement).click();
+      await wrapper.setProps({ runIdentity: 'second', skipSeenProse: true });
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect(document.activeElement).toBe(outside);
+      expect(game.found).not.toHaveBeenCalled();
+    } finally {
+      wrapper.unmount();
+      outside.remove();
+    }
+  });
+
+  it('does not steal focus from the new run after old stage navigation', async () => {
+    const prologue = prologueView();
+    rememberSeenProse(window.localStorage, seenProseKey(
+      'prologue', prologueSeenText(prologue.opening, prologue.triad, prologue.thesis),
+    ));
+    const game = actions();
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    const wrapper = mount(Prologue, {
+      attachTo: document.body,
+      props: {
+        prologue, actions: game, refused: null, startYear: 1042,
+        runIdentity: 'first', skipSeenProse: true,
+      },
+    });
+    try {
+      await answerFounder(wrapper);
+      outside.focus();
+      // A pending nextTick navigation must not focus the destination in a
+      // different run that inherited the same component instance.
+      (wrapper.get('.signing-navigation button.primary').element as HTMLButtonElement).click();
+      await wrapper.setProps({ runIdentity: 'second' });
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect(document.activeElement).toBe(outside);
+      expect((wrapper.get('input[aria-label="Name the founder"]').element as HTMLInputElement).value).toBe('');
+      expect(game.found).not.toHaveBeenCalled();
+
+      // The replacement run still owns its own subsequent navigation.
+      await answerFounder(wrapper, 1, 'Alys');
+      await continueSigning(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('2 of 3');
+      expect(document.activeElement).toBe(wrapper.get('.examination .stage-title').element);
+    } finally {
+      wrapper.unmount();
+      outside.remove();
+    }
+  });
+});
+
 describe('founding submit single-flight (#1484)', () => {
   it('discards same-tick clicks and Enter, then permits a deliberate retry after refusal', async () => {
     const game = actions();
