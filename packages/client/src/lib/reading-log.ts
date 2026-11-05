@@ -525,8 +525,11 @@ export function tableWorkloadWindows(
     lastAt = to;
   };
   const finish = (at: number, endedBy: TableWorkloadWindow['endedBy']) => {
-    // Do not invent a house for exposure on a title screen before Begin.
-    if (!current.hasEvidence && current.tableForegroundMs === 0) return;
+    // A persisted/stale pane selection can still say "table" on Start.
+    // Pane exposure alone is not proof that a house was ever opened; only a
+    // successful Begin, displayed pickup, run or actual game action establishes
+    // a workload window. Do not manufacture a whole initial house from UI.
+    if (!current.hasEvidence) return;
     windows.push({
       source: current.source, endedBy, startedAt: current.startedAt, endedAt: at,
       campaign: current.campaign, seed: current.seed,
