@@ -30,7 +30,7 @@ command or contact a network endpoint. Input file paths are not written
 into the report. Keep the output private too: aggregates over a single
 participant can still describe that person's play.
 
-Only complete **ed-reading-log/12** exports are accepted. The tool validates
+Only complete **ed-reading-log/12** (historical) and **ed-reading-log/13** (current) exports are accepted. Version 13 adds an explicit failed-pickup boundary; version 12 cannot supply that observation. Mixed-version input is labelled `mixed` in the report. The tool validates
 the terminal marker, cap flag and ordered finite timestamps; unsupported,
 missing, partially written or out-of-order logs fail rather than inferring
 a duration. It recomputes clocks and category totals using the client's
