@@ -39,10 +39,9 @@ events:
           outcomes:
             - id: reading_kept
               weight: 100
-              onlyIf: { slot: READER, filters: [{ studying: true }] }
               text: >-
-                {READER} takes the lamp upstairs. No watch is assigned by this
-                decision, and the reading keeps the years already given to it.
+                The house leaves {READER}'s existing commitments alone. No watch
+                is assigned by this decision; no years of reading are taken away.
                 The bell can still be heard through the wall.
               effects:
                 - { kind: relationship, from: { slot: READER }, to: head, sentiment: 12 }
@@ -50,22 +49,11 @@ events:
                 event: the_readers_open_book_returns
                 after: { minYears: 5, maxYears: 5 }
                 keep: [READER]
-            - id: reading_no_longer_open
-              weight: 100
-              onlyIf: { slot: READER, filters: [{ not: { studying: true } }] }
-              text: The book is no longer being read. The order comes too late, and the household has heard it contradicted.
-              effects: [{ kind: respect, delta: -1 }]
         - id: move_the_chair
           label: Give {READER} four paid years of sickroom watch; pause the unfinished book.
           outcomes:
             - id: watch_begun
               weight: 100
-              onlyIf:
-                slot: READER
-                filters:
-                  - all:
-                      - { studying: true }
-                      - { canKeepDuty: { working: sickroom_watch } }
               text: >-
                 {READER} marks the place and closes the book. The house pays to
                 prepare the watch. The unfinished learning will wait through the
@@ -77,17 +65,6 @@ events:
                 event: the_readers_sickroom_term_returns
                 after: { minYears: 5, maxYears: 5 }
                 keep: [READER]
-            - id: watch_no_longer_possible
-              weight: 100
-              onlyIf:
-                slot: READER
-                filters:
-                  - not:
-                      all:
-                        - { studying: true }
-                        - { canKeepDuty: { working: sickroom_watch } }
-              text: The reader or the promised work is no longer available. No fee is taken, but the household has heard an order it cannot carry out.
-              effects: [{ kind: respect, delta: -1 }]
 
   - id: the_readers_open_book_returns
     title: The Chair Left Upstairs
@@ -161,13 +138,9 @@ proseVariants:
     of: 3454e893ba72082f
     plainenglish: Let {READER} continue studying. Do not assign the sickroom watch.
   - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].outcomes[id=reading_kept].text
-    of: 4980ff164e16f49a
-    plainenglish: "{READER} continues the unfinished study. This decision assigns no sickroom
-      care. The bell can still be heard upstairs."
-  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].outcomes[id=reading_no_longer_open].text
-    of: 00af4bbc29af8f98
-    plainenglish: The study is no longer active. Nothing is assigned, and the failed order
-      costs standing.
+    of: 20dcc3917c7fd9dd
+    plainenglish: "The house leaves {READER}'s existing commitments alone. This decision
+      assigns no sickroom care and takes no study progress away."
   - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=move_the_chair].label
     of: aa26ad08373c1604
     plainenglish: Assign {READER} four paid years of sickroom care and pause the study.
@@ -175,10 +148,6 @@ proseVariants:
     of: 47b033cd8c3fa6a1
     plainenglish: "{READER} pauses the unfinished study and takes the sickroom duty. The house
       pays the preparation fee. Remaining study time is preserved until the duty ends."
-  - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=move_the_chair].outcomes[id=watch_no_longer_possible].text
-    of: 4217000d25187511
-    plainenglish: The reader or work is no longer available. No fee is paid and no duty
-      begins. The failed order costs standing.
   - address: content:events/competing_commitments.yaml#events[id=the_readers_open_book_returns].title
     of: 1df5ce29a27521a5
     plainenglish: The Reading Chosen

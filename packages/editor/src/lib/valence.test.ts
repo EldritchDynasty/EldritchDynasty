@@ -147,6 +147,7 @@ describe('every effect the schema allows is scored', () => {
       awakening: { kind: 'awakening', target: { slot: 's' } },
       heirloom: { kind: 'heirloom', op: 'grant', heirloom: 'the_ring' },
       spellbook: { kind: 'spellbook', op: 'gain', target: { slot: 's' }, book: 'b' },
+      mystic_duty: { kind: 'mystic_duty', target: { slot: 's' }, working: 'sickroom_watch', years: 4 },
       career: { kind: 'career', target: { slot: 's' }, op: 'assign', career: 'c' },
       treasury: { kind: 'treasury', delta: 1 },
       respect: { kind: 'respect', delta: 1 },

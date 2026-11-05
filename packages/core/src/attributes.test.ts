@@ -6,6 +6,8 @@ import {
   expressAttributes, fertilityByAge, genomeOf, phenotypeOf, place, runYears, testWorld,
 } from '@ed/core';
 import type { VitalityInput } from '@ed/core';
+import { accrueMadness } from './people/factory.js';
+import { applyEffect } from './events/effects.js';
 
 const bundle = loadContent();
 
@@ -113,6 +115,25 @@ function cached(p: Person, ctx: ReturnType<typeof testWorld>) {
 }
 
 describe('the carried genomic expression (#1641)', () => {
+  it.each(['annual', 'outcome'] as const)('recomputes vitality after %s Madness in the same year', (source) => {
+    const ctx = testWorld(bundle, 16410, 1042);
+    const p = place(ctx, { sex: 'male', age: 30, awakened: true });
+    const g = genomeOf(p, ctx.genetics);
+    for (const i of ctx.genetics.table.fontIndices) {
+      const alleles = ctx.genetics.table.xAlleles[i]!;
+      g.sex[0][i] = alleles.reduce((best, a, at) => a.effect > alleles[best]!.effect ? at : best, 0);
+    }
+    p.phenotype = undefined;
+    const ph = phenotypeOf(p, ctx.genetics, ctx.world.year);
+    expect(ph.eldritch.canExpress).toBe(true);
+    p.madness = (ph.attrs.get('mind') ?? 0) + 20;
+    ph.dirty = true;
+    const before = phenotypeOf(p, ctx.genetics, ctx.world.year).attrs.get('health')!;
+    if (source === 'annual') expect(accrueMadness(p, ctx.genetics, ctx.world.year)).toBeGreaterThan(0);
+    else applyEffect({ kind: 'madness', target: { slot: 'P' }, delta: 4 }, ctx, { P: p.id });
+    expect(cached(p, ctx)).toEqual(fresh(p, ctx));
+    expect(phenotypeOf(p, ctx.genetics, ctx.world.year).attrs.get('health')!).toBeLessThan(before);
+  });
   it('is reused across a new year and a dirty mark, and the life layers still move', () => {
     const ctx = testWorld(bundle, 16410, 1042);
     const p = place(ctx, { sex: 'female', age: 30, name: 'Carried' });

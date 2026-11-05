@@ -22,6 +22,7 @@ const RELATIONS = ['not', 'child_of', 'sibling_of', 'spouse_of', 'blood_of'];
 
 type Shape =
   | { kind: 'affinity' }
+  | { kind: 'working' }
   | { kind: 'attr' }
   | { kind: 'has'; label: string }
   | { kind: 'boolean' }
@@ -33,6 +34,8 @@ type Shape =
 /** kind -> shape, read against `schema/src/conditions.ts`'s `Filter`. */
 const LEAF_SHAPES: Record<string, Shape> = {
   knows: { kind: 'affinity' },
+  studying: { kind: 'boolean' },
+  canKeepDuty: { kind: 'working' },
   attr: { kind: 'attr' },
   trait: { kind: 'has', label: 'trait' },
   tag: { kind: 'has', label: 'cast tag' },
@@ -51,6 +54,7 @@ function defaultOf(kind: string): Filter {
   if (!shape) throw new Error(`Unknown filter editor shape: ${kind}`);
   switch (shape.kind) {
     case 'affinity': return { knows: { affinity: 'life' } };
+    case 'working': return { canKeepDuty: { working: 'sickroom_watch' } };
     case 'attr': return { attr: '', op: 'gte', value: 0 } as never;
     case 'has': return { [kind]: '', has: true } as never;
     case 'boolean': return { [kind]: true } as never;
@@ -132,6 +136,9 @@ function inSet(key: string, option: string): boolean {
       </select>
 
       <template v-if="LEAF_SHAPES[nodeKind]">
+        <input v-if="nodeKind === 'canKeepDuty'" type="text" aria-label="Mystic working"
+               :value="(leafValue().canKeepDuty as { working: string }).working"
+               @input="updateNested('canKeepDuty', { working: ($event.target as HTMLInputElement).value })" />
         <select v-if="nodeKind === 'knows'" aria-label="Known affinity"
                 :value="(leafValue().knows as { affinity: string }).affinity"
                 @change="updateNested('knows', { affinity: ($event.target as HTMLSelectElement).value })">
