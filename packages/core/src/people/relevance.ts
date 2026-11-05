@@ -47,7 +47,8 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
 
   for (const [hall, members] of halls(w, w.year)) {
     const branch = w.branches.get(hall);
-    if (branch && branch.extinct === undefined && branch.foundedYear <= w.year && branch.grievance > 0) {
+    if (branch && (branch.extinct === undefined || branch.extinct > w.year)
+      && branch.foundedYear <= w.year && branch.grievance > 0) {
       for (const person of members.filter((p) => aliveNow(ctx, p))) {
         add(out, person.id, msg(ctx, 'relevance.hall_grievance', 'their hall holds a grievance'));
       }
@@ -82,7 +83,8 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       for (const [hall, members] of halls(w, w.year)) {
         const currentMembers = members.filter((p) => aliveNow(ctx, p));
         const branch = w.branches.get(hall);
-        if (hall === MAIN_BRANCH || !branch || branch.extinct !== undefined
+        if (hall === MAIN_BRANCH || !branch
+          || (branch.extinct !== undefined && branch.extinct <= w.year)
           || branch.foundedYear > w.year || viableCadetHall(currentMembers, w.year)) continue;
         // Staff living in the hall cannot preserve its bloodline; the
         // relevance cue belongs to family members who can act on this aim.

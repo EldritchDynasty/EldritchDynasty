@@ -175,6 +175,29 @@ describe('the cast of a generation', () => {
     expect(relevantPeople(ctx).get(cousin.id) ?? []).toContain('their hall holds a grievance');
   });
 
+  it('keeps a hall visible until future extinction without leaking a future seal year (#2964)', () => {
+    const ctx = aFamily();
+    const w = ctx.world;
+    const hall = w.branches.get('branch_ash')!;
+    const speaker = w.people.get(hall.founder)!;
+    const heldInFuture = w.year + 2;
+    const extinctInFuture = w.year + 3;
+    hall.heldSeal = heldInFuture;
+    hall.extinct = extinctInFuture;
+
+    const before = castOf(ctx).find((c) => c.role === 'aggrieved');
+    expect(before?.hall).toBe('Ashfold');
+    expect(before?.because).toMatch(/never held the seal/);
+    expect(before?.because).not.toContain(String(heldInFuture));
+    expect(relevantPeople(ctx).get(speaker.id) ?? []).toContain('their hall holds a grievance');
+
+    w.year = heldInFuture;
+    expect(castOf(ctx).find((c) => c.role === 'aggrieved')?.because).toContain(String(heldInFuture));
+    w.year = extinctInFuture;
+    expect(castOf(ctx).find((c) => c.role === 'aggrieved')).toBeUndefined();
+    expect(relevantPeople(ctx).get(speaker.id) ?? []).not.toContain('their hall holds a grievance');
+  });
+
   it('leaves a small grievance off the list', () => {
     const ctx = aFamily();
     const hall = ctx.world.branches.get('branch_ash')!;
@@ -348,10 +371,131 @@ describe('the situational roles', () => {
     marry(ctx, her, him);
     const child = place(ctx, { sex: 'male', age: 6, name: 'Small' });
     beget(ctx, child, her, him);
+    // The marriage must predate the death: this is a real widow, not a
+    // restored record with a wedding that has not happened yet.
+    for (const m of [...her.marriages, ...him.marriages]) m.from = w.year - 10;
     w.people.kill(him.id, w.year - 2, 'plague');
     const row = roleOf(ctx, String(her.id));
     expect(row?.role, castOf(ctx).map((c) => `${c.role}:${c.name}`).join(',')).toBe('widow');
     expect(row?.because).toMatch(/1 child under sixteen/);
+  });
+
+
+  it('does not make a future marriage a married-in role before its wedding (#2955)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    // The seeded founding family already has a married-in candidate. Make
+    // this test's prospective bride the only eligible outsider so a tie in
+    // salience does not hide the chronology being tested.
+    for (const resident of w.people.household(w.playerHouse, w.year)) {
+      if (resident.houseOfOrigin !== w.playerHouse) resident.marriages = [];
+    }
+    const groom = place(ctx, { sex: 'male', age: 38, name: 'Groom' });
+    const bride = place(ctx, { sex: 'female', age: 23, name: 'Future Bride', house: 'house_marrow' });
+    bride.membership.push({ house: asId(w.playerHouse), kind: 'married_in', from: w.year - 1 });
+    marry(ctx, groom, bride);
+    for (const m of [...groom.marriages, ...bride.marriages]) m.from = w.year + 1;
+
+    expect(castOf(ctx).some((c) => c.person === bride.id && c.role === 'married_in')).toBe(false);
+    // After thirteen years, the same childless marriage is an unusually
+    // visible present fact; it was never a fact before the wedding date.
+    w.year += 13;
+    expect(castOf(ctx).some((c) => c.person === bride.id && c.role === 'married_in')).toBe(true);
+  });
+
+  it('still recognises an unwed woman when her restored wedding is in the future (#2955)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    const her = place(ctx, { sex: 'female', age: 37, name: 'Sable' });
+    const him = place(ctx, { sex: 'male', age: 38, name: 'Future Husband' });
+    marry(ctx, her, him);
+    for (const m of [...her.marriages, ...him.marriages]) m.from = w.year + 1;
+
+    expect(roleOf(ctx, String(her.id))?.role).toBe('unwed');
+    w.year += 1;
+    expect(castOf(ctx).some((c) => c.person === her.id && c.role === 'unwed')).toBe(false);
+  });
+
+  it('does not describe widowhood until the marriage ends and the spouse dies (#2956)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    const her = place(ctx, { sex: 'female', age: 34, name: 'Nell', house: 'commons' });
+    her.membership = [{ house: asId(w.playerHouse), kind: 'married_in', from: w.year - 10 }];
+    const him = place(ctx, { sex: 'male', age: 40, name: 'Gone' });
+    marry(ctx, her, him);
+    const child = place(ctx, { sex: 'male', age: 6, name: 'Small' });
+    beget(ctx, child, her, him);
+    w.people.kill(him.id, w.year - 2, 'plague');
+
+    // Inconsistent imported data: status is already dead, but the saved
+    // death and the marriage ending belong to a future year.
+    him.died = w.year + 2;
+    for (const m of [...her.marriages, ...him.marriages]) m.to = w.year + 2;
+    expect(castOf(ctx).some((c) => c.person === her.id && c.role === 'widow')).toBe(false);
+    w.year += 2;
+    expect(roleOf(ctx, String(her.id))?.role).toBe('widow');
+
+    // Even after a spouse dies, an earlier divorce is not widowhood.
+    for (const m of [...her.marriages, ...him.marriages]) m.to = w.year - 3;
+    expect(castOf(ctx).some((c) => c.person === her.id && c.role === 'widow')).toBe(false);
+  });
+
+  it('shows future-exposed forged papers as unexposed until their recorded year (#2957)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    const man = place(ctx, { sex: 'male', age: 33, name: 'Gethen' });
+    man.lineageDocuments.push({
+      generations: 3, notarisedBy: 'the Bramme chapter house',
+      forged: true, exposed: w.year + 3,
+    });
+    const before = roleOf(ctx, String(man.id));
+    expect(before?.role).toBe('papers');
+    expect(before?.because).toMatch(/paid to write/);
+    expect(before?.because).not.toMatch(/parish roll/);
+
+    w.year += 3;
+    const after = roleOf(ctx, String(man.id));
+    expect(after?.role).toBe('papers');
+    expect(after?.because).toMatch(/parish roll/);
+    expect(after?.because).toContain(String(w.year));
+  });
+
+  it('excludes future-born residents even when their saved status is alive (#2963)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    const present = place(ctx, { sex: 'male', age: 33, name: 'Present Witness' });
+    present.lineageDocuments.push({
+      generations: 3, notarisedBy: 'the chapter', forged: true, exposed: w.year - 4,
+    });
+    const unborn = place(ctx, { sex: 'male', age: 33, name: 'Future Witness' });
+    unborn.lineageDocuments.push({
+      generations: 3, notarisedBy: 'the chapter', forged: true, exposed: w.year - 1,
+    });
+    // A recovered record may have a membership already active, but a
+    // person whose birth is in the future cannot testify in this year.
+    unborn.born = w.year + 2;
+    expect(unborn.status).toBe('alive');
+    expect(castOf(ctx).find((member) => member.role === 'papers')?.person).toBe(present.id);
+    expect(castOf(ctx).some((member) => member.person === unborn.id)).toBe(false);
+  });
+
+  it('excludes effectively dead residents despite stale alive status (#2963)', () => {
+    const ctx = quiet();
+    const w = ctx.world;
+    const present = place(ctx, { sex: 'male', age: 33, name: 'Living Witness' });
+    present.lineageDocuments.push({
+      generations: 3, notarisedBy: 'the chapter', forged: true, exposed: w.year - 4,
+    });
+    const deceased = place(ctx, { sex: 'male', age: 43, name: 'Past Witness' });
+    deceased.lineageDocuments.push({
+      generations: 3, notarisedBy: 'the chapter', forged: true, exposed: w.year - 1,
+    });
+    // Model an inconsistent imported save, not a new death path: production
+    // deaths still go exclusively through PersonStore.kill.
+    deceased.died = w.year - 1;
+    expect(deceased.status).toBe('alive');
+    expect(castOf(ctx).find((member) => member.role === 'papers')?.person).toBe(present.id);
+    expect(castOf(ctx).some((member) => member.person === deceased.id)).toBe(false);
   });
 
   it('names the oldest, when nobody else is close', () => {
