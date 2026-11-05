@@ -348,6 +348,8 @@ export class Sound {
    * mute, zero volume, pause and disposal can retire them immediately.
    */
   private readonly activeCues = new Map<AudioScheduledSourceNode, () => void>();
+  /** Previous Age drones may still be fading when the host freezes its audio clock. */
+  private readonly retiringDrones = new Set<{ nodes: AudioScheduledSourceNode[]; gain: GainNode }>();
   private readonly ctors: readonly Ctor[];
 
   #muted = true;
@@ -483,7 +485,24 @@ export class Sound {
     });
   }
 
+  /**
+   * A former Age's fade is no longer `this.drone` but is still scheduled.
+   * Muting or freezing the clock must cut *all* those older graphs as well.
+   */
+  private cutRetiringDrones(): void {
+    const now = this.context?.currentTime ?? 0;
+    for (const retired of this.retiringDrones) {
+      for (const source of retired.nodes) {
+        try { source.stop(now); } catch { /* ended or invalidated by the host */ }
+      }
+      try { retired.gain.disconnect(); } catch { /* invalidated device */ }
+      this.retiringDrones.delete(retired);
+    }
+  }
+
   stopDrone(fadeSeconds = 1.4) {
+    // No active drone is not proof that no old fade is still connected.
+    if (fadeSeconds === 0) this.cutRetiringDrones();
     const d = this.drone;
     if (!d || !this.context) return;
     this.drone = null;
@@ -500,10 +519,11 @@ export class Sound {
       // after the last source finishes; otherwise repeated Age transitions
       // leave disconnected-from-the-game but still connected-to-output nodes.
       let remaining = d.nodes.length;
-      let disconnected = false;
+      const retired = { nodes: d.nodes, gain: d.gain };
+      this.retiringDrones.add(retired);
       const disconnect = () => {
-        if (disconnected) return;
-        disconnected = true;
+        // The immediate-cut path may have already disconnected this old fade.
+        if (!this.retiringDrones.delete(retired)) return;
         try { d.gain.disconnect(); } catch { /* the host already closed the graph */ }
       };
       const stopAt = now + fadeSeconds + Math.min(0.1, fadeSeconds);
@@ -613,6 +633,7 @@ export class Sound {
 
   private fail(): void {
     this.stopCues();
+    this.cutRetiringDrones();
     this.#failed = true;
     this.drone = null;
     this.droneKey = '';
