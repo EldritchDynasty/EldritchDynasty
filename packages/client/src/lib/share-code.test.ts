@@ -27,6 +27,14 @@ describe('share-code front-door refusals (#2532)', () => {
 });
 
 describe('share code import name prompts (#1995)', () => {
+  it('describes malformed platform name inputs in both reading modes', () => {
+    const problem: ShareCodeProblem = { kind: 'invalid_names' };
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe('Names for a share code must be text, with no more than five friends.');
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe('The names offered for this code must be words, and no more than five friends may be named.');
+  });
+
   it('requests each unnamed friend, not one name for the whole friends category', () => {
     // After a reader supplies a house name, the codec can return just
     // 'friends' even when several members of that roster lack names.
