@@ -19,7 +19,12 @@ text, order payloads or refusal prose.
 `packages/client/src/lib/reading-log.ts` reads those events without changing
 the format, the original events, the save or the game. It segments the observer's
 timeline on a **successful Begin/share-code start** or a **displayed saved-run
-pickup**. A cancelled/failed load is not a new house. Since format 13, a failed-pickup marker also clears speculative run/year identity for subsequent observations; earlier format 12 exports cannot record that explicit refusal. A new run marker emitted by Vue before the Chronicle confirms pickup is held for the next window, rather than overwriting the previous house. Each segment reports:
+pickup**. A cancelled/failed load is not a new house. Format 13 records
+an explicit `pickup-failed` event, which discards speculative run and year
+markers in Table workload and answer-gap projections without cutting the old
+house's interval. Older format 12 exports cannot prove this refusal. A new
+run marker emitted by Vue before Chronicle confirms pickup is held for the next
+window rather than overwriting the previous house. Each segment reports:
 
 | Field | Interpretation |
 | --- | --- |
