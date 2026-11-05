@@ -122,7 +122,7 @@ function validatedEvents(input: unknown, index: number): {
 } {
   const fail = (reason: string): never => { throw new Error('Reading log ' + index + ': ' + reason); };
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail('expected an object');
-  const artifact = input as Partial<ReadingLogArtifact>;
+  const artifact = input as Omit<Partial<ReadingLogArtifact>, 'format'> & { format?: unknown };
   if (artifact.format !== READING_LOG_FORMAT && artifact.format !== 'ed-reading-log/12') {
     fail('unsupported format; ed-reading-log/12 or /13 required');
   }
