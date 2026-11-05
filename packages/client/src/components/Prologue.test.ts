@@ -527,6 +527,51 @@ describe('founding submit single-flight (#1484)', () => {
   });
 });
 
+describe('visible signing names (#1984)', () => {
+  it('keeps invisible-only founder and house names from passing the staged signing', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      const founder = wrapper.get('input[aria-label="Name the founder"]');
+      await founder.setValue('\u200B\u2060');
+      await wrapper.findAll('.identity button')[0]!.trigger('click');
+      expect(founder.attributes('aria-invalid')).toBe('true');
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+      expect(game.found).not.toHaveBeenCalled();
+
+      // Formatting marks inside a visible name remain valid.
+      await founder.setValue('Dav\u200Deed');
+      expect(founder.attributes('aria-invalid')).toBe('false');
+      await continueSigning(wrapper);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await continueSigning(wrapper);
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+
+      const house = wrapper.get('input[aria-label="Name the house"]');
+      await house.setValue('\u200B');
+      expect(house.attributes('aria-invalid')).toBe('true');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+      await wrapper.setProps({ proseMode: 'plainenglish' });
+      expect(wrapper.get('.waiting').text()).toContain('family name');
+      await wrapper.get('input[aria-label="Enter the family name"]').setValue('House \u200D Ash');
+      expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledOnce();
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        houseName: 'House \u200D Ash', founder: { name: 'Dav\u200Deed', gender: 'man', configuration: 'blood_father' },
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('optional friends at signing (#1984)', () => {
   it('does not invite friends when this signing requests none, in either prose mode (#2154)', async () => {
     const game = actions();
@@ -623,6 +668,42 @@ describe('optional friends at signing (#1984)', () => {
       wrapper.unmount();
     }
   });
+
+  it.each(['original', 'plainenglish'] as const)(
+    'blocks a formatting-only optional friend name in %s without making friends required',
+    async (proseMode) => {
+      const game = actions();
+      const wrapper = mount(Prologue, {
+        props: { prologue: withFriends(), actions: game, refused: null, startYear: 1042 },
+      });
+      try {
+        await readyToSign(wrapper);
+        await wrapper.setProps({ proseMode });
+        // Omitting the entire optional roster still permits founding.
+        expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+        (wrapper.get('details.friend-names').element as HTMLDetailsElement).open = true;
+        await nextTick();
+        const friend = wrapper.get(proseMode === 'plainenglish'
+          ? 'input[aria-label="Name friend 1"]' : 'input[aria-label="Name the first friend"]');
+        await friend.setValue('\u200B\u2060');
+        expect(friend.attributes('aria-invalid')).toBe('true');
+        expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
+        expect(wrapper.get('.waiting').text()).toContain(proseMode === 'plainenglish'
+          ? 'a visible name for each named friend' : 'a visible name for every friend you chose to name');
+        expect(game.found).not.toHaveBeenCalled();
+
+        await friend.setValue('Ma\u200Dra');
+        expect(friend.attributes('aria-invalid')).toBe('false');
+        expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+        await wrapper.get('button.sign').trigger('click');
+        expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+          friends: [{ name: 'Ma\u200Dra', sex: 'female' }],
+        }));
+      } finally {
+        wrapper.unmount();
+      }
+    },
+  );
 
   it('keeps optional names and sex selections when the disclosure closes or language changes', async () => {
     const game = actions();
