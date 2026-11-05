@@ -1741,6 +1741,41 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(relative.status).toBe('alive');
   });
 
+  it('keeps a last-night branch witness despite deaths and extinction after collection', () => {
+    const { ctx, branch, relative, cousin } = foundedHall();
+    const w = ctx.world;
+    const atCollection = w.ending!.year;
+    const witnessed = epilogueOf(ctx)!.purpose;
+    expect(witnessed).toMatchObject({ kind: 'branch_kept', person: 'Leora of the Orchard' });
+
+    // This recovered world has moved five years past its stored ending. Both
+    // relatives have since died and the branch has closed, but they and its
+    // founding were present in the book at collection.
+    w.year = atCollection + 5;
+    w.people.kill(relative.id, atCollection + 2, 'old age');
+    w.people.kill(cousin.id, atCollection + 3, 'old age');
+    w.branches.get(asId(branch))!.extinct = atCollection + 4;
+    expect(relative.status).toBe('dead');
+    expect(cousin.status).toBe('dead');
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
+      expect(epilogueOf(ctx)!.id).toBe('forgotten');
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // The same record must not invent survival if either person or the hall
+    // was already gone on the actual last night.
+    relative.died = atCollection;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    relative.died = atCollection + 2;
+    w.branches.get(asId(branch))!.extinct = atCollection;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+    w.branches.get(asId(branch))!.extinct = atCollection + 4;
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
+  });
+
   it('excludes outside houses, unsupported founders, other ambitions and shorter campaigns', () => {
     const { ctx, branch, founder } = foundedHall();
     const w = ctx.world;
