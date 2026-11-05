@@ -38,6 +38,8 @@ async function signDemo(page: Page, plain: boolean): Promise<void> {
 
 for (const scenario of [
   { mode: 'original', width: 1400 },
+  { mode: 'original', width: 390 },
+  { mode: 'plainenglish', width: 1400 },
   { mode: 'plainenglish', width: 390 },
 ] as const) {
   test(`the complete Demonstration survives a pending Record reload, ${scenario.mode}, ${scenario.width}px (#1979)`, async ({ page }, testInfo) => {
