@@ -229,6 +229,8 @@ const shareInput = ref('');
 const shareNames = ref<{ founder: string; house: string; friends: string[] }>({ founder: '', house: '', friends: [] });
 /** Retain the structured refusal so changing reading mode rewords it. */
 const shareBeginProblem = ref<ReturnType<GameActions['beginFromShareCode']>>(null);
+/** Save-collision consent must follow the exact share code, not just the current profile. */
+const confirmingSharedDemoOverwrite = ref<string | null>(null);
 const shareRead = computed(() => shareInput.value.trim() ? props.actions.readShareCode(shareInput.value) : null);
 const sharedFounding = computed(() => shareRead.value?.ok ? shareRead.value.founding : null);
 const shareCampaignName = computed(() => {
@@ -239,7 +241,8 @@ const shareProblem = computed(() => (shareBeginProblem.value
   ? shareCodeProblem(shareBeginProblem.value, props.proseMode)
   : (shareRead.value && !shareRead.value.ok ? shareCodeProblem(shareRead.value.problem, props.proseMode) : null)));
 const mayBeginShared = computed(() => sharedFounding.value !== null && libraryIsReady.value
-  && !selectingRun.value && !libraryBusy.value);
+  && !selectingRun.value && !libraryBusy.value
+  && (sharedFounding.value.campaign !== 'demo' || (!listingSaves.value && !checkingDemoBeforeBegin.value)));
 
 function onShareInput(): void {
   // Recipient names belong to the code for which they were entered. A pasted
@@ -248,6 +251,7 @@ function onShareInput(): void {
   // or while they fill in the name fields for the current founding.
   shareNames.value = { founder: '', house: '', friends: [] };
   shareBeginProblem.value = null;
+  confirmingSharedDemoOverwrite.value = null;
 }
 
 /** A corrected recipient name invalidates the previous submit refusal, not the code. */
@@ -255,10 +259,11 @@ function onShareNameInput(): void {
   shareBeginProblem.value = null;
 }
 
-function beginShared(): void {
+function beginSharedNow(): void {
   const founding = sharedFounding.value;
   if (!founding || !mayBeginShared.value || beginning) return;
   beginning = true;
+  confirmingSharedDemoOverwrite.value = null;
   try {
     const names = shareNames.value;
     const problem = props.actions.beginFromShareCode(shareInput.value, {
@@ -270,6 +275,46 @@ function beginShared(): void {
   } finally {
     void nextTick().then(() => { beginning = false; });
   }
+}
+
+function requestSharedDemoOverwriteConfirmation(): void {
+  confirmingSharedDemoOverwrite.value = shareInput.value;
+  void nextTick(() => startRoot.value
+    ?.querySelector<HTMLButtonElement>('.share-demo-overwrite-confirm .confirm-overwrite')?.focus());
+}
+
+async function beginShared(): Promise<void> {
+  const founding = sharedFounding.value;
+  if (!founding || !mayBeginShared.value || beginning) return;
+  if (founding.campaign !== 'demo') { beginSharedNow(); return; }
+  if (demoOverwriteRisk.value) { requestSharedDemoOverwriteConfirmation(); return; }
+
+  // Another tab or native host may have saved a Demo after the initial listing.
+  const code = shareInput.value;
+  beginning = true;
+  checkingDemoBeforeBegin.value = true;
+  try {
+    await refreshSaves();
+  } finally {
+    checkingDemoBeforeBegin.value = false;
+    beginning = false;
+  }
+  if (shareInput.value !== code || sharedFounding.value?.campaign !== 'demo' || !mayBeginShared.value) return;
+  if (demoOverwriteRisk.value) requestSharedDemoOverwriteConfirmation();
+  else beginSharedNow();
+}
+
+function confirmBeginSharedDemo(): void {
+  if (confirmingSharedDemoOverwrite.value === null
+    || confirmingSharedDemoOverwrite.value !== shareInput.value
+    || sharedFounding.value?.campaign !== 'demo'
+    || !mayBeginShared.value || beginning) return;
+  beginSharedNow();
+}
+
+function cancelBeginSharedDemo(): void {
+  confirmingSharedDemoOverwrite.value = null;
+  void nextTick(() => startRoot.value?.querySelector<HTMLButtonElement>('button[data-begin-share]')?.focus());
 }
 
 function survivingPage(run: LibraryRun): string | undefined {
@@ -821,7 +866,21 @@ onMounted(() => { void refreshSaves(); });
               <input :id="'share-friend-' + i" v-model="shareNames.friends[i]" type="text" @input="onShareNameInput()" />
             </div>
           </template>
-          <button class="quiet small" :disabled="!mayBeginShared" @click="beginShared()">{{ plain ? 'Start from this code' : 'Sign from this code' }}</button>
+          <button class="quiet small" data-begin-share :disabled="!mayBeginShared" @click="beginShared()">{{ plain ? 'Start from this code' : 'Sign from this code' }}</button>
+          <div
+            v-if="confirmingSharedDemoOverwrite !== null && sharedFounding.campaign === 'demo'"
+            class="share-demo-overwrite-confirm demo-overwrite-confirm panel"
+            role="group"
+            :aria-label="plain ? 'Confirm replacing the saved demonstration from a share code' : 'Confirm replacing the Demonstration from a share code'"
+          >
+            <p class="rubric small" role="status">
+              <template v-if="savedDemoExists">{{ plain ? 'Starting this shared demonstration will replace your saved demonstration at its latest checkpoint. Continue or export it first if you want to keep it.' : 'This shared Demonstration would replace the last sitting you kept. Return to it or copy it out first if you mean to keep it.' }}</template>
+              <template v-else>{{ plain ? 'Saved games could not be checked. Starting this shared demonstration may replace an existing one. Retry the saved-game list first if you are unsure.' : 'The saved runs could not be read. This shared Demonstration may overwrite one already kept. Retry the listing first if you are unsure.' }}</template>
+              {{ plain ? 'Your full campaigns remain unchanged.' : 'The full lines remain untouched.' }}
+            </p>
+            <button class="quiet small confirm-overwrite" :disabled="!mayBeginShared" @click="confirmBeginSharedDemo()">{{ plain ? 'Yes, start this shared demonstration' : 'Yes, sign this shared Demonstration' }}</button>
+            <button class="quiet small" @click="cancelBeginSharedDemo()">Cancel</button>
+          </div>
         </template>
         <p v-if="shareProblem" id="share-code-error" class="rubric small" role="alert">{{ shareProblem }}</p>
       </div>
