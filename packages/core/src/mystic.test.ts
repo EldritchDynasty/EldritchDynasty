@@ -16,7 +16,7 @@ import type { SimCtx } from './world.js';
 import { civilianApplication, improvementSupport } from './mystic-civilian.js';
 import { tickEconomy } from './economy.js';
 import { hirePractitioner, honourServicePromise, outsideServicesView, quoteCommission, quoteHire, quotePractitionerSearch, seekPractitioner, undertakeCommission } from './mystic-contracts.js';
-import { captureContractor, ransomCaptive } from './people/captivity.js';
+import { captureContractor, captureFamily, ransomCaptive } from './people/captivity.js';
 import { beginCommitment } from './muster.js';
 import { relate } from './people/relationships.js';
 import { libraryCare } from './mystic-civilian.js';
@@ -131,20 +131,24 @@ describe('one reader, two commitments (#1982)', () => {
     expect(canonical({ ...saveGame(f.ctx), savedAt: '' })).toBe(before);
     expect(answer(f, 'keep_the_book_open').outcome.id).toBe('reading_kept');
   });
-  it('closes personal care after death and renders the absent return without a replacement', () => {
+  it.each(['dead', 'captive'] as const)('closes personal care when the reader is %s and returns without a replacement', (fate) => {
     const f = dilemma();
     answer(f);
-    f.ctx.world.people.kill(f.p.id, f.began + 1, 'test');
     f.ctx.world.year = f.began + 1;
+    if (fate === 'dead') f.ctx.world.people.kill(f.p.id, f.ctx.world.year, 'test');
+    else expect(captureFamily(f.ctx, f.p.id, 'house_marrow', 50)).toBe(true);
     phase('mystic', f.ctx);
-    expect(f.ctx.world.mystic.assignments).toEqual([]);
+    expect(lifeCareFor(f.ctx, f.infant)).toBeUndefined();
     expect(f.ctx.world.studies).toEqual([]);
     f.ctx.world.year = f.began + 5;
+    phase('mystic', f.ctx);
+    expect(f.ctx.world.mystic.assignments).toEqual([]);
     const step = dueArcSteps(f.ctx, makeRng(1982)).find(s => s.instance.arc.includes(root))!;
     expect(step).toBeDefined();
     expect(step.fill.READER).toBe(f.p.id);
-    expect(step.absent).toBe(true);
-    expect(renderBody(f.ctx.content.mustEvent(step.node.event).absentBody!, step.fill, f.ctx)).not.toMatch(/\{READER/);
+    expect(step.absent).toBe(fate === 'dead');
+    const returned = f.ctx.content.mustEvent(step.node.event);
+    expect(renderBody(step.absent ? returned.absentBody! : returned.body, step.fill, f.ctx)).not.toMatch(/\{READER/);
   });
   it('does not let the old return release a new duty after an early withdrawal', () => {
     const f = dilemma();
