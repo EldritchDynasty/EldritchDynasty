@@ -242,8 +242,20 @@ function encode(payload: Payload): string {
 export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCodeResult {
   const w = ctx.world;
   if (w.campaign === 'demo') return { ok: false, unavailable: 'demonstration' };
-  const founding = w.decisionLog.find((row) => row.kind === 'founding');
-  if (!founding) return { ok: false, unavailable: 'not_founded' };
+  const foundings = w.decisionLog.filter((row) => row.kind === 'founding');
+  if (!foundings.length) return { ok: false, unavailable: 'not_founded' };
+  const founding = foundings[0]!;
+  const persisted = w.founding;
+  // Recovered saves can disagree with their historical decision log. A share
+  // code promises the actual founding, not whichever log row happens to come
+  // first. Ambiguous duplicate founding rows are not a reproducible answer.
+  if (foundings.length !== 1 || !persisted
+    || persisted.year !== founding.year
+    || persisted.houseName !== founding.houseName
+    || persisted.heirloom !== founding.heirloom
+    || persisted.grudge !== founding.grudge) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const def = ctx.content.prologue;
   // The product path founds every campaign at its own start year. A run built
   // any other way is a test's house, and a code would promise what `newGame`'s
@@ -270,6 +282,14 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // and require its result to be unchanged: silently dropping an invisible
   // name, normalizing spelling, or refusing duplicates would break the
   // founding that this code promises to reproduce.
+  // Names can be spent or released during play, and their due years advance
+  // independently of the founding. Their recorded identity and order must not:
+  // importing a code with a different live roster would not start this house.
+  if (w.friends.length !== founding.friends.length
+    || w.friends.some((friend, i) =>
+      friend.name !== founding.friends[i]?.name || friend.sex !== founding.friends[i]?.sex)) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const checkedFriends = normaliseFriends(ctx, founding.friends, founding.year);
   if (!checkedFriends.ok
     || checkedFriends.friends.length !== founding.friends.length
@@ -278,8 +298,18 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     return { ok: false, unavailable: 'unrepresentable' };
   }
 
-  const signing = w.decisionLog.find((row) => row.kind === 'signing');
+  const signings = w.decisionLog.filter((row) => row.kind === 'signing');
+  const signing = signings[0];
   const given = signing?.answers ?? {};
+  // The signing is a once-only founding answer. A stray historical row, a
+  // duplicate, or an answer disagreeing with persisted founding state cannot
+  // be silently used to generate a different house's share code.
+  const persistedAnswers = Object.entries(persisted.answers);
+  if (signings.length > 1 || (signing && signing.year !== founding.year)
+    || persistedAnswers.length !== Object.keys(given).length
+    || persistedAnswers.some(([question, answer]) => given[question] !== answer)) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   const answers = Object.keys(given).length ? def.examination.map((q) => {
     const id = given[q.id];
     return id === undefined ? -1 : q.answers.findIndex((a) => a.id === id);
