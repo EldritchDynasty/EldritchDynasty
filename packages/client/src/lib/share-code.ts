@@ -61,7 +61,10 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'other_edition': {
       // A malformed bridge/old client may omit the detailed differences.
       // A refusal must remain useful without inventing a specific mismatch.
-      const parts = problem.differs.map((p) => editionPart(p, plain)).join(', ');
+      const differs = Array.isArray(problem.differs)
+        && problem.differs.every((p) => p === 'format' || p === 'content' || p === 'build')
+        ? problem.differs : [];
+      const parts = differs.map((p) => editionPart(p, plain)).join(', ');
       const detail = parts ? ` (${parts})` : '';
       return plain
         ? `This code was made with a different version of the game${detail}. It would not start the same family, so it cannot be used.`
@@ -76,22 +79,25 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'names_needed': {
       // A missing/empty list cannot yield a valid prompt with a missing noun.
       // Do not turn a refusal into an apparent success or echo code text.
-      if (problem.missing.length === 0) {
+      const missing = Array.isArray(problem.missing)
+        && problem.missing.every((name) => name === 'founder' || name === 'house' || name === 'friends')
+        ? problem.missing : [];
+      if (missing.length === 0) {
         return plain
           ? 'This founding still needs names before it can begin.'
           : 'This house lacks the names it needs before it may begin.';
       }
       // 'friends' is one missing-name category but can mean several people.
       // Counting categories would misleadingly ask for only one name.
-      if (problem.missing.length === 1 && problem.missing[0] === 'friends') {
+      if (missing.length === 1 && missing[0] === 'friends') {
         return plain
           ? 'Enter a name for every friend in this code.'
           : 'The code left the friends unnamed. Give each one a name.';
       }
-      const plural = problem.missing.length !== 1;
+      const plural = missing.length !== 1;
       return plain
-        ? `Enter the missing ${plural ? 'names' : 'name'}: ${nameList(problem.missing, plain)}.`
-        : `The code left ${plural ? 'names' : 'a name'} out. Give ${nameList(problem.missing, plain)}.`;
+        ? `Enter the missing ${plural ? 'names' : 'name'}: ${nameList(missing, plain)}.`
+        : `The code left ${plural ? 'names' : 'a name'} out. Give ${nameList(missing, plain)}.`;
     }
     case 'refused':
       // Already the signing's own refusal, worded by core in the reader's mode.
