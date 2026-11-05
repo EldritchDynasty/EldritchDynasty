@@ -119,15 +119,17 @@ describe('one reader, two commitments (#1982)', () => {
       expect(canonical(saveGame(resumed))).toBe(canonical(saveGame(f.ctx)));
     });
   }
-  it('turns a stale unaffordable care choice into a real refusal without a charge or reservation', () => {
+  it.each(['unpaid', 'busy', 'dead', 'study_finished'] as const)('refuses stale care (%s), then lets the house leave existing obligations alone', (why) => {
     const f = dilemma();
-    f.ctx.world.treasury = DEBT_FLOOR;
-    const result = answer(f);
-    expect(result.outcome.id).toBe('watch_no_longer_possible');
-    expect(f.ctx.world.treasury).toBe(DEBT_FLOOR);
-    expect(f.ctx.world.mystic.assignments).toEqual([]);
-    expect(f.ctx.world.studies).toHaveLength(1);
-    expect([...f.ctx.world.arcs.values()].some(a => a.arc.includes(root))).toBe(false);
+    if (why === 'unpaid') f.ctx.world.treasury = DEBT_FLOOR;
+    if (why === 'busy') expect(assignDuty(f.ctx, { person: f.p.id, working: 'sickroom_watch', target: SEAT }).ok).toBe(true);
+    if (why === 'dead') f.ctx.world.people.kill(f.p.id, f.began, 'before the answer');
+    if (why === 'study_finished') f.ctx.world.studies = [];
+    const before = canonical({ ...saveGame(f.ctx), savedAt: '' });
+    const result = resolveChoice(f.ctx, f.pending.id, 'move_the_chair', makeRng(1982));
+    expect(result).toMatchObject({ ok: false, reason: expect.stringContaining('no longer available') });
+    expect(canonical({ ...saveGame(f.ctx), savedAt: '' })).toBe(before);
+    expect(answer(f, 'keep_the_book_open').outcome.id).toBe('reading_kept');
   });
   it('closes personal care after death and renders the absent return without a replacement', () => {
     const f = dilemma();

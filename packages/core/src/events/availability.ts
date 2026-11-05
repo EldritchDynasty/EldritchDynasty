@@ -6,6 +6,8 @@ import { soleCast, type SlotFill } from './slots.js';
 import { msg } from '../messages.js';
 import { proseForContentField } from '../prose.js';
 import { missingPracticalReader } from './practice.js';
+import { evalFilter } from './conditions.js';
+import { householdDutyOrder, quoteDuty } from '../mystic.js';
 
 /**
  * Lives here rather than in `decisions.ts` because `deciders.ts` needs it and
@@ -33,6 +35,19 @@ export interface DecisionChoice {
 export function choiceAvailability(c: Choice, ctx: SimCtx, fill: SlotFill, event: EventTemplate): DecisionChoice {
   const absentReader = missingPracticalReader(c, event, ctx, fill);
   if (absentReader) return unavailableReader(c, ctx, absentReader);
+  // A parked docket may outlive another order. Ask the same live quote as
+  // the Table before committing a promise, never after printing its success.
+  for (const effect of c.outcomes.flatMap(outcome => outcome.effects)) {
+    if (effect.kind !== 'mystic_duty') continue;
+    const slot = typeof effect.target === 'object' && 'slot' in effect.target ? effect.target.slot : undefined;
+    const spec = slot === undefined ? undefined : event.slots[slot];
+    const p = ctx.world.people.get(slot === undefined ? '' : soleCast(fill, slot) ?? '');
+    if (!p || !spec || !spec.filters.every(filter => evalFilter(filter, p, ctx, fill, spec.role))
+      || !quoteDuty(ctx, householdDutyOrder(ctx, p, effect.working)).ok) {
+      return { id: c.id, label: c.label, available: false,
+        blockedBy: msg(ctx, 'choice.blocked.duty', 'The reader or the promised work is no longer available.') };
+    }
+  }
   for (const req of c.requires) {
     const p = ctx.world.people.get(soleCast(fill, req.slot) ?? '');
     if (!p) {

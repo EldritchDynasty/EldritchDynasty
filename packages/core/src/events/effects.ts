@@ -122,6 +122,7 @@ export function applyEffect(eff: Effect, ctx: SimCtx, fill: SlotFill, scope: Eva
         // mundane men cannot go mad, and no effect may make them.
         if (!phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress) continue;
         p.madness = Math.max(0, p.madness + eff.delta);
+        if (p.phenotype) p.phenotype.dirty = true;
       }
       break;
     }

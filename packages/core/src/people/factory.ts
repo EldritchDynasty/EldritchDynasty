@@ -591,5 +591,6 @@ export function accrueMadness(p: Person, ctx: GeneticsCtx, year: Year): number {
   if (!profile.canExpress) return 0;
   const delta = profile.overflowMadness / MADNESS_OVERFLOW_YEARS;
   p.madness += delta;
+  if (delta && p.phenotype) p.phenotype.dirty = true;
   return delta;
 }

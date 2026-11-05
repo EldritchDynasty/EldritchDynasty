@@ -266,8 +266,7 @@ describe('a scene that reads the blanks names one', () => {
     expect(selectFrame(ctx, makeRng(1))?.id).not.toBe(ID);
   });
 
-  it('returns named blanks to the ordinary pool and schedules identically in both prose modes (#2632)', () => {
-    for (const proseMode of ['original', 'plainenglish'] as const) {
+  it.each(['original', 'plainenglish'] as const)('returns named blanks to the ordinary pool (%s, #2632)', (proseMode) => {
       const ctx = newGame(bundle, { seed: 2632, proseMode }).ctx;
       blank(ctx, 'chr_first', 1100);
       ctx.world.decisionLog.push({ kind: 'record', year: 1090, event: 'the_letters_to_the_weighers', option: 'record' });
@@ -282,7 +281,6 @@ describe('a scene that reads the blanks names one', () => {
       selectFrame(ctx, rng);
       expect(draw.mock.calls[0]?.[0].length).toBeGreaterThan(1);
       expect(missingPlainEnglish(ctx)).toEqual([]);
-    }
   });
 
   it('binds the earliest unnamed blank, then the next, then the newest once all are named', () => {

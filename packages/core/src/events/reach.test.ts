@@ -116,9 +116,7 @@ describe('the two-room dilemma through the live docket (#1982)', () => {
   for (const mode of ['original', 'plainenglish'] as const) {
     for (const row of [
       { choice: 'keep_the_book_open', outcome: 'reading_kept', stale: false },
-      { choice: 'keep_the_book_open', outcome: 'reading_no_longer_open', stale: true },
       { choice: 'move_the_chair', outcome: 'watch_begun', stale: false },
-      { choice: 'move_the_chair', outcome: 'watch_no_longer_possible', stale: true },
     ]) {
       it(`${mode}: ${row.outcome} commits after casting, including stale availability`, () => {
         const ctx = testWorld(content, 1982);
