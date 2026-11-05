@@ -178,7 +178,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     for (const names of invalid) {
       expect(() => newGameFromShareCode(code, content, { build: BUILD, names: names as never })).not.toThrow();
       expect(newGameFromShareCode(code, content, { build: BUILD, names: names as never }))
-        .toEqual({ ok: false, problem: { kind: 'refused', reason: 'Share-code names must be text, with no more than five friends.' } });
+        .toEqual({ ok: false, problem: { kind: 'invalid_names' } });
     }
     const accepted = newGameFromShareCode(code, content, {
       build: BUILD,
