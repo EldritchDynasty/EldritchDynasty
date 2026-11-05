@@ -187,6 +187,39 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(accepted.ok && saved(accepted.session)).toBe(saved(founded()));
   });
 
+  it('refuses oversized recipient names before creating a world, without rejecting padded valid names (#1995)', () => {
+    const code = codeOf(founded());
+    const names = {
+      founder: SIGNED.founder.name,
+      house: SIGNED.houseName,
+      friends: SIGNED.friends.map((friend) => friend.name),
+    };
+    for (const supplied of [
+      { ...names, house: 'H'.repeat(HOUSE_NAME_MAX + 1) },
+      { ...names, friends: [names.friends[0]!, 'F'.repeat(FRIEND_NAME_MAX + 1), names.friends[2]!] },
+    ]) {
+      // A fresh simulation must not even inspect the Library until the
+      // recipient's names have passed the same limits as manual signing.
+      const guarded = {
+        build: BUILD,
+        names: supplied,
+        get libraryRuns(): never { throw new Error('oversized names reached newGame'); },
+      };
+      expect(newGameFromShareCode(code, content, guarded))
+        .toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+    }
+
+    const padded = newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: {
+        founder: names.founder,
+        house: `  ${names.house}  `,
+        friends: names.friends.map((name) => `  ${name}  `),
+      },
+    });
+    expect(padded.ok && saved(padded.session)).toBe(saved(founded()));
+  });
+
   it('refuses surplus recipient friend names instead of silently discarding them (#1995)', () => {
     const names = SIGNED.friends.map((friend) => friend.name);
     const code = codeOf(founded());
