@@ -24,6 +24,18 @@ import { proseForContentField, proseForEventTitle } from '../prose.js';
 
 const key = (from: string, to: string) => `${from}->${to}`;
 
+/** Restored status flags may disagree with recorded birth/death chronology. */
+function livingAt(p: Person, year: number): boolean {
+  return p.status === 'alive' && p.born <= year
+    && (p.died === undefined || p.died > year);
+}
+
+/** Membership is an interval, not only an open-ended final row. */
+function memberOfAt(p: Person, house: string, year: number): boolean {
+  return p.membership.some((m) => m.house === house && m.from <= year
+    && (m.to === undefined || m.to > year));
+}
+
 export function edge(w: WorldState, from: string, to: string): Relationship | undefined {
   return w.relationships.get(key(from, to));
 }
@@ -108,7 +120,7 @@ export function grudgesAgainst(w: WorldState, id: string): Grudge[] {
   for (const rel of w.relationships.values()) {
     if (rel.to === id || (w.houses.has(rel.to) && person
       && (person.houseOfOrigin === rel.to
-        || person.membership.some((m) => m.house === rel.to && m.to === undefined)))) {
+        || memberOfAt(person, rel.to, w.year)))) {
       // Imported future quarrels are not present-year hostility.
       out.push(...rel.grudges.filter((g) => g.originYear <= w.year));
     }
@@ -122,7 +134,7 @@ export function grudgeAgainstUs(w: WorldState): number {
   for (const rel of w.relationships.values()) {
     const target = w.people.get(rel.to);
     const theirs = rel.to === w.playerHouse || (target?.houseOfOrigin) === w.playerHouse
-      || target?.membership.some((m) => m.house === w.playerHouse && m.to === undefined);
+      || (target !== undefined && memberOfAt(target, w.playerHouse, w.year));
     if (!theirs) continue;
     for (const g of rel.grudges) {
       if (g.originYear <= w.year) worst = Math.max(worst, g.severity);
@@ -144,15 +156,15 @@ function successorTo(w: WorldState, id: string, mode: Grudge['inheritance']): st
   const p = w.people.get(id);
   if (!p) return undefined;
 
-  const byAge = (xs: Person[]) => [...xs].sort((a, b) => a.born - b.born);
-  // Recovered saves can mark a person alive before their recorded birth.
-  // Such a person cannot yet carry an ancestor's quarrel.
-  const alive = (xs: Person[]) => xs.filter((x) => x.status === 'alive' && x.born <= w.year);
+  const byAge = (xs: Person[]) => [...xs].sort((a, b) => a.born - b.born || a.id.localeCompare(b.id));
+  // The recorded dates outrank a stale alive flag when an imported heir,
+  // sibling or housemate is offered an inherited quarrel.
+  const alive = (xs: Person[]) => xs.filter((x) => livingAt(x, w.year));
 
   const heir = () => byAge(alive(w.people.children(p.id)))[0];
   const blood = () => byAge(alive(w.people.siblings(p.id)))[0];
   const house = () => byAge(
-    w.people.living().filter((q) => q.born <= w.year
+    w.people.living().filter((q) => livingAt(q, w.year)
       && q.houseOfOrigin === p.houseOfOrigin && q.id !== p.id),
   )[0];
 
@@ -180,7 +192,7 @@ export function tickRelationships(ctx: SimCtx): void {
     // without replacing either institutional endpoint at each succession.
     if (w.houses.has(id)) return false;
     const p = w.people.get(id);
-    return !p || (p.status !== 'alive' && p.status !== 'guardian');
+    return !p || (p.status !== 'guardian' && !livingAt(p, w.year));
   };
 
   for (const [k, rel] of [...w.relationships]) {
@@ -306,7 +318,7 @@ function ours(w: WorldState, id: string): boolean {
   if (id === w.playerHouse) return true;
   const p = w.people.get(id);
   return p?.houseOfOrigin === w.playerHouse
-    || (p?.membership.some((m) => m.house === w.playerHouse && m.to === undefined) ?? false);
+    || (p !== undefined && memberOfAt(p, w.playerHouse, w.year));
 }
 
 export function echoGrudges(ctx: SimCtx): number {
@@ -369,15 +381,14 @@ export function bitterestAgainst(w: WorldState, houseId: string): PersonId | und
   let worst: { id: string; severity: number } | undefined;
   for (const rel of w.relationships.values()) {
     const target = w.people.get(rel.to);
-    const theirs = rel.to === houseId || target?.membership.some(
-      (m) => m.house === houseId && m.to === undefined,
-    );
+    const theirs = rel.to === houseId || (target !== undefined && memberOfAt(target, houseId, w.year));
     if (!theirs) continue;
     const holder = w.people.get(rel.from) ?? (w.houses.has(rel.from)
-      ? w.people.household(rel.from, w.year).sort((a, b) => a.born - b.born || (a.id < b.id ? -1 : 1))[0]
+      ? w.people.household(rel.from, w.year).filter((p) => livingAt(p, w.year))
+        .sort((a, b) => a.born - b.born || a.id.localeCompare(b.id))[0]
       : undefined);
     // A future-born holder must not appear in a present-year event cast.
-    if (!holder || holder.status !== 'alive' || holder.born > w.year) continue;
+    if (!holder || !livingAt(holder, w.year)) continue;
     for (const g of rel.grudges) {
       if (g.originYear > w.year) continue;
       if (!worst || g.severity > worst.severity) worst = { id: holder.id, severity: g.severity };

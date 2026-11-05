@@ -1049,3 +1049,135 @@ describe('recovered future-born grudge participants (#2859, #2860)', () => {
     expect(branch.grievance).toBeLessThan(90);
   });
 });
+
+
+// Recovered-save chronology: dates outrank a stale status flag or future membership.
+describe('feud recovery chronology (#2981, #2982, #2983)', () => {
+  it('transfers a grudge exactly when an imported death year arrives (#2981)', () => {
+    const { ctx, us, them } = feuding(2981);
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Surviving son' });
+    beget(ctx, son, undefined, us);
+    const grudge = addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'heir_only' });
+    const firstYear = ctx.world.year;
+    us.died = firstYear + 2;
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)?.grudges).toContain(grudge);
+    expect(edge(ctx.world, them.id, son.id)).toBeUndefined();
+    ctx.world.year = firstYear + 2;
+    tickRelationships(ctx);
+    expect(us.status).toBe('alive');
+    expect(edge(ctx.world, them.id, us.id)).toBeUndefined();
+    expect(edge(ctx.world, them.id, son.id)?.grudges).toContain(grudge);
+  });
+
+  it('ends a personal grudge on a recorded death despite a stale alive flag (#2981)', () => {
+    const { ctx, us, them } = feuding(29811);
+    addGrudge(ctx, them.id, us.id, { severity: 75, inheritance: 'none' });
+    us.died = ctx.world.year;
+    expect(us.status).toBe('alive');
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, us.id)).toBeUndefined();
+  });
+
+  it('skips a deceased elder heir but takes the younger living heir (#2982)', () => {
+    const { ctx, us, them } = feuding(2982);
+    const elder = place(ctx, { sex: 'male', age: 30, name: 'Deceased elder' });
+    const younger = place(ctx, { sex: 'male', age: 20, name: 'Living younger' });
+    beget(ctx, elder, undefined, us);
+    beget(ctx, younger, undefined, us);
+    addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'heir_only' });
+    us.died = ctx.world.year;
+    elder.died = ctx.world.year;
+    tickRelationships(ctx);
+    expect(elder.status).toBe('alive');
+    expect(edge(ctx.world, them.id, elder.id)).toBeUndefined();
+    expect(edge(ctx.world, them.id, younger.id)?.grudges).toHaveLength(1);
+  });
+
+  it('falls back to a living sibling after an effectively dead saved child (#2982)', () => {
+    const { ctx, us, them } = feuding(29822);
+    const father = place(ctx, { sex: 'male', age: 70, name: 'Father of the line' });
+    const brother = place(ctx, { sex: 'male', age: 30, name: 'Living brother' });
+    const son = place(ctx, { sex: 'male', age: 20, name: 'Recorded dead son' });
+    beget(ctx, us, undefined, father);
+    beget(ctx, brother, undefined, father);
+    beget(ctx, son, undefined, us);
+    addGrudge(ctx, them.id, us.id, { severity: 80, inheritance: 'all_blood' });
+    us.died = ctx.world.year;
+    son.died = ctx.world.year;
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, son.id)).toBeUndefined();
+    expect(edge(ctx.world, them.id, brother.id)?.grudges).toHaveLength(1);
+  });
+
+  it('does not inherit a house-wide feud through a deceased housemate (#2982)', () => {
+    const { ctx, us, them } = feuding(29823);
+    const older = place(ctx, { sex: 'female', age: 60, name: 'Dead housemate' });
+    const younger = place(ctx, { sex: 'female', age: 30, name: 'Living housemate' });
+    older.died = ctx.world.year;
+    us.died = ctx.world.year;
+    addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' });
+    tickRelationships(ctx);
+    expect(edge(ctx.world, them.id, older.id)).toBeUndefined();
+    expect(edge(ctx.world, them.id, younger.id)?.grudges).toHaveLength(1);
+  });
+
+  it('counts a target as ours only during a finite, effective membership (#2983)', () => {
+    const { ctx, them } = feuding(2983);
+    const holder = place(ctx, { sex: 'male', age: 36, house: 'house_calder', name: 'Outside holder' });
+    const firstYear = ctx.world.year;
+    const grudge = addGrudge(ctx, holder.id, them.id, { severity: 67, inheritance: 'none' });
+    them.membership[0]!.to = firstYear + 2;
+    them.membership.push({ house: ctx.world.playerHouse, kind: 'married_in', from: firstYear + 2, to: firstYear + 4 });
+    expect(grudgeAgainstUs(ctx.world)).toBe(0);
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBeUndefined();
+    ctx.world.year = firstYear + 2;
+    expect(grudgeAgainstUs(ctx.world)).toBe(grudge.severity);
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBe(holder.id);
+    ctx.world.year = firstYear + 4;
+    expect(grudgeAgainstUs(ctx.world)).toBe(0);
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBeUndefined();
+  });
+
+  it('includes finite membership for a house grudge only between its dates (#2983)', () => {
+    const { ctx, us } = feuding(29831);
+    const outsider = place(ctx, { sex: 'male', age: 27, house: 'house_calder', name: 'Future Marrow guest' });
+    const firstYear = ctx.world.year;
+    outsider.membership[0]!.to = firstYear + 3;
+    outsider.membership.push({ house: 'house_marrow', kind: 'married_in', from: firstYear + 3, to: firstYear + 6 });
+    const grudge = addGrudge(ctx, us.id, 'house_marrow', { severity: 55, inheritance: 'none' });
+    expect(grudgesAgainst(ctx.world, outsider.id)).not.toContain(grudge);
+    ctx.world.year = firstYear + 3;
+    expect(grudgesAgainst(ctx.world, outsider.id)).toContain(grudge);
+    ctx.world.year = firstYear + 6;
+    expect(grudgesAgainst(ctx.world, outsider.id)).not.toContain(grudge);
+  });
+
+  it('cannot cast a rival after their recorded death year (#2983)', () => {
+    const { ctx, us, them } = feuding(29832);
+    addGrudge(ctx, them.id, us.id, { severity: 85, inheritance: 'none' });
+    them.died = ctx.world.year + 1;
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBe(them.id);
+    ctx.world.year++;
+    expect(them.status).toBe('alive');
+    expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBeUndefined();
+  });
+
+  it('does not echo a feud through a foreigner before their membership starts (#2983)', () => {
+    const { ctx, them } = feuding(29833);
+    const holder = place(ctx, { sex: 'male', age: 33, house: 'house_calder', name: 'Outside witness' });
+    const grudge = addGrudge(ctx, holder.id, them.id, { severity: 90, inheritance: 'house_wide' });
+    const firstYear = ctx.world.year;
+    them.membership[0]!.to = firstYear + ECHO_AFTER + 2;
+    them.membership.push({
+      house: ctx.world.playerHouse, kind: 'married_in',
+      from: firstYear + ECHO_AFTER + 2, to: firstYear + ECHO_AFTER + 5,
+    });
+    ctx.world.year = firstYear + ECHO_AFTER;
+    expect(echoGrudges(ctx)).toBe(0);
+    expect(grudge.echoed).toBeUndefined();
+    ctx.world.year += 2;
+    expect(echoGrudges(ctx)).toBe(1);
+    expect(grudge.echoedIn).toBe(ctx.world.year);
+  });
+});
