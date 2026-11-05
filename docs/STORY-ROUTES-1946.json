@@ -3965,6 +3965,6 @@
       ]
     }
   ],
-  "finalAuthoredContentHash": "9db37e60e01ee82c08bfa012aacd525d535108e24eb90aede91d2a97f59d7cc7",
-  "postMeasurementNote": "After measurement, two prose-only fields were clarified: leaving existing commitments is coherent on a stale docket, and an absent reader is not asserted dead. Original/Plain English fingerprints were reviewed together. No weights, eligibility, delays, effects, IDs or policy changed. Later authoring validation rejects unsupported finite-duty contexts. Exact final-head preflight/CI validates these changes."
+  "finalAuthoredContentHash": "1a25a1c090619b28be1a30e6fa97023fc6f0b64c93a408ed64006df4d3026835",
+  "postMeasurementNote": "After measurement, two prose-only fields were clarified: leaving existing commitments is coherent on a stale docket, and an absent reader is not asserted dead. Original/Plain English fingerprints were reviewed together. The refusal message also received its audited Plain English counterpart. No weights, eligibility, delays, effects, IDs or policy changed. Later authoring validation rejects unsupported finite-duty contexts. Exact final-head preflight/CI validates these changes."
 }
