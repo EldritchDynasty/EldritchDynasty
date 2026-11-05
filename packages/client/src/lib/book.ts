@@ -156,15 +156,16 @@ export type Measure = (text: string, font: string) => number;
  * An indivisible grapheme wider than max stays on its own row.
  */
 export function wrap(text: string, font: string, max: number, measure: Measure): string[] {
-  if (!text.trim() && !/[\r\n]/.test(text)) return [];
+  if (!text.trim() && !/[\r\n\u2028\u2029]/.test(text)) return [];
 
   const out: string[] = [];
   const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
 
   // Hard breaks are part of the Chronicle, not inter-word whitespace. Preserve
-  // even an empty paragraph as a blank plate row. Ordinary spaces still wrap
+  // even an empty paragraph as a blank plate row. Unicode line/paragraph
+  // separators are hard breaks too, not spaces to silently collapse. Ordinary spaces still wrap
   // greedily, and long words keep their grapheme-safe fallback.
-  for (const line of text.split(/\r\n|\r|\n/)) {
+  for (const line of text.split(/\r\n|[\r\n\u2028\u2029]/)) {
     let row = '';
     for (const word of line.split(/\s+/).filter(Boolean)) {
       const next = row ? row + ' ' + word : word;
