@@ -156,7 +156,7 @@ describe('first-session signing transitions (#1984)', () => {
       { at: 600, verb: 'enter', act: 'signing', status: 'returned' },
     ]);
     const artifact = l.artifact();
-    expect(artifact.format).toBe('ed-reading-log/12');
+    expect(artifact.format).toBe('ed-reading-log/13');
     expect(artifact.summary.answers).toBe(0);
     expect(artifact.summary.gaps.some(g => g.to.kind === 'new-run')).toBe(false);
     for (const secret of ['private house', 'private friend', 'private refusal']) {
@@ -713,6 +713,30 @@ describe('answers and the gaps between them', () => {
 
     expect(l.events.some((e) => e.kind === 'page' && 'carried' in e && e.carried)).toBe(false);
     expect(l.artifact().summary.answers).toBe(3);
+  });
+
+  it('exports failed-pickup evidence without censoring the existing house', async () => {
+    const l = log();
+    l.note({ kind: 'run', campaign: 'short', seed: 17 });
+    l.note({ kind: 'year', year: 1042 });
+    const actions = recordActions({
+      load: async () => false,
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    expect(await actions.load('unavailable slot')).toBe(false);
+    l.note({ kind: 'year', year: 1048 });
+    const artifact = l.artifact();
+    expect(artifact.events.filter((e) => e.kind === 'pickup-failed')).toHaveLength(1);
+    expect(artifact.events.filter((e) => e.kind === 'pickup')).toHaveLength(0);
+    expect(artifact.summary.gaps.some((g) => g.to.kind === 'new-run')).toBe(false);
+    expect(JSON.stringify(artifact)).not.toContain('unavailable slot');
+
+    // A delayed failure from the old request must not cancel a newer pickup.
+    l.note({ kind: 'action', verb: 'resume', act: 'start' });
+    const previous = l.startGeneration - 1;
+    l.pickUpFailed(previous);
+    expect(l.events.filter((e) => e.kind === 'pickup-failed')).toHaveLength(1);
+    l.chronicle([{ id: 'carried', year: 1050, answer: 'clause' }]);
+    expect(l.events.some((e) => e.kind === 'page' && 'carried' in e && e.carried)).toBe(true);
   });
 
   it('treats fresh pages as news after any synchronously throwing pickup, and still carries a later successful pickup', async () => {
