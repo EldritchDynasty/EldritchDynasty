@@ -51,7 +51,7 @@ function play(seed: number, answer: RecordOption): ReadStats {
         }
       }
 
-      if (decision.kind === 'record') resolveRecord(ctx, decision.id, answer);
+      if (decision.kind === 'record' && answer !== 'automatic') resolveRecord(ctx, decision.id, answer);
       else autoResolveDecision(ctx, decision, rng);
     }
 
@@ -108,7 +108,7 @@ interface BynameBatch {
   contested: number;
 }
 
-function playForBynames(seed: number, answer: RecordOption): { ctx: ReturnType<typeof bootstrap>; batch: BynameBatch } {
+function playForBynames(seed: number, answer: RecordOption | 'automatic'): { ctx: ReturnType<typeof bootstrap>; batch: BynameBatch } {
   const ctx = bootstrap(bundle, seed, 1042);
   const rng = makeRng(seed * 31 + 1990);
   for (let i = 0; i < YEARS; i++) {
@@ -205,5 +205,105 @@ describe('earned bynames over played runs (#1990)', () => {
     const namedHeads = writing.reduce((n, run) => n + run.headsNamed, 0);
     expect(namedHeads).toBeGreaterThan(0);
     console.log(`bynames over ${SEEDS.length} × ${YEARS}-year Long Lines — ${report.join('; ')}`);
+  });
+});
+
+
+/**
+ * #2287: compare the new reign-ending source against a policy which never
+ * writes a person-claim byname. Use the same seeds and game decisions for
+ * both policies; only their Record pen choices differ.
+ *
+ * Report ALL Heads (including the founder and a still-serving final Head),
+ * completed Heads (the only ones eligible for a reign-end grant), and other
+ * blood relatives separately. These are played-game reach measurements,
+ * NOT evidence that readers feel more attached to named people.
+ */
+const REIGN_REACH_SEEDS = Array.from({ length: 16 }, (_, k) => 1990 + 37 * k);
+
+interface ReignReach {
+  heads: number;
+  headsNamed: number;
+  completedHeads: number;
+  completedNamed: number;
+  recordHeads: number;
+  reignHeads: number;
+  otherBlood: number;
+  otherNamed: number;
+}
+
+function reignReach(ctx: ReturnType<typeof bootstrap>): ReignReach {
+  const w = ctx.world;
+  const heads = new Set(w.succession.map((reign) => String(reign.person)));
+  const completed = new Set(w.succession.filter((reign) => reign.to !== undefined)
+    .map((reign) => String(reign.person)));
+  const grants = [...heads].map((id) => w.people.get(id)?.byname);
+  const blood = w.people.blood(w.playerHouse).filter((person) => !heads.has(String(person.id)));
+  return {
+    heads: heads.size,
+    headsNamed: grants.filter((grant) => grant !== undefined).length,
+    completedHeads: completed.size,
+    completedNamed: [...completed].filter((id) => w.people.get(id)?.byname !== undefined).length,
+    recordHeads: grants.filter((grant) => grant?.source.kind === 'record').length,
+    reignHeads: grants.filter((grant) => grant?.source.kind === 'reign').length,
+    otherBlood: blood.length,
+    otherNamed: blood.filter((person) => person.byname !== undefined).length,
+  };
+}
+
+function reachTotal(runs: readonly ReignReach[], key: keyof ReignReach): number {
+  return runs.reduce((n, row) => n + row[key], 0);
+}
+
+/** Wilson 95% interval: no normal approximation to tiny non-Head incidence. */
+function reachInterval(hits: number, n: number): string {
+  if (!n) return 'not measured (n=0)';
+  const z = 1.959963984540054;
+  const p = hits / n;
+  const d = 1 + z ** 2 / n;
+  const centre = (p + z ** 2 / (2 * n)) / d;
+  const half = z * Math.sqrt(p * (1 - p) / n + z ** 2 / (4 * n ** 2)) / d;
+  return `${(p * 100).toFixed(1)}% [${((centre - half) * 100).toFixed(1)}, ${((centre + half) * 100).toFixed(1)}]`;
+}
+
+describe('second byname source: paired Long Line reach (#2287)', () => {
+  it('measures ordinary chronicler against a paired always-Omit policy', () => {
+    const ordinary: ReignReach[] = [];
+    const omitted: ReignReach[] = [];
+
+    for (const seed of REIGN_REACH_SEEDS) {
+      const normal = playForBynames(seed, 'automatic');
+      const allOmit = playForBynames(seed, 'omit');
+      ordinary.push(reignReach(normal.ctx));
+      omitted.push(reignReach(allOmit.ctx));
+
+      // Omit creates no claim-bearing byname. The reign source can name a
+      // completed Head for the house's omitted pages, but never a relative
+      // who did not hold the seal.
+      for (const person of allOmit.ctx.world.people.all()) {
+        expect(person.byname?.source.kind).not.toBe('record');
+      }
+    }
+
+    for (const [label, runs] of [['ordinary', ordinary], ['always-Omit', omitted]] as const) {
+      const heads = reachTotal(runs, 'heads');
+      const headsNamed = reachTotal(runs, 'headsNamed');
+      const closed = reachTotal(runs, 'completedHeads');
+      const closedNamed = reachTotal(runs, 'completedNamed');
+      const relatives = reachTotal(runs, 'otherBlood');
+      const relativesNamed = reachTotal(runs, 'otherNamed');
+      expect(heads).toBeGreaterThan(0);
+      expect(closed).toBeGreaterThan(0);
+      expect(headsNamed).toBeGreaterThanOrEqual(reachTotal(runs, 'reignHeads'));
+      expect(headsNamed).toBeGreaterThanOrEqual(reachTotal(runs, 'recordHeads'));
+      console.log(
+        `#2287 ${label}: Heads ${headsNamed}/${heads} = ${reachInterval(headsNamed, heads)}; `
+        + `completed Heads ${closedNamed}/${closed} = ${reachInterval(closedNamed, closed)}; `
+        + `source record=${reachTotal(runs, 'recordHeads')}, reign=${reachTotal(runs, 'reignHeads')}; `
+        + `other blood ${relativesNamed}/${relatives} = ${reachInterval(relativesNamed, relatives)}`,
+      );
+    }
+    expect(reachTotal(omitted, 'recordHeads')).toBe(0);
+    expect(reachTotal(omitted, 'otherNamed')).toBe(0);
   });
 });
