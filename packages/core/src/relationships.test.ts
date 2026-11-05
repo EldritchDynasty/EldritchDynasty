@@ -1114,6 +1114,15 @@ describe('feud recovery chronology (#2981, #2982, #2983)', () => {
     const { ctx, us, them } = feuding(29823);
     const older = place(ctx, { sex: 'female', age: 60, name: 'Dead housemate' });
     const younger = place(ctx, { sex: 'female', age: 30, name: 'Living housemate' });
+    // The founding cast contains other eligible housemates. Isolate this
+    // inheritance choice so the test proves the stale-death boundary rather
+    // than whichever unrelated founder happens to be the eldest survivor.
+    for (const person of ctx.world.people.all()) {
+      if (person.houseOfOrigin === us.houseOfOrigin
+        && person.id !== us.id && person.id !== older.id && person.id !== younger.id) {
+        ctx.world.people.remove(person.id);
+      }
+    }
     older.died = ctx.world.year;
     us.died = ctx.world.year;
     addGrudge(ctx, them.id, us.id, { severity: 90, inheritance: 'house_wide' });
