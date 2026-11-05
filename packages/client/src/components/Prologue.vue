@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, ref, useId, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
 import type { FoundingConfiguration, Gender, ProseMode } from '@ed/schema';
 import { FOUNDER_NAME_MAX, founderConfigurationFor, type GameActions } from '../lib/game';
@@ -300,13 +300,17 @@ const stageReady = computed(() => {
 });
 
 const signingRoot = ref<HTMLElement | null>(null);
+// An earlier signing can remain mounted during a switch. Stage names remain
+// stable, but ids must be unique so each section labels its OWN heading.
+const headingPrefix = useId();
+const headingIds = {
+  founder: `${headingPrefix}-founder`,
+  examination: `${headingPrefix}-examination`,
+  house: `${headingPrefix}-house`,
+} satisfies Record<SigningStage, string>;
 function focusSigningStageHeading(): void {
-  const heading = signingStage.value === 'founder' ? 'founder-section-heading'
-    : signingStage.value === 'examination' ? 'examination-heading'
-      : 'house-section-heading';
-  // During a retained/switching screen, an older mounted signing can carry
-  // the same static heading IDs. Focus only the instance whose stage moved.
-  signingRoot.value?.querySelector<HTMLElement>(`#${heading}`)?.focus();
+  // Scope focus to this signing even if an older instance is still mounted.
+  signingRoot.value?.querySelector<HTMLElement>(`#${headingIds[signingStage.value]}`)?.focus();
 }
 
 let navigatingSigning = false;
@@ -426,8 +430,8 @@ function signOnEnter(event: KeyboardEvent): void {
 
     <template v-else-if="!prologue.founded">
       <p class="signing-progress" role="status" aria-live="polite">{{ plain ? `Step ${signingStageIndex + 1} of ${signingStages.length}` : `The signing · ${signingStageIndex + 1} of ${signingStages.length}` }}</p>
-      <section v-if="prologue.namePrompt" v-show="signingStage === 'founder'" class="founder-section" aria-labelledby="founder-section-heading">
-        <h2 id="founder-section-heading" class="stage-title" tabindex="-1">{{ plain ? 'About the founder' : 'Who signs the book' }}</h2>
+      <section v-if="prologue.namePrompt" v-show="signingStage === 'founder'" class="founder-section" :aria-labelledby="headingIds.founder">
+        <h2 :id="headingIds.founder" class="stage-title" tabindex="-1">{{ plain ? 'About the founder' : 'Who signs the book' }}</h2>
         <div class="choice founder-name">
         <h3 class="label">{{ plain ? 'Your name' : 'The name' }}</h3>
         <p class="prompt">{{ prologue.namePrompt }}</p>
@@ -469,9 +473,9 @@ function signOnEnter(event: KeyboardEvent): void {
       <section
         v-if="prologue.examination.length" v-show="signingStage === 'examination'"
         class="choice examination"
-        aria-labelledby="examination-heading"
+        :aria-labelledby="headingIds.examination"
       >
-        <h2 id="examination-heading" class="stage-title" tabindex="-1">{{ plain ? 'The questions' : 'The Examination' }}</h2>
+        <h2 :id="headingIds.examination" class="stage-title" tabindex="-1">{{ plain ? 'The questions' : 'The Examination' }}</h2>
         <fieldset v-for="question in prologue.examination" :key="question.id" class="question">
           <legend class="prompt">{{ question.situation }}</legend>
           <button
@@ -499,8 +503,8 @@ function signOnEnter(event: KeyboardEvent): void {
            the house's hands and the grudge into the world, and at the term the ending
            names which of them the selected line changed. Keep the complete
            house-making group together without turning any answer optional. -->
-      <section v-show="signingStage === 'house'" class="house-section" aria-labelledby="house-section-heading">
-        <h2 id="house-section-heading" class="stage-title" tabindex="-1">{{ plain ? 'House name and commitments' : 'What the house will carry' }}</h2>
+      <section v-show="signingStage === 'house'" class="house-section" :aria-labelledby="headingIds.house">
+        <h2 :id="headingIds.house" class="stage-title" tabindex="-1">{{ plain ? 'House name and commitments' : 'What the house will carry' }}</h2>
       <section class="choice">
         <h3 class="label">{{ plain ? 'Choose an heirloom' : 'You asked for one thing by name' }}</h3>
         <button
