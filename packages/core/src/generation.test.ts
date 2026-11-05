@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { proseOriginalHash } from '@ed/schema';
-import { answerGenerationQuestion, chooseGenerationQuestion } from './generation.js';
+import { answerGenerationQuestion, chooseGenerationQuestion, livingBlood } from './generation.js';
 import { marry, place, testWorld } from './testing.js';
 import { coreMessageAddress } from './messages.js';
 import { setProseMode, setProseVariants } from './prose.js';
@@ -277,5 +277,124 @@ describe('dated branch concerns (#2786)', () => {
     expect(chooseGenerationQuestion(ctx)).toMatchObject({
       kind: 'branch', subject: futureId, subjectName: 'Unbuilt Hall', baseline: 85,
     });
+  });
+});
+
+describe('recovered generation-question dates (#2977, #2978, #2979)', () => {
+  /** Remove unrelated pressures so each question tests the intended mechanism. */
+  function quietQuestionWorld(seed: number): SimCtx {
+    const ctx = testWorld(bundle, seed, 1200);
+    const w = ctx.world;
+    w.bloodHighWater = 0;
+    for (let i = 0; i < 8; i++) place(ctx, { sex: 'male', age: 30 + i, name: `Additional kin ${i}` });
+    w.discrepancies.clear();
+    w.clausesRecovered.clear();
+    for (const person of w.people.living()) person.madness = 0;
+    return ctx;
+  }
+
+  it('counts only people alive at the reading year in both thin-line readings (#2977)', () => {
+    const ctx = testWorld(bundle, 2977001, 1200);
+    const w = ctx.world;
+    const before = livingBlood(ctx).length;
+    const unborn = place(ctx, { sex: 'male', age: -4, name: 'Future blood' });
+    const deceased = place(ctx, { sex: 'female', age: 30, name: 'Earlier death' });
+    deceased.died = w.year - 1; // Inconsistent imported status deliberately remains alive.
+    const later = place(ctx, { sex: 'male', age: 25, name: 'Later death' });
+    later.died = w.year + 2;
+
+    expect(livingBlood(ctx)).toHaveLength(before + 1);
+    expect(livingBlood(ctx)).not.toContain(unborn);
+    expect(livingBlood(ctx)).not.toContain(deceased);
+    expect(livingBlood(ctx)).toContain(later);
+
+    w.bloodHighWater = 100;
+    const question = chooseGenerationQuestion(ctx)!;
+    expect(question.kind).toBe('thin_line');
+    expect(question.baseline).toBe(before + 1);
+
+    w.year += 3;
+    expect(livingBlood(ctx)).toHaveLength(before);
+    expect(answerGenerationQuestion(ctx, question)).toContain('The living blood thinned');
+    w.year += 2;
+    expect(livingBlood(ctx)).toContain(unborn);
+    expect(livingBlood(ctx)).not.toContain(later);
+  });
+
+  it('does not begin a question under a future-born or effectively dead Head (#2977)', () => {
+    const ctx = testWorld(bundle, 2977002, 1200);
+    const head = ctx.world.people.living().find((p) => p.castSlots.includes('head'))!;
+    const born = head.born;
+
+    head.born = ctx.world.year + 1;
+    expect(chooseGenerationQuestion(ctx)).toBeUndefined();
+
+    head.born = born;
+    head.died = ctx.world.year;
+    expect(chooseGenerationQuestion(ctx)).toBeUndefined();
+
+    head.died = ctx.world.year + 1;
+    ctx.world.bloodHighWater = 100;
+    expect(chooseGenerationQuestion(ctx)?.subject).toBe(head.id);
+  });
+
+  it('asks about a troubled hall until, not before, its saved extinction (#2978)', () => {
+    const ctx = quietQuestionWorld(2978001);
+    const w = ctx.world;
+    const id = 'future_extinction_hall' as never;
+    w.branches.set(id, {
+      id, name: 'The troubled hall', house: w.playerHouse,
+      founder: w.people.living()[0]!.id, splitFrom: 'main',
+      foundedYear: w.year - 20, extinct: w.year + 2, grievance: 80,
+    } as never);
+
+    const question = chooseGenerationQuestion(ctx)!;
+    expect(question).toMatchObject({ kind: 'branch', subject: id });
+    expect(answerGenerationQuestion(ctx, question)).toContain('grievance stands at 80');
+
+    w.year += 2;
+    expect(chooseGenerationQuestion(ctx)?.kind).not.toBe('branch');
+    expect(answerGenerationQuestion(ctx, question)).toContain('did not remain a standing cadet hall');
+  });
+
+  it('keeps a future wedding out of the Match question and verdict until its year (#2979)', () => {
+    const ctx = quietQuestionWorld(2979001);
+    const w = ctx.world;
+    const daughter = place(ctx, { sex: 'female', age: 22, name: 'Future bride' });
+    const spouse = place(ctx, { sex: 'male', age: 24, name: 'Foreign groom', house: 'house_marrow' });
+    // Any pre-existing eligible daughter is already married; this one is not.
+    for (const person of w.people.blood(w.playerHouse)) {
+      if (person.id !== daughter.id && person.sex === 'female'
+        && w.year - person.born >= 16 && w.year - person.born <= 38) {
+        person.marriages.push({ spouse: spouse.id, from: w.year - 1 });
+      }
+    }
+    daughter.marriages.push({ spouse: spouse.id, from: w.year + 3 });
+
+    const question = chooseGenerationQuestion(ctx)!;
+    expect(question).toMatchObject({ kind: 'match', subject: daughter.id });
+    expect(answerGenerationQuestion(ctx, question)).toContain('remained unmarried');
+
+    daughter.died = w.year;
+    expect(answerGenerationQuestion(ctx, question)).toContain('did not live to make that marriage');
+    daughter.died = w.year + 4;
+    expect(answerGenerationQuestion(ctx, question)).toContain('remained unmarried');
+
+    w.year += 3;
+    expect(answerGenerationQuestion(ctx, question)).toContain('married outward');
+  });
+
+  it('does not let an already-recorded death pass as a living heir verdict (#2979)', () => {
+    const ctx = testWorld(bundle, 2979002, 1200);
+    const heir = place(ctx, { sex: 'male', age: 25, name: 'Recorded heir' });
+    const question: GenerationQuestion = {
+      kind: 'unstable_heir', subject: heir.id, subjectName: heir.name,
+      opened: ctx.world.year, baseline: 30, text: '', signature: `unstable_heir:${heir.id}`,
+    };
+
+    heir.died = ctx.world.year;
+    expect(answerGenerationQuestion(ctx, question)).toContain('did not live to take the seal');
+    heir.died = ctx.world.year + 1;
+    expect(answerGenerationQuestion(ctx, question)).toContain('lived through the generation');
   });
 });
