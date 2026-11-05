@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadContent } from '@ed/content';
-import { GameSession } from '@ed/core';
+import { canonical, GameSession, newGame } from '@ed/core';
+import { emptyRunLibrary, type RunLibrary } from '@ed/schema';
 import { createGame } from './game.js';
 import type { Platform } from '../platform.js';
 
@@ -530,5 +531,369 @@ describe('demonstration deletion validates stored saves (#2374)', () => {
     await removing;
     expect(host.deletes).toEqual(['demo-autosave']);
     expect(host.records.has('demo-autosave')).toBe(false);
+  });
+});
+
+
+
+const source = loadContent();
+
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (error: Error) => void;
+  const promise = new Promise<T>((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+/** Drain promise continuations, without imposing a host response order. */
+const drain = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+function history(id: string): RunLibrary {
+  return { format: 1, runs: [{
+    id, seed: 74, campaign: 'short', endedYear: 1342, house: `House ${id}`,
+    ending: { id: 'forgotten', title: 'Forgotten' }, entries: [],
+  }] };
+}
+
+function memoryHost() {
+  const slots = new Map<string, unknown>();
+  let library = history('original');
+  const host: Platform = {
+    listSaves: async () => [],
+    readSave: async (slot) => structuredClone(slots.get(slot) ?? null),
+    writeSave: async (slot, save) => { slots.set(slot, structuredClone(save)); },
+    deleteSave: async (slot) => { slots.delete(slot); },
+    readLibrary: async () => structuredClone(library),
+    // Real hosts serialize Vue's reactive Library values across the boundary.
+    writeLibrary: async (next) => { library = JSON.parse(JSON.stringify(next)) as RunLibrary; },
+    readUserContent: async () => ({}),
+    exportSave: async () => undefined, importSave: async () => null,
+    onPause: () => () => undefined, onBack: () => () => undefined,
+  };
+  return { host, slots, library: () => library };
+}
+
+describe('Library read/write ordering (#3043)', () => {
+  it.each([false, true])('keeps the latest retry authoritative (newer settles first: %s)', async (newerFirst) => {
+    const { host } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    const older = deferred<unknown>();
+    const newer = deferred<unknown>();
+    const reading = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    host.readLibrary = reading;
+
+    const oldRetry = game.actions.retryLibrary();
+    const newRetry = game.actions.retryLibrary();
+    if (newerFirst) newer.resolve(history('newer'));
+    else older.resolve(history('older'));
+    await drain();
+    const intermediate = { ready: game.libraryReady.value, ids: game.library.value.runs.map((run) => run.id) };
+    if (newerFirst) older.resolve(history('older'));
+    else newer.resolve(history('newer'));
+    await Promise.all([oldRetry, newRetry]);
+
+    expect(intermediate).toEqual({ ready: false, ids: ['original'] });
+    expect(game.library.value).toEqual(history('newer'));
+    expect(game.libraryReady.value).toBe(true);
+    expect(game.libraryReadError.value).toBe(false);
+  });
+
+  it('does not publish an obsolete retry error while the current read is pending', async () => {
+    const { host } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    const older = deferred<unknown>();
+    const newer = deferred<unknown>();
+    host.readLibrary = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    const oldRetry = game.actions.retryLibrary().catch((error: Error) => error);
+    const newRetry = game.actions.retryLibrary();
+    older.reject(new Error('obsolete read failed'));
+    const oldError = await oldRetry;
+    const intermediateError = game.libraryReadError.value;
+    newer.resolve(history('recovered'));
+    await newRetry;
+
+    expect(oldError).toEqual(new Error('obsolete read failed'));
+    expect(intermediateError).toBe(false);
+    expect(game.libraryReadError.value).toBe(false);
+    expect(game.libraryReady.value).toBe(true);
+    expect(game.library.value).toEqual(history('recovered'));
+  });
+
+  it('reads after an already-requested Clear and retains that confirmed rollback baseline', async () => {
+    const memory = memoryHost();
+    const { host } = memory;
+    const game = createGame(source, host);
+    await drain();
+    const gate = deferred<void>();
+    const write = host.writeLibrary;
+    host.writeLibrary = async (snapshot) => { await gate.promise; await write(snapshot); };
+    const reading = vi.fn(host.readLibrary);
+    host.readLibrary = reading;
+
+    const clearing = game.actions.clearLibrary();
+    await drain();
+    const retrying = game.actions.retryLibrary();
+    await drain();
+    const readsBeforeWrite = reading.mock.calls.length;
+    gate.resolve();
+    await Promise.all([clearing, retrying]);
+    const afterRetry = canonical(game.library.value);
+    host.writeLibrary = async () => { throw new Error('storage full'); };
+    await expect(game.actions.clearLibrary()).rejects.toThrow('storage full');
+
+    expect(readsBeforeWrite).toBe(0);
+    expect(afterRetry).toBe(canonical(emptyRunLibrary()));
+    expect(game.library.value).toEqual(emptyRunLibrary());
+    expect(memory.library()).toEqual(emptyRunLibrary());
+  });
+
+  it('waits for the current retry before removing a run from its recovered baseline', async () => {
+    const memory = memoryHost();
+    const game = createGame(source, memory.host);
+    await drain();
+    const read = deferred<unknown>();
+    memory.host.readLibrary = () => read.promise;
+    const retrying = game.actions.retryLibrary();
+    const removing = game.actions.deleteLibraryRun('original');
+    read.resolve({ format: 1, runs: [...history('original').runs, ...history('external').runs] });
+    await Promise.all([retrying, removing]);
+
+    expect(game.library.value).toEqual(history('external'));
+    expect(memory.library()).toEqual(history('external'));
+  });
+
+  it('keeps an edit waiting when a newer retry supersedes the read it first awaited', async () => {
+    const memory = memoryHost();
+    const initial = deferred<unknown>();
+    const current = deferred<unknown>();
+    memory.host.readLibrary = vi.fn().mockReturnValueOnce(initial.promise).mockReturnValueOnce(current.promise);
+    const game = createGame(source, memory.host);
+    const removing = game.actions.deleteLibraryRun('original');
+    const retrying = game.actions.retryLibrary();
+    initial.resolve(history('obsolete'));
+    await drain();
+    current.resolve({ format: 1, runs: [...history('original').runs, ...history('external').runs] });
+    await Promise.all([retrying, removing]);
+
+    expect(game.library.value).toEqual(history('external'));
+    expect(memory.library()).toEqual(history('external'));
+  });
+
+  it('archives a finished run after the current read, without an older retry erasing it', async () => {
+    const memory = memoryHost();
+    const game = createGame(source, memory.host);
+    await drain();
+    const older = deferred<unknown>();
+    const newer = deferred<unknown>();
+    memory.host.readLibrary = vi.fn().mockReturnValueOnce(older.promise).mockReturnValueOnce(newer.promise);
+    const oldRetry = game.actions.retryLibrary();
+    const newRetry = game.actions.retryLibrary();
+    const finished = newGame(source, { seed: 74, campaign: 'short' });
+    const signing = finished.prologue()!;
+    expect(finished.found({ houseName: 'House Finished', heirloom: signing.heirlooms[0]!.heirloom,
+      grudge: signing.grudges[0]!.house }).ok).toBe(true);
+    // Construct the ending rather than playing a whole campaign for a storage test.
+    finished.ctx.world.year = 1342;
+    finished.ctx.world.ending = { id: 'forgotten', year: 1342 };
+    memory.slots.set('finished', finished.save());
+    expect(await game.actions.load('finished')).toBe(true);
+    newer.resolve(history('current'));
+    await drain();
+    older.resolve(history('obsolete'));
+    await Promise.all([oldRetry, newRetry]);
+    await drain();
+
+    expect(game.library.value.runs.map((run) => run.house)).toEqual(['House current', 'House Finished']);
+    expect(memory.library()).toEqual(game.library.value);
+    expect(game.libraryReady.value).toBe(true);
+  });
+
+  it('keeps a failed current read unavailable, then recovers without overwriting the host', async () => {
+    const memory = memoryHost();
+    const game = createGame(source, memory.host);
+    await drain();
+    memory.host.readLibrary = async () => { throw new Error('read unavailable'); };
+    await expect(game.actions.retryLibrary()).rejects.toThrow('read unavailable');
+    expect(game.libraryReady.value).toBe(false);
+    expect(game.libraryReadError.value).toBe(true);
+    await expect(game.actions.clearLibrary()).rejects.toThrow('the Library is unavailable');
+    expect(memory.library()).toEqual(history('original'));
+    memory.host.readLibrary = async () => history('recovered');
+    await game.actions.retryLibrary();
+    expect(game.library.value).toEqual(history('recovered'));
+    expect(game.libraryReadError.value).toBe(false);
+  });
+});
+
+describe('save pickup ordering (#3044)', () => {
+  it('loads the complete newer autosave after an earlier pending write', async () => {
+    const { host, slots } = memoryHost();
+    slots.set('autosave', newGame(source, { seed: 1, campaign: 'short' }).save());
+    const game = createGame(source, host);
+    await drain();
+    const gate = deferred<void>();
+    const write = host.writeSave;
+    let checkpoint: unknown;
+    host.writeSave = async (slot, save) => {
+      checkpoint ??= structuredClone(save);
+      await gate.promise;
+      await write(slot, save);
+    };
+    const reading = vi.fn(host.readSave);
+    host.readSave = reading;
+    game.actions.begin(2, 'short');
+    const loading = game.actions.load('autosave');
+    await drain();
+    const readsDuringWrite = reading.mock.calls.length;
+    gate.resolve();
+    expect(await loading).toBe(true);
+    await drain();
+
+    expect(game.view.value?.seed).toBe(2);
+    expect(canonical(slots.get('autosave'))).toBe(canonical(checkpoint));
+    expect(readsDuringWrite).toBe(0);
+    expect(game.saveStatus.value).toBe('saved');
+  });
+
+  it('captures a slow read before a later Begin writes, while refusing the stale selection', async () => {
+    const { host, slots } = memoryHost();
+    const original = newGame(source, { seed: 1, campaign: 'short' }).save();
+    slots.set('autosave', original);
+    const game = createGame(source, host);
+    await drain();
+    const gate = deferred<void>();
+    let captured: unknown;
+    host.readSave = async (slot) => {
+      await gate.promise;
+      captured = structuredClone(slots.get(slot));
+      return captured;
+    };
+    const write = vi.fn(host.writeSave);
+    host.writeSave = write;
+    const loading = game.actions.load('autosave');
+    await drain();
+    game.actions.begin(3, 'short');
+    await drain();
+    const writesDuringRead = write.mock.calls.length;
+    gate.resolve();
+    expect(await loading).toBe(false);
+    await drain();
+
+    expect(canonical(captured)).toBe(canonical(original));
+    expect(writesDuringRead).toBe(0);
+    expect(game.view.value?.seed).toBe(3);
+    expect(slots.get('autosave')).toMatchObject({ seed: 3 });
+    expect(game.saveStatus.value).toBe('saved');
+    expect(game.resumable.value).toBe(true);
+  });
+
+  it('lets later writes finish after a failed read without hiding their save status', async () => {
+    const { host, slots } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    const gate = deferred<unknown>();
+    host.readSave = () => gate.promise;
+    const loading = game.actions.load('autosave');
+    await drain();
+    game.actions.begin(4, 'short');
+    gate.reject(new Error('host read failed'));
+    expect(await loading).toBe(false);
+    await drain();
+
+    expect(game.view.value?.seed).toBe(4);
+    expect(slots.get('autosave')).toMatchObject({ seed: 4 });
+    expect(game.saveStatus.value).toBe('saved');
+    expect(game.resumable.value).toBe(true);
+  });
+
+  it('waits for every parallel read before writing, even when one read rejects', async () => {
+    const { host, slots } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    const slow = deferred<unknown>();
+    const broken = deferred<unknown>();
+    host.readSave = (slot) => slot === 'slow' ? slow.promise : broken.promise;
+    const writing = vi.fn(host.writeSave);
+    host.writeSave = writing;
+    const slowLoad = game.actions.load('slow');
+    const brokenLoad = game.actions.load('broken');
+    await drain();
+    game.actions.begin(6, 'short');
+    broken.reject(new Error('one reader failed'));
+    expect(await brokenLoad).toBe(false);
+    await drain();
+    const writesBeforeCapture = writing.mock.calls.length;
+    slow.resolve(newGame(source, { seed: 1, campaign: 'short' }).save());
+    expect(await slowLoad).toBe(false);
+    await drain();
+
+    expect(writesBeforeCapture).toBe(0);
+    expect(game.view.value?.seed).toBe(6);
+    expect(slots.get('autosave')).toMatchObject({ seed: 6 });
+    expect(game.saveStatus.value).toBe('saved');
+  });
+
+  it('preserves completion of the last genuine save when a later pickup fails', async () => {
+    const { host } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    const gate = deferred<void>();
+    host.writeSave = () => gate.promise;
+    host.readSave = async () => { throw new Error('read unavailable'); };
+    game.actions.begin(7, 'short');
+    const loading = game.actions.load('missing');
+    gate.resolve();
+    expect(await loading).toBe(false);
+
+    expect(game.saveStatus.value).toBe('saved');
+    expect(game.resumable.value).toBe(true);
+    expect(game.view.value?.seed).toBe(7);
+  });
+
+  it('resumes after a queued full-save deletion rather than restoring discarded bytes', async () => {
+    const { host, slots } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    game.actions.begin(8, 'short');
+    await drain();
+    const gate = deferred<void>();
+    const remove = host.deleteSave;
+    host.deleteSave = async (slot) => { await gate.promise; await remove(slot); };
+    game.actions.restart();
+    const resuming = game.actions.resume();
+    await drain();
+    gate.resolve();
+    const accepted = await resuming;
+    await drain();
+
+    expect(accepted).toBe(false);
+    expect(game.view.value).toBeNull();
+    expect(slots.has('autosave')).toBe(false);
+    expect(game.resumable.value).toBe(false);
+    expect(game.saveStatus.value).toBe('idle');
+  });
+
+  it('cannot reload and resurrect a demo autosave behind an already-requested Restart', async () => {
+    const { host, slots } = memoryHost();
+    const game = createGame(source, host);
+    await drain();
+    game.actions.begin(5, 'demo');
+    await drain();
+    const gate = deferred<void>();
+    const remove = host.deleteSave;
+    host.deleteSave = async (slot) => { await gate.promise; await remove(slot); };
+    game.actions.restart();
+    const loading = game.actions.load('demo-autosave');
+    await drain();
+    gate.resolve();
+    const accepted = await loading;
+    await drain();
+
+    expect(accepted).toBe(false);
+    expect(game.view.value).toBeNull();
+    expect(slots.has('demo-autosave')).toBe(false);
+    expect(game.saveStatus.value).toBe('idle');
   });
 });

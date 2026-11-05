@@ -537,32 +537,42 @@ export function createGame(
    * next mutation always gets a turn.
    */
   let autosaveTail: Promise<void> = Promise.resolve();
+  /** Consecutive pickups can read together; each waits for the last mutation. */
+  let autosaveMutationTail: Promise<void> = autosaveTail;
   let autosaveRevision = 0;
   /**
    * The profile Library is a second mutable host record, separate from save
    * slots. An archive and a later Clear can otherwise finish out of order and
    * resurrect history the player explicitly deleted. Snapshot each intent and
-   * serialize host writes; a failure must not block the next intent.
+   * serialize host reads and writes; a failure must not block the next intent.
    */
-  let libraryWriteTail: Promise<void> = Promise.resolve();
+  let libraryTail: Promise<void> = Promise.resolve();
+  /** Only the latest requested profile read may publish its result or error. */
+  let libraryReadRevision = 0;
   /** Last host-confirmed snapshot, not a potentially failed optimistic edit. */
   let persistedLibrary: RunLibrary = emptyRunLibrary();
   /** Every in-memory Library change gets a revision, including automatic archives. */
   let libraryRevision = 0;
 
   function persistLibrary(snapshot: RunLibrary): Promise<void> {
-    const done = libraryWriteTail.then(async () => {
+    const done = libraryTail.then(async () => {
       await platform.writeLibrary(snapshot);
       persistedLibrary = snapshot;
     });
-    libraryWriteTail = done.catch(() => undefined);
+    libraryTail = done.catch(() => undefined);
     return done;
   }
 
   async function ensureLibraryReady(): Promise<void> {
     // A failed profile read is NOT an empty Library. The first explicit edit
     // may arrive while the initial asynchronous read is still in flight.
-    if (!libraryReady.value && !libraryReadError.value) await libraryLoad;
+    while (!libraryReady.value && !libraryReadError.value) {
+      const reading = libraryLoad;
+      await reading;
+      // A retry requested during this wait owns the baseline now. Wait for
+      // that read as well rather than refusing an edit against a stale read.
+      if (reading === libraryLoad) break;
+    }
     if (!libraryReady.value) throw new Error('the Library is unavailable; retry reading it');
   }
 
@@ -595,7 +605,18 @@ export function createGame(
     const revision = ++autosaveRevision;
     const done = autosaveTail.then(operation);
     autosaveTail = done.catch(() => undefined);
+    autosaveMutationTail = autosaveTail;
     return { revision, done };
+  }
+
+  /** Reserve byte capture among host mutations, without inventing a save revision. */
+  function readSave(slot: string): Promise<unknown | null> {
+    const read = autosaveMutationTail.then(() => platform.readSave(slot));
+    // A slow obsolete pickup must not delay another read. Every read still
+    // finishes before the next write/delete; even a rejected read cannot
+    // release that barrier while another read is capturing its bytes.
+    autosaveTail = Promise.allSettled([autosaveTail, read]).then(() => undefined);
+    return read;
   }
   /** The chapter queue (issue #65). Never trimmed to "the latest" — see `ChapterBeat`. */
   const chapterQueue = ref<ChapterBeat[]>([]);
@@ -817,7 +838,7 @@ export function createGame(
     async load(slot) {
       const selection = ++runSelectionRevision;
       try {
-        const saved = await platform.readSave(slot);
+        const saved = await readSave(slot);
         return selection === runSelectionRevision && saveMatchesSlot(slot, saved)
           ? loadSave(saved) : false;
       } catch {
@@ -864,9 +885,7 @@ export function createGame(
         // join the same ordering tail as autosaves and chapter snapshots.
         // This is read-only: do not bump autosaveRevision (which would make
         // the last genuine save's completion invisible to the status UI).
-        const read = autosaveTail.then(() => platform.readSave(slot));
-        autosaveTail = read.then(() => undefined, () => undefined);
-        const save = await read;
+        const save = await readSave(slot);
         if (!save) return false;
         // Do not hold the mutation queue while a user chooses a destination.
         await platform.exportSave(save);
@@ -1315,13 +1334,16 @@ export function createGame(
     }
   }
 
-  async function readKept(): Promise<unknown | null> {
+  async function readKept(discovery = false): Promise<unknown | null> {
     // Composition starts this read immediately. If the player starts or
     // discards a run before a slow host answers, that stale answer must not
     // overwrite the newer local intent.
     const revision = fullAutosaveRevision;
     try {
-      const found = await platform.readSave(AUTOSAVE);
+      // Composition only discovers Continue availability. Its revision guard
+      // protects the cache, and a slow discovery must not hold up demo saves.
+      // An explicit pickup reserves its byte capture among host mutations.
+      const found = await (discovery ? platform.readSave(AUTOSAVE) : readSave(AUTOSAVE));
       if (revision !== fullAutosaveRevision) return keptSave;
       keptSave = found;
       // Never offer full Continue for a demo snapshot misplaced in this slot.
@@ -1435,13 +1457,18 @@ export function createGame(
   }
 
   async function loadLibrary(): Promise<void> {
+    const revision = ++libraryReadRevision;
+    // A retry must observe earlier Clear/Remove/archive writes, and later
+    // writes must wait until this host has finished capturing its bytes.
+    const read = libraryTail.then(() => platform.readLibrary());
+    libraryTail = read.then(() => undefined, () => undefined);
     libraryReady.value = false;
     libraryReadError.value = false;
     try {
       // A rejected read (or invalid profile data) says nothing about whether
       // completed houses remain on disk. Only a successful read may establish
       // the baseline against which later mutations are written.
-      const raw = await platform.readLibrary();
+      const raw = await read;
       // A genuinely absent profile is new; malformed non-null root data is
       // NOT an empty profile. Refuse to overwrite its bytes with an empty
       // replacement. readRunLibrary deliberately tolerates damaged *entries*
@@ -1452,6 +1479,7 @@ export function createGame(
         throw new TypeError('invalid Library of Houses root');
       }
       const recovered = readRunLibrary(raw);
+      if (revision !== libraryReadRevision) return;
       persistedLibrary = recovered;
       library.value = recovered;
       libraryReady.value = true;
@@ -1460,7 +1488,7 @@ export function createGame(
       const g = session.value;
       if (g) archiveFinished(g);
     } catch (error) {
-      libraryReadError.value = true;
+      if (revision === libraryReadRevision) libraryReadError.value = true;
       throw error;
     }
   }
@@ -1468,7 +1496,7 @@ export function createGame(
   // Native stores answer asynchronously. A failed read stays unavailable
   // until the player explicitly retries from the front door.
   libraryLoad = loadLibrary().catch(() => undefined);
-  void readKept();
+  void readKept(true);
   void refreshSaves();
   platform.onPause(() => {
     const g = session.value;
