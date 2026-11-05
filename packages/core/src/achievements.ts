@@ -260,7 +260,17 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   ]);
   add('ending_all_long', LONG_ENDINGS.every((id) => longEndings.has(id)));
 
-  const best = RUNGS.indexOf(save.ascension.best);
+  let best = RUNGS.indexOf(save.ascension.best);
+  // Recovered runs may contain ladder progress from after their ending.
+  // A stamped future high-water mark is not an achievement at this term.
+  // Older saves without that stamp retain their historical high-water result.
+  const bestAt = save.ascension.reachedAt[save.ascension.best];
+  if (bestAt !== undefined && bestAt > endYear) {
+    best = RUNGS.reduce((highest, rung, index) => {
+      const reached = save.ascension.reachedAt[rung];
+      return reached !== undefined && reached <= endYear ? index : highest;
+    }, 0);
+  }
   for (const [rung, id] of [
     ['touched', 'ladder_touched'],
     ['adept', 'ladder_adept'],
@@ -300,12 +310,16 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   // A recovered save can carry rows from a later year. Achievements describe
   // what had happened by this ending, not everything stored in the imported
   // timeline. Use the same term boundary as Record and Match decisions.
-  const sex = new Map(save.people.map((person) => [person.id, person.sex]));
+  const people = new Map(save.people.map((person) => [person.id, person]));
   add(
     'regency_survived',
-    save.succession.some((reign) =>
-      sex.get(reign.person) === 'female' && reign.to !== undefined
-      && reign.from <= reign.to && reign.to <= endYear),
+    save.succession.some((reign) => {
+      const regent = people.get(reign.person);
+      return regent?.sex === 'female' && reign.to !== undefined
+        && regent.born <= reign.from
+        && (regent.died === undefined || regent.died >= reign.to)
+        && reign.from <= reign.to && reign.to <= endYear;
+    }),
   );
   add('cadet_took_seal', save.branches.some((branch) =>
     branch.heldSeal !== undefined && branch.heldSeal <= endYear));
@@ -333,7 +347,8 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   add(
     'five_names_returned',
     save.friends.length === 5 && save.friends.every((friend) =>
-      friend.spentIn !== undefined && friend.spentIn <= endYear),
+      friend.spentIn !== undefined && friend.spentIn >= friend.dueFrom
+      && friend.spentIn <= endYear),
   );
 
   return ACHIEVEMENT_IDS.filter((id) => earned.has(id));
