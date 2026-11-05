@@ -90,6 +90,9 @@ events:
     conditions:
       all:
         - { ageElapsed: { op: gte, years: 6 } }
+        # Hiding the books schedules next year's discovery. Do not offer that
+        # promise in the collection year, in either full campaign (#1946).
+        - { campaignProgress: { op: lt, value: 1 } }
     slots:
       HEAD: { role: head }
       ARCHIVIST: { role: retainer, filters: [{ status: [alive] }] }

@@ -112,13 +112,52 @@ const OUTCOME_WITNESS_MANIFEST = join(
 const declaredOutcomeKeys = new Set(declaredOutcomes(content).keys());
 const witnessedOutcomeKeys = new Set<string>();
 
+describe('the cellar promise at collection (#1946)', () => {
+  const shelf = content.mustEvent('the_shelf_that_has_to_go');
+  if (shelf.interaction.kind !== 'choice') throw new Error('the shelf is not a choice');
+  for (const choice of shelf.interaction.choices) for (const outcome of choice.outcomes) {
+    it(`${choice.id}/${outcome.id} remains executable in the last admissible year`, () => {
+      const ctx = fixture(1946);
+      ctx.world.generation = 5;
+      ctx.world.year = campaignDef(ctx.world.campaign).endYear - 1;
+      ctx.world.age.active = [{ age: asId('the_crusade'), began: ctx.world.year - 10, named: true, paid: { standing: false } }];
+      const result = executeOutcomeWitness(ctx, shelf, { choiceId: choice.id, expectedOutcomeId: outcome.id, rng: makeRng(1946) });
+      expect(result.ok, result.reason).toBe(true);
+    });
+  }
+  it.each(['long', 'short'] as const)('offers the one-year discovery only while it can return (%s)', (campaign) => {
+    const ctx = fixture(1946);
+    ctx.world.generation = 5;
+    ctx.world.campaign = campaign;
+    const end = campaignDef(campaign).endYear;
+    ctx.world.year = end - 1;
+    ctx.world.age.active = [{ age: asId('the_crusade'), began: end - 10, named: true, paid: { standing: false } }];
+    const shelf = content.mustEvent('the_shelf_that_has_to_go');
+    expect(ambientPool(ctx).some(e => e.id === shelf.id)).toBe(true);
+    ctx.world.year = end;
+    expect(evalCondition(shelf.conditions, ctx)).toBe(false);
+    expect(ambientPool(ctx).some(e => e.id === shelf.id)).toBe(false);
+    ctx.world.year = end - 1;
+    const result = executeOutcomeWitness(ctx, shelf, { choiceId: 'hide_them', expectedOutcomeId: 'hidden', rng: makeRng(1946) });
+    expect(result.ok, result.reason).toBe(true);
+    expect(ctx.world.scheduled.find(s => s.event === 'the_cellar_shelf_is_found')).toMatchObject({ year: end });
+    const resumed = loadGame(JSON.parse(JSON.stringify(saveGame(ctx))), content);
+    for (const world of [ctx, resumed]) {
+      world.world.year = end;
+      expect(ambientPool(world).some(e => e.id === shelf.id)).toBe(false);
+      expect(selectEvents(world, makeRng(1946), 0).some(candidate => candidate.source === 'forced'
+        && candidate.event.id === 'the_cellar_shelf_is_found')).toBe(true);
+    }
+  });
+});
+
 describe('the two-room dilemma through the live docket (#1982)', () => {
   for (const mode of ['original', 'plainenglish'] as const) {
     for (const row of [
-      { choice: 'keep_the_book_open', outcome: 'reading_kept', stale: false },
-      { choice: 'move_the_chair', outcome: 'watch_begun', stale: false },
+      { choice: 'keep_the_book_open', outcome: 'reading_kept' },
+      { choice: 'move_the_chair', outcome: 'watch_begun' },
     ]) {
-      it(`${mode}: ${row.outcome} commits after casting, including stale availability`, () => {
+      it(`${mode}: ${row.outcome} commits and delivers its kept-person return`, () => {
         const ctx = testWorld(content, 1982);
         setProseVariants(ctx, content.proseVariants);
         setProseMode(ctx, mode);
@@ -131,29 +170,21 @@ describe('the two-room dilemma through the live docket (#1982)', () => {
         expect(res.ok).toBe(true);
         expect(res.fill.READER).toBe(p.id);
         const pending = queueChoice(ctx, event, event.body, res.fill, res.playerCast);
-        if (row.stale) {
-          if (row.choice === 'move_the_chair') ctx.world.treasury = DEBT_FLOOR;
-          else ctx.world.studies = [];
-        }
         const result = resolveChoice(ctx, pending.id, row.choice, makeRng(1982));
         expect(result.ok, result.reason).toBe(true);
         expect(result.resolved?.outcome.id).toBe(row.outcome);
-        // These refusals happen AFTER a valid cast, so the ordinary pre-cast
-        // witness helper cannot build them. Credit only this exact real commit.
         expect(ctx.world.decisionLog.some(d => d.kind === 'outcome' && d.event === event.id
           && d.choiceId === row.choice && d.outcomeId === row.outcome)).toBe(true);
         const key = outcomeKey(event.id, row.choice, row.outcome);
         expect(declaredOutcomeKeys.has(key)).toBe(true);
         witnessedOutcomeKeys.add(key);
-        if (!row.stale) {
-          ctx.world.year += 5;
-          phase('mystic', ctx);
-          const step = dueArcSteps(ctx, makeRng(1982)).find(s => s.instance.arc.includes(event.id))!;
-          const returned = executeOutcomeWitness(ctx, content.mustEvent(step.node.event), {
-            expectedOutcomeId: 'remembered', rng: makeRng(1982), arcStep: step,
-          });
-          expect(returned.ok, returned.reason).toBe(true);
-        }
+        ctx.world.year += 5;
+        phase('mystic', ctx);
+        const step = dueArcSteps(ctx, makeRng(1982)).find(s => s.instance.arc.includes(event.id))!;
+        const returned = executeOutcomeWitness(ctx, content.mustEvent(step.node.event), {
+          expectedOutcomeId: 'remembered', rng: makeRng(1982), arcStep: step,
+        });
+        expect(returned.ok, returned.reason).toBe(true);
         expect(missingPlainEnglish(ctx)).toEqual([]);
       });
     }
@@ -1521,6 +1552,10 @@ describe('authored age-elapsed required-slot player-choice outcome witnesses', (
       const slotIds = Object.keys(event.slots);
       const head = event.slots.HEAD;
       const condition = event.conditions;
+      // Calendar admission still goes through evalCondition/ambientPool below.
+      // It does not replace the Age floor this fixture is crossing (#1946).
+      const ageConditions = condition && 'all' in condition
+        ? condition.all.filter(c => !('campaignProgress' in c)) : [];
       const extraSlots = slotIds
         .filter((slotId) => slotId !== 'HEAD')
         .map((slotId) => event.slots[slotId]!);
@@ -1541,10 +1576,10 @@ describe('authored age-elapsed required-slot player-choice outcome witnesses', (
         || !extraSlots.some((slot) => slot.optional !== true)
         || !condition
         || !('all' in condition)
-        || condition.all.length !== 1
+        || ageConditions.length !== 1
       ) return [];
 
-      const leaf = condition.all[0];
+      const leaf = ageConditions[0];
       if (!leaf || !('ageElapsed' in leaf) || leaf.ageElapsed.op !== 'gte' || leaf.ageElapsed.years <= 0) {
         return [];
       }
