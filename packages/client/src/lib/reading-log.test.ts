@@ -1407,3 +1407,36 @@ describe('recap telemetry boundary (#1985)', () => {
     },
   );
 });
+
+
+describe('opt-in signing-stage exposure (#1984)', () => {
+  it('records coarse pane boundaries without changing accepted-command timing or storing text inputs', () => {
+    const c = clock(), l = log(c);
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    c.tick(100);
+    l.note({ kind: 'pane', pane: 'signing:founder' });
+    c.tick(200);
+    l.note({ kind: 'pane', pane: 'signing:examination' });
+    c.tick(300);
+    l.note({ kind: 'pane', pane: 'signing:house' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'found', act: 'signing', status: 'accepted' });
+    c.tick(100);
+    l.note({ kind: 'action', verb: 'enter', act: 'signing', status: 'returned' });
+    c.tick(200);
+    l.note({ kind: 'action', verb: 'match', act: 'answer', status: 'accepted' });
+    const artifact = l.artifact();
+    expect(artifact.events.filter(event => event.kind === 'pane')).toMatchObject([
+      { at: 100, pane: 'signing:founder' },
+      { at: 300, pane: 'signing:examination' },
+      { at: 600, pane: 'signing:house' },
+    ]);
+    expect(artifact.summary.entries[0]).toMatchObject({
+      startedAt: 0, foundedAt: 700, enteredAt: 800,
+      firstAcceptedCommand: { at: 1000, verb: 'match' },
+      wallMs: 1000, foregroundMs: 1000, censored: false,
+    });
+    expect(artifact.notice).toContain('which signing section you reach');
+    expect(JSON.stringify(artifact)).not.toContain('Private Founder Name');
+  });
+});
