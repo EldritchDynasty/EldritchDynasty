@@ -1134,10 +1134,12 @@ describe('fail-open Table research and window-safe outcomes (#1992)', () => {
     const seen: unknown[][] = [];
     const bare = {
       order(payload: unknown) {
+        expect(this).toBe(bare);
         seen.push(['order', payload]);
         return payload === unreadableOrder ? accepted : unreadableReturn;
       },
       muster(payload: unknown) {
+        expect(this).toBe(bare);
         seen.push(['muster', payload]);
         return unreadableReturn;
       },
