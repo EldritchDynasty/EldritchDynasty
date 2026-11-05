@@ -625,7 +625,7 @@ describe('queued signing focus after a run switch (#1984)', () => {
       const staleButton = wrapper.get('button.on').element as HTMLButtonElement;
       // A state change can precede the DOM patch that removes the button.
       // The old click cannot silently complete an unread opening.
-      const founded = wrapper.setProps({ prologue: { ...prologue, founded: true } });
+      const founded = wrapper.setProps({ prologue: { ...prologue, founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 } } });
       staleButton.click();
       await founded;
       expect(hasSeenProse(window.localStorage, key)).toBe(false);
