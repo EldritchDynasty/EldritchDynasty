@@ -27,6 +27,15 @@ describe('share-code front-door refusals (#2532)', () => {
 });
 
 describe('share code import name prompts (#1995)', () => {
+  it('gives a safe, complete refusal when a host omits the missing-name list', () => {
+    const incomplete: ShareCodeProblem = { kind: 'names_needed', missing: [] };
+    expect(shareCodeProblem(incomplete, 'plainenglish'))
+      .toBe('This founding still needs names before it can begin.');
+    expect(shareCodeProblem(incomplete, 'original'))
+      .toBe('This house lacks the names it needs before it may begin.');
+    expect(shareCodeProblem(incomplete, 'original')).not.toContain('undefined');
+  });
+
   it('describes malformed platform name inputs in both reading modes', () => {
     const problem: ShareCodeProblem = { kind: 'invalid_names' };
     expect(shareCodeProblem(problem, 'plainenglish'))
@@ -88,6 +97,14 @@ describe('unsupported share-code version refusals (#2139)', () => {
 });
 
 describe('share-code refusal wording in both reading modes (#1995)', () => {
+  it('does not manufacture a mismatch detail when an older host supplies none', () => {
+    const incomplete: ShareCodeProblem = { kind: 'other_edition', differs: [] };
+    expect(shareCodeProblem(incomplete, 'plainenglish'))
+      .toBe('This code was made with a different version of the game. It would not start the same family, so it cannot be used.');
+    expect(shareCodeProblem(incomplete, 'original'))
+      .toBe('That code was made by another edition of the game. It would not begin the same house, so it is not offered.');
+  });
+
   it('identifies the incompatible edition fields rather than offering a divergent founding', () => {
     const difference: ShareCodeProblem = {
       kind: 'other_edition',
