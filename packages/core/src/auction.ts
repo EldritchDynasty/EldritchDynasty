@@ -249,7 +249,8 @@ export interface BidResult {
 export function marriageBidOffer(ctx: SimCtx, lotId: string): { signer?: { id: string; name: string }; reason?: string } {
   const w = ctx.world;
   const signer = w.people.household(w.playerHouse, w.year).find((p) => p.castSlots.includes('head'));
-  if (!signer || signer.status !== 'alive') {
+  if (!signer || signer.status !== 'alive' || signer.born > w.year
+    || (signer.died !== undefined && signer.died <= w.year)) {
     return { reason: msg(ctx, 'auction.refuse.pledge_head', 'the sitting Head must sign the pledge') };
   }
   if (w.marriagePromises.some((promise) => promise.year <= w.year) || w.auction.upcoming.some((l) => l.id !== lotId
