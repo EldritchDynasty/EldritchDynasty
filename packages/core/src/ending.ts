@@ -1,4 +1,4 @@
-import type { EndingDef, EndingId, Rung } from '@ed/schema';
+import type { EndingDef, EndingId, Person, Rung } from '@ed/schema';
 import { assertNever, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
@@ -8,6 +8,7 @@ import { proseForClause, renderContentProse } from './prose.js';
 import { msg } from './messages.js';
 import { afterimageEvidence, type AfterimageEvidence } from './afterimage.js';
 import { ambitionView } from './ambition.js';
+import { visibleEpithet } from './byname.js';
 import { CADET_AGE, activeBranches, cadetFamilyMember, halls, viableCadetHall } from './people/branches.js';
 
 // Compatibility export: existing gates and clients import the term from ending.ts.
@@ -599,10 +600,15 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
   };
 }
 
-/** A saved name can already carry its earned epithet; the last night must not repeat it. */
-function purposePersonName(person: { name: string; epithet?: string }): string {
-  return person.epithet && !person.name.endsWith(` ${person.epithet}`)
-    ? `${person.name} ${person.epithet}` : person.name;
+/**
+ * Names in a recovered world may include bynames awarded after collection.
+ * Keep authored and legacy epithets, but read earned names as of the last
+ * night rather than exposing what a later Record or reign would have said.
+ */
+function purposePersonName(person: Pick<Person, 'name' | 'epithet' | 'byname'>, asOfYear: number): string {
+  const epithet = visibleEpithet(person, asOfYear);
+  return epithet && !person.name.endsWith(` ${epithet}`)
+    ? `${person.name} ${epithet}` : person.name;
 }
 
 /**
@@ -673,10 +679,10 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (!survivor) continue;
       return {
         kind: 'branch_kept',
-        founder: purposePersonName(founder),
+        founder: purposePersonName(founder, readYear),
         branch: branch.name,
         year: branch.foundedYear,
-        person: purposePersonName(survivor),
+        person: purposePersonName(survivor, readYear),
       };
     }
     return undefined;
@@ -713,7 +719,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         || (person.died !== undefined && person.died < page.year)) continue;
       return {
         kind: 'ascendant_wait',
-        person: purposePersonName(person),
+        person: purposePersonName(person, readYear),
         year: page.year,
         text: page.text!,
       };
@@ -743,7 +749,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   if (page.greyed || !inBookTerm(w, page.year)) return undefined;
   return {
     kind: 'blood_spent',
-    person: purposePersonName(spent),
+    person: purposePersonName(victim, readYear),
     year: page.year,
     text: page.text!,
     embellished: page.record === 'embellish',
