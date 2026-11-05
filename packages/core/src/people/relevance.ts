@@ -1,4 +1,4 @@
-import { assertNever, MAIN_BRANCH, type PersonId } from '@ed/schema';
+import { assertNever, MAIN_BRANCH, type Person, type PersonId } from '@ed/schema';
 import type { SimCtx } from '../world.js';
 import { visibleAscensionRanking } from '../ascension.js';
 import { cadetFamilyMember, halls, viableCadetHall } from './branches.js';
@@ -11,10 +11,17 @@ function add(out: Map<PersonId, string[]>, person: PersonId, reason: string): vo
   out.set(person, reasons);
 }
 
+/** Status alone is not reliable in an imported/recovered save. Relevance is present-year evidence. */
+function aliveNow(ctx: SimCtx, p: Person): boolean {
+  return p.status === 'alive'
+    && p.born <= ctx.world.year
+    && (p.died === undefined || p.died > ctx.world.year);
+}
+
 function currentBlood(ctx: SimCtx) {
   const w = ctx.world;
   return w.people.household(w.playerHouse, w.year).filter((p) =>
-    p.membership.some(
+    aliveNow(ctx, p) && p.membership.some(
       (m) => m.from <= w.year
         && (m.to === undefined || m.to > w.year)
         && (m.kind === 'blood' || m.kind === 'cadet'),
@@ -41,7 +48,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
   for (const [hall, members] of halls(w, w.year)) {
     const branch = w.branches.get(hall);
     if (branch && branch.extinct === undefined && branch.foundedYear <= w.year && branch.grievance > 0) {
-      for (const person of members) {
+      for (const person of members.filter((p) => aliveNow(ctx, p))) {
         add(out, person.id, msg(ctx, 'relevance.hall_grievance', 'their hall holds a grievance'));
       }
     }
@@ -64,7 +71,7 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       for (const person of currentBlood(ctx)) {
         const age = w.year - person.born;
         if (
-          person.status === 'alive'
+          aliveNow(ctx, person)
           && age >= 17
           && age <= 45
           && !person.marriages.some((m) => m.from <= w.year && (m.to === undefined || m.to > w.year))
@@ -73,18 +80,20 @@ export function relevantPeople(ctx: SimCtx): Map<PersonId, string[]> {
       break;
     case 'secure_branches':
       for (const [hall, members] of halls(w, w.year)) {
+        const currentMembers = members.filter((p) => aliveNow(ctx, p));
         const branch = w.branches.get(hall);
         if (hall === MAIN_BRANCH || !branch || branch.extinct !== undefined
-          || branch.foundedYear > w.year || viableCadetHall(members, w.year)) continue;
+          || branch.foundedYear > w.year || viableCadetHall(currentMembers, w.year)) continue;
         // Staff living in the hall cannot preserve its bloodline; the
         // relevance cue belongs to family members who can act on this aim.
-        for (const person of members.filter((p) => cadetFamilyMember(p, w.year))) {
+        for (const person of currentMembers.filter((p) => cadetFamilyMember(p, w.year))) {
           add(out, person.id, msg(ctx, 'relevance.thin_hall', 'keeps a thin cadet hall alive'));
         }
       }
       break;
     case 'restore_ledger':
       for (const person of w.people.household(w.playerHouse, w.year)) {
+        if (!aliveNow(ctx, person)) continue;
         const role = person.contract?.role;
         if (role === 'archivist' || role === 'chronicler') {
           add(out, person.id, msg(ctx, 'relevance.ledger_reader', "the house's reader of the Ledger"));
