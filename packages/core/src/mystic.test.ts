@@ -883,7 +883,7 @@ describe('duties survive save and load (#1873)', () => {
 
 /** Regression witnesses for imported Mystic duties; keep inside a measured test file. */
 const recoveredBedside = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'life_care');
-const recoveredTeaching = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'recoveredTeaching');
+const recoveredTeaching = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'teaching');
 
 function recoveredReaderWorld(seed: number) {
   const ctx = testWorld(bundle, seed, 1100);
