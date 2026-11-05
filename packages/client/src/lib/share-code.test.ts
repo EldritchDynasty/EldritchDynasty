@@ -162,9 +162,9 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
         .toBe('That code did not begin a house. Read the founding details and try again.');
     }
     // Valid authored refusal text stays exact, including surrounding spaces.
-    const reason = { kind: 'refused', reason: '  The founder cannot take that oath.  ' } as ShareCodeProblem;
-    expect(shareCodeProblem(reason, 'plainenglish')).toBe(reason.reason);
-    expect(shareCodeProblem(reason, 'original')).toBe(reason.reason);
+    const authoredReason = '  The founder cannot take that oath.  ';
+    const refusal: ShareCodeProblem = { kind: 'refused', reason: authoredReason };
+    expect(shareCodeProblem(refusal, 'plainenglish')).toBe(authoredReason);
+    expect(shareCodeProblem(refusal, 'original')).toBe(authoredReason);
   });
-
 });
