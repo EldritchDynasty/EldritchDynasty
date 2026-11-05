@@ -5,6 +5,7 @@ import { computed, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import type { ProseMode } from '@ed/schema';
 import type { SessionView } from '@ed/core';
+import ReadingSettings from './ReadingSettings.vue';
 import Member from './Member.vue';
 import Cast from './Cast.vue';
 import { ageLabel } from '../lib/age';
@@ -194,4 +195,39 @@ describe('a card says where an earned byname came from (#1990)', () => {
     const w = mount(Member, { props: { member: member(undefined, ''), names: [], traitNames: [], open: true } });
     try { expect(w.find('[data-byname]').exists()).toBe(false); } finally { w.unmount(); }
   });
+});
+
+// Keep the sound slider regressions in the existing measured reader suite.
+// Standalone suites also consume the CI duration-inventory allowance.
+describe('sound volume slider (#2641)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'represents 25 percent and permits an exact one-percent adjustment in %s',
+    async (proseMode) => {
+      const wrapper = mount(ReadingSettings, {
+        props: {
+          textScale: 'standard',
+          readingFont: 'book',
+          proseMode,
+          skipSeenProse: false,
+          reduceMotion: false,
+          sound: true,
+          soundVolume: 0.25,
+          showSoundOption: true,
+        },
+      });
+      try {
+        const slider = wrapper.get('input[type="range"]');
+        expect(slider.attributes('min')).toBe('0');
+        expect(slider.attributes('max')).toBe('100');
+        expect(slider.attributes('step')).toBe('1');
+        expect((slider.element as HTMLInputElement).value).toBe('25');
+        expect(slider.attributes('aria-valuetext')).toBe('25%');
+
+        await slider.setValue('26');
+        expect(wrapper.emitted('update:soundVolume')).toEqual([[0.26]]);
+      } finally {
+        wrapper.unmount();
+      }
+    },
+  );
 });
