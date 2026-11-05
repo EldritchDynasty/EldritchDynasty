@@ -30,6 +30,30 @@ const first = () => [
 ];
 
 describe('offline reading and Table evidence report (#1945, #1992)', () => {
+  it('reads both historic /12 and failed-pickup /13 logs without mislabelling mixed input', () => {
+    const legacy = log(first());
+    const current = log([
+      ...first().slice(0, -1),
+      { at: 485, kind: 'action', verb: 'load', act: 'start' },
+      { at: 486, kind: 'pickup-failed' },
+      { at: 500, kind: 'end', reason: 'exported' },
+    ], { format: 'ed-reading-log/13' });
+    expect(reportReadingLogs([legacy]).sourceFormat).toBe('ed-reading-log/12');
+    expect(reportReadingLogs([current]).sourceFormat).toBe('ed-reading-log/13');
+    const combined = reportReadingLogs([legacy, current]);
+    expect(combined.sourceFormat).toBe('mixed');
+    expect(combined.totals.windows).toBe(2);
+    expect(reportReaderCohort([legacy, current]).inputFormat).toBe('mixed');
+    expect(reportReaderCohort([current]).inputFormat).toBe('ed-reading-log/13');
+
+    const mislabeled = log([
+      ...first().slice(0, -1),
+      { at: 490, kind: 'pickup-failed' },
+      { at: 500, kind: 'end', reason: 'exported' },
+    ]);
+    expect(() => reportReadingLogs([mislabeled])).toThrow('marker requires ed-reading-log/13');
+  });
+
   it('recomputes exposure and answers, excludes title time, and keeps censored intervals distinct', () => {
     const report = reportReadingLogs([log(first())]);
     expect(report.format).toBe('ed-reader-evidence-report/1');
