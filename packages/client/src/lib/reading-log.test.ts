@@ -202,7 +202,7 @@ describe('censored first-session entry timing (#1984)', () => {
     c.tick(150);
     l.note({ kind: 'action', verb: 'match', act: 'answer', status: 'accepted' });
     const artifact = l.artifact();
-    expect(artifact.format).toBe('ed-reading-log/12');
+    expect(artifact.format).toBe('ed-reading-log/13');
     expect(artifact.summary.entries).toEqual([{
       startedAt: 2_000, campaign: 'short', foundedAt: 2_300, enteredAt: 2_400,
       firstAcceptedCommand: { at: 2_900, verb: 'match' },
@@ -329,7 +329,7 @@ describe('accepted first family actions (#1984)', () => {
       { at: 1_000, verb: 'match', act: 'answer', status: 'accepted' },
     ]);
     const artifact = JSON.stringify(l.artifact());
-    expect(l.artifact().format).toBe('ed-reading-log/12');
+    expect(l.artifact().format).toBe('ed-reading-log/13');
     for (const secret of ['private_decision', 'private_hand', 'private choice', 'private Match',
       'private person', 'private refusal', 'private marriage']) {
       expect(artifact).not.toContain(secret);
@@ -568,7 +568,7 @@ describe('answers and the gaps between them', () => {
         ['same-id', false, true],
       ]);
       const artifact = l.artifact();
-      expect(artifact.format).toBe('ed-reading-log/12');
+      expect(artifact.format).toBe('ed-reading-log/13');
       expect(artifact.summary.answers).toBe(3);
       expect(artifact.summary.gaps.filter(g => g.to.kind === 'new-run')).toHaveLength(1);
       expect(JSON.stringify(artifact)).not.toContain('private-slot');
@@ -844,7 +844,7 @@ describe('answers and the gaps between them', () => {
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
     const artifact = log().artifact();
-    expect(artifact).toMatchObject({ format: 'ed-reading-log/12', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
+    expect(artifact).toMatchObject({ format: 'ed-reading-log/13', build: BUILD, startedAt: '2026-10-28T00:00:00.000Z' });
     expect(artifact.caveats.join(' ')).toMatch(/exposure proxy, not reading time/);
     expect(artifact.caveats.join(' ')).toMatch(/not elapsed time/);
     expect(JSON.parse(JSON.stringify(artifact))).toEqual(artifact);
@@ -933,7 +933,7 @@ describe('Record mode research (#1987)', () => {
     expect(exported).not.toContain('do not export this');
     expect(exported).toContain('"decision":"dec_1"');
     expect(exported).not.toContain('decision_4');
-    expect(l.artifact().format).toBe('ed-reading-log/12');
+    expect(l.artifact().format).toBe('ed-reading-log/13');
   });
 
   it('records a thrown Record attempt once and rethrows the same error', () => {
@@ -990,7 +990,7 @@ describe('Table action research (#1992)', () => {
     expect(exported).not.toContain('private_muster');
     expect(exported).not.toContain('do not log me');
     expect(exported).not.toContain('private refusal details');
-    expect(l.artifact().format).toBe('ed-reading-log/12');
+    expect(l.artifact().format).toBe('ed-reading-log/13');
   });
 
   it('records bounded order and Muster categories with paired attempted/accepted/refused results', () => {
@@ -1093,7 +1093,7 @@ describe('Table action outcome summary (#2526)', () => {
     l.note({ kind: 'action', verb: 'delegateChoice', act: 'delegate', category: 'choice', change: 'set', status: 'returned' });
     l.note({ kind: 'action', verb: 'delegateRecord', act: 'delegate', category: 'record', change: 'clear', status: 'attempted' });
     const summary = l.artifact().summary;
-    expect(l.artifact().format).toBe('ed-reading-log/12');
+    expect(l.artifact().format).toBe('ed-reading-log/13');
     expect(summary.tableActions).toEqual({
       orders: [
         { category: 'study', attempts: 2, accepted: 1, refused: 0, threw: 0, returned: 0, unfinished: 1 },
