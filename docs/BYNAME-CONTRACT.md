@@ -1,6 +1,6 @@
 # Byname grant and provenance contract (implementation preparation)
 
-**Status:** shipped as the record-claim source for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990), 1 November 2026. The sections below keep the 31 October audit; **What shipped** records what the code now does and where it departs from the proposal.
+**Status:** the record-claim source shipped for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990) on 1 November 2026. The **second, reign-ending source is implemented** under [#2287](https://github.com/EldritchDynasty/EldritchDynasty/issues/2287), but its population reach and owner acceptance are still open. The historical sections below retain the 31 October audit; **What shipped** describes the current code.
 
 ## What shipped (1 November 2026)
 
@@ -8,16 +8,41 @@
 | --- | --- |
 | Authored wording | `byname: { slot, text }` on a Record block's `record` or `embellish` option (`schema/src/byname.ts`, `RecordBynameS`). Omit has no field for it. Plain English counterparts use the ordinary `proseVariants` address `….options.<pen>.byname.text`. |
 | Validation | `byname/slot` (`schema/src/rules.ts`): a declared slot, a claim about that slot on the same pen, no `{TOKEN}`, no §29 bearing word, at most five words. |
-| The one grant | `grantByname` (`core/src/byname.ts`), called at the end of `applyRecord` after the page is written. `resolveRecord` (the docket) and `afterRecord` (the chronicler's automatic pen) both reach it. |
+| Record grant | `grantByname` (`core/src/byname.ts`), called at the end of `applyRecord` after the page is written. `resolveRecord` (the docket) and `afterRecord` (the chronicler's automatic pen) both reach it. |\n| Reign grant (#2287) | `grantReignByname` from the single real `seatHead` succession commit. For an outgoing Head with at least two dated pages, grant for a strict majority of Record, Omit or Embellish; a tie/plurality is `mixed`. The words describe the **house's book**, not the objective truth or a virtue score; pre-existing epithets and earlier grants win. Source `kind: 'reign'` stores the years, pen, and page count, with no invented single source-page link. |
 | Eligibility | `eligibleByname`: the selected pen authors one; its slot cast exactly one person; that person was family of the player's house in the page's year (dead included); the committed page carries a claim about them; they hold no epithet or grant yet. |
 | Saved provenance | `Person.byname` (`BynameGrantS`): `source { kind: 'record', event, pen, page, choice?, outcome?, discrepancy? }`, `year`, optional `settled`. The words are frozen into `Person.epithet` in the reader's prose mode at commit. Additive: no `SAVE_FORMAT` bump; an older save loads with its epithets and no grant. |
 | Contest | `settleBynames`, called from the one real `discrepancy` prove/bury effect, stamps `settled` on the grant whose page is the **latest** embellished page carrying that authored id — found through that page's own claims. An earlier telling keeps its stamp, or stays `claimed` if it was superseded while open. |
-| Read model | `bynameView` → `BynameView { text, standing, year?, page?, settledYear? }` on members, `line()` and Chronicle people; `recordBynamePreview` on Record dockets (derived, never saved); `RecordResolution.byname` for the receipt. Standings: `attested`, `claimed`, `contested`, `buried`, `unknown`. |
+| Read model | `bynameView` → `BynameView { text, standing, year?, page?, settledYear? }` on members, `line()` and Chronicle people; `recordBynamePreview` on Record dockets (derived, never saved); `RecordResolution.byname` for the receipt. Standings: `attested`, `claimed`, `contested`, `buried`, `reign`, `unknown`. |
 | Client | Docket preview per pen, receipt line, member card note with a link to the exact page, Recorded Life marks that page (`client/src/lib/byname.ts`). |
 
 **Departures from the proposal below.** (1) The contest is stamped on the grant at settlement rather than projected from the discrepancy map, because the map cannot say which telling a proof addressed once an authored id repeats; this is the "occurrence-scoped proof identity" option, scoped to the grant and leaving the world's discrepancy model unchanged. (2) The words are stored once, in the reader's mode at commit, like every other saved page, rather than as an Original/Plain pair (`docs/LOCALISATION.md`: changing mode is prospective). (3) The source table is authored inline on the Record options rather than in a separate table, so a byname can only rest on the claims beside it. (4) **Known limit:** a `discrepancy: create` *effect* can reopen an authored id without writing an embellished page — today only `the_drowning_repeated`'s Omit pen does, for `the_second_drowning_lie`. If that template embellished once, later omitted, and the lie was then proven, the proof would settle the earlier embellished telling. That needs a rare template to fire twice with those pens and a proof after; fixing it needs per-occurrence identity on the discrepancy itself, which is a save-format change this slice does not make.
 
-**Measured reach of this source.** Sixteen 500-year Long Lines under the ordinary chronicler (seeds 1990 + 37k, `main` at 5a788e3) committed claim-bearing Record pages about 59 of 192 Heads (30.7%) and 43 other people. That is the ceiling for any record-claim source, even if every claim-bearing block authored a byname. **"Most Heads" therefore needs a second source variant** (a death, succession or reign source) — an intentional new `BynameSource` case, not more wording on Record blocks.
+**Measured reach of the *record-only* source.** Sixteen 500-year Long Lines under the ordinary chronicler (seeds 1990 + 37k, `main` at 5a788e3) committed claim-bearing Record pages about 59 of 192 Heads (30.7%) and 43 other people. That is the ceiling for record-claim grants, even with more authored wording. The reign source addresses that ceiling; **its actual achieved incidence must be measured**, not inferred from this older baseline.
+
+
+## Second-source reach protocol (#2287)
+
+The declared slow suite `packages/core/src/record-claims.slow.test.ts` includes a
+paired, deterministic sixteen-seed comparison: seeds `1990 + 37k`, for
+`k = 0..15`, each played as a 500-year Long Line. One side uses the ordinary
+chronicler's automatic Record choices; the other deliberately Omit-writes every
+Record decision. Non-Record decisions use the same seeded automatic resolver.
+
+The report explicitly separates **all distinct Heads** (including the founder
+and the final unfinished reign), **Heads with completed reigns** (eligible for
+the new source), and **other blood relatives**. For each it prints named/total
+and Wilson 95% intervals, plus separate Record and reign grant counts. The
+always-Omit side must have no record-source grants or named non-Head relatives;
+its completed Heads may earn a reign-source name because the *omissions* are
+the basis of the name.
+
+**Predeclared decision target:** more than 50% of distinct Heads named in the
+ordinary chronicler cohort, while bynames remain unusual among non-Head blood
+relatives. Count all Heads in the headline denominator, not just completed
+reigns, and do not discard broken or truncated runs to inflate reach. A miss is
+a **reported design result**, not a reason to weaken the test gate or invent
+post-hoc wording. CI stdout is the measurement receipt; until that run is read,
+this document makes no claim that the target was achieved.
 
 ## Existing contracts to preserve
 
@@ -79,4 +104,4 @@ The reader's `causeOf` / `answeredBy` fallback used to select the **first** embe
 
 ## Delivery boundary
 
-The record-claim source, its saved provenance, contest stamping, read model and client surfaces shipped with #1990 (see **What shipped**). Still open, and not claimed by this work: a second source variant to reach most Heads, and the actual-reader #44 "three people" question, which no automated run can answer.
+The record-claim source, provenance, contest stamping, read model and client surfaces shipped with #1990 (see **What shipped**). The reign-ending source is implemented under #2287; paired-run reach, the owner's source choice and the actual-reader #44 "three people" question remain open. No automated reach measurement can answer the attachment question.
