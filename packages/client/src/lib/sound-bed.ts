@@ -188,7 +188,9 @@ export class SoundBed {
   show(): void {
     // A host can announce a foreground return while the browser still says
     // this page is hidden. Do not unmute the drone on that stale signal.
-    if (this.#disposed || !this.#away || this.#documentHidden || this.#hostPaused) return;
+    // A raw show() is not proof that a page hidden by pagehide has returned.
+    // Only pageshow, a fresh visible-document attachment or a gesture may clear it.
+    if (this.#disposed || !this.#away || this.#documentHidden || this.#pageHidden || this.#hostPaused) return;
     this.#away = false;
     this.#settle();
   }
