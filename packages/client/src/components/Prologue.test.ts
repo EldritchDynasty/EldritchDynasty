@@ -468,6 +468,44 @@ describe('Prologue beat pacing (#1561)', () => {
   });
 });
 
+describe('first signing focus after opening (#1984)', () => {
+  it('focuses the first available signing heading when the final reveal removes its button', async () => {
+    const scenarios = [
+      { heading: '#founder-section-heading', prologue: prologueView() },
+      { heading: '#examination-heading', prologue: { ...prologueView(), namePrompt: '' } },
+      { heading: '#house-section-heading', prologue: { ...prologueView(), namePrompt: '', examination: [] } },
+    ];
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      for (const scenario of scenarios) {
+        const game = actions();
+        const wrapper = mount(Prologue, {
+          attachTo: document.body,
+          props: {
+            prologue: scenario.prologue, actions: game,
+            refused: null, startYear: 1042, proseMode,
+          },
+        });
+        try {
+          for (let step = 0; step < 3; step += 1) {
+            const advance = wrapper.get('button.on');
+            (advance.element as HTMLButtonElement).focus();
+            await advance.trigger('click');
+            if (step < 2) {
+              expect(document.activeElement).toBe(advance.element);
+            }
+          }
+          await nextTick();
+          expect(wrapper.find('button.on').exists()).toBe(false);
+          expect(document.activeElement).toBe(wrapper.get(scenario.heading).element);
+          expect(game.found).not.toHaveBeenCalled();
+        } finally {
+          wrapper.unmount();
+        }
+      }
+    }
+  });
+});
+
 describe('founding submit single-flight (#1484)', () => {
   it('discards same-tick clicks and Enter, then permits a deliberate retry after refusal', async () => {
     const game = actions();
