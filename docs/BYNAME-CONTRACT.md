@@ -41,7 +41,7 @@ ordinary chronicler cohort, while bynames remain unusual among non-Head blood
 relatives. Count all Heads in the headline denominator, not just completed
 reigns, and do not discard broken or truncated runs to inflate reach. A miss is
 a **reported design result**, not a reason to weaken the test gate or invent
-post-hoc wording. CI stdout is the measurement receipt; until that run is read,
+post-hoc wording. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite. Until such a run is read,
 this document makes no claim that the target was achieved.
 
 ## Existing contracts to preserve
