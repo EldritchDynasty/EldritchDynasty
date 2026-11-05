@@ -58,6 +58,48 @@ describe('Table workload observation windows (#1992)', () => {
     ]);
   });
 
+  it('defers a tentative loaded year alongside its run identity until the pickup boundary', () => {
+    const events: ReadingLogEvent[] = [
+      { at: 0, kind: 'run', campaign: 'short', seed: 41 },
+      { at: 1, kind: 'year', year: 1042 },
+      { at: 10, kind: 'year', year: 1090 },
+      { at: 20, kind: 'action', verb: 'load', act: 'start' },
+      // App.vue emits the incoming run and year before Chronicle confirms pickup.
+      { at: 21, kind: 'run', campaign: 'long', seed: 91 },
+      { at: 22, kind: 'year', year: 1330 },
+      { at: 23, kind: 'pickup' },
+      { at: 24, kind: 'year', year: 1331 },
+    ];
+    const before = JSON.stringify(events);
+    const windows = tableWorkloadWindows(events, 30);
+    expect(windows).toHaveLength(2);
+    expect(windows[0]).toMatchObject({
+      campaign: 'short', seed: 41, firstObservedYear: 1042,
+      lastObservedYear: 1090, observedYearDelta: 48, endedBy: 'pickup',
+    });
+    expect(windows[1]).toMatchObject({
+      source: 'pickup', campaign: 'long', seed: 91,
+      firstObservedYear: 1330, lastObservedYear: 1331, observedYearDelta: 1,
+    });
+    expect(JSON.stringify(events)).toBe(before);
+  });
+
+  it('does not fabricate a title-screen house from a tentative pickup year', () => {
+    const events: ReadingLogEvent[] = [
+      { at: 0, kind: 'pane', pane: 'house' },
+      { at: 1, kind: 'action', verb: 'resume', act: 'start' },
+      { at: 2, kind: 'run', campaign: 'long', seed: 41 },
+      { at: 3, kind: 'year', year: 1200 },
+      { at: 4, kind: 'pickup' },
+    ];
+    const windows = tableWorkloadWindows(events, 10);
+    expect(windows).toHaveLength(1);
+    expect(windows[0]).toMatchObject({
+      source: 'pickup', campaign: 'long', seed: 41,
+      firstObservedYear: 1200, lastObservedYear: 1200, observedYearDelta: 0,
+    });
+  });
+
   it('does not treat an unconfirmed load as a new house and preserves unfinished attempts', () => {
     const events: ReadingLogEvent[] = [
       { at: 0, kind: 'year', year: 1100 },
