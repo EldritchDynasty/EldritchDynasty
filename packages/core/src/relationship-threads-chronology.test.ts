@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import { asId } from '@ed/schema';
-import { activeRelationshipThreadHouses, addGrudge, bootstrap, digestOf, externalThreadFor, growRivalLineage, place } from '@ed/core';
+import { activeRelationshipThreadHouses, addGrudge, beget, bootstrap, digestOf, externalThreadFor, growRivalLineage, place } from '@ed/core';
 
 const bundle = loadContent();
 
@@ -199,5 +199,86 @@ describe('recovered external relationship facts are only active in their own yea
     expect(promise()?.year).toBe(1052);
     ctx.world.year = 1053;
     expect(promise()?.year).toBe(1052);
+  });
+});
+
+describe('recovered relationship contact and effective life chronology (#2973–#2975)', () => {
+  function contact(seed: number) {
+    const ctx = bootstrap(bundle, seed, 1200);
+    const rival = place(ctx, { sex: 'male', age: 35, name: 'A Marrow correspondent', house: 'house_marrow' });
+    const scene = bundle.events.find((e) => e.purposes.includes('change_relationship'));
+    expect(scene).toBeDefined();
+    return { ctx, rival, scene: scene! };
+  }
+
+  it('reads recent relationship outcomes even when an older record was appended last (#2973)', () => {
+    const { ctx, rival, scene } = contact(297301);
+    ctx.world.decisionLog.push({
+      kind: 'outcome', year: 1199, event: scene.id, outcomeId: 'recent-2973',
+      fill: { RIVAL: rival.id },
+    });
+    // Import order is not event chronology; reverse iteration must not break at 1100.
+    ctx.world.decisionLog.push({
+      kind: 'outcome', year: 1100, event: scene.id, outcomeId: 'old-2973',
+      fill: { RIVAL: rival.id },
+    });
+    const before = digestOf(ctx);
+    const thread = externalThreadFor(ctx, 'house_marrow');
+    expect(thread?.pressures.filter((f) => f.kind === 'recent_contact').map((f) => f.year)).toEqual([1199]);
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(true);
+    expect(digestOf(ctx)).toBe(before);
+  });
+
+  it('keeps future relationship outcomes out of present threads until their year (#2974)', () => {
+    const { ctx, rival, scene } = contact(297401);
+    ctx.world.decisionLog.push({
+      kind: 'outcome', year: 1203, event: scene.id, outcomeId: 'future-2974',
+      fill: { RIVAL: rival.id },
+    });
+    const before = digestOf(ctx);
+    expect(externalThreadFor(ctx, 'house_marrow')).toBeUndefined();
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(false);
+    expect(digestOf(ctx)).toBe(before);
+
+    ctx.world.year = 1203;
+    expect(externalThreadFor(ctx, 'house_marrow')?.pressures.some((f) =>
+      f.kind === 'recent_contact' && f.year === 1203)).toBe(true);
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(true);
+  });
+
+  function marriedOutsider(seed: number) {
+    const ctx = bootstrap(bundle, seed, 1200);
+    const spouse = place(ctx, { sex: 'female', age: 30, name: 'A Marrow spouse', house: 'house_marrow' });
+    spouse.membership.push({ house: asId(ctx.world.playerHouse), kind: 'married_in', from: 1198 });
+    const family = () => externalThreadFor(ctx, 'house_marrow')?.pressures
+      .some((f) => f.kind === 'family') ?? false;
+    return { ctx, spouse, family };
+  }
+
+  it('does not keep a marriage connection alive after a saved death with stale alive status (#2975)', () => {
+    const { ctx, spouse, family } = marriedOutsider(297501);
+    spouse.status = 'alive';
+    spouse.died = 1202;
+    expect(family()).toBe(true);
+    ctx.world.year = 1201;
+    expect(family()).toBe(true);
+    ctx.world.year = 1202;
+    expect(family()).toBe(false);
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(false);
+  });
+
+  it('keeps a connection through a living child, not a child already dead in the save (#2975)', () => {
+    const { ctx, spouse, family } = marriedOutsider(297502);
+    const child = place(ctx, { sex: 'male', age: 15, name: 'Their living son' });
+    beget(ctx, child, spouse, undefined);
+    spouse.status = 'alive';
+    spouse.died = 1200;
+    child.status = 'alive';
+    child.died = 1202;
+
+    expect(family()).toBe(true); // Child still living, though spouse is effectively dead.
+    ctx.world.year = 1202;
+    expect(family()).toBe(false); // Both recorded deaths now effective.
+    expect(activeRelationshipThreadHouses(ctx).has('house_marrow')).toBe(false);
   });
 });
