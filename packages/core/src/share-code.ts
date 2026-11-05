@@ -550,6 +550,12 @@ export function newGameFromShareCode(
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
   const given = parsedNames.data;
+  // Anonymous codes encode an exact friend roster. Extra supplied names must
+  // not disappear silently while the import claims to honour the recipient's
+  // founding; this also applies to a code with no friends at all.
+  if (f.houseName === undefined && (given.friends?.length ?? 0) > f.friends.length) {
+    return { ok: false, problem: { kind: 'invalid_names' } };
+  }
   // A recipient may leave the founder answer blank, but not submit an
   // invisible-only name in place of one. Check before newGame so import
   // remains atomic and agrees with staged signing's visible-name rule.
