@@ -1,7 +1,7 @@
 # Cohort-ready reader, signing and Table metrics
 
 **Scope:** a read-only, privacy-preserving reduction of the existing opt-in
-ed-reading-log/12 export. Refs #1945 (mystery pacing), #1984 (first signing)
+ed-reading-log/12 or /13 export. Refs #1945 (mystery pacing), #1984 (first signing)
 and #1992 (Table workload). It is not a new recorder, a bot-policy run, or an
 observed study. Those issue-level studies and any owner decision remain open.
 
