@@ -50,7 +50,7 @@ export const READING_LOG_CAVEATS = [
   'The first Chronicle window after a successful saved-run pickup is carried history; the prior house gap is censored, not continued into the loaded save.',
   'For Record, Table, Muster and delegation, attempted and terminal action events form pairs. An unpaired attempt means an interruption or capped log, not a refusal. Delegation returning is not proof it made a change.',
   'Unknown Table and Muster categories are recorded as unknown, never as unvalidated caller text.',
-  'Table action summary counts terminal results separately from attempts; unfinished attempts may be interrupted or capped and must not be classified as refusals.',
+  'Table action summary counts only terminal results paired with an attempt in the same window; unmatched terminals are ignored, and unfinished attempts may be interrupted, capped or have an unreadable outcome. None is a refusal.',
   'Record actions carry the chosen mode, generated decision id and whether the game accepted it, but no typed wording. A Record action alone does not prove a later page was read back.',
   'Choose and Match record acceptance or refusal from their returned result, not an attempted click. Other answer verbs without a returned outcome remain attempts only; a Match refusal may include an unavailable card.',
   'A share-code start marks a new run only after acceptance; neither its code nor the recipient names are recorded.',
@@ -417,6 +417,12 @@ function tableActionsOf(events: readonly ReadingLogEvent[], stop: number): Table
   type Terminal = 'accepted' | 'refused' | 'threw' | 'returned';
   const count = (group: Map<string, TableActionCounts>, category: string, status: 'attempted' | Terminal) => {
     let row = group.get(category);
+    if (status !== 'attempted') {
+      // An interrupted action can finish after an observation-window boundary.
+      // Without its attempt in THIS window, a terminal marker proves nothing
+      // about this house's accepted/refused work. Never import that result.
+      if (!row || row.accepted + row.refused + row.threw + row.returned >= row.attempts) return;
+    }
     if (!row) {
       row = { category, attempts: 0, accepted: 0, refused: 0, threw: 0, returned: 0, unfinished: 0 };
       group.set(category, row);
@@ -757,6 +763,29 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
  * make the observed run a different run. It only listens to a pick-up's
  * promise, to hear when it came back without a run.
  */
+/**
+ * A malformed host payload can expose an accessor or Proxy that throws when
+ * inspected. Observing it must never prevent the real verb from running.
+ */
+function observedActionField(payload: unknown, field: 'kind' | 'op'): unknown {
+  try {
+    return (payload as Record<'kind' | 'op', unknown> | null | undefined)?.[field];
+  } catch {
+    return undefined;
+  }
+}
+
+/** An unreadable result is censored, not an invented refusal or exception. */
+function observedTableOutcome(result: unknown): 'accepted' | 'refused' | null {
+  try {
+    if (result === null || (typeof result !== 'object' && typeof result !== 'function')) return null;
+    const ok = (result as { ok?: unknown }).ok;
+    return ok === true ? 'accepted' : ok === false ? 'refused' : null;
+  } catch {
+    return null;
+  }
+}
+
 export function recordActions<A extends GameActions>(actions: A, log: ReadingLog): A {
   const wrapped = { ...actions };
   for (const verb of Object.keys(RECORDED_VERBS) as RecordedVerb[]) {
@@ -856,12 +885,13 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
       // Table and Muster return explicit success/refusal. Keep the attempt
       // even if the call throws, and do not log its free-text refusal reason.
       if (verb === 'order') {
-        const category = readingLogTableCategory((args[0] as { kind?: unknown } | null | undefined)?.kind);
+        const category = readingLogTableCategory(observedActionField(args[0], 'kind'));
         const event = { kind: 'action' as const, verb, act: 'table' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['order']>;
-          log.note({ ...event, status: result.ok ? 'accepted' : 'refused' });
+          const status = observedTableOutcome(result);
+          if (status) log.note({ ...event, status });
           return result;
         } catch (error) {
           log.note({ ...event, status: 'threw' });
@@ -869,12 +899,13 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         }
       }
       if (verb === 'muster') {
-        const category = readingLogMusterCategory((args[0] as { op?: unknown } | null | undefined)?.op);
+        const category = readingLogMusterCategory(observedActionField(args[0], 'op'));
         const event = { kind: 'action' as const, verb, act: 'muster' as const, category };
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['muster']>;
-          log.note({ ...event, status: result.ok ? 'accepted' : 'refused' });
+          const status = observedTableOutcome(result);
+          if (status) log.note({ ...event, status });
           return result;
         } catch (error) {
           log.note({ ...event, status: 'threw' });
