@@ -311,6 +311,80 @@ describe('achievements (issue #323)', () => {
     expect(earnedAchievements(save)).toContain('match_never_refused');
   });
 
+  it('reconstructs earned ladder rungs at the ending instead of using future high-water progress (#2986)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    save.ascension.best = 'god';
+    save.ascension.reachedAt = {
+      touched: term - 2,
+      adept: term - 1,
+      god: term + 1,
+    };
+    const before = structuredClone(save);
+    const earned = earnedAchievements(save);
+    expect(earned).toContain('ladder_touched');
+    expect(earned).toContain('ladder_adept');
+    expect(earned).not.toContain('ladder_hierophant');
+    expect(earned).not.toContain('ladder_god');
+    expect(save).toEqual(before);
+
+    // The same year is part of the completed run; the next year is not.
+    save.ascension.reachedAt.god = term;
+    expect(earnedAchievements(save)).toContain('ladder_god');
+
+    save.ascension.reachedAt.god = term + 1;
+    delete save.ascension.reachedAt.touched;
+    delete save.ascension.reachedAt.adept;
+    expect(earnedAchievements(save)).not.toContain('ladder_touched');
+
+    // Old saves may have a high-water rung without a matching timestamp.
+    delete save.ascension.reachedAt.god;
+    expect(earnedAchievements(save)).toContain('ladder_god');
+  });
+
+  it('rejects recovered regencies before birth or after the regent died (#2987)', () => {
+    const save = finished();
+    const regent = save.people[0]!;
+    regent.sex = 'female';
+    const from = save.ending!.year - 40;
+    const to = from + 20;
+    save.succession.push({ person: regent.id, name: regent.name, from, to });
+
+    regent.born = from + 1;
+    expect(earnedAchievements(save)).not.toContain('regency_survived');
+
+    regent.born = from;
+    regent.died = to - 1;
+    expect(earnedAchievements(save)).not.toContain('regency_survived');
+
+    // Death in the closing year can itself end a legitimate regency.
+    regent.died = to;
+    expect(earnedAchievements(save)).toContain('regency_survived');
+    regent.died = to + 1;
+    expect(earnedAchievements(save)).toContain('regency_survived');
+    delete regent.died;
+    expect(earnedAchievements(save)).toContain('regency_survived');
+  });
+
+  it('credits five returned names only after every name became eligible (#2988)', () => {
+    const save = finished();
+    const term = save.ending!.year;
+    save.friends = Array.from({ length: 5 }, (_, i) => ({
+      name: `Friend ${i + 1}`, sex: 'female' as const,
+      dueFrom: term - 10 + i, spentIn: term - 10 + i,
+    }));
+    expect(earnedAchievements(save)).toContain('five_names_returned');
+
+    // This spend is in the past but before the window opened.
+    save.friends[0]!.dueFrom = term + 1;
+    expect(earnedAchievements(save)).not.toContain('five_names_returned');
+    save.friends[0]!.dueFrom = term - 10;
+    expect(earnedAchievements(save)).toContain('five_names_returned');
+
+    save.friends[0]!.spentIn = term + 1;
+    expect(earnedAchievements(save)).not.toContain('five_names_returned');
+  });
+
   it('uses the existing Library of Houses for the cross-run all-endings achievement', () => {
     const save = finished();
     save.campaign = 'long';
