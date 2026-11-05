@@ -106,8 +106,10 @@ export class SoundBed {
   #documentHidden = false;
   /** A pagehide can arrive while visibilityState is still "visible". */
   #pageHidden = false;
-  /** Distinguish a new document from re-subscribing while the old page is away. */
-  #attachedDocument: object | null = null;
+  /** A native pause is not undone merely by a new visible document or duplicate DOM event. */
+  #hostPaused = false;
+  /** Read live visibility at gestures: some WebViews omit visibilitychange. */
+  #attachedDocument: { readonly visibilityState: DocumentVisibilityState } | null = null;
   #scene: DroneInput | null = null;
   #sceneKey = 'null';
   #detach: () => void = () => undefined;
@@ -149,10 +151,24 @@ export class SoundBed {
 
   /** The player touched the page: audio is allowed, and they are evidently here. */
   gesture(): void {
-    if (this.#disposed || this.#documentHidden) return;
+    if (this.#disposed) return;
+    // WebViews can change visibility without dispatching visibilitychange.
+    // Never trust a previously visible snapshot to authorize a hidden gesture,
+    // nor refuse a fresh visible gesture because an old hidden snapshot lingered.
+    if (this.#attachedDocument) {
+      let visible = false;
+      try { visible = this.#attachedDocument.visibilityState === 'visible'; }
+      catch { /* a refusing host must not unlock audio */ }
+      this.#documentHidden = !visible;
+      if (!visible) {
+        this.hide();
+        return;
+      }
+    } else if (this.#documentHidden) return;
     this.#unlocked = true;
     this.#away = false;
     this.#pageHidden = false;
+    this.#hostPaused = false;
     this.#settle();
     if (this.audible) this.engine.wake();
   }
@@ -167,7 +183,7 @@ export class SoundBed {
   show(): void {
     // A host can announce a foreground return while the browser still says
     // this page is hidden. Do not unmute the drone on that stale signal.
-    if (this.#disposed || !this.#away || this.#documentHidden) return;
+    if (this.#disposed || !this.#away || this.#documentHidden || this.#hostPaused) return;
     this.#away = false;
     this.#settle();
   }
@@ -207,24 +223,41 @@ export class SoundBed {
     // callbacks from the current attachment may act on the current device.
     let active = true;
     const gesture = () => { if (active) this.gesture(); };
+    const visibleNow = () => {
+      try { return doc.visibilityState === 'visible'; }
+      catch { return false; } // an unavailable host state is not foreground evidence
+    };
     const visibility = () => {
       if (!active) return;
-      // Prerendered or unknown host states are not permission to start audio.
-      this.#documentHidden = doc.visibilityState !== 'visible';
+      // A duplicate 'visible' notification does not prove a native-paused
+      // WebView has returned. An actual hidden -> visible transition does.
+      const wasHidden = this.#documentHidden;
+      this.#documentHidden = !visibleNow();
       if (this.#documentHidden) this.hide();
-      else {
+      else if (wasHidden) {
         this.#pageHidden = false;
+        this.#hostPaused = false;
         this.show();
-      }
+      } else if (!this.#pageHidden && !this.#hostPaused) this.show();
     };
     const hide = () => {
       if (!active) return;
       this.#pageHidden = true;
       this.hide();
     };
-    // A pageshow can arrive before visibilitychange while the page remains
-    // hidden (for example when a tab is restored in the background).
-    const show = () => visibility();
+    // Unlike a redundant visibilitychange, a real pageshow signals a
+    // foreground transition. It still cannot override a hidden document.
+    const show = () => {
+      if (!active) return;
+      if (!visibleNow()) {
+        visibility();
+        return;
+      }
+      this.#documentHidden = false;
+      this.#pageHidden = false;
+      this.#hostPaused = false;
+      this.show();
+    };
     for (const type of GESTURES) win.addEventListener(type, gesture, true);
     doc.addEventListener('visibilitychange', visibility);
     win.addEventListener('pagehide', hide);
@@ -239,6 +272,7 @@ export class SoundBed {
       unpause = onPause?.(() => {
         // Only a synchronous host pause can veto the initial visible sample.
         if (subscribing) pausedDuringSubscription = true;
+        this.#hostPaused = true;
         hide();
       }) ?? unpause;
     } catch {
@@ -250,18 +284,16 @@ export class SoundBed {
     // mistake the initial visibility sample for a foreground/resume event:
     // that would immediately undo the host's pause and restart the drone.
     // A real visibilitychange, pageshow or a fresh user gesture can resume.
-    this.#documentHidden = doc.visibilityState !== 'visible';
+    this.#documentHidden = !visibleNow();
     if (this.#documentHidden) this.hide();
     else {
-      // Only a DIFFERENT visible document supersedes pagehide by itself.
-      // Re-subscribing on the old page is not a foreground event: pageshow or
-      // a new gesture must still restore it. A synchronous native pause on
-      // the new subscription wins over either recovery signal.
-      const replacedHiddenPage = wasPageHidden && replacingDocument;
-      if (!wasPageHidden || replacedHiddenPage || pausedDuringSubscription) {
+      // A new visible document may supersede browser pagehide (#2924), but
+      // never an unresolved native pause: replacement alone is not a resume.
+      const replacedHiddenPage = wasPageHidden && replacingDocument && !this.#hostPaused;
+      if ((!wasPageHidden || replacedHiddenPage) && !pausedDuringSubscription && !this.#hostPaused) {
         this.#pageHidden = false;
       }
-      if ((wasDocumentHidden || replacedHiddenPage) && !pausedDuringSubscription) {
+      if ((wasDocumentHidden || replacedHiddenPage) && !pausedDuringSubscription && !this.#hostPaused) {
         this.show();
       }
     }
