@@ -436,6 +436,39 @@ export interface GameActions {
   dismissChapter(): void;
 }
 
+/**
+ * Presentation-only pickup notification. Wrap the already-observed actions,
+ * so the reading log sees the same accepted verbs and no extra page event.
+ * The underlying store arbitrates concurrent loads; only an accepted result
+ * may surface facts from the current save (#1985).
+ */
+/** The recap is a research prototype, not an automatic feature before reader evidence exists. */
+export function resumeRecapRequested(search: string): boolean {
+  const values = new URLSearchParams(search).getAll('resume-recap');
+  return values.length === 1 && values[0] === '1';
+}
+
+export function withAcceptedPickup(actions: GameActions, onAccepted: () => void): GameActions {
+  return {
+    ...actions,
+    async resume() {
+      const accepted = await actions.resume();
+      if (accepted) onAccepted();
+      return accepted;
+    },
+    async load(slot) {
+      const accepted = await actions.load(slot);
+      if (accepted) onAccepted();
+      return accepted;
+    },
+    async importSave() {
+      const accepted = await actions.importSave();
+      if (accepted === true) onAccepted();
+      return accepted;
+    },
+  };
+}
+
 export interface GameClientOptions {
   /** Alternate authored wording supplied by composition; never part of SavedGame. */
   proseVariants?: readonly ProseVariant[];

@@ -1,0 +1,58 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import type { SessionView } from '@ed/core';
+import type { ProseMode } from '@ed/schema';
+
+/** Reader-local facts after an accepted save pickup; never a second promise store. */
+const props = withDefaults(defineProps<{
+  view: SessionView;
+  pending: number;
+  proseMode?: ProseMode;
+}>(), { proseMode: 'original' });
+defineEmits<{ dismiss: [] }>();
+const plain = computed(() => props.proseMode === 'plainenglish');
+</script>
+
+<template>
+  <aside class="panel small resume-recap" :aria-label="plain ? 'Saved game recap' : 'House recap'">
+    <div class="recap-heading">
+      <strong>{{ plain ? 'Back to your game' : 'The house, taken up again' }}</strong>
+      <button class="quiet small" type="button" @click="$emit('dismiss')">
+        {{ plain ? 'Hide recap' : 'Put aside' }}
+      </button>
+    </div>
+    <details>
+      <summary>{{ plain ? 'See where things stand' : 'Where the house stands' }}</summary>
+      <p class="dim small">{{ view.houseName }} · {{ view.year }} · Generation {{ view.generation }}</p>
+      <dl>
+        <template v-if="view.generationArc?.question">
+          <dt>{{ plain ? 'Current family question' : 'This generation asks' }}</dt>
+          <dd>{{ view.generationArc.question }}</dd>
+        </template>
+        <template v-if="view.ambition">
+          <dt>{{ plain ? 'Goal being tracked' : 'Ambition kept in view' }}</dt>
+          <dd><strong>{{ view.ambition.name }}</strong> — {{ view.ambition.next }}</dd>
+        </template>
+        <template v-if="pending > 0">
+          <dt>{{ plain ? 'Waiting for you' : 'Before the clock may turn' }}</dt>
+          <dd>{{ pending === 1
+            ? (plain ? 'One decision is waiting in your docket.' : 'One decision awaits on the docket.')
+            : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}</dd>
+        </template>
+      </dl>
+      <p class="dim small">{{ plain
+        ? 'These are facts from this save, not a record of what you planned to do.'
+        : "These are the house's present records, not a memory of your intended course." }}</p>
+    </details>
+  </aside>
+</template>
+
+<style scoped>
+.resume-recap { max-width: 58rem; margin: 0 auto 14px; }
+.recap-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+summary { cursor: pointer; min-height: 44px; align-content: center; }
+dl { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: 8px 14px; }
+dt { color: var(--rubric); }
+dd { margin: 0; overflow-wrap: anywhere; }
+@media (max-width: 600px) { dl { grid-template-columns: 1fr; gap: 3px; } dd { margin-bottom: 9px; } }
+</style>
