@@ -1327,6 +1327,36 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('does not disclose a blood relative’s future-earned byname in the last-night purpose', () => {
+    const ctx = accountedRite();
+    const victim = ctx.world.people.get(ctx.world.chronicle[0]!.people![0]!)!;
+    const year = ctx.world.year;
+    victim.byname = {
+      source: { kind: 'record', event: 'later_account', pen: 'record', page: 'later-page' },
+      year: year + 1,
+    };
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'blood_spent', person: 'Meriel',
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    victim.byname.year = year;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Meriel of the Tides',
+    });
+    victim.byname = undefined;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'blood_spent', person: 'Meriel of the Tides',
+    });
+  });
+
+
   it('does not repeat an already-suffixed epithet in a recorded blood-relative cost', () => {
     const ctx = accountedRite();
     const victim = ctx.world.people.get(ctx.world.chronicle[0]!.people![0]!)!;
@@ -1620,6 +1650,43 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
   });
 
+  it('shows only bynames earned by collection for branch founders and survivors', () => {
+    const { ctx, founder, relative } = foundedHall();
+    const year = ctx.world.year;
+    founder.epithet = 'the Patient';
+    founder.byname = {
+      source: { kind: 'record', event: 'later_founder_account', pen: 'record', page: 'later-founder' },
+      year: year + 1,
+    };
+    relative.byname = {
+      source: { kind: 'record', event: 'later_relative_account', pen: 'record', page: 'later-relative' },
+      year: year + 1,
+    };
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'branch_kept', founder: 'Edrin', person: 'Leora',
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    founder.byname.year = year;
+    relative.byname.year = year;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'branch_kept', founder: 'Edrin the Patient', person: 'Leora of the Orchard',
+    });
+    // A legacy epithet without an award year has always been visible.
+    founder.byname = undefined;
+    relative.byname = undefined;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'branch_kept', founder: 'Edrin the Patient', person: 'Leora of the Orchard',
+    });
+  });
+
+
   it('does not repeat an epithet already included in either named branch relative', () => {
     const { ctx, founder, relative } = foundedHall();
     founder.name = 'Edrin the Patient';
@@ -1818,6 +1885,31 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     view.purpose.text = 'A rewritten history.';
     expect(ctx.world.chronicle[0]!.text).toBe('Edric stopped growing older, but the house had not finished the Ledger.');
   });
+
+  it('does not backdate the named ascendant’s byname to an earlier last night', () => {
+    const { ctx, ascendant } = accountedWait();
+    const year = ctx.world.year;
+    ascendant.byname = {
+      source: { kind: 'reign', from: year - 20, to: year + 1, pen: 'record', pages: 4 },
+      year: year + 1,
+    };
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'ascendant_wait', person: 'Edric',
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    ascendant.byname.year = year;
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({
+      kind: 'ascendant_wait', person: 'Edric the Unwearied',
+    });
+  });
+
 
   it('does not repeat an already-suffixed ascendant epithet in the witnessed wait', () => {
     const { ctx, ascendant } = accountedWait();
