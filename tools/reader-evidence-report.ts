@@ -55,7 +55,8 @@ interface EvidenceLog {
 
 export interface ReaderEvidenceReport {
   format: 'ed-reader-evidence-report/1';
-  sourceFormat: typeof READING_LOG_FORMAT;
+  /** One source version, or 'mixed' when combining historical and current exports. */
+  sourceFormat: 'ed-reading-log/12' | typeof READING_LOG_FORMAT | 'mixed';
   inputLogs: number;
   totals: {
     windows: number;
@@ -122,13 +123,18 @@ function validatedEvents(input: unknown, index: number): {
   const fail = (reason: string): never => { throw new Error('Reading log ' + index + ': ' + reason); };
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail('expected an object');
   const artifact = input as Partial<ReadingLogArtifact>;
-  if (artifact.format !== READING_LOG_FORMAT) fail('unsupported format; ed-reading-log/12 required');
+  if (artifact.format !== READING_LOG_FORMAT && artifact.format !== 'ed-reading-log/12') {
+    fail('unsupported format; ed-reading-log/12 or /13 required');
+  }
   const truncated: boolean = typeof artifact.truncated === 'boolean'
     ? artifact.truncated : fail('missing cap state');
   const rawEvents: ReadingLogEvent[] = Array.isArray(artifact.events)
     ? artifact.events as ReadingLogEvent[] : fail('invalid event count');
   if (rawEvents.length < 3 || rawEvents.length > READING_LOG_MAX_EVENTS + 1) {
     fail('invalid event count');
+  }
+  if (artifact.format === 'ed-reading-log/12' && rawEvents.some((e) => e.kind === 'pickup-failed')) {
+    fail('pickup-failed marker requires ed-reading-log/13');
   }
   let previous = 0;
   for (const event of rawEvents) {
@@ -209,9 +215,13 @@ export function reportReadingLogs(inputs: readonly unknown[]): ReaderEvidenceRep
     };
   });
   totals.tableForegroundShare = ratio(totals.tableForegroundMs, totals.foregroundMsInWindows);
+  const formats = new Set(inputs.map((input) => (input as { format: string }).format));
+  const sourceFormat: ReaderEvidenceReport['sourceFormat'] = formats.size === 1
+    ? formats.has(READING_LOG_FORMAT) ? READING_LOG_FORMAT : 'ed-reading-log/12'
+    : 'mixed';
   return {
     format: 'ed-reader-evidence-report/1',
-    sourceFormat: READING_LOG_FORMAT,
+    sourceFormat,
     inputLogs: logs.length,
     totals,
     logs,
