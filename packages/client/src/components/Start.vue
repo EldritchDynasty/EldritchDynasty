@@ -150,13 +150,21 @@ const validSeed = computed(() => Number.isInteger(seed.value) && seed.value >= 0
 /** A pending host restore owns the session until it settles. */
 /** Do not snapshot inherited houses while an asynchronous Library mutation is unsettled. */
 const mayBegin = computed(() => libraryIsReady.value && validSeed.value
-  && !selectingRun.value && !libraryBusy.value);
+  && !selectingRun.value && !libraryBusy.value
+  // An unresolved host listing cannot tell us whether beginning a Demo would
+  // replace an existing demo autosave. Full campaigns need not wait for it.
+  && (campaign.value !== 'demo' || !listingSaves.value));
+const savedDemoExists = computed(() => demoSaves.value.some((s) => s.slot === 'demo-autosave'));
+/** A failed listing does not prove that no Demonstration is saved. */
+const demoOverwriteRisk = computed(() => savedDemoExists.value || saveListError.value !== null);
+const confirmingDemoOverwrite = ref(false);
 /** A double click can arrive before Vue replaces the Start screen with the prologue. */
 let beginning = false;
 
-function begin(): void {
+function beginNow(): void {
   if (!mayBegin.value || beginning) return;
   beginning = true;
+  confirmingDemoOverwrite.value = false;
   try {
     props.actions.begin(seed.value, campaign.value);
   } finally {
@@ -164,6 +172,28 @@ function begin(): void {
     // deliberate later attempt is still possible if the screen remains open.
     void nextTick().then(() => { beginning = false; });
   }
+}
+
+function begin(): void {
+  if (!mayBegin.value || beginning) return;
+  if (campaign.value === 'demo' && demoOverwriteRisk.value) {
+    // The separate Demo namespace prevents replacing a full campaign, but an
+    // ordinary Begin would still overwrite an unfinished Demonstration.
+    confirmingDemoOverwrite.value = true;
+    void nextTick(() => startRoot.value?.querySelector<HTMLButtonElement>('.demo-overwrite-confirm .confirm-overwrite')?.focus());
+    return;
+  }
+  beginNow();
+}
+
+function confirmBeginDemo(): void {
+  if (!confirmingDemoOverwrite.value || campaign.value !== 'demo' || !mayBegin.value || beginning) return;
+  beginNow();
+}
+
+function cancelBeginDemo(): void {
+  confirmingDemoOverwrite.value = false;
+  void nextTick(() => startRoot.value?.querySelector<HTMLButtonElement>('.primary-row button[data-begin]')?.focus());
 }
 
 /**
@@ -526,7 +556,7 @@ onMounted(() => { void refreshSaves(); });
     <fieldset class="campaigns">
       <legend class="label">{{ plain ? 'Choose the length of your game' : 'The length of the line' }}</legend>
       <label v-for="choice in CAMPAIGN_CHOICES" :key="choice.id" class="campaign panel">
-        <input v-model="campaign" type="radio" name="campaign" :value="choice.id" />
+        <input v-model="campaign" type="radio" name="campaign" :value="choice.id" @change="confirmingDemoOverwrite = false" />
         <span>
           <strong>{{ choice.name }}{{ plain ? (choice.id === 'short' ? ' (shorter campaign)' : choice.id === 'long' ? ' (longer campaign)' : '') : '' }}</strong>
           <span class="dim small">
@@ -544,10 +574,25 @@ onMounted(() => { void refreshSaves(); });
       <button
         :class="resumable ? 'quiet' : 'primary'"
         :disabled="!mayBegin"
+        data-begin
         @click="begin()"
       >
         {{ !libraryIsReady ? (plain ? 'Loading completed games…' : 'Reading the library…') : resumable ? (plain ? 'Start a new game' : 'Begin a new signing') : (plain ? 'Start playing' : 'Begin the signing') }}
       </button>
+    </div>
+    <div
+      v-if="confirmingDemoOverwrite && campaign === 'demo'"
+      class="demo-overwrite-confirm panel"
+      role="group"
+      :aria-label="plain ? 'Confirm replacing the saved demonstration' : 'Confirm replacing the Demonstration'"
+    >
+      <p class="rubric small" role="status">
+        <template v-if="savedDemoExists">{{ plain ? 'Starting another demonstration will replace your saved demonstration at its latest checkpoint. Continue or export it first if you want to keep it.' : 'A Demonstration is already kept at its last sitting. A new signing will replace that checkpoint; return to it or copy it out first if you mean to keep it.' }}</template>
+        <template v-else>{{ plain ? 'Saved games could not be checked. Starting a demonstration may replace an existing one. Retry the saved-game list first if you are unsure.' : 'The saved runs could not be read. A new Demonstration may overwrite one already kept. Retry the listing first if you are unsure.' }}</template>
+        {{ plain ? 'Other saved games remain unchanged.' : 'The other saved lines remain untouched.' }}
+      </p>
+      <button class="quiet small confirm-overwrite" :disabled="!mayBegin" @click="confirmBeginDemo()">{{ plain ? 'Yes, start a new demonstration' : 'Yes, begin another Demonstration' }}</button>
+      <button class="quiet small" @click="cancelBeginDemo()">Cancel</button>
     </div>
     <p v-if="resumeRefused" class="resume-refusal rubric small" role="status">{{ displayError(resumeRefused) }}</p>
     <div v-if="!libraryIsReady && libraryReadError" class="save-list-error" role="alert">
@@ -774,6 +819,9 @@ h1 { font-size: var(--t-display); font-weight: 400; margin: 0 0 26px; letter-spa
 .campaign input { width: auto; margin-top: 4px; }
 .campaign strong, .campaign span { display: block; }
 .primary-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.demo-overwrite-confirm { margin-top: 12px; }
+.demo-overwrite-confirm p { margin: 0 0 12px; }
+.demo-overwrite-confirm button + button { margin-left: 8px; }
 input { width: 9ch; }
 .share-start textarea { display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: var(--t-fine); word-break: break-all; }
 .share-name { margin-top: 8px; }
