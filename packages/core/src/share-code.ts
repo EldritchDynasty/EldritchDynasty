@@ -528,7 +528,7 @@ export function newGameFromShareCode(
   const read = readShareCode(code, source, { build: opts.build });
   if (!read.ok) return read;
   const f = read.founding;
-  const parsedNames = SharedNamesS.safeParse(opts.names ?? {});
+  const parsedNames = SharedNamesS.safeParse(opts.names === undefined ? {} : opts.names);
   if (!parsedNames.success) {
     return { ok: false, problem: { kind: 'refused', reason: 'Share-code names must be text, with no more than five friends.' } };
   }
