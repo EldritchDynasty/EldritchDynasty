@@ -468,6 +468,25 @@ describe('Prologue beat pacing (#1561)', () => {
   });
 });
 
+describe('signing focus belongs to its own mounted instance (#1984)', () => {
+  it('does not move focus into an older signing with duplicate heading ids', async () => {
+    const props = { prologue: prologueView(), refused: null, startYear: 1042 };
+    const old = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
+    const current = mount(Prologue, { attachTo: document.body, props: { ...props, actions: actions() } });
+    try {
+      for (let i = 0; i < 3; i += 1) {
+        await current.get('button.on').trigger('click');
+      }
+      await nextTick();
+      expect(document.activeElement).toBe(current.get('#founder-section-heading').element);
+      expect(document.activeElement).not.toBe(old.get('#founder-section-heading').element);
+    } finally {
+      current.unmount();
+      old.unmount();
+    }
+  });
+});
+
 describe('first signing focus after opening (#1984)', () => {
   it('focuses the first available signing heading when the final reveal removes its button', async () => {
     const scenarios = [
