@@ -4,7 +4,8 @@ import { loadContent } from '@ed/content';
 import { beget, marry, phase, place, testWorld } from '../testing.js';
 import { phenotypeOf } from './factory.js';
 import { ACQUIRED_NUTRITION, ACQUIRED_SPACING } from './factory.js';
-import { nutrition, spacing, tickCondition } from './condition.js';
+import { nutrition, nutritionTarget, spacing, tickCondition } from './condition.js';
+import { standingCostPerHead } from '../economy.js';
 import { proseOriginalHash } from '@ed/schema';
 import { coreMessageAddress } from '../messages.js';
 import { setProseMode, setProseVariants } from '../prose.js';
@@ -55,6 +56,51 @@ describe('annual bodily condition', () => {
     a.ctx.world.year += 5;
     for (let year = 0; year < 8; year++) spacing(a.ctx, a.mother);
     expect(Math.abs(a.mother.acquired[ACQUIRED_SPACING] ?? 0)).toBeLessThan(0.01);
+  });
+
+
+  it('rations only for present mouths, ignoring recovered future births and past deaths (#2959)', () => {
+    const ctx = testWorld(content, 2959, 1042);
+    const w = ctx.world;
+    const living = place(ctx, { sex: 'female', age: 28, name: 'Present Resident' });
+    const unborn = place(ctx, { sex: 'female', age: -2, name: 'Not Yet Here' });
+    const deceased = place(ctx, { sex: 'female', age: 35, name: 'Already Gone' });
+    deceased.died = w.year; // The imported status flag still says alive.
+    const present = w.people.household(w.playerHouse, w.year)
+      .filter(p => p.born <= w.year && (p.died === undefined || p.died > w.year)).length;
+    w.treasury = present * standingCostPerHead(w.respect, present) * 1.15;
+
+    // Both invalid records appear in the raw household but must not lower reserves.
+    expect(w.people.household(w.playerHouse, w.year)).toContain(unborn);
+    expect(w.people.household(w.playerHouse, w.year)).toContain(deceased);
+    expect(nutritionTarget(ctx)).toBeCloseTo(0.6, 8);
+    const beforeUnborn = structuredClone(unborn.acquired);
+    const beforeDeceased = structuredClone(deceased.acquired);
+
+    tickCondition(ctx);
+    expect(unborn.acquired).toEqual(beforeUnborn);
+    expect(deceased.acquired).toEqual(beforeDeceased);
+    expect(living.acquired[ACQUIRED_NUTRITION]).toBeDefined();
+  });
+
+  it('begins annual condition at birth and stops on the recorded death year (#2959)', () => {
+    const ctx = testWorld(content, 2959, 1042);
+    const w = ctx.world;
+    const newborn = place(ctx, { sex: 'female', age: -1, name: 'Tomorrow' });
+    const dying = place(ctx, { sex: 'female', age: 28, name: 'Final Living Year' });
+    dying.died = w.year + 1;
+    const beforeBirth = structuredClone(newborn.acquired);
+
+    tickCondition(ctx);
+    expect(newborn.acquired).toEqual(beforeBirth);
+    expect(dying.acquired[ACQUIRED_NUTRITION]).toBeDefined();
+    const beforeDeath = structuredClone(dying.acquired);
+
+    w.year += 1;
+    tickCondition(ctx);
+    expect(newborn.acquired[ACQUIRED_NUTRITION]).toBeDefined();
+    expect(dying.acquired).toEqual(beforeDeath);
+    expect(dying.status).toBe('alive'); // Do not rewrite recovered history.
   });
 
   it('ignores an unborn saved child until their recorded birth year (#2762)', () => {

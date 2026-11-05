@@ -48,6 +48,37 @@ describe('a granddaughter pays an auction pledge (#1449)', () => {
     expect(bidAtAuction(ctx, next.id, 'marriage_promise', 0).ok).toBe(false);
   });
 
+
+  it('refuses unborn and effectively deceased Heads as new pledge signers (#2961)', () => {
+    const ctx = bootstrap(bundle, 2961, 1042);
+    const w = ctx.world;
+    const head = w.people.household(w.playerHouse, w.year).find(p => p.castSlots.includes('head'))!;
+    const lot: AuctionLot = {
+      id: 'date_invalid_head', kind: 'heirloom', refId: 'portion_of_agelessness',
+      house: 'house_marrow', announcedYear: w.year, saleYear: w.year + 3, reserveCoin: 800,
+    };
+    w.auction.upcoming = [lot];
+
+    const originalBirth = head.born;
+    head.born = w.year + 1;
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(false);
+    expect(lot.playerBid).toBeUndefined();
+
+    head.born = originalBirth;
+    head.died = w.year;
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(false);
+    expect(lot.playerBid).toBeUndefined();
+
+    head.died = w.year + 1; // A future death does not invalidate today's signature.
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(true);
+    expect(lot.playerBid?.pledgedBy).toBe(head.id);
+
+    w.year += 1;
+    expect(bidAtAuction(ctx, lot.id, 'marriage_promise', 0).ok).toBe(false);
+    expect(lot.playerBid?.pledgedBy).toBe(head.id); // Earlier valid bid is retained.
+    expect(head.status).toBe('alive');
+  });
+
   it('does not reserve a granddaughter before her recovered birth year (#2855)', () => {
     const { ctx, head, promise } = wonPledge();
     ctx.world.year = promise.year + 1;

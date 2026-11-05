@@ -125,6 +125,61 @@ describe('recovered future-born bond holders (#2854)', () => {
   });
 });
 
+
+describe('historical death dates override stale status-alive bonds (#2960)', () => {
+  it('does not bind, free, service or resent a worker already dead by date', () => {
+    const ctx = testWorld(bundle);
+    const w = ctx.world;
+    const deceasedRecruit = place(ctx, { sex: 'male', age: 30, name: 'Dead Recruit', contract: contract() });
+    const deceasedDebtor = place(ctx, {
+      sex: 'female', age: 30, name: 'Dead Debtor',
+      contract: contract({ term: 'bonded', debt: 80, loyalty: 50 }),
+    });
+    const livingDebtor = place(ctx, {
+      sex: 'male', age: 28, name: 'Living Debtor',
+      contract: contract({ term: 'bonded', debt: 100, loyalty: 50 }),
+    });
+    deceasedRecruit.died = w.year;
+    deceasedDebtor.died = w.year;
+    const treasury = w.treasury;
+    const pages = w.chronicle.length;
+
+    expect(bondsmen(ctx)).not.toContain(deceasedDebtor);
+    expect(bondsmen(ctx)).toContain(livingDebtor);
+    expect(bindService(ctx, deceasedRecruit, 40)).toBe(false);
+    expect(freeBond(ctx, deceasedDebtor)).toEqual({ ok: false, forgiven: 0, resented: 0 });
+    expect(w.treasury).toBe(treasury);
+    expect(w.chronicle).toHaveLength(pages);
+
+    serviceBonds(ctx);
+    expect(deceasedDebtor.contract!.debt).toBe(80);
+    expect(livingDebtor.contract!.debt).toBe(94);
+    expect(freeBond(ctx, livingDebtor)).toEqual({ ok: true, forgiven: 94, resented: 0 });
+    expect(deceasedDebtor.contract!.loyalty).toBe(50);
+    expect(deceasedDebtor.contract!.term).toBe('bonded');
+    expect(deceasedRecruit.contract!.term).toBe('yearly');
+    expect(deceasedDebtor.status).toBe('alive');
+  });
+
+  it('includes the final living year and excludes the effective death boundary', () => {
+    const ctx = testWorld(bundle);
+    const w = ctx.world;
+    const worker = place(ctx, {
+      sex: 'male', age: 29, name: 'One Year Left',
+      contract: contract({ term: 'bonded', debt: 30, wage: 6 }),
+    });
+    worker.died = w.year + 1;
+    expect(bondsmen(ctx)).toContain(worker);
+    serviceBonds(ctx);
+    expect(worker.contract!.debt).toBe(24);
+    w.year += 1;
+    expect(bondsmen(ctx)).not.toContain(worker);
+    serviceBonds(ctx);
+    expect(worker.contract!.debt).toBe(24);
+    expect(freeBond(ctx, worker).ok).toBe(false);
+  });
+});
+
 describe('bond mutations require the living world-owned servant (#1212)', () => {
   it('a detached record cannot spend treasury or put a phantom bond in the Chronicle', () => {
     const ctx = testWorld(bundle);
