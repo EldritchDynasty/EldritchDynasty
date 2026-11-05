@@ -676,4 +676,88 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     const s = newGame(content, { seed: 1, startYear: CAMPAIGNS.short.startYear, campaign: 'short' });
     expect(s.shareCode()).toEqual({ ok: false, unavailable: 'not_founded' });
   });
+
+  it('refuses share codes when a recovered founding state is absent or contradicts the logged founding (#2965)', () => {
+    const pristine = founded();
+    expect(readShareCode(codeOf(pristine), content, { build: BUILD }).ok).toBe(true);
+    const original = pristine.ctx.world.founding!;
+    delete pristine.ctx.world.founding;
+    expect(pristine.shareCode({ build: BUILD }))
+      .toEqual({ ok: false, unavailable: 'unrepresentable' });
+
+    for (const changed of [
+      { ...original, houseName: 'Another House' },
+      { ...original, heirloom: 'portion_of_agelessness' },
+      { ...original, grudge: 'house_marrow' },
+      { ...original, year: original.year + 1 },
+    ]) {
+      pristine.ctx.world.founding = changed;
+      expect(pristine.shareCode({ build: BUILD }))
+        .toEqual({ ok: false, unavailable: 'unrepresentable' });
+    }
+
+    const duplicate = founded();
+    const row = duplicate.ctx.world.decisionLog.find((entry) => entry.kind === 'founding');
+    if (!row) throw new Error('no logged founding');
+    duplicate.ctx.world.decisionLog.push({ ...row });
+    expect(duplicate.shareCode({ build: BUILD }))
+      .toEqual({ ok: false, unavailable: 'unrepresentable' });
+  });
+
+  it('uses only a single same-year signing that agrees with persisted answers (#2966)', () => {
+    const invalid = { ok: false, unavailable: 'unrepresentable' };
+    const misplaced = founded();
+    const oldSigning = misplaced.ctx.world.decisionLog.find((entry) => entry.kind === 'signing');
+    if (!oldSigning) throw new Error('no logged signing');
+    oldSigning.year += 1;
+    expect(misplaced.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const duplicated = founded();
+    const duplicatedSigning = duplicated.ctx.world.decisionLog.find((entry) => entry.kind === 'signing');
+    if (!duplicatedSigning) throw new Error('no logged signing');
+    duplicated.ctx.world.decisionLog.push({ ...duplicatedSigning, answers: { ...duplicatedSigning.answers } });
+    expect(duplicated.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const changed = founded();
+    const changedSigning = changed.ctx.world.decisionLog.find((entry) => entry.kind === 'signing');
+    if (!changedSigning) throw new Error('no logged signing');
+    changedSigning.answers.the_ford = 'another_answer';
+    expect(changed.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const missing = founded();
+    const at = missing.ctx.world.decisionLog.findIndex((entry) => entry.kind === 'signing');
+    if (at < 0) throw new Error('no logged signing');
+    missing.ctx.world.decisionLog.splice(at, 1);
+    expect(missing.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const unsigned = founded({ houseName: 'Hearth', heirloom: 'portion_of_agelessness', grudge: 'house_marrow' });
+    expect(readShareCode(codeOf(unsigned), content, { build: BUILD }).ok).toBe(true);
+  });
+
+  it('rejects a live friend roster that no longer matches the founding record (#2967)', () => {
+    const invalid = { ok: false, unavailable: 'unrepresentable' };
+    const normal = founded();
+    const before = codeOf(normal, { names: true });
+    normal.advance(20);
+    // Spending or rescheduling names within the run is not a different roster.
+    expect(codeOf(normal, { names: true })).toBe(before);
+
+    const renamed = founded();
+    renamed.ctx.world.friends[0]!.name = 'Different friend';
+    expect(renamed.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const changedSex = founded();
+    changedSex.ctx.world.friends[0]!.sex = 'male';
+    expect(changedSex.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const missing = founded();
+    missing.ctx.world.friends.pop();
+    expect(missing.shareCode({ build: BUILD })).toEqual(invalid);
+
+    const reordered = founded();
+    [reordered.ctx.world.friends[0], reordered.ctx.world.friends[1]] =
+      [reordered.ctx.world.friends[1]!, reordered.ctx.world.friends[0]!];
+    expect(reordered.shareCode({ build: BUILD })).toEqual(invalid);
+  });
+
 });
