@@ -111,6 +111,13 @@ const CONFIGURATIONS: readonly { id: FoundingConfiguration; original: string; pl
   },
 ];
 const answers = ref<Record<string, string>>({});
+/** Match the signing/import rule: formatting-only names do not identify anyone. */
+function hasVisibleName(name: string): boolean {
+  return name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim().length > 0;
+}
+function invalidOptionalFriendName(name: string): boolean {
+  return name.trim().length > 0 && !hasVisibleName(name);
+}
 const houseName = ref('');
 const heirloom = ref('');
 const grudge = ref('');
@@ -202,7 +209,7 @@ const wanted = computed(() => {
     // an empty optional prompt must not require invisible founder fields.
     // The player signs as themselves (#1867): the authored name is the
     // headless default, never the interactive one.
-    if (!founderName.value.trim()) out.push('what you are called');
+    if (!hasVisibleName(founderName.value)) out.push('what you are called');
     if (!gender.value) out.push('who signed it');
     if (!configuration.value) out.push('whose blood the house carries');
   }
@@ -211,7 +218,10 @@ const wanted = computed(() => {
   }
   if (!props.prologue.heirlooms.some((option) => option.heirloom === heirloom.value)) out.push('the thing you asked for by name');
   if (!props.prologue.grudges.some((option) => option.house === grudge.value)) out.push('who paid for the rest of it');
-  if (!houseName.value.trim()) out.push('what the family will be called');
+  if (!hasVisibleName(houseName.value)) out.push('what the family will be called');
+  if (friends.value.some((friend) => invalidOptionalFriendName(friend.name))) {
+    out.push('a visible name for every friend you chose to name');
+  }
   return out;
 });
 
@@ -267,7 +277,7 @@ const signingStage = computed(() => signingStages.value[Math.min(signingStageInd
 const stageReady = computed(() => {
   switch (signingStage.value) {
     case 'founder':
-      return Boolean(founderName.value.trim() && gender.value && configuration.value);
+      return Boolean(hasVisibleName(founderName.value) && gender.value && configuration.value);
     case 'examination':
       return props.prologue.examination.every((question) => question.answers.some((answer) => answer.id === answers.value[question.id]));
     case 'house':
@@ -310,6 +320,7 @@ function waitingText(): string {
     'the thing you asked for by name': 'a selected heirloom',
     'who paid for the rest of it': 'a selected rival house',
     'what the family will be called': 'a family name',
+    'a visible name for every friend you chose to name': 'a visible name for each named friend',
   };
   return `Before signing, provide ${wanted.value.map((item) => labels[item] ?? item).join(', and ')}.`;
 }
@@ -331,7 +342,7 @@ function sign(): void {
       houseName: houseName.value,
       heirloom: heirloom.value,
       grudge: grudge.value,
-      friends: friends.value.filter((f) => f.name.trim()),
+      friends: friends.value.filter((f) => hasVisibleName(f.name)),
       ...(props.prologue.namePrompt
         ? {
           founder: {
@@ -404,6 +415,7 @@ function signOnEnter(event: KeyboardEvent): void {
           :maxlength="FOUNDER_NAME_MAX"
           :placeholder="plain ? 'Your name' : 'what are you called?'"
           :aria-label="plain ? 'Enter the founder name' : 'Name the founder'"
+          :aria-invalid="Boolean(founderName.trim()) && !hasVisibleName(founderName)"
         />
         <div class="identity" role="group" :aria-label="plain ? 'Your gender' : 'Who signed it'">
           <button
@@ -507,6 +519,7 @@ function signOnEnter(event: KeyboardEvent): void {
           maxlength="48"
           :placeholder="plain ? 'Enter the family name' : 'what the family will be called'"
           :aria-label="plain ? 'Enter the family name' : 'Name the house'"
+          :aria-invalid="Boolean(houseName.trim()) && !hasVisibleName(houseName)"
           @keydown.enter="signOnEnter($event)"
         />
       </section>
@@ -530,6 +543,7 @@ function signOnEnter(event: KeyboardEvent): void {
                 maxlength="32"
                 :placeholder="plain ? `Friend ${i + 1}` : `the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'}`"
                 :aria-label="plain ? `Name friend ${i + 1}` : `Name the ${['first', 'second', 'third', 'fourth', 'fifth'][i] ?? 'next'} friend`"
+                :aria-invalid="invalidOptionalFriendName(friend.name)"
               />
               <div
                 class="sex"
