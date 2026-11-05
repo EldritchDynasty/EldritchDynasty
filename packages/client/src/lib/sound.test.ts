@@ -1223,6 +1223,26 @@ describe('the bed decides when the house may be heard', () => {
     expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
   });
 
+  it('does not treat a bare show() as a pageshow after pagehide (#1986)', () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    page.fire('win:pagehide');
+    expect(bed.audible).toBe(false);
+    const before = ctx.sources.length;
+
+    // The document still reports visible while the page is leaving. A host
+    // callback invoking show() is not evidence of an actual foreground return.
+    bed.show();
+    expect(bed.audible).toBe(false);
+    expect(ctx.sources).toHaveLength(before);
+
+    page.fire('win:pageshow');
+    expect(bed.audible).toBe(true);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+    bed.dispose();
+  });
+
   it('a duplicate visible event does not override a native pause (#2951)', () => {
     const { e, page, bed, pause } = bedOnBoard();
     page.fire('win:pointerdown');
