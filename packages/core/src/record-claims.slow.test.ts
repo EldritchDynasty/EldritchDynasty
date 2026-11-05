@@ -211,8 +211,8 @@ describe('earned bynames over played runs (#1990)', () => {
 
 /**
  * #2287: compare the new reign-ending source against a policy which never
- * writes a person-claim byname. Use the same seeds and game decisions for
- * both policies; only their Record pen choices differ.
+ * writes a person-claim byname. Pair runs by seed and use the same
+ * non-Record decision policy; writing differences can change later histories.
  *
  * Report ALL Heads (including the founder and a still-serving final Head),
  * completed Heads (the only ones eligible for a reign-end grant), and other
