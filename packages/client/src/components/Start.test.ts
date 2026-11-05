@@ -2888,7 +2888,7 @@ describe('the front door begins from a share code', () => {
       host.saves.set('demo-autosave', newDemo);
       await w.get('button[data-begin-share]').trigger('click');
       await flush();
-      expect(w.get('.share-demo-overwrite-confirm').exists()).toBe(true);
+      expect(w.find('.share-demo-overwrite-confirm').exists()).toBe(true);
       expect(recipient.view.value).toBeNull();
       expect(host.saves.get('demo-autosave')).toEqual(newDemo);
     } finally {
