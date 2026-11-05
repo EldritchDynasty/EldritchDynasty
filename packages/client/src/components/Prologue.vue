@@ -175,7 +175,9 @@ watch([founderName, gender, configuration, answers, houseName, heirloom, grudge,
 // mark the whole Prologue as read before its final beat was displayed).
 let revealing = false;
 function on(): void {
-  if (revealing || shown.value >= props.prologue.triad.length) return;
+  if (revealing || props.prologue.founded || shown.value >= props.prologue.triad.length) return;
+  // The nextTick focus belongs to this exact signing, not a reused component.
+  const origin = signingIdentity.value;
   revealing = true;
   try {
     shown.value = revealPrologueBeat(
@@ -190,6 +192,7 @@ function on(): void {
     // on a detached control. Earlier beats retain their focused button.
     void nextTick(() => {
       revealing = false;
+      if (signingIdentity.value !== origin) return;
       if (!props.prologue.founded && shown.value >= props.prologue.triad.length) {
         focusSigningStageHeading();
       }
@@ -325,13 +328,14 @@ function moveSigningStage(direction: -1 | 1): void {
   if (navigatingSigning || (direction === 1 && !stageReady.value)) return;
   const next = Math.max(0, Math.min(signingStageIndex.value + direction, signingStages.value.length - 1));
   if (next === signingStageIndex.value) return;
+  const origin = signingIdentity.value;
   navigatingSigning = true;
   signingStageIndex.value = next;
   // Navigation removes the clicked button. Give keyboard and screen-reader
   // readers a predictable target instead of dropping focus to the document.
   void nextTick(() => {
     try {
-      focusSigningStageHeading();
+      if (signingIdentity.value === origin) focusSigningStageHeading();
     } finally {
       navigatingSigning = false;
     }
