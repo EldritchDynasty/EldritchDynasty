@@ -123,10 +123,10 @@ function validatedEvents(input: unknown, index: number): {
   if (!input || typeof input !== 'object' || Array.isArray(input)) fail('expected an object');
   const artifact = input as Partial<ReadingLogArtifact>;
   if (artifact.format !== READING_LOG_FORMAT) fail('unsupported format; ed-reading-log/12 required');
-  const truncated = artifact.truncated;
-  if (typeof truncated !== 'boolean') fail('missing cap state');
-  const rawEvents = artifact.events;
-  if (!Array.isArray(rawEvents)) fail('invalid event count');
+  const truncated: boolean = typeof artifact.truncated === 'boolean'
+    ? artifact.truncated : fail('missing cap state');
+  const rawEvents: ReadingLogEvent[] = Array.isArray(artifact.events)
+    ? artifact.events as ReadingLogEvent[] : fail('invalid event count');
   if (rawEvents.length < 3 || rawEvents.length > READING_LOG_MAX_EVENTS + 1) {
     fail('invalid event count');
   }
