@@ -132,7 +132,9 @@ describe('cohort timing and Table rate reductions (#1945, #1984, #1992)', () => 
     expect(result.format).toBe('ed-reader-cohort-metrics/1');
     expect(result.entries).toMatchObject({ completed: 1, censored: 0 });
     expect(result.entries.completedForegroundMs).toEqual({
-      count: 1, min: 500, median: 500, p90: 500, max: 500,
+      // Entry starts at Begin (100ms), not at log start (0ms). The first
+      // accepted family/Table command is at 500ms: 500 - 100 = 400ms.
+      count: 1, min: 400, median: 400, p90: 400, max: 400,
     });
     expect(result.answerGaps).toMatchObject({
       completed: 1, censored: 1,
