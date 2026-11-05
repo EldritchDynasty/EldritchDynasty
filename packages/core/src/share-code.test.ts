@@ -206,6 +206,19 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(accepted.ok).toBe(true);
   });
 
+  it('refuses invisible-only or overlong recipient founder names before making a world', () => {
+    const code = codeOf(founded()); // names withheld, founder gender/body retained
+    const names = { house: 'Salt', friends: ['Alice', 'Bran', 'Cora'] };
+    for (const founder of ['\u200B', ' \u200D \u2060\t', '\uFE0F', 'A'.repeat(PERSON_NAME_MAX + 1)]) {
+      expect(newGameFromShareCode(code, content, {
+        build: BUILD, names: { ...names, founder },
+      })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+    }
+    // An empty optional answer still leaves the authored founder unchanged.
+    const blank = newGameFromShareCode(code, content, { build: BUILD, names: { ...names, founder: '   ' } });
+    expect(blank.ok).toBe(true);
+  });
+
   it('refuses invisible-only required friend names instead of dropping an encoded friend (#2264)', () => {
     const code = codeOf(founded()); // Anonymous: three friends of specified sexes.
     for (const invisible of ['\u200B', ' \u200D \u2060\t', '\uFE0F']) {
@@ -519,6 +532,18 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(readShareCode(named, content, { build: BUILD }).ok).toBe(true);
   });
 
+  it('refuses invisible-only founder names in a forged named code', () => {
+    const named = codeOf(founded(), { names: true });
+    for (const founderName of ['\u200B', ' \u200D \u2060 ', '\uFE0F']) {
+      const damaged = forge(named, (payload) => {
+        payload[5] = ['w', 'm', founderName];
+      });
+      expect(problemOf(damaged)).toEqual({ kind: 'damaged' });
+    }
+    // Blank answers are deliberate and remain round-trippable (above).
+    expect(readShareCode(named, content, { build: BUILD }).ok).toBe(true);
+  });
+
   it('refuses forged named codes with noncanonical or invisible friend names', () => {
     const named = codeOf(founded(), { names: true });
     for (const friend of ['  Corven Pike', '\u200D', '  \u2060 \u200B ']) {
@@ -640,6 +665,7 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
       { label: 'unknown founding body', value: { ...SIGNED.founder, configuration: 'blood_ancestor' } },
       { label: 'non-text name', value: { ...SIGNED.founder, name: 42 } },
       { label: 'overlong name', value: { ...SIGNED.founder, name: 'N'.repeat(PERSON_NAME_MAX + 1) } },
+      { label: 'invisible-only name', value: { ...SIGNED.founder, name: '\u200B\u2060' } },
     ];
     for (const { label, value } of malformed) {
       const s = founded();
