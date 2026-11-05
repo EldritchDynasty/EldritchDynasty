@@ -4,7 +4,7 @@ import {
   CAMPAIGNS, END_YEAR, GOD_RITE_FAILED, closeTheLedger, digestOf, endingSummary, epilogueOf, foundHouse, place, missingPlainEnglish,
   prologueView, readTheChronicle, selectEnding, setProseMode, setProseVariants, stepYear, testWorld,
 } from '@ed/core';
-import { asId, MAIN_BRANCH, contentProseEntries, ENDING_ORDER, proseOriginalAt, proseOriginalHash, type EndingId, type Rung } from '@ed/schema';
+import { asId, MAIN_BRANCH, contentProseEntries, ENDING_ORDER, proseOriginalAt, proseOriginalHash, type BranchState, type EndingId, type Rung } from '@ed/schema';
 import type { ChronicleEntry, SimCtx } from './world.js';
 import { afterimageEvidence } from './afterimage.js';
 import { coreMessageAddress } from './messages.js';
@@ -1653,16 +1653,15 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
   it('records a different lost hall without assigning it an unproven cause', () => {
     const { ctx } = foundedHall();
     const w = ctx.world;
-    const lostBranch = asId('br_ash_hall');
+    const lostBranch = 'br_ash_hall';
     const lostFounder = place(ctx, { name: 'Orrin', sex: 'male', age: 68, branch: lostBranch });
-    const lostFounderId = asId(String(lostFounder.id));
-    const lost = {
-      id: lostBranch, house: asId(w.playerHouse), name: 'The Ash Hall',
-      founder: lostFounderId, splitFrom: MAIN_BRANCH,
+    const lost: BranchState = {
+      id: asId(lostBranch), house: asId(w.playerHouse), name: 'The Ash Hall',
+      founder: lostFounder.id, splitFrom: MAIN_BRANCH,
       foundedYear: w.year - 30, extinct: w.year - 7, grievance: 0,
     };
     w.branches.set(lostBranch, lost);
-    w.people.kill(lostFounderId, w.year - 7, 'old age');
+    w.people.kill(lostFounder.id, w.year - 7, 'old age');
     const selected = selectEnding(ctx);
     const before = digestOf(ctx);
     const expected = { name: 'The Ash Hall', year: w.year - 7 };
