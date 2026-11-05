@@ -505,6 +505,8 @@ export type EpiloguePurpose =
     year: number;
     /** A living blood relative in a viable cadet hall at the term. */
     person: string;
+    /** One other hall whose dated extinction is in the saved branch ledger. */
+    lostHall?: { name: string; year: number };
   }
   | {
     kind: 'ledger_witness';
@@ -709,12 +711,23 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         .filter((person) => person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
         .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
       if (!survivor) continue;
+      // A dated loss in the same saved branch ledger, not an attribution of blame.
+      const lost = [...w.branches.values()]
+        .filter((other) => other.id !== branch.id
+          && other.house === w.playerHouse
+          && inBookTerm(w, other.foundedYear)
+          && other.extinct !== undefined
+          && other.extinct >= other.foundedYear
+          && other.extinct <= readYear)
+        .sort((a, b) => b.extinct! - a.extinct!
+          || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))[0];
       return {
         kind: 'branch_kept',
         founder: purposePersonName(founder, readYear),
         branch: branch.name,
         year: branch.foundedYear,
         person: purposePersonName(survivor, readYear),
+        ...(lost ? { lostHall: { name: lost.name, year: lost.extinct! } } : {}),
       };
     }
     return undefined;
