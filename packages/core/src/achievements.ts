@@ -233,6 +233,7 @@ const RUNGS = ['none', 'touched', 'adept', 'hierophant', 'vessel', 'demigod', 'g
  */
 export function earnedAchievements(save: SavedGame, library?: RunLibrary): AchievementId[] {
   if (!save.ending) return [];
+  const endYear = save.ending.year;
 
   const earned = new Set<AchievementId>();
   const add = (id: AchievementId, yes = true) => { if (yes) earned.add(id); };
@@ -281,7 +282,7 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
   // after its own ending, even if an imported log contains future rows.
   const records = save.decisionLog
     .filter((entry) => entry.kind === 'record')
-    .filter((entry) => entry.year <= save.ending!.year);
+    .filter((entry) => entry.year <= endYear);
   if (records.length) {
     add('record_never_embellished', records.every((entry) => entry.option !== 'embellish'));
     add('record_never_truthful', records.every((entry) => entry.option !== 'record'));
@@ -296,32 +297,43 @@ export function earnedAchievements(save: SavedGame, library?: RunLibrary): Achie
     save.discrepancies.some(([, discrepancy]) => discrepancy.state === 'open'),
   );
 
+  // A recovered save can carry rows from a later year. Achievements describe
+  // what had happened by this ending, not everything stored in the imported
+  // timeline. Use the same term boundary as Record and Match decisions.
   const sex = new Map(save.people.map((person) => [person.id, person.sex]));
   add(
     'regency_survived',
-    save.succession.some((reign) => sex.get(reign.person) === 'female' && reign.to !== undefined),
+    save.succession.some((reign) =>
+      sex.get(reign.person) === 'female' && reign.to !== undefined
+      && reign.from <= reign.to && reign.to <= endYear),
   );
-  add('cadet_took_seal', save.branches.some((branch) => branch.heldSeal !== undefined));
+  add('cadet_took_seal', save.branches.some((branch) =>
+    branch.heldSeal !== undefined && branch.heldSeal <= endYear));
 
+  // A future commitment does not exist at this term. Only commitments already
+  // begun can satisfy or break a completed run's Muster record.
+  const commitmentsAtTerm = save.muster.commitments.filter((commitment) =>
+    commitment.began <= endYear);
   add(
     'muster_settled_under_banner',
-    save.muster.commitments.some((commitment) => commitment.status === 'settled' && commitment.position !== undefined),
+    commitmentsAtTerm.some((commitment) => commitment.status === 'settled' && commitment.position !== undefined),
   );
   add(
     'muster_withdrew_every_time',
-    save.muster.commitments.length > 0
-      && save.muster.commitments.every((commitment) => commitment.status === 'withdrawn'),
+    commitmentsAtTerm.length > 0
+      && commitmentsAtTerm.every((commitment) => commitment.status === 'withdrawn'),
   );
 
-  const answeredMatch = save.decisionLog.some((entry) => entry.kind === 'match' && entry.year <= save.ending!.year);
+  const answeredMatch = save.decisionLog.some((entry) => entry.kind === 'match' && entry.year <= endYear);
   add(
     'match_never_refused',
-    answeredMatch && !save.bearing.acts.some((act) => act.kind === 'refused_a_hand'),
+    answeredMatch && !save.bearing.acts.some((act) => act.kind === 'refused_a_hand' && act.year <= endYear),
   );
 
   add(
     'five_names_returned',
-    save.friends.length === 5 && save.friends.every((friend) => friend.spentIn !== undefined),
+    save.friends.length === 5 && save.friends.every((friend) =>
+      friend.spentIn !== undefined && friend.spentIn <= endYear),
   );
 
   return ACHIEVEMENT_IDS.filter((id) => earned.has(id));
