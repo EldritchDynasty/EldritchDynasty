@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { applyEffect } from './events/effects.js';
 import { readFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
-import { proseOriginalHash, type BranchState, type ProseVariant } from '@ed/schema';
+import { asId, proseOriginalHash, type BranchState, type HouseId, type ProseVariant } from '@ed/schema';
 import {
   activeRelationshipThreadHouses, ASSIZE_RESPONSES, addGrudge, beget, bitterestAgainst, bootstrap, contentProseAddress,
   ECHO_AFTER, echoGrudges, edge, eventTitleAddress, externalThreadFor, grudgeAgainstUs, grudgesAgainst, makeRng,
@@ -1128,7 +1128,7 @@ describe('feud recovery chronology (#2981, #2982, #2983)', () => {
     const firstYear = ctx.world.year;
     const grudge = addGrudge(ctx, holder.id, them.id, { severity: 67, inheritance: 'none' });
     them.membership[0]!.to = firstYear + 2;
-    them.membership.push({ house: ctx.world.playerHouse, kind: 'married_in', from: firstYear + 2, to: firstYear + 4 });
+    them.membership.push({ house: asId<HouseId>(ctx.world.playerHouse), kind: 'married_in', from: firstYear + 2, to: firstYear + 4 });
     expect(grudgeAgainstUs(ctx.world)).toBe(0);
     expect(bitterestAgainst(ctx.world, ctx.world.playerHouse)).toBeUndefined();
     ctx.world.year = firstYear + 2;
@@ -1144,7 +1144,7 @@ describe('feud recovery chronology (#2981, #2982, #2983)', () => {
     const outsider = place(ctx, { sex: 'male', age: 27, house: 'house_calder', name: 'Future Marrow guest' });
     const firstYear = ctx.world.year;
     outsider.membership[0]!.to = firstYear + 3;
-    outsider.membership.push({ house: 'house_marrow', kind: 'married_in', from: firstYear + 3, to: firstYear + 6 });
+    outsider.membership.push({ house: asId<HouseId>('house_marrow'), kind: 'married_in', from: firstYear + 3, to: firstYear + 6 });
     const grudge = addGrudge(ctx, us.id, 'house_marrow', { severity: 55, inheritance: 'none' });
     expect(grudgesAgainst(ctx.world, outsider.id)).not.toContain(grudge);
     ctx.world.year = firstYear + 3;
@@ -1170,7 +1170,7 @@ describe('feud recovery chronology (#2981, #2982, #2983)', () => {
     const firstYear = ctx.world.year;
     them.membership[0]!.to = firstYear + ECHO_AFTER + 2;
     them.membership.push({
-      house: ctx.world.playerHouse, kind: 'married_in',
+      house: asId<HouseId>(ctx.world.playerHouse), kind: 'married_in',
       from: firstYear + ECHO_AFTER + 2, to: firstYear + ECHO_AFTER + 5,
     });
     ctx.world.year = firstYear + ECHO_AFTER;
