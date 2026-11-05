@@ -83,6 +83,42 @@ describe('fail-open Table research and window-safe outcomes (#1992)', () => {
     });
   });
 
+  it('does not match a previous house result to a new same-category attempt', () => {
+    const l = log();
+    const earlier = { kind: 'study', person: 'old' };
+    const later = { kind: 'study', person: 'new' };
+    const unreadableReturn = Object.defineProperty({}, 'ok', {
+      get() { throw new Error('unreadable result'); },
+    });
+    const bare = {
+      order(payload: unknown) {
+        if (payload === earlier) {
+          // Model a host re-entering a successful Begin while the earlier
+          // verb has not returned. A new-house attempt in the SAME category
+          // must not consume the previous house's eventual accepted result.
+          l.note({ kind: 'action', verb: 'begin', act: 'start' });
+          expect(actions.order(later as unknown as Parameters<typeof actions.order>[0]))
+            .toBe(unreadableReturn);
+          return { ok: true };
+        }
+        return unreadableReturn;
+      },
+    } as unknown as Parameters<typeof recordActions>[0];
+    const actions = recordActions(bare, l);
+    expect(actions.order(earlier as unknown as Parameters<typeof actions.order>[0]))
+      .toEqual({ ok: true });
+
+    const windows = tableWorkloadWindows(l.events, 1_000);
+    expect(windows).toHaveLength(2);
+    for (const window of windows) {
+      expect(window.actions.orders).toEqual([
+        { category: 'study', attempts: 1, accepted: 0, refused: 0, threw: 0, returned: 0, unfinished: 1 },
+      ]);
+    }
+    expect(windows[0]!.endedBy).toBe('begin');
+    expect(windows[1]!.source).toBe('begin');
+  });
+
   it('censors a cross-house attempt without crediting its late result to the new house', () => {
     const events = [
       { at: 0, kind: 'pane', pane: 'table' },
