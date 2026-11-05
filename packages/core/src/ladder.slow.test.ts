@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadBundle } from '@ed/content';
 import { isLadderRole, type ContentBundle } from '@ed/schema';
 import { gateLadder } from './tools/ladder-gate.js';
+import { gateLadderScales } from './tools/gates.js';
 
 const bundle = loadBundle();
 
@@ -74,5 +75,43 @@ describe('the ladder gate', () => {
 
     const { ok, lines } = gateLadder(declawed, { seeds, years });
     expect(ok, `the gate passed a game that charges nobody:\n${lines.join('\n')}`).toBe(false);
+  });
+});
+
+// Population ceilings need the configured gate sample, not a reduced verdict fixture.
+// Keep this campaign batch in the measured slow lane (#1982).
+describe('the measured ladder floors', () => {
+  it('passes the shipped ladder, and says what share clears each floor', () => {
+    const { ok, lines } = gateLadderScales(bundle);
+    const out = lines.join('\n');
+    expect(ok, out).toBe(true);
+    expect(out).toMatch(/wants mind 70/);
+    expect(out).toMatch(/#378 diagnostic — sampled Madness by progression route/);
+    expect(out).toMatch(/none\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
+    expect(out).toMatch(/vessel\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
+    expect(out).toMatch(/great_rite\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
+    expect(out).toMatch(/unmaking\s+samples\s+\d+ · max \d+\.\d · >=60 \d+\.\d% · >=90 \d+\.\d% · >=90 viable (?:\d+\.\d%|n\/a) of >=90/);
+    expect(out).toMatch(/#378 diagnostic — resolved Madness-progression decisions across batch/);
+    for (const event of [
+      'the_drowning',
+      'the_vessel_rite',
+      'the_great_rite',
+      'the_second_name',
+      'the_second_widening',
+      'the_unmaking',
+    ]) {
+      expect(out).toMatch(new RegExp(`${event}\\s+resolved\\s+\\d+ ·`));
+    }
+    expect(out).toMatch(/#378 diagnostic — top distinct sampled Madness holders per run/);
+
+    // The diagnostic must not let one long-lived man occupy all three rows
+    // merely because the 25/50-year sampler saw him repeatedly.
+    for (const seed of [5000, 5007]) {
+      const rows = lines.filter((line) => line.includes(`seed ${seed} #`));
+      const ids = rows.map((line) => /\bid ([^ ]+)/.exec(line)?.[1]);
+      expect(rows.length, `no Madness provenance rows for seed ${seed}`).toBeGreaterThan(0);
+      expect(ids.every(Boolean), `seed ${seed} emitted a provenance row without a person id`).toBe(true);
+      expect(new Set(ids).size, `seed ${seed} repeated one holder in its top rows`).toBe(ids.length);
+    }
   });
 });

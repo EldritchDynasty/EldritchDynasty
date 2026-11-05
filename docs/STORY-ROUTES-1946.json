@@ -1,0 +1,3970 @@
+{
+  "version": 1,
+  "date": "2026-11-06",
+  "beforeRuntime": "0219dd2f",
+  "candidateRuntime": "4da4cd1f",
+  "method": "Current Long-Line 500-year cohorts. Eight complete-save observer controls per column. Parallel partitions retain the canonical seed order and use the shipped observer/reducer. Per-house Wilson intervals come from the production reporter. Route rows do not close the final Ledger; final collection endings are measured separately by gateEndings.",
+  "samples": [
+    {
+      "name": "routes-canonical",
+      "runs": 800,
+      "start": 5000,
+      "step": 7,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "c354c3baad5fa5e38d29dc6daf06bf008c8fead0ab1358eddb6715e118c79be4",
+      "sha256": "113bdff5d8c89bb6955df6c833702a496a1ee58f1cf872a31a462374b50b5c58",
+      "heraldVisits": 41,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 114,
+        "the_shelf_that_has_to_go/hide_them": 114,
+        "the_shelf_that_has_to_go/sell_them": 114,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 114,
+        "the_heralds_visitation/full_descent": 41,
+        "the_heralds_visitation/the_short_descent": 41
+      },
+      "answers": {
+        "the_shelf_that_has_to_go|hide_them|hidden": 23,
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_heralds_visitation|full_descent|full": 24,
+        "the_heralds_visitation|the_short_descent|short": 17,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 37,
+        "the_hall_that_waited||somebody_reads_it_properly": 22,
+        "the_shelf_that_has_to_go|burn_them|burned": 23,
+        "the_hall_that_waited||it_is_about_a_roof": 30
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 17,
+            "n": 800,
+            "rate": 0.02125,
+            "lower": 0.013309011615382496,
+            "upper": 0.03376692971435212
+          },
+          "housesPromised": 17,
+          "housesDeliveringEveryPromise": {
+            "hits": 17,
+            "n": 17,
+            "rate": 1,
+            "lower": 0.8156763396284354,
+            "upper": 1
+          },
+          "promises": 17,
+          "statuses": {
+            "delivered": 17
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 13,
+            "n": 800,
+            "rate": 0.01625,
+            "lower": 0.009520719168443501,
+            "upper": 0.027603012671262236
+          },
+          "housesPromised": 22,
+          "housesDeliveringEveryPromise": {
+            "hits": 13,
+            "n": 22,
+            "rate": 0.5909090909090909,
+            "lower": 0.38734477382893806,
+            "upper": 0.7674444033117963
+          },
+          "promises": 22,
+          "statuses": {
+            "delivered": 13,
+            "cancelled_other_or_unknown": 9
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 4
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 27,
+            "n": 800,
+            "rate": 0.03375,
+            "lower": 0.023296972591091623,
+            "upper": 0.048659492463715204
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 30,
+          "statuses": {
+            "delivered": 29,
+            "cancelled_other_or_unknown": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 10
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 23,
+            "n": 800,
+            "rate": 0.02875,
+            "lower": 0.019232692308443156,
+            "upper": 0.042771563256334785
+          },
+          "housesPromised": 23,
+          "housesDeliveringEveryPromise": {
+            "hits": 23,
+            "n": 23,
+            "rate": 1,
+            "lower": 0.8568788745827374,
+            "upper": 1
+          },
+          "promises": 23,
+          "statuses": {
+            "delivered": 23
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-independent",
+      "runs": 800,
+      "start": 19461100,
+      "step": 37,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "c354c3baad5fa5e38d29dc6daf06bf008c8fead0ab1358eddb6715e118c79be4",
+      "sha256": "67f8054a2b2901e8838249979af068a9446ae7118d93bc831ef30201e73425eb",
+      "heraldVisits": 51,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 123,
+        "the_shelf_that_has_to_go/hide_them": 123,
+        "the_shelf_that_has_to_go/sell_them": 123,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 123,
+        "the_heralds_visitation/full_descent": 51,
+        "the_heralds_visitation/the_short_descent": 51
+      },
+      "answers": {
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_heralds_visitation|full_descent|full": 22,
+        "the_hall_that_waited||it_is_about_a_roof": 27,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 30,
+        "the_shelf_that_has_to_go|burn_them|burned": 31,
+        "the_hall_that_waited||somebody_reads_it_properly": 18,
+        "the_heralds_visitation|the_short_descent|short": 29,
+        "the_shelf_that_has_to_go|hide_them|hidden": 31
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 28,
+            "n": 800,
+            "rate": 0.035,
+            "lower": 0.02432455034286968,
+            "upper": 0.05011996708444437
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 29,
+          "statuses": {
+            "delivered": 28,
+            "retired_without_delivery": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 12,
+            "n": 800,
+            "rate": 0.015,
+            "lower": 0.008601024976305207,
+            "upper": 0.026034654490893303
+          },
+          "housesPromised": 18,
+          "housesDeliveringEveryPromise": {
+            "hits": 12,
+            "n": 18,
+            "rate": 0.6666666666666666,
+            "lower": 0.4374906934425036,
+            "upper": 0.8372144563633714
+          },
+          "promises": 18,
+          "statuses": {
+            "delivered": 12,
+            "cancelled_other_or_unknown": 6
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 2
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 24,
+            "n": 800,
+            "rate": 0.03,
+            "lower": 0.020241338615343545,
+            "upper": 0.044250969321941606
+          },
+          "housesPromised": 26,
+          "housesDeliveringEveryPromise": {
+            "hits": 24,
+            "n": 26,
+            "rate": 0.9230769230769231,
+            "lower": 0.7585805251948495,
+            "upper": 0.9786453608166245
+          },
+          "promises": 27,
+          "statuses": {
+            "delivered": 25,
+            "cancelled_other_or_unknown": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 6
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 29,
+            "n": 800,
+            "rate": 0.03625,
+            "lower": 0.025356267901371504,
+            "upper": 0.05157630189844975
+          },
+          "housesPromised": 29,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 29,
+            "rate": 0.9310344827586207,
+            "lower": 0.7803505240414808,
+            "upper": 0.9808791359020055
+          },
+          "promises": 31,
+          "statuses": {
+            "delivered": 29,
+            "retired_without_delivery": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-after-canonical",
+      "runs": 800,
+      "start": 5000,
+      "step": 7,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "62fd02e7b46d5d0f01f601d406d7b96773b072baa3df23ae2e2705f11c5054d0",
+      "sha256": "11c0a30e2be93758f2ad914cbb1e04b7cd351b33b2ff8998c97f909476bcb3ef",
+      "heraldVisits": 41,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 114,
+        "the_shelf_that_has_to_go/hide_them": 114,
+        "the_shelf_that_has_to_go/sell_them": 114,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 114,
+        "the_heralds_visitation/full_descent": 41,
+        "the_heralds_visitation/the_short_descent": 41
+      },
+      "answers": {
+        "the_shelf_that_has_to_go|hide_them|hidden": 23,
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_heralds_visitation|full_descent|full": 24,
+        "the_heralds_visitation|the_short_descent|short": 17,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 37,
+        "the_hall_that_waited||somebody_reads_it_properly": 22,
+        "the_shelf_that_has_to_go|burn_them|burned": 23,
+        "the_hall_that_waited||it_is_about_a_roof": 30
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 17,
+            "n": 800,
+            "rate": 0.02125,
+            "lower": 0.013309011615382496,
+            "upper": 0.03376692971435212
+          },
+          "housesPromised": 17,
+          "housesDeliveringEveryPromise": {
+            "hits": 17,
+            "n": 17,
+            "rate": 1,
+            "lower": 0.8156763396284354,
+            "upper": 1
+          },
+          "promises": 17,
+          "statuses": {
+            "delivered": 17
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 13,
+            "n": 800,
+            "rate": 0.01625,
+            "lower": 0.009520719168443501,
+            "upper": 0.027603012671262236
+          },
+          "housesPromised": 22,
+          "housesDeliveringEveryPromise": {
+            "hits": 13,
+            "n": 22,
+            "rate": 0.5909090909090909,
+            "lower": 0.38734477382893806,
+            "upper": 0.7674444033117963
+          },
+          "promises": 22,
+          "statuses": {
+            "delivered": 13,
+            "cancelled_other_or_unknown": 9
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 4
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 27,
+            "n": 800,
+            "rate": 0.03375,
+            "lower": 0.023296972591091623,
+            "upper": 0.048659492463715204
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 30,
+          "statuses": {
+            "delivered": 29,
+            "cancelled_other_or_unknown": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 10
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 23,
+            "n": 800,
+            "rate": 0.02875,
+            "lower": 0.019232692308443156,
+            "upper": 0.042771563256334785
+          },
+          "housesPromised": 23,
+          "housesDeliveringEveryPromise": {
+            "hits": 23,
+            "n": 23,
+            "rate": 1,
+            "lower": 0.8568788745827374,
+            "upper": 1
+          },
+          "promises": 23,
+          "statuses": {
+            "delivered": 23
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-after-independent",
+      "runs": 800,
+      "start": 19461100,
+      "step": 37,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "62fd02e7b46d5d0f01f601d406d7b96773b072baa3df23ae2e2705f11c5054d0",
+      "sha256": "76453347c1db5988b27a91769994d68ef1ab5fcbeb4887e2c4dd6dac4e2d47c4",
+      "heraldVisits": 51,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 122,
+        "the_shelf_that_has_to_go/hide_them": 122,
+        "the_shelf_that_has_to_go/sell_them": 122,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 122,
+        "the_heralds_visitation/full_descent": 51,
+        "the_heralds_visitation/the_short_descent": 51
+      },
+      "answers": {
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_heralds_visitation|full_descent|full": 22,
+        "the_hall_that_waited||it_is_about_a_roof": 27,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 30,
+        "the_shelf_that_has_to_go|burn_them|burned": 30,
+        "the_hall_that_waited||somebody_reads_it_properly": 18,
+        "the_heralds_visitation|the_short_descent|short": 29,
+        "the_shelf_that_has_to_go|hide_them|hidden": 31
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 28,
+            "n": 800,
+            "rate": 0.035,
+            "lower": 0.02432455034286968,
+            "upper": 0.05011996708444437
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 29,
+          "statuses": {
+            "delivered": 28,
+            "retired_without_delivery": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 12,
+            "n": 800,
+            "rate": 0.015,
+            "lower": 0.008601024976305207,
+            "upper": 0.026034654490893303
+          },
+          "housesPromised": 18,
+          "housesDeliveringEveryPromise": {
+            "hits": 12,
+            "n": 18,
+            "rate": 0.6666666666666666,
+            "lower": 0.4374906934425036,
+            "upper": 0.8372144563633714
+          },
+          "promises": 18,
+          "statuses": {
+            "delivered": 12,
+            "cancelled_other_or_unknown": 6
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 2
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 24,
+            "n": 800,
+            "rate": 0.03,
+            "lower": 0.020241338615343545,
+            "upper": 0.044250969321941606
+          },
+          "housesPromised": 26,
+          "housesDeliveringEveryPromise": {
+            "hits": 24,
+            "n": 26,
+            "rate": 0.9230769230769231,
+            "lower": 0.7585805251948495,
+            "upper": 0.9786453608166245
+          },
+          "promises": 27,
+          "statuses": {
+            "delivered": 25,
+            "cancelled_other_or_unknown": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 6
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 29,
+            "n": 800,
+            "rate": 0.03625,
+            "lower": 0.025356267901371504,
+            "upper": 0.05157630189844975
+          },
+          "housesPromised": 29,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 29,
+            "rate": 0.9310344827586207,
+            "lower": 0.7803505240414808,
+            "upper": 0.9808791359020055
+          },
+          "promises": 31,
+          "statuses": {
+            "delivered": 29,
+            "retired_without_delivery": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-before-short",
+      "runs": 200,
+      "start": 5000,
+      "step": 7,
+      "controls": 8,
+      "policy": "short-descent",
+      "contentHash": "c354c3baad5fa5e38d29dc6daf06bf008c8fead0ab1358eddb6715e118c79be4",
+      "sha256": "2792be5bc2ce900c1b4eb84d383246dc35d4a1e80f7f88f40aee92b6c16c03bd",
+      "heraldVisits": 10,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 26,
+        "the_shelf_that_has_to_go/hide_them": 26,
+        "the_shelf_that_has_to_go/sell_them": 26,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 26,
+        "the_heralds_visitation/full_descent": 10,
+        "the_heralds_visitation/the_short_descent": 10
+      },
+      "answers": {
+        "the_hall_that_waited||somebody_reads_it_properly": 2,
+        "the_hall_that_waited||it_is_about_a_roof": 11,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 8,
+        "the_heralds_visitation|the_short_descent|short": 10,
+        "the_shelf_that_has_to_go|hide_them|hidden": 8,
+        "the_shelf_that_has_to_go|burn_them|burned": 5,
+        "the_shelf_that_has_to_go|sell_them|sold": 5
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 10,
+            "n": 200,
+            "rate": 0.05,
+            "lower": 0.027382349028644986,
+            "upper": 0.08957905629784384
+          },
+          "housesPromised": 10,
+          "housesDeliveringEveryPromise": {
+            "hits": 10,
+            "n": 10,
+            "rate": 1,
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "promises": 10,
+          "statuses": {
+            "delivered": 10
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 2,
+            "n": 200,
+            "rate": 0.01,
+            "lower": 0.0027466006037749346,
+            "upper": 0.03572248519617954
+          },
+          "housesPromised": 2,
+          "housesDeliveringEveryPromise": {
+            "hits": 2,
+            "n": 2,
+            "rate": 1,
+            "lower": 0.34237195288961925,
+            "upper": 1
+          },
+          "promises": 2,
+          "statuses": {
+            "delivered": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 1
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 11,
+            "n": 200,
+            "rate": 0.055,
+            "lower": 0.030985020801370097,
+            "upper": 0.0957879244659355
+          },
+          "housesPromised": 11,
+          "housesDeliveringEveryPromise": {
+            "hits": 11,
+            "n": 11,
+            "rate": 1,
+            "lower": 0.7411599827511859,
+            "upper": 1
+          },
+          "promises": 11,
+          "statuses": {
+            "delivered": 11
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 5
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 8,
+            "n": 200,
+            "rate": 0.04,
+            "lower": 0.02040538715065641,
+            "upper": 0.07693293829419882
+          },
+          "housesPromised": 8,
+          "housesDeliveringEveryPromise": {
+            "hits": 8,
+            "n": 8,
+            "rate": 1,
+            "lower": 0.6755843804891231,
+            "upper": 1
+          },
+          "promises": 8,
+          "statuses": {
+            "delivered": 8
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-after-short",
+      "runs": 200,
+      "start": 5000,
+      "step": 7,
+      "controls": 8,
+      "policy": "short-descent",
+      "contentHash": "62fd02e7b46d5d0f01f601d406d7b96773b072baa3df23ae2e2705f11c5054d0",
+      "sha256": "b89da1d7bf645f53c075f0248db5bab778cac9261f69b40c22fade5bfa514c56",
+      "heraldVisits": 10,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 26,
+        "the_shelf_that_has_to_go/hide_them": 26,
+        "the_shelf_that_has_to_go/sell_them": 26,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 26,
+        "the_heralds_visitation/full_descent": 10,
+        "the_heralds_visitation/the_short_descent": 10
+      },
+      "answers": {
+        "the_hall_that_waited||somebody_reads_it_properly": 2,
+        "the_hall_that_waited||it_is_about_a_roof": 11,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 8,
+        "the_heralds_visitation|the_short_descent|short": 10,
+        "the_shelf_that_has_to_go|hide_them|hidden": 8,
+        "the_shelf_that_has_to_go|burn_them|burned": 5,
+        "the_shelf_that_has_to_go|sell_them|sold": 5
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 10,
+            "n": 200,
+            "rate": 0.05,
+            "lower": 0.027382349028644986,
+            "upper": 0.08957905629784384
+          },
+          "housesPromised": 10,
+          "housesDeliveringEveryPromise": {
+            "hits": 10,
+            "n": 10,
+            "rate": 1,
+            "lower": 0.7224598312333834,
+            "upper": 1
+          },
+          "promises": 10,
+          "statuses": {
+            "delivered": 10
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 2,
+            "n": 200,
+            "rate": 0.01,
+            "lower": 0.0027466006037749346,
+            "upper": 0.03572248519617954
+          },
+          "housesPromised": 2,
+          "housesDeliveringEveryPromise": {
+            "hits": 2,
+            "n": 2,
+            "rate": 1,
+            "lower": 0.34237195288961925,
+            "upper": 1
+          },
+          "promises": 2,
+          "statuses": {
+            "delivered": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 1
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 11,
+            "n": 200,
+            "rate": 0.055,
+            "lower": 0.030985020801370097,
+            "upper": 0.0957879244659355
+          },
+          "housesPromised": 11,
+          "housesDeliveringEveryPromise": {
+            "hits": 11,
+            "n": 11,
+            "rate": 1,
+            "lower": 0.7411599827511859,
+            "upper": 1
+          },
+          "promises": 11,
+          "statuses": {
+            "delivered": 11
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 5
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 8,
+            "n": 200,
+            "rate": 0.04,
+            "lower": 0.02040538715065641,
+            "upper": 0.07693293829419882
+          },
+          "housesPromised": 8,
+          "housesDeliveringEveryPromise": {
+            "hits": 8,
+            "n": 8,
+            "rate": 1,
+            "lower": 0.6755843804891231,
+            "upper": 1
+          },
+          "promises": 8,
+          "statuses": {
+            "delivered": 8
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-tail-canonical",
+      "runs": 800,
+      "start": 5000,
+      "step": 7,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "62fd02e7b46d5d0f01f601d406d7b96773b072baa3df23ae2e2705f11c5054d0",
+      "sha256": "8f012a0be2590f4afd8b405126602769208a517b4f35a357d53d2d47bac20f2c",
+      "heraldVisits": 41,
+      "offers": {
+        "the_relief_on_inheritance/declare_true": 34,
+        "the_relief_on_inheritance/declare_short": 34,
+        "the_marrow_codex_offered/buy_the_codex": 72,
+        "the_marrow_codex_offered/decline_and_lend_them_money": 72,
+        "the_shelf_that_has_to_go/burn_them": 114,
+        "the_shelf_that_has_to_go/hide_them": 114,
+        "the_shelf_that_has_to_go/sell_them": 114,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 114,
+        "the_heralds_visitation/full_descent": 41,
+        "the_heralds_visitation/the_short_descent": 41,
+        "the_ward_who_grew_up_here/marry_her_in": 27,
+        "the_ward_who_grew_up_here/send_her_home": 27,
+        "the_reader_has_two_rooms/keep_the_book_open": 28,
+        "the_reader_has_two_rooms/move_the_chair": 28
+      },
+      "answers": {
+        "the_relief_on_inheritance|declare_short|short_return": 13,
+        "the_marrow_codex_offered|buy_the_codex|bought_the_codex": 40,
+        "the_relief_on_inheritance|declare_true|true_return": 21,
+        "the_marrow_codex_offered|decline_and_lend_them_money|lent_instead": 18,
+        "the_shelf_that_has_to_go|hide_them|hidden": 23,
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_heralds_visitation|full_descent|full": 24,
+        "the_ward_who_grew_up_here|marry_her_in|married_in_ward": 14,
+        "the_heralds_visitation|the_short_descent|short": 17,
+        "the_reader_has_two_rooms|move_the_chair|watch_begun": 13,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 37,
+        "the_reader_has_two_rooms|keep_the_book_open|reading_kept": 15,
+        "the_hall_that_waited||somebody_reads_it_properly": 22,
+        "the_shelf_that_has_to_go|burn_them|burned": 23,
+        "the_marrow_codex_offered|decline_and_lend_them_money|they_sell_it_east": 14,
+        "the_hall_that_waited||it_is_about_a_roof": 30,
+        "the_ward_who_grew_up_here|send_her_home|she_talks": 8,
+        "the_ward_who_grew_up_here|send_her_home|sent_home": 5
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 17,
+            "n": 800,
+            "rate": 0.02125,
+            "lower": 0.013309011615382496,
+            "upper": 0.03376692971435212
+          },
+          "housesPromised": 17,
+          "housesDeliveringEveryPromise": {
+            "hits": 17,
+            "n": 17,
+            "rate": 1,
+            "lower": 0.8156763396284354,
+            "upper": 1
+          },
+          "promises": 17,
+          "statuses": {
+            "delivered": 17
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 13,
+            "n": 800,
+            "rate": 0.01625,
+            "lower": 0.009520719168443501,
+            "upper": 0.027603012671262236
+          },
+          "housesPromised": 22,
+          "housesDeliveringEveryPromise": {
+            "hits": 13,
+            "n": 22,
+            "rate": 0.5909090909090909,
+            "lower": 0.38734477382893806,
+            "upper": 0.7674444033117963
+          },
+          "promises": 22,
+          "statuses": {
+            "delivered": 13,
+            "cancelled_other_or_unknown": 9
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 4
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 27,
+            "n": 800,
+            "rate": 0.03375,
+            "lower": 0.023296972591091623,
+            "upper": 0.048659492463715204
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 30,
+          "statuses": {
+            "delivered": 29,
+            "cancelled_other_or_unknown": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 10
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 23,
+            "n": 800,
+            "rate": 0.02875,
+            "lower": 0.019232692308443156,
+            "upper": 0.042771563256334785
+          },
+          "housesPromised": 23,
+          "housesDeliveringEveryPromise": {
+            "hits": 23,
+            "n": 23,
+            "rate": 1,
+            "lower": 0.8568788745827374,
+            "upper": 1
+          },
+          "promises": 23,
+          "statuses": {
+            "delivered": 23
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "both_books_open",
+          "housesFired": {
+            "hits": 12,
+            "n": 800,
+            "rate": 0.015,
+            "lower": 0.008601024976305207,
+            "upper": 0.026034654490893303
+          },
+          "housesPromised": 12,
+          "housesDeliveringEveryPromise": {
+            "hits": 11,
+            "n": 12,
+            "rate": 0.9166666666666666,
+            "lower": 0.6461140782014047,
+            "upper": 0.9851352905492264
+          },
+          "promises": 13,
+          "statuses": {
+            "delivered": 12,
+            "start_refused_term_window": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_ward_answers_cawdry",
+          "housesFired": {
+            "hits": 14,
+            "n": 800,
+            "rate": 0.0175,
+            "lower": 0.010452446404837008,
+            "upper": 0.02915933780737595
+          },
+          "housesPromised": 14,
+          "housesDeliveringEveryPromise": {
+            "hits": 14,
+            "n": 14,
+            "rate": 1,
+            "lower": 0.7846829880728186,
+            "upper": 1
+          },
+          "promises": 14,
+          "statuses": {
+            "delivered": 14
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_codex_in_the_eastern_invoice",
+          "housesFired": {
+            "hits": 14,
+            "n": 800,
+            "rate": 0.0175,
+            "lower": 0.010452446404837008,
+            "upper": 0.02915933780737595
+          },
+          "housesPromised": 14,
+          "housesDeliveringEveryPromise": {
+            "hits": 14,
+            "n": 14,
+            "rate": 1,
+            "lower": 0.7846829880728186,
+            "upper": 1
+          },
+          "promises": 14,
+          "statuses": {
+            "delivered": 14
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_readers_open_book_returns",
+          "housesFired": {
+            "hits": 15,
+            "n": 800,
+            "rate": 0.01875,
+            "lower": 0.011395038944009435,
+            "upper": 0.03070479764071074
+          },
+          "housesPromised": 15,
+          "housesDeliveringEveryPromise": {
+            "hits": 15,
+            "n": 15,
+            "rate": 1,
+            "lower": 0.7961107336956521,
+            "upper": 1
+          },
+          "promises": 15,
+          "statuses": {
+            "delivered": 15
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_readers_sickroom_term_returns",
+          "housesFired": {
+            "hits": 13,
+            "n": 800,
+            "rate": 0.01625,
+            "lower": 0.009520719168443501,
+            "upper": 0.027603012671262236
+          },
+          "housesPromised": 13,
+          "housesDeliveringEveryPromise": {
+            "hits": 13,
+            "n": 13,
+            "rate": 1,
+            "lower": 0.7718981569447083,
+            "upper": 1
+          },
+          "promises": 13,
+          "statuses": {
+            "delivered": 13
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    },
+    {
+      "name": "routes-tail-independent",
+      "runs": 800,
+      "start": 19461100,
+      "step": 37,
+      "controls": 8,
+      "policy": "canonical",
+      "contentHash": "62fd02e7b46d5d0f01f601d406d7b96773b072baa3df23ae2e2705f11c5054d0",
+      "sha256": "24f36b0544b915c5c9c332d95e0c24f4df84d09bea28dbed7e47ee8d1d252558",
+      "heraldVisits": 51,
+      "offers": {
+        "the_shelf_that_has_to_go/burn_them": 122,
+        "the_shelf_that_has_to_go/hide_them": 122,
+        "the_shelf_that_has_to_go/sell_them": 122,
+        "the_shelf_that_has_to_go/offer_them_as_tribute": 122,
+        "the_marrow_codex_offered/buy_the_codex": 79,
+        "the_marrow_codex_offered/decline_and_lend_them_money": 79,
+        "the_heralds_visitation/full_descent": 51,
+        "the_heralds_visitation/the_short_descent": 51,
+        "the_ward_who_grew_up_here/marry_her_in": 44,
+        "the_ward_who_grew_up_here/send_her_home": 44,
+        "the_relief_on_inheritance/declare_true": 35,
+        "the_relief_on_inheritance/declare_short": 35,
+        "the_reader_has_two_rooms/keep_the_book_open": 34,
+        "the_reader_has_two_rooms/move_the_chair": 34
+      },
+      "answers": {
+        "the_shelf_that_has_to_go|sell_them|sold": 31,
+        "the_marrow_codex_offered|buy_the_codex|bought_the_codex": 42,
+        "the_heralds_visitation|full_descent|full": 22,
+        "the_ward_who_grew_up_here|send_her_home|she_talks": 11,
+        "the_hall_that_waited||it_is_about_a_roof": 27,
+        "the_shelf_that_has_to_go|offer_them_as_tribute|offered_to_bramme": 30,
+        "the_shelf_that_has_to_go|burn_them|burned": 30,
+        "the_ward_who_grew_up_here|marry_her_in|married_in_ward": 24,
+        "the_marrow_codex_offered|decline_and_lend_them_money|lent_instead": 22,
+        "the_hall_that_waited||somebody_reads_it_properly": 18,
+        "the_heralds_visitation|the_short_descent|short": 29,
+        "the_shelf_that_has_to_go|hide_them|hidden": 31,
+        "the_relief_on_inheritance|declare_true|true_return": 20,
+        "the_relief_on_inheritance|declare_short|short_return": 15,
+        "the_reader_has_two_rooms|keep_the_book_open|reading_kept": 15,
+        "the_reader_has_two_rooms|move_the_chair|watch_begun": 19,
+        "the_marrow_codex_offered|decline_and_lend_them_money|they_sell_it_east": 15,
+        "the_ward_who_grew_up_here|send_her_home|sent_home": 9
+      },
+      "summary": [
+        {
+          "target": "the_herald_opens_the_old_question",
+          "housesFired": {
+            "hits": 28,
+            "n": 800,
+            "rate": 0.035,
+            "lower": 0.02432455034286968,
+            "upper": 0.05011996708444437
+          },
+          "housesPromised": 28,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 28,
+            "rate": 0.9642857142857143,
+            "lower": 0.8228742388150135,
+            "upper": 0.9936676435024582
+          },
+          "promises": 29,
+          "statuses": {
+            "delivered": 28,
+            "retired_without_delivery": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_hall_is_answered",
+          "housesFired": {
+            "hits": 12,
+            "n": 800,
+            "rate": 0.015,
+            "lower": 0.008601024976305207,
+            "upper": 0.026034654490893303
+          },
+          "housesPromised": 18,
+          "housesDeliveringEveryPromise": {
+            "hits": 12,
+            "n": 18,
+            "rate": 0.6666666666666666,
+            "lower": 0.4374906934425036,
+            "upper": 0.8372144563633714
+          },
+          "promises": 18,
+          "statuses": {
+            "delivered": 12,
+            "cancelled_other_or_unknown": 6
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 2
+        },
+        {
+          "target": "the_hall_stops_writing",
+          "housesFired": {
+            "hits": 24,
+            "n": 800,
+            "rate": 0.03,
+            "lower": 0.020241338615343545,
+            "upper": 0.044250969321941606
+          },
+          "housesPromised": 26,
+          "housesDeliveringEveryPromise": {
+            "hits": 24,
+            "n": 26,
+            "rate": 0.9230769230769231,
+            "lower": 0.7585805251948495,
+            "upper": 0.9786453608166245
+          },
+          "promises": 27,
+          "statuses": {
+            "delivered": 25,
+            "cancelled_other_or_unknown": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 6
+        },
+        {
+          "target": "the_cellar_shelf_is_found",
+          "housesFired": {
+            "hits": 29,
+            "n": 800,
+            "rate": 0.03625,
+            "lower": 0.025356267901371504,
+            "upper": 0.05157630189844975
+          },
+          "housesPromised": 29,
+          "housesDeliveringEveryPromise": {
+            "hits": 27,
+            "n": 29,
+            "rate": 0.9310344827586207,
+            "lower": 0.7803505240414808,
+            "upper": 0.9808791359020055
+          },
+          "promises": 31,
+          "statuses": {
+            "delivered": 29,
+            "retired_without_delivery": 2
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "both_books_open",
+          "housesFired": {
+            "hits": 14,
+            "n": 800,
+            "rate": 0.0175,
+            "lower": 0.010452446404837008,
+            "upper": 0.02915933780737595
+          },
+          "housesPromised": 15,
+          "housesDeliveringEveryPromise": {
+            "hits": 14,
+            "n": 15,
+            "rate": 0.9333333333333333,
+            "lower": 0.7018292244757601,
+            "upper": 0.9881334113938051
+          },
+          "promises": 15,
+          "statuses": {
+            "delivered": 14,
+            "start_refused_term_window": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_ward_answers_cawdry",
+          "housesFired": {
+            "hits": 24,
+            "n": 800,
+            "rate": 0.03,
+            "lower": 0.020241338615343545,
+            "upper": 0.044250969321941606
+          },
+          "housesPromised": 24,
+          "housesDeliveringEveryPromise": {
+            "hits": 24,
+            "n": 24,
+            "rate": 1,
+            "lower": 0.8620194241710247,
+            "upper": 1
+          },
+          "promises": 24,
+          "statuses": {
+            "delivered": 24
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_codex_in_the_eastern_invoice",
+          "housesFired": {
+            "hits": 14,
+            "n": 800,
+            "rate": 0.0175,
+            "lower": 0.010452446404837008,
+            "upper": 0.02915933780737595
+          },
+          "housesPromised": 14,
+          "housesDeliveringEveryPromise": {
+            "hits": 13,
+            "n": 14,
+            "rate": 0.9285714285714286,
+            "lower": 0.6853073044604219,
+            "upper": 0.9872781138877085
+          },
+          "promises": 15,
+          "statuses": {
+            "delivered": 14,
+            "retired_without_delivery": 1
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_readers_open_book_returns",
+          "housesFired": {
+            "hits": 15,
+            "n": 800,
+            "rate": 0.01875,
+            "lower": 0.011395038944009435,
+            "upper": 0.03070479764071074
+          },
+          "housesPromised": 15,
+          "housesDeliveringEveryPromise": {
+            "hits": 15,
+            "n": 15,
+            "rate": 1,
+            "lower": 0.7961107336956521,
+            "upper": 1
+          },
+          "promises": 15,
+          "statuses": {
+            "delivered": 15
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        },
+        {
+          "target": "the_readers_sickroom_term_returns",
+          "housesFired": {
+            "hits": 19,
+            "n": 800,
+            "rate": 0.02375,
+            "lower": 0.015256294229507172,
+            "upper": 0.036795751845241885
+          },
+          "housesPromised": 19,
+          "housesDeliveringEveryPromise": {
+            "hits": 19,
+            "n": 19,
+            "rate": 1,
+            "lower": 0.8318156346315496,
+            "upper": 1
+          },
+          "promises": 19,
+          "statuses": {
+            "delivered": 19
+          },
+          "deliveredWithoutCause": 0,
+          "deliveredWithChangedKeptCast": 0
+        }
+      ]
+    }
+  ],
+  "rarestTen": [
+    {
+      "event": "the_unmaking",
+      "canonicalHouses": 6,
+      "independentHouses": 7,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "an_early_waking_daughter",
+      "canonicalHouses": 11,
+      "independentHouses": 17,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_counting_rhyme",
+      "canonicalHouses": 11,
+      "independentHouses": 19,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "waking_early",
+      "canonicalHouses": 11,
+      "independentHouses": 8,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "both_books_open",
+      "canonicalHouses": 12,
+      "independentHouses": 14,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_millers_boy",
+      "canonicalHouses": 12,
+      "independentHouses": 15,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_hall_is_answered",
+      "canonicalHouses": 13,
+      "independentHouses": 12,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_readers_sickroom_term_returns",
+      "canonicalHouses": 13,
+      "independentHouses": 19,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_codex_in_the_eastern_invoice",
+      "canonicalHouses": 14,
+      "independentHouses": 14,
+      "runsPerColumn": 800
+    },
+    {
+      "event": "the_ward_answers_cawdry",
+      "canonicalHouses": 14,
+      "independentHouses": 24,
+      "runsPerColumn": 800
+    }
+  ],
+  "comparisons": {
+    "canonical": {
+      "changed": [
+        {
+          "seed": 5350,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 6162,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 7107,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 7415,
+          "fields": [
+            "templateFires",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 7527,
+          "fields": [
+            "templateFires",
+            "shares",
+            "choices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 1
+        },
+        {
+          "seed": 7674,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 7765,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 8339,
+          "fields": [
+            "templateFires"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 8577,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 8794,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 9242,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 9704,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 10565,
+          "fields": [
+            "templateFires",
+            "shares",
+            "choices",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": -1
+        }
+      ],
+      "before": {
+        "choices": 105164,
+        "repeated": 22570,
+        "meanSilence": 54.39625,
+        "maxSilence": 74,
+        "inPlayEndings": {
+          "broken_line": 175,
+          "none": 625
+        }
+      },
+      "after": {
+        "choices": 105164,
+        "repeated": 22568,
+        "meanSilence": 54.39625,
+        "maxSilence": 74,
+        "inPlayEndings": {
+          "broken_line": 175,
+          "none": 625
+        }
+      },
+      "shares": {
+        "ages": [
+          {
+            "key": "(no Age)",
+            "before": 54324,
+            "after": 54324,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade",
+            "before": 10651,
+            "after": 10651,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_long_peace",
+            "before": 2878,
+            "after": 2878,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_plague",
+            "before": 792,
+            "after": 792,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_quickening",
+            "before": 1009,
+            "after": 1009,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_wars",
+            "before": 4145,
+            "after": 4145,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_withering",
+            "before": 7071,
+            "after": 7071,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection",
+            "before": 3163,
+            "after": 3163,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_long_peace",
+            "before": 1422,
+            "after": 1422,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_plague",
+            "before": 173,
+            "after": 173,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_quickening",
+            "before": 479,
+            "after": 479,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_wars",
+            "before": 1023,
+            "after": 1023,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_withering",
+            "before": 1913,
+            "after": 1913,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace",
+            "before": 36927,
+            "after": 36927,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_plague",
+            "before": 3595,
+            "after": 3595,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_wars",
+            "before": 15716,
+            "after": 15716,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_withering",
+            "before": 8346,
+            "after": 8346,
+            "delta": 0
+          },
+          {
+            "key": "the_plague",
+            "before": 2185,
+            "after": 2185,
+            "delta": 0
+          },
+          {
+            "key": "the_plague+the_quickening",
+            "before": 425,
+            "after": 425,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening",
+            "before": 4765,
+            "after": 4765,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_wars",
+            "before": 1809,
+            "after": 1809,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_withering",
+            "before": 2190,
+            "after": 2190,
+            "delta": 0
+          },
+          {
+            "key": "the_wars",
+            "before": 12503,
+            "after": 12503,
+            "delta": 0
+          },
+          {
+            "key": "the_withering",
+            "before": 11206,
+            "after": 11206,
+            "delta": 0
+          }
+        ],
+        "tier": [
+          {
+            "key": "family",
+            "before": 89906,
+            "after": 89906,
+            "delta": 0
+          },
+          {
+            "key": "frame",
+            "before": 6580,
+            "after": 6580,
+            "delta": 0
+          },
+          {
+            "key": "head",
+            "before": 55232,
+            "after": 55230,
+            "delta": -2
+          },
+          {
+            "key": "individual",
+            "before": 36719,
+            "after": 36721,
+            "delta": 2
+          },
+          {
+            "key": "record",
+            "before": 273,
+            "after": 273,
+            "delta": 0
+          }
+        ],
+        "frequency": [
+          {
+            "key": "common",
+            "before": 145100,
+            "after": 145101,
+            "delta": 1
+          },
+          {
+            "key": "mythic",
+            "before": 325,
+            "after": 325,
+            "delta": 0
+          },
+          {
+            "key": "rare",
+            "before": 13524,
+            "after": 13522,
+            "delta": -2
+          },
+          {
+            "key": "uncommon",
+            "before": 29761,
+            "after": 29762,
+            "delta": 1
+          }
+        ],
+        "source": [
+          {
+            "key": "ambient",
+            "before": 90609,
+            "after": 90609,
+            "delta": 0
+          },
+          {
+            "key": "arc",
+            "before": 61409,
+            "after": 61409,
+            "delta": 0
+          },
+          {
+            "key": "forced",
+            "before": 4837,
+            "after": 4837,
+            "delta": 0
+          },
+          {
+            "key": "frame",
+            "before": 6580,
+            "after": 6580,
+            "delta": 0
+          },
+          {
+            "key": "pressure",
+            "before": 25275,
+            "after": 25275,
+            "delta": 0
+          }
+        ],
+        "joint": [
+          {
+            "key": "the_crusade / family / uncommon / ambient",
+            "before": 173,
+            "after": 175,
+            "delta": 2
+          },
+          {
+            "key": "the_crusade / head / rare / ambient",
+            "before": 279,
+            "after": 278,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade / head / uncommon / ambient",
+            "before": 396,
+            "after": 394,
+            "delta": -2
+          },
+          {
+            "key": "the_crusade / individual / uncommon / ambient",
+            "before": 5,
+            "after": 6,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_plague / family / uncommon / ambient",
+            "before": 25,
+            "after": 24,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_plague / head / common / ambient",
+            "before": 132,
+            "after": 131,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_plague / head / uncommon / ambient",
+            "before": 23,
+            "after": 24,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_plague / individual / common / ambient",
+            "before": 20,
+            "after": 21,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_wars / family / common / ambient",
+            "before": 811,
+            "after": 813,
+            "delta": 2
+          },
+          {
+            "key": "the_crusade+the_wars / family / rare / ambient",
+            "before": 42,
+            "after": 41,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_wars / family / uncommon / ambient",
+            "before": 55,
+            "after": 54,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_withering / family / common / ambient",
+            "before": 1430,
+            "after": 1429,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_withering / head / uncommon / ambient",
+            "before": 234,
+            "after": 235,
+            "delta": 1
+          }
+        ]
+      }
+    },
+    "independent": {
+      "changed": [
+        {
+          "seed": 19463505,
+          "fields": [
+            "templateFires",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19463616,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19467353,
+          "fields": [
+            "templateFires"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19469647,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19470868,
+          "fields": [
+            "templateFires"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19471275,
+          "fields": [
+            "templateFires",
+            "shares",
+            "choices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": -1
+        },
+        {
+          "seed": 19473828,
+          "fields": [
+            "templateFires",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19476196,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19479748,
+          "fields": [
+            "templateFires",
+            "shares",
+            "choices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": -1
+        },
+        {
+          "seed": 19480562,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19485779,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19487148,
+          "fields": [
+            "templateFires",
+            "shares",
+            "choices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": -1
+        },
+        {
+          "seed": 19488702,
+          "fields": [
+            "templateFires",
+            "offers",
+            "answers",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 19488739,
+          "fields": [
+            "templateFires",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        }
+      ],
+      "before": {
+        "choices": 104542,
+        "repeated": 22635,
+        "meanSilence": 54.72625,
+        "maxSilence": 84,
+        "inPlayEndings": {
+          "none": 619,
+          "broken_line": 181
+        }
+      },
+      "after": {
+        "choices": 104539,
+        "repeated": 22638,
+        "meanSilence": 54.72625,
+        "maxSilence": 84,
+        "inPlayEndings": {
+          "none": 619,
+          "broken_line": 181
+        }
+      },
+      "shares": {
+        "ages": [
+          {
+            "key": "(no Age)",
+            "before": 53714,
+            "after": 53714,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade",
+            "before": 10323,
+            "after": 10323,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_long_peace",
+            "before": 3508,
+            "after": 3508,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_plague",
+            "before": 890,
+            "after": 890,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_quickening",
+            "before": 995,
+            "after": 995,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_wars",
+            "before": 3603,
+            "after": 3603,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_withering",
+            "before": 7601,
+            "after": 7601,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection",
+            "before": 3532,
+            "after": 3532,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_long_peace",
+            "before": 1642,
+            "after": 1642,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_plague",
+            "before": 227,
+            "after": 227,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_quickening",
+            "before": 555,
+            "after": 555,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_wars",
+            "before": 1170,
+            "after": 1170,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_withering",
+            "before": 1887,
+            "after": 1887,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace",
+            "before": 37066,
+            "after": 37066,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_plague",
+            "before": 3499,
+            "after": 3499,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_wars",
+            "before": 15186,
+            "after": 15186,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_withering",
+            "before": 7851,
+            "after": 7851,
+            "delta": 0
+          },
+          {
+            "key": "the_plague",
+            "before": 2086,
+            "after": 2086,
+            "delta": 0
+          },
+          {
+            "key": "the_plague+the_quickening",
+            "before": 399,
+            "after": 399,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening",
+            "before": 4628,
+            "after": 4628,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_wars",
+            "before": 1903,
+            "after": 1903,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_withering",
+            "before": 2090,
+            "after": 2090,
+            "delta": 0
+          },
+          {
+            "key": "the_wars",
+            "before": 12331,
+            "after": 12331,
+            "delta": 0
+          },
+          {
+            "key": "the_withering",
+            "before": 10894,
+            "after": 10894,
+            "delta": 0
+          }
+        ],
+        "tier": [
+          {
+            "key": "family",
+            "before": 89852,
+            "after": 89851,
+            "delta": -1
+          },
+          {
+            "key": "frame",
+            "before": 6447,
+            "after": 6447,
+            "delta": 0
+          },
+          {
+            "key": "head",
+            "before": 54655,
+            "after": 54658,
+            "delta": 3
+          },
+          {
+            "key": "individual",
+            "before": 36327,
+            "after": 36328,
+            "delta": 1
+          },
+          {
+            "key": "record",
+            "before": 299,
+            "after": 296,
+            "delta": -3
+          }
+        ],
+        "frequency": [
+          {
+            "key": "common",
+            "before": 144415,
+            "after": 144420,
+            "delta": 5
+          },
+          {
+            "key": "mythic",
+            "before": 294,
+            "after": 294,
+            "delta": 0
+          },
+          {
+            "key": "rare",
+            "before": 13447,
+            "after": 13448,
+            "delta": 1
+          },
+          {
+            "key": "uncommon",
+            "before": 29424,
+            "after": 29418,
+            "delta": -6
+          }
+        ],
+        "source": [
+          {
+            "key": "ambient",
+            "before": 90142,
+            "after": 90142,
+            "delta": 0
+          },
+          {
+            "key": "arc",
+            "before": 60988,
+            "after": 60988,
+            "delta": 0
+          },
+          {
+            "key": "forced",
+            "before": 4820,
+            "after": 4820,
+            "delta": 0
+          },
+          {
+            "key": "frame",
+            "before": 6447,
+            "after": 6447,
+            "delta": 0
+          },
+          {
+            "key": "pressure",
+            "before": 25183,
+            "after": 25183,
+            "delta": 0
+          }
+        ],
+        "joint": [
+          {
+            "key": "the_crusade / family / common / ambient",
+            "before": 2113,
+            "after": 2111,
+            "delta": -2
+          },
+          {
+            "key": "the_crusade / family / uncommon / ambient",
+            "before": 193,
+            "after": 192,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade / head / common / ambient",
+            "before": 1901,
+            "after": 1904,
+            "delta": 3
+          },
+          {
+            "key": "the_crusade / head / rare / ambient",
+            "before": 307,
+            "after": 308,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade / head / uncommon / ambient",
+            "before": 359,
+            "after": 358,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade / individual / common / ambient",
+            "before": 240,
+            "after": 241,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade / record / uncommon / ambient",
+            "before": 36,
+            "after": 35,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_long_peace / head / common / ambient",
+            "before": 623,
+            "after": 624,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_long_peace / record / uncommon / ambient",
+            "before": 18,
+            "after": 17,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_quickening / family / common / ambient",
+            "before": 202,
+            "after": 203,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_quickening / head / uncommon / ambient",
+            "before": 50,
+            "after": 49,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_withering / family / common / ambient",
+            "before": 1526,
+            "after": 1527,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_withering / record / uncommon / ambient",
+            "before": 37,
+            "after": 36,
+            "delta": -1
+          }
+        ]
+      }
+    },
+    "shortDescent": {
+      "changed": [
+        {
+          "seed": 5245,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 5350,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 6106,
+          "fields": [
+            "templateFires",
+            "shares",
+            "repeatedChoices"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        },
+        {
+          "seed": 6190,
+          "fields": [
+            "templateFires",
+            "shares"
+          ],
+          "ending": [
+            null,
+            null
+          ],
+          "choiceDelta": 0
+        }
+      ],
+      "before": {
+        "choices": 24629,
+        "repeated": 5139,
+        "meanSilence": 53.225,
+        "maxSilence": 75,
+        "inPlayEndings": {
+          "none": 142,
+          "broken_line": 58
+        }
+      },
+      "after": {
+        "choices": 24629,
+        "repeated": 5139,
+        "meanSilence": 53.225,
+        "maxSilence": 75,
+        "inPlayEndings": {
+          "none": 142,
+          "broken_line": 58
+        }
+      },
+      "shares": {
+        "ages": [
+          {
+            "key": "(no Age)",
+            "before": 13163,
+            "after": 13163,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade",
+            "before": 2396,
+            "after": 2396,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_long_peace",
+            "before": 605,
+            "after": 605,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_plague",
+            "before": 170,
+            "after": 170,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_quickening",
+            "before": 184,
+            "after": 184,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_wars",
+            "before": 907,
+            "after": 907,
+            "delta": 0
+          },
+          {
+            "key": "the_crusade+the_withering",
+            "before": 1313,
+            "after": 1313,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection",
+            "before": 677,
+            "after": 677,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_long_peace",
+            "before": 378,
+            "after": 378,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_plague",
+            "before": 20,
+            "after": 20,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_quickening",
+            "before": 111,
+            "after": 111,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_wars",
+            "before": 299,
+            "after": 299,
+            "delta": 0
+          },
+          {
+            "key": "the_insurrection+the_withering",
+            "before": 434,
+            "after": 434,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace",
+            "before": 8606,
+            "after": 8606,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_plague",
+            "before": 745,
+            "after": 745,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_wars",
+            "before": 3709,
+            "after": 3709,
+            "delta": 0
+          },
+          {
+            "key": "the_long_peace+the_withering",
+            "before": 2289,
+            "after": 2289,
+            "delta": 0
+          },
+          {
+            "key": "the_plague",
+            "before": 520,
+            "after": 520,
+            "delta": 0
+          },
+          {
+            "key": "the_plague+the_quickening",
+            "before": 100,
+            "after": 100,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening",
+            "before": 1083,
+            "after": 1083,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_wars",
+            "before": 423,
+            "after": 423,
+            "delta": 0
+          },
+          {
+            "key": "the_quickening+the_withering",
+            "before": 505,
+            "after": 505,
+            "delta": 0
+          },
+          {
+            "key": "the_wars",
+            "before": 2773,
+            "after": 2773,
+            "delta": 0
+          },
+          {
+            "key": "the_withering",
+            "before": 2488,
+            "after": 2488,
+            "delta": 0
+          }
+        ],
+        "tier": [
+          {
+            "key": "family",
+            "before": 21034,
+            "after": 21032,
+            "delta": -2
+          },
+          {
+            "key": "frame",
+            "before": 1546,
+            "after": 1546,
+            "delta": 0
+          },
+          {
+            "key": "head",
+            "before": 12906,
+            "after": 12908,
+            "delta": 2
+          },
+          {
+            "key": "individual",
+            "before": 8358,
+            "after": 8358,
+            "delta": 0
+          },
+          {
+            "key": "record",
+            "before": 54,
+            "after": 54,
+            "delta": 0
+          }
+        ],
+        "frequency": [
+          {
+            "key": "common",
+            "before": 33776,
+            "after": 33776,
+            "delta": 0
+          },
+          {
+            "key": "mythic",
+            "before": 58,
+            "after": 58,
+            "delta": 0
+          },
+          {
+            "key": "rare",
+            "before": 3149,
+            "after": 3149,
+            "delta": 0
+          },
+          {
+            "key": "uncommon",
+            "before": 6915,
+            "after": 6915,
+            "delta": 0
+          }
+        ],
+        "source": [
+          {
+            "key": "ambient",
+            "before": 21493,
+            "after": 21493,
+            "delta": 0
+          },
+          {
+            "key": "arc",
+            "before": 14132,
+            "after": 14132,
+            "delta": 0
+          },
+          {
+            "key": "forced",
+            "before": 1140,
+            "after": 1140,
+            "delta": 0
+          },
+          {
+            "key": "frame",
+            "before": 1546,
+            "after": 1546,
+            "delta": 0
+          },
+          {
+            "key": "pressure",
+            "before": 5587,
+            "after": 5587,
+            "delta": 0
+          }
+        ],
+        "joint": [
+          {
+            "key": "the_crusade+the_wars / family / rare / ambient",
+            "before": 7,
+            "after": 6,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_wars / head / rare / ambient",
+            "before": 18,
+            "after": 19,
+            "delta": 1
+          },
+          {
+            "key": "the_crusade+the_withering / family / common / ambient",
+            "before": 270,
+            "after": 269,
+            "delta": -1
+          },
+          {
+            "key": "the_crusade+the_withering / head / common / ambient",
+            "before": 233,
+            "after": 234,
+            "delta": 1
+          }
+        ]
+      }
+    }
+  },
+  "losses": [
+    {
+      "cohort": "canonical",
+      "seed": 5721,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1495,
+      "originalCast": {
+        "COUSIN": "p_cb",
+        "HEAD": "p_co"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "COUSIN",
+          "person": "p_cb",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_95",
+      "instance": "arc_1g",
+      "dueYear": 1506,
+      "keptCast": {
+        "HEAD": "p_co",
+        "COUSIN": "p_cb"
+      },
+      "finalBindings": {
+        "HEAD": "p_co",
+        "COUSIN": "p_cb"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 5728,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1393,
+      "originalCast": {
+        "COUSIN": "p_a8",
+        "HEAD": "p_ax"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_ax",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_a8",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_5r",
+      "instance": "arc_t",
+      "dueYear": 1404,
+      "keptCast": {
+        "HEAD": "p_ax",
+        "COUSIN": "p_a8"
+      },
+      "finalBindings": {
+        "HEAD": "p_ax",
+        "COUSIN": "p_a8"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 5903,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1463,
+      "originalCast": {
+        "COUSIN": "p_c7",
+        "HEAD": "p_b1"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_b1",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_c7",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_6z",
+      "instance": "arc_10",
+      "dueYear": 1478,
+      "keptCast": {
+        "HEAD": "p_b1",
+        "COUSIN": "p_c7"
+      },
+      "finalBindings": {
+        "HEAD": "p_dr",
+        "COUSIN": "p_c7"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 6449,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1427,
+      "originalCast": {
+        "COUSIN": "p_be",
+        "HEAD": "p_cm"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_cm",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_be",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_7g",
+      "instance": "arc_1d",
+      "dueYear": 1445,
+      "keptCast": {
+        "HEAD": "p_cm",
+        "COUSIN": "p_be"
+      },
+      "finalBindings": {
+        "HEAD": "p_d5",
+        "COUSIN": "p_be"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 6561,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1263,
+      "originalCast": {
+        "COUSIN": "p_5t",
+        "HEAD": "p_5w"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_5w",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_5t",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_4b",
+      "instance": "arc_r",
+      "dueYear": 1277,
+      "keptCast": {
+        "HEAD": "p_5w",
+        "COUSIN": "p_5t"
+      },
+      "finalBindings": {
+        "HEAD": "p_7d",
+        "COUSIN": "p_5t"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 6659,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1381,
+      "originalCast": {
+        "COUSIN": "p_90",
+        "HEAD": "p_b4"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_b4",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_90",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_5g",
+      "instance": "arc_t",
+      "dueYear": 1396,
+      "keptCast": {
+        "HEAD": "p_b4",
+        "COUSIN": "p_90"
+      },
+      "finalBindings": {
+        "HEAD": "p_bf",
+        "COUSIN": "p_90"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 7513,
+      "target": "the_hall_stops_writing",
+      "launcher": "the_hall_that_waited||it_is_about_a_roof",
+      "year": 1331,
+      "originalCast": {
+        "COUSIN": "p_72",
+        "HEAD": "p_6f"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_6f",
+          "status": "dead",
+          "policy": "recast"
+        }
+      ],
+      "launchPage": "chr_5q",
+      "instance": "arc_v",
+      "dueYear": 1338,
+      "keptCast": {
+        "HEAD": "p_6f",
+        "COUSIN": "p_72"
+      },
+      "finalBindings": {
+        "HEAD": "p_6f",
+        "COUSIN": "p_72"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 8010,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1389,
+      "originalCast": {
+        "COUSIN": "p_92",
+        "HEAD": "p_a7"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "COUSIN",
+          "person": "p_92",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_6a",
+      "instance": "arc_y",
+      "dueYear": 1402,
+      "keptCast": {
+        "HEAD": "p_a7",
+        "COUSIN": "p_92"
+      },
+      "finalBindings": {
+        "HEAD": "p_a7",
+        "COUSIN": "p_92"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 8997,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1531,
+      "originalCast": {
+        "COUSIN": "p_es",
+        "HEAD": "p_ep"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_ep",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_es",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_a4",
+      "instance": "arc_1j",
+      "dueYear": 1542,
+      "keptCast": {
+        "HEAD": "p_ep",
+        "COUSIN": "p_es"
+      },
+      "finalBindings": {
+        "HEAD": "p_h1",
+        "COUSIN": "p_es"
+      }
+    },
+    {
+      "cohort": "canonical",
+      "seed": 9081,
+      "target": "both_books_open",
+      "launcher": "the_relief_on_inheritance|declare_short|short_return",
+      "year": 1518,
+      "originalCast": {
+        "HEAD": "p_fc"
+      },
+      "queued": false,
+      "status": "start_refused_term_window",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_8i"
+    },
+    {
+      "cohort": "canonical",
+      "seed": 10348,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1366,
+      "originalCast": {
+        "COUSIN": "p_94",
+        "HEAD": "p_8c"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_8c",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_94",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_69",
+      "instance": "arc_x",
+      "dueYear": 1379,
+      "keptCast": {
+        "HEAD": "p_8c",
+        "COUSIN": "p_94"
+      },
+      "finalBindings": {
+        "HEAD": "p_a4",
+        "COUSIN": "p_94"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19466169,
+      "target": "the_hall_stops_writing",
+      "launcher": "the_hall_that_waited||it_is_about_a_roof",
+      "year": 1337,
+      "originalCast": {
+        "COUSIN": "p_6z",
+        "HEAD": "p_8n"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_8n",
+          "status": "dead",
+          "policy": "recast"
+        }
+      ],
+      "launchPage": "chr_55",
+      "instance": "arc_r",
+      "dueYear": 1354,
+      "keptCast": {
+        "HEAD": "p_8n",
+        "COUSIN": "p_6z"
+      },
+      "finalBindings": {
+        "HEAD": "p_8n",
+        "COUSIN": "p_6z"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19466909,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1312,
+      "originalCast": {
+        "COUSIN": "p_77",
+        "HEAD": "p_78"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "COUSIN",
+          "person": "p_77",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_4k",
+      "instance": "arc_p",
+      "dueYear": 1325,
+      "keptCast": {
+        "HEAD": "p_78",
+        "COUSIN": "p_77"
+      },
+      "finalBindings": {
+        "HEAD": "p_78",
+        "COUSIN": "p_77"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19467279,
+      "target": "both_books_open",
+      "launcher": "the_relief_on_inheritance|declare_short|short_return",
+      "year": 1518,
+      "originalCast": {
+        "HEAD": "p_eb"
+      },
+      "queued": false,
+      "status": "start_refused_term_window",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_8o"
+    },
+    {
+      "cohort": "independent",
+      "seed": 19467834,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1344,
+      "originalCast": {
+        "COUSIN": "p_7y",
+        "HEAD": "p_ai"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "COUSIN",
+          "person": "p_7y",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_5p",
+      "instance": "arc_x",
+      "dueYear": 1354,
+      "keptCast": {
+        "HEAD": "p_ai",
+        "COUSIN": "p_7y"
+      },
+      "finalBindings": {
+        "HEAD": "p_ai",
+        "COUSIN": "p_7y"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19472126,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1452,
+      "originalCast": {
+        "COUSIN": "p_as",
+        "HEAD": "p_bc"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_bc",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_as",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_6r",
+      "instance": "arc_y",
+      "dueYear": 1470,
+      "keptCast": {
+        "HEAD": "p_bc",
+        "COUSIN": "p_as"
+      },
+      "finalBindings": {
+        "HEAD": "p_d1",
+        "COUSIN": "p_as"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19472570,
+      "target": "the_cellar_shelf_is_found",
+      "launcher": "the_shelf_that_has_to_go|hide_them|hidden",
+      "year": 1525,
+      "originalCast": {
+        "ARCHIVIST": "p_fu",
+        "HEAD": "p_eh"
+      },
+      "dueYear": 1526,
+      "queued": true,
+      "status": "retired_without_delivery",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_8w"
+    },
+    {
+      "cohort": "independent",
+      "seed": 19475271,
+      "target": "the_cellar_shelf_is_found",
+      "launcher": "the_shelf_that_has_to_go|hide_them|hidden",
+      "year": 1477,
+      "originalCast": {
+        "ARCHIVIST": "p_d4",
+        "HEAD": "p_bd"
+      },
+      "dueYear": 1478,
+      "queued": true,
+      "status": "retired_without_delivery",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_75"
+    },
+    {
+      "cohort": "independent",
+      "seed": 19475419,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1328,
+      "originalCast": {
+        "COUSIN": "p_5y",
+        "HEAD": "p_70"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "COUSIN",
+          "person": "p_5y",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_4p",
+      "instance": "arc_q",
+      "dueYear": 1338,
+      "keptCast": {
+        "HEAD": "p_70",
+        "COUSIN": "p_5y"
+      },
+      "finalBindings": {
+        "HEAD": "p_70",
+        "COUSIN": "p_5y"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19480192,
+      "target": "the_hall_stops_writing",
+      "launcher": "the_hall_that_waited||it_is_about_a_roof",
+      "year": 1317,
+      "originalCast": {
+        "COUSIN": "p_6x",
+        "HEAD": "p_8b"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_8b",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_6x",
+          "status": "dead",
+          "policy": "continue_absent"
+        }
+      ],
+      "launchPage": "chr_4y",
+      "instance": "arc_r",
+      "dueYear": 1331,
+      "keptCast": {
+        "HEAD": "p_8b",
+        "COUSIN": "p_6x"
+      },
+      "finalBindings": {
+        "HEAD": "p_8b",
+        "COUSIN": "p_6x"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19481228,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1493,
+      "originalCast": {
+        "COUSIN": "p_co",
+        "HEAD": "p_bm"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_bm",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_co",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_7g",
+      "instance": "arc_1a",
+      "dueYear": 1509,
+      "keptCast": {
+        "HEAD": "p_bm",
+        "COUSIN": "p_co"
+      },
+      "finalBindings": {
+        "HEAD": "p_bm",
+        "COUSIN": "p_co"
+      }
+    },
+    {
+      "cohort": "independent",
+      "seed": 19483337,
+      "target": "the_codex_in_the_eastern_invoice",
+      "launcher": "the_marrow_codex_offered|decline_and_lend_them_money|they_sell_it_east",
+      "year": 1313,
+      "originalCast": {
+        "HEAD": "p_8y",
+        "RIVAL": "p_94"
+      },
+      "dueYear": 1314,
+      "queued": true,
+      "status": "retired_without_delivery",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_4s"
+    },
+    {
+      "cohort": "independent",
+      "seed": 19485187,
+      "target": "the_herald_opens_the_old_question",
+      "launcher": "the_heralds_visitation|the_short_descent|short",
+      "year": 1391,
+      "originalCast": {
+        "HEAD": "p_91"
+      },
+      "dueYear": 1392,
+      "queued": true,
+      "status": "retired_without_delivery",
+      "waits": [],
+      "missing": [],
+      "launchPage": "chr_70"
+    },
+    {
+      "cohort": "independent",
+      "seed": 19486889,
+      "target": "the_hall_is_answered",
+      "launcher": "the_hall_that_waited||somebody_reads_it_properly",
+      "year": 1405,
+      "originalCast": {
+        "COUSIN": "p_aq",
+        "HEAD": "p_ap"
+      },
+      "queued": true,
+      "status": "cancelled_other_or_unknown",
+      "waits": [],
+      "missing": [
+        {
+          "slot": "HEAD",
+          "person": "p_ap",
+          "status": "dead",
+          "policy": "recast"
+        },
+        {
+          "slot": "COUSIN",
+          "person": "p_aq",
+          "status": "dead",
+          "policy": {
+            "inherit": "hall"
+          }
+        }
+      ],
+      "launchPage": "chr_7b",
+      "instance": "arc_12",
+      "dueYear": 1418,
+      "keptCast": {
+        "HEAD": "p_ap",
+        "COUSIN": "p_aq"
+      },
+      "finalBindings": {
+        "HEAD": "p_be",
+        "COUSIN": "p_aq"
+      }
+    }
+  ],
+  "cancellationTraces": [
+    {
+      "seed": 5721,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_1g",
+          "year": 1506,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1495,
+            "page": "chr_95"
+          },
+          "headCandidates": [
+            "p_co"
+          ],
+          "branch": "br_j",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1506
+        }
+      ]
+    },
+    {
+      "seed": 5728,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_t",
+          "year": 1404,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1393,
+            "page": "chr_5r"
+          },
+          "headCandidates": [],
+          "branch": "br_c",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1404
+        }
+      ]
+    },
+    {
+      "seed": 5903,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_10",
+          "year": 1478,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1463,
+            "page": "chr_6z"
+          },
+          "headCandidates": [
+            "p_dr"
+          ],
+          "branch": "br_c",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1478
+        }
+      ]
+    },
+    {
+      "seed": 6449,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_1d",
+          "year": 1445,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1427,
+            "page": "chr_7g"
+          },
+          "headCandidates": [
+            "p_d5"
+          ],
+          "branch": "br_b",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1445
+        }
+      ]
+    },
+    {
+      "seed": 6561,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_r",
+          "year": 1277,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1263,
+            "page": "chr_4b"
+          },
+          "headCandidates": [
+            "p_7d"
+          ],
+          "branch": "br_a",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1277
+        }
+      ]
+    },
+    {
+      "seed": 6659,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_t",
+          "year": 1396,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1381,
+            "page": "chr_5g"
+          },
+          "headCandidates": [
+            "p_bf"
+          ],
+          "branch": "br_9",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1396
+        }
+      ]
+    },
+    {
+      "seed": 7513,
+      "targets": [
+        "the_hall_stops_writing"
+      ],
+      "lost": [
+        {
+          "instance": "arc_v",
+          "year": 1338,
+          "event": "the_hall_stops_writing",
+          "cause": {
+            "year": 1331,
+            "page": "chr_5q"
+          },
+          "headCandidates": [],
+          "branch": "br_8",
+          "branchActive": true,
+          "speaker": {
+            "id": "p_72",
+            "age": 77,
+            "status": "alive",
+            "filters": [
+              true
+            ]
+          },
+          "cancelledYear": 1338
+        }
+      ]
+    },
+    {
+      "seed": 8010,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_y",
+          "year": 1402,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1389,
+            "page": "chr_6a"
+          },
+          "headCandidates": [
+            "p_a7"
+          ],
+          "branch": "br_c",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1402
+        }
+      ]
+    },
+    {
+      "seed": 8997,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_1j",
+          "year": 1542,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1531,
+            "page": "chr_a4"
+          },
+          "headCandidates": [
+            "p_h1"
+          ],
+          "branch": "br_g",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1542
+        }
+      ]
+    },
+    {
+      "seed": 10348,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_x",
+          "year": 1379,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1366,
+            "page": "chr_69"
+          },
+          "headCandidates": [
+            "p_a4"
+          ],
+          "branch": "br_b",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1379
+        }
+      ]
+    },
+    {
+      "seed": 19466169,
+      "targets": [
+        "the_hall_stops_writing"
+      ],
+      "lost": [
+        {
+          "instance": "arc_r",
+          "year": 1354,
+          "event": "the_hall_stops_writing",
+          "cause": {
+            "year": 1337,
+            "page": "chr_55"
+          },
+          "headCandidates": [],
+          "branch": "br_7",
+          "branchActive": true,
+          "speaker": {
+            "id": "p_6z",
+            "age": 105,
+            "status": "alive",
+            "filters": [
+              true
+            ]
+          },
+          "cancelledYear": 1354
+        }
+      ]
+    },
+    {
+      "seed": 19466909,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_p",
+          "year": 1325,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1312,
+            "page": "chr_4k"
+          },
+          "headCandidates": [
+            "p_78"
+          ],
+          "branch": "br_c",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1325
+        }
+      ]
+    },
+    {
+      "seed": 19467834,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_x",
+          "year": 1354,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1344,
+            "page": "chr_5p"
+          },
+          "headCandidates": [
+            "p_ai"
+          ],
+          "branch": "br_8",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1354
+        }
+      ]
+    },
+    {
+      "seed": 19472126,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_y",
+          "year": 1470,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1452,
+            "page": "chr_6r"
+          },
+          "headCandidates": [
+            "p_d1"
+          ],
+          "branch": "br_7",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1470
+        }
+      ]
+    },
+    {
+      "seed": 19475419,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_q",
+          "year": 1338,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1328,
+            "page": "chr_4p"
+          },
+          "headCandidates": [
+            "p_70"
+          ],
+          "branch": "br_c",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1338
+        }
+      ]
+    },
+    {
+      "seed": 19480192,
+      "targets": [
+        "the_hall_stops_writing"
+      ],
+      "lost": [
+        {
+          "instance": "arc_r",
+          "year": 1331,
+          "event": "the_hall_stops_writing",
+          "cause": {
+            "year": 1317,
+            "page": "chr_4y"
+          },
+          "headCandidates": [],
+          "branch": "br_7",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1331
+        }
+      ]
+    },
+    {
+      "seed": 19481228,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_1a",
+          "year": 1509,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1493,
+            "page": "chr_7g"
+          },
+          "headCandidates": [],
+          "branch": "br_m",
+          "branchActive": true,
+          "speaker": null,
+          "cancelledYear": 1509
+        }
+      ]
+    },
+    {
+      "seed": 19486889,
+      "targets": [
+        "the_hall_is_answered"
+      ],
+      "lost": [
+        {
+          "instance": "arc_12",
+          "year": 1418,
+          "event": "the_hall_is_answered",
+          "cause": {
+            "year": 1405,
+            "page": "chr_7b"
+          },
+          "headCandidates": [
+            "p_be"
+          ],
+          "branch": "br_7",
+          "branchActive": false,
+          "speaker": null,
+          "cancelledYear": 1418
+        }
+      ]
+    }
+  ],
+  "finalAuthoredContentHash": "9db37e60e01ee82c08bfa012aacd525d535108e24eb90aede91d2a97f59d7cc7",
+  "postMeasurementNote": "After measurement, two prose-only fields were clarified: leaving existing commitments is coherent on a stale docket, and an absent reader is not asserted dead. Original/Plain English fingerprints were reviewed together. No weights, eligibility, delays, effects, IDs or policy changed. Later authoring validation rejects unsupported finite-duty contexts. Exact final-head preflight/CI validates these changes."
+}

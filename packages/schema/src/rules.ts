@@ -2832,8 +2832,26 @@ const finiteMysticDuty: ValidationRule = {
   about: 'A finite household duty names one quoted reader, so its committed work cannot silently refuse.',
   check(content) {
     const issues: Issue[] = [];
+    for (const h of content.heirlooms) {
+      if (h.effects.some(effect => effect.kind === 'mystic_duty')) {
+        issues.push(err(this.id, `heirloom:${h.id}`, 'a finite Mystic duty needs an event outcome and its initiating page'));
+      }
+    }
+    for (const e of content.events) {
+      const records = [e.record, ...(e.recordByChoice ?? []), ...(e.recordByOutcome ?? []),
+        ...outcomeGroups(e).flat().map(o => o.primordial?.record)];
+      for (const record of records) {
+        if (!record) continue;
+        if (Object.values(record.options).some(option => option.effects.some(effect => effect.kind === 'mystic_duty'))) {
+          issues.push(err(this.id, `event:${e.id}/record`, 'a finite Mystic duty belongs to the quoted outcome, not a later Record answer'));
+        }
+      }
+    }
     for (const e of content.events) for (const o of allOutcomes(e)) for (const effect of o.effects) {
       if (effect.kind !== 'mystic_duty') continue;
+      if (e.interaction.kind === 'narration' || e.interaction.decidedBy !== 'player') {
+        issues.push(err(this.id, `event:${e.id}/${o.id}`, 'a finite Mystic duty needs a player choice with a live availability quote'));
+      }
       const slot = typeof effect.target === 'object' && 'slot' in effect.target ? effect.target.slot : undefined;
       const spec = slot === undefined ? undefined : e.slots[slot];
       const admits = (filters: Filter[]): boolean => filters.some(f =>

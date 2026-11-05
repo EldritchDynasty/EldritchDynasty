@@ -17274,3 +17274,135 @@ existing fire, corrected outcome-reach, endings and density checks without
 changing their bars. Automated reach does not establish attachment, reading
 time, comprehension or enjoyment.
 
+## 6 November 2026 — commitments, named blanks and the current story tail (#1982, #2632, #1946)
+
+**Source and final scope.** The before-calendar runtime is `0219dd2f`, based
+on `ba974199`; the bounded calendar candidate is `4da4cd1f`. Both already
+include the new commitment dilemma, frame priority and the same-year
+Madness-cache correction. The [route report](STORY-ROUTES-1946.md) and its
+[data](STORY-ROUTES-1946.json) retain the declaration, content hashes,
+sample/output hashes, classifications, exact promises, loss dispositions,
+selection shares and every changed seed. Later validation/test changes and
+two prose-only clarifications change no sampled rule, weight or identifier;
+the artifacts record the final content hash separately. #2477 was taken over
+by another branch; this branch instead completes #1946's remaining audit.
+
+**Final commitment semantics.** The 5 November prototype description above
+predates the final refusal handling. A stale watch answer is now refused by
+the live choice-availability quote before any commitment, charge or docket
+removal. Leaving existing commitments alone remains available. The two
+otherwise unreachable authored refusal outcomes were removed, and the
+execution manifest was regenerated. The finite verb is restricted to
+quoted player outcomes; heirloom effects and later Record answers cannot
+silently pretend to reserve a reader.
+
+The ordinary duty lifecycle still supplies preparation, annual payment,
+exclusive occupation, paused study, care, release and the exact source-page
+account. Constructed witnesses cover stale funds, a busy/dead reader,
+finished study, double allocation, death/captivity/disappearance, early withdrawal,
+save/resume, both prose modes and the campaign boundary. The canonical
+800-house column launches 15 book and 13 care returns; the independent
+column launches 15 and 19. Every one delivers with its original reader and
+page in these samples. This adds one once-per-run Docket dilemma and
+automatic returns; it adds no recurring Table action. The #1992 human
+maintenance baseline is still unavailable.
+
+**Frame priority, isolated and combined.** Fresh matched Short Lines use
+`198700+i`, `i=0..399`, for each of chronicler, forced-Omit and
+forced-Embellish. All three columns share the current runtime. The control
+removes the three commitment events and the priority marker; the priority
+column removes only those events; the combined column uses the candidate.
+Return means an interlude citing the exact first altered page. Denominators
+are houses whose first alteration was Omit; medians are among those reached.
+
+| Policy / column | Exact first-blank returns | Median after Omit | Within 25 years / Omit sources |
+| --- | ---: | ---: | ---: |
+| Chronicler / control | 146/206 (70.9%) | 39 | 52/206 |
+| Chronicler / priority | 201/206 (97.6%) | 28 | 95/206 |
+| Chronicler / combined | 203/208 (97.6%) | 28 | 93/208 |
+| Forced Omit / control | 373/399 (93.5%) | 27 | 183/399 |
+| Forced Omit / priority | 386/399 (96.7%) | 20.5 | 216/399 |
+| Forced Omit / combined | 389/398 (97.7%) | 20 | 220/398 |
+
+The earlier 25-year chronicler median aspiration is **not** achieved. The
+chosen priority lever improves delivery while retaining the minimum 45-year
+gap, yearly roll, template cooldowns and existing fallback. There is no
+once-per-blank cadence exception. The isolated priority column's remaining
+chronicler misses are three line breaks and two term endings; the combined
+column's five are all line breaks. Forced-Omit misses are 26→13→9, all line
+breaks. Every policy/column has four houses with no interlude: 4/400 (1%).
+
+| Policy | Control interludes/run | Priority interludes/run | Combined interludes/run |
+| --- | ---: | ---: | ---: |
+| Chronicler | 1642/400 = 4.105 | 1642/400 = 4.105 | 1611/400 = 4.0275 |
+| Forced Omit | 1488/400 = 3.720 | 1489/400 = 3.7225 | 1468/400 = 3.670 |
+| Forced Embellish | 1406/400 = 3.515 | 1406/400 = 3.515 | 1368/400 = 3.420 |
+
+[The full interlude mix](FRAME-PRIORITY-2632.json) records every template's
+count and per-run frequency, all nine column denominators and raw hashes.
+All 400 forced-Embellish observations are identical between control and
+isolated priority. The combined column separately exposes the new ambient
+content's reroll rather than attributing that displacement to frame priority.
+
+**Current tail and calendar correction.** The #1946 audit refreshes two
+800-house Long-Line columns: canonical `5000+7*i` and the predeclared new
+holdout `19461100+37*i`, each 500 years. It repeats them after the guard,
+adds the current thin-tail launchers, and runs the explicit short-descent
+policy on the first 200 canonical seeds. Every column passes eight
+complete-save observer controls. The retained 18 cancellation replays also
+pass a complete-save control each.
+
+The new `campaignProgress < 1` condition withdraws the cellar invitation in
+the collection year, preserving the one-year delay and its penultimate-year
+delivery. Tests fail on the before-runtime in both full campaigns and pass
+afterward, including saved pending delivery. Existing offered choices and
+saved schedules retain their terms. The guard changes final-year ambient
+selections in 13 canonical, 14 independent and four docket-policy houses;
+the report publishes their full disposition. No sampled hiding answer was
+late before the change, so no improved incidence is inferred from it.
+
+The Hall answer reaches 13/800 canonical and 12/800 independent houses.
+Fifteen Hall and three roof cancellations are resolved by production
+snapshots: 13 Hall cases have an inactive hall; two Hall and three roof
+cases have no eligible Head, with overlapping gaps retained in the data.
+This integrates #1977's actual ownership policy. Duplicate nonrepeatable
+schedules retire explicitly; the two optional 25-year tax-return starts
+that cannot fit retain the existing refusal. They are not credited as
+deliveries or made to fit by shortening their minimum delay. Every audited
+delivery cites its exact launching page.
+
+**Checks and limits.** Before/after standard fire, vocabulary and full
+corrected outcome-reach pass at 800×500 years. All 31 effect kinds are
+authored and execute. The same six old zeroes remain underpowered by the
+unchanged proof calculation; the rarest template is the Unmaking at 6/800
+(0.75%). The static choice audit remains 439 events / 909 choices against
+438 / 907 before the prototype, with no converging or prose-only choices;
+resource-only choices remain 207 and wholly resource-only events 34.
+
+Both standard ending columns pass at 512 houses per policy ×500 years;
+their printed reports are identical before/after. Chronicler Broken Line
+is 119/512 (23.2%, band 22–45%), Devoured 143/512 (27.9%, ceiling 45%),
+Forgotten 249 and Unmade one. Apotheosis remains the owner's reported,
+unjudged pre-production diagnostic. Density uses 12 seeds `4100+i` per
+full campaign: headline rates remain 7.5/7.4 choices per generation and
+14.2/14.7 per Age, with run repetition 22%/18% and Age repetition 1%/2%.
+The only printed detailed density change is 500-year category repetition
+excluding predetermined choices, 47.9→47.8%. Longest answer silence is
+unchanged: canonical mean/max 54.39625/74, independent 54.72625/84, and
+the explicit docket policy 53.225/75 game years.
+
+The played-century test exposed stale vitality after Madness changed.
+Both production mutation paths now dirty the derived cache; direct annual
+and outcome witnesses compare against a fresh derivation. The existing
+played-century expectation and seed are retained. Effect-count expectations
+derive from the schema. The affirmative population-ceiling test retains its assertions,
+moves to the slow lane and uses the configured gate cohort; the reduced
+fixture continues testing negative verdict branches. All 80 gate/ladder
+tests pass, as do 405 outcome witnesses, 98 Mystic tests, 232 schema-rule
+tests and 528 lane checks. Editor Chromium checks pass 9/9 with installed
+Chrome 156.0.8078.74 on Windows; the pinned download timed out. Final
+preflight and exact-head GitHub CI govern submission and integration.
+
+These measurements establish execution, provenance and delivery. They do
+not establish player attachment, comprehension, curiosity or enjoyment.
+

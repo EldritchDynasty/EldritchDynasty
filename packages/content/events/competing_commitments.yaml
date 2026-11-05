@@ -35,7 +35,7 @@ events:
       kind: choice
       choices:
         - id: keep_the_book_open
-          label: Let {READER} continue the book. Leave the sickroom watch unfilled.
+          label: Leave {READER}'s commitments alone. Assign no sickroom watch.
           outcomes:
             - id: reading_kept
               weight: 100
@@ -112,7 +112,7 @@ events:
     absentBody: >-
       The reader named on the earlier page is no longer here. The sickroom
       term has ended, and its account keeps only the
-      service actually given. Nobody takes the dead person's place by taking
+      service actually given. Nobody takes the original reader's place by taking
       the chair.
     interaction:
       kind: narration
@@ -135,8 +135,8 @@ proseVariants:
       years: twelve crowns to prepare, then four for each year of paid service. One person
       cannot do both jobs at once."
   - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].label
-    of: 3454e893ba72082f
-    plainenglish: Let {READER} continue studying. Do not assign the sickroom watch.
+    of: 23c49ca083b9bc7c
+    plainenglish: Leave {READER}'s current commitments alone. Assign no sickroom care.
   - address: content:events/competing_commitments.yaml#events[id=the_reader_has_two_rooms].interaction.choices[id=keep_the_book_open].outcomes[id=reading_kept].text
     of: 20dcc3917c7fd9dd
     plainenglish: "The house leaves {READER}'s existing commitments alone. This decision
@@ -174,7 +174,7 @@ proseVariants:
       resume if the book survives and no other duty occupies the reader. The chair is
       free."
   - address: content:events/competing_commitments.yaml#events[id=the_readers_sickroom_term_returns].absentBody
-    of: 5e8336be431adeb2
+    of: d9deb7314254260d
     plainenglish: The original reader is no longer here. The care term is over. The account
       retains only the service given. Nobody replaces the reader in this personal
       commitment.

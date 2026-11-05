@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { loadContent } from '@ed/content';
 import { bootstrap, stepYear } from './sim.js';
-import { outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
+import { ProseModeS, outcomesOf, type ContentBundle, type Outcome } from '@ed/schema';
 import {
   FRAME_ANSWER_GAP_YEARS, FRAME_MAX_GAP_YEARS, FRAME_MIN_GAP_YEARS,
   frameDue, frameOverdue, framePool, frameReadHolds, inline, lastAnswerYear, pageToCite, presentFrame, selectFrame,
@@ -266,7 +266,7 @@ describe('a scene that reads the blanks names one', () => {
     expect(selectFrame(ctx, makeRng(1))?.id).not.toBe(ID);
   });
 
-  it.each(['original', 'plainenglish'] as const)('returns named blanks to the ordinary pool (%s, #2632)', (proseMode) => {
+  it.each(ProseModeS.options)('returns named blanks to the ordinary pool (%s, #2632)', (proseMode) => {
       const ctx = newGame(bundle, { seed: 2632, proseMode }).ctx;
       blank(ctx, 'chr_first', 1100);
       ctx.world.decisionLog.push({ kind: 'record', year: 1090, event: 'the_letters_to_the_weighers', option: 'record' });
