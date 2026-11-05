@@ -388,11 +388,19 @@ export function soundActions<A extends GameActions>(
   bed: Pick<SoundBed, 'cue'>,
   read: SoundReads,
 ): A {
+  // Audio is presentation-only. An invalidated host/device or optional sink
+  // must never turn a committed simulation verb into a failure or suppress
+  // the next cue. Keep this boundary around the output, not the game action.
+  function cueSafely(cue: Cue): void {
+    try { bed.cue(cue); }
+    catch { /* the player keeps the accepted action; sound falls silent */ }
+  }
+
   function answered<T>(answer: () => T): T {
     const before = read.outcome();
     const result = answer();
     const after = read.outcome();
-    if (after && after !== before) bed.cue(outcomeCue(after));
+    if (after && after !== before) cueSafely(outcomeCue(after));
     return result;
   }
 
@@ -402,12 +410,12 @@ export function soundActions<A extends GameActions>(
       const year = read.year();
       const waiting = read.docket();
       actions.advance(years, opts);
-      if (read.year() !== year) bed.cue('page');
-      if (read.docket() > waiting) bed.cue('bell');
+      if (read.year() !== year) cueSafely('page');
+      if (read.docket() > waiting) cueSafely('bell');
     },
     found(choice) {
       const result = actions.found(choice);
-      if (result.ok) bed.cue('seal');
+      if (result.ok) cueSafely('seal');
       return result;
     },
     choose: (...args) => answered(() => actions.choose(...args)),
