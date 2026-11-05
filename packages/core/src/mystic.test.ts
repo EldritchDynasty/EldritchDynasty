@@ -6,7 +6,7 @@ import { rollDeath } from './people/demography.js';
 import { beginStudy, canStudySpellbook, completeStudies, tickLibraryWear } from './people/library.js';
 import { beginImprovement, damageParcel, grantParcel, landView } from './land.js';
 import { order, tableView } from './table.js';
-import { commitDuty, fieldSupplySaving, lifeCareFor, mysticView, quoteDuty, targetGap, wardedYieldFactor } from './mystic.js';
+import { assignDuty, commitDuty, fieldSupplySaving, lifeCareFor, liveDuties, mysticView, practitionerGap, quoteDuty, targetGap, wardedYieldFactor } from './mystic.js';
 import { resolvePresence } from './presence.js';
 import { canonical, loadGame, saveGame } from './save.js';
 import { runYears } from './year/step.js';
@@ -878,5 +878,104 @@ describe('duties survive save and load (#1873)', () => {
     saved.format = 33;
     const loaded = loadGame(saved, bundle);
     expect(loaded.world.mystic).toEqual({ assignments: [], services: [], contracts: [], contacts: [], pauses: [] });
+  });
+});
+
+/** Regression witnesses for imported Mystic duties; keep inside a measured test file. */
+const recoveredBedside = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'life_care');
+const recoveredTeaching = bundle.bundle.mysticWorkings.find(w => w.benefit.kind === 'recoveredTeaching');
+
+function recoveredReaderWorld(seed: number) {
+  const ctx = testWorld(bundle, seed, 1100);
+  ctx.world.treasury = 1000;
+  expect(recoveredBedside).toBeDefined();
+  const sex = canLearn('female', recoveredBedside!.affinity) ? 'female' : 'male';
+  const p = place(ctx, { sex, age: 30, awakened: true, name: 'The house reader' });
+  for (const book of recoveredBedside!.books) p.spellsKnown.push(asId(book));
+  const target: SceneSite = { kind: 'hall', hall: 'main' };
+  const order = { person: p.id, working: recoveredBedside!.id, target };
+  return { ctx, p, order };
+}
+
+describe('recovered Mystic duty chronology (#2969, #2970, #2971)', () => {
+  it('rejects a reader whose saved death is already effective, not one who dies later (#2969)', () => {
+    const { ctx, p, order } = recoveredReaderWorld(2969);
+    p.died = ctx.world.year + 2;
+    expect(practitionerGap(ctx, p, recoveredBedside!)).toBeUndefined();
+    expect(quoteDuty(ctx, order).ok).toBe(true);
+
+    ctx.world.year = p.died;
+    // Recovered rows can retain the stale alive flag; the death year is authoritative.
+    expect(p.status).toBe('alive');
+    expect(practitionerGap(ctx, p, recoveredBedside!)).toBe('dead');
+    expect(quoteDuty(ctx, order).gap).toBe('dead');
+    ctx.world.year++;
+    expect(quoteDuty(ctx, order).gap).toBe('dead');
+  });
+
+  it('does not keep paying a recovered service after its practitioner died (#2969)', () => {
+    const { ctx, p, order } = recoveredReaderWorld(29691);
+    expect(assignDuty(ctx, order).ok).toBe(true);
+    const assignment = ctx.world.mystic.assignments.at(-1)!;
+    ctx.world.year = assignment.ready;
+    assignment.status = 'serving';
+    assignment.paidThrough = ctx.world.year;
+    p.died = ctx.world.year + 1;
+    expect(liveDuties(ctx, 'life_care').some(row => row.p.id === p.id)).toBe(true);
+
+    ctx.world.year++;
+    assignment.paidThrough = ctx.world.year;
+    expect(liveDuties(ctx, 'life_care').some(row => row.p.id === p.id)).toBe(false);
+  });
+
+  it('keeps a reader at home until an away career actually starts (#2970)', () => {
+    const { ctx, p, order } = recoveredReaderWorld(2970);
+    p.career = { career: asId('clergy'), from: ctx.world.year + 3 };
+    expect(practitionerGap(ctx, p, recoveredBedside!)).toBeUndefined();
+    expect(quoteDuty(ctx, order).ok).toBe(true);
+
+    ctx.world.year = p.career.from - 1;
+    expect(quoteDuty(ctx, order).ok).toBe(true);
+    ctx.world.year++;
+    expect(practitionerGap(ctx, p, recoveredBedside!)).toBe('away_post');
+    expect(quoteDuty(ctx, order).gap).toBe('away_post');
+  });
+
+  it('stops a serving duty at the actual first year of an away post (#2970)', () => {
+    const { ctx, p, order } = recoveredReaderWorld(29701);
+    expect(assignDuty(ctx, order).ok).toBe(true);
+    const assignment = ctx.world.mystic.assignments.at(-1)!;
+    ctx.world.year = assignment.ready;
+    assignment.status = 'serving';
+    assignment.paidThrough = ctx.world.year;
+    p.career = { career: asId('clergy'), from: ctx.world.year + 2 };
+    expect(liveDuties(ctx, 'life_care').some(row => row.p.id === p.id)).toBe(true);
+    ctx.world.year = p.career.from;
+    assignment.paidThrough = ctx.world.year;
+    expect(liveDuties(ctx, 'life_care').some(row => row.p.id === p.id)).toBe(false);
+  });
+
+  it('refuses a stale completed lesson and selects a later active book (#2971)', () => {
+    const ctx = testWorld(bundle, 2971, 1100);
+    ctx.world.treasury = 1000;
+    expect(recoveredTeaching).toBeDefined();
+    const sex = canLearn('female', recoveredTeaching!.affinity) ? 'female' : 'male';
+    const teacher = place(ctx, { sex, age: 40, awakened: true, name: 'The tutor' });
+    for (const book of recoveredTeaching!.books) teacher.spellsKnown.push(asId(book));
+    const pupil = place(ctx, { sex, age: 22, awakened: true, name: 'The pupil' });
+    const target: SceneSite = { kind: 'person', person: pupil.id };
+    ctx.world.studies.push({ person: pupil.id, book: 'old_completed_study', completes: ctx.world.year - 1 });
+
+    expect(targetGap(ctx, recoveredTeaching!, target, {}, ctx.world.playerHouse, teacher)).toBe('no_need');
+
+    ctx.world.studies.push({ person: pupil.id, book: recoveredTeaching!.books[0]!, completes: ctx.world.year + 8 });
+    expect(targetGap(ctx, recoveredTeaching!, target, {}, ctx.world.playerHouse, teacher)).toBeUndefined();
+    expect(quoteDuty(ctx, { person: teacher.id, working: recoveredTeaching!.id, target }).ok).toBe(true);
+
+    const unlearned = place(ctx, { sex, age: 40, awakened: true, name: 'The unfamiliar tutor' });
+    expect(targetGap(ctx, recoveredTeaching!, target, {}, ctx.world.playerHouse, unlearned)).toBe('unlearned');
+
+    ctx.world.year += 8;
+    expect(targetGap(ctx, recoveredTeaching!, target, {}, ctx.world.playerHouse, teacher)).toBe('no_need');
   });
 });
