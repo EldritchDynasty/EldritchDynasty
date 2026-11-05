@@ -156,6 +156,9 @@ function selectedAnswer(questionId: string): string | undefined {
 const friends = ref(
   Array.from({ length: props.prologue.friendsWanted }, () => ({ name: '', sex: 'female' as 'male' | 'female' })),
 );
+// A hidden invalid optional name must not silently trap the reader behind a
+// disabled Sign button. Keep the count in the disclosure summary even closed.
+const invalidNamedFriends = computed(() => friends.value.filter((friend) => invalidOptionalFriendName(friend.name)).length);
 
 // A failed signing reports the inputs as they were submitted. If the player
 // corrects them, keep the previous refusal out of the current form. The store
@@ -227,7 +230,7 @@ const wanted = computed(() => {
   if (!props.prologue.heirlooms.some((option) => option.heirloom === heirloom.value)) out.push('the thing you asked for by name');
   if (!props.prologue.grudges.some((option) => option.house === grudge.value)) out.push('who paid for the rest of it');
   if (!hasVisibleName(houseName.value)) out.push('what the family will be called');
-  if (friends.value.some((friend) => invalidOptionalFriendName(friend.name))) {
+  if (invalidNamedFriends.value > 0) {
     out.push('a visible name for every friend you chose to name');
   }
   return out;
@@ -560,7 +563,14 @@ function signOnEnter(event: KeyboardEvent): void {
              path. Native details preserve keyboard/touch disclosure and keep
              entered names mounted when the reader closes this section. -->
         <details v-if="friends.length" :key="signingIdentity" class="friend-names">
-          <summary>{{ plain ? 'Add friends (optional)' : 'Name them, if you wish' }}</summary>
+          <summary>
+            {{ plain ? 'Add friends (optional)' : 'Name them, if you wish' }}
+            <span v-if="invalidNamedFriends > 0" class="friend-warning" role="status" aria-live="polite">
+              {{ plain
+                ? `Open to correct ${invalidNamedFriends} friend ${invalidNamedFriends === 1 ? 'name' : 'names'}`
+                : (invalidNamedFriends === 1 ? 'One friend name needs correcting' : `${invalidNamedFriends} friend names need correcting`) }}
+            </span>
+          </summary>
           <div class="friends-fields">
             <div v-for="(friend, i) in friends" :key="i" class="friend">
               <input
@@ -691,6 +701,7 @@ input { width: 100%; font-size: var(--t-body); }
 .friend-names { margin-top: 14px; }
 .friend-names summary { color: var(--ink); cursor: pointer; padding: 10px 0; min-height: 44px; line-height: 24px; }
 .friend-names summary:focus-visible { outline: 2px solid var(--rubric); outline-offset: 3px; }
+.friend-warning { display: block; color: var(--rubric); font-size: var(--t-fine); }
 .friends-fields { padding-top: 10px; }
 .friend { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 .friend input { flex: 1 1 auto; font-size: var(--t-card); }
