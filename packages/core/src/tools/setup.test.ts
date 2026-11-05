@@ -408,3 +408,86 @@ describe('hooks and people take one path', () => {
       .toMatch(/import \{ sessionReady \} from '\.\.\/\.\.\/tools\/setup\.mjs'/);
   });
 });
+
+type CiStage = 'browser' | 'probe' | 'dependencies';
+type CiResult = { ok: boolean; timedOut?: boolean };
+const ciBrowser = await import(pathToFileURL(join(import.meta.dirname, '../../../../tools/ci-browser.mjs')).href) as {
+  provisionCiBrowser(options: {
+    run(stage: CiStage, timeout: number): CiResult;
+    now?: () => number;
+    log?: (line: string) => void;
+    platform?: string;
+  }): void;
+};
+
+function ciBrowserRunner(outcomes: Partial<Record<CiStage, CiResult[]>> = {}, platform = 'linux') {
+  const calls: { stage: CiStage; timeout: number }[] = [];
+  let clock = 0;
+  const options = {
+    platform,
+    now: () => clock,
+    log: () => {},
+    run: (stage: CiStage, timeout: number) => {
+      calls.push({ stage, timeout });
+      clock += 1000;
+      return outcomes[stage]?.shift() ?? { ok: true };
+    },
+  };
+  return { calls, options, advance: (ms: number) => { clock += ms; } };
+}
+
+describe('bounded Chromium provisioning (#2904)', () => {
+  it('verifies launch without apt on a ready ciBrowserRunner, including Windows', () => {
+    for (const platform of ['linux', 'win32']) {
+      const r = ciBrowserRunner({}, platform);
+      ciBrowser.provisionCiBrowser(r.options);
+      expect(r.calls.map(c => c.stage)).toEqual(['browser', 'probe']);
+    }
+  });
+
+  it('recovers one failed download and still requires a real launch', () => {
+    const r = ciBrowserRunner({ browser: [{ ok: false }, { ok: true }] });
+    ciBrowser.provisionCiBrowser(r.options);
+    expect(r.calls.map(c => c.stage)).toEqual(['browser', 'browser', 'probe']);
+  });
+
+  it('repairs missing Linux dependencies and verifies launch again', () => {
+    const r = ciBrowserRunner({ probe: [{ ok: false }, { ok: true }], dependencies: [{ ok: false }, { ok: true }] });
+    ciBrowser.provisionCiBrowser(r.options);
+    expect(r.calls.map(c => c.stage)).toEqual(['browser', 'probe', 'dependencies', 'dependencies', 'probe']);
+  });
+
+  it('fails after both downloads fail without running a probe', () => {
+    const r = ciBrowserRunner({ browser: [{ ok: false }, { ok: false }] });
+    expect(() => ciBrowser.provisionCiBrowser(r.options)).toThrow('both attempts');
+    expect(r.calls.map(c => c.stage)).toEqual(['browser', 'browser']);
+  });
+
+  it('refuses unavailable dependencies or a browser that still cannot launch', () => {
+    const refused = ciBrowserRunner({ probe: [{ ok: false }], dependencies: [{ ok: false }, { ok: false }] });
+    expect(() => ciBrowser.provisionCiBrowser(refused.options)).toThrow('both attempts');
+    const broken = ciBrowserRunner({ probe: [{ ok: false }, { ok: false }] });
+    expect(() => ciBrowser.provisionCiBrowser(broken.options)).toThrow('could not launch after');
+    const windows = ciBrowserRunner({ probe: [{ ok: false }] }, 'win32');
+    expect(() => ciBrowser.provisionCiBrowser(windows.options)).toThrow('could not launch');
+    expect(windows.calls.map(c => c.stage)).not.toContain('dependencies');
+  });
+
+  it('never retries a timed-out installer or exceeds the remaining budget', () => {
+    const timedOut = ciBrowserRunner({ browser: [{ ok: false, timedOut: true }] });
+    expect(() => ciBrowser.provisionCiBrowser(timedOut.options)).toThrow('timed out');
+    expect(timedOut.calls).toHaveLength(1);
+    const spent = ciBrowserRunner({ probe: [{ ok: false }] });
+    const run = spent.options.run;
+    spent.options.run = (stage, timeout) => {
+      const result = run(stage, timeout);
+      if (stage === 'browser') spent.advance(220_000);
+      return result;
+    };
+    ciBrowser.provisionCiBrowser(spent.options);
+    expect(spent.calls.map(c => c.timeout)).toEqual([90_000, 19_000, 18_000, 17_000]);
+    const exhausted = ciBrowserRunner();
+    exhausted.options.run = () => { exhausted.advance(240_000); return { ok: true }; };
+    expect(() => ciBrowser.provisionCiBrowser(exhausted.options)).toThrow('budget');
+  });
+});
