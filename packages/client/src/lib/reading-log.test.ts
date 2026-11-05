@@ -1178,7 +1178,7 @@ describe('fail-open Table research and window-safe outcomes (#1992)', () => {
     l.note({ kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'accepted' });
     l.note({ kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'attempted' });
     l.note({ kind: 'action', verb: 'order', act: 'table', category: 'study', status: 'refused' });
-    l.note({ kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'returned' as 'threw' });
+    l.note({ kind: 'action', verb: 'muster', act: 'muster', category: 'withdraw', status: 'threw' });
     expect(l.artifact().summary.tableActions).toEqual({
       orders: [
         { category: 'study', attempts: 1, accepted: 0, refused: 1, threw: 0, returned: 0, unfinished: 0 },
