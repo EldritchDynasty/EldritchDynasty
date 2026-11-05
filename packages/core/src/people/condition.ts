@@ -16,6 +16,13 @@ const SPACING_TOLL = 45;
 const clamp = (n: number, min: number, max: number): number => Math.max(min, Math.min(max, n));
 const toward = (at: number, target: number, response: number): number => at + (target - at) * response;
 
+/** A recovered alive flag alone is not evidence of present household residence. */
+function presentHousehold(ctx: SimCtx): Person[] {
+  const w = ctx.world;
+  return w.people.household(w.playerHouse, w.year)
+    .filter(p => p.born <= w.year && (p.died === undefined || p.died > w.year));
+}
+
 /**
  * The body's reading of the purse, in acquired Health points.
  *
@@ -26,7 +33,7 @@ const toward = (at: number, target: number, response: number): number => at + (t
  */
 export function nutritionTarget(ctx: SimCtx): number {
   const w = ctx.world;
-  const living = w.people.household(w.playerHouse, w.year).length;
+  const living = presentHousehold(ctx).length;
   const reservePerHead = w.treasury / Math.max(1, living);
   const costPerHead = standingCostPerHead(w.respect, living);
   const reserveYears = reservePerHead / costPerHead;
@@ -37,7 +44,7 @@ export function nutritionTarget(ctx: SimCtx): number {
 export function nutrition(ctx: SimCtx): number {
   const w = ctx.world;
   const target = nutritionTarget(ctx);
-  for (const p of w.people.household(w.playerHouse, w.year)) {
+  for (const p of presentHousehold(ctx)) {
     const at = p.acquired[ACQUIRED_NUTRITION] ?? 0;
     p.acquired[ACQUIRED_NUTRITION] = toward(at, target, NUTRITION_RESPONSE);
     if (p.phenotype) p.phenotype.dirty = true;
@@ -105,7 +112,7 @@ export function acquiredFamilySize(mother: Person, father: Person): number {
 /** Existing economy phase hook: close the books, then let bodies read them. */
 export function tickCondition(ctx: SimCtx): void {
   nutrition(ctx);
-  for (const p of ctx.world.people.household(ctx.world.playerHouse, ctx.world.year)) {
+  for (const p of presentHousehold(ctx)) {
     if (p.sex === 'female') spacing(ctx, p);
   }
 }
