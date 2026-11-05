@@ -229,8 +229,8 @@ function strain(ctx: SimCtx, p: Person): number {
 }
 
 /** Whoever is still married to them, as far as the record goes. */
-function isMarried(p: Person): boolean {
-  return p.marriages.some((m) => m.to === undefined);
+function isMarried(p: Person, year: number): boolean {
+  return p.marriages.some((m) => m.from <= year && (m.to === undefined || m.to > year));
 }
 
 /**
@@ -387,7 +387,7 @@ function carrier(ctx: SimCtx, r: Read): Candidate | undefined {
   const next = women[1] ? r.font(women[1]) : 0;
   const clear = next > 0 && r.font(her) >= next * 1.35;
   const age = r.age(her);
-  const married = isMarried(her);
+  const married = isMarried(her, ctx.world.year);
 
   return first(her, [
     [only && !married, 58, () => msg(ctx, 'cast.carrier.only_unspent',
@@ -415,7 +415,8 @@ function carrier(ctx: SimCtx, r: Read): Candidate | undefined {
 function aggrieved(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
   const halls = [...w.branches.values()]
-    .filter((b) => b.extinct === undefined && b.foundedYear <= w.year && b.grievance >= 24)
+    .filter((b) => (b.extinct === undefined || b.extinct > w.year)
+      && b.foundedYear <= w.year && b.grievance >= 24)
     .sort((a, b) => b.grievance - a.grievance);
   for (const b of halls) {
     const speaker = wouldSpeakFor(ctx, b.id);
@@ -424,7 +425,8 @@ function aggrieved(ctx: SimCtx, r: Read): Candidate | undefined {
     const salience = Math.min(58, 11 + b.grievance / 2.6);
     const HALL = b.name;
     const OWED = String(owed);
-    const heldSeal = b.heldSeal;
+    // A restored future reign is not yet part of today's hall history.
+    const heldSeal = b.heldSeal !== undefined && b.heldSeal <= w.year ? b.heldSeal : undefined;
     const grievance = b.grievance;
     const because = () => heldSeal !== undefined
       ? msg(ctx, 'cast.aggrieved.held',
@@ -453,7 +455,7 @@ function aggrieved(ctx: SimCtx, r: Read): Candidate | undefined {
  */
 function marriedIn(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
-  const outsiders = r.living.filter((p) => p.houseOfOrigin !== w.playerHouse && isMarried(p));
+  const outsiders = r.living.filter((p) => p.houseOfOrigin !== w.playerHouse && isMarried(p, w.year));
   if (!outsiders.length) return undefined;
 
   const childrenOf = (p: Person) => r.living.filter(
@@ -478,7 +480,7 @@ function marriedIn(ctx: SimCtx, r: Read): Candidate | undefined {
     const HOUSE = () => def
       ? proseForContentField(ctx, 'houses', String(p.houseOfOrigin), 'name', def.name)
       : String(p.houseOfOrigin);
-    const wed = p.marriages.find((m) => m.to === undefined);
+    const wed = p.marriages.find((m) => m.from <= w.year && (m.to === undefined || m.to > w.year));
     const years = wed ? w.year - wed.from : 0;
     const grudged = grudgesAgainst(w, String(p.id)).some((g) => g.severity >= 25);
 
@@ -553,7 +555,7 @@ function soleExpresser(ctx: SimCtx, r: Read): Candidate | undefined {
 /** A woman of the blood the house has had years to do something about. */
 function unwed(ctx: SimCtx, r: Read): Candidate | undefined {
   const her = r.living
-    .filter((p) => p.sex === 'female' && r.isBlood(p) && r.age(p) >= 26 && !p.marriages.length)
+    .filter((p) => p.sex === 'female' && r.isBlood(p) && r.age(p) >= 26 && !p.marriages.some((m) => m.from <= ctx.world.year))
     .sort((a, b) => a.born - b.born)[0];
   if (!her) return undefined;
   const age = r.age(her);
@@ -683,14 +685,23 @@ function scholar(ctx: SimCtx, r: Read): Candidate | undefined {
 function widow(ctx: SimCtx, r: Read): Candidate | undefined {
   const w = ctx.world;
   const candidates = r.living
-    .filter((p) => !isMarried(p) && p.marriages.length > 0)
+    .filter((p) => !isMarried(p, w.year)
+      && p.marriages.some((m) => m.from <= w.year && m.to !== undefined && m.to <= w.year))
     .map((p) => {
-      const last = [...p.marriages].sort((a, b) => (b.to ?? 0) - (a.to ?? 0))[0]!;
+      const last = p.marriages
+        .filter((m) => m.from <= w.year && m.to !== undefined && m.to <= w.year)
+        .sort((a, b) => (b.to ?? 0) - (a.to ?? 0))[0]!;
       const spouse = w.people.get(last.spouse);
+      const died = spouse?.died;
       const kids = r.living.filter(
         (q) => (q.trueParents.mother === p.id || q.trueParents.father === p.id) && r.age(q) < 16,
       );
-      return { p, ended: last.to, dead: spouse?.died !== undefined, kids: kids.length };
+      // Widowhood is the loss of a spouse during a real marriage, not a
+      // subsequent death after divorce or a future-dated imported death.
+      return { p, ended: last.to,
+        dead: died !== undefined && died >= last.from && died <= w.year
+          && last.to !== undefined && died <= last.to,
+        kids: kids.length };
     })
     .filter((x) => x.dead && x.kids > 0 && x.ended !== undefined)
     .sort((a, b) => b.kids - a.kids);
@@ -716,7 +727,9 @@ function widow(ctx: SimCtx, r: Read): Candidate | undefined {
  */
 function papers(ctx: SimCtx, r: Read): Candidate | undefined {
   const caught = r.living
-    .map((p) => ({ p, doc: p.lineageDocuments.find((d) => d.exposed !== undefined) }))
+    .map((p) => ({ p, doc: p.lineageDocuments
+      .filter((d) => d.exposed !== undefined && d.exposed <= ctx.world.year)
+      .sort((a, b) => (b.exposed ?? 0) - (a.exposed ?? 0))[0] }))
     .filter((x) => x.doc !== undefined)
     .sort((a, b) => (b.doc!.exposed ?? 0) - (a.doc!.exposed ?? 0))[0];
   if (caught?.doc) {
@@ -733,7 +746,8 @@ function papers(ctx: SimCtx, r: Read): Candidate | undefined {
   // is already on the desk (`table.ts`), so naming it here tells the player
   // nothing the house does not know and everything the world does not.
   const standing = r.living
-    .map((p) => ({ p, doc: p.lineageDocuments.find((d) => d.forged && d.exposed === undefined) }))
+    .map((p) => ({ p, doc: p.lineageDocuments.find((d) =>
+      d.forged && (d.exposed === undefined || d.exposed > ctx.world.year)) }))
     .filter((x) => x.doc !== undefined)
     .sort((a, b) => (b.doc!.generations ?? 0) - (a.doc!.generations ?? 0))[0];
   if (!standing?.doc) return undefined;
@@ -775,8 +789,13 @@ const FINDERS: { role: CastRole; find: (ctx: SimCtx, r: Read) => Candidate | und
  */
 export function castOf(ctx: SimCtx): CastMember[] {
   const w = ctx.world;
-  const living = w.people.household(w.playerHouse, w.year);
+  // Imported saves may retain an alive flag on people whose birth has not
+  // happened or whose recorded death has already passed. This is a reading
+  // of the present house, not an instruction to repair stored history.
+  const living = w.people.household(w.playerHouse, w.year)
+    .filter((p) => p.born <= w.year && (p.died === undefined || p.died > w.year));
   if (!living.length) return [];
+  const presentIds = new Set(living.map((p) => p.id));
 
   const r: Read = {
     living,
@@ -791,7 +810,9 @@ export function castOf(ctx: SimCtx): CastMember[] {
   const found: { role: CastRole; pick: Candidate }[] = [];
   for (const f of FINDERS) {
     const pick = f.find(ctx, r);
-    if (pick) found.push({ role: f.role, pick });
+    // Wardship, succession, ranking and hall-speaker finders can fetch people
+    // directly from the store; they must obey the same present-year boundary.
+    if (pick && presentIds.has(pick.person.id)) found.push({ role: f.role, pick });
   }
 
   // LOUDEST FIRST, and deterministically: two facts of equal weight are broken
