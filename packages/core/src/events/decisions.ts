@@ -37,6 +37,15 @@ import { eventTitleAddress, proseForChoiceLabel, proseForEventBody, proseForEven
 
 export type RecordOption = 'record' | 'omit' | 'embellish';
 
+/** The selected pen has committed its effects and its exact Chronicle page.
+ * Diagnostic observers see this receipt for player and automatic Record alike. */
+export interface AppliedRecordObservation {
+  event: EventTemplate;
+  page: string;
+  option: RecordOption;
+  fill: SlotFill;
+}
+
 /** A slot the player fills himself. This is the whole of the mission mechanic. */
 export interface CastRequest {
   slot: string;
@@ -925,6 +934,12 @@ function commitRecord(
     ...(recordOutcomeId !== undefined ? { outcome: recordOutcomeId } : {}),
     ...(recordAddress !== undefined ? { address: recordAddress } : {}),
   });
+  // Record-option effects can schedule a future scene independently of the
+  // event's outcome. Publish the exact committed page, not a speculative
+  // decision preview, so route audits also see the automatic chronicler pen.
+  if (ctx.observeAppliedRecord) {
+    ctx.observeAppliedRecord({ event: e, page: entryId, option, fill: structuredClone(fill) });
+  }
   return { line: text, ...(byname ? { byname } : {}) };
 }
 

@@ -4,7 +4,7 @@ import { asId, indexContent, type Content } from '@ed/schema';
 import { dueArcSteps } from '../events/arcs.js';
 import { executeOutcomeWitness } from '../events/reach.js';
 import { selectEvents } from '../events/selection.js';
-import { queueChoice, resolveChoice, resolveRecord, type OutcomeObservation } from '../events/decisions.js';
+import { applyRecord, queueChoice, resolveChoice, resolveRecord, type OutcomeObservation } from '../events/decisions.js';
 import { resolveSlots } from '../events/slots.js';
 import { evalCondition } from '../events/conditions.js';
 import { canonical, loadGame, saveGame } from '../save.js';
@@ -62,6 +62,66 @@ describe('story-route promises (#1946)', () => {
     expect(launchers.map(launcher => launcher.outcome).sort()).toEqual(['hidden', 'hidden_primordial']);
     expect(launchers.every(launcher => launcher.choice === 'hide_them' && launcher.event === 'the_shelf_that_has_to_go')).toBe(true);
     expect(launchers.every(launcher => 'schedule' in launcher.mechanism && launcher.mechanism.schedule === 1)).toBe(true);
+  });
+
+  it.each([false, true])('watches Record-option schedules at the committed page (automatic=%s)', (automatic) => {
+    const bundle = structuredClone(content.bundle);
+    const authoring = bundle.events.find(event => event.id === 'the_heralds_visitation')!;
+    authoring.record!.options.record.effects.push({ kind: 'schedule', event: 'the_cellar_shelf_is_found', inYears: 3 });
+    const source = indexContent(bundle);
+    expect(routeLaunchers(source, ['the_cellar_shelf_is_found']).some(launcher =>
+      launcher.event === 'the_heralds_visitation' && launcher.recordOption === 'record'
+      && launcher.mechanism && 'schedule' in launcher.mechanism)).toBe(true);
+
+    const ctx = testWorld(source, 194610);
+    const receipts: string[] = [];
+    ctx.observeAppliedRecord = observation => { receipts.push(observation.page); };
+    const previousReceipt = ctx.observeAppliedRecord;
+    const observer = new StoryRouteObserver(ctx, ['the_cellar_shelf_is_found']);
+    const event = source.mustEvent('the_heralds_visitation');
+    const cast = resolveSlots(event, ctx, testRng('record-route-cast'));
+    if (!cast.ok) throw new Error('record-route witness cannot cast');
+    const choice = queueChoice(ctx, event, event.body, cast.fill, []);
+    const resolution = resolveChoice(ctx, choice.id, 'the_short_descent', testRng('record-route-answer'));
+    expect(resolution.ok, resolution.reason).toBe(true);
+    const page = resolution.resolved!.entryId;
+    const record = ctx.world.pendingDecisions.find(decision => decision.kind === 'record' && decision.entryId === page);
+    if (!record || record.kind !== 'record') throw new Error('record-route docket missing');
+    // The automatic chronicler calls applyRecord, bypassing the user docket.
+    if (automatic) applyRecord(ctx, record.event, page, 'record', record.fill);
+    else expect(resolveRecord(ctx, record.id, 'record').ok).toBe(true);
+    expect(receipts).toEqual([page]);
+    expect(ctx.world.scheduled.filter(s => s.event === 'the_cellar_shelf_is_found'
+      && s.cause?.page === page && s.cause.year === ctx.world.year)).toHaveLength(1);
+
+    const promises = observer.finish().filter(promise => promise.target === 'the_cellar_shelf_is_found');
+    expect(promises).toHaveLength(1);
+    expect(promises[0]).toMatchObject({
+      launcher: 'the_heralds_visitation|record:record',
+      launchPage: page, dueYear: ctx.world.year + 3,
+      originalCast: record.fill, queued: true, status: 'pending_at_observation_end',
+    });
+    expect(ctx.observeAppliedRecord).toBe(previousReceipt);
+  });
+
+  it('does not invent a Record-option promise when a different pen was selected', () => {
+    const bundle = structuredClone(content.bundle);
+    const authored = bundle.events.find(event => event.id === 'the_heralds_visitation')!;
+    authored.record!.options.record.effects.push({ kind: 'schedule', event: 'the_cellar_shelf_is_found', inYears: 2 });
+    const source = indexContent(bundle);
+    const ctx = testWorld(source, 194611);
+    const observer = new StoryRouteObserver(ctx, ['the_cellar_shelf_is_found']);
+    const event = source.mustEvent('the_heralds_visitation');
+    const slots = resolveSlots(event, ctx, testRng('omit-route-cast'));
+    if (!slots.ok) throw new Error('omit-route witness cannot cast');
+    const pending = queueChoice(ctx, event, event.body, slots.fill, []);
+    const choice = resolveChoice(ctx, pending.id, 'the_short_descent', testRng('omit-route-answer'));
+    expect(choice.ok, choice.reason).toBe(true);
+    const record = ctx.world.pendingDecisions.find(decision => decision.kind === 'record'
+      && decision.entryId === choice.resolved!.entryId);
+    if (!record || record.kind !== 'record') throw new Error('omit-route docket missing');
+    expect(resolveRecord(ctx, record.id, 'omit').ok).toBe(true);
+    expect(observer.finish().filter(promise => promise.target === 'the_cellar_shelf_is_found')).toEqual([]);
   });
 
   it('reports the exact kept people and causal page when a real hall promise is delivered', () => {

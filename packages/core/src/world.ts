@@ -10,7 +10,7 @@ import { emptyCovertState, type CovertState, type MysticState } from '@ed/schema
 import { PersonStore } from './people/store.js';
 import type { GeneticsCtx } from './people/factory.js';
 import type { BearingEntry } from './bearing.js';
-import type { DecisionObservation, OutcomeObservation, PendingDecision } from './events/decisions.js';
+import type { AppliedRecordObservation, DecisionObservation, OutcomeObservation, PendingDecision } from './events/decisions.js';
 import type { Rung } from './ascension.js';
 import type { FriendName } from './people/friends.js';
 import type { DelegationPreferences } from './delegation.js';
@@ -812,6 +812,8 @@ export interface SimCtx {
   observeOutcome?: (observation: OutcomeObservation) => void;
   /** Measurement-only listener after authored effects, with their exact page. Never saved. */
   observeAppliedOutcome?: (observation: OutcomeObservation, entryId: string) => void;
+  /** Measurement-only Record receipt after pen effects and the exact page commit. Never saved. */
+  observeAppliedRecord?: (observation: AppliedRecordObservation) => void;
   /** Measurement-only docket listener; choice/Record inputs precede effects. Never saved. */
   observeDecision?: (observation: DecisionObservation) => void;
   /** Measurement-only selection listener before effects. Never saved. */
