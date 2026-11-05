@@ -510,6 +510,10 @@ export function tableWorkloadWindows(
   // cancelled/refused pickup must not replace the previous house's identity.
   let awaitingPickup = false;
   let pendingRun: { campaign: string; seed: number } | null = null;
+  // App.vue emits run -> year -> Chronicle in one Vue flush. A year seen
+  // before Chronicle confirms the pickup belongs to the incoming house,
+  // not the previous window's last observed year.
+  let pendingYear: number | null = null;
   const advance = (at: number) => {
     const to = Math.max(lastAt, Math.min(at, stop));
     const span = to - lastAt;
@@ -542,6 +546,10 @@ export function tableWorkloadWindows(
         ? null : { campaign: current.campaign, seed: current.seed });
       finish(event.at, 'pickup');
       current = newWindow('pickup', event.at);
+      if (pendingYear !== null) {
+        current.firstYear = pendingYear;
+        current.lastYear = pendingYear;
+      }
       interlude = false;
       ended = false;
       if (nextRun) {
@@ -550,6 +558,7 @@ export function tableWorkloadWindows(
       }
       awaitingPickup = false;
       pendingRun = null;
+      pendingYear = null;
       continue;
     }
     if (event.kind === 'action' && event.act === 'start'
@@ -560,6 +569,7 @@ export function tableWorkloadWindows(
       ended = false;
       awaitingPickup = false;
       pendingRun = null;
+      pendingYear = null;
       continue;
     }
     if (event.kind === 'visible') visible = event.visible;
@@ -574,14 +584,19 @@ export function tableWorkloadWindows(
         current.seed = event.seed;
       }
     } else if (event.kind === 'year') {
-      current.hasEvidence = true;
-      if (current.firstYear === null) current.firstYear = event.year;
-      current.lastYear = event.year;
+      if (awaitingPickup) {
+        pendingYear = event.year;
+      } else {
+        current.hasEvidence = true;
+        if (current.firstYear === null) current.firstYear = event.year;
+        current.lastYear = event.year;
+      }
     } else if (event.kind === 'action') {
       if (event.act === 'start'
         && (event.verb === 'resume' || event.verb === 'load' || event.verb === 'importSave')) {
         awaitingPickup = true;
         pendingRun = null;
+        pendingYear = null;
         // A canceled picker on the title screen says nothing about a house.
         // Preserve an existing window, but wait for actual run evidence or
         // the confirmed pickup before creating one.
