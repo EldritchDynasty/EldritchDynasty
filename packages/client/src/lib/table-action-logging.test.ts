@@ -256,6 +256,9 @@ describe('failed saved-run pickup evidence boundaries (#1992)', () => {
       { category: 'study', attempts: 1, accepted: 1, unfinished: 0 },
     ]);
     expect(summarize(events, 10).gaps.some((gap) => gap.to.kind === 'new-run')).toBe(false);
+    // An unconfirmed incoming year's watcher must not overwrite the old
+    // house's answer-gap year, even when exported immediately after failure.
+    expect(summarize(events.slice(0, 6), 5).gaps.at(-1)?.to.year).toBe(1042);
     expect(JSON.stringify(events)).toBe(original);
   });
 });
