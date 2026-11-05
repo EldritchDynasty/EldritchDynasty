@@ -150,4 +150,21 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     expect(shareCodeProblem(refusal, 'plainenglish')).toBe(refusal.reason);
     expect(shareCodeProblem(refusal, 'original')).toBe(refusal.reason);
   });
+
+  it('keeps a visible refusal when a legacy adapter omits the founding-validator reason', () => {
+    // JavaScript and native bridges may return values outside the TypeScript
+    // union. A rejection must never silently become an empty status message.
+    for (const reason of [undefined, null, '', '   ']) {
+      const incomplete = { kind: 'refused', reason } as unknown as ShareCodeProblem;
+      expect(shareCodeProblem(incomplete, 'plainenglish'))
+        .toBe('This code could not start a game. Check the founding details and try again.');
+      expect(shareCodeProblem(incomplete, 'original'))
+        .toBe('That code did not begin a house. Read the founding details and try again.');
+    }
+    // Valid authored refusal text stays exact, including surrounding spaces.
+    const reason = { kind: 'refused', reason: '  The founder cannot take that oath.  ' } as ShareCodeProblem;
+    expect(shareCodeProblem(reason, 'plainenglish')).toBe(reason.reason);
+    expect(shareCodeProblem(reason, 'original')).toBe(reason.reason);
+  });
+
 });
