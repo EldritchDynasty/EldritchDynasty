@@ -100,8 +100,14 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
         : `The code left ${plural ? 'names' : 'a name'} out. Give ${nameList(missing, plain)}.`;
     }
     case 'refused':
-      // Already the signing's own refusal, worded by core in the reader's mode.
-      return problem.reason;
+      // Core normally supplies the signing validator's own wording. An older
+      // adapter or malformed result can omit it; never show a blank refusal
+      // beside a rejected founding. Preserve every genuine reason verbatim.
+      return typeof problem.reason === 'string' && problem.reason.trim()
+        ? problem.reason
+        : plain
+          ? 'This code could not start a game. Check the founding details and try again.'
+          : 'That code did not begin a house. Read the founding details and try again.';
     default:
       return assertNever(problem, 'share code problem');
   }
