@@ -1702,6 +1702,34 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(digestOf(ctx)).toBe(before);
   });
 
+  it('excludes future-born occupants from a viable hall on the last night', () => {
+    const { ctx, relative, cousin } = foundedHall();
+    const w = ctx.world;
+    const selected = selectEnding(ctx);
+    const witnessed = epilogueOf(ctx)!.purpose;
+    expect(witnessed?.kind).toBe('branch_kept');
+
+    // Recovered membership rows can wrongly place someone in a hall years
+    // before birth. One actual relative plus a future child is not a family.
+    cousin.born = w.year + 1;
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // Nor can two future-born persons together keep that hall.
+    relative.born = w.year + 1;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+
+    // When both are born by collection, the actual founding remains eligible.
+    cousin.born = w.year - 30;
+    relative.born = w.year - 35;
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
+  });
+
   it('does not infer a surviving household from ambition selection, an extinct branch or one survivor', () => {
     const { ctx, branch, relative, cousin } = foundedHall();
     const w = ctx.world;
@@ -2292,6 +2320,43 @@ describe('future duplicates cannot erase earlier ascendant testimony (#2846)', (
   });
 });
 
+
+describe('pre-founding duplicates cannot erase a Long Line wait witness (#1983)', () => {
+  it('ignores a matching ID from before founding but still rejects a second in-term page', () => {
+    const ctx = atTheTerm(198301);
+    const w = ctx.world;
+    w.houseAmbition = 'raise_ascendant';
+    w.ending = { id: 'forgotten', year: w.year };
+    const ascendant = place(ctx, { name: 'Edric', sex: 'male', age: 55 });
+    const page: ChronicleEntry = {
+      id: 'ledger_wait:' + ascendant.id,
+      year: w.year - 10,
+      weight: 'paragraph',
+      title: 'The Ledger Stayed Open',
+      text: 'Edric was ageless, but the Ledger remained unfinished.',
+      named: false,
+      rung: 'demigod',
+      people: [ascendant.id],
+    };
+    w.chronicle = [page, { ...page, year: CAMPAIGNS.long.startYear - 1 }];
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({
+        kind: 'ascendant_wait', person: 'Edric', year: page.year,
+      });
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+    expect(w.chronicle[1]!.year).toBe(CAMPAIGNS.long.startYear - 1);
+
+    // A second page within this house's term does make the ID ambiguous.
+    w.chronicle[1]!.year = w.year;
+    expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+  });
+});
 
 describe('the completed Chronicle starts with the founding (#2930)', () => {
   it('excludes pre-founding pages, blanks, false attestation and embellished proof debt', () => {
