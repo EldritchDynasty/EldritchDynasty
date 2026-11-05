@@ -40,9 +40,9 @@ describe('fail-open Table research and window-safe outcomes (#1992)', () => {
     const actions = recordActions(bare, l);
     const study = { kind: 'study', person: 'private-student' };
 
-    expect(actions.order(unreadableOrder as Parameters<typeof actions.order>[0])).toBe(accepted);
+    expect(actions.order(unreadableOrder as unknown as Parameters<typeof actions.order>[0])).toBe(accepted);
     expect(actions.order(study as Parameters<typeof actions.order>[0])).toBe(unreadableReturn);
-    expect(actions.muster(unreadableMuster as Parameters<typeof actions.muster>[0])).toBe(unreadableReturn);
+    expect(actions.muster(unreadableMuster as unknown as Parameters<typeof actions.muster>[0])).toBe(unreadableReturn);
     expect(seen).toEqual([
       ['order', unreadableOrder], ['order', study], ['muster', unreadableMuster],
     ]);
