@@ -7,7 +7,7 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { activeAgeIds } from '../ages/scheduler.js';
 import { campaignDef, START_YEAR } from '../campaign.js';
-import { autoResolveDecision, resolveChoice, type OutcomeObservation } from '../events/decisions.js';
+import { autoResolveDecision, resolveChoice, type AppliedRecordObservation, type OutcomeObservation, type RecordOption } from '../events/decisions.js';
 import { evalCondition } from '../events/conditions.js';
 import { minimumArcYears } from '../events/arc-reach.js';
 import { outcomeKey } from '../events/reach.js';
@@ -27,6 +27,8 @@ export interface RouteLauncher {
   event: string;
   choice?: string;
   outcome: string;
+  /** Record-option effects commit after the outcome with their own chosen pen. */
+  recordOption?: RecordOption;
   mechanism: { schedule: number } | { arc: string };
 }
 
@@ -54,6 +56,16 @@ export function routeLaunchers(content: Content, targets: readonly string[]): Ro
         const arc = content.mustArc(id);
         const target = arc.nodes.find(node => node.id === arc.entry)?.event;
         if (target && targets.includes(target)) out.push({ ...base, target, mechanism: { arc: id } });
+      }
+    }
+    // Record / Omit / Embellish can schedule a separate follow-up after the
+    // event's outcome. The pen is an actual commit, not a speculative outcome.
+    for (const option of ['record', 'omit', 'embellish'] as const) {
+      for (const effect of event.record?.options[option].effects ?? []) {
+        if (effect.kind === 'schedule' && targets.includes(effect.event)) {
+          out.push({ event: String(event.id), outcome: `record:${option}`, recordOption: option,
+            target: effect.event, mechanism: { schedule: effect.inYears } });
+        }
       }
     }
   }
@@ -91,12 +103,12 @@ export class StoryRouteObserver {
   private promises: WatchedPromise[] = [];
   private seenInstances = new Set<string>();
   private pendingLaunches = new WeakMap<OutcomeObservation, RoutePromise[]>();
-  private previous: Pick<SimCtx, 'observeOutcome' | 'observeAppliedOutcome' | 'observeSelection'>;
+  private previous: Pick<SimCtx, 'observeOutcome' | 'observeAppliedOutcome' | 'observeAppliedRecord' | 'observeSelection'>;
 
   constructor(private ctx: SimCtx, targets: readonly string[] = STORY_ROUTE_IDS) {
     this.launchers = routeLaunchers(ctx.content, targets);
     this.previous = { observeOutcome: ctx.observeOutcome, observeAppliedOutcome: ctx.observeAppliedOutcome,
-      observeSelection: ctx.observeSelection };
+      observeAppliedRecord: ctx.observeAppliedRecord, observeSelection: ctx.observeSelection };
     ctx.observeOutcome = observation => {
       this.onOutcome(observation);
       this.previous.observeOutcome?.(observation);
@@ -109,6 +121,10 @@ export class StoryRouteObserver {
       }
       this.pendingLaunches.delete(observation);
       this.previous.observeAppliedOutcome?.(observation, entryId);
+    };
+    ctx.observeAppliedRecord = observation => {
+      this.onRecord(observation);
+      this.previous.observeAppliedRecord?.(observation);
     };
     ctx.observeSelection = observation => {
       if (observation.kind === 'choice_offered' && this.launchers.some(launcher => launcher.event === observation.event)) {
@@ -128,6 +144,27 @@ export class StoryRouteObserver {
     };
   }
 
+  private onRecord(observation: AppliedRecordObservation): void {
+    const { event, page, option, fill } = observation;
+    const w = this.ctx.world;
+    // The same event can write several pages in one year. An event/year pair
+    // is insufficient; the already-committed page identifies this pen's act.
+    const written = w.chronicle.some(entry => entry.id === page && entry.eventId === event.id && entry.record === option);
+    for (const launcher of this.launchers) {
+      if (launcher.event !== event.id || launcher.recordOption !== option) continue;
+      if (!('schedule' in launcher.mechanism)) continue;
+      const promise: RoutePromise = {
+        target: launcher.target, launcher: `${event.id}|record:${option}`, year: w.year,
+        ...(written ? { launchPage: page } : {}),
+        dueYear: w.year + launcher.mechanism.schedule, originalCast: structuredClone(fill),
+        queued: written && w.scheduled.some(scheduled => scheduled.event === launcher.target
+          && scheduled.cause?.page === page && scheduled.cause.year === w.year),
+        status: 'not_yet_observed', waits: [], missing: [],
+      };
+      this.promises.push({ launcher, promise });
+    }
+  }
+
   private onOutcome(observation: OutcomeObservation): void {
     const w = this.ctx.world;
     const key = outcomeKey(observation.event.id, observation.choiceId, observation.outcome.id);
@@ -135,7 +172,7 @@ export class StoryRouteObserver {
       this.answers[key] = (this.answers[key] ?? 0) + 1;
     }
     for (const launcher of this.launchers) {
-      if (key !== outcomeKey(launcher.event, launcher.choice, launcher.outcome)) continue;
+      if (launcher.recordOption || key !== outcomeKey(launcher.event, launcher.choice, launcher.outcome)) continue;
       let refusal: string | undefined;
       if ('arc' in launcher.mechanism) {
         const arc = this.ctx.content.mustArc(launcher.mechanism.arc);
@@ -252,6 +289,7 @@ export class StoryRouteObserver {
     }
     this.ctx.observeOutcome = this.previous.observeOutcome;
     this.ctx.observeAppliedOutcome = this.previous.observeAppliedOutcome;
+    this.ctx.observeAppliedRecord = this.previous.observeAppliedRecord;
     this.ctx.observeSelection = this.previous.observeSelection;
     return this.promises.map(({ promise }) => promise);
   }
