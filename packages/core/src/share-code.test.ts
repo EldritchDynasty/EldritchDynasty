@@ -80,6 +80,22 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(saved(begun.session)).toBe(saved(original));
   });
 
+  it('refuses corrupt in-memory decision-log rows without crashing share exports (#1995)', () => {
+    const session = founded();
+    const original = codeOf(session, { names: true });
+    // Native/recovered state can be modified at runtime after schema checking.
+    // An invalid row used to throw at row.kind while drawing a share image.
+    for (const corrupt of [null, undefined, 5, 'invalid']) {
+      session.ctx.world.decisionLog.push(corrupt as never);
+      for (const names of [false, true]) {
+        expect(session.shareCode({ build: BUILD, names }))
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+      session.ctx.world.decisionLog.pop();
+    }
+    expect(codeOf(session, { names: true })).toBe(original);
+  });
+
   it('preserves Unicode founding names exactly and redacts them from anonymous codes', () => {
     // Founding text is player-entered, not a mechanical id. A share code
     // must retain its exact UTF-8 spelling when names are explicitly included,
