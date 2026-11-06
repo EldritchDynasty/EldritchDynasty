@@ -74,6 +74,25 @@ describe('queue throughput evidence (#2794)', () => {
     expect(s.windowDays).toBe(1);
   });
 
+  it('retains hundredth-minute precision for queue slot evidence', () => {
+    // Seven and fifteen extra seconds are not the same duration. Rounding
+    // each run to tenths before taking quantiles hid that distinction.
+    const started = '2026-11-06T01:10:00Z';
+    const rows = [
+      run(21, '2026-11-06T01:00:00Z', {
+        run_started_at: started, updated_at: '2026-11-06T01:20:07Z',
+      }),
+      run(22, '2026-11-06T01:00:01Z', {
+        run_started_at: started, updated_at: '2026-11-06T01:20:15Z',
+      }),
+    ];
+    const report = summarizeMergeGroups(rows, { from, to, now, source: 'api' });
+    expect(report.runs.map((entry: { minutes: number }) => entry.minutes)).toEqual([10.12, 10.25]);
+    expect(report.medianMinutes).toBe(10.12);
+    expect(report.p90Minutes).toBe(10.25);
+    expect(formatMergeGroups(report)).toContain('10.12 min | 10.25 min');
+  });
+
   it('fails closed on invalid durations, duplicates and unverified snapshots', () => {
     const row = run(5, from);
     expect(() => summarizeMergeGroups([row, row], { from, to, now })).toThrow(/Duplicate/);
