@@ -1,14 +1,15 @@
-# Byname grant and provenance contract (implementation preparation)
+# Byname grant and provenance contract (shipped sources and historical design)
 
-**Status:** the record-claim source shipped for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990) on 1 November 2026. The **second, reign-ending source is implemented** under [#2287](https://github.com/EldritchDynasty/EldritchDynasty/issues/2287), but its population reach and owner acceptance are still open. The historical sections below retain the 31 October audit; **What shipped** describes the current code.
+**Status:** the record-claim source shipped for [#1990](https://github.com/EldritchDynasty/EldritchDynasty/issues/1990) on 1 November 2026. The **second, reign-ending source is implemented** under [#2287](https://github.com/EldritchDynasty/EldritchDynasty/issues/2287). Its declared population reach is now measured below the predeclared majority target; the owner acceptance/revision decision remains open. The historical sections below retain the 31 October audit; **What shipped** describes the current code.
 
-## What shipped (1 November 2026)
+## What shipped (Record source and later reign source)
 
 | Piece | Where |
 | --- | --- |
 | Authored wording | `byname: { slot, text }` on a Record block's `record` or `embellish` option (`schema/src/byname.ts`, `RecordBynameS`). Omit has no field for it. Plain English counterparts use the ordinary `proseVariants` address `….options.<pen>.byname.text`. |
 | Validation | `byname/slot` (`schema/src/rules.ts`): a declared slot, a claim about that slot on the same pen, no `{TOKEN}`, no §29 bearing word, at most five words. |
-| Record grant | `grantByname` (`core/src/byname.ts`), called at the end of `applyRecord` after the page is written. `resolveRecord` (the docket) and `afterRecord` (the chronicler's automatic pen) both reach it. |\n| Reign grant (#2287) | `grantReignByname` from the single real `seatHead` succession commit. For an outgoing Head with at least two dated pages, grant for a strict majority of Record, Omit or Embellish; a tie/plurality is `mixed`. The words describe the **house's book**, not the objective truth or a virtue score; pre-existing epithets and earlier grants win. Source `kind: 'reign'` stores the years, pen, and page count, with no invented single source-page link. |
+| Record grant | `grantByname` (`core/src/byname.ts`), called at the end of `applyRecord` after the page is written. `resolveRecord` (the docket) and `afterRecord` (the chronicler's automatic pen) both reach it. |
+| Reign grant (#2287) | `grantReignByname` from the single real `seatHead` succession commit. For an outgoing Head with at least two dated pages, grant for a strict majority of Record, Omit or Embellish; a tie/plurality is `mixed`. The words describe the **house's book**, not the objective truth or a virtue score; pre-existing epithets and earlier grants win. Source `kind: 'reign'` stores the years, pen, and page count, with no invented single source-page link. |
 | Eligibility | `eligibleByname`: the selected pen authors one; its slot cast exactly one person; that person was family of the player's house in the page's year (dead included); the committed page carries a claim about them; they hold no epithet or grant yet. |
 | Saved provenance | `Person.byname` (`BynameGrantS`): `source { kind: 'record', event, pen, page, choice?, outcome?, discrepancy? }`, `year`, optional `settled`. The words are frozen into `Person.epithet` in the reader's prose mode at commit. Additive: no `SAVE_FORMAT` bump; an older save loads with its epithets and no grant. |
 | Contest | `settleBynames`, called from the one real `discrepancy` prove/bury effect, stamps `settled` on the grant whose page is the **latest** embellished page carrying that authored id — found through that page's own claims. An earlier telling keeps its stamp, or stays `claimed` if it was superseded while open. |
@@ -17,7 +18,7 @@
 
 **Departures from the proposal below.** (1) The contest is stamped on the grant at settlement rather than projected from the discrepancy map, because the map cannot say which telling a proof addressed once an authored id repeats; this is the "occurrence-scoped proof identity" option, scoped to the grant and leaving the world's discrepancy model unchanged. (2) The words are stored once, in the reader's mode at commit, like every other saved page, rather than as an Original/Plain pair (`docs/LOCALISATION.md`: changing mode is prospective). (3) The source table is authored inline on the Record options rather than in a separate table, so a byname can only rest on the claims beside it. (4) **Known limit:** a `discrepancy: create` *effect* can reopen an authored id without writing an embellished page — today only `the_drowning_repeated`'s Omit pen does, for `the_second_drowning_lie`. If that template embellished once, later omitted, and the lie was then proven, the proof would settle the earlier embellished telling. That needs a rare template to fire twice with those pens and a proof after; fixing it needs per-occurrence identity on the discrepancy itself, which is a save-format change this slice does not make.
 
-**Measured reach of the *record-only* source.** Sixteen 500-year Long Lines under the ordinary chronicler (seeds 1990 + 37k, `main` at 5a788e3) committed claim-bearing Record pages about 59 of 192 Heads (30.7%) and 43 other people. That is the ceiling for record-claim grants, even with more authored wording. The reign source addresses that ceiling; **its actual achieved incidence must be measured**, not inferred from this older baseline.
+**Measured reach of the *record-only* source.** Sixteen 500-year Long Lines under the ordinary chronicler (seeds 1990 + 37k, `main` at 5a788e3) committed claim-bearing Record pages about 59 of 192 Heads (30.7%) and 43 other people. That is the ceiling for record-claim grants, even with more authored wording. The reign source addresses that ceiling, but its later **measured incidence** is documented below and misses the predeclared majority target. Do not infer that result from this older baseline.
 
 
 ## Second-source reach protocol (#2287)
@@ -41,7 +42,7 @@ ordinary chronicler cohort, while bynames remain unusual among non-Head blood
 relatives. Count all Heads in the headline denominator, not just completed
 reigns, and do not discard broken or truncated runs to inflate reach. A miss is
 a **reported design result**, not a reason to weaken the test gate or invent
-post-hoc wording. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite.
+post-hoc wording. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite.
 
 ### Recorded paired reach — 6 November 2026
 
@@ -68,9 +69,9 @@ The predeclared **greater-than-50% of all Heads** target was **not met** in the 
 | Saved evidence | [core/world.ts](../packages/core/src/world.ts) and [schema/save.ts](../packages/schema/src/save.ts) carry ChronicleEntry.id (optional on old entries), record, claims, discrepancyId and the discrepancy map with open/proven/buried states. [core/record.ts](../packages/core/src/record.ts) folds claims; a deed claim is an attributed narrative claim, *not* objective truth. |
 | Causal links | [core/cause.ts](../packages/core/src/cause.ts) uses exact Chronicle page identity and can resolve an answered proven/buried discrepancy to its embellished page. [core/run-library.ts](../packages/core/src/run-library.ts) creates a display-only year/index fallback for pages missing ids; that fallback is **not durable source identity**. |
 
-There is no byname provenance or authoritative grant path today. The generated-name EPITHETS list in [people/names.ts](../packages/core/src/people/names.ts) is not Person.epithet and must never be treated as a grant.
+At the original 31 October design audit, there was no byname provenance or authoritative grant path; the shipped implementation is summarized above. The generated-name EPITHETS list in [people/names.ts](../packages/core/src/people/names.ts) is not Person.epithet and must never be treated as a grant.
 
-## First candidate source: one already-authored Record moment
+## Historical first candidate: one already-authored Record moment
 
 [waking_early](../packages/content/events/age_quickening.yaml) is a bounded **candidate**, not an approved incidence decision. The existing nine-year-old CHILD slot is the actual named person, not a string parsed from prose.
 
@@ -84,7 +85,7 @@ There is no byname provenance or authoritative grant path today. The generated-n
 
 Second candidate for later evaluation: [corran_what_came_back](../packages/content/events/arc_corran.yaml) records the named SON's return. A later source must be audited for all three pen branches and person availability before inclusion, rather than inferred from its story title. Do not change content while lane-content is held by another session.
 
-## Proposed production contract — not yet added to the schema
+## Historical proposed production contract (31 October; superseded by shipped choices above)
 
 1. **One authoritative commit boundary.** Evaluate eligible byname candidates only immediately after successful Record commitment in the core, using the *actual* page id and the resolved cast/claims. No client watcher, save loader, succession polling or text search may award a byname. Keep the existing outcome and death gates unchanged.
 2. **Closed provenance discriminant.** Start with one source variant, record-claim, exhaustively handled with assertNever. Proposed durable grant shape: personId, source kind, sourceId (authored table entry), pageId, grantYear, selected pen, optional discrepancyId, and frozen Original and Plain byname wording. The existing Person.epithet remains an accessible display value. A second variant (death or succession) requires another intentional exhaustive case, not an arbitrary string.
