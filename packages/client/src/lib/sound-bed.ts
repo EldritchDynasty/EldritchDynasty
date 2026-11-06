@@ -119,7 +119,7 @@ export class SoundBed {
   /** True only when a cue could be heard; zero volume must not open the audio device. */
   get audible(): boolean {
     return !this.#disposed && this.#preference.on && this.#preference.volume > 0
-      && this.#unlocked && !this.#away && this.engine.available;
+      && this.#unlocked && !this.#away && this.#engineAvailable();
   }
 
   prefer(preference: SoundPreference): void {
@@ -135,7 +135,7 @@ export class SoundBed {
       ? Math.min(1, Math.max(0, requestedVolume)) : 0;
     // Only a literal true with a valid, positive volume may turn sound on.
     this.#preference = { on: supplied?.on === true, volume };
-    this.engine.volume = volume;
+    this.#tryAudio(() => { this.engine.volume = volume; });
     this.#settle();
   }
 
@@ -147,11 +147,11 @@ export class SoundBed {
     this.#scene = next;
     this.#sceneKey = key;
     // `Sound` remembers it while muted, so unmuting plays this and not a stale one.
-    this.engine.setDrone(next);
+    this.#tryAudio(() => this.engine.setDrone(next));
   }
 
   cue(cue: Cue): void {
-    if (this.audible) this.engine.cue(cue);
+    if (this.audible) this.#tryAudio(() => this.engine.cue(cue));
   }
 
   /** The player touched the page: audio is allowed, and they are evidently here. */
@@ -175,14 +175,14 @@ export class SoundBed {
     this.#pageHidden = false;
     this.#hostPaused = false;
     this.#settle();
-    if (this.audible) this.engine.wake();
+    if (this.audible) this.#tryAudio(() => this.engine.wake());
   }
 
   hide(): void {
     if (this.#disposed || this.#away) return;
     this.#away = true;
     this.#settle();
-    this.engine.suspend();
+    this.#tryAudio(() => this.engine.suspend());
   }
 
   show(): void {
@@ -350,12 +350,25 @@ export class SoundBed {
     // invoke its old listener, and the sound engine must stay closed.
     this.#disposed = true;
     this.#detach();
-    this.engine.close();
+    this.#tryAudio(() => this.engine.close());
+  }
+
+  /** Even a hostile or invalidated audio adapter must not break the game. */
+  #tryAudio(action: () => void): void {
+    try { action(); }
+    catch { /* Audio is optional presentation; a rejected host becomes silence. */ }
+  }
+
+  #engineAvailable(): boolean {
+    try { return this.engine.available; }
+    catch { return false; }
   }
 
   #settle(): void {
     const muted = !this.audible;
-    if (this.engine.muted !== muted) this.engine.muted = muted;
+    this.#tryAudio(() => {
+      if (this.engine.muted !== muted) this.engine.muted = muted;
+    });
   }
 }
 
