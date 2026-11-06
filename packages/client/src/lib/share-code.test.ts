@@ -168,3 +168,48 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     expect(shareCodeProblem(refusal, 'original')).toBe(authoredReason);
   });
 });
+
+
+describe('malformed native share-code refusal details (#1995)', () => {
+  it('does not coerce an invalid maximum into refusal text', () => {
+    const throwing = { toString(): never { throw new Error('untrusted length'); } };
+    for (const max of [undefined, null, '99999', NaN, 0, -1, throwing]) {
+      const problem = { kind: 'too_long', max } as unknown as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This is too long to be a share code. Copy a shorter code.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('That is longer than a share code this game can read.');
+    }
+  });
+
+  it('bounds untrusted version values without invoking their conversion hooks', () => {
+    const throwing = { toString(): never { throw new Error('untrusted version'); } };
+    for (const version of [undefined, null, 22, throwing]) {
+      const problem = { kind: 'unsupported_version', version } as unknown as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This code uses a format this version cannot read.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('That code is written in a hand this game cannot read.');
+    }
+  });
+
+  it('requests each missing name category only once', () => {
+    const friends = { kind: 'names_needed', missing: ['friends', 'friends'] } as ShareCodeProblem;
+    expect(shareCodeProblem(friends, 'plainenglish')).toBe('Enter a name for every friend in this code.');
+    expect(shareCodeProblem(friends, 'original')).toBe('The code left the friends unnamed. Give each one a name.');
+
+    const mixed = { kind: 'names_needed', missing: ['house', 'house', 'friends'] } as ShareCodeProblem;
+    expect(shareCodeProblem(mixed, 'plainenglish'))
+      .toBe("Enter the missing names: the family name and each friend's name.");
+    expect(shareCodeProblem(mixed, 'original'))
+      .toBe("The code left names out. Give the house's name and each friend's name.");
+  });
+
+  it('lists duplicated edition mismatch details once', () => {
+    const problem = { kind: 'other_edition', differs: ['format', 'format', 'content'] } as ShareCodeProblem;
+    expect(shareCodeProblem(problem, 'plainenglish'))
+      .toBe('This code was made with a different version of the game (save format, game content). It would not start the same family, so it cannot be used.');
+    expect(shareCodeProblem(problem, 'original'))
+      .toBe('That code was made by another edition of the game (save format, content). It would not begin the same house, so it is not offered.');
+  });
+});
