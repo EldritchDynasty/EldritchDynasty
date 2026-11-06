@@ -663,10 +663,15 @@ export class Sound {
       if (this.context !== context || this.#failed) return;
       if (resume && isActivationRefusal(reason)) {
         // Activation denial is temporary, so retain the device for the next
-        // gesture. But the cue that triggered this refused resume belonged to
-        // an earlier player action: a later unlock must not ring it belatedly.
-        // Cut only one-shots; the current Age drone may be restored on wake.
-        this.attempt(() => this.stopCues());
+        // gesture. Cues and the Age drone may already be scheduled on its
+        // suspended clock: neither should begin belatedly on an unrelated tap.
+        // Keep the latest scene, but cut every graph now and rebuild the drone
+        // on the next successful gesture just as for a synchronous refusal.
+        this.restoreDroneAfterDeniedResume = true;
+        this.attempt(() => {
+          this.stopCues();
+          this.stopDrone(0);
+        });
         return;
       }
       this.fail();
