@@ -1075,6 +1075,52 @@ const page = (over: Partial<ChronicleEntry> = {}): ChronicleEntry => ({
 });
 
 describe('the house remembered from attributed evidence (#1808)', () => {
+  it('confines the recovered Afterimage to the founding-to-collection term (#1983)', () => {
+    const ctx = atTheTerm(198314);
+    const w = ctx.world;
+    const beforeFounding = place(ctx, { name: 'Before the founding', sex: 'male', age: 30 });
+    const atCollection = place(ctx, { name: 'At the collection', sex: 'female', age: 30 });
+    const afterCollection = place(ctx, { name: 'After the collection', sex: 'male', age: 30 });
+    w.chronicle = [
+      page({ id: 'before-founding', year: CAMPAIGNS.long.startYear - 1, people: [beforeFounding.id] }),
+      page({ id: 'at-collection', year: END_YEAR, people: [atCollection.id] }),
+      page({ id: 'after-collection', year: END_YEAR + 1, people: [afterCollection.id] }),
+      page({ id: 'future-blank', year: END_YEAR + 1, text: null }),
+    ];
+    w.succession = [
+      { person: atCollection.id, name: atCollection.name, from: END_YEAR - 1,
+        question: { kind: 'thin_line', opened: END_YEAR - 1, baseline: 3,
+          text: 'Three were present.', signature: 'thin_line:at-collection' } },
+      { person: afterCollection.id, name: afterCollection.name, from: END_YEAR + 1,
+        question: { kind: 'thin_line', opened: END_YEAR + 1, baseline: 1,
+          text: 'One came afterwards.', signature: 'thin_line:after-collection' } },
+    ];
+
+    // Unfinished authoring inventories deliberately include synthetic future
+    // and pre-founding pages. Only a completed last night has book bounds.
+    expect(afterimageEvidence(ctx).people.map((person) => person.name)).toContain('Before the founding');
+    expect(afterimageEvidence(ctx).people.map((person) => person.name)).toContain('After the collection');
+
+    w.ending = { id: 'forgotten', year: END_YEAR };
+    // Recovered state can outlive the saved collection date; the reader must
+    // never let the later clock rewrite what was in the ending's book.
+    w.year = END_YEAR + 5;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      // The setter changes saved state; only the following read must be pure.
+      const before = digestOf(ctx);
+      const epilogue = epilogueOf(ctx)!;
+      const evidence = epilogue.afterimage!;
+      expect(evidence.people.map((person) => person.name)).toEqual(['At the collection']);
+      expect(evidence.people[0]!.sources.map((source) => source.page)).toEqual(['at-collection']);
+      expect(evidence.blank).toBeUndefined();
+      expect(evidence.line?.[0]?.id).toBe(atCollection.id);
+      expect(evidence.brush?.source.year).toBe(END_YEAR - 1);
+      expect(epilogue.year).toBe(END_YEAR);
+      expect(digestOf(ctx), 'reading the ending must not mutate the saved history').toBe(before);
+    }
+  });
+
   it('selects up to three people from structured pages and choices, with stable ties', () => {
     const ctx = testWorld(content);
     const people = ['Élodie 家', 'Wystan', 'Meriel', 'Unmentioned'].map((name) =>
@@ -2564,7 +2610,9 @@ describe('Long Line family-purpose witnesses begin with the house (#2931)', () =
     }];
     const outcome = w.decisionLog[0]!;
     if (outcome.kind !== 'outcome') throw new Error('expected attributed rite');
-    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victim.id);
+    // Completed Afterimages exclude pre-founding pages even when a rite
+    // elsewhere in the world state could otherwise be attributed.
+    expect(afterimageEvidence(ctx).spentBlood).toBeUndefined();
     // As above, the general reckoning may materialize the ascendant's genome.
     const selected = selectEnding(ctx);
     const before = digestOf(ctx);
@@ -2574,6 +2622,7 @@ describe('Long Line family-purpose witnesses begin with the house (#2931)', () =
     page.year = start;
     outcome.year = start;
     victim.died = start;
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victim.id);
     for (const mode of ['original', 'plainenglish'] as const) {
       setProseMode(ctx, mode);
       expect(epilogueOf(ctx)!.purpose).toMatchObject({
