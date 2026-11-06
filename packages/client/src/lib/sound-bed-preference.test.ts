@@ -190,3 +190,51 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
   });
 
 });
+
+describe('Age scene recovery after a refusing host (#1986)', () => {
+  it('retries the same Age when the adapter rejected its first delivery', () => {
+    const engine = fakeSound();
+    const delivery = vi.fn()
+      .mockImplementationOnce(() => { throw new Error('InvalidStateError: audio host unavailable'); });
+    engine.setDrone = delivery;
+    const bed = new SoundBed(engine);
+    const warm = { registers: ['warm'] as const, frame: false };
+
+    expect(() => bed.scene(warm)).not.toThrow();
+    expect(delivery).toHaveBeenCalledTimes(1);
+    // The next view did not change Age, but the previously rejected request
+    // must not be mistaken for one the engine actually accepted.
+    expect(() => bed.scene({ registers: ['warm'], frame: false })).not.toThrow();
+    expect(delivery).toHaveBeenCalledTimes(2);
+    expect(delivery).toHaveBeenLastCalledWith(warm);
+
+    bed.scene(warm);
+    expect(delivery, 'a successful unchanged scene restarted the drone').toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+
+  it('retries a failed silence request rather than leaving a stale drone', () => {
+    const engine = fakeSound();
+    let rejectOneClear = true;
+    const delivery = vi.fn((scene: Parameters<SoundEngine['setDrone']>[0]) => {
+      if (scene === null && rejectOneClear) {
+        rejectOneClear = false;
+        throw new Error('InvalidStateError: output moved');
+      }
+    });
+    engine.setDrone = delivery;
+    const bed = new SoundBed(engine);
+    bed.scene({ registers: ['warm'], frame: false });
+    expect(delivery).toHaveBeenCalledTimes(1);
+
+    expect(() => bed.scene(null)).not.toThrow();
+    expect(delivery).toHaveBeenCalledTimes(2);
+    bed.scene(null);
+    expect(delivery).toHaveBeenCalledTimes(3);
+    expect(delivery).toHaveBeenLastCalledWith(null);
+
+    bed.scene(null);
+    expect(delivery).toHaveBeenCalledTimes(3);
+    bed.dispose();
+  });
+});
