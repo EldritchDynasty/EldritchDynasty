@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, useId } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 
@@ -11,12 +11,14 @@ const props = withDefaults(defineProps<{
 }>(), { proseMode: 'original' });
 defineEmits<{ dismiss: [] }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
+// Each optional recap is a named landmark, with the visible heading as its name.
+const recapTitleId = useId();
 </script>
 
 <template>
-  <aside class="panel small resume-recap" :aria-label="plain ? 'Saved game recap' : 'House recap'">
+  <aside class="panel small resume-recap" :aria-labelledby="recapTitleId">
     <div class="recap-heading">
-      <strong>{{ plain ? 'Back to your game' : 'The house, taken up again' }}</strong>
+      <h2 :id="recapTitleId" class="recap-title">{{ plain ? 'Back to your game' : 'The house, taken up again' }}</h2>
       <button class="quiet small" type="button" @click="$emit('dismiss')">
         {{ plain ? 'Hide recap' : 'Put aside' }}
       </button>
@@ -50,6 +52,7 @@ const plain = computed(() => props.proseMode === 'plainenglish');
 <style scoped>
 .resume-recap { max-width: 58rem; margin: 0 auto 14px; }
 .recap-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.recap-title { font: inherit; font-weight: 700; margin: 0; }
 summary { cursor: pointer; min-height: 44px; align-content: center; }
 dl { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: 8px 14px; }
 dt { color: var(--rubric); }
