@@ -3295,6 +3295,39 @@ describe('voluntary resume recap (#1985)', () => {
     },
   );
 
+  it.each(['original', 'plainenglish'] as const)(
+    'never presents a future-dated restored pledge as an existing debt (%s)', async (proseMode) => {
+      const future = { house: 'house_future', houseName: 'House Future', year: 1400,
+        lot: 'a_future_book', lotName: 'a book not yet bought' };
+      const existing = { house: 'house_elm', houseName: 'House Elm', year: 1315,
+        lot: 'old_book', lotName: 'a Book of Hours' };
+      const base = { generationArc: undefined, ambition: undefined, year: 1321 };
+      const view = snapshot({ ...base, marriagePromises: [future] });
+      const before = structuredClone(view);
+      // A recovered future-dated row is not an outstanding promise at this year.
+      expect(hasResumeRecapFacts(view, 0)).toBe(false);
+      const w = mount(ResumeRecap, { props: { view, pending: 0, proseMode } });
+      try {
+        expect(w.find('.recap-pledges').exists()).toBe(false);
+        expect(w.text()).not.toContain('House Future');
+        expect(view).toEqual(before);
+
+        // Keep current obligations even if the same save has impossible later rows.
+        const mixed = snapshot({ ...base, marriagePromises: [existing, future] });
+        expect(hasResumeRecapFacts(mixed, 0)).toBe(true);
+        await w.setProps({ view: mixed });
+        expect(w.get('.recap-pledges').findAll('li')).toHaveLength(1);
+        expect(w.text()).toContain('House Elm');
+        expect(w.text()).not.toContain('House Future');
+
+        // A later, genuinely current year can acknowledge the second pledge.
+        await w.setProps({ view: snapshot({ ...base, year: 1400, marriagePromises: [existing, future] }) });
+        expect(w.get('.recap-pledges').findAll('li')).toHaveLength(2);
+        expect(w.text()).toContain('House Future');
+      } finally { w.unmount(); }
+    },
+  );
+
   it('keeps separate outstanding creditors and omits absent legacy evidence', async () => {
     const view = snapshot({ marriagePromises: [
       { house: 'house_elm', houseName: 'House Elm', year: 1315, lot: 'book', lotName: 'Book of Hours' },
