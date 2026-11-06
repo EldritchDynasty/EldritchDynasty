@@ -178,6 +178,41 @@ arrival-versus-landing balance. The earlier control was already
 confounded. Keep concurrency unchanged and refresh this fixed-cutover
 cohort once its required denominators exist.
 
+### Second post-cutover observation (9 groups)
+
+Collected on **6 November 2026 after 06:01 UTC**, from the
+[merge-group `check` workflow runs](https://github.com/EldritchDynasty/EldritchDynasty/actions/workflows/check.yml)
+and the `gates (batch)` job logs. These six completed runs extend, rather
+than replace, the first three post-cutover observations above. The selection
+still begins **after PR #2825 merged at 01:36:17 UTC**; it does not count
+the 69-run pre-change control as an improvement.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42156657912](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42156657912) | 03:27:24 | 10.03 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42156657912/job/127692358865) |
+| [42157836756](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42157836756) | 03:39:09 | 7.98 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42157836756/job/127696174661) |
+| [42163732690](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42163732690) | 04:38:48 | 10.15 | success | [5 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42163732690/job/127715250634) |
+| [42165371334](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42165371334) | 04:55:50 | 10.17 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42165371334/job/127720530209) |
+| [42167307456](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42167307456) | 05:15:11 | 17.27 | success | [0 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42167307456/job/127726715835) |
+| [42170345139](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42170345139) | 05:46:00 | 15.85 | success | [0 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42170345139/job/127736480358) |
+
+**Cumulative post-cutover evidence (9 completed groups):** 9 successes,
+0 failures (0% observed); median **10.08 minutes**, measured consistently
+from `run_started_at` to `updated_at`; **63 / 108 trusted gate-proof
+decisions reused (58.3%)**. The six new groups contributed **41 / 72**;
+the preceding three contributed **22 / 36**. The two new zero-reuse
+groups took 17.27 and 15.85 minutes, while the fully reused groups took
+10.03, 7.98 and 10.17 minutes. That association illustrates why the
+proof mechanism matters, but it does not prove all slot variation has a
+single cause.
+
+**Acceptance is still pending.** Nine groups are short of the required
+20-group proof/slot comparison and 30-group day; this is also not seven
+consecutive days of duration-budget evidence or an arrivals-versus-landings
+working-day sample. The pre-cutover day already had 0/69 failures, so the
+post-cutover 0/9 cannot establish an improvement in failure rate. Keep
+build concurrency unchanged while gathering the full denominators.
+
 ## Follow-up after landing
 
 The implementation publishes merge-group proofs, but consumers accept them only
