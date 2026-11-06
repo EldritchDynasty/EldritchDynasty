@@ -1119,6 +1119,11 @@ export function secondForemostOf(ctx: SimCtx): { person: Person; standing: Stand
   return rankedExpressers(ctx)[1];
 }
 
+/** Completed-book views must not replace a persisted lazy GenomeRef when measuring a person. */
+function measuredPerson(ctx: SimCtx, p: Person): Person {
+  return ctx.world.ending && p.genome.kind === 'lazy' ? { ...p } : p;
+}
+
 /**
  * The house's expressers, best first. ONE ranking, so `foremostOf` and
  * `secondForemostOf` cannot drift into disagreeing about which man is which
@@ -1134,11 +1139,6 @@ export function secondForemostOf(ctx: SimCtx): { person: Person; standing: Stand
  * Draws no dice: the ladder is a measurement, and `outranks` falls to
  * household order past rung and power, which is stable per world.
  */
-/** Completed-book views must not replace a persisted lazy GenomeRef when measuring a person. */
-function measuredPerson(ctx: SimCtx, p: Person): Person {
-  return ctx.world.ending && p.genome.kind === 'lazy' ? { ...p } : p;
-}
-
 function rankedExpressers(ctx: SimCtx): { person: Person; standing: Standing }[] {
   const w = ctx.world;
   const ranked: { person: Person; standing: Standing }[] = [];
