@@ -393,3 +393,43 @@ day-sized baseline is a different cohort and workload. The required
 30-group day below 5% failure and seven consecutive days without a
 duration-budget merge-group failure remain unmeasured. Do not change
 build concurrency on this preliminary evidence alone.
+
+
+### Seventh post-cutover observation: 29 completed groups (7 more)
+
+Collected on **6 November 2026 after 11:19 UTC** for child #3103 of #2794.
+This extends the *same* fixed cohort whose cutover is #2825's merge at
+**2026-11-06 01:36:17 UTC**. The seven subsequent, completed
+`check.yml` `merge_group` runs are shown in creation order; none appears
+in the preceding 22-group observation. Each has a successful terminal
+workflow conclusion. Run durations are GitHub `updated_at - run_started_at`;
+proof counts were read from each job's **planner decisions** (`reuse from run`
+versus `run — no matching trusted main proof`), *not* from the separate
+proof-production trace's `reusable` lines.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42195495034](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42195495034) | 09:29:58 | 10.43 | success | [5 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42195495034/job/127817703791) |
+| [42196815353](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42196815353) | 09:40:59 | 7.92 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42196815353/job/127822143858) |
+| [42198632580](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42198632580) | 09:55:04 | 6.97 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42198632580/job/127828151438) |
+| [42200917200](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42200917200) | 10:12:48 | 9.50 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42200917200/job/127835766863) |
+| [42203127448](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42203127448) | 10:30:02 | 9.93 | success | [5 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42203127448/job/127843174180) |
+| [42204491034](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42204491034) | 10:40:42 | 8.12 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42204491034/job/127847680137) |
+| [42206473802](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42206473802) | 10:56:35 | 10.72 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42206473802/job/127854468387) |
+
+**Cumulative post-cutover cohort: 29/29 successful groups, 0 failures,
+9.93-minute median slot, and 270/348 (77.6%) trusted gate-proof decisions
+reused.** These seven new groups added **70/84** reuse decisions to the
+previous 200/264. The latest seven group durations were 10.43, 7.92, 6.97,
+9.50, 9.93, 8.12 and 10.72 minutes. This is a *descriptive* cohort:
+more reuse does not establish causation of every time difference, and a
+proof-only 0/0 gate execution must not be treated as full-gate timing.
+
+**Acceptance remains open.** The elapsed post-cutover observation is under
+one full day, and 29 is one short of the issue's 30-group/day condition.
+The immediately preceding 24-hour pre-cutover control already had **0/69**
+failures; therefore the post-cutover 0/29 is **not** evidence of a failure-rate
+improvement. A seven-consecutive-day absence of unmeasured-duration budget
+failures has not yet elapsed. Earlier bounded arrivals/landings also do not
+establish a full working-day *ready-backlog* decrease. No queue concurrency
+change or owner approval is implied.
