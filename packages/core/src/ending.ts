@@ -693,7 +693,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         || (membership.to !== undefined && !Number.isSafeInteger(membership.to))) continue;
       const people = residents.get(membership.branch!) ?? [];
       people.push(person);
-      residents.set(membership.branch, people);
+      residents.set(membership.branch!, people);
     }
     const branches = [...w.branches.values()]
       .filter((branch) => branch.house === w.playerHouse
