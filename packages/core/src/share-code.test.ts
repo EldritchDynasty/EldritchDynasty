@@ -106,6 +106,12 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       live.decisionLog = intact;
     }
     expect(codeOf(session, { names: true })).toBe(original);
+
+    // Demonstration codes remain unsupported regardless of malformed logs.
+    const demo = newGame(content, { seed: 7, startYear: CAMPAIGNS.demo.startYear, campaign: 'demo' });
+    demo.ctx.world.decisionLog.push(null as never);
+    expect(demo.shareCode({ build: BUILD }))
+      .toEqual({ ok: false, unavailable: 'demonstration' });
   });
 
   it('preserves Unicode founding names exactly and redacts them from anonymous codes', () => {
