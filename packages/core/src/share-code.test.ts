@@ -122,7 +122,8 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       // Invalid runtime state must not throw out of the ending/Chronicle
       // export path. Prototype keys are truthy property lookups on ordinary
       // objects but are not members of the campaign vocabulary.
-      for (const invalid of ['unknown', '__proto__', 'constructor', null, undefined]) {
+      for (const invalid of ['unknown', '__proto__', 'constructor', null, undefined,
+        new String('short'), new String('demo')]) {
         session.ctx.world.campaign = invalid as never;
         for (const names of [false, true]) {
           expect(() => session.shareCode({ build: BUILD, names }), String(invalid)).not.toThrow();
