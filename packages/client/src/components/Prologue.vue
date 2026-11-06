@@ -412,6 +412,21 @@ function signOnEnter(event: KeyboardEvent): void {
   if (event.isComposing || event.keyCode === 229 || event.repeat) return;
   sign();
 }
+
+// The completed signing's Enter button remains mounted until the parent's
+// presentation update. A burst of clicks must enter once, not record multiple
+// accepted opening transitions for the same deliberate action (#1984).
+let entering = false;
+function enter(): void {
+  if (!props.prologue.founded || entering) return;
+  entering = true;
+  try {
+    props.actions.enter();
+  } finally {
+    // If the action cannot transition, permit a later deliberate retry.
+    void nextTick(() => { entering = false; });
+  }
+}
 </script>
 
 <template>
@@ -648,7 +663,7 @@ function signOnEnter(event: KeyboardEvent): void {
          does not survive being printed above a family tree. -->
     <template v-else>
       <p class="thesis">{{ prologue.thesis }}</p>
-      <button class="primary" @click="actions.enter()">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
+      <button class="primary" @click="enter()">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
     </template>
   </main>
 </template>
