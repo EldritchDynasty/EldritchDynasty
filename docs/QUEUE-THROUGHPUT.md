@@ -65,6 +65,38 @@ performance improvement merely because it produces a number.
 
 
 
+## Conservative seven-day duration-budget evidence (#3180)
+
+A closed seven-day window can **prove the absence of** `lanes.test.ts`
+duration-budget failures without needing to diagnose individual jobs, but only
+when every merge-group `check` succeeded. Run the reporter with a *live*
+GitHub token and exactly seven consecutive 24-hour segments, for example:
+
+```bash
+GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-13T01:36:17Z --json
+```
+
+The JSON field `sevenDayNoBudgetFailuresProved` is `true` only when the
+window has closed, the API cohort is complete, there are no pending runs, each
+of the seven consecutive 24-hour segments has at least one group, and **all**
+those groups concluded `success`. The array `sevenDayGroupCounts` shows
+activity in each segment. A successful required merge-group `check` cannot
+contain a failing budget test; this is a **sufficient**, deliberately
+conservative certificate, not a way to classify failed jobs.
+
+For a shorter window, an unverified offline snapshot, an empty day, a failure,
+cancellation or missing result, the value is `null` / **not established**.
+In particular, `null` must **not** be read as a confirmed duration-budget
+failure: a red group could have failed anywhere, and diagnosing a budget
+failure requires inspecting its fast-lane job logs. This report does not
+certify proof reuse, historical ready-queue depth, PR landings or throughput,
+and it never changes the queue concurrency.
+
+This is a reporting capability, **not** a seven-day acceptance observation.
+No seven-day cohort was completed as part of this change. Keep parent #2794
+open until the actual closed-window evidence and other acceptance criteria
+are documented.
+
 ## Completed 24-hour queue-flow snapshot (6 November 2026; #3158)
 
 This is a **separate rolling cohort**, not the next adjacent window in the

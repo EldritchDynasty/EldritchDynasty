@@ -126,6 +126,52 @@ describe('queue throughput evidence (#2794)', () => {
     }
   });
 
+
+  it('proves seven clean budget days only from complete, active and green API cohorts', () => {
+    const sevenDaysTo = '2026-11-13T01:00:00Z';
+    const sevenDayNow = Date.parse('2026-11-14T00:00:00Z');
+    const utc = (ms: number) => new Date(ms).toISOString().replace('.000Z', 'Z');
+    const green = Array.from({ length: 7 }, (_, day) => {
+      const first = Date.parse(from) + day * 86400000;
+      return run(700 + day, utc(first), {
+        run_started_at: utc(first + 600000),
+        updated_at: utc(first + 1200000),
+      });
+    });
+    const options = { from, to: sevenDaysTo, now: sevenDayNow, source: 'api' };
+    const proven = summarizeMergeGroups(green, options);
+    expect(proven).toMatchObject({
+      complete: true, successful: 7, failed: 0,
+      sevenDayGroupCounts: [1, 1, 1, 1, 1, 1, 1],
+      sevenDayNoBudgetFailuresProved: true,
+    });
+    expect(formatMergeGroups(proven)).toContain(
+      'Seven-day zero duration-budget failures (sufficient green-CI evidence): established.',
+    );
+
+    // No failure cause can be attributed to the budget without fast-lane logs.
+    const insufficient: Array<{ rows: Run[]; options: Parameters<typeof summarizeMergeGroups>[1] }> = [
+      { rows: green.map((x, i) => i === 3 ? { ...x, conclusion: 'failure' } : x), options },
+      { rows: green.map((x, i) => i === 3 ? { ...x, conclusion: 'cancelled' } : x), options },
+      { rows: green.map((x, i) => i === 3
+        ? { ...x, status: 'in_progress', conclusion: null, updated_at: null } : x), options },
+      { rows: green.filter(x => x.id !== 703), options },
+      { rows: [...green.slice(0, 3), { ...green[3]!, created_at: green[2]!.created_at }, ...green.slice(4)], options },
+      { rows: [], options },
+      { rows: green, options: { ...options, source: 'snapshot' } },
+      { rows: green, options: { ...options, now: Date.parse('2026-11-12T00:00:00Z') } },
+      { rows: green, options: { ...options, to } },
+    ];
+    for (const sample of insufficient) {
+      const report = summarizeMergeGroups(sample.rows, sample.options);
+      expect(report.sevenDayNoBudgetFailuresProved).toBeNull();
+      expect(formatMergeGroups(report)).toContain(
+        'Seven-day zero duration-budget failures (sufficient green-CI evidence): not established.',
+      );
+    }
+    expect(summarizeMergeGroups(green, { ...options, to }).sevenDayGroupCounts).toBeNull();
+  });
+
   it('does not report a diluted failure share for other terminal outcomes', () => {
     const rows = [
       run(41, from, { conclusion: 'failure' }),
