@@ -48,7 +48,13 @@ const janitor = (cwd: string, env: Record<string, string> = {}) => {
       // A real file rather than `/dev/null`, which is a path on one of the two
       // platforms this suite runs on. The summary is written, read by nobody,
       // and thrown away with the fixture — what these tests read is stdout.
-      env: { ...process.env, GITHUB_STEP_SUMMARY: join(root, 'summary.md'), ...env },
+      // The fixtures use private bare repositories and synthetic issue IDs.
+      // A hosted runner exposes its real GITHUB_REPOSITORY; forwarding it
+      // would let the janitor query the host's actual issue state (e.g. #538
+      // is closed) and incorrectly retire an active synthetic claim.
+      // Individual reconciliation tests may still opt in to their own repo
+      // and supply explicit issue evidence through ...env.
+      env: { ...process.env, GITHUB_REPOSITORY: '', GITHUB_STEP_SUMMARY: join(root, 'summary.md'), ...env },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
     return { code: 0, out };
