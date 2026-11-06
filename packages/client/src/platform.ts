@@ -24,7 +24,8 @@ export type SmokeCommand =
   | { kind: 'save'; seed: number; years: number }
   | { kind: 'resume' }
   | { kind: 'export' }
-  | { kind: 'import'; path: string };
+  | { kind: 'import'; path: string }
+  | { kind: 'share-code' };
 
 /** A validated client snapshot returned to the host for hashing and evidence. */
 export interface SmokeResult {
