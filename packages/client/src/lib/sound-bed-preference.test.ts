@@ -198,7 +198,7 @@ describe('Age scene recovery after a refusing host (#1986)', () => {
       .mockImplementationOnce(() => { throw new Error('InvalidStateError: audio host unavailable'); });
     engine.setDrone = delivery;
     const bed = new SoundBed(engine);
-    const warm = { registers: ['warm'] as const, frame: false };
+    const warm: Parameters<SoundBed['scene']>[0] = { registers: ['warm'], frame: false };
 
     expect(() => bed.scene(warm)).not.toThrow();
     expect(delivery).toHaveBeenCalledTimes(1);
