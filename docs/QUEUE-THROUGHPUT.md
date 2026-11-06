@@ -332,3 +332,64 @@ Before increasing it, confirm the account's concurrent-job allowance against
 GitHub's current plan documentation and record the actual ruleset change in
 COMMANDS.md. No concurrency or rate improvement is claimed in advance.
 
+
+### Sixth post-cutover observation: 22 completed groups and a bounded flow check
+
+Collected **6 November 2026 after 09:27 UTC**, extending the same fixed
+post-[#2825](https://github.com/EldritchDynasty/EldritchDynasty/pull/2825)
+cutover cohort (01:36:17 UTC). Neither row below was counted in the fifth
+observation; both check.yml merge-group runs completed successfully. The
+gate-proof decisions come from the gates (batch) job's actual planner log,
+not a duration-based inference.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42191598170](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42191598170) | 08:59:10 | 9.57 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42191598170/job/127804788040) |
+| [42193017150](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42193017150) | 09:10:27 | 10.83 | success | [0 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42193017150/job/127809435545) |
+
+**Cumulative fixed post-cutover cohort: 22/22 successful groups (0
+observed failures), median slot 9.96 minutes and 200/264 (75.8%)
+trusted gate-proof decisions reused.** Duration is again GitHub's
+updated_at minus run_started_at, not the gate job's execution time.
+The two additions contribute 12/24 reused decisions. The second job
+explicitly reported no matching trusted main proof among 60 candidate
+runs and executed all twelve gates in about nine minutes; this is not
+evidence that the proof-consumer bypassed validation or that any single
+cause explains the fingerprint misses.
+
+#### Bounded arrivals-versus-landings observation (not a full-day result)
+
+For the half-open window **(2026-11-06 01:36:17 UTC,
+2026-11-06 09:21:43 UTC]**, immediately after #2825's merge through
+the last completed merge in the observed cohort (**7 h 45 m 26 s**),
+GitHub's PR metadata records:
+
+- **22 new PRs opened and 22 PRs merged**, or approximately **2.84/h**
+  in each direction. These counts use PR created_at and merged_at,
+  including merges of PRs opened before this window; the cutover PR
+  itself is excluded from the landing count.
+- One additional PR, [#3069](https://github.com/EldritchDynasty/EldritchDynasty/pull/3069),
+  was closed without merging. It is not counted as a landing.
+- The number of **open PRs** declined from **3 at the start** (#3060,
+  #3061, #3062) to **2 at the end** (#3085, #3090), reconstructed from
+  PR creation and closing timestamps. This is an *open-PR* count, not
+  a reconstructed *ready queue* count: historical draft and queue
+  transitions were not established.
+- Source: GitHub
+  [PR collection](https://github.com/EldritchDynasty/EldritchDynasty/pulls?q=is%3Apr),
+  inspected via the REST pulls collection with state=all, creation
+  descending and 100 results, alongside the closed/updated collection.
+  The oldest returned creation was 4 November 16:11 UTC;
+  the closed/updated collection covered the entire target interval.
+  The [merge-group run collection](https://github.com/EldritchDynasty/EldritchDynasty/actions/workflows/check.yml)
+  was filtered to event=merge_group and completed check runs.
+
+This bounded observation shows arrivals matching landings *during this
+window* and an open-PR count falling by one. It does not establish the
+issue's full **working-day ready-backlog** criterion, nor can the small
+0/22 failure sample establish an improvement over the immediately
+preceding **0/69** pre-cutover control. The original **14/97**
+day-sized baseline is a different cohort and workload. The required
+30-group day below 5% failure and seven consecutive days without a
+duration-budget merge-group failure remain unmeasured. Do not change
+build concurrency on this preliminary evidence alone.
