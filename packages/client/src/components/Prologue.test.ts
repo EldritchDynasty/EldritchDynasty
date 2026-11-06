@@ -1310,7 +1310,7 @@ describe('who signed', () => {
     expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
   });
 
-  it('pre-selects the body for a woman, keeps a nonbinary founder\'s own choice, and lets anyone change it', async () => {
+  it('pre-selects the body for a woman, then requires a nonbinary founder to choose', async () => {
     const game = actions();
     const wrapper = mount(Prologue, { props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 } });
     await revealChoices(wrapper);
@@ -1318,7 +1318,8 @@ describe('who signed', () => {
     await answerFounder(wrapper, 1);
     expect(pressed(wrapper)).toEqual(['false', 'true']);
     await answerFounder(wrapper, 2);
-    expect(pressed(wrapper), 'nonbinary keeps the body already chosen').toEqual(['false', 'true']);
+    expect(pressed(wrapper), 'a gender default is not a player choice').toEqual(['false', 'false']);
+    expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
     await wrapper.findAll('.founding-configuration button')[0]!.trigger('click');
     expect(pressed(wrapper)).toEqual(['true', 'false']);
 
