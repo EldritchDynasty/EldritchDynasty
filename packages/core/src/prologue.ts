@@ -289,10 +289,9 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   if (w.founding) return { ok: false, reason: msg(ctx, 'founding.refuse.founded', 'the house has already been founded') };
 
   const houseName = choice.houseName.trim().replace(/\s+/g, ' ');
-  // Some characters (e.g. zero-width spaces and word joiners) survive trim
-  // but cannot make a visible house name on their own. Keep them when a name
-  // contains real text; refuse only a name made entirely of invisible marks.
-  if (!houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()) {
+  // Default-ignorable formatting marks and nonprinting controls survive trim(),
+  // but cannot name a house on their own. Preserve them inside visible text.
+  if (!houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()) {
     return { ok: false, reason: msg(ctx, 'founding.refuse.no_name', 'the house needs a name') };
   }
   if (houseName.length > HOUSE_NAME_MAX) {

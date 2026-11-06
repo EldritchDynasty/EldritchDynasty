@@ -199,6 +199,16 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     }
   });
 
+  it('refuses control-only founder answers in both share-code privacy modes', () => {
+    for (const name of ['\u0000', '\u0085']) {
+      const game = founded({ ...SIGNED, founder: { ...SIGNED.founder, name } });
+      for (const names of [false, true]) {
+        expect(game.shareCode({ names, build: BUILD }))
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+    }
+  });
+
   it('replays an explicitly blank founder-name answer in a named share code', () => {
     // Founding permits a blank answer: the authored name is shown, but the
     // signing log still records exactly what the player submitted.

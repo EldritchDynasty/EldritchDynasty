@@ -292,12 +292,12 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     return { ok: false, unavailable: 'unrepresentable' };
   }
   // The signing trims and collapses whitespace before writing its founding
-  // log, and refuses invisible-only names. A restored or corrupted log may
+  // log, and refuses formatting-only or control-only names. A restored log may
   // no longer meet that contract. Never export a name that the same signing
   // would change or refuse, even when the sender leaves names out of the code.
   const houseName = founding.houseName.trim().replace(/\s+/g, ' ');
   if (!wellFormedUtf16(houseName) || houseName !== founding.houseName
-    || !houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()
+    || !houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()
     || houseName.length > HOUSE_NAME_MAX) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
@@ -429,7 +429,7 @@ function wellFormedUtf16(name: string): boolean {
 
 function canonicalVisibleName(name: string): boolean {
   return wellFormedUtf16(name) && name === name.trim().replace(/\s+/g, ' ')
-    && !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
+    && !!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim();
 }
 
 /** An explicitly blank founder answer is part of the signing log and may
@@ -440,7 +440,7 @@ function canonicalVisibleName(name: string): boolean {
  */
 function validFounderName(name: string): boolean {
   return wellFormedUtf16(name)
-    && (!name.trim() || !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim());
+    && (!name.trim() || !!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim());
 }
 
 /** A payload's indices against the prologue it claims, or undefined if any is out of place. */
@@ -536,7 +536,7 @@ export function readShareCode(
   // combining grapheme joiners, variation selectors, and others. None belong
   // to the wire alphabet. Strip the whole default-ignorable category rather
   // than a hand-maintained subset, only after bounding the raw input.
-  const text = code.replace(/[\s\p{Default_Ignorable_Code_Point}]+/gu, '');
+  const text = code.replace(/[\s[\p{Default_Ignorable_Code_Point}\p{Cc}]]+/gu, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
@@ -666,8 +666,8 @@ export function newGameFromShareCode(
   // skips invisible-only optional names, which would silently shorten an
   // imported roster and break the code's mechanical founding contract (#2264).
   const missing: SharedName[] = [
-    ...(!houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim() ? ['house' as const] : []),
-    ...(friendNames.some((name) => !name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim())
+    ...(!houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim() ? ['house' as const] : []),
+    ...(friendNames.some((name) => !name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim())
       ? ['friends' as const] : []),
   ];
   if (missing.length) return { ok: false, problem: { kind: 'names_needed', missing } };

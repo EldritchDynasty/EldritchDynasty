@@ -115,9 +115,9 @@ const CONFIGURATIONS: readonly { id: FoundingConfiguration; original: string; pl
   },
 ];
 const answers = ref<Record<string, string>>({});
-/** Match the signing/import rule: formatting-only names do not identify anyone. */
+/** Formatting marks and nonprinting controls cannot name someone on their own. */
 function hasVisibleName(name: string): boolean {
-  return name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim().length > 0;
+  return name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim().length > 0;
 }
 function invalidOptionalFriendName(name: string): boolean {
   return name.trim().length > 0 && !hasVisibleName(name);
