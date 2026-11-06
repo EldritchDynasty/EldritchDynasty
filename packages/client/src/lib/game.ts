@@ -453,8 +453,18 @@ export function resumeRecapRequested(search: string): boolean {
  * Otherwise a later action can introduce a question and unexpectedly reveal
  * what was hidden at pickup time (#1985).
  */
+/** An invalidated/restored view can contain a future-dated pledge. It is not yet
+ * a present obligation and must not create a recap or be presented as one.
+ * Use the same projection for recap eligibility and its visible lines.
+ */
+export function currentMarriagePromises(view: SessionView): SessionView['marriagePromises'] {
+  return view.marriagePromises?.filter((promise) =>
+    Number.isSafeInteger(promise.year) && promise.year <= view.year
+  ) ?? [];
+}
+
 export function hasResumeRecapFacts(view: SessionView | null, pending: number): boolean {
-  return Boolean(view && (view.generationArc?.question || view.ambition || pending > 0 || view.marriagePromises?.length));
+  return Boolean(view && (view.generationArc?.question || view.ambition || pending > 0 || currentMarriagePromises(view).length));
 }
 
 export function withAcceptedPickup(actions: GameActions, onAccepted: () => void): GameActions {
