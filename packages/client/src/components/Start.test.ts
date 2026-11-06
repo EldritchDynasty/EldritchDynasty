@@ -3199,6 +3199,12 @@ describe('resume recap opt-in', () => {
     expect(hasResumeRecapFacts(empty, 1)).toBe(true);
     expect(hasResumeRecapFacts(snapshot({ ambition: undefined }), 0)).toBe(true);
     expect(hasResumeRecapFacts(snapshot({ generationArc: undefined }), 0)).toBe(true);
+    const pledgeOnly = snapshot({ generationArc: undefined, ambition: undefined, marriagePromises: [
+      { house: 'house_elm', houseName: 'House Elm', year: 1315, lot: 'book', lotName: 'Book of Hours' },
+    ] });
+    expect(hasResumeRecapFacts(pledgeOnly, 0)).toBe(true);
+    expect(hasResumeRecapFacts(snapshot({ generationArc: undefined, ambition: undefined, marriagePromises: [] }), 0)).toBe(false);
+    expect(hasResumeRecapFacts(snapshot({ generationArc: undefined, ambition: undefined, marriagePromises: undefined }), 0)).toBe(false);
   });
 });
 
