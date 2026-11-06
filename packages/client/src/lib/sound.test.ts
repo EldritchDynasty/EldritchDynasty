@@ -1073,6 +1073,40 @@ function bedOnBoard(scene: DroneInput = WARM) {
 }
 
 describe('the bed decides when the house may be heard', () => {
+  it('silences a malformed scene without throwing or retaining the former drone (#1986)', () => {
+    const setDrone = vi.fn();
+    const engine = {
+      muted: true, volume: 1, available: true,
+      cue: vi.fn(), setDrone, suspend: vi.fn(), wake: vi.fn(), close: vi.fn(),
+    };
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 1 });
+    bed.gesture();
+    bed.scene(WARM);
+    expect(setDrone).toHaveBeenLastCalledWith(WARM);
+
+    // An invalidated view/adapter can supply a cyclic object or a throwing
+    // getter even though the TypeScript seam promises a plain scene.
+    const cyclic = { ...WARM, self: undefined as unknown };
+    cyclic.self = cyclic;
+    expect(() => bed.scene(cyclic)).not.toThrow();
+    expect(setDrone).toHaveBeenLastCalledWith(null);
+
+    const invalidated = {
+      get registers(): Register[] { throw new Error('view was invalidated'); },
+      frame: false,
+    };
+    expect(() => bed.scene(invalidated)).not.toThrow();
+    expect(() => bed.scene(undefined as unknown as DroneInput)).not.toThrow();
+    expect(setDrone).toHaveBeenCalledTimes(2); // repeated silence does not restart audio
+
+    // A later valid public view restores the new Age rather than the stale one.
+    const recovered: DroneInput = { registers: ['cold'], frame: false };
+    bed.scene(recovered);
+    expect(setDrone).toHaveBeenLastCalledWith(recovered);
+    bed.dispose();
+  });
+
   it('keeps settings, scene changes and teardown safe when an optional audio adapter throws (#1986)', () => {
     const broken = {
       get available(): boolean { throw new Error('device status unavailable'); },
