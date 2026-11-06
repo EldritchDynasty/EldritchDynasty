@@ -1033,6 +1033,64 @@ function bedOnBoard(scene: DroneInput = WARM) {
 }
 
 describe('the bed decides when the house may be heard', () => {
+  it('keeps settings, scene changes and teardown safe when an optional audio adapter throws (#1986)', () => {
+    const broken = {
+      get available(): boolean { throw new Error('device status unavailable'); },
+      get muted(): boolean { throw new Error('mute state unavailable'); },
+      set muted(_value: boolean) { throw new Error('mute control unavailable'); },
+      get volume(): number { return 1; },
+      set volume(_value: number) { throw new Error('volume control unavailable'); },
+      cue(): void { throw new Error('cue unavailable'); },
+      setDrone(): void { throw new Error('drone unavailable'); },
+      suspend(): void { throw new Error('suspend unavailable'); },
+      wake(): void { throw new Error('wake unavailable'); },
+      close(): void { throw new Error('close unavailable'); },
+    };
+    const bed = new SoundBed(broken);
+    expect(() => {
+      bed.prefer({ on: true, volume: 0.4 });
+      bed.scene(WARM);
+      bed.gesture();
+      expect(bed.audible).toBe(false);
+      bed.cue('page');
+      bed.hide();
+      bed.show();
+      bed.dispose();
+      bed.dispose();
+    }).not.toThrow();
+    expect(bed.audible).toBe(false);
+  });
+
+  it('does not propagate throwing audio effects after a successful gesture (#1986)', () => {
+    const engine = {
+      muted: true,
+      volume: 1,
+      available: true,
+      cue: vi.fn(() => { throw new Error('cue graph invalidated'); }),
+      setDrone: vi.fn(() => { throw new Error('drone graph invalidated'); }),
+      suspend: vi.fn(() => { throw new Error('device suspend refused'); }),
+      wake: vi.fn(() => { throw new Error('device resume refused'); }),
+      close: vi.fn(() => { throw new Error('device close refused'); }),
+    };
+    const bed = new SoundBed(engine);
+    expect(() => {
+      bed.prefer({ on: true, volume: 0.5 });
+      bed.scene(WARM);
+      bed.gesture();
+      expect(bed.audible).toBe(true);
+      bed.cue('page');
+      bed.hide();
+      bed.show();
+      bed.dispose();
+    }).not.toThrow();
+    expect(engine.setDrone).toHaveBeenCalledWith(WARM);
+    expect(engine.wake).toHaveBeenCalledOnce();
+    expect(engine.cue).toHaveBeenCalledExactlyOnceWith('page');
+    expect(engine.suspend).toHaveBeenCalledOnce();
+    expect(engine.close).toHaveBeenCalledOnce();
+    expect(bed.audible).toBe(false);
+  });
+
   it('is silent until the first touch, then hums for the board', () => {
     const { e, page, bed } = bedOnBoard();
     bed.cue('page');
