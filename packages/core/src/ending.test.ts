@@ -1121,6 +1121,61 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     }
   });
 
+  it('does not quote testimony beyond a rewound recovered clock (#3126)', () => {
+    const ctx = atTheTerm(312601);
+    const w = ctx.world;
+    const earlier = place(ctx, { name: 'Earlier witness', sex: 'female', age: 40 });
+    const later = place(ctx, { name: 'Later witness', sex: 'male', age: 30 });
+    const earlierYear = END_YEAR - 4;
+    const laterYear = END_YEAR - 1;
+    w.ending = { id: 'forgotten', year: END_YEAR };
+    w.chronicle = [
+      page({ id: 'earlier-clock-page', year: earlierYear, people: [earlier.id] }),
+      page({ id: 'later-clock-page', year: laterYear, people: [later.id] }),
+      page({ id: 'later-clock-blank', year: laterYear, text: null }),
+    ];
+    w.succession = [
+      { person: earlier.id, name: earlier.name, from: earlierYear,
+        question: { kind: 'thin_line', opened: earlierYear, baseline: 4,
+          text: 'Four remained.', signature: 'thin_line:earlier' } },
+      { person: later.id, name: later.name, from: laterYear,
+        question: { kind: 'thin_line', opened: laterYear, baseline: 1,
+          text: 'One came later.', signature: 'thin_line:later' } },
+    ];
+
+    // An inconsistent recovered save may retain a last night dated ahead of
+    // its current clock. The Chronicle already withholds those later pages;
+    // the accompanying Afterimage must agree on names, head, loss and blanks.
+    w.year = END_YEAR - 2;
+    const selected = selectEnding(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const before = digestOf(ctx);
+      const view = epilogueOf(ctx)!;
+      expect(view.reckoning.pages).toBe(1);
+      expect(view.afterimage?.people.map((person) => person.name)).toEqual(['Earlier witness']);
+      expect(view.afterimage?.line?.[0]?.id).toBe(earlier.id);
+      expect(view.afterimage?.brush?.source.year).toBe(earlierYear);
+      expect(view.afterimage?.blank).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+      expect(digestOf(ctx)).toBe(before);
+    }
+
+    // Once the world catches up, both pages may be read. Moving past the
+    // saved ending must not add any new witness or mutate the saved book.
+    w.year = END_YEAR;
+    const caughtUp = afterimageEvidence(ctx);
+    expect(readTheChronicle(ctx).pages).toBe(2);
+    expect(caughtUp.people.map((person) => person.name)).toEqual(['Earlier witness', 'Later witness']);
+    expect(caughtUp.line?.[0]?.id).toBe(later.id);
+    expect(caughtUp.brush?.source.year).toBe(laterYear);
+    expect(caughtUp.blank?.year).toBe(laterYear);
+    w.year = END_YEAR + 5;
+    const before = digestOf(ctx);
+    expect(afterimageEvidence(ctx)).toEqual(caughtUp);
+    expect(digestOf(ctx)).toBe(before);
+  });
+
   it('selects up to three people from structured pages and choices, with stable ties', () => {
     const ctx = testWorld(content);
     const people = ['Élodie 家', 'Wystan', 'Meriel', 'Unmentioned'].map((name) =>
