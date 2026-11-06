@@ -127,6 +127,21 @@ describe('queue throughput evidence (#2794)', () => {
     expect(fetched.at(-1).id).toBe(900);
   });
 
+  it('rejects shuffled or repeated merge-group pages instead of truncating a cohort', async () => {
+    const first = Array.from({ length: 100 }, (_, i) => run(i + 1, '2026-11-06T02:00:00Z'));
+    for (const second of [
+      [run(101, '2026-11-06T02:00:01Z'), run(102, '2026-11-05T23:00:00Z')],
+      [run(1, '2026-11-06T02:00:00Z')],
+    ]) {
+      let page = 0;
+      await expect(fetchMergeGroupRuns({
+        repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret', from,
+        fetchImpl: async () => ({ ok: true, json: async () => ({ workflow_runs: ++page === 1 ? first : second }) }),
+      })).rejects.toThrow(/descending creation order|Duplicate or invalid/);
+      expect(page).toBe(2);
+    }
+  });
+
   it('rejects missing credentials and API errors rather than reporting partial evidence', async () => {
     await expect(fetchMergeGroupRuns({ repo: 'org/repo', from })).rejects.toThrow(/GITHUB_TOKEN/);
     await expect(fetchMergeGroupRuns({
@@ -226,6 +241,21 @@ describe('main PR flow evidence (#2794)', () => {
     expect(pages).toEqual(['1', '2']);
     expect(rows).toHaveLength(101);
     expect(summarizePrFlow(rows, { from, to }).mergedIds).toContain(101);
+  });
+
+  it('rejects out-of-order and duplicated PR pagination before certifying flow', async () => {
+    const first = Array.from({ length: 100 }, (_, i) => pr(i + 1, '2026-11-06T02:00:00Z'));
+    for (const second of [
+      [pr(101, '2026-11-06T02:00:01Z')],
+      [pr(1, '2026-11-06T02:00:00Z')],
+    ]) {
+      let page = 0;
+      await expect(fetchPullRequests({
+        repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret',
+        fetchImpl: async () => ({ ok: true, json: async () => ++page === 1 ? first : second }),
+      })).rejects.toThrow(/descending creation order|Duplicate or invalid/);
+      expect(page).toBe(2);
+    }
   });
 
   it('refuses missing credentials and API failures', async () => {
