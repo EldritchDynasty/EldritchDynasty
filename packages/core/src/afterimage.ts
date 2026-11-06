@@ -59,7 +59,9 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // Afterimage, or it would attribute testimony that has not happened yet.
   const throughYear = w.ending ? Math.min(w.year, w.ending.year) : Infinity;
   const pages = w.chronicle.map((page, index) => ({ page, index }))
-    .filter(({ page }) => page.year >= fromYear && page.year <= throughYear)
+    .filter(({ page }) => page.year >= fromYear && page.year <= throughYear
+      // A damaged completed save cannot turn a fractional year into testimony.
+      && (!w.ending || Number.isSafeInteger(page.year)))
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
   // Legacy/imported omissions may retain old text. Their words are not
@@ -157,6 +159,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     const q = reign.question;
     return reign.from >= fromYear && reign.from <= throughYear
       && q?.kind === 'thin_line' && q.opened >= fromYear && q.opened <= throughYear
+      && (!w.ending || (Number.isSafeInteger(reign.from) && Number.isSafeInteger(q.opened)))
       && q.text && Number.isFinite(q.baseline)
       ? [{ count: q.baseline, source: { year: q.opened, text: q.text } }]
       : [];
@@ -175,6 +178,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
       // Unfinished authoring inventories retain their synthetic flexibility.
       const person = w.ending ? w.people.get(reign.person) : undefined;
       return reign.from >= fromYear && reign.from <= throughYear
+        && (!w.ending || Number.isSafeInteger(reign.from))
         && (!w.ending || (person && person.born <= reign.from
           && (person.died === undefined || person.died >= reign.from)))
         && (!latest || reign.from >= latest.from)
