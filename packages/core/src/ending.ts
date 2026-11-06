@@ -683,14 +683,13 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (memberships.length !== 1) continue;
       const membership = memberships[0]!;
       const charter = membership.branch ? w.branches.get(membership.branch) : undefined;
-      // Only dated residence in an already-founded hall can establish who
-      // lived there at collection. A recovered row may begin before its
-      // occupant was born, before the charter, or in a fractional year.
+      // A recovered row cannot establish residence before birth or in a
+      // fractional year. Older memberships may begin at birth and acquire
+      // a cadet branch later, so do not reject a valid pre-charter start.
       if (membership.house !== w.playerHouse || !charter
         || !Number.isSafeInteger(person.born)
         || !Number.isSafeInteger(membership.from)
         || membership.from < person.born
-        || membership.from < charter.foundedYear
         || (membership.to !== undefined && !Number.isSafeInteger(membership.to))) continue;
       const people = residents.get(membership.branch!) ?? [];
       people.push(person);
