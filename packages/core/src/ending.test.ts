@@ -2973,6 +2973,55 @@ describe('the credited cadet charter matches surviving founder membership eviden
     expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
     expect(selectEnding(ctx)).toBe(ending);
   });
+  it('rejects malformed dated founder memberships but retains genuine legacy charters', () => {
+    const ctx = atTheTerm(198324);
+    const w = ctx.world;
+    const branch = 'br_charter_year_integrity';
+    const foundedYear = w.year - 30;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+    place(ctx, { name: 'Leora', sex: 'female', age: 35, branch });
+    place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch });
+    w.branches.set(asId(branch), {
+      id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+    });
+    const chosen = selectEnding(ctx);
+    const legacy = epilogueOf(ctx)!.purpose;
+    expect(legacy).toMatchObject({ kind: 'branch_kept', founder: 'Edrin' });
+
+    // A dated, uncontradicted founder record agrees with the saved charter.
+    const open = founder.membership.find((m) => m.to === undefined)!;
+    founder.membership = [{ ...open, from: foundedYear, branch }];
+    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+    const dated = founder.membership[0]!;
+    const rejects = () => {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(chosen);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    };
+
+    dated.from = foundedYear - 0.5;
+    rejects();
+    dated.from = founder.born - 1;
+    rejects();
+    dated.from = foundedYear;
+    dated.to = foundedYear + 0.5;
+    rejects();
+
+    delete dated.to;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+      expect(selectEnding(ctx)).toBe(chosen);
+    }
+  });
+
   it('does not credit a charter or survivor from conflicting same-year memberships', () => {
     const ctx = atTheTerm(198313);
     const w = ctx.world;
