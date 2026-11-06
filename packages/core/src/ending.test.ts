@@ -3057,4 +3057,42 @@ describe('completed family-purpose evidence requires whole, dated years (#1983)'
     };
     expect(afterimageEvidence(ctx).brush?.count).toBe(1);
   });
+  it.each(['original', 'plainenglish'] as const)(
+    'ignores corrupt thin-line headcounts in the completed Afterimage (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198320);
+      const w = ctx.world;
+      setProseMode(ctx, mode);
+      const earlier = place(ctx, { name: 'Earlier Head', sex: 'male', age: 75 });
+      const later = place(ctx, { name: 'Later Head', sex: 'male', age: 40 });
+      w.ending = { id: 'forgotten', year: w.year };
+      const first = {
+        person: earlier.id, name: earlier.name, from: w.year - 10,
+        question: { kind: 'thin_line' as const, opened: w.year - 10,
+          baseline: 4, text: 'Four remained.', signature: 'four-remained' },
+      };
+      const second = (baseline: number) => ({
+        person: later.id, name: later.name, from: w.year - 1,
+        question: { kind: 'thin_line' as const, opened: w.year - 1,
+          baseline, text: 'The later count.', signature: 'later-count' },
+      });
+
+      for (const invalid of [-2, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+        w.succession = [first, second(invalid)];
+        const before = digestOf(ctx);
+        const reading = epilogueOf(ctx)!.afterimage!;
+        expect(reading.brush).toMatchObject({
+          count: 4, source: { text: 'Four remained.' },
+        });
+        expect(digestOf(ctx)).toBe(before);
+      }
+
+      // Whole non-negative counts still retain their ordinary ordering.
+      w.succession = [first, second(2)];
+      expect(epilogueOf(ctx)!.afterimage?.brush?.count).toBe(2);
+      w.succession = [first, second(0)];
+      expect(afterimageEvidence(ctx).brush?.count).toBe(0);
+    },
+  );
+
 });
