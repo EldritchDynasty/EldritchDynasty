@@ -115,6 +115,8 @@ export class SoundBed {
   /** Read live visibility at gestures: some WebViews omit visibilitychange. */
   #attachedDocument: { readonly visibilityState: DocumentVisibilityState } | null = null;
   #sceneKey = 'null';
+  /** Only the most recent asynchronous scene delivery may invalidate its cache. */
+  #sceneAttempt = 0;
   #detach: () => void = () => undefined;
 
   constructor(private readonly engine: SoundEngine) {}
@@ -204,9 +206,19 @@ export class SoundBed {
     // adapter threw before setting the drone, retaining this key would make
     // every later identical view a no-op even after the host recovers.
     // Successful muted scenes are still remembered by Sound for unmuting.
+    const attempt = ++this.#sceneAttempt;
     try {
-      this.engine.setDrone(scene);
+      const delivery: unknown = this.engine.setDrone(scene);
       this.#sceneKey = key;
+      // Native adapters can reject asynchronously despite the void interface.
+      // An unhandled rejection must not interrupt play, and a refused scene
+      // must be eligible for retry on the next unchanged view. A late refusal
+      // from an older scene must not evict a newer accepted scene.
+      if (delivery != null) {
+        void Promise.resolve(delivery).catch(() => {
+          if (this.#sceneAttempt === attempt) this.#sceneKey = '';
+        });
+      }
     } catch {
       // Audio must never interrupt the game. A later identical view can retry
       // without inventing a new Age transition or restarting a healthy drone.
@@ -431,9 +443,16 @@ export class SoundBed {
   }
 
   /** Even a hostile or invalidated audio adapter must not break the game. */
-  #tryAudio(action: () => void): void {
-    try { action(); }
-    catch { /* Audio is optional presentation; a rejected host becomes silence. */ }
+  #tryAudio(action: () => unknown): void {
+    try {
+      const result = action();
+      // The public Sound methods are void, but optional host adapters may
+      // return a rejecting Promise/thenable. Observe that rejection without
+      // letting an audio failure become an unhandled game-level exception.
+      if (result != null) void Promise.resolve(result).catch(() => {
+        /* Audio is optional presentation; a rejected host becomes silence. */
+      });
+    } catch { /* Audio is optional presentation; a rejected host becomes silence. */ }
   }
 
   #engineAvailable(): boolean {

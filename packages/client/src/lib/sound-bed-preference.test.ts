@@ -306,3 +306,63 @@ describe('Age scene recovery after a refusing host (#1986)', () => {
     bed.dispose();
   });
 });
+
+describe('asynchronous host audio refusals (#1986)', () => {
+  it('contains late cue, wake, suspend and close rejections without interrupting play', async () => {
+    const engine = fakeSound();
+    engine.cue = vi.fn(async () => { throw new Error('cue rejected after return'); });
+    engine.wake = vi.fn(async () => { throw new Error('wake rejected after return'); });
+    engine.suspend = vi.fn(async () => { throw new Error('suspend rejected after return'); });
+    engine.close = vi.fn(async () => { throw new Error('close rejected after return'); });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    expect(() => { bed.gesture(); bed.cue('bell'); bed.hide(); bed.dispose(); }).not.toThrow();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    expect(engine.cue).toHaveBeenCalledWith('bell');
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    expect(engine.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries an unchanged Age after a late rejected scene delivery', async () => {
+    const engine = fakeSound();
+    engine.setDrone = vi.fn()
+      .mockRejectedValueOnce(new Error('scene rejected after return'))
+      .mockResolvedValue(undefined);
+    const bed = new SoundBed(engine);
+    const warm = { registers: ['warm'] as const, frame: false };
+
+    expect(() => bed.scene({ registers: [...warm.registers], frame: warm.frame })).not.toThrow();
+    await Promise.resolve();
+    await Promise.resolve();
+    bed.scene({ registers: [...warm.registers], frame: warm.frame });
+    expect(engine.setDrone).toHaveBeenCalledTimes(2);
+    expect(engine.setDrone).toHaveBeenLastCalledWith({ registers: ['warm'], frame: false });
+    bed.scene({ registers: ['warm'], frame: false });
+    expect(engine.setDrone, 'accepted identical scene restarted the drone').toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+
+  it('does not let a late refusal of an older scene invalidate a newer accepted Age', async () => {
+    let refuseOld!: (reason: Error) => void;
+    const pending = new Promise<void>((_resolve, reject) => {
+      refuseOld = reject;
+    });
+    const engine = fakeSound();
+    engine.setDrone = vi.fn()
+      .mockImplementationOnce(() => pending)
+      .mockResolvedValue(undefined);
+    const bed = new SoundBed(engine);
+
+    bed.scene({ registers: ['warm'], frame: false });
+    bed.scene({ registers: ['cold'], frame: false });
+    refuseOld(new Error('old warm device closed'));
+    await Promise.resolve();
+    await Promise.resolve();
+    bed.scene({ registers: ['cold'], frame: false });
+    expect(engine.setDrone, 'older refusal evicted the accepted cold scene').toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+});
