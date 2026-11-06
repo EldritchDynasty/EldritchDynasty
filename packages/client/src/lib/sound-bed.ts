@@ -220,6 +220,10 @@ export class SoundBed {
         });
       }
     } catch {
+      // A synchronous refusal may have partially changed the output. An
+      // older asynchronous delivery might also reject later; never keep its
+      // unverified key cached after this attempt could not be accepted.
+      this.#sceneKey = '';
       // Audio must never interrupt the game. A later identical view can retry
       // without inventing a new Age transition or restarting a healthy drone.
     }

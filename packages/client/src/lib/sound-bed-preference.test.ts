@@ -365,4 +365,28 @@ describe('asynchronous host audio refusals (#1986)', () => {
     expect(engine.setDrone, 'older refusal evicted the accepted cold scene').toHaveBeenCalledTimes(2);
     bed.dispose();
   });
+
+  it('retries after a newer synchronous refusal while an older delivery is still pending', async () => {
+    let refuseOld!: (reason: Error) => void;
+    const pending = new Promise<void>((_resolve, reject) => {
+      refuseOld = reject;
+    });
+    const engine = fakeSound();
+    engine.setDrone = vi.fn()
+      .mockImplementationOnce(() => pending)
+      .mockImplementationOnce(() => { throw new Error('new Age unavailable'); })
+      .mockResolvedValue(undefined);
+    const bed = new SoundBed(engine);
+
+    bed.scene({ registers: ['warm'], frame: false });
+    // The attempted cold scene is refused synchronously while warm is pending.
+    bed.scene({ registers: ['cold'], frame: false });
+    refuseOld(new Error('warm also refused after return'));
+    await Promise.resolve();
+    await Promise.resolve();
+    bed.scene({ registers: ['warm'], frame: false });
+    expect(engine.setDrone, 'a refused newer scene left the older key cached').toHaveBeenCalledTimes(3);
+    expect(engine.setDrone).toHaveBeenLastCalledWith({ registers: ['warm'], frame: false });
+    bed.dispose();
+  });
 });
