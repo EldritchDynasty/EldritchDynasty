@@ -118,6 +118,66 @@ fingerprints. Every sampled gate-duration line reported a 4-CPU host.
 | [41816512130](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41816512130) | 17.37 | success | 0 / 12 |
 | [41818476985](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41818476985) | 14.03 | failure | 0 / 12 |
 
+## Cutover check: first proof-reuse evidence (6 November 2026)
+
+PR [#2825](https://github.com/EldritchDynasty/EldritchDynasty/pull/2825)
+merged at **2026-11-06 01:36:17 UTC** (`9c4ff14e`). It is the
+cutover for the duration-refresh, landed-merge-group-proof and intake-brake
+changes. The older baseline above must **not** be compared with a period
+which predates this merge and then called a post-change result.
+
+### Fresh pre-cutover control
+
+The preceding fixed 24-hour window, **2026-11-05 01:36:17 to
+2026-11-06 01:36:17 UTC**, contains **69 completed merge-group
+`check` runs, all successful (0 failures)**. Its median slot was
+**12.20 minutes** (range 6.03–18.02), calculated from each run's
+`run_started_at` to `updated_at`, the same measure used above.
+The last included run was
+[42143778776](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42143778776).
+The complete result set was selected from
+[merge-group Actions runs](https://github.com/EldritchDynasty/EldritchDynasty/actions/workflows/check.yml)
+using the GitHub Actions `/actions/runs?event=merge_group&per_page=100&page=1`
+API, filtering to workflow `check`, completed runs and the stated
+half-open `created_at` window. That page included all 69 runs at
+collection time. In particular, the zero-failure result occurred
+**before** #2825 landed; do not attribute it to #2825.
+
+### First three post-cutover groups (insufficient for acceptance)
+
+These are the complete finished merge-group `check` runs observed between
+the cutover and the 6 November 03:27 UTC collection. Each head is a
+descendant of `9c4ff14e` (verified with GitHub commit comparison),
+not merely a run created after the merge.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42144943781](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42144943781) | 01:36:19 | 9.82 | success | 5 / 12 |
+| [42146053210](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42146053210) | 01:46:36 | 10.08 | success | 12 / 12 |
+| [42153716411](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42153716411) | 02:59:12 | 9.50 | success | 5 / 12 |
+
+**Early sample only:** 3/3 groups succeeded; median slot **9.82
+minutes**; **22/36 (61.1%)** of the gate planner's per-group decisions
+reused a trusted proof. The reuse numerator comes from the actual
+`gates (batch)` job logs:
+[127654076578](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42144943781/job/127654076578),
+[127657747114](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42146053210/job/127657747114),
+and [127682840965](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42153716411/job/127682840965).
+These plans cite the source run for each reused gate, rather than
+inferring reuse from elapsed time. For comparison, the three immediately
+preceding gate jobs each planned **0/12** reuse:
+[42139818809](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42139818809),
+[42140921682](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42140921682),
+[42143778776](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42143778776).
+
+**Do not claim an acceptance result yet.** Three post-change groups
+are below the required 20-group throughput/proof comparison and the
+30-group day, and cannot speak to a seven-day budget streak or
+arrival-versus-landing balance. The earlier control was already
+0/69 failures, so short-term failure comparisons are especially
+confounded. Keep concurrency unchanged and refresh this fixed-cutover
+cohort once its required denominators exist.
+
 ## Follow-up after landing
 
 The implementation publishes merge-group proofs, but consumers accept them only
@@ -136,7 +196,7 @@ The following evidence is still pending and keeps #2794 open:
 - A working day with landings keeping up with arrivals and a falling ready backlog.
 
 Build concurrency remains at its existing setting. Slice 5 requires measured
-improvement from slices 2–4 first; the post-change evidence does not yet exist.
+improvement from slices 2–4 first; the initial three-group post-change evidence above is not enough to evaluate that change.
 Before increasing it, confirm the account's concurrent-job allowance against
 GitHub's current plan documentation and record the actual ruleset change in
 COMMANDS.md. No concurrency or rate improvement is claimed in advance.
