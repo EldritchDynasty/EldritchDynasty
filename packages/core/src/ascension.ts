@@ -1134,6 +1134,11 @@ export function secondForemostOf(ctx: SimCtx): { person: Person; standing: Stand
  * Draws no dice: the ladder is a measurement, and `outranks` falls to
  * household order past rung and power, which is stable per world.
  */
+/** Completed-book views must not replace a persisted lazy GenomeRef when measuring a person. */
+function measuredPerson(ctx: SimCtx, p: Person): Person {
+  return ctx.world.ending && p.genome.kind === 'lazy' ? { ...p } : p;
+}
+
 function rankedExpressers(ctx: SimCtx): { person: Person; standing: Standing }[] {
   const w = ctx.world;
   const ranked: { person: Person; standing: Standing }[] = [];
@@ -1143,7 +1148,7 @@ function rankedExpressers(ctx: SimCtx): { person: Person; standing: Standing }[]
     // merely by opening the epilogue. Compute against a transient person and
     // keep the real reference for callers that use the ranking to cast.
     // During an active campaign retain the normal materialization/cache path.
-    const measured = w.ending && p.genome.kind === 'lazy' ? { ...p } : p;
+    const measured = measuredPerson(ctx, p);
     if (!phenotypeOf(measured, ctx.genetics, w.year).eldritch.canExpress) continue;
     // A man declared mundane (§11, issue #1794) can never wake, so he can
     // never stand on a rung. Ranking him would leave the ladder reading
@@ -1171,7 +1176,7 @@ export interface HouseAscension {
 /** The same ranking, restricted to what the house has witnessed. Engine roles keep their pool. */
 export function visibleAscensionRanking(ctx: SimCtx): NonNullable<HouseAscension['foremost']>[] {
   return rankedExpressers(ctx)
-    .filter(({ person }) => knownToExpress(person, ctx.genetics, ctx.world.year))
+    .filter(({ person }) => knownToExpress(measuredPerson(ctx, person), ctx.genetics, ctx.world.year))
     .map(({ person, standing }) => ({ person: person.id, name: person.name, standing }));
 }
 
@@ -1204,7 +1209,7 @@ export interface FrozenLadder {
 
 export function frozenLadder(ctx: SimCtx): FrozenLadder | undefined {
   const w = ctx.world;
-  const known = (p: Person): boolean => knownToExpress(p, ctx.genetics, w.year);
+  const known = (p: Person): boolean => knownToExpress(measuredPerson(ctx, p), ctx.genetics, w.year);
   const household = w.people.household(w.playerHouse, w.year);
   if (household.some((p) => p.status === 'alive' && known(p))) return undefined;
 
@@ -1254,7 +1259,7 @@ export function diagnoseHouseAscension(
   const candidate = measured.foremost && ctx.world.people.get(measured.foremost.person);
   // An engine measurement may name an unwoken man. Reuse it only when the
   // house knows him; otherwise diagnose the highest witnessed expresser.
-  const top = candidate && knownToExpress(candidate, ctx.genetics, ctx.world.year)
+  const top = candidate && knownToExpress(measuredPerson(ctx, candidate), ctx.genetics, ctx.world.year)
     ? measured.foremost : visibleAscensionRanking(ctx)[0];
   if (!top) {
     return {
