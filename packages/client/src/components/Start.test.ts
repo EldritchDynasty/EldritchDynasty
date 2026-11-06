@@ -3306,6 +3306,10 @@ describe('voluntary resume recap (#1985)', () => {
       const before = structuredClone(view);
       // A recovered future-dated row is not an outstanding promise at this year.
       expect(hasResumeRecapFacts(view, 0)).toBe(false);
+      // Damaged dates that are fractional but earlier than the current year
+      // must not be recast as a valid, historically signed obligation either.
+      const fractional = snapshot({ ...base, marriagePromises: [{ ...future, year: 1320.5 }] });
+      expect(hasResumeRecapFacts(fractional, 0)).toBe(false);
       const w = mount(ResumeRecap, { props: { view, pending: 0, proseMode } });
       try {
         expect(w.find('.recap-pledges').exists()).toBe(false);
