@@ -156,5 +156,9 @@ eligible as a fallback. Unfinished authoring inventories remain unchanged.
 The added `ending.test.ts` regression checks absent, unborn and already-dead
 Heads, pre-accession and post-tenure questions, fractional tenure boundaries,
 a supported fallback, both prose modes and read-only saved-state behavior.
+The existing `byname-chronology.test.ts` also now distinguishes advancing the
+collection year (which cannot rescue a question predating its Head's tenure)
+from updating that question to its real accession year; unfinished synthetic
+diagnostics continue to admit the original inconsistent fixture.
 This is one bounded evidence-integrity correction, not participant acceptance
 for #1983. Local npm tests and exact-head CI are not claimed by the edit.
