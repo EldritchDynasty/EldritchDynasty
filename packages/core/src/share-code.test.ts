@@ -179,6 +179,32 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(imported.ok && saved(imported.session)).toBe(saved(emoji));
   });
 
+  it('refuses combining-mark-only recipient names before making a world (#3155)', () => {
+    const code = codeOf(founded());
+    const names = { house: SIGNED.houseName, friends: SIGNED.friends.map((friend) => friend.name) };
+    for (const mark of ['\u0301', '\u0301\u034F', ' \u0301\u200D\t']) {
+      expect(newGameFromShareCode(code, content, {
+        build: BUILD, names: { ...names, founder: mark },
+      })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+      expect(newGameFromShareCode(code, content, {
+        build: BUILD, names: { ...names, house: mark },
+      })).toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['house'] } });
+      expect(newGameFromShareCode(code, content, {
+        build: BUILD, names: { ...names, friends: ['Iona Vale', mark, 'Edda Rook'] },
+      })).toEqual({ ok: false, problem: { kind: 'names_needed', missing: ['friends'] } });
+    }
+    // A combining mark after real text remains part of its exact name.
+    const valid = newGameFromShareCode(code, content, {
+      build: BUILD,
+      names: {
+        founder: 'Maud e\u0301',
+        house: 'House of E\u0301ther',
+        friends: ['Iona Vale', 'Corven e\u0301', 'Edda Rook'],
+      },
+    });
+    expect(valid.ok).toBe(true);
+  });
+
   it('refuses malformed UTF-16 recipient names before constructing a game', () => {
     const anonymous = codeOf(founded());
     const names = {
@@ -197,6 +223,22 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
           .toEqual({ ok: false, problem: { kind: 'invalid_names' } });
       }
     }
+  });
+
+  it('refuses a recovered mark-only founder in either export privacy mode (#3155)', () => {
+    const game = founded();
+    const unchanged = saved(game);
+    const signing = game.ctx.world.decisionLog.find((row) => row.kind === 'signing');
+    if (!signing || signing.kind !== 'signing') throw new Error('missing signing fixture');
+    const recorded = signing.founder;
+    signing.founder = { ...SIGNED.founder, name: '\u0301' };
+    for (const names of [false, true]) {
+      expect(game.shareCode({ build: BUILD, names }))
+        .toEqual({ ok: false, unavailable: 'unrepresentable' });
+    }
+    signing.founder = recorded;
+    expect(saved(game)).toBe(unchanged);
+    expect(game.shareCode({ build: BUILD, names: true }).ok).toBe(true);
   });
 
   it('refuses control-only founder answers in both share-code privacy modes', () => {
@@ -927,6 +969,21 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(problemOf(forge(code, (p) => { p[6] = [-1, -1, -1, -1]; }))).toEqual({ kind: 'damaged' });
     // Names travel together: a house name without the friends' names is no export this build writes.
     expect(problemOf(forge(code, (p) => { p[11] = 0; }))).toEqual({ kind: 'damaged' });
+  });
+
+  it('refuses forged named codes containing only combining marks (#3155)', () => {
+    const named = codeOf(founded(), { names: true });
+    const mark = '\u0301';
+    for (const modify of [
+      (payload: unknown[]) => { payload[9] = mark; },
+      (payload: unknown[]) => { payload[11] = ['Iona Vale', mark, 'Edda Rook']; },
+      (payload: unknown[]) => { payload[5] = ['w', 'm', mark]; },
+    ]) {
+      const forged = forge(named, modify);
+      expect(problemOf(forged)).toEqual({ kind: 'damaged' });
+      expect(newGameFromShareCode(forged, content, { build: BUILD }))
+        .toEqual({ ok: false, problem: { kind: 'damaged' } });
+    }
   });
 
   it('refuses forged named codes with house names the signing would normalize or discard', () => {
