@@ -947,7 +947,9 @@ describe('the player, over a fake engine', () => {
     // Before the promise settles, setDrone has scheduled the new Age on a
     // frozen audio clock. A later gesture must not start that stale graph.
     const before = ctx.sources.length;
+    const beforeGains = ctx.gains.length;
     sound.setDrone(COLD);
+    const refusedGain = ctx.gains[beforeGains]!;
     const refused = ctx.sources.slice(before);
     expect(refused).toHaveLength(droneScore(COLD)!.voices.length);
     expect(humming(ctx)).toHaveLength(refused.length);
@@ -957,7 +959,7 @@ describe('the player, over a fake engine', () => {
     expect(refused.every((source) => source.stopped === ctx.currentTime),
       'async denial left sustained sources waiting for a later unlock').toBe(true);
     expect(humming(ctx)).toHaveLength(0);
-    expect(ctx.gains[ctx.gains.length - refused.length - 1]?.disconnected).toBeGreaterThanOrEqual(0);
+    expect(refusedGain.disconnected, 'the rejected drone gain was left connected').toBe(1);
 
     ctx.resume = resume;
     sound.wake();
