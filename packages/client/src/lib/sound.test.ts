@@ -1108,6 +1108,39 @@ describe('the bed decides when the house may be heard', () => {
     bed.dispose();
   });
 
+  it('requests mute when a host mute getter throws but its setter still works (#1986)', () => {
+    let level = 1;
+    let audibleOutput = false;
+    let refuseVolume = false;
+    const engine = {
+      available: true,
+      get muted(): boolean { throw new Error('host mute state unavailable'); },
+      set muted(value: boolean) { audibleOutput = !value; },
+      get volume() { return level; },
+      set volume(value: number) {
+        if (refuseVolume) throw new Error('host rejected the new volume');
+        level = value;
+      },
+      cue: vi.fn(),
+      setDrone: vi.fn(),
+      suspend: vi.fn(),
+      wake: vi.fn(),
+      close: vi.fn(),
+    };
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 1 });
+    bed.gesture();
+    expect(audibleOutput).toBe(true);
+
+    refuseVolume = true;
+    bed.prefer({ on: true, volume: 0.2 });
+    expect(level).toBe(1);
+    expect(bed.audible).toBe(false);
+    expect(audibleOutput, 'getter rejection skipped the safety mute').toBe(false);
+    expect(engine.cue).not.toHaveBeenCalled();
+    bed.dispose();
+  });
+
   it('does not propagate throwing audio effects after a successful gesture (#1986)', () => {
     const engine = {
       muted: true,
