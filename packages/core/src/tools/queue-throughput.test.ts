@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 // The reporter is a standalone cross-platform Node CLI, intentionally .mjs.
 // @ts-ignore -- no declaration file for the standalone Node entrypoint
-import {
-  timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups,
-} from '../../../../tools/queue-throughput.mjs';
+import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups } from '../../../../tools/queue-throughput.mjs';
 
 type Run = {
   id: number; event: string; name: string; created_at: string;
