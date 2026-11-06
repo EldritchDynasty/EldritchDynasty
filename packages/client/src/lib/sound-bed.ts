@@ -416,7 +416,9 @@ export class SoundBed {
   }
 
   #engineAvailable(): boolean {
-    try { return this.engine.available; }
+    // Optional/native adapters can violate their TypeScript contract at runtime.
+    // A truthy string such as "false" must not unlock an unavailable device.
+    try { return this.engine.available === true; }
     catch { return false; }
   }
 
