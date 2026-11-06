@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
-import { asId, indexContent, type ActiveAge, type HouseId } from '@ed/schema';
-import { place, testWorld } from './testing.js';
+import { asId, currentMembership, indexContent, MAIN_BRANCH, SexS, type ActiveAge, type HouseId } from '@ed/schema';
+import { expectHealthyWorld, place, testRng, testWorld } from './testing.js';
 import { ageMortality, thinBloodFertility, thinBloodMortality, wed } from './people/demography.js';
 import { conceiveChild } from './people/factory.js';
 import type { SimCtx } from './world.js';
+import { ensureHead, ofTheLine } from './people/succession.js';
+import { loadGame, saveGame } from './save.js';
 
 const content = indexContent(loadContent());
 
@@ -266,6 +268,46 @@ describe('the Age the house is living through', () => {
  * while the other person is left in the old hall (#1523).
  */
 describe('wedding records and residence agree', () => {
+  it.each(SexS.options)('keeps a %s relative in the line when marriage changes halls (#3106)', (sex) => {
+    for (const kind of ['blood', 'cadet'] as const) {
+      const ctx = testWorld(content);
+      // Construct a surviving couple rather than depending on a campaign's
+      // deaths or which cousin a random Match happens to offer.
+      for (const person of ctx.world.people.living()) {
+        ctx.world.people.kill(person.id, ctx.world.year, 'before the test');
+      }
+      const sitting = place(ctx, {
+        sex: sex === 'female' ? 'male' : 'female', age: 45,
+        name: 'The Sitting Head', castSlots: ['head'],
+      });
+      const relative = place(ctx, { sex, age: 25, name: 'The Relative', branch: 'cadet_wedding' });
+      const first = relative.membership[0]!;
+      first.to = ctx.world.year - 1;
+      relative.membership.push({
+        house: first.house, kind, from: ctx.world.year - 1, branch: 'cadet_wedding',
+      });
+      const history = structuredClone(relative.membership);
+
+      wed(ctx, sitting, relative);
+
+      expect(currentMembership(relative, ctx.world.year)).toMatchObject({ house: first.house, kind });
+      expect(currentMembership(relative, ctx.world.year)?.branch ?? MAIN_BRANCH).toBe(MAIN_BRANCH);
+      expect(relative.membership.filter((m) => m.to === undefined)).toHaveLength(1);
+      expect(relative.membership.slice(0, -2)).toEqual(history.slice(0, -1));
+      expect(relative.membership.at(-2)?.to).toBe(ctx.world.year);
+      expect(currentMembership(sitting, ctx.world.year)?.branch ?? MAIN_BRANCH).toBe(MAIN_BRANCH);
+      expect(ofTheLine(ctx, relative)).toBe(true);
+
+      // Membership is saved history. Reload must retain the same right to
+      // succeed after the spouse dies, without a repair in the loader.
+      const resumed = loadGame(saveGame(ctx), content);
+      resumed.world.people.kill(sitting.id, resumed.world.year, 'the seal falls vacant');
+      expect(ensureHead(resumed, testRng('wedding-succession')).newHead?.id).toBe(relative.id);
+      expect(resumed.world.wardship).toBeUndefined();
+      expectHealthyWorld(resumed);
+    }
+  });
+
   it('does not record a marriage when the intended stayer has no destination', () => {
     const ctx = testWorld(content);
     const groom = place(ctx, { sex: 'male', age: 25, name: 'Homeless Groom' });

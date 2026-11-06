@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { writeFileSync } from 'node:fs';
 import { loadContent } from '@ed/content';
 import {
   autoResolveDecision, bootstrap, bynameStanding, expectHealthyWorld, expectRate, makeRng, resolveRecord, stepYear,
@@ -121,7 +122,11 @@ function playForBynames(seed: number, answer: RecordOption | 'automatic'): { ctx
       if (decision.kind === 'record' && answer !== 'automatic') resolveRecord(ctx, decision.id, answer);
       else autoResolveDecision(ctx, decision, rng);
     }
-    expectHealthyWorld(ctx);
+    try {
+      expectHealthyWorld(ctx);
+    } catch (cause) {
+      throw new Error(`byname cohort seed=${seed}, policy=${answer}, year=${ctx.world.year}`, { cause });
+    }
     if (ctx.world.year === before) break;
   }
   const w = ctx.world;
@@ -271,6 +276,7 @@ describe('second byname source: paired Long Line reach (#2287)', () => {
   it('measures ordinary chronicler against a paired always-Omit policy', () => {
     const ordinary: ReignReach[] = [];
     const omitted: ReignReach[] = [];
+    const rows: (ReignReach & { seed: number; policy: string; year: number; ending: string | null })[] = [];
 
     for (const seed of REIGN_REACH_SEEDS) {
       const normal = playForBynames(seed, 'automatic');
@@ -279,10 +285,12 @@ describe('second byname source: paired Long Line reach (#2287)', () => {
       omitted.push(reignReach(allOmit.ctx));
       for (const [policy, run] of [['ordinary', normal], ['always-Omit', allOmit]] as const) {
         const world = run.ctx.world;
-        process.stdout.write(`${JSON.stringify({
+        const row = {
           seed, policy, year: world.year, ending: world.ending?.id ?? null,
           ...reignReach(run.ctx),
-        })}\n`);
+        };
+        rows.push(row);
+        process.stdout.write(`${JSON.stringify(row)}\n`);
       }
 
       // Omit creates no claim-bearing byname. The reign source can name a
@@ -313,5 +321,12 @@ describe('second byname source: paired Long Line reach (#2287)', () => {
     }
     expect(reachTotal(omitted, 'recordHeads')).toBe(0);
     expect(reachTotal(omitted, 'otherNamed')).toBe(0);
+    // An explicit measurement can retain the complete cohort independently
+    // of a test reporter's handling of successful stdout. Ordinary CI writes
+    // nothing; the caller chooses the artifact path for a dated receipt.
+    if (process.env.ED_BYNAME_REPORT) {
+      writeFileSync(process.env.ED_BYNAME_REPORT,
+        `${JSON.stringify({ years: YEARS, seeds: REIGN_REACH_SEEDS, runs: rows }, null, 2)}\n`);
+    }
   });
 });

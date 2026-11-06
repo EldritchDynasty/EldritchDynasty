@@ -738,10 +738,15 @@ export function wed(ctx: SimCtx, p: Person, partner: Person, pledge?: MarriagePr
     && current.house === destination
     && (current.branch ?? MAIN_BRANCH) === destBranch;
   if (!sameHall) {
+    // Marriage can move a cousin between halls of the same house. Residence
+    // changes, but blood membership does not: calling that cousin married-in
+    // would exclude them from succession while extinction still counts them.
+    const kind = current?.house === destination && (current.kind === 'blood' || current.kind === 'cadet')
+      ? current.kind : 'married_in';
     if (current) current.to = w.year;
     const record: Person['membership'][number] = {
       house: asId(destination),
-      kind: 'married_in',
+      kind,
       from: w.year,
     };
     if (destination === w.playerHouse && destBranch !== MAIN_BRANCH) record.branch = destBranch;
