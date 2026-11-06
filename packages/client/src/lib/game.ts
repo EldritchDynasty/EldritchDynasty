@@ -470,8 +470,24 @@ export function currentMarriagePromises(view: SessionView): SessionView['marriag
   ) ?? [];
 }
 
+/** A recap line needs readable saved evidence, not a truthy blank string.
+ * Use the same predicates when deciding to offer the recap and when drawing it.
+ */
+function hasReadableRecapText(value: unknown): boolean {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+export function hasResumeRecapQuestion(view: SessionView): boolean {
+  return hasReadableRecapText(view.generationArc?.question);
+}
+
+export function hasResumeRecapAmbition(view: SessionView): boolean {
+  return hasReadableRecapText(view.ambition?.name) && hasReadableRecapText(view.ambition?.next);
+}
+
 export function hasResumeRecapFacts(view: SessionView | null, pending: number): boolean {
-  return Boolean(view && (view.generationArc?.question || view.ambition || pending > 0 || currentMarriagePromises(view).length));
+  return Boolean(view && (hasResumeRecapQuestion(view) || hasResumeRecapAmbition(view)
+    || pending > 0 || currentMarriagePromises(view).length > 0));
 }
 
 export function withAcceptedPickup(actions: GameActions, onAccepted: () => void): GameActions {
