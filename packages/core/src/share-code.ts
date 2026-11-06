@@ -60,8 +60,10 @@ import type { SimCtx } from './world.js';
  *    heirloom index, grudge index,
  *    house: 0 | name,  friend sexes: 'fmf…',  friend names: 0 | [name…]]
  *
- * A house name present means the sender included names; then and only then
- * do the founder's and the friends' names appear.
+ * A house name present means the sender included names; then the founder's
+ * and friends' names may appear. The one safe exception is an explicitly
+ * blank founder-name answer: even an anonymous code retains its whitespace
+ * to distinguish that submitted answer from no answer, without exposing a name.
  */
 
 /** The codec's own version: the digit after `ED`. */
@@ -361,7 +363,10 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
     ...editionOf(ctx.content, opts.build),
     campaignLetter(w.campaign),
     w.seed,
-    founder === undefined ? 0 : names && founder.name !== undefined
+    // Preserve an explicit blank signing answer even when names are private:
+    // dropping it would silently turn { name: '' } into no name property in
+    // the canonical signing log. Whitespace alone reveals no personal name.
+    founder === undefined ? 0 : founder.name !== undefined && (names || !founder.name.trim())
       ? [genderLetter(founder.gender), bodyLetter(founder.configuration), founder.name]
       : [genderLetter(founder.gender), bodyLetter(founder.configuration)],
     answers,
@@ -421,7 +426,9 @@ function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): Shar
   // Names travel together or not at all.
   if (names !== (friendNames !== 0)) return undefined;
   if (friendNames !== 0 && friendNames.length !== sexes.length) return undefined;
-  if (!names && founderCode !== 0 && founderCode.length === 3) return undefined;
+  // An anonymous code may retain an explicitly blank signing answer, but
+  // must never carry a nonblank personal name under that exception.
+  if (!names && founderCode !== 0 && founderCode.length === 3 && founderCode[2].trim()) return undefined;
   if (founderCode !== 0 && founderCode.length === 3 && !validFounderName(founderCode[2])) return undefined;
   // The payload schema checks lengths and wire types. The actual signing also
   // rejects noncanonical/blank names and case-insensitive duplicate friends.
@@ -464,7 +471,7 @@ function resolve(p: Payload, def: PrologueDef, campaign: 'short' | 'long'): Shar
   const missing: SharedName[] = names ? [] : [
     // The authored founder (no `founder` at all) has no typed name to supply;
     // nor does a house with no friends. The house always has a typed name.
-    ...(founder ? ['founder' as const] : []),
+    ...(founder && founder.name === undefined ? ['founder' as const] : []),
     'house' as const,
     ...(friends.length ? ['friends' as const] : []),
   ];
