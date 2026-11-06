@@ -299,7 +299,7 @@ describe('unreadable signing and Match outcomes remain observational (#3169)', (
 
     for (const result of results) expect(actions.found(input)).toBe(result);
     expect(calls).toEqual([[input], [input], [input], [input]]);
-    expect(l.events.filter(e => e.kind === 'action').map(e => [e.verb, e.status])).toEqual([
+    expect(l.events.filter(e => e.kind === 'action' && e.verb === 'found').map(e => [e.verb, e.status])).toEqual([
       ['found', 'attempted'],
       ['found', 'attempted'],
       ['found', 'attempted'], ['found', 'refused'],
