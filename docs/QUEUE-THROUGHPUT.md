@@ -213,6 +213,35 @@ working-day sample. The pre-cutover day already had 0/69 failures, so the
 post-cutover 0/9 cannot establish an improvement in failure rate. Keep
 build concurrency unchanged while gathering the full denominators.
 
+### Third post-cutover observation (12 completed groups)
+
+Collected on **6 November 2026 after 06:50 UTC** from the same
+[merge-group `check` workflow](https://github.com/EldritchDynasty/EldritchDynasty/actions/workflows/check.yml).
+The next three runs after the nine-group observation all finished successfully.
+Their trusted-proof counts come from their actual `gates (batch)` job logs,
+not an estimate based on runtime.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42173359961](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42173359961) | 06:16:09 | 9.93 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42173359961/job/127746162754) |
+| [42174452516](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42174452516) | 06:26:33 | 9.78 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42174452516/job/127749625645) |
+| [42176107270](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42176107270) | 06:42:07 | 8.38 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42176107270/job/127754883893) |
+
+**Cumulative post-cutover (12 groups):** 12 successes, 0 failures;
+median slot **9.98 minutes**, measured from `run_started_at` to `updated_at`;
+**99 / 144 trusted proof decisions reused (68.75%)**. The 3 added
+groups contribute 36 / 36, on top of the prior 63 / 108. The last
+group's gate-duration log explicitly marks its proof-only 0/0 execution
+as *not* a full-batch timing comparison; do not substitute it for a
+measured gate batch.
+
+This is still a **descriptive sample below acceptance thresholds**, not
+proof of a throughput or failure-rate improvement: the fresh pre-cutover
+control was already 0/69 failures, only 12 of 20 required post-change
+groups have completed, and the 30-group day, seven-day budget streak,
+and arrivals-versus-landings comparison remain unmeasured. Keep merge
+queue build concurrency unchanged pending those checks.
+
 ## Follow-up after landing
 
 The implementation publishes merge-group proofs, but consumers accept them only
