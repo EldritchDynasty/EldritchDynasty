@@ -336,9 +336,17 @@ describe('Afterimage reads only testimony available by the current year (#2657)'
     w.year = year + 1;
     expect(afterimageEvidence(ctx).brush).toEqual(today.brush);
     w.ending!.year = year + 1;
+    // Advancing collection does not legitimize a question dated before the
+    // supposed Head took the seal: retain the older documented count.
+    expect(afterimageEvidence(ctx).brush).toEqual(today.brush);
+    const laterQuestion = w.succession[1]!.question!;
+    laterQuestion.opened = year + 1;
     expect(afterimageEvidence(ctx).brush).toEqual({ count: 1, source: {
-      year: year - 1, text: 'One remained under the later seal.',
+      year: year + 1, text: 'One remained under the later seal.',
     } });
+    // Unfinished authoring diagnostics still expose synthetic histories,
+    // even when their question chronology is inconsistent.
+    laterQuestion.opened = year - 1;
     w.year = year;
     w.ending = undefined;
     expect(afterimageEvidence(ctx).brush?.count).toBe(1);
