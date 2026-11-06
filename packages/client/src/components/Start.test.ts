@@ -3335,6 +3335,44 @@ describe('voluntary resume recap (#1985)', () => {
   );
 
   it.each(['original', 'plainenglish'] as const)(
+    'excludes pre-founding pledge records from recap eligibility and display (%s)', async (proseMode) => {
+      const base = {
+        generationArc: undefined, ambition: undefined, year: 1321,
+        campaign: { id: 'long', startYear: 1042 },
+      };
+      const ancient = {
+        house: 'house_ancient', houseName: 'House Ancient', year: 1041,
+        lot: 'ancient_relic', lotName: 'an old relic',
+      };
+      const founded = {
+        house: 'house_elm', houseName: 'House Elm', year: 1042,
+        lot: 'founding_book', lotName: 'a Book of Hours',
+      };
+      const beforeFounding = snapshot({ ...base, marriagePromises: [ancient] });
+      const unchanged = structuredClone(beforeFounding);
+      expect(hasResumeRecapFacts(beforeFounding, 0)).toBe(false);
+      const w = mount(ResumeRecap, { props: { view: beforeFounding, pending: 0, proseMode } });
+      try {
+        expect(w.find('.recap-pledges').exists()).toBe(false);
+        expect(w.text()).not.toContain('House Ancient');
+
+        // A pledge in the founding year is current testimony, not an
+        // out-of-campaign record. A mixed restored list displays only it.
+        const withinCampaign = snapshot({ ...base, marriagePromises: [ancient, founded] });
+        expect(hasResumeRecapFacts(withinCampaign, 0)).toBe(true);
+        await w.setProps({ view: withinCampaign });
+        expect(w.get('.recap-pledges').findAll('li')).toHaveLength(1);
+        expect(w.text()).toContain('House Elm');
+        expect(w.text()).not.toContain('House Ancient');
+
+        await w.setProps({ view: snapshot({ ...base, marriagePromises: [founded] }) });
+        expect(w.get('.recap-pledges').findAll('li')).toHaveLength(1);
+        expect(beforeFounding).toEqual(unchanged);
+      } finally { w.unmount(); }
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
     'never presents a future-dated restored pledge as an existing debt (%s)', async (proseMode) => {
       const future = { house: 'house_future', houseName: 'House Future', year: 1400,
         lot: 'a_future_book', lotName: 'a book not yet bought' };
