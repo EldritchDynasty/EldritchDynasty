@@ -48,11 +48,11 @@ const recapTitleId = useId();
       <summary>{{ plain ? 'See where things stand' : 'Where the house stands' }}</summary>
       <p class="dim small">{{ view.houseName }} · {{ view.year }} · Generation {{ view.generation }}</p>
       <dl>
-        <template v-if="hasQuestion">
+        <template v-if="hasQuestion && view.generationArc">
           <dt>{{ plain ? 'Current family question' : 'This generation asks' }}</dt>
           <dd>{{ view.generationArc.question }}</dd>
         </template>
-        <template v-if="hasAmbition">
+        <template v-if="hasAmbition && view.ambition">
           <dt>{{ plain ? 'Goal being tracked' : 'Ambition kept in view' }}</dt>
           <dd><strong>{{ view.ambition.name }}</strong> — {{ view.ambition.next }}</dd>
         </template>
