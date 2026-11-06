@@ -15,6 +15,21 @@ const props = withDefaults(defineProps<{
 defineEmits<{ dismiss: [] }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
 const pledges = computed(() => currentMarriagePromises(props.view));
+/**
+ * A recovered docket can carry an impossible future, fractional, or
+ * pre-campaign date. Keep its count (the engine still owns the docket), but
+ * do not describe that item as a decision already facing the reader.
+ */
+const currentDecision = computed(() => {
+  const decision = props.nextDecision;
+  if (props.pending <= 0 || !decision || !Number.isSafeInteger(decision.year)
+    || decision.year > props.view.year) return undefined;
+  const firstYear = props.view.campaign?.startYear;
+  if (firstYear !== undefined && (!Number.isSafeInteger(firstYear) || decision.year < firstYear)) {
+    return undefined;
+  }
+  return decision;
+});
 // Each optional recap is a named landmark, with the visible heading as its name.
 const recapTitleId = useId();
 </script>
@@ -47,16 +62,16 @@ const recapTitleId = useId();
               : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}
             <!-- The first actionable item is already in the public docket. Do not
                  reconstruct other queued items or a player's unwritten plan. -->
-            <p v-if="pending > 0 && nextDecision?.kind === 'choice'" class="dim small recap-next-decision">
-              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} · {{ nextDecision.event.title }}
+            <p v-if="pending > 0 && currentDecision?.kind === 'choice'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ currentDecision.year }} · {{ currentDecision.event.title }}
             </p>
-            <p v-else-if="pending > 0 && nextDecision?.kind === 'match'" class="dim small recap-next-decision">
-              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} ·
-              {{ plain ? 'Choose a spouse for' : 'A marriage for' }} {{ nextDecision.subject.name }}
+            <p v-else-if="pending > 0 && currentDecision?.kind === 'match'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ currentDecision.year }} ·
+              {{ plain ? 'Choose a spouse for' : 'A marriage for' }} {{ currentDecision.subject.name }}
             </p>
-            <p v-else-if="pending > 0 && nextDecision?.kind === 'record'" class="dim small recap-next-decision">
-              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} ·
-              {{ plain ? 'Choose what to record about' : 'What the book will say of' }} {{ nextDecision.subject }}
+            <p v-else-if="pending > 0 && currentDecision?.kind === 'record'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ currentDecision.year }} ·
+              {{ plain ? 'Choose what to record about' : 'What the book will say of' }} {{ currentDecision.subject }}
             </p>
           </dd>
         </template>
