@@ -1465,6 +1465,38 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
   });
 
+  it('refuses an impossible pre-birth witness in both the Afterimage and the bloodline purpose', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const victimId = w.chronicle[0]!.people![0]!;
+    const victim = w.people.get(victimId)!;
+    const originalBirth = victim.born;
+    const ending = selectEnding(ctx);
+
+    // A recovered save may have a valid-looking dated page and matching outcome,
+    // but a person born after that page cannot have appeared in its rite.
+    victim.born = w.year + 1;
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const evidence = afterimageEvidence(ctx);
+      expect(evidence.people.some((person) => person.person === victimId)).toBe(false);
+      expect(evidence.spent).toBeUndefined();
+      expect(evidence.spentBlood).toBeUndefined();
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(ending);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // The same page and outcome are admissible when the identity's dated
+    // lifetime agrees with the record; no testimony or state was rewritten.
+    victim.born = originalBirth;
+    expect(afterimageEvidence(ctx).people.some((person) => person.person === victimId)).toBe(true);
+    expect(afterimageEvidence(ctx).spent?.person).toBe(victimId);
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'blood_spent', person: 'Meriel of the Tides' });
+    expect(selectEnding(ctx)).toBe(ending);
+  });
+
   it('does not treat retained text on a legacy omitted rite page as written evidence', () => {
     const ctx = accountedRite();
     const w = ctx.world;
