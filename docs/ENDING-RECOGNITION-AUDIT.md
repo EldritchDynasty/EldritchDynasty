@@ -65,3 +65,28 @@ new campaign population reach, or whether actual readers can articulate the
 family's purpose, its cost and the creditor's separate judgment. The parent
 #1983 remains open for the dated real-reader check and any independently
 demonstrated later gap; no qualitative benefit is inferred from automated tests.
+
+## Follow-up: erased Chronicle pages are not surviving Afterimage memories (7 November 2026)
+
+The earlier term-boundary audit established *when* the shareable Afterimage may
+read a completed book. A distinct surviving-evidence check remains necessary:
+legacy/recovered Chronicle entries may be marked `greyed` (known to have
+existed but lost) while still carrying residual text, names, or a Record choice.
+The client image's quote selector already excludes such pages, but the core
+Afterimage's named-person memories, choice-linked cast mentions, and standing
+embellishment previously could still present their words as if preserved.
+
+The bounded correction in `afterimage.ts` now builds those surviving-memory
+surfaces from non-greyed written pages, and does not attribute a logged choice
+through a greyed page. The broader historical `spent` inventory intentionally
+retains its earlier meaning: a documented rite happened even if its account was
+later lost; the separate `spentBlood` reckoning already requires ungreyed
+written testimony. Neither `purposeOf` nor ending precedence changes.
+
+A new test inside the existing `ending.test.ts` suite constructs a greyed
+named and embellished page plus an outcome-log cast, checks that both prose
+modes refuse those surviving memories without changing the saved state, then
+adds an independent legible page and verifies that only its own source returns.
+This is mechanism evidence, **not** a reader study or a declaration that the
+parent issue's human acceptance is complete. Local tests and the exact-head CI
+verdict must be reported separately; a connector-only code edit is not a pass.
