@@ -4,7 +4,7 @@ import type { AchievementView, EpilogueView, SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 import type { GameActions } from '../lib/game';
 import Entry from './Entry.vue';
-import { downloadBlob } from '../lib/download';
+import { exportArtifact } from '../platform';
 import { selectShareCodeTextarea } from '../lib/ending-textarea';
 import {
   MAX_PLATE_CANVAS_HEIGHT, PLATE, afterimageLayout, afterimageModel, afterimageName, afterimageSvg, rowFont, type Measure,
@@ -154,13 +154,14 @@ async function saveAfterimage(): Promise<void> {
     // The measured rows also have a vector representation. Tall plates cannot
     // safely allocate a bitmap in mobile WebViews; failed PNG allocation and
     // encoding should not make the nameless founding code unshareable (#2073).
-    const saveSvg = () => downloadBlob(
+    const saveSvg = () => exportArtifact(
       new Blob([afterimageSvg(model, layout)], { type: 'image/svg+xml;charset=utf-8' }),
       filename.replace(/\.png$/, '.svg'),
     );
     if (!gauge || layout.height > MAX_PLATE_CANVAS_HEIGHT) {
-      saveSvg();
+      await saveSvg();
     } else {
+      let png: Blob | null = null;
       try {
         const width = PLATE.width;
         const canvas = document.createElement('canvas');
@@ -191,12 +192,12 @@ async function saveAfterimage(): Promise<void> {
         ink.font = `12px ${PLATE.serif}`;
         ink.fillText(model.footer, PLATE.pad, canvas.height - 28);
 
-        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
-        if (!blob) throw new Error('PNG export unavailable');
-        downloadBlob(blob, filename);
+        png = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
       } catch {
-        saveSvg();
+        // Rendering can fall back to vector; a rejected host handoff cannot.
       }
+      if (png) await exportArtifact(png, filename);
+      else await saveSvg();
     }
   } catch {
     afterimageError.value = 'The house afterimage could not be saved. Try again.';

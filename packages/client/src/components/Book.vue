@@ -7,7 +7,7 @@ import { findEntry, linksFor } from '../lib/causes';
 import type { GameActions, GameStore } from '../lib/game';
 import Entry from './Entry.vue';
 import RecordedLife from './RecordedLife.vue';
-import { downloadBlob } from '../lib/download';
+import { exportArtifact } from '../platform';
 import { selectShareCodeTextarea } from '../lib/ending-textarea';
 import {
   LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, isWritten, plateFoot, plateFootLines, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads, rowFont,
@@ -309,12 +309,12 @@ async function plate(): Promise<void> {
     // of silently dropping the entire image when getContext/toBlob fails.
     const downloadSvg = () => {
       const svg = plateSvg(rows, houseName, plateCaption, foot, titleWidth);
-      downloadBlob(
+      return exportArtifact(
         new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }),
         plateName(houseName, entries).replace(/\.png$/, '.svg'),
       );
     };
-    if (!gauge || height > MAX_PLATE_CANVAS_HEIGHT) { downloadSvg(); return; }
+    if (!gauge || height > MAX_PLATE_CANVAS_HEIGHT) { await downloadSvg(); return; }
 
     // The measured rows can still be saved as vector when bitmap allocation
     // or encoding fails on a memory-limited browser. Do not discard the plate.
@@ -368,8 +368,8 @@ async function plate(): Promise<void> {
     } catch {
       // Canvas allocation, painting or PNG encoding is unavailable: use SVG.
     }
-    if (png) downloadBlob(png, plateName(houseName, entries));
-    else downloadSvg();
+    if (png) await exportArtifact(png, plateName(houseName, entries));
+    else await downloadSvg();
   } catch {
     // Canvas allocation/encoding and browser download APIs can all fail.
     // A silent click would leave a reader thinking their page was saved.

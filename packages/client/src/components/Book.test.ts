@@ -20,6 +20,7 @@ import ReadingSettings from './ReadingSettings.vue';
 import Ending from './Ending.vue';
 import { downloadBlob } from '../lib/download';
 import { afterimageName, plateName } from '../lib/book';
+import { currentPlatform, installPlatform } from '../platform';
 
 // Export tests assert actual download calls without relying on jsdom blob URL support.
 vi.mock('../lib/download', () => ({ downloadBlob: vi.fn() }));
@@ -978,6 +979,42 @@ describe('house afterimage export failure (#1141)', () => {
       },
     });
   }
+
+  it.each(['book', 'afterimage'] as const)('keeps %s busy through native cancellation, then permits one retry (#3153)', async (surface) => {
+    const previous = currentPlatform();
+    let reject!: (error: Error) => void;
+    const handoff = vi.fn(() => new Promise<void>((_resolve, fail) => { reject = fail; }));
+    installPlatform({ ...previous, exportArtifact: handoff });
+    const context = { font: '', measureText: (text: string) => ({ width: text.length * 7 }),
+      fillRect() {}, fillText() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {} };
+    const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    const encode = vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(done => done(new Blob(['png'], { type: 'image/png' })));
+    const wrapper = surface === 'book' ? mountBook() : mountEnding();
+    const save = surface === 'book'
+      ? wrapper.findAll('button').find(button => button.text() === 'Save this as a page')!
+      : wrapper.get('.ending-actions button');
+    try {
+      await save.trigger('click');
+      await flushPromises();
+      expect(handoff).toHaveBeenCalledTimes(1);
+      expect(save.attributes('disabled')).toBeDefined();
+      reject(new Error('Share canceled'));
+      await flushPromises();
+      expect(wrapper.get('[role="alert"]').text()).toContain('could not be saved');
+      expect(save.attributes('disabled')).toBeUndefined();
+      expect(handoff).toHaveBeenCalledTimes(1); // no automatic second chooser for SVG
+      handoff.mockResolvedValueOnce(undefined);
+      await save.trigger('click');
+      await flushPromises();
+      expect(handoff).toHaveBeenCalledTimes(2);
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+      canvas.mockRestore();
+      encode.mockRestore();
+      installPlatform(previous);
+    }
+  });
 
   it('reports an unavailable canvas instead of silently doing nothing, and permits retry', async () => {
     const canvas = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
