@@ -627,6 +627,38 @@ describe('first signing focus after opening (#1984)', () => {
   });
 });
 
+describe('queued signing reveal after a run switch (#1984)', () => {
+  it('does not reveal a replacement run from the previous run\'s still-mounted button', async () => {
+    const prologue = reactive(prologueView());
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await wrapper.get('button.on').trigger('click');
+      expect(wrapper.findAll('.triad li')).toHaveLength(1);
+      const oldAdvance = wrapper.get('button.on').element as HTMLButtonElement;
+
+      // A new campaign can arrive before Vue repaints the former button.
+      // Its synchronous identity reset must not let that stale click reveal
+      // any part of the new signing.
+      prologue.id = 'next_campaign_signing';
+      oldAdvance.click();
+      await nextTick();
+      expect(wrapper.findAll('.triad li')).toHaveLength(0);
+      expect(wrapper.get('button.on').text()).toBe('The first thing');
+      expect(game.found).not.toHaveBeenCalled();
+
+      // A subsequent click on the new run's own button remains legitimate.
+      await wrapper.get('button.on').trigger('click');
+      expect(wrapper.findAll('.triad li')).toHaveLength(1);
+      expect(wrapper.get('.triad').text()).toContain('First given.');
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('queued signing focus after a run switch (#1984)', () => {
   it('does not focus the replacement signing from the previous run\'s final reveal', async () => {
     const prologue = prologueView();
