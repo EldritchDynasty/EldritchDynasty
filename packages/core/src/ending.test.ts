@@ -1167,6 +1167,52 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     expect(afterimageEvidence(ctx).people).toEqual([]);
   });
 
+  it('does not remember greyed named or chosen pages as surviving Afterimage testimony (#1983)', () => {
+    const ctx = atTheTerm(198317);
+    const w = ctx.world;
+    const relative = place(ctx, { name: 'Alys', sex: 'female', age: 30 });
+    const writtenYear = w.year - 3;
+    w.ending = { id: 'forgotten', year: w.year };
+    w.discrepancies.set('lost-memory', { state: 'open', severity: 'minor', provableBy: [] });
+    w.chronicle = [page({
+      id: 'lost-memory', year: writtenYear, eventId: 'a_lost_record',
+      weight: 'illuminated', named: true, people: [relative.id],
+      text: 'The house named Alys.', record: 'embellish',
+      discrepancyId: 'lost-memory', greyed: true,
+    })];
+    w.decisionLog = [{
+      kind: 'outcome', event: 'a_lost_record', year: writtenYear,
+      choiceId: 'keep', outcomeId: 'kept', fill: { PERSON: [relative.id] },
+    }];
+
+    // A lost page's residual text, person ID and logged cast are not surviving
+    // testimony, even if a damaged save still calls its discrepancy open.
+    const selected = selectEnding(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const before = digestOf(ctx);
+      const evidence = epilogueOf(ctx)!.afterimage!;
+      expect(evidence.people).toEqual([]);
+      expect(evidence.embellishment).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+      expect(digestOf(ctx)).toBe(before);
+    }
+
+    // An independent surviving page may still name the same relative, but
+    // cannot import the erased decision's choice or missing embellishment.
+    w.chronicle.push(page({
+      id: 'legible-memory', year: writtenYear + 1, people: [relative.id],
+      text: 'Alys remained in the book.',
+    }));
+    const evidence = afterimageEvidence(ctx);
+    expect(evidence.people).toEqual([{
+      person: relative.id, name: 'Alys',
+      sources: [{ year: writtenYear + 1, page: 'legible-memory', text: 'Alys remained in the book.' }],
+    }]);
+    expect(evidence.embellishment).toBeUndefined();
+    expect(evidence.people[0]!.sources.some((source) => source.choice === 'keep')).toBe(false);
+  });
+
   it('requires a successful rite mark and an explicitly named written account', () => {
     const ctx = testWorld(content, 1042, 1200);
     const vessel = place(ctx, { name: 'Meriel', sex: 'female', age: 40 });

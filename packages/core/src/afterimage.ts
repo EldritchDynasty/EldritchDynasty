@@ -62,6 +62,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // Legacy/imported omissions may retain old text. Their words are not
   // written testimony, even if the saved page's `text` was never cleared.
   const written = pages.filter((page) => page.text !== null && page.record !== 'omit');
+  // Greyed pages still existed historically (the broad rite inventory reads
+  // them), but their words are lost as surviving testimony. They must not
+  // supply people or an outstanding embellishment to the shareable Afterimage.
+  const survivingWritten = written.filter((page) => !page.greyed);
   // A recorded outcome can be attributed only to exactly one written page
   // for its event and year. Index once instead of re-scanning the entire
   // Chronicle for each outcome in a centuries-long decision log (#2607).
@@ -92,7 +96,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     reading.sources.push(source);
     people.set(id, reading);
   };
-  for (const page of written) {
+  for (const page of survivingWritten) {
     for (const id of new Set([
       ...(page.people ?? []), ...(page.claims ?? []).map((claim) => claim.person),
     ])) mention(id, sourceOf(page));
@@ -107,7 +111,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     // unambiguously, so do not attach one decision to somebody else's page.
     const page = writtenByEvent.get(decision.event)?.get(decision.year);
     if (!page) continue;
-    if (decision.choiceId) {
+    if (decision.choiceId && !page.greyed) {
       for (const id of new Set(Object.values(decision.fill).flat())) {
         mention(id, { ...sourceOf(page), choice: decision.choiceId });
       }
@@ -154,7 +158,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
       ? [{ count: q.baseline, source: { year: q.opened, text: q.text } }]
       : [];
   }).sort((a, b) => a.count - b.count || a.source.year - b.source.year)[0];
-  const embellishment = written.find((page) => page.record === 'embellish'
+  const embellishment = survivingWritten.find((page) => page.record === 'embellish'
     && page.discrepancyId && w.discrepancies.get(page.discrepancyId)?.state === 'open');
   const blank = pages.find((page) => page.text === null);
   const line: NonNullable<AfterimageEvidence['line']> = [];
