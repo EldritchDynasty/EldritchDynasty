@@ -100,6 +100,8 @@ export class SoundBed {
   /** Teardown is terminal: late UI/host callbacks must never reopen Web Audio. */
   #disposed = false;
   #preference: SoundPreference = { on: false, volume: 1 };
+  /** A refusing host must not leave us unmuted at a stale, louder level. */
+  #volumeApplied = false;
   #unlocked = false;
   #away = false;
   /** A gesture may resume a paused host, but must never wake a hidden document. */
@@ -118,7 +120,7 @@ export class SoundBed {
 
   /** True only when a cue could be heard; zero volume must not open the audio device. */
   get audible(): boolean {
-    return !this.#disposed && this.#preference.on && this.#preference.volume > 0
+    return !this.#disposed && this.#volumeApplied && this.#preference.on && this.#preference.volume > 0
       && this.#unlocked && !this.#away && this.#engineAvailable();
   }
 
@@ -135,7 +137,13 @@ export class SoundBed {
       ? Math.min(1, Math.max(0, requestedVolume)) : 0;
     // Only a literal true with a valid, positive volume may turn sound on.
     this.#preference = { on: supplied?.on === true, volume };
-    this.#tryAudio(() => { this.engine.volume = volume; });
+    // Volume is set before unmuting. If an optional adapter throws, the old
+    // output level may still be loud: mute it rather than accepting that level.
+    this.#volumeApplied = false;
+    try {
+      this.engine.volume = volume;
+      this.#volumeApplied = true;
+    } catch { /* Host audio is optional; a later valid preference may retry. */ }
     this.#settle();
   }
 
