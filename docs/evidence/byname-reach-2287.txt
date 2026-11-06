@@ -1,5 +1,6 @@
 2026-11-06 — #3106 / #2287 paired Long Line measurement
 Source: a83f1b4416dbf8c0d8c09982ceddfdf282eb88ee
+Core tree: 1b51cc74be6233f3e73d6bcecf5ca18cee1e6aab (identical after the client-only rebase onto d6d0ca3771acc96c0daff83926579e694e0af0ee)
 Environment: Linux x86_64, Node 22.23.4, Vitest 4.1.11
 Command: ED_BYNAME_REPORT=/tmp/eldritch-byname-reach-2287.json npm test -- packages/core/src/record-claims.slow.test.ts --silent=false --disableConsoleIntercept
 All 32 paired histories retained; annual expectHealthyWorld passed.
