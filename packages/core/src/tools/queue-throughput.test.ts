@@ -89,7 +89,7 @@ describe('queue throughput evidence (#2794)', () => {
       fetchImpl: async (url: URL, options: { headers: Record<string, string> }) => {
         visited.push({
           page: url.searchParams.get('page'), event: url.searchParams.get('event'),
-          token: options.headers.Authorization,
+          token: options.headers.Authorization ?? '',
         });
         return { ok: true, json: async () => ({ workflow_runs: visited.length === 1 ? first : second }) };
       },
