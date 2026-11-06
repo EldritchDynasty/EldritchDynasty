@@ -144,6 +144,40 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(imported.ok && saved(imported.session)).toBe(saved(original));
   });
 
+  it.each(['original', 'plainenglish'] as const)('preserves the same nonblank founder answer with excluded names (%s)', (proseMode) => {
+    // The signing displays a trimmed name but records the original answer.
+    // Re-entering that same answer must reproduce the whole founding, including
+    // the signing log, rather than silently trimming its recorded spelling.
+    const name = '\tMaud e\u0301 Gearithy\u2003 ';
+    const original = newGame(content, {
+      seed: 199500, campaign: 'short', proseMode,
+    });
+    expect(original.found({ ...SIGNED, founder: { ...SIGNED.founder, name } }).ok).toBe(true);
+    const anonymous = codeOf(original);
+    const imported = newGameFromShareCode(anonymous, content, {
+      build: BUILD,
+      proseMode,
+      names: {
+        founder: name,
+        house: SIGNED.houseName,
+        friends: SIGNED.friends.map((friend) => friend.name),
+      },
+    });
+    expect(imported.ok).toBe(true);
+    if (!imported.ok) return;
+    expect(imported.session.ctx.world.decisionLog.find((row) => row.kind === 'signing'))
+      .toEqual(original.ctx.world.decisionLog.find((row) => row.kind === 'signing'));
+    expect(saved(imported.session)).toBe(saved(original));
+    expect(codeOf(imported.session, { names: true })).toBe(codeOf(original, { names: true }));
+    const resumed = resumeGame(imported.session.save(), content, { proseMode });
+    expect(saved(resumed)).toBe(saved(original));
+    original.advance(1);
+    imported.session.advance(1);
+    resumed.advance(1);
+    expect(saved(imported.session)).toBe(saved(original));
+    expect(saved(resumed)).toBe(saved(original));
+  });
+
   it('keeps a complete named founding authoritative over unused recipient founder input (#3039)', () => {
     for (const name of [undefined, '', '   ', 'Maud Gearithy']) {
       const original = founded({
