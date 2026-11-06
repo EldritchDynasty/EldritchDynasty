@@ -673,3 +673,90 @@ describe('the connector-only remote claim transport', () => {
     expect(transport).toContain("child.status === 0 ? 'Remote claim' : 'Remote claim — failed'");
   });
 });
+
+
+describe('native queue intake brake (#2794)', () => {
+  const intakeTool = async () => await import(pathToFileURL(TOOL).href) as {
+    READY_PR_INTAKE_LIMIT: number;
+    readyPullRequestCount: (options: {
+      repo: string; request: (url: string) => Promise<unknown>; limit?: number;
+    }) => Promise<number>;
+    claimIntakeDecision: (options: {
+      repo: string; issue: number; lane: string; request: (url: string) => Promise<unknown>;
+      limit?: number;
+    }) => Promise<{ allowed: boolean; ready?: number; reason: string }>;
+  };
+  const repo = 'EldritchDynasty/EldritchDynasty';
+  const pr = (draft = false, sameRepo = true) => ({
+    state: 'open', draft, base: { ref: 'main' },
+    head: { repo: { full_name: sameRepo ? repo : 'another/fork' } },
+  });
+  const respond = (body: unknown) => ({
+    ok: true, status: 200, json: async () => body,
+  });
+
+  it('exempts P0 and exclusive gates work without consulting the queue', async () => {
+    const { claimIntakeDecision } = await intakeTool();
+    const urls: string[] = [];
+    const request = async (url: string) => {
+      urls.push(url);
+      if (url.includes('/issues/')) return respond({
+        state: 'open', labels: [{ name: 'priority: P0' }],
+      });
+      throw new Error('a P0 claim must never query the serial queue');
+    };
+    expect((await claimIntakeDecision({
+      repo, issue: 93, lane: 'code', request,
+    })).allowed).toBe(true);
+    expect(urls).toHaveLength(1);
+    urls.length = 0;
+    expect((await claimIntakeDecision({
+      repo, issue: 93, lane: 'gates', request,
+    })).allowed).toBe(true);
+    expect(urls).toHaveLength(0);
+  });
+
+  it('counts only open, ready, same-repo main PRs, including pagination', async () => {
+    const { readyPullRequestCount } = await intakeTool();
+    const pages: number[] = [];
+    const request = async (url: string) => {
+      const page = Number(new URL(url).searchParams.get('page'));
+      pages.push(page);
+      if (page === 1) return respond([
+        ...Array.from({ length: 95 }, () => pr(true)),
+        ...Array.from({ length: 3 }, () => pr(false, false)),
+        pr(), pr(),
+      ]);
+      return respond([pr(), pr(true), pr()]);
+    };
+    expect(await readyPullRequestCount({ repo, request, limit: 10 })).toBe(4);
+    expect(pages).toEqual([1, 2]);
+  });
+
+  it('refuses an ordinary code claim at ten ready PRs and allows it below ten', async () => {
+    const { claimIntakeDecision, READY_PR_INTAKE_LIMIT } = await intakeTool();
+    expect(READY_PR_INTAKE_LIMIT).toBe(10);
+    let ready = 10;
+    const request = async (url: string) => respond(
+      url.includes('/issues/') ? { state: 'open', labels: [{ name: 'priority: P1' }] }
+        : Array.from({ length: ready }, () => pr()),
+    );
+    const options = { repo, issue: 2794, lane: 'code', request };
+    expect(await claimIntakeDecision(options)).toMatchObject({
+      allowed: false, ready: 10, reason: 'native queue at capacity',
+    });
+    ready = 9;
+    expect(await claimIntakeDecision(options)).toMatchObject({
+      allowed: true, ready: 9,
+    });
+  });
+
+  it('never mistakes a failed API read for an empty queue', async () => {
+    const { claimIntakeDecision } = await intakeTool();
+    const request = async (url: string) => url.includes('/issues/')
+      ? respond({ state: 'open', labels: [] })
+      : { ok: false, status: 403, json: async () => ({}) };
+    await expect(claimIntakeDecision({ repo, issue: 10, lane: 'code', request }))
+      .rejects.toThrow('GitHub HTTP 403');
+  });
+});

@@ -32,6 +32,7 @@
  * writes, and `lanes.test.ts` fails the build when the packing drifts.
  */
 import { writeFileSync } from 'node:fs';
+import { cpus } from 'node:os';
 
 export default class DurationReporter {
   onInit(ctx) {
@@ -59,7 +60,7 @@ export default class DurationReporter {
    * nothing saying so. A reporter already holds the tasks — so it counts them
    * here, and nothing has to parse anybody's prose.
    */
-  onTestRunEnd(testModules = []) {
+  onTestRunEnd(testModules = [], unhandledErrors = [], reason) {
     // Vitest 4 removed `onFinished` and its raw file tasks (#506). A reporter
     // still declaring only that hook is never called, writes nothing, and
     // `cost.mjs` reads the stale table back as if it were this run's.
@@ -82,7 +83,10 @@ export default class DurationReporter {
       };
     }
     writeFileSync(this.out, `${JSON.stringify({
-      summary: { files: Object.keys(rows).length, tests },
+      summary: { files: Object.keys(rows).length, tests,
+        success: reason === 'passed' && unhandledErrors.length === 0 },
+      host: { cpus: cpus().length, node: process.versions.node, platform: process.platform },
+      sourceSha: process.env.ED_DURATION_SOURCE_SHA ?? null,
       files: rows,
     }, null, 2)}\n`);
   }

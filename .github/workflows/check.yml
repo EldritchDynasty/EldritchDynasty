@@ -726,6 +726,9 @@ jobs:
         lane: [batch]
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Ancestry is part of the proof boundary, so a shallow checkout cannot answer it.
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -745,14 +748,17 @@ jobs:
           rm -rf "$ROOT"
           mkdir -p "$ROOT"
 
+          git fetch --no-tags origin main
           gh api "repos/$GITHUB_REPOSITORY/actions/workflows/check.yml/runs?branch=main&event=push&status=success&per_page=30" > "$RUNS"
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/check.yml/runs?event=merge_group&status=success&per_page=30" > "$RUNS.queue"
           export ROOT RUNS IDS
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
           import path from 'node:path';
-          const payload = JSON.parse(fs.readFileSync(process.env.RUNS, 'utf8'));
+          const runs = [process.env.RUNS, process.env.RUNS + '.queue'].flatMap((file) =>
+            JSON.parse(fs.readFileSync(file, 'utf8')).workflow_runs ?? []);
           const ids = [];
-          for (const run of payload.workflow_runs ?? []) {
+          for (const run of runs) {
             if (!Number.isSafeInteger(run.id)) continue;
             const dir = path.join(process.env.ROOT, String(run.id));
             fs.mkdirSync(dir, { recursive: true });
@@ -807,9 +813,9 @@ jobs:
           fi
           elapsed=$(( $(date +%s) - started ))
           node tools/gate-duration.mjs --check ${{ matrix.lane }} "$elapsed" --timings-json gate-timings-${{ matrix.lane }}.json
-      - name: produce trusted main gate proofs
+      - name: produce main or merge-group gate proofs
         id: gate-proofs
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && success()
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main' || github.event_name == 'merge_group') && success()
         continue-on-error: true
         env:
           ED_GATE_READ_TRACE: ${{ runner.temp }}/gate-read-trace.jsonl
@@ -821,13 +827,21 @@ jobs:
           --source-run "$GITHUB_RUN_ID"
           --repository "$GITHUB_REPOSITORY"
           --workflow ".github/workflows/check.yml"
-      - name: retain trusted main gate proofs
+      # Consumers require whole-run success AND main ancestry before trusting a
+      # merge-group artifact. Publication alone never makes it eligible.
+      - name: retain gate proofs
         if: steps.gate-proofs.outcome == 'success'
         uses: actions/upload-artifact@v7
         with:
           name: gate-proofs
           path: gate-proofs/
           retention-days: 90
+      - name: retain gate reuse decisions
+        if: steps.reuse.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: gate-reuse-plan-${{ matrix.lane }}
+          path: ${{ runner.temp }}/gate-reuse-plan.json
       - name: retain structured gate timings
         if: always()
         uses: actions/upload-artifact@v7

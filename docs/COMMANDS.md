@@ -82,6 +82,15 @@ npm run agents -- release 93          # when it lands. See docs/PARALLEL.md
 **generated**. Never hand-edit one; the last packs CI's shards, and a stale one
 fails `lanes.test.ts`.
 
+`test-duration-maintenance.yml` checks the live inventory on every main push
+and hourly. At five missing suites it takes `lane-gates`, measures the complete
+suite on a 4-CPU runner with `tools/duration-reporter.mjs`, and imports it with
+`npm run cost -- --report <file> --require-complete --write`. Failed, incomplete
+or other-runner reports are refused. One issue-owned `automation/test-durations`
+branch opens or updates one ready PR; normal required CI and the native queue
+own its landing. A busy lane defers the repair until the next run. The normal
+unmeasured-file allowance remains eight; no measurement figure is hand-edited.
+
 ---
 
 ## How a session starts
@@ -375,8 +384,9 @@ cancel its siblings and rebuild that failure mode one level down.
 
 Merge-blocking simulation gates may reuse a prior result only through the
 #441 proof boundary. **A cache hit is never evidence.** The authority is a
-proof artifact produced by a successful `push` run of
-`.github/workflows/check.yml` on `refs/heads/main` in this repository.
+proof artifact produced by a successful `.github/workflows/check.yml` run
+in this repository: either a `push` on `refs/heads/main`, or a `merge_group`
+whose exact SHA has subsequently become reachable from fetched `origin/main`.
 
 Each proof names its gate, proof-format and fingerprint-algorithm versions,
 normalized dependency manifest, fingerprint, source SHA/run/repository/workflow,
@@ -392,9 +402,11 @@ evidence; the next integration runs the gate.
 A PR or merge-group consumer may inherit green only after independently checking
 all of these facts:
 
-- the source workflow run event is `push`, its branch is `main`, its
-  conclusion is `success`, and its head repository is
+- the source is a main `push` or a main-queue `merge_group`, its conclusion is
+  `success`, and its head repository is
   `EldritchDynasty/EldritchDynasty`;
+- for a merge group, full-history git ancestry independently proves its SHA
+  reachable from fetched `origin/main`; the artifact cannot assert that fact;
 - the run path is exactly `.github/workflows/check.yml`;
 - the proof's source SHA and run id match that workflow run;
 - proof-format and fingerprint-algorithm versions are current;
@@ -402,7 +414,7 @@ all of these facts:
 - the producer marked the proof reusable and recorded zero unclassified reads.
 
 Lookup is by **fingerprint**, not by the PR base SHA: the newest trusted main
-run with an equal fingerprint is eligible. A feature-branch artifact, PR
+or landed merge-group run with an equal fingerprint is eligible. A feature-branch artifact, PR
 artifact, `actions/cache`, mutable label, arbitrary branch/ref, failed or
 pending run, missing artifact, or unverifiable evidence is never an authority.
 Every such uncertainty is a cache miss and executes the real gate. The gate job
