@@ -19,11 +19,13 @@ describe('iOS runtime smoke protocol', () => {
       .toEqual({ kind: 'save', seed: 1042, years: 40 });
     expect(parseSmokeCommand('eldritchdynasty-smoke://resume')).toEqual({ kind: 'resume' });
     expect(parseSmokeCommand('eldritchdynasty-smoke://export')).toEqual({ kind: 'export' });
+    expect(parseSmokeCommand('eldritchdynasty-smoke://share-code')).toEqual({ kind: 'share-code' });
     expect(parseSmokeCommand('eldritchdynasty-smoke://import?path=smoke.json'))
       .toEqual({ kind: 'import', path: 'smoke.json' });
     expect(parseSmokeCommand('https://save?seed=1042&years=40')).toBeNull();
     expect(parseSmokeCommand('eldritchdynasty-smoke://save?years=-1')).toBeNull();
     expect(parseSmokeCommand('eldritchdynasty-smoke://import')).toBeNull();
+    expect(parseSmokeCommand('eldritchdynasty-smoke://share-codes')).toBeNull();
   });
 
   it('keeps default smoke parameters but rejects ambiguous numeric spellings (#2179)', () => {
