@@ -363,6 +363,16 @@ function waitingText(): string {
   return `Before signing, provide ${wanted.value.map((item) => labels[item] ?? item).join(', and ')}.`;
 }
 
+// A queued reveal click can still target an old run's button before Vue
+// replaces that DOM node. Bind its identity at render time: checking only inside
+// on() would consume a beat of the replacement run after its synchronous reset.
+function revealForRenderedRun(renderedIdentity: string): () => void {
+  return () => {
+    if (signingIdentity.value !== renderedIdentity) return;
+    on();
+  };
+}
+
 // A successful founding replaces this view at the next render, not before
 // another synchronous click or Enter can reach this component. Guard both
 // submission routes until Vue has had a chance to apply that update.
@@ -460,7 +470,7 @@ function enterForRun(renderedIdentity: string): void {
       </li>
     </ol>
 
-    <button v-if="!prologue.founded && shown < prologue.triad.length" class="on" @click="on()">
+    <button v-if="!prologue.founded && shown < prologue.triad.length" class="on" :onClick="revealForRenderedRun(signingIdentity)">
       {{ plain ? (shown === 0 ? 'Read the first part' : shown === 1 ? 'Read the second part' : 'Read the third part') : (shown === 0 ? 'The first thing' : shown === 1 ? 'The second thing' : 'The third thing') }}
     </button>
 
