@@ -54,7 +54,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // Once a house has an ending, only evidence available by that year may be
   // quoted, counted, or used to attribute outcomes.
   const fromYear = w.ending ? campaignDef(w.campaign).startYear : -Infinity;
-  const throughYear = w.ending ? w.ending.year : Infinity;
+  // A recovered world can be rewound before its saved ending. The adjacent
+  // Chronicle reckoning never reads past either clock; neither may its
+  // Afterimage, or it would attribute testimony that has not happened yet.
+  const throughYear = w.ending ? Math.min(w.year, w.ending.year) : Infinity;
   const pages = w.chronicle.map((page, index) => ({ page, index }))
     .filter(({ page }) => page.year >= fromYear && page.year <= throughYear)
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
