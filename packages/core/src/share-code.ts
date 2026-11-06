@@ -248,7 +248,7 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // A recovered or programmatically modified world may carry a runtime value
   // outside the closed campaign union. Fail closed before campaignDef or
   // campaignLetter reads it; inherited object keys are not campaign IDs.
-  if (!Object.prototype.hasOwnProperty.call(CAMPAIGNS, w.campaign)) {
+  if (typeof w.campaign !== 'string' || !Object.prototype.hasOwnProperty.call(CAMPAIGNS, w.campaign)) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
   // An in-memory or recovered decision log can be damaged despite its static
