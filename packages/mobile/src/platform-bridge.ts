@@ -8,6 +8,7 @@ import { chooseSaveFile } from './file-chooser.js';
 import { exportInterchangeFilename, serializeInterchange } from './interchange.js';
 import { attachNativeListener } from './native-listener.js';
 import { handleNativeBackButton } from './back-button.js';
+import { shareArtifact } from './artifacts.js';
 
 const storage = mobileStorage();
 const SMOKE_RESULT = 'smoke-result.json';
@@ -65,6 +66,8 @@ const platform = {
     const uri = await Filesystem.getUri({ path: name, directory: Directory.Documents });
     await Share.share({ title: 'Eldritch Dynasty', url: uri.uri, dialogTitle: 'Write the run down' });
   },
+
+  exportArtifact: shareArtifact,
 
   importSave() {
     const input = document.createElement('input');

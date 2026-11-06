@@ -52,6 +52,8 @@ export interface Platform {
   readUserContent(): Promise<Record<string, string>>;
   /** Ask the host to write an interchange file, where that is possible. */
   exportSave(save: unknown): Promise<void>;
+  /** Optional binary file handoff; embedded hosts may have no browser download manager. */
+  exportArtifact?(blob: Blob, filename: string): Promise<void>;
   /** Ask the host for an interchange file, where that is possible. */
   importSave(): Promise<unknown | null>;
   /**
@@ -85,6 +87,7 @@ interface Bridge {
   unlockAchievement?(id: string): Promise<void>;
   readUserContent(): Promise<Record<string, string>>;
   exportSave(save: unknown): Promise<void>;
+  exportArtifact?(blob: Blob, filename: string): Promise<void>;
   importSave(): Promise<unknown | null>;
   copyText?(text: string): Promise<void>;
   onPause(listener: () => void): () => void;
@@ -367,4 +370,11 @@ export function installPlatform(platform: Platform): void {
 
 export function currentPlatform(): Platform {
   return installed ?? browserPlatform();
+}
+
+/** A completed rendering is only saved after its host accepts the file handoff. */
+export async function exportArtifact(blob: Blob, filename: string): Promise<void> {
+  const host = currentPlatform();
+  if (host.exportArtifact) await host.exportArtifact(blob, filename);
+  else downloadBlob(blob, filename);
 }

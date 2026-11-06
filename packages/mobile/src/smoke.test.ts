@@ -12,6 +12,7 @@ import { readSave, saveRoot, writeSave } from '../../shell/src/saves.mjs';
 import { mobileStorage } from './storage.js';
 import type { Directory, Encoding } from '@capacitor/filesystem';
 import { parseSmokeCommand, smokeEvidence } from './smoke.js';
+import { artifactFilename, shareArtifact } from './artifacts.js';
 
 describe('iOS runtime smoke protocol', () => {
   it('accepts only the private smoke scheme and well-formed commands', () => {
@@ -472,14 +473,17 @@ describe('native Library bytes are never mistaken for an absent profile (#1241)'
 // the public mobile share and file-picker paths; that can miss a broken bridge.
 const native = vi.hoisted(() => ({
   documents: new Map<string, string>(),
+  artifacts: new Map<string, string>(),
   sharedUrls: [] as string[],
+  shareError: null as Error | null,
 }));
 
 vi.mock('@capacitor/filesystem', () => ({
-  Directory: { Documents: 'DOCUMENTS', Data: 'DATA' },
+  Directory: { Documents: 'DOCUMENTS', Data: 'DATA', Cache: 'CACHE' },
   Encoding: { UTF8: 'utf8' },
   Filesystem: {
     async writeFile({ path, data, directory }: { path: string; data: string; directory: string }) {
+      if (directory === 'CACHE') { native.artifacts.set(path, data); return; }
       if (directory !== 'DOCUMENTS') throw new Error('interchange was not written to Documents');
       native.documents.set(path, data);
     },
@@ -496,7 +500,10 @@ vi.mock('@capacitor/filesystem', () => ({
 }));
 
 vi.mock('@capacitor/share', () => ({
-  Share: { async share({ url }: { url: string }) { native.sharedUrls.push(url); } },
+  Share: { async share({ url }: { url: string }) {
+    native.sharedUrls.push(url);
+    if (native.shareError) throw native.shareError;
+  } },
 }));
 vi.mock('@capacitor/preferences', () => ({
   Preferences: {
@@ -512,7 +519,53 @@ vi.mock('@capacitor/app', () => ({
 afterEach(() => {
   vi.unstubAllGlobals();
   native.documents.clear();
+  native.artifacts.clear();
   native.sharedUrls.length = 0;
+  native.shareError = null;
+});
+
+describe('native binary artifact handoff (#3153)', () => {
+  it('shares exact binary and Unicode SVG bytes in independent cache files', async () => {
+    const bytes = Uint8Array.from({ length: 100_000 }, (_, index) => index % 256);
+    const svg = '<svg><text>雪 ED1.anonymous.check</text></svg>';
+    await shareArtifact(new Blob([bytes], { type: 'image/png' }), 'the-house.png');
+    await shareArtifact(new Blob([svg], { type: 'image/svg+xml' }), 'the-house.svg');
+    await shareArtifact(new Blob([bytes], { type: 'image/png' }), 'the-house.png');
+    const paths = [...native.artifacts.keys()];
+    expect(new Set(paths).size).toBe(3);
+    expect(paths).toEqual([
+      expect.stringMatching(/^eldritch-exports\/[a-f0-9]{32}\/the-house\.png$/),
+      expect.stringMatching(/^eldritch-exports\/[a-f0-9]{32}\/the-house\.svg$/),
+      expect.stringMatching(/^eldritch-exports\/[a-f0-9]{32}\/the-house\.png$/),
+    ]);
+    expect(Buffer.from(native.artifacts.get(paths[0]!)!, 'base64')).toEqual(Buffer.from(bytes));
+    expect(Buffer.from(native.artifacts.get(paths[1]!)!, 'base64').toString('utf8')).toBe(svg);
+    expect(native.sharedUrls).toEqual(paths.map(path => `native://${path}`));
+    expect(native.documents.size).toBe(0);
+  });
+
+  it('rejects path escapes before writing or sharing, and bounds wide Unicode filenames', async () => {
+    for (const name of ['', '..', '../save.json', 'a/b.png', 'a\\b.png', 'a\0.png']) {
+      await expect(shareArtifact(new Blob(['untouched']), name)).rejects.toThrow('basename');
+    }
+    expect(native.artifacts.size).toBe(0);
+    expect(native.sharedUrls).toEqual([]);
+    const bounded = artifactFilename('雪🌿'.repeat(60) + '.svg');
+    expect(new TextEncoder().encode(bounded).length).toBeLessThanOrEqual(220);
+    expect(bounded.endsWith('.svg')).toBe(true);
+    expect(bounded).not.toMatch(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u);
+  });
+
+  it('propagates chooser cancellation while retaining readable bytes for a deliberate retry', async () => {
+    native.shareError = new Error('Share canceled');
+    await expect(shareArtifact(new Blob(['plate']), 'house.svg')).rejects.toThrow('Share canceled');
+    const [first] = native.artifacts.keys();
+    expect(Buffer.from(native.artifacts.get(first!)!, 'base64').toString()).toBe('plate');
+    native.shareError = null;
+    await expect(shareArtifact(new Blob(['retry']), 'house.svg')).resolves.toBeUndefined();
+    expect(native.artifacts.size).toBe(2);
+    expect(native.sharedUrls).toHaveLength(2);
+  });
 });
 
 describe('Windows / Android / iOS host interchange (#322)', () => {
@@ -575,6 +628,7 @@ describe('Windows / Android / iOS host interchange (#322)', () => {
       await import('./platform-bridge.js');
       const mobile = (globalThis as { window?: { edPlatform?: Platform } }).window?.edPlatform;
       expect(mobile).toBeDefined();
+      expect(mobile!.exportArtifact).toBe(shareArtifact);
 
       const importedSave = await mobile!.importSave();
       expect(importedSave).toEqual(saved);

@@ -12,6 +12,9 @@ import { createGame } from './lib/game.js';
 import {
   BROWSER_IMPORT_CANCELLED,
   browserPlatform,
+  currentPlatform,
+  installPlatform,
+  exportArtifact,
   platformForWindow,
   type Platform,
   type SmokeCommand,
@@ -32,6 +35,27 @@ function bridge(): Platform {
     onPause: () => () => undefined, onBack: () => () => undefined,
   };
 }
+
+describe('binary exports use the composed host (#3153)', () => {
+  it('waits for the host handoff and propagates rejection without trying a browser download', async () => {
+    const previous = currentPlatform();
+    let accept!: () => void;
+    const handoff = vi.fn(() => new Promise<void>(resolve => { accept = resolve; }));
+    installPlatform({ ...bridge(), exportArtifact: handoff });
+    const blob = new Blob(['plate']);
+    let settled = false;
+    try {
+      const pending = exportArtifact(blob, 'house.png').then(() => { settled = true; });
+      await Promise.resolve();
+      expect(handoff).toHaveBeenCalledExactlyOnceWith(blob, 'house.png');
+      expect(settled).toBe(false);
+      accept();
+      await pending;
+      handoff.mockRejectedValueOnce(new Error('Share canceled'));
+      await expect(exportArtifact(blob, 'house.png')).rejects.toThrow('Share canceled');
+    } finally { installPlatform(previous); }
+  });
+});
 
 function memoryPlatform(): Platform & { saves: Map<string, unknown>; unlocks: string[] } {
   const saves = new Map<string, unknown>();
