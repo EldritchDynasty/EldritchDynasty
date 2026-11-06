@@ -3290,6 +3290,47 @@ describe('voluntary resume recap (#1985)', () => {
     },
   );
 
+  it.each(['original', 'plainenglish'] as const)(
+    'keeps impossible recovered docket dates out of the current recap (%s)',
+    async (proseMode) => {
+      const view = snapshot({
+        generationArc: undefined, ambition: undefined,
+        campaign: { id: 'long', startYear: 1042 },
+      });
+      const original = structuredClone(view);
+      const decision = (year: number) => ({
+        kind: 'choice', year, event: { title: 'The Unwritten Choice' },
+      }) as unknown as SessionView['docket'][number];
+      const w = mount(ResumeRecap, {
+        props: { view, pending: 1, nextDecision: decision(1400), proseMode },
+      });
+      try {
+        // The docket still reports a blocker. The recap must not claim that
+        // an impossible future event has already reached this household.
+        expect(w.text()).toContain('One decision');
+        expect(w.find('.recap-next-decision').exists()).toBe(false);
+        expect(w.text()).not.toContain('The Unwritten Choice');
+
+        await w.setProps({ nextDecision: decision(1321) });
+        expect(w.get('.recap-next-decision').text()).toContain('1321 · The Unwritten Choice');
+
+        // An older-than-founding or fractional restored date is not a
+        // current decision either; no simulated choice is discarded.
+        await w.setProps({ nextDecision: decision(1041) });
+        expect(w.find('.recap-next-decision').exists()).toBe(false);
+        await w.setProps({ nextDecision: decision(1320.5) });
+        expect(w.find('.recap-next-decision').exists()).toBe(false);
+
+        await w.setProps({ view: snapshot({
+          generationArc: undefined, ambition: undefined,
+          year: 1400, campaign: { id: 'long', startYear: 1042 },
+        }), nextDecision: decision(1400) });
+        expect(w.get('.recap-next-decision').text()).toContain('1400 · The Unwritten Choice');
+        expect(view).toEqual(original);
+      } finally { w.unmount(); }
+    },
+  );
+
   it('omits unsupported facts and updates when the current save changes', async () => {
     const w = mount(ResumeRecap, { props: {
       view: snapshot({ generationArc: undefined, ambition: undefined }),
