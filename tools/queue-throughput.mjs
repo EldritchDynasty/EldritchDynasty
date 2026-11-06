@@ -94,6 +94,8 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Invalid owner/repo');
   if (!token) throw new Error('Set GITHUB_TOKEN for live evidence, or pass --runs FILE');
   const found = [];
+  const seenIds = new Set();
+  let previousCreated = Infinity;
   let reachedStart = false;
   for (let page = 1; page <= MAX_PAGES; page++) {
     const url = new URL(API + '/repos/' + repo + '/actions/runs');
@@ -111,8 +113,15 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
     const body = await response.json();
     if (!Array.isArray(body.workflow_runs)) throw new Error('Missing workflow_runs on page ' + page);
     for (const run of body.workflow_runs) {
-      // GitHub returns newest created_at first. Fail closed on malformed dates.
+      // The start-boundary shortcut is only safe for descending, nonduplicated
+      // pages. A page shift or unexpected ordering must not certify a partial cohort.
       const created = timestamp(run.created_at);
+      if (created > previousCreated) throw new Error('Merge-group runs are not in descending creation order');
+      previousCreated = created;
+      if (!Number.isSafeInteger(run.id) || seenIds.has(run.id)) {
+        throw new Error('Duplicate or invalid merge-group run ID');
+      }
+      seenIds.add(run.id);
       if (created < start) {
         reachedStart = true;
         break;
@@ -178,6 +187,8 @@ export async function fetchPullRequests({ repo, token, fetchImpl = fetch }) {
   if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Invalid owner/repo');
   if (!token) throw new Error('Set GITHUB_TOKEN for live PR flow, or pass --prs FILE');
   const pulls = [];
+  const seenNumbers = new Set();
+  let previousCreated = Infinity;
   for (let page = 1; page <= MAX_PAGES; page++) {
     const url = new URL(API + '/repos/' + repo + '/pulls');
     url.searchParams.set('state', 'all');
@@ -195,7 +206,16 @@ export async function fetchPullRequests({ repo, token, fetchImpl = fetch }) {
     if (!response.ok) throw new Error('GitHub PR API returned HTTP ' + response.status + ' on page ' + page);
     const body = await response.json();
     if (!Array.isArray(body)) throw new Error('Expected PR array on page ' + page);
-    pulls.push(...body);
+    for (const pr of body) {
+      const created = timestamp(pr.created_at);
+      if (created > previousCreated) throw new Error('PRs are not in descending creation order');
+      previousCreated = created;
+      if (!Number.isSafeInteger(pr.number) || seenNumbers.has(pr.number)) {
+        throw new Error('Duplicate or invalid PR number across pages');
+      }
+      seenNumbers.add(pr.number);
+      pulls.push(pr);
+    }
     if (body.length < PAGE_SIZE) return pulls;
   }
   throw new Error('More than ' + MAX_PAGES + ' PR pages: incomplete history; refuse to report');
