@@ -1,5 +1,5 @@
 import type { EndingDef, EndingId, Person, Rung } from '@ed/schema';
-import { assertNever, currentMembership, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
+import { assertNever, isContentProseField, GOD_RITE_FAILED } from '@ed/schema';
 import type { ChronicleEntry, SimCtx, WorldState } from './world.js';
 import { RUNGS, rungIndex, rungTitle, measureAscension } from './ascension.js';
 import { prologueTriad, prologueView } from './prologue.js';
@@ -673,8 +673,13 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (person.died === undefined
         ? person.status !== 'alive'
         : person.died <= readYear) continue;
-      const membership = currentMembership(person, readYear);
-      if (!membership || membership.house !== w.playerHouse || !membership.branch) continue;
+      // A recovered person can carry contradictory same-year memberships.
+      // The first matching record is not proof that this hall held them.
+      const memberships = person.membership.filter((m) =>
+        m.from <= readYear && (m.to === undefined || m.to > readYear));
+      if (memberships.length !== 1) continue;
+      const membership = memberships[0]!;
+      if (membership.house !== w.playerHouse || !membership.branch) continue;
       const people = residents.get(membership.branch) ?? [];
       people.push(person);
       residents.set(membership.branch, people);
@@ -702,7 +707,12 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       // Do not turn contradictory evidence into a credited family purpose.
       // Older saves without membership at the founding year still retain the
       // charter as their available evidence.
-      const charterMembership = currentMembership(founder, branch.foundedYear);
+      const charterMemberships = founder.membership.filter((m) =>
+        m.from <= branch.foundedYear && (m.to === undefined || m.to > branch.foundedYear));
+      // Legacy charters may lack a dated membership. Conflicting positive
+      // evidence is different: do not pick an arbitrary first record.
+      if (charterMemberships.length > 1) continue;
+      const charterMembership = charterMemberships[0];
       if (charterMembership
         && (charterMembership.house !== w.playerHouse
           || charterMembership.branch !== branch.id

@@ -2675,4 +2675,57 @@ describe('the credited cadet charter matches surviving founder membership eviden
     expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
     expect(selectEnding(ctx)).toBe(ending);
   });
+  it('does not credit a charter or survivor from conflicting same-year memberships', () => {
+    const ctx = atTheTerm(198313);
+    const w = ctx.world;
+    const branch = 'br_conflicting_memberships';
+    const foundedYear = w.year - 30;
+    w.houseAmbition = 'secure_branches';
+    w.ending = { id: 'forgotten', year: w.year };
+    const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+    const relative = place(ctx, { name: 'Leora', sex: 'female', age: 35, branch });
+    place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch });
+    w.branches.set(asId(branch), {
+      id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+    });
+    w.people.kill(founder.id, w.year - 1, 'old age');
+    const selected = selectEnding(ctx);
+    const expected = epilogueOf(ctx)!.purpose;
+    expect(expected).toMatchObject({ kind: 'branch_kept', person: 'Leora' });
+
+    const assertAmbiguous = () => {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    };
+
+    // The charter has both a plausible branch membership and a competing
+    // historical placement. Neither row may be chosen just by array order.
+    const historical = founder.membership[0]!;
+    const documented = { ...historical, from: foundedYear, branch };
+    const contradictory = { ...historical, from: foundedYear, branch: 'br_other_roof' };
+    founder.membership = [documented, contradictory];
+    assertAmbiguous();
+    founder.membership.reverse();
+    assertAmbiguous();
+    founder.membership = [documented];
+    expect(epilogueOf(ctx)!.purpose).toEqual(expected);
+
+    // Two living relatives made the hall viable. One with conflicting
+    // collection-year memberships cannot count as a certain resident.
+    const resident = relative.membership.find((m) => m.to === undefined)!;
+    const originalMemberships = [...relative.membership];
+    relative.membership.push({ ...resident, from: w.year - 1, branch: 'br_other_roof' });
+    assertAmbiguous();
+    relative.membership.reverse();
+    assertAmbiguous();
+    relative.membership = originalMemberships;
+    expect(epilogueOf(ctx)!.purpose).toEqual(expected);
+  });
+
 });
