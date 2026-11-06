@@ -1061,6 +1061,53 @@ describe('the bed decides when the house may be heard', () => {
     expect(bed.audible).toBe(false);
   });
 
+  it('mutes a previously audible host if its volume adapter refuses a quieter level (#1986)', () => {
+    let level = 1;
+    let muted = true;
+    let rejectVolume = false;
+    const cue = vi.fn();
+    const engine = {
+      available: true,
+      get volume() { return level; },
+      set volume(value: number) {
+        if (rejectVolume) throw new Error('host volume setter unavailable');
+        level = value;
+      },
+      get muted() { return muted; },
+      set muted(value: boolean) { muted = value; },
+      cue,
+      setDrone: vi.fn(),
+      suspend: vi.fn(),
+      wake: vi.fn(),
+      close: vi.fn(),
+    };
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 1 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+
+    // The host kept its full-volume output when Reading requested a lower
+    // level. The bed must not leave an old drone or new cues at that level.
+    rejectVolume = true;
+    bed.prefer({ on: true, volume: 0.25 });
+    expect(engine.volume).toBe(1);
+    expect(engine.muted).toBe(true);
+    expect(bed.audible).toBe(false);
+    bed.cue('bell');
+    expect(cue).not.toHaveBeenCalled();
+
+    // A later successful preference application can restore normal playback.
+    rejectVolume = false;
+    bed.prefer({ on: true, volume: 0.25 });
+    expect(engine.volume).toBe(0.25);
+    expect(engine.muted).toBe(false);
+    expect(bed.audible).toBe(true);
+    bed.cue('bell');
+    expect(cue).toHaveBeenCalledExactlyOnceWith('bell');
+    bed.dispose();
+  });
+
   it('does not propagate throwing audio effects after a successful gesture (#1986)', () => {
     const engine = {
       muted: true,
