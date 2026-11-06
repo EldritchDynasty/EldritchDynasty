@@ -136,3 +136,25 @@ or the original #1983 participant-study requirement.
 
 The connector edit alone does not establish a local npm preflight or a green
 hosted CI verdict; those must be reported separately.
+
+## Follow-up: a thin-line count belongs to a credible succession tenure (7 November 2026)
+
+The Afterimage's smallest generation-opening blood count was previously taken
+from any in-term `thin_line` question with a plausible date and numeric count.
+Unlike the neighboring ancestral-silhouette selection, it did not verify that
+the succession row's named Head existed and was alive at accession, or that
+the question was actually opened during that Head's tenure. A recovered book
+could therefore project a spurious minimum of one from an impossible reign,
+even while its displayed last seal-holder rejected that same row.
+
+For a **completed** book, `afterimageEvidence` now admits a count only when
+the accession has an existing, living-at-accession Head, the question's opening
+falls between that accession and its recorded end (if any), and each recorded
+tenure boundary is a whole safe-integer year. Earlier valid questions remain
+eligible as a fallback. Unfinished authoring inventories remain unchanged.
+
+The added `ending.test.ts` regression checks absent, unborn and already-dead
+Heads, pre-accession and post-tenure questions, fractional tenure boundaries,
+a supported fallback, both prose modes and read-only saved-state behavior.
+This is one bounded evidence-integrity correction, not participant acceptance
+for #1983. Local npm tests and exact-head CI are not claimed by the edit.
