@@ -1137,6 +1137,7 @@ describe('the bed decides when the house may be heard', () => {
     expect(level).toBe(1);
     expect(bed.audible).toBe(false);
     expect(audibleOutput, 'getter rejection skipped the safety mute').toBe(false);
+    bed.cue('page');
     expect(engine.cue).not.toHaveBeenCalled();
     bed.dispose();
   });
