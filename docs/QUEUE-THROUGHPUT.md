@@ -1,5 +1,80 @@
 # Merge queue throughput evidence (#2794)
 
+## Post-change gate-proof reuse: 20 observed merge groups (7 November 2026; #3183)
+
+**Window and selection.** On 7 November 2026 UTC, inspect the closed half-open
+interval **2026-11-06 19:00:00Z (included) to 2026-11-06 23:00:00Z (excluded)**.
+The GitHub Actions API returned **20** `merge_group` workflow runs named
+`check` in this four-hour window. All 20 had `status=completed` and
+`conclusion=success`. Each had an `attempt=1` `gates (batch)` job with
+`status=completed` and `conclusion=success`; its decoded job log had 12
+individual gate-planner decision lines. This is an observed post-change sample,
+**not** a seven-day or complete 24-hour acceptance cohort.
+
+**Planner evidence.** Count only the timestamped output lines of the form
+`<gate>: reuse from run <id>` or `<gate>: run ...` from the gate job.
+Ignore echoed source commands, proof-producer messages and the later summary.
+Across the 20 successful jobs, **209 of 240 decisions reused a trusted-main
+gate proof (87.1%)** and **31 required execution**; the
+nearest-rank **median merge-group slot was 10.15 minutes**, calculated from
+`updated_at - run_started_at` for each run. The nearest-rank p90 was
+**10.67 minutes**. All 20 groups succeeded; this small window has no observed
+merge-group failure, but is not a daily failure-rate certificate.
+
+| Merge-group `check` run | Start (UTC, 6 Nov) | Slot minutes | Gate planner reuse / decisions |
+|---|---:|---:|---:|
+| [42276079064](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42276079064) | 19:02:20 | 10.47 | 12/12 |
+| [42277695635](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42277695635) | 19:13:16 | 8.43 | 5/12 |
+| [42279006685](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42279006685) | 19:22:10 | 10.47 | 12/12 |
+| [42280612092](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42280612092) | 19:33:07 | 16.97 | 0/12 |
+| [42283166372](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42283166372) | 19:50:33 | 15.95 | 0/12 |
+| [42285550866](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42285550866) | 20:07:00 | 9.78 | 12/12 |
+| [42286997854](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42286997854) | 20:16:54 | 7.42 | 12/12 |
+| [42288128652](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42288128652) | 20:24:45 | 10.67 | 12/12 |
+| [42289701361](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42289701361) | 20:35:52 | 10.65 | 12/12 |
+| [42291240782](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42291240782) | 20:46:57 | 10.08 | 12/12 |
+| [42292688755](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42292688755) | 20:57:32 | 8.10 | 12/12 |
+| [42293904379](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42293904379) | 21:06:06 | 8.27 | 12/12 |
+| [42295070827](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42295070827) | 21:14:26 | 8.88 | 12/12 |
+| [42296748454](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42296748454) | 21:26:32 | 10.40 | 12/12 |
+| [42298250406](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42298250406) | 21:37:25 | 10.25 | 12/12 |
+| [42299684266](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42299684266) | 21:48:08 | 9.90 | 12/12 |
+| [42302069766](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42302069766) | 22:06:12 | 8.25 | 12/12 |
+| [42303680718](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42303680718) | 22:18:27 | 10.35 | 12/12 |
+| [42305711504](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42305711504) | 22:34:13 | 10.58 | 12/12 |
+| [42307601391](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42307601391) | 22:49:50 | 10.15 | 12/12 |
+
+**How to reproduce and check the boundary.** Page GitHub's
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/runs?event=merge_group&per_page=100&page=N`;
+select only `name=check` and `created_at` inside the half-open UTC window
+above. For each retained run, use
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/runs/<run_id>/attempts/1/jobs?per_page=100`
+and the matching `gates (batch)` job's
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/jobs/<job_id>/logs`.
+Verify each run's and gate job's completed/success state and that 12 distinct
+planner decisions (reused or run) are observed, not inferred from a green check.
+`tools/queue-throughput.mjs --with-proofs --from 2026-11-06T19:00:00Z --to 2026-11-06T23:00:00Z --json`
+is the stricter live replay route: it additionally verifies exact-attempt job
+identity and the gate inventory at each historical commit. The figures above
+are directly counted job-log observations; a full historical-registry replay
+was **not** separately executed in this connector session.
+
+**Comparison, not attribution.** The pre-change day-sized baseline in this
+document (3 Nov 11:05Z to 4 Nov 11:05Z) recorded **36 reused decisions of
+1,152 (3.1%)** across 96 gate jobs, and a **14.38-minute** median across 97
+groups. This later 20-group, four-hour sample shows higher observed reuse
+(87.1%) and a shorter median (10.15 minutes), but the windows differ in length,
+source/content mix, dependency fingerprints, host variation and queue load.
+It neither isolates the effect of #2825 nor establishes sustained throughput
+or that arrivals are below landings; do not extrapolate these percentages to
+the full day.
+
+The observation advances the parent #2794's *before/after proof-reuse*
+measurement. It does **not** satisfy the required real seven-day
+duration-budget window, sustained arrival/landing balance, any remaining
+failure-cause investigation, or the owner's concurrency decision. Keep
+#2794 open; no queue setting is changed here.
+
 ## Reproduce gate-proof reuse (#3148)
 
 Add `--with-proofs` to inspect the actual planner decisions alongside the
