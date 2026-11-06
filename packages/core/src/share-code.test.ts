@@ -926,6 +926,35 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
     expect(problemOf(forge(code, (p) => { p.push(1); }))).toEqual({ kind: 'damaged' });
   });
 
+  it('refuses re-sealed malformed UTF-8 instead of importing a changed founding (#1995)', () => {
+    // A barcode reader or clipboard can damage the bytes inside an otherwise
+    // correctly formatted code. Recomputing the copy-error checksum must not
+    // turn an invalid UTF-8 name into a replacement-character founding.
+    const json = payloadOf(code);
+    const name = 'Maud Gearithy';
+    const at = json.indexOf(name);
+    expect(at).toBeGreaterThan(0);
+    const bytes = new TextEncoder().encode(json);
+    const offset = new TextEncoder().encode(json.slice(0, at)).length;
+    for (const invalid of [
+      Uint8Array.of(0x80),           // orphan continuation byte
+      Uint8Array.of(0xc3),           // truncated two-byte sequence
+      Uint8Array.of(0xc0, 0xaf),     // overlong encoding
+    ]) {
+      const corrupt = new Uint8Array(bytes.length - 1 + invalid.length);
+      corrupt.set(bytes.slice(0, offset));
+      corrupt.set(invalid, offset);
+      corrupt.set(bytes.slice(offset + 1), offset + invalid.length);
+      const body = btoa(String.fromCharCode(...corrupt))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const sealed = `ED1.${body}.${hashSeed('ED1', body).toString(36)}`;
+      expect(problemOf(sealed)).toEqual({ kind: 'damaged' });
+      expect(newGameFromShareCode(sealed, content, { build: BUILD }))
+        .toEqual({ ok: false, problem: { kind: 'damaged' } });
+    }
+    expect(readShareCode(code, content, { build: BUILD }).ok).toBe(true);
+  });
+
   it('refuses a non-canonical base64url alias, even with a matching check', () => {
     // A final base64 character contains unused padding bits when the byte
     // length is not divisible by three. Changing just one of those bits used
