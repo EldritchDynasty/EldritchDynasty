@@ -310,6 +310,11 @@ function detectEngines(): Ctor[] {
   return candidates;
 }
 
+function isActivationRefusal(reason: unknown): boolean {
+  return typeof reason === 'object' && reason !== null
+    && 'name' in reason && reason.name === 'NotAllowedError';
+}
+
 /**
  * Plays a `Score`. Everything interesting already happened above this line.
  *
@@ -331,11 +336,6 @@ function detectEngines(): Ctor[] {
  * that has gone away must not take the answer with it. A failed engine stops
  * being `available` and the run goes on in silence.
  */
-function isActivationRefusal(reason: unknown): boolean {
-  return typeof reason === 'object' && reason !== null
-    && 'name' in reason && reason.name === 'NotAllowedError';
-}
-
 export class Sound {
   private context: AudioContext | null = null;
   private out: GainNode | null = null;
