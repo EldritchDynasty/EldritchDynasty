@@ -626,7 +626,14 @@ export class Sound {
       // A stale promise from a disposed context must not disable a later one.
       if (this.context !== context || this.#failed) return;
       if (resume && typeof reason === 'object' && reason !== null
-        && 'name' in reason && reason.name === 'NotAllowedError') return;
+        && 'name' in reason && reason.name === 'NotAllowedError') {
+        // Activation denial is temporary, so retain the device for the next
+        // gesture. But the cue that triggered this refused resume belonged to
+        // an earlier player action: a later unlock must not ring it belatedly.
+        // Cut only one-shots; the current Age drone may be restored on wake.
+        this.attempt(() => this.stopCues());
+        return;
+      }
       this.fail();
     });
   }
