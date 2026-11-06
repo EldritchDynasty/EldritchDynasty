@@ -613,7 +613,8 @@ export function newGameFromShareCode(
     // The signing stores the untrimmed nonblank answer in its log. Even when
     // the displayed name fits, an overlong raw answer cannot be encoded in a
     // named code later; reject before creating an unshareable founding.
-    if (recipientFounder.length > PERSON_NAME_MAX || !validFounderName(supplied)) {
+    if ((supplied.length > 0 && recipientFounder.length > PERSON_NAME_MAX)
+      || !validFounderName(supplied)) {
       return { ok: false, problem: { kind: 'invalid_names' } };
     }
   }
