@@ -969,6 +969,43 @@ describe('the player, over a fake engine', () => {
     sound.close();
   });
 
+  it('recovers after a synchronous activation refusal without replaying an old cue (#1986)', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    sound.suspend();
+    expect(ctx.state).toBe('suspended');
+
+    const resume = ctx.resume.bind(ctx);
+    ctx.resume = () => {
+      ctx.calls.push('resume:sync-denied');
+      throw Object.assign(new Error('activation required'), { name: 'NotAllowedError' });
+    };
+    const before = ctx.sources.length;
+    // The new Age and the bell arrived before the next permitted gesture.
+    // Neither may queue a stale sound on the suspended audio clock.
+    expect(() => {
+      sound.setDrone(COLD);
+      sound.cue('bell');
+      sound.wake();
+    }).not.toThrow();
+    expect(sound.available, 'a temporary synchronous policy denial disabled the device').toBe(true);
+    expect(ctx.sources).toHaveLength(before);
+    expect(humming(ctx)).toHaveLength(0);
+
+    ctx.resume = resume;
+    sound.wake();
+    expect(ctx.state).toBe('running');
+    expect(heldPitches(ctx), 'the latest Age drone was not restored').toEqual(pitchesOf(COLD));
+    const freshStart = ctx.sources.length;
+    sound.cue('seal');
+    expect(ctx.sources.slice(freshStart)).toHaveLength(cueScore('seal').voices.length);
+    expect(e.made, 'a retryable activation refusal reopened the audio device').toHaveLength(1);
+    sound.close();
+  });
+
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
     const e = fakeEngine({ reject: true });
     const s = new Sound(e.ctor);
