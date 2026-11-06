@@ -258,57 +258,64 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(problemOf(smuggled)).toEqual({ kind: 'damaged' });
   });
 
-  it.each(['original', 'plainenglish'] as const)(
-    'ignores malformed unused recipient founder values when an anonymous code records the answer (%s, #3134)',
-    (proseMode) => {
-      for (const name of ['', ' \t ']) {
-        const original = newGame(content, {
-          seed: 199500, startYear: CAMPAIGNS.short.startYear, campaign: 'short', proseMode,
-        });
-        expect(original.found({ ...SIGNED, founder: { ...SIGNED.founder, name } }).ok).toBe(true);
-        const anonymous = codeOf(original);
-        const preview = readShareCode(anonymous, content, { build: BUILD });
-        expect(preview.ok && preview.founding.missing).toEqual(['house', 'friends']);
-        const named = codeOf(original, { names: true });
-        for (const stale of [null, 42, { value: 'Previous founder' }, ['outdated']]) {
-          // A native bridge or a reused Start form can retain an invalid value
-          // for a question this code has *already* answered.
-          const imported = newGameFromShareCode(anonymous, content, {
-            build: BUILD,
-            proseMode,
-            names: {
-              founder: stale as never,
-              house: SIGNED.houseName,
-              friends: SIGNED.friends.map((friend) => friend.name),
-            },
-          });
-          expect(imported.ok).toBe(true);
-          if (!imported.ok) continue;
-          expect(saved(imported.session)).toBe(saved(original));
-          expect(codeOf(imported.session)).toBe(anonymous);
-          expect(codeOf(imported.session, { names: true })).toBe(named);
-          const resumed = resumeGame(imported.session.save(), content, { proseMode });
-          expect(saved(resumed)).toBe(saved(original));
-        }
-        // Ignoring an unused founder field must not weaken the validation of
-        // the names this same anonymous code still needs.
-        expect(newGameFromShareCode(anonymous, content, {
+  it.each([
+    { proseMode: 'original' as const, name: '', answer: 'empty' },
+    { proseMode: 'original' as const, name: ' \t ', answer: 'whitespace' },
+    { proseMode: 'plainenglish' as const, name: '', answer: 'empty' },
+    { proseMode: 'plainenglish' as const, name: ' \t ', answer: 'whitespace' },
+  ])(
+    'ignores malformed unused recipient founder values ($proseMode, $answer, #3134)',
+    ({ proseMode, name }) => {
+      // One founding per test case: the fast lane forbids batches of newGame
+      // calls inside loops. Table-driven cases still cover both prose modes
+      // and both kinds of recorded blank signing answers.
+      const original = newGame(content, {
+        seed: 199500, startYear: CAMPAIGNS.short.startYear, campaign: 'short', proseMode,
+      });
+      expect(original.found({ ...SIGNED, founder: { ...SIGNED.founder, name } }).ok).toBe(true);
+      const anonymous = codeOf(original);
+      const preview = readShareCode(anonymous, content, { build: BUILD });
+      expect(preview.ok && preview.founding.missing).toEqual(['house', 'friends']);
+      const named = codeOf(original, { names: true });
+      for (const stale of [null, 42, { value: 'Previous founder' }, ['outdated']]) {
+        // A native bridge or a reused Start form can retain an invalid value
+        // for a question this code has *already* answered.
+        const imported = newGameFromShareCode(anonymous, content, {
           build: BUILD,
+          proseMode,
           names: {
-            founder: null as never,
-            house: 42 as never,
+            founder: stale as never,
+            house: SIGNED.houseName,
             friends: SIGNED.friends.map((friend) => friend.name),
           },
-        })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
-        expect(newGameFromShareCode(anonymous, content, {
-          build: BUILD,
-          names: {
-            founder: null as never,
-            house: SIGNED.houseName,
-            friends: ['Iona Vale', 42 as never, 'Edda Rook'],
-          },
-        })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+        });
+        expect(imported.ok).toBe(true);
+        if (!imported.ok) continue;
+        expect(saved(imported.session)).toBe(saved(original));
+        expect(codeOf(imported.session)).toBe(anonymous);
+        expect(codeOf(imported.session, { names: true })).toBe(named);
+        const resumed = resumeGame(imported.session.save(), content, { proseMode });
+        expect(saved(resumed)).toBe(saved(original));
       }
+
+      // Ignoring an unused founder field must not weaken the validation of
+      // the names this same anonymous code still needs.
+      expect(newGameFromShareCode(anonymous, content, {
+        build: BUILD,
+        names: {
+          founder: null as never,
+          house: 42 as never,
+          friends: SIGNED.friends.map((friend) => friend.name),
+        },
+      })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+      expect(newGameFromShareCode(anonymous, content, {
+        build: BUILD,
+        names: {
+          founder: null as never,
+          house: SIGNED.houseName,
+          friends: ['Iona Vale', 42 as never, 'Edda Rook'],
+        },
+      })).toEqual({ ok: false, problem: { kind: 'invalid_names' } });
 
       // When the code omitted a real founder answer, recipient founder input
       // is still used and malformed runtime types must still be refused.
