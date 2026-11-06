@@ -119,6 +119,101 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
   throw new Error('More than ' + MAX_PAGES + ' pages: incomplete cohort; refuse to report');
 }
 
+
+/**
+ * An actual merged_at timestamp, not a successful merge_group check, proves
+ * landing. REST provides a latest-state snapshot, not historical ready states.
+ */
+export function summarizePrFlow(pulls, { from, to, now = Date.now(), source = 'snapshot' }) {
+  const start = timestamp(from);
+  const end = timestamp(to);
+  if (end <= start) throw new Error('--to must be later than --from');
+  if (!Array.isArray(pulls)) throw new Error('Expected an array of GitHub pull requests');
+  const seen = new Set();
+  const arrivalIds = [];
+  const mergedIds = [];
+  let closedUnmerged = 0;
+  let openAtStart = 0;
+  let openAtEnd = 0;
+  for (const pr of pulls) {
+    if (pr.base?.ref !== 'main') continue;
+    if (!Number.isSafeInteger(pr.number)) throw new Error('PR is missing a numeric number');
+    if (seen.has(pr.number)) throw new Error('Duplicate PR number: ' + pr.number);
+    seen.add(pr.number);
+    const created = timestamp(pr.created_at);
+    const closed = pr.closed_at == null ? null : timestamp(pr.closed_at);
+    const landed = pr.merged_at == null ? null : timestamp(pr.merged_at);
+    if (closed !== null && closed < created) throw new Error('PR closed before creation: ' + pr.number);
+    if (landed !== null && landed < created) throw new Error('PR merged before creation: ' + pr.number);
+    if (created >= start && created < end) arrivalIds.push(pr.number);
+    if (landed !== null && landed >= start && landed < end) mergedIds.push(pr.number);
+    if (closed !== null && landed === null && closed >= start && closed < end) closedUnmerged++;
+    // Counts immediately BEFORE the half-open window boundaries.
+    if (created < start && (closed === null || closed >= start)) openAtStart++;
+    if (created < end && (closed === null || closed >= end)) openAtEnd++;
+  }
+  const hours = (end - start) / 3600000;
+  return {
+    from, to, source, complete: source === 'api' && end <= now,
+    arrivals: arrivalIds.length, merged: mergedIds.length, closedUnmerged,
+    openAtStart, openAtEnd, backlogChange: openAtEnd - openAtStart,
+    arrivalsPerHour: Math.round(arrivalIds.length / hours * 100) / 100,
+    mergedPerHour: Math.round(mergedIds.length / hours * 100) / 100,
+    measuresReadyQueue: false, arrivalIds, mergedIds,
+  };
+}
+
+// Fetch ALL pages, not just PRs created since from: older PRs can land within
+// the window. Refuse a truncated cohort rather than declaring victory.
+export async function fetchPullRequests({ repo, token, fetchImpl = fetch }) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Invalid owner/repo');
+  if (!token) throw new Error('Set GITHUB_TOKEN for live PR flow, or pass --prs FILE');
+  const pulls = [];
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const url = new URL(API + '/repos/' + repo + '/pulls');
+    url.searchParams.set('state', 'all');
+    url.searchParams.set('sort', 'created');
+    url.searchParams.set('direction', 'desc');
+    url.searchParams.set('per_page', String(PAGE_SIZE));
+    url.searchParams.set('page', String(page));
+    const response = await fetchImpl(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: 'Bearer ' + token,
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+    if (!response.ok) throw new Error('GitHub PR API returned HTTP ' + response.status + ' on page ' + page);
+    const body = await response.json();
+    if (!Array.isArray(body)) throw new Error('Expected PR array on page ' + page);
+    pulls.push(...body);
+    if (body.length < PAGE_SIZE) return pulls;
+  }
+  throw new Error('More than ' + MAX_PAGES + ' PR pages: incomplete history; refuse to report');
+}
+
+export function formatPrFlow(report) {
+  return [
+    '# Main-targeted PR flow (#2794)',
+    '',
+    'Window (UTC): ' + report.from + ' inclusive to ' + report.to + ' exclusive.',
+    'Source: ' + report.source + '; coverage: ' +
+      (report.complete ? 'all-state API-paginated snapshot' : 'INCOMPLETE / snapshot only') + '.',
+    '',
+    '| Arrivals | Merged PRs | Closed unmerged | Open at start | Open at end | Net open change |',
+    '|---:|---:|---:|---:|---:|---:|',
+    '| ' + report.arrivals + ' | ' + report.merged + ' | ' + report.closedUnmerged +
+      ' | ' + report.openAtStart + ' | ' + report.openAtEnd + ' | ' + report.backlogChange + ' |',
+    '',
+    'Created/hour: ' + report.arrivalsPerHour + '; merged/hour: ' + report.mergedPerHour + '.',
+    'Open counts use current closure timestamps; past reopen and draft/ready changes are unavailable.',
+    'This is NOT the historical ready merge-queue depth. Creation is not admission.',
+    '',
+    'Created PRs: ' + report.arrivalIds.join(', '),
+    'Merged PRs: ' + report.mergedIds.join(', '),
+  ].join('\n');
+}
+
 export function formatMergeGroups(report) {
   const value = (x) => x === null ? 'n/a' : String(x);
   return [
@@ -149,14 +244,24 @@ export async function runCli(argv = process.argv.slice(2), environment = process
   };
   const from = option('--from');
   const to = option('--to');
-  if (!from || !to) throw new Error('Use --from UTC --to UTC [--runs FILE] [--json]');
+  if (!from || !to) throw new Error('Use --from UTC --to UTC [--runs FILE] [--with-prs | --prs FILE] [--json]');
   const file = option('--runs');
   const repo = option('--repo') ?? 'EldritchDynasty/EldritchDynasty';
   const runs = file
     ? (() => { const json = JSON.parse(readFileSync(file, 'utf8')); return Array.isArray(json) ? json : json.workflow_runs; })()
     : await fetchMergeGroupRuns({ repo, token: environment.GITHUB_TOKEN, from });
   const report = summarizeMergeGroups(runs, { from, to, source: file ? 'snapshot' : 'api' });
-  process.stdout.write((argv.includes('--json') ? JSON.stringify(report, null, 2) : formatMergeGroups(report)) + '\n');
+  const prFile = option('--prs');
+  const withPrs = argv.includes('--with-prs') || prFile !== null;
+  const prRows = !withPrs ? null : prFile
+    ? (() => { const json = JSON.parse(readFileSync(prFile, 'utf8')); return Array.isArray(json) ? json : json.pull_requests; })()
+    : await fetchPullRequests({ repo, token: environment.GITHUB_TOKEN });
+  const prReport = prRows === null ? null :
+    summarizePrFlow(prRows, { from, to, source: prFile ? 'snapshot' : 'api' });
+  const output = prReport === null ? report : { mergeGroups: report, pullRequests: prReport };
+  process.stdout.write((argv.includes('--json')
+    ? JSON.stringify(output, null, 2)
+    : formatMergeGroups(report) + (prReport ? '\n\n' + formatPrFlow(prReport) : '')) + '\n');
   // A result can be useful while incomplete, but never say it is acceptance evidence.
   return report;
 }
