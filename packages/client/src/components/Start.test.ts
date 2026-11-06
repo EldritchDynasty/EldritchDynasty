@@ -3192,6 +3192,26 @@ describe('resume recap opt-in', () => {
     expect(showRecap).toBe(true);
   });
 
+  it('arms a pledge-only recap at successful pickup, never from a later new pledge', async () => {
+    let loaded = snapshot({ generationArc: undefined, ambition: undefined, marriagePromises: [] });
+    let showRecap = false;
+    const actions = { load: vi.fn(async () => true) } as unknown as GameActions;
+    const decorated = withAcceptedPickup(actions, () => {
+      showRecap = hasResumeRecapFacts(loaded, 0);
+    });
+
+    expect(await decorated.load('house-1')).toBe(true);
+    expect(showRecap).toBe(false);
+
+    loaded = snapshot({ generationArc: undefined, ambition: undefined, marriagePromises: [
+      { house: 'house_elm', houseName: 'House Elm', year: 1315, lot: 'book', lotName: 'Book of Hours' },
+    ] });
+    expect(hasResumeRecapFacts(loaded, 0)).toBe(true);
+    expect(showRecap).toBe(false);
+    expect(await decorated.load('house-1')).toBe(true);
+    expect(showRecap).toBe(true);
+  });
+
   it('accepts any real recap line but refuses a missing or empty view', () => {
     const empty = snapshot({ generationArc: undefined, ambition: undefined });
     expect(hasResumeRecapFacts(null, 4)).toBe(false);
