@@ -93,6 +93,39 @@ describe('queue throughput evidence (#2794)', () => {
     expect(formatMergeGroups(report)).toContain('10.12 min | 10.25 min');
   });
 
+  it('certifies the daily failure target only for a complete 30+ group day', () => {
+    const groupDay = Array.from({ length: 40 }, (_, i) => run(i + 1, from, {
+      conclusion: i < 2 ? 'failure' : 'success',
+    }));
+    const atThreshold = summarizeMergeGroups(groupDay, { from, to, now, source: 'api' });
+    expect(atThreshold.failureSharePercent).toBe(5);
+    expect(atThreshold.dailyTargetUnder5Percent).toBe(false); // strict under 5%
+
+    const belowThreshold = summarizeMergeGroups(
+      groupDay.map((row, i) => i === 1 ? { ...row, conclusion: 'success' } : row),
+      { from, to, now, source: 'api' },
+    );
+    expect(belowThreshold.failureSharePercent).toBe(2.5);
+    expect(belowThreshold.dailyTargetUnder5Percent).toBe(true);
+    expect(formatMergeGroups(belowThreshold)).toContain('Daily <5% failure target');
+    expect(formatMergeGroups(belowThreshold)).toContain('met.');
+
+    for (const [rows, options] of [
+      [groupDay.slice(0, 29), { from, to, now, source: 'api' }],
+      [groupDay, { from, to, now, source: 'snapshot' }],
+      [groupDay, { from, to, now: Date.parse(from), source: 'api' }],
+      [groupDay, { from, to: '2026-11-06T13:00:00Z', now, source: 'api' }],
+      [groupDay.map((row, i) => i === 2 ? { ...row, conclusion: 'cancelled' } : row),
+        { from, to, now, source: 'api' }],
+      [groupDay.map((row, i) => i === 2 ? { ...row, conclusion: null, status: 'in_progress' } : row),
+        { from, to, now, source: 'api' }],
+    ] as const) {
+      const report = summarizeMergeGroups([...rows], options);
+      expect(report.dailyTargetUnder5Percent).toBeNull();
+      expect(formatMergeGroups(report)).toContain('not evaluated');
+    }
+  });
+
   it('fails closed on invalid durations, duplicates and unverified snapshots', () => {
     const row = run(5, from);
     expect(() => summarizeMergeGroups([row, row], { from, to, now })).toThrow(/Duplicate/);

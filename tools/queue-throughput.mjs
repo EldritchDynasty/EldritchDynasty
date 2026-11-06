@@ -71,6 +71,14 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   const counts = {};
   for (const run of finished) counts[run.conclusion] = (counts[run.conclusion] ?? 0) + 1;
   const complete = source === 'api' && end <= now && finished.length === details.length;
+  const failed = counts.failure ?? 0;
+  const failureSharePercent = complete && details.length
+    ? Math.round(failed / details.length * 1000) / 10 : null;
+  // Only an exact one-day, 30+ group, fully classified API cohort meets the
+  // issue's failure-rate evidence threshold; cancellations never count as green.
+  const dailyEligible = complete && end - start === 86400000 && details.length >= 30 &&
+    Object.keys(counts).every(key => key === 'success' || key === 'failure');
+  const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
 
   return {
     from, to, source, complete,
@@ -79,7 +87,8 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
     finished: finished.length,
     unfinished: details.length - finished.length,
     successful: counts.success ?? 0,
-    failed: counts.failure ?? 0,
+    failed,
+    failureSharePercent, dailyTargetUnder5Percent,
     otherConclusions: Object.fromEntries(Object.entries(counts).filter(([key]) => key !== 'success' && key !== 'failure')),
     medianMinutes: rank(0.5),
     p90Minutes: rank(0.9),
@@ -260,6 +269,11 @@ export function formatMergeGroups(report) {
       ' | ' + report.unfinished + ' | ' + value(report.medianMinutes) +
       ' min | ' + value(report.p90Minutes) + ' min |',
     '',
+    'Failure share (finished API cohort only): ' +
+      (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '%') + '.',
+    'Daily <5% failure target (exact 24h, 30+ groups, only success/failure conclusions): ' +
+      (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
+        report.dailyTargetUnder5Percent ? 'met' : 'not met') + '.',
     'This counts workflow runs, not PR arrivals or landed PRs. It is not a throughput or concurrency recommendation.',
     '',
     'Run IDs: ' + report.runs.map(x => x.id).join(', '),
