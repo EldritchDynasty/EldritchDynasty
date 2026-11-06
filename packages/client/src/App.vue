@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { createGame, resumeRecapRequested, withAcceptedPickup, type GameActions } from './lib/game';
+import { createGame, hasResumeRecapFacts, resumeRecapRequested, withAcceptedPickup, type GameActions } from './lib/game';
 import { installPlainEnglishCatalogue, loadBundle } from './lib/content';
 import { createProseModeSelector } from './lib/prose-selection';
 import { appShellCopy, clockBlockers, frozenLine, frozenNoticeShown } from './lib/app-shell-copy';
@@ -115,7 +115,8 @@ const actions = soundActions(
 const resumeRecap = ref(false);
 const recapExperiment = typeof window !== 'undefined' && resumeRecapRequested(window.location.search);
 const startActions: GameActions = withAcceptedPickup(actions, () => {
-  resumeRecap.value = recapExperiment && Boolean(view.value && openingSeen.value && !ended.value);
+  resumeRecap.value = recapExperiment && openingSeen.value && !ended.value
+    && hasResumeRecapFacts(view.value, docket.value.length);
 });
 watch(view, (next) => { if (!next) resumeRecap.value = false; });
 
@@ -631,7 +632,7 @@ const yearAndBirths = computed(() => {
 
   <template v-else>
     <ResumeRecap
-      v-if="resumeRecap && (view.generationArc?.question || view.ambition || docket.length)"
+      v-if="resumeRecap && hasResumeRecapFacts(view, docket.length)"
       :view="view"
       :pending="docket.length"
       :prose-mode="accessibility.proseMode"
