@@ -691,7 +691,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       .filter((branch) => branch.house === w.playerHouse
         && inBookTerm(w, branch.foundedYear)
         // An extinction after collection is not an extinct hall at collection.
-        && (branch.extinct === undefined || branch.extinct > readYear))
+        && (branch.extinct === undefined
+          || (Number.isSafeInteger(branch.extinct) && branch.extinct > readYear)))
       .sort((a, b) => a.foundedYear - b.foundedYear
         || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     for (const branch of branches) {
@@ -730,6 +731,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
           && other.house === w.playerHouse
           && inBookTerm(w, other.foundedYear)
           && other.extinct !== undefined
+          // A fractional recovered year is not proof of a lost hall.
+          && Number.isSafeInteger(other.extinct)
           && other.extinct >= other.foundedYear
           && other.extinct <= readYear)
         .sort((a, b) => b.extinct! - a.extinct!

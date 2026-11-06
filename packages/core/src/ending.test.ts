@@ -1903,7 +1903,10 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     }
     expect(digestOf(ctx)).toBe(before);
 
-    // The collected book cannot credit losses in the future or before a charter.
+    // The collected book cannot credit losses in a fractional year,
+    // in the future, or before the charter was signed.
+    lost.extinct = w.year - 6.5;
+    expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
     lost.extinct = w.year + 2;
     expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
     lost.extinct = lost.foundedYear - 1;
@@ -1921,6 +1924,22 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toMatchObject({
       kind: 'branch_kept', lostHall: expected,
     });
+  });
+
+  it('rejects an impossible fractional extinction when crediting a surviving hall', () => {
+    const { ctx, branch } = foundedHall();
+    const hall = ctx.world.branches.get(asId(branch))!;
+    hall.extinct = ctx.world.year + 0.5;
+    const selected = selectEnding(ctx);
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+    hall.extinct = ctx.world.year + 1;
+    expect(epilogueOf(ctx)!.purpose?.kind).toBe('branch_kept');
   });
 
   it('shows only bynames earned by collection for branch founders and survivors', () => {

@@ -103,7 +103,9 @@ succession Head and thin-line question in the shareable Afterimage.
 
 The completed-book projection now requires safe integer years for Chronicle
 witnesses, all four derived purpose cases, the Afterimage's quoted pages,
-succession accession and thin-line question dates. Unfinished-world authoring
+succession accession and thin-line question dates, as well as saved cadet-hall
+extinction years when crediting a surviving hall or a documented lost hall.
+Unfinished-world authoring
 diagnostics remain unrestricted, as before. Regression cases in the existing
 `ending.test.ts` suite cover rejected fractional dates, legitimate integer
 witnesses, a fractional duplicate, both prose modes, and unchanged saved state
