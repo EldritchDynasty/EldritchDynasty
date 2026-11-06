@@ -929,6 +929,44 @@ describe('the player, over a fake engine', () => {
     bed.dispose();
   });
 
+  it('cuts a drone scheduled before async activation denial and restores the latest Age on a gesture', async () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    sound.suspend();
+    expect(ctx.state).toBe('suspended');
+
+    const resume = ctx.resume.bind(ctx);
+    ctx.resume = () => {
+      ctx.calls.push('resume:async-denied');
+      return Promise.reject(Object.assign(new Error('activation required'), { name: 'NotAllowedError' }));
+    };
+
+    // Before the promise settles, setDrone has scheduled the new Age on a
+    // frozen audio clock. A later gesture must not start that stale graph.
+    const before = ctx.sources.length;
+    sound.setDrone(COLD);
+    const refused = ctx.sources.slice(before);
+    expect(refused).toHaveLength(droneScore(COLD)!.voices.length);
+    expect(humming(ctx)).toHaveLength(refused.length);
+    await settle();
+
+    expect(sound.available, 'an activation denial is temporary').toBe(true);
+    expect(refused.every((source) => source.stopped === ctx.currentTime),
+      'async denial left sustained sources waiting for a later unlock').toBe(true);
+    expect(humming(ctx)).toHaveLength(0);
+    expect(ctx.gains[ctx.gains.length - refused.length - 1]?.disconnected).toBeGreaterThanOrEqual(0);
+
+    ctx.resume = resume;
+    sound.wake();
+    expect(ctx.state).toBe('running');
+    expect(heldPitches(ctx), 'the most recent Age was not rebuilt after recovery').toEqual(pitchesOf(COLD));
+    expect(e.made).toHaveLength(1);
+    sound.close();
+  });
+
   it('does not replay an old cue after a temporary user-activation refusal (#1986)', async () => {
     const e = fakeEngine();
     const sound = new Sound(e.ctor);
