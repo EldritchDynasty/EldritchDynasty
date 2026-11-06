@@ -3253,12 +3253,9 @@ describe('voluntary resume recap (#1985)', () => {
 
   it.each(['original', 'plainenglish'] as const)(
     'names the first real pending docket item without inventing a previous plan (%s)', async (proseMode) => {
-      const first = { kind: 'choice', year: 1321, event: { title: 'The River Oath' } }
-        as unknown as SessionView['docket'][number];
-      const marriage = { kind: 'match', year: 1322, subject: { name: 'Iona' } }
-        as unknown as SessionView['docket'][number];
-      const record = { kind: 'record', year: 1323, subject: 'an old promise' }
-        as unknown as SessionView['docket'][number];
+      const first = { kind: 'choice', year: 1321, event: { title: 'The River Oath' } } as unknown as SessionView['docket'][number];
+      const marriage = { kind: 'match', year: 1322, subject: { name: 'Iona' } } as unknown as SessionView['docket'][number];
+      const record = { kind: 'record', year: 1323, subject: 'an old promise' } as unknown as SessionView['docket'][number];
       const w = mount(ResumeRecap, { props: {
         view: snapshot(), pending: 2, proseMode, nextDecision: first,
       } });
