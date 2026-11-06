@@ -428,17 +428,13 @@ function enter(): void {
   }
 }
 
-// Bind the completed-signing button to the run that rendered it. During a
-// retained-component switch Vue can still dispatch a click from the old DOM
-// before replacing its listener, even when the NEW run is already founded.
-// Reading props.prologue.founded alone would enter that newer run too early.
-const enterCurrentRun = computed(() => {
-  const renderedIdentity = signingIdentity.value;
-  return () => {
-    if (signingIdentity.value !== renderedIdentity) return;
-    enter();
-  };
-});
+// Bind Enter to the run that actually rendered this button. A computed
+// handler is insufficient: its latest value could target a different run
+// while Vue still has the old button mounted.
+function enterForRun(renderedIdentity: string): void {
+  if (signingIdentity.value !== renderedIdentity) return;
+  enter();
+}
 </script>
 
 <template>
@@ -675,7 +671,12 @@ const enterCurrentRun = computed(() => {
          does not survive being printed above a family tree. -->
     <template v-else>
       <p class="thesis">{{ prologue.thesis }}</p>
-      <button class="primary" @click="enterCurrentRun">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
+      <button
+        v-for="renderedIdentity in [signingIdentity]"
+        :key="renderedIdentity"
+        class="primary"
+        @click="enterForRun(renderedIdentity)"
+      >{{ plain ? `Begin in ${startYear}` : startYear }}</button>
     </template>
   </main>
 </template>
