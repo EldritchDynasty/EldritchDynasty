@@ -244,6 +244,13 @@ function encode(payload: Payload): string {
 /** The founding this run was given, as a code. Only from its own logged answers. */
 export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCodeResult {
   const w = ctx.world;
+  // An in-memory or recovered decision log can be damaged despite its static
+  // type. A null row otherwise throws in the filter below and takes down
+  // the share/export surface instead of reporting an unavailable code.
+  if (!Array.isArray(w.decisionLog)
+    || w.decisionLog.some((row) => !row || typeof row !== 'object')) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   if (w.campaign === 'demo') return { ok: false, unavailable: 'demonstration' };
   const foundings = w.decisionLog.filter((row) => row.kind === 'founding');
   if (!foundings.length) return { ok: false, unavailable: 'not_founded' };
