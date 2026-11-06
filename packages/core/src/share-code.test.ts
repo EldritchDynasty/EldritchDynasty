@@ -183,15 +183,19 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       ...SIGNED,
       founder: { gender: 'woman', configuration: 'blood_mother' },
     });
-    const imported = newGameFromShareCode(codeOf(original), content, {
-      build: BUILD,
-      names: {
-        house: SIGNED.houseName,
-        founder: '   ',
-        friends: SIGNED.friends.map((friend) => friend.name),
-      },
-    });
-    expect(imported.ok && saved(imported.session)).toBe(saved(original));
+    for (const founder of ['   ', ' '.repeat(PERSON_NAME_MAX + 5)]) {
+      // An all-blank optional answer is not persisted, regardless of its
+      // length. Only nonblank raw answers must fit the wire format.
+      const imported = newGameFromShareCode(codeOf(original), content, {
+        build: BUILD,
+        names: {
+          house: SIGNED.houseName,
+          founder,
+          friends: SIGNED.friends.map((friend) => friend.name),
+        },
+      });
+      expect(imported.ok && saved(imported.session)).toBe(saved(original));
+    }
   });
 
   it.each(['original', 'plainenglish'] as const)('preserves the same nonblank founder answer with excluded names (%s)', (proseMode) => {
