@@ -93,6 +93,18 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       }
       session.ctx.world.decisionLog.pop();
     }
+    const live = session.ctx.world as unknown as { decisionLog: unknown };
+    const intact = live.decisionLog;
+    try {
+      // A damaged container, not just a bad entry, must also refuse cleanly.
+      for (const corrupt of [null, {}, 'invalid log']) {
+        live.decisionLog = corrupt;
+        expect(session.shareCode({ build: BUILD }))
+          .toEqual({ ok: false, unavailable: 'unrepresentable' });
+      }
+    } finally {
+      live.decisionLog = intact;
+    }
     expect(codeOf(session, { names: true })).toBe(original);
   });
 
