@@ -53,4 +53,35 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     expect(engine.cue).toHaveBeenCalledWith('seal');
     bed.dispose();
   });
+
+  it.each(['on', 'volume'] as const)(
+    'mutes an unlocked bed when a host %s getter throws (#1986)',
+    (property) => {
+      const engine = fakeSound();
+      const bed = new SoundBed(engine);
+      bed.prefer({ on: true, volume: 1 });
+      bed.gesture();
+      bed.cue('bell');
+      expect(engine.cue).toHaveBeenCalledTimes(1);
+
+      const hostile = { on: true, volume: 0.25 };
+      Object.defineProperty(hostile, property, {
+        get() { throw new Error('host preference unavailable'); },
+      });
+      expect(() => bed.prefer(hostile)).not.toThrow();
+      expect(bed.audible).toBe(false);
+      expect(engine.muted).toBe(true);
+      expect(engine.volume).toBe(0);
+      bed.cue('seal');
+      expect(engine.cue).toHaveBeenCalledTimes(1);
+
+      // A subsequent valid preference can recover without remounting.
+      bed.prefer({ on: true, volume: 0.3 });
+      expect(bed.audible).toBe(true);
+      bed.cue('seal');
+      expect(engine.cue).toHaveBeenCalledTimes(2);
+      bed.dispose();
+    },
+  );
+
 });
