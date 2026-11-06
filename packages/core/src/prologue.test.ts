@@ -358,9 +358,9 @@ describe('the prologue', () => {
   });
 
   it('refuses invisible-only Unicode house names without changing the world', () => {
-    // Neither trim() nor JavaScript's whitespace class removes zero-width
-    // formatting code points. Those marks are not a visible house name.
-    for (const houseName of ['\u200B', '\u2060', ' \u200B\t\u200D \u2060 ', '\uFE0F']) {
+    // Neither trim() nor JavaScript's whitespace class removes all format
+    // marks or control characters. They do not make a visible house name.
+    for (const houseName of ['\u200B', '\u2060', ' \u200B\t\u200D \u2060 ', '\uFE0F', '\u0000', '\u0085']) {
       const ctx = testWorld(content);
       const result = foundHouse(ctx, { ...CHOICE, houseName });
       expect(result).toMatchObject({ ok: false, reason: 'the house needs a name' });

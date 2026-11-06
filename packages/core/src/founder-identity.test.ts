@@ -242,6 +242,16 @@ describe('who signed, persisted', () => {
     expect(g.ctx.world.founding).toBeUndefined();
   });
 
+  it('does not replace the authored narrator with a control-only founder name', () => {
+    const baseline = choice({ gender: 'woman', configuration: 'blood_mother' });
+    const authoredName = baseline.g.ctx.world.people.get(baseline.g.ctx.world.narrator!)!.name;
+    for (const name of ['\u0000', '\u0085']) {
+      const { g, result } = choice({ name, gender: 'woman', configuration: 'blood_mother' });
+      expect(result.ok).toBe(true);
+      expect(g.ctx.world.people.get(g.ctx.world.narrator!)!.name).toBe(authoredName);
+    }
+  });
+
   it('survives save, resume and replay', () => {
     const { g } = choice({ name: 'Ysolt Gearithy', gender: 'nonbinary', configuration: 'blood_mother' });
     g.advance(3);

@@ -858,9 +858,11 @@ describe('visible signing names (#1984)', () => {
     try {
       await revealChoices(wrapper);
       const founder = wrapper.get('input[aria-label="Name the founder"]');
-      await founder.setValue('\u200B\u2060');
       await wrapper.findAll('.identity button')[0]!.trigger('click');
-      expect(founder.attributes('aria-invalid')).toBe('true');
+      for (const name of ['\u200B\u2060', '\u0000', '\u0085']) {
+        await founder.setValue(name);
+        expect(founder.attributes('aria-invalid')).toBe('true');
+      }
       expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
       expect(game.found).not.toHaveBeenCalled();
 
@@ -876,8 +878,10 @@ describe('visible signing names (#1984)', () => {
       await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
 
       const house = wrapper.get('input[aria-label="Name the house"]');
-      await house.setValue('\u200B');
-      expect(house.attributes('aria-invalid')).toBe('true');
+      for (const name of ['\u200B', '\u0000', '\u0085']) {
+        await house.setValue(name);
+        expect(house.attributes('aria-invalid')).toBe('true');
+      }
       expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
       await wrapper.setProps({ proseMode: 'plainenglish' });
       expect(wrapper.get('.waiting').text()).toContain('family name');
@@ -1007,8 +1011,10 @@ describe('optional friends at signing (#1984)', () => {
         await nextTick();
         const friend = wrapper.get(proseMode === 'plainenglish'
           ? 'input[aria-label="Name friend 1"]' : 'input[aria-label="Name the first friend"]');
-        await friend.setValue('\u200B\u2060');
-        expect(friend.attributes('aria-invalid')).toBe('true');
+        for (const name of ['\u200B\u2060', '\u0000', '\u0085']) {
+          await friend.setValue(name);
+          expect(friend.attributes('aria-invalid')).toBe('true');
+        }
         expect(wrapper.get('button.sign').attributes('disabled')).toBeDefined();
         expect(wrapper.get('.waiting').text()).toContain(proseMode === 'plainenglish'
           ? 'a visible name for each named friend' : 'a visible name for every friend you chose to name');

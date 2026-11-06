@@ -333,6 +333,8 @@ describe('the roster the signing takes', () => {
       { name: '\u200B', sex: 'male' },
       { name: ' \u200D \u2060\t', sex: 'female' },
       { name: '\uFE0F', sex: 'male' },
+      { name: '\u0000', sex: 'male' },
+      { name: '\u0085', sex: 'female' },
       { name: '  家族\u200Dの友  ', sex: 'female' },
     ], 1042);
     expect(checked).toEqual({
