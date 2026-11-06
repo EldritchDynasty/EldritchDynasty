@@ -287,7 +287,7 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // no longer meet that contract. Never export a name that the same signing
   // would change or refuse, even when the sender leaves names out of the code.
   const houseName = founding.houseName.trim().replace(/\s+/g, ' ');
-  if (houseName !== founding.houseName
+  if (!wellFormedUtf16(houseName) || houseName !== founding.houseName
     || !houseName.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim()
     || houseName.length > HOUSE_NAME_MAX) {
     return { ok: false, unavailable: 'unrepresentable' };
@@ -303,6 +303,13 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   if (w.friends.length !== founding.friends.length
     || w.friends.some((friend, i) =>
       friend.name !== founding.friends[i]?.name || friend.sex !== founding.friends[i]?.sex)) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
+  // TextEncoder replaces lone UTF-16 surrogates with U+FFFD. Such a name
+  // cannot survive a share-code round-trip even if the signer stored it.
+  // Refuse before both anonymous and named export rather than promising
+  // a founding that the decoder can never recreate byte-for-byte.
+  if (founding.friends.some((friend) => !wellFormedUtf16(friend.name))) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
   const checkedFriends = normaliseFriends(ctx, founding.friends, founding.year);
@@ -379,8 +386,20 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
  * Anonymous names are supplied later, but a name already in the wire payload
  * must not pass preview if founding would normalize or discard it.
  */
+/** UTF-8 has no representation for an unpaired UTF-16 surrogate. Iterating
+ * code points preserves valid pairs (including emoji) while exposing lone
+ * surrogates as values in the reserved D800-DFFF range.
+ */
+function wellFormedUtf16(name: string): boolean {
+  for (const character of name) {
+    const point = character.codePointAt(0)!;
+    if (point >= 0xd800 && point <= 0xdfff) return false;
+  }
+  return true;
+}
+
 function canonicalVisibleName(name: string): boolean {
-  return name === name.trim().replace(/\s+/g, ' ')
+  return wellFormedUtf16(name) && name === name.trim().replace(/\s+/g, ' ')
     && !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
 }
 
@@ -391,7 +410,8 @@ function canonicalVisibleName(name: string): boolean {
  * spaces, so do not normalize it here.
  */
 function validFounderName(name: string): boolean {
-  return !name.trim() || !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim();
+  return wellFormedUtf16(name)
+    && (!name.trim() || !!name.replace(/\p{Default_Ignorable_Code_Point}/gu, '').trim());
 }
 
 /** A payload's indices against the prologue it claims, or undefined if any is out of place. */
@@ -601,7 +621,8 @@ export function newGameFromShareCode(
   // fresh GameSession. Normalize exactly as foundHouse/normaliseFriends do:
   // whitespace padding alone must not make a valid name too long.
   const signingLength = (name: string) => name.trim().replace(/\s+/g, ' ').length;
-  if (signingLength(houseName) > HOUSE_NAME_MAX
+  if (!wellFormedUtf16(houseName) || friendNames.some((name) => !wellFormedUtf16(name))
+    || signingLength(houseName) > HOUSE_NAME_MAX
     || friendNames.some((name) => signingLength(name) > FRIEND_NAME_MAX)) {
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
