@@ -3,7 +3,7 @@ import type {
   CampaignId, Content, ContentBundle, FounderAnswer, FoundingConfiguration, Gender, LibraryRun, PrologueDef, ProseMode,
   ProseVariant, Sex,
 } from '@ed/schema';
-import { assertNever, FounderIdentityS, indexContent, PERSON_NAME_MAX, SAVE_FORMAT } from '@ed/schema';
+import { assertNever, founderSexOf, FounderIdentityS, indexContent, PERSON_NAME_MAX, resolveFounder, SAVE_FORMAT } from '@ed/schema';
 import { campaignDef } from './campaign.js';
 import { FRIEND_NAME_MAX, MAX_FRIENDS, normaliseFriends } from './people/friends.js';
 import { HOUSE_NAME_MAX, type FoundingChoice } from './prologue.js';
@@ -364,6 +364,23 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   if (founder !== undefined && (!FounderIdentityS.safeParse(founder).success
     || (founder.name !== undefined
       && (founder.name.length > PERSON_NAME_MAX || !validFounderName(founder.name))))) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
+  // Shape validation cannot detect a schema-valid signing edited after the
+  // founding. Its body, gender and displayed name must still identify the
+  // saved founder, including after death redirects them to the guardian.
+  // Bootstrap keeps these facts unchanged throughout play. A missing answer
+  // means the authored identity; it must not disguise a personalized founder.
+  const authoredFounders = ctx.content.characters.filter((person) => person.becomesGuardian);
+  const savedFounders = w.people.all().filter((person) => person.becomesGuardian);
+  if (authoredFounders.length > 1 || savedFounders.length !== authoredFounders.length) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
+  const person = savedFounders[0];
+  if (person && (person.sex !== founderSexOf(resolveFounder(founder).configuration)
+    || person.gender !== founder?.gender
+    // The displayed name is trimmed; the raw answer stays in the payload.
+    || person.name !== (founder?.name?.trim() || authoredFounders[0]!.name))) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
   const payload: Payload = [

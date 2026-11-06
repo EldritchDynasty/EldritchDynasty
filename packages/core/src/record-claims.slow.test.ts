@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { loadContent } from '@ed/content';
 import {
-  autoResolveDecision, bootstrap, bynameStanding, expectRate, makeRng, resolveRecord, stepYear,
+  autoResolveDecision, bootstrap, bynameStanding, expectHealthyWorld, expectRate, makeRng, resolveRecord, stepYear,
   type RecordOption,
 } from '@ed/core';
 
@@ -121,6 +121,7 @@ function playForBynames(seed: number, answer: RecordOption | 'automatic'): { ctx
       if (decision.kind === 'record' && answer !== 'automatic') resolveRecord(ctx, decision.id, answer);
       else autoResolveDecision(ctx, decision, rng);
     }
+    expectHealthyWorld(ctx);
     if (ctx.world.year === before) break;
   }
   const w = ctx.world;
@@ -276,6 +277,13 @@ describe('second byname source: paired Long Line reach (#2287)', () => {
       const allOmit = playForBynames(seed, 'omit');
       ordinary.push(reignReach(normal.ctx));
       omitted.push(reignReach(allOmit.ctx));
+      for (const [policy, run] of [['ordinary', normal], ['always-Omit', allOmit]] as const) {
+        const world = run.ctx.world;
+        process.stdout.write(`${JSON.stringify({
+          seed, policy, year: world.year, ending: world.ending?.id ?? null,
+          ...reignReach(run.ctx),
+        })}\n`);
+      }
 
       // Omit creates no claim-bearing byname. The reign source can name a
       // completed Head for the house's omitted pages, but never a relative
@@ -296,11 +304,11 @@ describe('second byname source: paired Long Line reach (#2287)', () => {
       expect(closed).toBeGreaterThan(0);
       expect(headsNamed).toBeGreaterThanOrEqual(reachTotal(runs, 'reignHeads'));
       expect(headsNamed).toBeGreaterThanOrEqual(reachTotal(runs, 'recordHeads'));
-      console.log(
+      process.stdout.write(
         `#2287 ${label}: Heads ${headsNamed}/${heads} = ${reachInterval(headsNamed, heads)}; `
         + `completed Heads ${closedNamed}/${closed} = ${reachInterval(closedNamed, closed)}; `
         + `source record=${reachTotal(runs, 'recordHeads')}, reign=${reachTotal(runs, 'reignHeads')}; `
-        + `other blood ${relativesNamed}/${relatives} = ${reachInterval(relativesNamed, relatives)}`,
+        + `other blood ${relativesNamed}/${relatives} = ${reachInterval(relativesNamed, relatives)}\n`,
       );
     }
     expect(reachTotal(omitted, 'recordHeads')).toBe(0);

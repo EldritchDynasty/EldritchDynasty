@@ -10,7 +10,7 @@ import { FRIEND_NAME_MAX, MAX_FRIENDS } from './people/friends.js';
 import {
   contentEdition, newGameFromShareCode, readShareCode, SHARE_CODE_MAX, type ShareCodeProblem,
 } from './share-code.js';
-import { PERSON_NAME_MAX } from '@ed/schema';
+import { PERSON_NAME_MAX, type FounderIdentity } from '@ed/schema';
 
 const content = loadContent();
 const BUILD = 'abc1234';
@@ -1008,6 +1008,56 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
       }
       // The exporter is a read-only view even when its source is malformed.
       expect(JSON.stringify(s.ctx.world.decisionLog)).toBe(before);
+    }
+  });
+
+  it.each(['original', 'plainenglish'] as const)(
+    'refuses a recovered signing that contradicts the saved founder (%s, #3104)',
+    (proseMode) => {
+      const original = founded();
+      const identities: { label: string; founder: FounderIdentity | undefined }[] = [
+        { label: 'body', founder: { ...SIGNED.founder, configuration: 'blood_father' } },
+        { label: 'gender', founder: { ...SIGNED.founder, gender: 'man' } },
+        { label: 'name', founder: { ...SIGNED.founder, name: 'A different founder' } },
+        { label: 'missing answer', founder: undefined },
+      ];
+      for (const { label, founder } of identities) {
+        const snapshot = original.save();
+        const signing = snapshot.decisionLog.find((row) => row.kind === 'signing');
+        if (!signing) throw new Error('the founding has no signing');
+        if (founder === undefined) delete signing.founder;
+        else signing.founder = founder;
+        // The save is schema-valid: the disagreement crosses the log/person
+        // boundary. Export must refuse instead of advertising another founder.
+        const recovered = resumeGame(snapshot, content, { proseMode });
+        expect(recovered.ctx.world.people.all().find((p) => p.becomesGuardian)?.sex).toBe('female');
+        const before = saved(recovered);
+        for (const names of [false, true]) {
+          expect(recovered.shareCode({ build: BUILD, names }), `${label}, names=${names}`)
+            .toEqual({ ok: false, unavailable: 'unrepresentable' });
+        }
+        expect(saved(recovered)).toBe(before);
+      }
+    },
+  );
+
+  it('keeps valid founder identities shareable after their guardian transition (#3104)', () => {
+    for (const gender of ['man', 'woman', 'nonbinary'] as const) {
+      for (const configuration of ['blood_father', 'blood_mother'] as const) {
+        const original = founded({ ...SIGNED, founder: { ...SIGNED.founder, gender, configuration } });
+        const code = codeOf(original, { names: true });
+        const person = original.ctx.world.people.all().find((p) => p.becomesGuardian)!;
+        original.ctx.world.people.kill(person.id, original.ctx.world.year, 'the founder departs');
+        expect(person.status).toBe('guardian');
+        const recovered = resumeGame(original.save(), content);
+        expect(codeOf(recovered, { names: true })).toBe(code);
+        const imported = newGameFromShareCode(code, content, { build: BUILD });
+        expect(imported.ok).toBe(true);
+        if (!imported.ok) throw new Error('a valid founder was refused');
+        expect(saved(imported.session)).toBe(saved(founded({
+          ...SIGNED, founder: { ...SIGNED.founder, gender, configuration },
+        })));
+      }
     }
   });
 
