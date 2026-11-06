@@ -707,6 +707,49 @@ describe('the player, over a fake engine', () => {
     },
   );
 
+  it.each(['gain ramp', 'source stop'] as const)(
+    'cuts the old Age and skips replacement when %s scheduling fails (#3175)',
+    (failure) => {
+      // An invalidated device can refuse teardown *and* context closure.
+      // With no explicit graph cleanup, its old sustained drone remains live.
+      const e = fakeEngine({ throwClose: true });
+      const sound = new Sound(e.ctor);
+      sound.muted = false;
+      sound.setDrone(WARM);
+      const ctx = e.made[0]!;
+      const oldSources = [...ctx.sources];
+      const oldGain = ctx.gains[1]!;
+      const oldCount = ctx.sources.length;
+
+      if (failure === 'gain ramp') {
+        oldGain.gain.linearRampToValueAtTime = () => {
+          throw new Error('NotSupportedError: gain schedule unavailable');
+        };
+      } else {
+        const source = oldSources[0]!;
+        const original = source.stop.bind(source);
+        let refused = false;
+        source.stop = (at = 0) => {
+          if (!refused) {
+            refused = true;
+            throw new Error('InvalidStateError: scheduled stop unavailable');
+          }
+          original(at);
+        };
+      }
+
+      expect(() => sound.setDrone(COLD)).not.toThrow();
+      expect(sound.available, 'an invalidated engine should fail closed').toBe(false);
+      expect(oldSources.every((source) => source.stopped === ctx.currentTime),
+        'the old sustained Age can remain audible after failed teardown').toBe(true);
+      expect(oldGain.disconnected, 'the old drone output was left connected').toBe(1);
+      expect(ctx.calls).toContain('close');
+      expect(ctx.sources, 'a failed engine built a replacement Age graph').toHaveLength(oldCount);
+      expect(() => sound.cue('page')).not.toThrow();
+      expect(ctx.sources).toHaveLength(oldCount);
+    },
+  );
+
   it('ignores gain-disconnect failure from a host that has already invalidated its output', () => {
     const e = fakeEngine();
     const sound = new Sound(e.ctor);
