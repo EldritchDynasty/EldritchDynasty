@@ -929,6 +929,46 @@ describe('the player, over a fake engine', () => {
     bed.dispose();
   });
 
+  it('does not replay an old cue after a temporary user-activation refusal (#1986)', async () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain'); // Open a functioning context before backgrounding.
+    const ctx = e.made[0]!;
+    sound.suspend();
+    expect(ctx.state).toBe('suspended');
+
+    const resume = ctx.resume.bind(ctx);
+    ctx.resume = () => {
+      ctx.calls.push('resume:gesture-required');
+      return Promise.reject(Object.assign(new Error('activation required'), { name: 'NotAllowedError' }));
+    };
+
+    // The host rejects this resume asynchronously; the bell was scheduled on
+    // a frozen audio clock and could otherwise ring on an unrelated next tap.
+    const before = ctx.sources.length;
+    sound.cue('bell');
+    const rejected = ctx.sources.slice(before);
+    expect(rejected).toHaveLength(cueScore('bell').voices.length);
+    expect(rejected.some((source) => source.stopped !== ctx.currentTime)).toBe(true);
+    await settle();
+
+    expect(sound.available, 'temporary activation denial disabled the device').toBe(true);
+    expect(rejected.every((source) => source.stopped === ctx.currentTime && source.disconnected === 1),
+      'a stale cue can play when a later gesture unlocks the host').toBe(true);
+
+    ctx.resume = resume;
+    sound.wake(); // The next gesture may unlock this same device.
+    await settle();
+    expect(ctx.state).toBe('running');
+    expect(e.made).toHaveLength(1);
+    const freshStart = ctx.sources.length;
+    sound.cue('seal');
+    expect(ctx.sources.slice(freshStart)).toHaveLength(cueScore('seal').voices.length);
+    expect(rejected.every((source) => source.disconnected === 1)).toBe(true);
+    sound.close();
+  });
+
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
     const e = fakeEngine({ reject: true });
     const s = new Sound(e.ctor);
