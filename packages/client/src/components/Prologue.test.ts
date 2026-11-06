@@ -2033,6 +2033,34 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
     }
   });
 
+  it('enters a finished signing once per deliberate click, not once per stale DOM event (#1984)', async () => {
+    const prologue: PrologueView = {
+      ...prologueView(),
+      founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 },
+    };
+    const enter = vi.fn();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: { enter } as unknown as GameActions, refused: null, startYear: 1042 },
+    });
+    try {
+      // Vue has not patched the completed-signing button away yet. These are
+      // separate browser clicks against the same rendered transition control.
+      const button = wrapper.get('button').element as HTMLButtonElement;
+      button.click();
+      button.click();
+      button.click();
+      expect(enter).toHaveBeenCalledTimes(1);
+
+      // If the caller could not leave the screen, a later intentional retry
+      // remains available rather than leaving a permanently disabled control.
+      await nextTick();
+      button.click();
+      expect(enter).toHaveBeenCalledTimes(2);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('changes the finished signing button but never edits the provided thesis or start year', async () => {
     const prologue: PrologueView = { ...prologueView(), founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 } };
     const enter = vi.fn();
