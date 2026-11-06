@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 // The reporter is a standalone cross-platform Node CLI, intentionally .mjs.
 // @ts-ignore -- no declaration file for the standalone Node entrypoint
-import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups } from '../../../../tools/queue-throughput.mjs';
+import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow } from '../../../../tools/queue-throughput.mjs';
 
 type Run = {
   id: number; event: string; name: string; created_at: string;
@@ -105,6 +105,87 @@ describe('queue throughput evidence (#2794)', () => {
     await expect(fetchMergeGroupRuns({ repo: 'org/repo', from })).rejects.toThrow(/GITHUB_TOKEN/);
     await expect(fetchMergeGroupRuns({
       repo: 'org/repo', token: 'token', from,
+      fetchImpl: async () => ({ ok: false, status: 403 }),
+    })).rejects.toThrow(/HTTP 403/);
+  });
+});
+
+
+type PrRow = {
+  number: number;
+  base: { ref: string };
+  created_at: string;
+  closed_at: string | null;
+  merged_at: string | null;
+};
+const pr = (number: number, created_at: string, extra: Partial<PrRow> = {}): PrRow => ({
+  number, base: { ref: 'main' }, created_at,
+  closed_at: null, merged_at: null, ...extra,
+});
+
+describe('main PR flow evidence (#2794)', () => {
+  it('counts real merges including older PRs and excludes unrelated bases and boundary arrivals', () => {
+    const rows = [
+      pr(1, '2026-11-05T23:00:00Z', {
+        merged_at: '2026-11-06T03:00:00Z',
+        closed_at: '2026-11-06T03:00:00Z',
+      }),
+      pr(2, '2026-11-06T02:00:00Z'),
+      pr(3, '2026-11-06T04:00:00Z', { closed_at: '2026-11-06T05:00:00Z' }),
+      pr(4, to), // outside half-open interval
+      pr(5, '2026-11-06T02:00:00Z', { base: { ref: 'release' } }),
+      pr(6, '2026-11-05T20:00:00Z'),
+    ];
+    const report = summarizePrFlow(rows, { from, to, now, source: 'api' });
+    expect(report.arrivalIds).toEqual([2, 3]);
+    expect(report.mergedIds).toEqual([1]);
+    expect(report.arrivals).toBe(2);
+    expect(report.merged).toBe(1);
+    expect(report.closedUnmerged).toBe(1);
+    expect(report.openAtStart).toBe(2); // 1 and 6
+    expect(report.openAtEnd).toBe(2); // 2 and 6
+    expect(report.backlogChange).toBe(0);
+    expect(report.arrivalsPerHour).toBe(0.08);
+    expect(report.mergedPerHour).toBe(0.04);
+    expect(report.complete).toBe(true);
+    expect(report.measuresReadyQueue).toBe(false);
+    expect(formatPrFlow(report)).toContain('NOT the historical ready merge-queue depth');
+  });
+
+  it('rejects bad dates, duplicate numbers and unverifiable snapshots', () => {
+    const row = pr(7, from);
+    expect(() => summarizePrFlow([row, row], { from, to })).toThrow(/Duplicate/);
+    expect(() => summarizePrFlow([pr(8, from, {
+      closed_at: '2026-11-05T23:00:00Z',
+    })], { from, to })).toThrow(/before creation/);
+    expect(summarizePrFlow([row], { from, to, now, source: 'snapshot' }).complete).toBe(false);
+    expect(summarizePrFlow([row], { from, to, now: Date.parse(from), source: 'api' }).complete).toBe(false);
+  });
+
+  it('paginates ALL PRs so older PRs merged in a window are retained', async () => {
+    const first = Array.from({ length: 100 }, (_, i) => pr(i + 1, from));
+    const second = [pr(101, '2020-01-01T00:00:00Z', {
+      merged_at: '2026-11-06T03:00:00Z', closed_at: '2026-11-06T03:00:00Z',
+    })];
+    const pages: string[] = [];
+    const rows = await fetchPullRequests({
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret',
+      fetchImpl: async (url: URL, options: { headers: Record<string, string> }) => {
+        pages.push(url.searchParams.get('page') ?? '');
+        expect(url.searchParams.get('state')).toBe('all');
+        expect(options.headers.Authorization).toBe('Bearer fake-secret');
+        return { ok: true, json: async () => pages.length === 1 ? first : second };
+      },
+    });
+    expect(pages).toEqual(['1', '2']);
+    expect(rows).toHaveLength(101);
+    expect(summarizePrFlow(rows, { from, to }).mergedIds).toContain(101);
+  });
+
+  it('refuses missing credentials and API failures', async () => {
+    await expect(fetchPullRequests({ repo: 'org/repo' })).rejects.toThrow(/GITHUB_TOKEN/);
+    await expect(fetchPullRequests({
+      repo: 'org/repo', token: 'fake-secret',
       fetchImpl: async () => ({ ok: false, status: 403 }),
     })).rejects.toThrow(/HTTP 403/);
   });
