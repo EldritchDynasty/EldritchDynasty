@@ -297,7 +297,7 @@ export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCode
   // would change or refuse, even when the sender leaves names out of the code.
   const houseName = founding.houseName.trim().replace(/\s+/g, ' ');
   if (!wellFormedUtf16(houseName) || houseName !== founding.houseName
-    || !houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()
+    || !hasNameText(houseName)
     || houseName.length > HOUSE_NAME_MAX) {
     return { ok: false, unavailable: 'unrepresentable' };
   }
@@ -427,9 +427,15 @@ function wellFormedUtf16(name: string): boolean {
   return true;
 }
 
+/** A combining mark can accent a name, but cannot alone *be* a name (#3155). */
+function hasNameText(name: string): boolean {
+  // Strip for the emptiness check only; never alter a legitimate entered name.
+  return !!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}\p{M}]/gu, '').trim();
+}
+
 function canonicalVisibleName(name: string): boolean {
   return wellFormedUtf16(name) && name === name.trim().replace(/\s+/g, ' ')
-    && !!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim();
+    && hasNameText(name);
 }
 
 /** An explicitly blank founder answer is part of the signing log and may
@@ -440,7 +446,7 @@ function canonicalVisibleName(name: string): boolean {
  */
 function validFounderName(name: string): boolean {
   return wellFormedUtf16(name)
-    && (!name.trim() || !!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim());
+    && (!name.trim() || hasNameText(name));
 }
 
 /** A payload's indices against the prologue it claims, or undefined if any is out of place. */
@@ -673,8 +679,8 @@ export function newGameFromShareCode(
   // skips invisible-only optional names, which would silently shorten an
   // imported roster and break the code's mechanical founding contract (#2264).
   const missing: SharedName[] = [
-    ...(!houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim() ? ['house' as const] : []),
-    ...(friendNames.some((name) => !name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim())
+    ...(!hasNameText(houseName) ? ['house' as const] : []),
+    ...(friendNames.some((name) => !hasNameText(name))
       ? ['friends' as const] : []),
   ];
   if (missing.length) return { ok: false, problem: { kind: 'names_needed', missing } };
