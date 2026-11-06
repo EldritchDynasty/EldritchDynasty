@@ -115,9 +115,9 @@ const CONFIGURATIONS: readonly { id: FoundingConfiguration; original: string; pl
   },
 ];
 const answers = ref<Record<string, string>>({});
-/** Formatting marks and nonprinting controls cannot name someone on their own. */
+/** Combining marks need a base character; controls and ignorable marks alone cannot name anyone. */
 function hasVisibleName(name: string): boolean {
-  return name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim().length > 0;
+  return name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}\p{M}]/gu, '').trim().length > 0;
 }
 function invalidOptionalFriendName(name: string): boolean {
   return name.trim().length > 0 && !hasVisibleName(name);

@@ -291,7 +291,7 @@ export function foundHouse(ctx: SimCtx, choice: FoundingChoice): FoundingResult 
   const houseName = choice.houseName.trim().replace(/\s+/g, ' ');
   // Default-ignorable formatting marks and nonprinting controls survive trim(),
   // but cannot name a house on their own. Preserve them inside visible text.
-  if (!houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()) {
+  if (!houseName.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}\p{M}]/gu, '').trim()) {
     return { ok: false, reason: msg(ctx, 'founding.refuse.no_name', 'the house needs a name') };
   }
   if (houseName.length > HOUSE_NAME_MAX) {

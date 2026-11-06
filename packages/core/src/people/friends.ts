@@ -191,7 +191,7 @@ export function normaliseFriends(
     const name = row.name.trim().replace(/\s+/g, ' ');
     // Formatting marks and nonprinting controls alone do not identify a friend;
     // an optional control-only row remains unreserved.
-    if (!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()) continue;
+    if (!name.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}\p{M}]/gu, '').trim()) continue;
     if (name.length > FRIEND_NAME_MAX) {
       return { ok: false, reason: msg(ctx, 'friends.refuse.too_long', "'{NAME}' is longer than a name", { NAME: name }) };
     }

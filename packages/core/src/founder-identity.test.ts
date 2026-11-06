@@ -211,7 +211,7 @@ describe('who signed, persisted', () => {
   it('keeps the authored name when a signing contains only invisible Unicode marks', () => {
     // A real name can include joiners, but a name made solely of those marks
     // would erase the visible narrator while passing PersonNameS.min(1).
-    for (const name of ['\u200B', ' \u200D \u2060 ', '\uFE0F']) {
+    for (const name of ['\u200B', ' \u200D \u2060 ', '\uFE0F', '\u0301', ' \u200D\u0301\u035C ']) {
       const { g, result } = choice({ name });
       expect(result.ok).toBe(true);
       const w = g.ctx.world;
@@ -227,6 +227,7 @@ describe('who signed, persisted', () => {
       expect(digestOf(replayed)).toBe(digestOf(g.ctx));
     }
     expect(founded({ name: 'Y\u200Dsolt' }).founder.name).toBe('Y\u200Dsolt');
+    expect(founded({ name: 'A\u0301lys' }).founder.name).toBe('A\u0301lys');
   });
 
   it('refuses an unfinished identity without touching the run', () => {

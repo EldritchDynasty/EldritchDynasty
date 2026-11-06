@@ -220,7 +220,7 @@ function signingFounderName(founder: FounderIdentity): string | undefined {
   // characters survive trim(), but cannot name the narrator alone. Preserve
   // those marks inside an otherwise visible name, and keep the original
   // signing answer in the log for deterministic replay.
-  return raw && raw.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').trim()
+  return raw && raw.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}\p{M}]/gu, '').trim()
     ? PersonNameS.parse(raw)
     : undefined;
 }
