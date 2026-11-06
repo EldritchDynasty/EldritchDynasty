@@ -682,8 +682,17 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         m.from <= readYear && (m.to === undefined || m.to > readYear));
       if (memberships.length !== 1) continue;
       const membership = memberships[0]!;
-      if (membership.house !== w.playerHouse || !membership.branch) continue;
-      const people = residents.get(membership.branch) ?? [];
+      const charter = membership.branch ? w.branches.get(membership.branch) : undefined;
+      // Only dated residence in an already-founded hall can establish who
+      // lived there at collection. A recovered row may begin before its
+      // occupant was born, before the charter, or in a fractional year.
+      if (membership.house !== w.playerHouse || !charter
+        || !Number.isSafeInteger(person.born)
+        || !Number.isSafeInteger(membership.from)
+        || membership.from < person.born
+        || membership.from < charter.foundedYear
+        || (membership.to !== undefined && !Number.isSafeInteger(membership.to))) continue;
+      const people = residents.get(membership.branch!) ?? [];
       people.push(person);
       residents.set(membership.branch, people);
     }

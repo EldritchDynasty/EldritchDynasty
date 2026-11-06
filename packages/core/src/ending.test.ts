@@ -2022,6 +2022,53 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
   });
 
+  it('does not credit a hall to impossible dated membership testimony', () => {
+    const { ctx, branch, relative } = foundedHall();
+    const w = ctx.world;
+    const charterYear = w.branches.get(asId(branch))!.foundedYear;
+    const membership = relative.membership.find((m) => m.to === undefined)!;
+    const originalFrom = membership.from;
+    const originalBorn = relative.born;
+    const originalTo = membership.to;
+    const chosen = selectEnding(ctx);
+    const credited = epilogueOf(ctx)!.purpose;
+    expect(credited?.kind).toBe('branch_kept');
+
+    const rejects = () => {
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(chosen);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    };
+
+    // An imported membership cannot establish life in a hall before its charter.
+    membership.from = charterYear - 1;
+    rejects();
+    // Nor does a fractional start or end date attest whole-year residence.
+    membership.from = w.year - 0.5;
+    rejects();
+    membership.from = originalFrom;
+    membership.to = w.year + 0.5;
+    rejects();
+    if (originalTo === undefined) delete membership.to;
+    else membership.to = originalTo;
+    // The hall existed, but this row claims the relative lived there pre-birth.
+    relative.born = w.year - 5;
+    membership.from = w.year - 10;
+    rejects();
+
+    relative.born = originalBorn;
+    membership.from = originalFrom;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toEqual(credited);
+      expect(selectEnding(ctx)).toBe(chosen);
+    }
+  });
+
   it('does not infer a surviving household from ambition selection, an extinct branch or one survivor', () => {
     const { ctx, branch, relative, cousin } = foundedHall();
     const w = ctx.world;
