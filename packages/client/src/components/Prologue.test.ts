@@ -625,6 +625,38 @@ describe('first signing focus after opening (#1984)', () => {
       }
     }
   });
+
+  it('focuses the first available signing heading when previously read prose is skipped', async () => {
+    const scenarios = [
+      { heading: '.founder-section .stage-title', prologue: prologueView() },
+      { heading: '.examination .stage-title', prologue: { ...prologueView(), namePrompt: '' } },
+      { heading: '.house-section .stage-title', prologue: { ...prologueView(), namePrompt: '', examination: [] } },
+    ];
+    for (const proseMode of ['original', 'plainenglish'] as const) {
+      for (const scenario of scenarios) {
+        const prologue = scenario.prologue;
+        rememberSeenProse(window.localStorage, seenProseKey('prologue', prologueSeenText(
+          prologue.opening, prologue.triad, prologue.thesis,
+        )));
+        const game = actions();
+        const wrapper = mount(Prologue, {
+          attachTo: document.body,
+          props: {
+            prologue, actions: game, refused: null, startYear: 1042,
+            proseMode, skipSeenProse: true,
+          },
+        });
+        try {
+          await nextTick();
+          expect(wrapper.find('button.on').exists()).toBe(false);
+          expect(document.activeElement).toBe(wrapper.get(scenario.heading).element);
+          expect(game.found).not.toHaveBeenCalled();
+        } finally {
+          wrapper.unmount();
+        }
+      }
+    }
+  });
 });
 
 describe('queued signing reveal after a run switch (#1984)', () => {
