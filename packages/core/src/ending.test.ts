@@ -1355,6 +1355,56 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     evidence.line![0]!.record.parents.mother = 'an edit to the photograph';
     expect(head.claimedParents.mother).toBe(parent.id);
   });
+
+  it('rejects an unborn, already dead, or absent last seal-holder in a completed Afterimage (#3131)', () => {
+    const ctx = testWorld(content, 3131, 1542);
+    const w = ctx.world;
+    const earlier = place(ctx, { name: 'The earlier seal', sex: 'male', age: 70 });
+    const later = place(ctx, { name: 'The disputed seal', sex: 'male', age: 40 });
+    const olderFrom = 1500;
+    const laterFrom = 1532;
+    w.succession = [
+      { person: earlier.id, name: earlier.name, from: olderFrom },
+      { person: later.id, name: later.name, from: laterFrom },
+    ];
+    w.ending = { id: 'forgotten', year: w.year };
+
+    const observedHead = () => [
+      afterimageEvidence(ctx).line?.[0]?.id,
+      epilogueOf(ctx)!.afterimage?.line?.[0]?.id,
+    ];
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const before = digestOf(ctx);
+      expect(observedHead()).toEqual([later.id, later.id]);
+      expect(digestOf(ctx)).toBe(before);
+    }
+
+    // A recovered row with a plausible in-term accession year is still
+    // impossible if its supposed Head was not alive when taking the seal.
+    const originalBirth = later.born;
+    later.born = laterFrom + 1;
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const before = digestOf(ctx);
+      expect(observedHead()).toEqual([earlier.id, earlier.id]);
+      expect(digestOf(ctx)).toBe(before);
+    }
+    later.born = originalBirth;
+    later.died = laterFrom - 1;
+    expect(observedHead()).toEqual([earlier.id, earlier.id]);
+
+    later.died = undefined;
+    w.succession[1]!.person = asId('missing-succession-head');
+    expect(observedHead()).toEqual([earlier.id, earlier.id]);
+    w.succession[1]!.person = later.id;
+    expect(observedHead()).toEqual([later.id, later.id]);
+
+    // No censorship of synthetic, unfinished authoring histories.
+    w.ending = undefined;
+    later.born = laterFrom + 1;
+    expect(afterimageEvidence(ctx).line?.[0]?.id).toBe(later.id);
+  });
 });
 
 describe('collection returns to where the run began (#1867 §6)', () => {
