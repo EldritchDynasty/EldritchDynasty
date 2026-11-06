@@ -41,6 +41,18 @@ const recapTitleId = useId();
             ? (plain ? 'One decision is waiting in your docket.' : 'One decision awaits on the docket.')
             : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}</dd>
         </template>
+        <template v-if="view.marriagePromises?.length">
+          <dt>{{ plain ? 'Outstanding marriage promises' : 'Marriage pledges still owed' }}</dt>
+          <dd>
+            <ul class="recap-pledges">
+              <li v-for="promise in view.marriagePromises" :key="`${promise.house}-${promise.year}-${promise.lot}`">
+                {{ plain ? 'Promised in' : 'Pledged in' }} {{ promise.year }}
+                {{ plain ? 'to' : 'unto' }} {{ promise.houseName }}
+                {{ plain ? 'for' : 'for' }} <em>{{ promise.lotName }}</em>
+              </li>
+            </ul>
+          </dd>
+        </template>
       </dl>
       <p class="dim small">{{ plain
         ? 'These are facts from this save, not a record of what you planned to do.'
@@ -53,6 +65,7 @@ const recapTitleId = useId();
 .resume-recap { max-width: 58rem; margin: 0 auto 14px; }
 .recap-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .recap-title { font: inherit; font-weight: 700; margin: 0; }
+.recap-pledges { margin: 0; padding-inline-start: 1.15rem; }
 summary { cursor: pointer; min-height: 44px; align-content: center; }
 dl { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: 8px 14px; }
 dt { color: var(--rubric); }
