@@ -1,5 +1,43 @@
 # Merge queue throughput evidence (#2794)
 
+## Reproduce gate-proof reuse (#3148)
+
+Add `--with-proofs` to inspect the actual planner decisions alongside the
+selected merge-group cohort. `--with-prs` can be combined with it:
+
+    GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --with-proofs --with-prs --save-proofs proofs.json --json
+
+This pages jobs for each run's **exact attempt**, checks the job's run, commit
+and attempt, and reads `BLOCKING_GATE_IDS` from the registry at that commit.
+It requires successful planner and gate steps before counting the planner's
+`run` / `reuse from run` output. Echoed command source and the later producer's
+`reusable` / `non-reusable` messages are excluded. Unknown syntax, incomplete
+inventories and duplicate decisions remain unknown observations; API failures
+or truncated job pagination stop the command. There is no copied gate list or
+assumed twelve-gate denominator.
+
+The report retains every selected workflow group, including a group without
+a gate job. It shows known/unknown groups, per-run and per-job identifiers,
+observed judged/reused/executed decisions, and the source run IDs for reuse.
+Here **executed** means a planner `run` decision followed by a successful gate
+step, not a fresh measurement of a gate's runtime. A complete-cohort percentage
+is withheld unless the API window is finished and every selected group has
+verified observations. Failed or interrupted planner/gate steps cannot supply
+an applied reuse decision. An empty cohort supplies no reuse rate.
+
+`--save-proofs FILE` preserves the decoded logs, job metadata and historical
+gate inventories for inspection. Retain the selected Actions run snapshot as
+well; replay both without credentials:
+
+    node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --runs check-runs.json --proofs proofs.json --json
+
+Offline snapshots are always labelled unverified and never receive a
+complete-cohort percentage. The reporter observes the planner; it does not
+independently certify gate proofs or change CI's trust boundary. Reuse is
+distinct from workflow success and actual PR landing. This mechanism makes
+the before/after calculation repeatable; it does not establish the full-day
+or seven-day acceptance windows in #2794 or authorize a concurrency change.
+
 ## Reproduce actual PR arrival and landing rates
 
 The read-only reporter now has an **opt-in PR-flow cohort** in addition to

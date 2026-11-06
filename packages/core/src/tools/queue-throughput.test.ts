@@ -1,12 +1,19 @@
 import { describe, expect, it } from 'vitest';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { BLOCKING_GATE_IDS } from './gate-registry.js';
 // The reporter is a standalone cross-platform Node CLI, intentionally .mjs.
 // @ts-ignore -- no declaration file for the standalone Node entrypoint
-import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow } from '../../../../tools/queue-throughput.mjs';
+import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow, gateIdsFromRegistry, parseGateProofLog, summarizeGateProofs, fetchGateProofEvidence, formatGateProofs } from '../../../../tools/queue-throughput.mjs';
 
 type Run = {
   id: number; event: string; name: string; created_at: string;
   run_started_at: string | null; updated_at: string | null;
   status: string; conclusion: string | null;
+  head_sha?: string; run_attempt?: number;
 };
 const from = '2026-11-06T01:00:00Z';
 const to = '2026-11-07T01:00:00Z';
@@ -208,5 +215,155 @@ describe('main PR flow evidence (#2794)', () => {
       repo: 'org/repo', token: 'fake-secret',
       fetchImpl: async () => ({ ok: false, status: 403 }),
     })).rejects.toThrow(/HTTP 403/);
+  });
+});
+
+const repo = 'EldritchDynasty/EldritchDynasty';
+const headSha = 'a'.repeat(40);
+const registry = readFileSync(new URL('./gate-registry.ts', import.meta.url), 'utf8');
+const proofRun = (id = 1) => run(id, from, { head_sha: headSha, run_attempt: 2 });
+const proofLog = (reuse = 5) => BLOCKING_GATE_IDS.map((gate, i) =>
+  '2026-11-06T01:15:00.1234567Z ' + gate + (i < reuse
+    ? ': reuse from run 123 — reused trusted main proof from run 123'
+    : ': run — no matching trusted main proof among 3 candidate run(s)')).join('\n');
+const proofJob = (id = 1) => ({
+  id: id + 100, run_id: id, head_sha: headSha, run_attempt: 2,
+  name: 'gates (batch)', status: 'completed', conclusion: 'success',
+  steps: ['find reusable trusted gate proofs', 'gates'].map(name => ({ name, status: 'completed', conclusion: 'success' })),
+});
+const proofEntry = (id = 1) => ({
+  runId: id, headSha, runAttempt: 2, job: proofJob(id), gateIds: [...BLOCKING_GATE_IDS], log: proofLog(),
+});
+const evidence = (entries = [proofEntry()]) => ({ version: 1, repository: repo, runs: entries });
+const cohort = (rows = [proofRun()]) => summarizeMergeGroups(rows, { from, to, now, source: 'api' });
+
+describe('gate-proof reuse observations (#3148)', () => {
+  it('derives the exact inventory from the measured registry and refuses unfamiliar syntax', () => {
+    expect(gateIdsFromRegistry(registry)).toEqual(BLOCKING_GATE_IDS);
+    expect(() => gateIdsFromRegistry('')).toThrow(/inventory/);
+    expect(() => gateIdsFromRegistry(registry.replace("'clauses',", '...otherGates,'))).toThrow(/inventory/);
+  });
+
+  it('reads planner output without counting echoed source or later proof-production traces', () => {
+    const echoed = '##[group]Run planner\n' + proofLog() + '\n##[endgroup]\n';
+    const produced = BLOCKING_GATE_IDS.map(gate => gate + ': abcdef012345 — reusable').join('\n');
+    const decisions = parseGateProofLog(echoed + proofLog() + '\n' + produced, BLOCKING_GATE_IDS);
+    expect(decisions).toHaveLength(BLOCKING_GATE_IDS.length);
+    expect(decisions.filter((x: { action: string }) => x.action === 'reuse')).toHaveLength(5);
+    expect(decisions[0]).toEqual({ gate: BLOCKING_GATE_IDS[0], action: 'reuse', sourceRunId: 123 });
+    expect(decisions.at(-1)).toEqual({ gate: BLOCKING_GATE_IDS.at(-1), action: 'run', sourceRunId: null });
+  });
+
+  it('refuses truncated, duplicated, unknown and inconsistent planner output', () => {
+    const valid = proofLog();
+    expect(() => parseGateProofLog(valid.split('\n').slice(1).join('\n'), BLOCKING_GATE_IDS)).toThrow(/Incomplete/);
+    expect(() => parseGateProofLog(valid + '\n' + valid, BLOCKING_GATE_IDS)).toThrow(/Duplicate/);
+    expect(() => parseGateProofLog(valid.replace('clauses:', 'unregistered:'), BLOCKING_GATE_IDS)).toThrow(/Unexpected/);
+    expect(() => parseGateProofLog(valid.replace('proof from run 123', 'proof from run 124'), BLOCKING_GATE_IDS)).toThrow(/Malformed/);
+    expect(() => parseGateProofLog(valid.replace('reuse from run 123', 'reuse from run nope'), BLOCKING_GATE_IDS)).toThrow(/Malformed/);
+    expect(() => parseGateProofLog('##[group]truncated\n' + valid, BLOCKING_GATE_IDS)).toThrow(/Incomplete/);
+  });
+
+  it('retains every workflow group and suppresses a complete-cohort rate if any evidence is missing', () => {
+    const report = summarizeGateProofs(evidence(), cohort([proofRun(), proofRun(2)]), { repo, source: 'api' });
+    expect(report).toMatchObject({ groups: 2, known: 1, unknown: 1, judged: BLOCKING_GATE_IDS.length, reused: 5, complete: false, reusePercent: null });
+    expect(report.runs[1].reason).toBe('missing run evidence');
+    expect(formatGateProofs(report)).toContain('Known groups: 1/2');
+    const complete = summarizeGateProofs(evidence(), cohort(), { repo, source: 'api' });
+    expect(complete).toMatchObject({ complete: true, reused: 5, executed: BLOCKING_GATE_IDS.length - 5 });
+    expect(complete.reusePercent).toBe(Math.round(5 / BLOCKING_GATE_IDS.length * 1000) / 10);
+    expect(summarizeGateProofs(evidence(), cohort(), { repo }).complete).toBe(false);
+    expect(summarizeGateProofs(evidence(), { ...cohort(), complete: false }, { repo, source: 'api' }).reusePercent).toBeNull();
+  });
+
+  it('does not count a plan which failed before the gate command could apply it', () => {
+    const entry = proofEntry();
+    entry.job.steps[0]!.conclusion = 'failure';
+    const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
+    expect(report).toMatchObject({ known: 0, unknown: 1, judged: 0, reused: 0, reusePercent: null });
+    expect(report.runs[0].reason).toContain('unconfirmed step');
+  });
+
+  it('rejects cross-run, cross-head, cross-attempt and ambiguous snapshot evidence', () => {
+    for (const entry of [
+      { ...proofEntry(), headSha: 'b'.repeat(40) },
+      { ...proofEntry(), runAttempt: 1 },
+      { ...proofEntry(), job: { ...proofJob(), run_id: 2 } },
+      { ...proofEntry(), job: { ...proofJob(), head_sha: 'b'.repeat(40) } },
+      { ...proofEntry(), job: { ...proofJob(), run_attempt: 1 } },
+    ]) {
+      expect(summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' })).toMatchObject({ known: 0, reusePercent: null });
+    }
+    expect(() => summarizeGateProofs(evidence([proofEntry(), proofEntry()]), cohort(), { repo })).toThrow(/Duplicate/);
+    expect(() => summarizeGateProofs(evidence([proofEntry(3)]), cohort(), { repo })).toThrow(/Unexpected/);
+    expect(() => summarizeGateProofs(evidence(), cohort(), { repo: 'other/repo' })).toThrow(/snapshot/);
+  });
+
+  it('fetches all job pages at the selected attempt, verifies metadata, and caches inventory by SHA', async () => {
+    const visited: URL[] = [];
+    const fetched = await fetchGateProofEvidence({ repo, token: 'fake-secret', runs: cohort([proofRun(), proofRun(2)]).runs,
+      fetchImpl: async (url: URL, options: { headers: Record<string, string> }) => {
+        visited.push(url);
+        expect(options.headers.Authorization).toBe('Bearer fake-secret');
+        const match = /\/runs\/(\d+)\/attempts\/2\/jobs$/.exec(url.pathname);
+        if (match) {
+          const id = Number(match[1]);
+          const page = url.searchParams.get('page');
+          return { ok: true, json: async () => ({ total_count: 101, jobs: page === '1'
+            ? Array.from({ length: 100 }, (_, i) => ({ id: 1000 + i, name: 'other' }))
+            : [proofJob(id)] }) };
+        }
+        return { ok: true, text: async () => url.pathname.includes('/contents/') ? registry : proofLog() };
+      },
+    });
+    expect(visited.filter(x => x.pathname.endsWith('/jobs'))).toHaveLength(4);
+    expect(visited.filter(x => x.pathname.includes('/contents/'))).toHaveLength(1);
+    expect(visited.find(x => x.pathname.includes('/contents/'))?.searchParams.get('ref')).toBe(headSha);
+    expect(summarizeGateProofs(fetched, cohort([proofRun(), proofRun(2)]), { repo, source: 'api' })).toMatchObject({ complete: true, known: 2, reused: 10 });
+  });
+
+  it('retains a missing gate job without fetching invented log evidence', async () => {
+    const fetched = await fetchGateProofEvidence({ repo, token: 'fake-secret', runs: cohort().runs,
+      fetchImpl: async () => ({ ok: true, json: async () => ({ total_count: 0, jobs: [] }) }),
+    });
+    expect(fetched.runs[0].job).toBeNull();
+    expect(summarizeGateProofs(fetched, cohort(), { repo, source: 'api' })).toMatchObject({ groups: 1, unknown: 1, complete: false });
+  });
+
+  it('fails closed on API failure, truncation and duplicate gate jobs', async () => {
+    await expect(fetchGateProofEvidence({ repo, runs: [] })).rejects.toThrow(/GITHUB_TOKEN/);
+    for (const response of [
+      { ok: false, status: 403 },
+      { ok: true, json: async () => ({ total_count: 2, jobs: [proofJob()] }) },
+      { ok: true, json: async () => ({ total_count: 2, jobs: [proofJob(), { ...proofJob(), id: 999 }] }) },
+    ]) {
+      await expect(fetchGateProofEvidence({ repo, token: 'fake-secret', runs: cohort().runs,
+        fetchImpl: async () => response,
+      })).rejects.toThrow(/HTTP 403|Truncated|Ambiguous/);
+    }
+  });
+
+  it('runs the offline CLI with preserved source IDs and unverified snapshot coverage', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'queue-proof-'));
+    try {
+      const runFile = join(dir, 'runs.json');
+      const proofFile = join(dir, 'proofs.json');
+      writeFileSync(runFile, JSON.stringify([proofRun()]));
+      writeFileSync(proofFile, JSON.stringify(evidence()));
+      const cli = fileURLToPath(new URL('../../../../tools/queue-throughput.mjs', import.meta.url));
+      const args = [cli, '--from', from, '--to', to, '--runs', runFile, '--proofs', proofFile];
+      const result = spawnSync(process.execPath, [...args, '--json'], { encoding: 'utf8' });
+      expect(result.error).toBeUndefined();
+      expect(result.status, result.stderr).toBe(0);
+      const output = JSON.parse(result.stdout);
+      expect(output.gateProofs).toMatchObject({ source: 'snapshot', complete: false, reused: 5, reusePercent: null });
+      expect(output.gateProofs.runs[0]).toMatchObject({ runId: 1, jobId: 101, headSha, runAttempt: 2 });
+      const printed = spawnSync(process.execPath, args, { encoding: 'utf8' });
+      expect(printed.stdout).toContain('INCOMPLETE / snapshot only');
+      expect(printed.stdout).toContain('Complete-cohort reuse: n/a');
+      const invalid = spawnSync(process.execPath, [...args, '--save-proofs', join(dir, 'output.json')], { encoding: 'utf8' });
+      expect(invalid.status).toBe(1);
+      expect(invalid.stderr).toContain('--save-proofs requires live');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });
