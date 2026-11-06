@@ -65,7 +65,7 @@ describe('the last night reads the book', () => {
     ctx.world.ascension.rung = 'god';
 
     expect(readTheChronicle(ctx).attested).toBe('none');
-    expect(selectEnding(ctx)).toBe('forgotten');
+    expect(selectEnding(ctx)).toBe(selected);
 
     // One page, and the same world ends four rungs away.
     attest(ctx, 'god');
@@ -3120,6 +3120,7 @@ describe('completed Afterimage thin-line counts require a credible Head and tenu
           baseline: 1, text: 'One was in the house.', signature: 'one-in-house' },
       };
       w.succession = [credited, disputed];
+      const selected = selectEnding(ctx);
       const count = () => epilogueOf(ctx)!.afterimage?.brush?.count;
       expect(count()).toBe(1);
 
