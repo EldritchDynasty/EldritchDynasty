@@ -674,6 +674,73 @@ describe('queued signing focus after a run switch (#1984)', () => {
   });
 });
 
+describe('stale signing events when a run changes (#1984)', () => {
+  async function prepareSign(wrapper: VueWrapper): Promise<void> {
+    await revealChoices(wrapper);
+    await answerFounder(wrapper);
+    await continueSigning(wrapper);
+    for (let question = 1; question <= 4; question += 1) {
+      await answerButton(wrapper, question).trigger('click');
+    }
+    await continueSigning(wrapper);
+    await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+    await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+    await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+    expect(wrapper.get('button.sign').attributes('disabled')).toBeUndefined();
+  }
+
+  it('rejects a queued Sign click and Enter after a different view has already founded', async () => {
+    const prologue = reactive(prologueView());
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await prepareSign(wrapper);
+      const staleButton = wrapper.get('button.sign').element as HTMLButtonElement;
+      const staleName = wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement;
+
+      // A parent may replace the view before Vue removes the old controls.
+      prologue.founded = { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 };
+      staleButton.click();
+      staleName.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(game.found).not.toHaveBeenCalled();
+      await nextTick();
+      expect(wrapper.find('button.sign').exists()).toBe(false);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('clears the old house draft before its queued Sign click reaches a new signing', async () => {
+    const prologue = reactive(prologueView());
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await prepareSign(wrapper);
+      const staleButton = wrapper.get('button.sign').element as HTMLButtonElement;
+      const staleName = wrapper.get('input[aria-label="Name the house"]').element as HTMLInputElement;
+
+      // Different authored signing, same starting year and still-mounted DOM:
+      // invalidation must be synchronous rather than a queued pre-flush watch.
+      prologue.id = 'a_new_signing';
+      staleButton.click();
+      staleName.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      expect(game.found).not.toHaveBeenCalled();
+      await nextTick();
+      expect(wrapper.find('button.sign').exists()).toBe(false);
+      await revealChoices(wrapper);
+      expect(wrapper.get('.signing-progress').text()).toContain('1 of 3');
+      expect((wrapper.get('input[aria-label="Name the founder"]').element as HTMLInputElement).value).toBe('');
+      expect(wrapper.get('.signing-navigation button.primary').attributes('disabled')).toBeDefined();
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('founding submit single-flight (#1484)', () => {
   it('discards same-tick clicks and Enter, then permits a deliberate retry after refusal', async () => {
     const game = actions();
