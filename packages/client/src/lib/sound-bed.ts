@@ -160,7 +160,16 @@ export class SoundBed {
   /** Where the drone should be. Called on every view; an unchanged scene is left alone. */
   scene(next: DroneInput | null): void {
     if (this.#disposed) return;
-    const key = JSON.stringify(next);
+    // A stale/invalidated view can expose a throwing getter or a cycle. Audio
+    // is optional presentation: a bad scene must neither interrupt rendering
+    // nor leave the old Age drone humming as though it were still current.
+    let key: string | undefined;
+    try { key = JSON.stringify(next); }
+    catch { /* An invalid scene means silence, not a failed player update. */ }
+    if (key === undefined) {
+      next = null;
+      key = 'null';
+    }
     if (key === this.#sceneKey) return;
     this.#scene = next;
     this.#sceneKey = key;
