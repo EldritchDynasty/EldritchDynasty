@@ -427,6 +427,18 @@ function enter(): void {
     void nextTick(() => { entering = false; });
   }
 }
+
+// Bind the completed-signing button to the run that rendered it. During a
+// retained-component switch Vue can still dispatch a click from the old DOM
+// before replacing its listener, even when the NEW run is already founded.
+// Reading props.prologue.founded alone would enter that newer run too early.
+const enterCurrentRun = computed(() => {
+  const renderedIdentity = signingIdentity.value;
+  return () => {
+    if (signingIdentity.value !== renderedIdentity) return;
+    enter();
+  };
+});
 </script>
 
 <template>
@@ -663,7 +675,7 @@ function enter(): void {
          does not survive being printed above a family tree. -->
     <template v-else>
       <p class="thesis">{{ prologue.thesis }}</p>
-      <button class="primary" @click="enter()">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
+      <button class="primary" @click="enterCurrentRun">{{ plain ? `Begin in ${startYear}` : startYear }}</button>
     </template>
   </main>
 </template>
