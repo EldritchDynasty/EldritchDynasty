@@ -70,6 +70,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { DURATIONS_FILE, packShards, shardCosts } from './shards.mjs';
+import { validateDurationReport } from './test-duration-report.mjs';
 
 const REPO = join(import.meta.dirname, '..');
 const COMMANDS_MD = join(REPO, 'docs/COMMANDS.md');
@@ -185,7 +186,9 @@ function measureFull() {
     // that case — it did not run the suite — so it says so rather than
     // inventing one, and `--write` then leaves the command block alone.
     const raw = JSON.parse(readFileSync(REPORT, 'utf8'));
-    const files = perFile(raw);
+    const files = validateDurationReport(raw, REPO, {
+      complete: process.argv.includes('--require-complete'),
+    });
     return {
       result: {
         script: 'test',
@@ -195,6 +198,7 @@ function measureFull() {
         ok: true,
       },
       files,
+      measurement: raw.host ? { host: raw.host, sourceSha: raw.sourceSha ?? null } : null,
     };
   }
   const dir = mkdtempSync(join(tmpdir(), 'ed-cost-'));
@@ -223,7 +227,8 @@ function measureFull() {
       result.files = raw.summary.files;
       result.tests = raw.summary.tests;
     }
-    return { result, files: perFile(raw) };
+    return { result, files: perFile(raw),
+      measurement: raw.host ? { host: raw.host, sourceSha: raw.sourceSha ?? null } : null };
   } catch {
     console.error('cost: the suite ran but no per-file report came back; table skipped.');
     // Do not rerun the whole suite here. A reporter failure must not turn one
@@ -278,6 +283,7 @@ function reportShards(files) {
 function main() {
   const results = [];
   let table = null;
+  let measurement = null;
 
   if (!REPORT) {
     const environment = FULL ? costMeasurementEnvironment() : process.env;
@@ -287,6 +293,7 @@ function main() {
     const full = measureFull();
     results.push(full.result);
     table = full.files;
+    measurement = full.measurement ?? null;
     if (!REPORT) results.push(measure('typecheck'), measure('validate'));
   }
 
@@ -348,6 +355,7 @@ function main() {
         + 'packages/core/src/lanes.test.ts to fail the build when they drift apart. '
         + 'Never hand-edited.',
       measured: new Date().toISOString().slice(0, 10),
+      ...(measurement ? { measurement } : {}),
       shards: n,
       shardCostsMs: costs,
       totalMs: Object.values(table).reduce((a, b) => a + b, 0),

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { build } from 'esbuild';
@@ -101,6 +102,21 @@ export interface GateProof {
 export interface ProofTrustDecision {
   reusable: boolean;
   reason: string;
+}
+
+/** Computed from fetched main ancestry by the consumer, never from an artifact. */
+export function landedMergeGroupShas(repoRoot: string, runs: readonly TrustedWorkflowRun[]): Set<string> {
+  const landed = new Set<string>();
+  const git = (args: string[]) => spawnSync('git', args, { cwd: repoRoot, encoding: 'utf8' });
+  const shallow = git(['rev-parse', '--is-shallow-repository']);
+  if (shallow.status !== 0 || shallow.stdout.trim() !== 'false') return landed;
+  for (const run of runs) {
+    if (run.event !== 'merge_group' || !/^[a-f0-9]{40}$/.test(run.head_sha)) continue;
+    if (git(['merge-base', '--is-ancestor', run.head_sha, 'refs/remotes/origin/main']).status === 0) {
+      landed.add(run.head_sha);
+    }
+  }
+  return landed;
 }
 
 const sha256 = (value: Buffer | string): string =>
@@ -362,10 +378,19 @@ export function judgeTrustedProof(
     workflow: string;
     gate: string;
     fingerprint: string;
+    landedMergeGroups?: ReadonlySet<string>;
   },
 ): ProofTrustDecision {
-  if (run.event !== 'push') return { reusable: false, reason: `source event is ${run.event}, not push` };
-  if (run.head_branch !== 'main') return { reusable: false, reason: `source branch is ${run.head_branch}, not main` };
+  if (run.event === 'merge_group') {
+    if (!/^gh-readonly-queue\/main\/pr-\d+-/.test(run.head_branch)) {
+      return { reusable: false, reason: 'source is not a main merge-group ref' };
+    }
+    if (!expected.landedMergeGroups?.has(run.head_sha)) {
+      return { reusable: false, reason: 'merge-group SHA is not proven reachable from main' };
+    }
+  } else if (run.event !== 'push' || run.head_branch !== 'main') {
+    return { reusable: false, reason: 'source is neither main push nor landed merge group' };
+  }
   if (run.path !== expected.workflow) return { reusable: false, reason: `source workflow is ${run.path}` };
   if (run.conclusion !== 'success') return { reusable: false, reason: `source conclusion is ${run.conclusion ?? 'missing'}` };
   if (run.head_repository?.full_name !== expected.repository) {
@@ -411,6 +436,7 @@ export function selectNewestTrustedProof(
     workflow: string;
     gate: string;
     fingerprint: string;
+    landedMergeGroups?: ReadonlySet<string>;
   },
 ): SelectedTrustedProof | null {
   const newestFirst = [...candidates].sort((a, b) => b.run.id - a.run.id);
@@ -589,6 +615,7 @@ async function planProofReuse(argv: readonly string[]): Promise<void> {
   }
 
   const gates: GateReusePlanRow[] = [];
+  const landedMergeGroups = landedMergeGroupShas(repoRoot, runs.map(({ run }) => run));
   for (const gate of BLOCKING_GATE_IDS) {
     const current = await fingerprintRegisteredGate(repoRoot, gate);
     const candidates: TrustedProofCandidate[] = runs.map(({ run, dir }) => ({
@@ -600,6 +627,7 @@ async function planProofReuse(argv: readonly string[]): Promise<void> {
       workflow,
       gate,
       fingerprint: current.fingerprint,
+      landedMergeGroups,
     });
 
     if (selected) {

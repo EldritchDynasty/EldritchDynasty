@@ -62,6 +62,7 @@ jobs:
       - name: Run canonical claim tool
         env:
           ED_CLAIM_REQUEST: ${{ github.event.comment.body }}
+          GH_TOKEN: ${{ github.token }}
         run: node tools/remote-claim.mjs
 
   # Same transport, read from a pushed file instead of a comment. Pushing a
@@ -113,4 +114,5 @@ jobs:
         env:
           ED_CLAIM_REQUEST_BRANCH: ${{ github.ref_name }}
           ED_CLAIM_REQUEST_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: node tools/remote-claim.mjs

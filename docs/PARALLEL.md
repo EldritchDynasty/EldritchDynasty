@@ -38,6 +38,28 @@ write a negated closing keyword such as `does not close #N`: GitHub still closes
 
 ---
 
+### Capacity before a new code claim (#2794)
+
+The public repository's native queue serializes integration. When **10 or more
+open, ready, same-repository PRs** target `main`, `npm run agents -- take`
+refuses a **new non-P0 code issue claim** rather than adding another slot to
+the backlog. The check reads the issue's real GitHub priority label and counts
+live ready PRs (draft PRs do not count). It happens **before** writing the
+canonical claim ref, and does not affect existing owners renewing a claim.
+
+`priority: P0` bypasses the intake brake; so do `--lane gates` claims, including
+the exclusive `lane-gates` owner. Those repairs can help drain the queue.
+The brake is capacity control, **not** the ownership mutex: Git refs remain
+the sole arbiter. If a sandbox has no direct GitHub API access, the tool warns
+and allows the claim rather than guessing that the queue is empty or
+deadlocking otherwise legitimate work. The remote claim workflow supplies
+a GitHub token for this read.
+
+Before claiming ordinary work while the queue is full, **help a ready PR
+advance, or repair a genuine CI failure on a claim you may legally own**.
+Bundle related audit defects in one properly claimed issue/branch/PR rather
+than spending a serial merge-group slot on every adjacent one-line fix.
+
 ## Can an agent assign an issue to itself?
 
 Mechanically yes, usefully no.

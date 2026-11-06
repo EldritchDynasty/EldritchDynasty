@@ -1,0 +1,53 @@
+name: maintain test durations
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+# Coalesce pending requests without repeatedly cancelling the full measurement.
+concurrency:
+  group: test-duration-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - id: status
+        run: node tools/duration-maintenance.mjs status
+      # App-authenticated pushes and PRs trigger check.yml. GITHUB_TOKEN would
+      # silently suppress those events and leave the generated repair unlandable.
+      - id: app
+        if: steps.status.outputs.needed == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.MERGE_QUEUE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.MERGE_QUEUE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - uses: actions/checkout@v7
+        if: steps.status.outputs.needed == 'true'
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+      - name: Measure, regenerate and open the repair PR
+        if: steps.status.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tools/duration-maintenance.mjs refresh

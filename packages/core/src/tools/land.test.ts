@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -1051,7 +1051,8 @@ describe('a markdown-only change runs the short set, and only then', () => {
     'tools/agents.mjs': 'message text only',
     'tools/brief.mjs': 'read-only issue-preparation CLI; CI only consumes it through fast tests',
     'tools/codemap.mjs': 'pure architecture and reading-route parsers; map validity checks run in fast tests',
-    'tools/cost.mjs': 'rewrites docs/COMMANDS.md figures; CI never runs it',
+    'tools/cost.mjs': 'rewrites command figures locally and in the separate duration-repair workflow; merge CI consumes it through fast tests',
+    'tools/duration-maintenance.mjs': 'writes temporary issue/PR body files; does not read markdown or supply a merge-CI verdict',
     'tools/land.mjs': 'message text only',
     'tools/orient.mjs': 'message text only',
     'tools/verify-plan.mjs': 'advisory CLI only; CI does not run it and land only prints it in dry-run mode',
@@ -1494,5 +1495,121 @@ describe('queue landing coverage metadata (#320/#352)', () => {
     const code = readFileSync(join(REPO, 'tools/verdict.mjs'), 'utf8');
     expect(code).toContain("const LANDING_NS = 'refs/landing'");
     expect(code).toContain('recordLandingRange(sha, verdict)');
+  });
+});
+
+
+const root = join(import.meta.dirname, '../../../..');
+const { validateDurationReport } = await import(pathToFileURL(join(root, 'tools/test-duration-report.mjs')).href);
+const { durationRefreshStatus, refreshDurations } = await import(pathToFileURL(join(root, 'tools/duration-maintenance.mjs')).href);
+describe('automatic generated duration maintenance (#2794)', () => {
+  const dirs: string[] = [];
+  afterEach(() => {
+    dirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
+    vi.unstubAllEnvs();
+  });
+  function fixture(count = 5) {
+    const dir = mkdtempSync(join(tmpdir(), 'ed-durations-test-'));
+    dirs.push(dir);
+    mkdirSync(join(dir, 'packages/core'), { recursive: true });
+    mkdirSync(join(dir, 'tools'));
+    const files: Record<string, { total: number }> = {};
+    for (let i = 0; i < count; i++) {
+      const file = `packages/core/${i}.test.ts`;
+      writeFileSync(join(dir, file), '');
+      files[file] = { total: 120 };
+    }
+    writeFileSync(join(dir, 'tools/test-durations.json'), '{"files":{}}');
+    return { dir, files };
+  }
+
+  it('requests a refresh at five missing suites, before the guard of eight', () => {
+    expect(durationRefreshStatus(fixture(4).dir).needed).toBe(false);
+    expect(durationRefreshStatus(fixture(5).dir).needed).toBe(true);
+  });
+
+  it('imports only complete, successful 4-CPU reports and rejects invalid measurements', () => {
+    const { dir, files } = fixture();
+    const report = { files, summary: { files: 5, success: true }, host: { cpus: 4 } };
+    expect(Object.keys(validateDurationReport(report, dir, { complete: true }))).toHaveLength(5);
+    for (const changed of [
+      { summary: { files: 5, success: false } },
+      { summary: { files: 5 } },
+      { host: { cpus: 2 } },
+      { files: Object.fromEntries(Object.entries(files).slice(1)) },
+      { files: { ...files, '../foreign.test.ts': { total: 5 } } },
+      { files: { ...files, 'packages/core/0.test.ts': { total: -1 } } },
+      { files: { ...files, 'packages/core/0.test.ts': { total: NaN } } },
+    ]) expect(() => validateDurationReport({ ...report, ...changed }, dir, { complete: true })).toThrow();
+  });
+
+  it('the reporter records the terminal verdict and includes setup and collection work', async () => {
+    const { default: Reporter } = await import(pathToFileURL(join(root, 'tools/duration-reporter.mjs')).href);
+    const { dir, files } = fixture();
+    const path = join(dir, 'raw.json');
+    const reporter = new Reporter();
+    reporter.onInit({ config: { outputFile: path } });
+    const modules = Object.keys(files).map((file) => ({
+      moduleId: join(dir, file), children: { allTests: () => [{}] },
+      diagnostic: () => ({ prepareDuration: 1, environmentSetupDuration: 2,
+        setupDuration: 3, collectDuration: 4, duration: 5 }),
+    }));
+    reporter.onTestRunEnd(modules, [], 'passed');
+    const raw = JSON.parse(readFileSync(path, 'utf8'));
+    expect(raw.summary).toEqual({ files: 5, tests: 5, success: true });
+    expect(raw.files[modules[0]!.moduleId].total).toBe(15);
+    expect(raw.host.cpus).toBeGreaterThan(0);
+    reporter.onTestRunEnd(modules, [], 'failed');
+    expect(JSON.parse(readFileSync(path, 'utf8')).summary.success).toBe(false);
+  });
+
+  function executor(fail: 'claim' | 'suite' | undefined) {
+    const calls: string[] = [];
+    const run = (command: string, args: string[]) => {
+      const line = `${command} ${args.join(' ')}`;
+      calls.push(line);
+      if (fail === 'claim' && line.includes('take lane-gates')) throw new Error('DENIED');
+      if (fail === 'suite' && args.includes('--reporter=default')) throw new Error('suite failed');
+      if (command === 'gh' && args[0] === 'issue' && args[1] === 'list') return '[]';
+      if (command === 'gh' && args[0] === 'issue' && args[1] === 'create') return 'https://github.com/fixture/repo/issues/99';
+      if (command === 'gh' && args[0] === 'pr' && args[1] === 'list') return '[]';
+      if (command === 'git' && args[0] === 'rev-parse') return 'a'.repeat(40);
+      if (command === 'git' && args[0] === 'diff') return 'tools/test-durations.json';
+      return '';
+    };
+    return { run, calls };
+  }
+
+  it('defers cleanly on a denied lane without measuring or publishing anything', () => {
+    vi.stubEnv('GITHUB_REPOSITORY', 'fixture/repo');
+    const { run, calls } = executor('claim');
+    expect(refreshDurations({ root: fixture().dir, run, cpuCount: 4 })).toBe('claim unavailable');
+    expect(calls.some((s) => /gh |npm | push /.test(s))).toBe(false);
+    expect(calls.some((s) => s.includes('release lane-gates'))).toBe(false);
+  });
+
+  it('releases its acquired claims when a suite fails, without pushing a partial table', () => {
+    vi.stubEnv('GITHUB_REPOSITORY', 'fixture/repo');
+    const { run, calls } = executor('suite');
+    expect(() => refreshDurations({ root: fixture().dir, run, cpuCount: 4 })).toThrow('suite failed');
+    expect(calls.some((s) => s.includes('release 99'))).toBe(true);
+    expect(calls.some((s) => s.includes('release lane-gates'))).toBe(true);
+    expect(calls.some((s) => s.includes(' push ') || s.includes('pr create'))).toBe(false);
+  });
+
+  it('publishes one issue-owned topic PR after import and normal lane verification', () => {
+    vi.stubEnv('GITHUB_REPOSITORY', 'fixture/repo');
+    const { run, calls } = executor(undefined);
+    expect(refreshDurations({ root: fixture().dir, run, cpuCount: 4 })).toBe('PR ready for required CI');
+    const imported = calls.findIndex((s) => s.includes('--require-complete'));
+    const checked = calls.findIndex((s) => s.includes('lanes.test.ts'));
+    const pushed = calls.findIndex((s) => s.includes(' push '));
+    expect(imported).toBeGreaterThan(0);
+    expect(checked).toBeGreaterThan(imported);
+    expect(pushed).toBeGreaterThan(checked);
+    expect(calls[pushed]).toContain('--force-with-lease=refs/heads/automation/test-durations:');
+    expect(calls.at(-1)).toContain('pr create');
+    expect(calls.some((s) => s.includes('release lane-gates'))).toBe(false);
+    expect(calls.some((s) => s.includes('HEAD:refs/heads/main'))).toBe(false);
   });
 });

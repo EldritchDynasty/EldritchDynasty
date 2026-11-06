@@ -204,6 +204,96 @@ const landingLine = (claims) => {
   return issues.length ? issues.map((n, i) => `${i === 0 ? 'Closes' : 'closes'} #${n}`).join(', ') : '';
 };
 
+
+/**
+ * Admission is cheap only while the serial native queue can drain. A brand-new
+ * ordinary code claim should not add more work when ten ready PRs already wait
+ * for exact-head integration (#2794). P0 and exclusive gate repairs are exempt.
+ *
+ * This is an intake policy, NOT the issue mutex. The orphan claim ref remains
+ * the single source of ownership, and an unreachable GitHub API is reported
+ * rather than interpreted as "zero queued".
+ */
+export const READY_PR_INTAKE_LIMIT = 10;
+const INTAKE_REPOSITORY = 'EldritchDynasty/EldritchDynasty';
+const INTAKE_PAGES = 10;
+
+function intakeHeaders(token) {
+  return {
+    accept: 'application/vnd.github+json',
+    ...(token ? { authorization: 'Bearer ' + token } : {}),
+  };
+}
+
+async function intakeJson(url, { token, request }) {
+  const response = await request(url, {
+    headers: intakeHeaders(token),
+    signal: AbortSignal.timeout(5000),
+  });
+  if (!response.ok) throw new Error('GitHub HTTP ' + response.status);
+  return response.json();
+}
+
+/** Count open, non-draft main PRs, including ones waiting for integration CI. */
+export async function readyPullRequestCount({ repo, token, request = fetch, limit = READY_PR_INTAKE_LIMIT }) {
+  let count = 0;
+  for (let page = 1; page <= INTAKE_PAGES; page++) {
+    const pulls = await intakeJson(
+      'https://api.github.com/repos/' + repo + '/pulls?state=open&base=main&per_page=100&page=' + page,
+      { token, request },
+    );
+    if (!Array.isArray(pulls)) throw new Error('Invalid GitHub pull request listing');
+    count += pulls.filter((pr) => pr.state === 'open' && !pr.draft
+      && pr.base?.ref === 'main' && pr.head?.repo?.full_name === repo).length;
+    if (count >= limit || pulls.length < 100) return count;
+  }
+  throw new Error('GitHub pull request listing exceeded safe pagination bound');
+}
+
+/** Called only for a new numbered code issue; a renewal must never be throttled. */
+export async function claimIntakeDecision({
+  repo, issue, lane, token, request = fetch, limit = READY_PR_INTAKE_LIMIT,
+}) {
+  if (lane !== 'code') return { allowed: true, reason: 'not an ordinary code claim' };
+  const data = await intakeJson('https://api.github.com/repos/' + repo + '/issues/' + issue,
+    { token, request });
+  if (data.pull_request || data.state !== 'open') {
+    throw new Error('Cannot verify an open issue for intake');
+  }
+  if (!Array.isArray(data.labels)) throw new Error('Cannot verify issue priority');
+  if (data.labels.some((label) => label.name?.toLowerCase().trim() === 'priority: p0')) {
+    return { allowed: true, reason: 'P0 exempt from intake brake' };
+  }
+  const ready = await readyPullRequestCount({ repo, token, request, limit });
+  return { allowed: ready < limit, ready, limit,
+    reason: ready < limit ? 'below ready-PR intake limit' : 'native queue at capacity' };
+}
+
+async function enforceClaimIntake(slug, lane) {
+  if (lane !== 'code' || !/^\d+$/.test(slug)) return;
+  // Fixture repositories and forks do not belong to this project's intake.
+  const origin = tryGit(['remote', 'get-url', 'origin']);
+  if (!origin.ok || !/(?:github\.com[:/])EldritchDynasty\/EldritchDynasty(?:\.git)?\/?$/.test(origin.out)) return;
+  try {
+    const result = await claimIntakeDecision({
+      repo: INTAKE_REPOSITORY, issue: Number(slug), lane,
+      token: process.env.GH_TOKEN || process.env.GITHUB_TOKEN,
+    });
+    if (!result.allowed) {
+      console.error('DENIED — intake brake: ' + result.ready + ' ready PRs (limit '
+        + result.limit + '). Advance a ready PR first, or take a P0/gates issue.');
+      process.exit(1);
+    }
+    console.log('intake: ' + result.reason
+      + (result.ready === undefined ? '' : ' (' + result.ready + '/' + result.limit + ' ready PRs)'));
+  } catch (error) {
+    // Codex sandboxes can fetch refs but have no general HTTPS. Do not confuse
+    // a missing API channel with an asserted backlog, or deadlock all workers.
+    console.warn('agents: cannot verify ready-PR intake (' + error.message + '); '
+      + 'proceeding with a warning, not a capacity verdict.');
+  }
+}
+
 const age = (h) => (!Number.isFinite(h) ? 'unknown' : h < 1 ? `${Math.round(h * 60)}m` : h < 48 ? `${h.toFixed(1)}h` : `${(h / 24).toFixed(1)}d`);
 
 // ---------------------------------------------------------------------------
@@ -254,7 +344,7 @@ function list() {
   }
 }
 
-function take() {
+async function take() {
   const slug = slugOf(positional[1]);
   const agent = thisAgent();
   const requestedPaths = pathArgs();
@@ -346,6 +436,9 @@ function take() {
       process.exit(1);
     }
   }
+
+  // Check queue capacity only on first acquisition, never on a renewal.
+  if (!mine) await enforceClaimIntake(slug, lane);
 
   const message = [
     `claim ${slug}`, '',
@@ -516,5 +609,6 @@ function check() {
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
   const cmd = positional[0] ?? 'list';
-  ({ list, take, release, steal, check }[cmd] ?? (() => die(`unknown command: ${cmd}`)))();
+  Promise.resolve(({ list, take, release, steal, check }[cmd] ?? (() => die(`unknown command: ${cmd}`)))())
+    .catch((error) => { console.error('agents: ' + error.message); process.exitCode = 2; });
 }

@@ -12,6 +12,7 @@ import {
   fingerprintGateDependencies,
   fingerprintGateManifest,
   judgeTrustedProof,
+  landedMergeGroupShas,
   makeGateProof,
   parseGateProof,
   selectNewestTrustedProof,
@@ -271,6 +272,36 @@ const expected = (proof: GateProof = trustedProof()) => ({
   });
 
 describe('#441 trusted proof boundary', () => {
+  it('accepts a successful merge group only after its exact SHA reaches fetched main', () => {
+    const root = fixtureRepo();
+    const git = (...args: string[]) => execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+    git('init', '-b', 'main');
+    git('config', 'user.name', 'proof-test');
+    git('config', 'user.email', 'proof-test@example.invalid');
+    git('add', '.');
+    git('commit', '-m', 'base');
+    git('update-ref', 'refs/remotes/origin/main', 'HEAD');
+    git('switch', '-c', 'queue');
+    writeFileSync(join(root, 'README.md'), '# new queue head\n');
+    git('add', '.');
+    git('commit', '-m', 'queue head');
+    const sha = git('rev-parse', 'HEAD');
+    const run = { ...trustedRun(), event: 'merge_group', head_branch: 'gh-readonly-queue/main/pr-12-base', head_sha: sha };
+    const proof = { ...trustedProof(), sourceSha: sha };
+    expect(judgeTrustedProof(run, proof, expected(proof)).reusable).toBe(false);
+    expect(landedMergeGroupShas(root, [run]).size).toBe(0);
+    git('update-ref', 'refs/remotes/origin/main', sha);
+    const trust = { ...expected(proof), landedMergeGroups: landedMergeGroupShas(root, [run]) };
+    expect(judgeTrustedProof(run, proof, trust).reusable).toBe(true);
+    for (const poison of [
+      { conclusion: 'failure' }, { conclusion: null }, { head_branch: 'feature' },
+      { event: 'pull_request' }, { head_repository: { full_name: 'fork/repo' } },
+    ]) expect(judgeTrustedProof({ ...run, ...poison }, proof, trust).reusable).toBe(false);
+    // Shallow history must never silently turn an ancestry guess into authority.
+    writeFileSync(join(root, '.git/shallow'), `${sha}\n`);
+    expect(landedMergeGroupShas(root, [run]).size).toBe(0);
+  });
+
   it('accepts only matching successful main-push evidence', () => {
     expect(judgeTrustedProof(trustedRun(), trustedProof(), expected())).toEqual({
       reusable: true,
