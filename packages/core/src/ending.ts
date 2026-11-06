@@ -727,7 +727,10 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (charterMemberships.length > 1) continue;
       const charterMembership = charterMemberships[0];
       if (charterMembership
-        && (charterMembership.house !== w.playerHouse
+        && (!Number.isSafeInteger(charterMembership.from)
+          || charterMembership.from < founder.born
+          || (charterMembership.to !== undefined && !Number.isSafeInteger(charterMembership.to))
+          || charterMembership.house !== w.playerHouse
           || charterMembership.branch !== branch.id
           || (charterMembership.kind !== 'blood' && charterMembership.kind !== 'cadet'))) continue;
       const survivor = family
