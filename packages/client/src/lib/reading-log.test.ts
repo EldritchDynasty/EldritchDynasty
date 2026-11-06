@@ -1430,6 +1430,50 @@ describe('recap telemetry boundary (#1985)', () => {
       expect(l.artifact().summary.answers).toBe(1);
     },
   );
+
+  it('an actual save pickup with a recap observer keeps history carried and the persisted run identical', async () => {
+    const platform = memoryPlatform();
+    const bundle = loadBundle();
+    const first = createGame(bundle, platform);
+    first.actions.begin(1945, 'long');
+    if (first.prologue.value) first.actions.enter();
+    playUntil(first, first.actions,
+      () => (first.view.value?.chronicle ?? []).some((page) => page.answer), 200);
+    expect(first.view.value?.chronicle.some((page) => page.answer)).toBe(true);
+    await settle();
+    const saved = platform.saves.get('autosave') as Record<string, unknown>;
+    expect(saved).toBeDefined();
+    const before = canonical({ ...saved, savedAt: '' });
+
+    const resumed = createGame(bundle, platform);
+    await settle();
+    const l = log();
+    const recorded = recordActions(resumed.actions, l);
+    let recapOffers = 0;
+    const observed = withAcceptedPickup(recorded, () => {
+      recapOffers++;
+      // App's recap observes the accepted public view, not the previous run.
+      expect(resumed.view.value?.chronicle.some((page) => page.answer)).toBe(true);
+    });
+    const unwatch = watch(() => resumed.view.value?.chronicle,
+      (pages) => l.chronicle(pages), { immediate: true, flush: 'sync' });
+    try {
+      expect(await observed.resume()).toBe(true);
+      expect(recapOffers).toBe(1);
+      const pages = l.events.filter((event) => event.kind === 'page');
+      expect(pages.length).toBeGreaterThan(0);
+      expect(pages.every((event) => 'carried' in event && event.carried === true)).toBe(true);
+      expect(l.events.filter((event) => event.kind === 'pickup')).toHaveLength(1);
+      expect(l.artifact().summary.answers).toBe(0);
+      // This canonical save includes the RNG and command log. A UI recap
+      // must not serialize another command or modify the saved campaign.
+      await settle();
+      const after = platform.saves.get('autosave') as Record<string, unknown>;
+      expect(canonical({ ...after, savedAt: '' })).toBe(before);
+    } finally {
+      unwatch();
+    }
+  });
 });
 
 
