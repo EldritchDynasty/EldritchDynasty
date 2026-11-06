@@ -3257,7 +3257,9 @@ describe('voluntary resume recap (#1985)', () => {
       const marriage = { kind: 'match', year: 1322, subject: { name: 'Iona' } } as unknown as SessionView['docket'][number];
       const record = { kind: 'record', year: 1323, subject: 'an old promise' } as unknown as SessionView['docket'][number];
       const w = mount(ResumeRecap, { props: {
-        view: snapshot(), pending: 2, proseMode, nextDecision: first,
+        // Every example below is due by this view's current year. Future
+        // dates are rejected separately by the malformed-docket test.
+        view: snapshot({ year: 1323 }), pending: 2, proseMode, nextDecision: first,
       } });
       const heading = proseMode === 'plainenglish' ? 'Next decision:' : 'First on the docket:';
       try {
