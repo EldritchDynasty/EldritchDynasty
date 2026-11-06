@@ -448,6 +448,14 @@ export function resumeRecapRequested(search: string): boolean {
   return values.length === 1 && values[0] === '1';
 }
 
+/** Only arm the optional recap when the accepted save has facts to show.
+ * Otherwise a later action can introduce a question and unexpectedly reveal
+ * what was hidden at pickup time (#1985).
+ */
+export function hasResumeRecapFacts(view: SessionView | null, pending: number): boolean {
+  return Boolean(view && (view.generationArc?.question || view.ambition || pending > 0));
+}
+
 export function withAcceptedPickup(actions: GameActions, onAccepted: () => void): GameActions {
   return {
     ...actions,
