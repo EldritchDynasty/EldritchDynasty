@@ -3349,6 +3349,54 @@ describe('voluntary resume recap (#1985)', () => {
   });
 
   it.each(['original', 'plainenglish'] as const)(
+    'does not invent a recap from blank saved question or ambition text (%s)', async (proseMode) => {
+      const empty = snapshot({
+        generationArc: { question: '  \\t ' },
+        ambition: { name: ' ', next: '\\n  ' },
+        marriagePromises: [],
+      });
+      const untouched = structuredClone(empty);
+      expect(hasResumeRecapFacts(empty, 0)).toBe(false);
+      const w = mount(ResumeRecap, { props: { view: empty, pending: 0, proseMode } });
+      try {
+        expect(w.findAll('dt')).toHaveLength(0);
+        // A visible name without a next step is not a complete ambition line.
+        const incomplete = snapshot({
+          generationArc: { question: ' ' },
+          ambition: { name: '守护家族', next: '  ' },
+          marriagePromises: [],
+        });
+        expect(hasResumeRecapFacts(incomplete, 0)).toBe(false);
+        await w.setProps({ view: incomplete });
+        expect(w.findAll('dt')).toHaveLength(0);
+
+        // Once a line is genuine, neither the gate nor display rewrites its words.
+        const question = snapshot({
+          generationArc: { question: '  谁会守住承诺？  ' },
+          ambition: { name: ' ', next: ' ' },
+          marriagePromises: [],
+        });
+        expect(hasResumeRecapFacts(question, 0)).toBe(true);
+        await w.setProps({ view: question });
+        expect(w.findAll('dt')).toHaveLength(1);
+        expect(w.text()).toContain('  谁会守住承诺？  ');
+
+        const ambition = snapshot({
+          generationArc: { question: ' ' },
+          ambition: { name: '守护家族', next: '记住承诺' },
+          marriagePromises: [],
+        });
+        expect(hasResumeRecapFacts(ambition, 0)).toBe(true);
+        await w.setProps({ view: ambition });
+        expect(w.findAll('dt')).toHaveLength(1);
+        expect(w.text()).toContain('守护家族');
+        expect(w.text()).toContain('记住承诺');
+        expect(empty).toEqual(untouched);
+      } finally { w.unmount(); }
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
     'uses only outstanding public marriage pledges, and drops settled ones (%s)', async (proseMode) => {
       const pledge = {
         house: 'house_elm', houseName: 'House Elm', year: 1315,
