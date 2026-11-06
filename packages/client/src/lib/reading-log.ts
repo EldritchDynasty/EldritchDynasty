@@ -825,7 +825,7 @@ function observedActionField(payload: unknown, field: 'kind' | 'op'): unknown {
 }
 
 /** An unreadable result is censored, not an invented refusal or exception. */
-function observedTableOutcome(result: unknown): 'accepted' | 'refused' | null {
+function observedActionOutcome(result: unknown): 'accepted' | 'refused' | null {
   try {
     if (result === null || (typeof result !== 'object' && typeof result !== 'function')) return null;
     const ok = (result as { ok?: unknown }).ok;
@@ -875,10 +875,12 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args);
-          const accepted = verb === 'choose'
-            ? result === true
-            : (result as { ok?: unknown } | null | undefined)?.ok === true;
-          log.note({ ...event, status: accepted ? 'accepted' : 'refused' });
+          const status = verb === 'choose'
+            ? (result === true ? 'accepted' : 'refused')
+            // No active run returns undefined; preserve that explicit refusal.
+            // Unreadable or non-boolean host outcomes are unconfirmed, not failures.
+            : (result === null || result === undefined ? 'refused' : observedActionOutcome(result));
+          if (status) log.note({ ...event, status });
           return result;
         } catch (error) {
           log.note({ ...event, status: 'threw' });
@@ -893,7 +895,10 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['found']>;
-          log.note({ ...event, status: result.ok ? 'accepted' : 'refused' });
+          // Only a literal boolean result is evidence of acceptance/refusal.
+          // Observing a host getter must never turn a returned result into an exception.
+          const status = observedActionOutcome(result);
+          if (status) log.note({ ...event, status });
           return result;
         } catch (error) {
           log.note({ ...event, status: 'threw' });
@@ -940,7 +945,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['order']>;
-          const status = observedTableOutcome(result);
+          const status = observedActionOutcome(result);
           // A nested Begin or pickup may switch houses before this verb returns.
           // Never credit the old outcome to a new house's attempt.
           if (status && log.startGeneration === generation) log.note({ ...event, status });
@@ -957,7 +962,7 @@ export function recordActions<A extends GameActions>(actions: A, log: ReadingLog
         log.note({ ...event, status: 'attempted' });
         try {
           const result = original.apply(actions, args) as ReturnType<GameActions['muster']>;
-          const status = observedTableOutcome(result);
+          const status = observedActionOutcome(result);
           // A nested Begin or pickup may switch houses before this verb returns.
           // Never credit the old outcome to a new house's attempt.
           if (status && log.startGeneration === generation) log.note({ ...event, status });
