@@ -347,6 +347,8 @@ export class Sound {
   private droneKey = '';
   /** Only one asynchronous resume at a time per device, even before state changes to running. */
   private resuming: AudioContext | null = null;
+  /** Only a synchronous activation refusal may need the last Age restored on wake. */
+  private restoreDroneAfterDeniedResume = false;
   /**
    * A one-shot's scheduled stop may be minutes away in wall time after a host
    * suspends its audio clock. Keep the exact sources and graph cleanups here so
@@ -455,6 +457,7 @@ export class Sound {
       this.stopDrone(0);
       return null;
     }
+    this.restoreDroneAfterDeniedResume = false;
     return { context: this.context, out: this.out };
   }
 
@@ -576,9 +579,13 @@ export class Sound {
     if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const ctx = this.context;
-      if (ctx && this.resumeIfNeeded(ctx) && this.lastDrone && !this.drone) {
-        // A previously refused synchronous resume may have prevented the
-        // current Age from being scheduled. Restore only that latest scene.
+      if (!ctx) return;
+      const deniedBeforeWake = this.restoreDroneAfterDeniedResume;
+      if (!this.resumeIfNeeded(ctx)) return;
+      this.restoreDroneAfterDeniedResume = false;
+      if (deniedBeforeWake && this.lastDrone && !this.drone) {
+        // Only a *refused* resume needs replay: an ordinary suspend/wake
+        // waits for the next scene instead of recreating the old Age.
         this.setDrone(this.lastDrone);
       }
     });
@@ -594,6 +601,7 @@ export class Sound {
     this.context = null;
     this.out = null;
     this.resuming = null;
+    this.restoreDroneAfterDeniedResume = false;
     // Some hosts throw synchronously rather than rejecting close(). Disposal
     // must still succeed, and a later gesture may open a fresh context.
     try { quietly(context?.close?.()); } catch { /* already gone */ }
@@ -625,6 +633,7 @@ export class Sound {
       // Some WebViews throw instead of returning a rejected promise. Treat
       // the same activation denial as temporary, not a broken audio engine.
       if (isActivationRefusal(reason)) {
+        this.restoreDroneAfterDeniedResume = true;
         this.stopCues();
         return false;
       }
@@ -674,6 +683,7 @@ export class Sound {
     this.context = null;
     this.out = null;
     this.resuming = null;
+    this.restoreDroneAfterDeniedResume = false;
     try { quietly(context?.close?.()); } catch { /* already gone */ }
   }
 
