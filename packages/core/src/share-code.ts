@@ -614,7 +614,10 @@ export function newGameFromShareCode(
   // leave blank. An authored founder (no founder payload) is not a missing
   // name: caller-provided, possibly stale input must not turn it into a
   // different signing behind the code's back.
-  const founderName = f.founder?.name ?? recipientFounder?.trim();
+  // Manual signing keeps a nonblank answer byte-for-byte in its decision log;
+  // bootstrap alone trims the displayed name. Preserve the same answer here
+  // so supplying the same excluded names reproduces the canonical founding.
+  const founderName = f.founder?.name ?? recipientFounder;
   // An explicit empty name is a real signing answer in the decision log:
   // blank leaves the authored person's name, but it is still recorded. A
   // named code must preserve that answer byte-for-byte to reproduce its save.
@@ -625,7 +628,7 @@ export function newGameFromShareCode(
         configuration: f.founder.configuration,
         ...(f.founder.name !== undefined
           ? { name: f.founder.name }
-          : founderName ? { name: founderName } : {}),
+          : founderName?.trim() ? { name: founderName } : {}),
       }
     : undefined;
 
