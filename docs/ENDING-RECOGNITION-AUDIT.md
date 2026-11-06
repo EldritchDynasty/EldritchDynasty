@@ -115,3 +115,24 @@ are made.
 This documents a mechanism repair only. Neither local execution nor the
 exact-head hosted CI result is asserted here, and the parent issue's human
 reader observations remain open.
+
+
+## Follow-up: a counted household has whole, non-negative people (7 November 2026)
+
+The Afterimage's smallest documented thin-line generation count was guarded by
+`Number.isFinite`, which also accepts negative, fractional and
+beyond-safe-integer counts in damaged or recovered succession-question data.
+This can make a completed book announce half a relative or an impossible
+negative household even when another, credible dated question survives.
+
+For completed books only, `afterimageEvidence` now requires the question's
+`baseline` to be a non-negative safe integer. Valid zero counts remain
+admissible, and unfinished authoring inventories retain their existing
+finite-number diagnostics. An existing ending test suite adds both prose
+modes, negative/fractional/unsafe contrasts, an independently valid fallback,
+and save-digest immutability. This changes only the evidence projected into
+the last-night Afterimage, not succession, gameplay state, ending eligibility,
+or the original #1983 participant-study requirement.
+
+The connector edit alone does not establish a local npm preflight or a green
+hosted CI verdict; those must be reported separately.
