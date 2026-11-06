@@ -3249,3 +3249,57 @@ describe('voluntary resume recap (#1985)', () => {
     expect(notify).not.toHaveBeenCalled();
   });
 });
+
+describe('saved-run recap landmark (#3059)', () => {
+  it.each([
+    ['original', 'The house, taken up again'],
+    ['plainenglish', 'Back to your game'],
+  ] as const)('uses its visible heading as the accessible landmark name (%s)', async (proseMode, expected) => {
+    const view = snapshot();
+    const before = structuredClone(view);
+    const wrapper = mount(ResumeRecap, { props: { view, pending: 1, proseMode } });
+    try {
+      const landmark = wrapper.get('aside');
+      const heading = wrapper.get('h2');
+      const id = heading.attributes('id');
+      expect(id).toBeTruthy();
+      expect(landmark.attributes('aria-labelledby')).toBe(id);
+      expect(landmark.attributes('aria-label')).toBeUndefined();
+      expect(heading.text()).toBe(expected);
+      expect(wrapper.get('details').attributes('open')).toBeUndefined();
+      expect(wrapper.text()).toContain('Whom shall the new head protect?');
+      await wrapper.get('button').trigger('click');
+      expect(wrapper.emitted('dismiss')).toEqual([[]]);
+      expect(view).toEqual(before);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
+  it('keeps sibling landmark IDs distinct while translating in place', async () => {
+    const view = snapshot();
+    const parent = mount(defineComponent({
+      props: { proseMode: { type: String, default: 'original' } },
+      setup: (props) => () => h('div', [
+        h(ResumeRecap, { view, pending: 0, proseMode: props.proseMode as 'original' | 'plainenglish' }),
+        h(ResumeRecap, { view, pending: 0, proseMode: 'plainenglish' }),
+      ]),
+    }));
+    try {
+      const [first, second] = parent.findAllComponents(ResumeRecap);
+      expect(first).toBeTruthy();
+      expect(second).toBeTruthy();
+      const firstId = first!.get('h2').attributes('id');
+      const secondId = second!.get('h2').attributes('id');
+      expect(firstId).toBeTruthy();
+      expect(secondId).toBeTruthy();
+      expect(firstId).not.toBe(secondId);
+      await parent.setProps({ proseMode: 'plainenglish' });
+      expect(first!.get('h2').attributes('id')).toBe(firstId);
+      expect(first!.get('aside').attributes('aria-labelledby')).toBe(firstId);
+      expect(first!.get('h2').text()).toBe('Back to your game');
+    } finally {
+      parent.unmount();
+    }
+  });
+});
