@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import * as ts from 'typescript';
 import { loadContent } from '@ed/content';
 import {
-  autoResolveAll, bootstrap, phenotypeOf, place, resolveChoice, resolveRecord, stepYear, testRng, viewOf,
+  autoResolveAll, bootstrap, ensureHead, phenotypeOf, place, presentFrame, resolveChoice, resolveRecord, stepYear, testRng, viewOf,
 } from '@ed/core';
 import type { SimCtx, TableView } from '@ed/core';
 import { loadRevealed, revealStorageKey, revealTransition, saveRevealed, type RevealElement } from './reveal';
@@ -171,17 +171,28 @@ function climbingView(): Record<string, unknown> {
     if (phenotypeOf(p, ctx.genetics, ctx.world.year).eldritch.canExpress) break;
     ctx.world.people.kill(p.id, ctx.world.year, 'not the man this fixture needs');
   }
-  // A frame outcome is optional in the played seeds and may disappear after
-  // unrelated content rebalances. Build its saved shape from an authored frame
-  // so the read-model reachability test is deterministic, not seed-mined.
-  const frame = ctx.content.events.find((event) => event.tier === 'frame' && event.interaction.kind === 'narration');
+  // Frame metadata is optional in played seeds. Construct a named blank and
+  // both listeners, then use the real presenter so the outcome and citation
+  // remain covered even when unrelated changes alter those histories.
+  const frame = ctx.content.events.find((event) => event.tier === 'frame'
+    && event.interaction.kind === 'narration' && event.body.includes('{PAGE_YEAR}'));
   if (!frame || frame.interaction.kind !== 'narration' || !frame.interaction.outcomes[0]) {
     throw new Error('view fixture needs an authored frame outcome');
   }
-  ctx.world.frame.entries.push({
-    year: ctx.world.year, eventId: frame.id,
-    outcomeId: frame.interaction.outcomes[0].id, text: frame.body,
+  const cited = { page: 'view_fixture_blank', year: ctx.world.year };
+  const origin = ctx.content.events.find((event) => event.record);
+  if (!origin) throw new Error('view fixture needs an authored Record');
+  ctx.world.chronicle.push({
+    id: cited.page, year: cited.year, weight: 'paragraph', named: false, text: null, record: 'omit',
+    eventId: origin.id, subject: origin.title,
   });
+  ctx.world.decisionLog.push({ kind: 'record', year: cited.year, event: origin.id, option: 'omit' });
+  for (const person of ctx.world.people.living().filter((p) => p.becomesGuardian)) {
+    ctx.world.people.kill(person.id, ctx.world.year, 'the founder becomes the frame listener');
+  }
+  ensureHead(ctx, testRng('view-fixture-head'));
+  const shown = presentFrame(ctx, frame, testRng('view-fixture-citation'));
+  if (shown?.cites?.page !== cited.page) throw new Error('view fixture needs an actual named-page citation');
   return viewOf(ctx) as unknown as Record<string, unknown>;
 }
 
@@ -232,6 +243,7 @@ const NOT_DRAWN: Record<string, string> = {
   // frame produced them, kept so the repetition instrument can count copies
   // without reading English (#276). A reader has no use for the frame's name.
   echoFrame: 'which echo sentence frame wrote a line; structure for the repetition instrument, never prose',
+  cites: 'the frame\'s exact page/year binding for core citation deduplication and return measurement; the passage already names the page in prose, rather than exposing this instrumentation key',
 };
 
 /**
@@ -241,7 +253,7 @@ const NOT_DRAWN: Record<string, string> = {
  */
 const REACHED = [
   'guardian', 'ascension', 'assize', 'chronicle', 'halls',
-  'outcomeId', 'discrepancyId', 'claims', 'record', 'foremost', 'blocked',
+  'outcomeId', 'discrepancyId', 'claims', 'record', 'foremost', 'blocked', 'cites',
 ];
 
 describe('Vue source reachability comment filtering (#1573)', () => {

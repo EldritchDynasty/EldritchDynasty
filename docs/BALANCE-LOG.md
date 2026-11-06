@@ -17420,6 +17420,11 @@ wedding moves the person within the same house. Outsiders still marry in;
 the existing Head remains at the seat and exactly one membership stays open.
 Constructed male/female and blood/cadet cases retain succession eligibility
 through save/load. The 160 focused demography, succession and Match tests pass.
+The changed history also exposed the optional frame `cites` key in the client
+read-model guard. Its precise page binding serves core deduplication and
+measurement; the frame's prose already names the page. The guard now documents
+that boundary and guarantees coverage by presenting a real authored frame
+against a constructed omission and its listeners; all 154 view tests pass.
 
 **Retained measurement.** Source `a83f1b4416dbf8c0d8c09982ceddfdf282eb88ee`,
 Linux x86_64, Node 22.23.4 / Vitest 4.1.11. Command:
