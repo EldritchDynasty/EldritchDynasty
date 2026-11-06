@@ -15,7 +15,8 @@ import { TEST_FAMILIES } from './tools/testFamilies.js';
 import { rollDeath } from './people/demography.js';
 import { makeRng } from './rng.js';
 import { coreMessageAddress } from './messages.js';
-import { ascensionBlockersFor, diagnoseHouseAscension, type HouseAscension } from './ascension.js';
+import { ascensionBlockersFor, diagnoseHouseAscension, measureAscension, type HouseAscension } from './ascension.js';
+import { readTheChronicle } from './ending.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
 const bundle = loadContent();
@@ -1078,5 +1079,40 @@ describe('the frozen ladder', () => {
     frozenLadder(ctx);
     viewOf(ctx);
     expect(JSON.stringify({ ...saveGame(ctx), savedAt: '' })).toBe(before);
+  });
+});
+
+/**
+ * Reading a completed book cannot materialize a lazy genome just to rank
+ * its expressers. A genome ref is persisted, even though the phenotype isn't.
+ */
+describe('completed-book ascension reads leave the saved family alone (#3073)', () => {
+  function household(seed: number) {
+    const ctx = testWorld(bundle, seed);
+    const lazy = [
+      place(ctx, { name: 'Unread Son', sex: 'male', age: 30 }),
+      place(ctx, { name: 'Unread Daughter', sex: 'female', age: 24 }),
+    ];
+    expect(lazy.every((p) => p.genome.kind === 'lazy')).toBe(true);
+    return { ctx, lazy };
+  }
+
+  it('keeps the same ladder reading without rewriting lazy genomes after collection', () => {
+    const active = household(3073);
+    const completed = household(3073);
+    const expected = measureAscension(active.ctx);
+    // The running game still deliberately materializes for ordinary simulation.
+    expect(active.lazy.every((p) => p.genome.kind === 'materialized')).toBe(true);
+
+    completed.ctx.world.ending = { id: 'forgotten', year: completed.ctx.world.year };
+    const saved = () => JSON.stringify({ ...saveGame(completed.ctx), savedAt: '' });
+    const before = saved();
+
+    for (let i = 0; i < 2; i++) {
+      expect(measureAscension(completed.ctx)).toEqual(expected);
+      readTheChronicle(completed.ctx);
+      expect(completed.lazy.every((p) => p.genome.kind === 'lazy')).toBe(true);
+      expect(saved(), 'reading the completed ledger must preserve the canonical save').toBe(before);
+    }
   });
 });
