@@ -72,12 +72,14 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   for (const run of finished) counts[run.conclusion] = (counts[run.conclusion] ?? 0) + 1;
   const complete = source === 'api' && end <= now && finished.length === details.length;
   const failed = counts.failure ?? 0;
-  const failureSharePercent = complete && details.length
+  // A cancelled/skipped/neutral run must never dilute the reported failure
+  // share. Such a cohort can describe outcomes but cannot establish a rate.
+  const classified = Object.keys(counts).every(key => key === 'success' || key === 'failure');
+  const failureSharePercent = complete && details.length && classified
     ? Math.round(failed / details.length * 1000) / 10 : null;
   // Only an exact one-day, 30+ group, fully classified API cohort meets the
   // issue's failure-rate evidence threshold; cancellations never count as green.
-  const dailyEligible = complete && end - start === 86400000 && details.length >= 30 &&
-    Object.keys(counts).every(key => key === 'success' || key === 'failure');
+  const dailyEligible = complete && end - start === 86400000 && details.length >= 30 && classified;
   const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
 
   return {
@@ -269,7 +271,7 @@ export function formatMergeGroups(report) {
       ' | ' + report.unfinished + ' | ' + value(report.medianMinutes) +
       ' min | ' + value(report.p90Minutes) + ' min |',
     '',
-    'Failure share (finished API cohort only): ' +
+    'Failure share (finished, classified API cohort only): ' +
       (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '%') + '.',
     'Daily <5% failure target (exact 24h, 30+ groups, only success/failure conclusions): ' +
       (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
