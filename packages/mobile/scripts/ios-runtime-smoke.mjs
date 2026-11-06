@@ -14,6 +14,7 @@ const COMPLETION_TIMEOUT_MS = {
   resume: 120_000,
   export: 120_000,
   import: 120_000,
+  'share-code': 120_000,
 };
 const udid = process.env.IOS_SIMULATOR_UDID;
 
@@ -201,3 +202,14 @@ if (imported.sha256 !== exported.sha256) {
 
 console.log(`save/resume sha256: ${saved.sha256}`);
 console.log(`export/import sha256: ${exported.sha256}`);
+
+// The Debug client's actual Start/share-code actions import a Unicode
+// anonymous founding and refuse a corrupted code before any replacement.
+// A separate simulator launch then proves the accepted save persisted through
+// the native Filesystem bridge, not only in an in-memory GameSession.
+const shared = await command('share-code', 'eldritchdynasty-smoke://share-code');
+const sharedResumed = await command('resume', 'eldritchdynasty-smoke://resume');
+if (sharedResumed.sha256 !== shared.sha256) {
+  throw new Error(`share-code import/cold-resume mismatch: ${shared.sha256} != ${sharedResumed.sha256}`);
+}
+console.log(`share-code import/cold-resume sha256: ${shared.sha256}`);
