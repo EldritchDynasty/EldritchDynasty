@@ -41,8 +41,20 @@ ordinary chronicler cohort, while bynames remain unusual among non-Head blood
 relatives. Count all Heads in the headline denominator, not just completed
 reigns, and do not discard broken or truncated runs to inflate reach. A miss is
 a **reported design result**, not a reason to weaken the test gate or invent
-post-hoc wording. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite. Until such a run is read,
-this document makes no claim that the target was achieved.
+post-hoc wording. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite. The weekly slow-suite stdout (or an explicit `npm test -- packages/core/src/record-claims.slow.test.ts` run) is the measurement receipt; the ordinary PR merge-blocking tier does **not** execute this weekly-classified suite.
+
+### Recorded paired reach — 6 November 2026
+
+The declared measurement **has now run**. The complete stdout, all 32 seed/policy rows and JSON receipt are retained in [`docs/evidence/byname-reach-2287.txt`](evidence/byname-reach-2287.txt), from source `a83f1b4416dbf8c0d8c09982ceddfdf282eb88ee` (Linux x86_64, Node 22.23.4, Vitest 4.1.11). The focused slow suite passed **4/4 tests**; all 32 yearly histories passed `expectHealthyWorld`. This is evidence from that pinned source, **not a new run on current main**.
+
+| Policy | All distinct Heads named | Completed-reign Heads named | Other blood relatives named | Source counts |
+| --- | --- | --- | --- | --- |
+| Ordinary chronicler | **74/172 (43.0%; Wilson 95% 35.9–50.5%)** | 72/156 (46.2%; 38.5–54.0%) | 20/3418 (0.59%; 0.4–0.9%) | 31 Record / 43 reign |
+| Always Omit | 67/185 (36.2%; 29.6–43.4%) | 67/169 (39.6%; 32.6–47.2%) | 0/3421 (0.00%; 0.0–0.1%) | 0 Record / 67 reign |
+
+The predeclared **greater-than-50% of all Heads** target was **not met** in the ordinary cohort: 74/172, not a majority. The other-relative incidence stayed low; the Omit control produced no Record-source grants and no named other relatives. Both policies retain all 16 histories, including 5 Broken Lines each; the final unfinished Head remains in each all-Heads denominator. These policies can change how a run unfolds, so their denominators differ; the older 1 November Record-only measurement is a historical cohort, **not** a matched estimate of improvement.
+
+**Disposition still needed:** the owner must accept the existing reign-source tradeoff despite missing the majority target, revise it as a separately scoped follow-up, or retain the measured no-change result. Do not change the source weights, denominator, gating or byname precedence to manufacture a pass. Observed player attachment remains unmeasured (#44).
 
 ## Existing contracts to preserve
 
