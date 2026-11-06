@@ -331,6 +331,11 @@ function detectEngines(): Ctor[] {
  * that has gone away must not take the answer with it. A failed engine stops
  * being `available` and the run goes on in silence.
  */
+function isActivationRefusal(reason: unknown): boolean {
+  return typeof reason === 'object' && reason !== null
+    && 'name' in reason && reason.name === 'NotAllowedError';
+}
+
 export class Sound {
   private context: AudioContext | null = null;
   private out: GainNode | null = null;
@@ -443,7 +448,13 @@ export class Sound {
     // Each accepted cue comes through here. Skip redundant host resume
     // requests while already running, but retry suspended or interrupted
     // contexts (including after a gesture-policy refusal).
-    this.resumeIfNeeded(this.context);
+    // A synchronous autoplay-policy refusal is temporary, but its action
+    // must not schedule a cue on a frozen clock to ring on a later gesture.
+    if (!this.resumeIfNeeded(this.context)) {
+      this.stopCues();
+      this.stopDrone(0);
+      return null;
+    }
     return { context: this.context, out: this.out };
   }
 
@@ -565,7 +576,11 @@ export class Sound {
     if (this.#muted || this.#volume === 0) return;
     this.attempt(() => {
       const ctx = this.context;
-      if (ctx) this.resumeIfNeeded(ctx);
+      if (ctx && this.resumeIfNeeded(ctx) && this.lastDrone && !this.drone) {
+        // A previously refused synchronous resume may have prevented the
+        // current Age from being scheduled. Restore only that latest scene.
+        this.setDrone(this.lastDrone);
+      }
     });
   }
 
@@ -601,10 +616,21 @@ export class Sound {
     return context.state === 'running';
   }
 
-  private resumeIfNeeded(context: AudioContext): void {
-    if (this.isRunningNow(context) || this.resuming === context) return;
-    const pending = context.resume?.();
-    if (!pending) return;
+  private resumeIfNeeded(context: AudioContext): boolean {
+    if (this.isRunningNow(context) || this.resuming === context) return true;
+    let pending: Promise<void> | undefined;
+    try {
+      pending = context.resume?.();
+    } catch (reason) {
+      // Some WebViews throw instead of returning a rejected promise. Treat
+      // the same activation denial as temporary, not a broken audio engine.
+      if (isActivationRefusal(reason)) {
+        this.stopCues();
+        return false;
+      }
+      throw reason;
+    }
+    if (!pending) return true;
     // Some engines enter 'running' synchronously, even though resume() returns
     // a promise. Do not keep a stale in-flight guard over a *later* suspension
     // in the same event turn (pagehide -> pageshow, or host pause -> gesture).
@@ -619,14 +645,14 @@ export class Sound {
       void pending.then(clear, clear);
     }
     this.watch(pending, context, true);
+    return true;
   }
 
   private watch(pending: Promise<unknown> | undefined, context: AudioContext, resume = false): void {
     pending?.catch((reason: unknown) => {
       // A stale promise from a disposed context must not disable a later one.
       if (this.context !== context || this.#failed) return;
-      if (resume && typeof reason === 'object' && reason !== null
-        && 'name' in reason && reason.name === 'NotAllowedError') {
+      if (resume && isActivationRefusal(reason)) {
         // Activation denial is temporary, so retain the device for the next
         // gesture. But the cue that triggered this refused resume belonged to
         // an earlier player action: a later unlock must not ring it belatedly.
