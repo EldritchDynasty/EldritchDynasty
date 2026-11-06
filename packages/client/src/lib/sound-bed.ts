@@ -375,7 +375,13 @@ export class SoundBed {
   #settle(): void {
     const muted = !this.audible;
     this.#tryAudio(() => {
-      if (this.engine.muted !== muted) this.engine.muted = muted;
+      // A host can refuse the optional mute-state read while still accepting
+      // writes. Do not skip a necessary mute just because its getter threw:
+      // the old drone could otherwise keep sounding at a stale volume.
+      let current: boolean | undefined;
+      try { current = this.engine.muted; }
+      catch { /* Unknown state: explicitly ask for the safe state below. */ }
+      if (current !== muted) this.engine.muted = muted;
     });
   }
 }
