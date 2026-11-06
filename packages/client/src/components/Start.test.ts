@@ -3251,6 +3251,48 @@ describe('voluntary resume recap (#1985)', () => {
     },
   );
 
+  it.each(['original', 'plainenglish'] as const)(
+    'names the first real pending docket item without inventing a previous plan (%s)', async (proseMode) => {
+      const first = { kind: 'choice', year: 1321, event: { title: 'The River Oath' } }
+        as unknown as SessionView['docket'][number];
+      const marriage = { kind: 'match', year: 1322, subject: { name: 'Iona' } }
+        as unknown as SessionView['docket'][number];
+      const record = { kind: 'record', year: 1323, subject: 'an old promise' }
+        as unknown as SessionView['docket'][number];
+      const w = mount(ResumeRecap, { props: {
+        view: snapshot(), pending: 2, proseMode, nextDecision: first,
+      } });
+      const heading = proseMode === 'plainenglish' ? 'Next decision:' : 'First on the docket:';
+      try {
+        expect(w.text()).toContain('2 decisions');
+        expect(w.get('.recap-next-decision').text()).toContain(heading);
+        expect(w.get('.recap-next-decision').text()).toContain('1321 · The River Oath');
+
+        await w.setProps({ pending: 1, nextDecision: marriage });
+        expect(w.text()).toContain('One decision');
+        expect(w.get('.recap-next-decision').text()).toContain('1322 ·');
+        expect(w.get('.recap-next-decision').text()).toContain(proseMode === 'plainenglish'
+          ? 'Choose a spouse for Iona' : 'A marriage for Iona');
+        expect(w.text()).not.toContain('The River Oath');
+
+        await w.setProps({ nextDecision: record });
+        expect(w.get('.recap-next-decision').text()).toContain('1323 ·');
+        expect(w.get('.recap-next-decision').text()).toContain(proseMode === 'plainenglish'
+          ? 'Choose what to record about an old promise'
+          : 'What the book will say of an old promise');
+        expect(w.text()).not.toContain('Iona');
+
+        // A legacy or changing view without a readable first item still gets
+        // its factual count; it does not inherit stale decision details.
+        await w.setProps({ nextDecision: undefined });
+        expect(w.text()).toContain('One decision');
+        expect(w.find('.recap-next-decision').exists()).toBe(false);
+        await w.setProps({ nextDecision: first, pending: 0 });
+        expect(w.find('.recap-next-decision').exists()).toBe(false);
+      } finally { w.unmount(); }
+    },
+  );
+
   it('omits unsupported facts and updates when the current save changes', async () => {
     const w = mount(ResumeRecap, { props: {
       view: snapshot({ generationArc: undefined, ambition: undefined }),

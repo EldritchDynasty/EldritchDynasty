@@ -635,6 +635,7 @@ const yearAndBirths = computed(() => {
       v-if="resumeRecap && hasResumeRecapFacts(view, docket.length)"
       :view="view"
       :pending="docket.length"
+      :next-decision="docket[0]"
       :prose-mode="accessibility.proseMode"
       @dismiss="resumeRecap = false"
     />

@@ -8,6 +8,8 @@ import { currentMarriagePromises } from '../lib/game';
 const props = withDefaults(defineProps<{
   view: SessionView;
   pending: number;
+  /** The first current public docket item, not an inferred player intention. */
+  nextDecision?: SessionView['docket'][number];
   proseMode?: ProseMode;
 }>(), { proseMode: 'original' });
 defineEmits<{ dismiss: [] }>();
@@ -39,9 +41,24 @@ const recapTitleId = useId();
         </template>
         <template v-if="pending > 0">
           <dt>{{ plain ? 'Waiting for you' : 'Before the clock may turn' }}</dt>
-          <dd>{{ pending === 1
-            ? (plain ? 'One decision is waiting in your docket.' : 'One decision awaits on the docket.')
-            : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}</dd>
+          <dd>
+            {{ pending === 1
+              ? (plain ? 'One decision is waiting in your docket.' : 'One decision awaits on the docket.')
+              : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}
+            <!-- The first actionable item is already in the public docket. Do not
+                 reconstruct other queued items or a player's unwritten plan. -->
+            <p v-if="pending > 0 && nextDecision?.kind === 'choice'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} · {{ nextDecision.event.title }}
+            </p>
+            <p v-else-if="pending > 0 && nextDecision?.kind === 'match'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} ·
+              {{ plain ? 'Choose a spouse for' : 'A marriage for' }} {{ nextDecision.subject.name }}
+            </p>
+            <p v-else-if="pending > 0 && nextDecision?.kind === 'record'" class="dim small recap-next-decision">
+              {{ plain ? 'Next decision:' : 'First on the docket:' }} {{ nextDecision.year }} ·
+              {{ plain ? 'Choose what to record about' : 'What the book will say of' }} {{ nextDecision.subject }}
+            </p>
+          </dd>
         </template>
         <template v-if="pledges.length">
           <dt>{{ plain ? 'Outstanding marriage promises' : 'Marriage pledges still owed' }}</dt>
@@ -67,6 +84,7 @@ const recapTitleId = useId();
 .recap-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .recap-title { font: inherit; font-weight: 700; margin: 0; }
 .recap-pledges { margin: 0; padding-inline-start: 1.15rem; }
+.recap-next-decision { margin: 5px 0 0; }
 summary { cursor: pointer; min-height: 44px; align-content: center; }
 dl { display: grid; grid-template-columns: minmax(9rem, 1fr) minmax(0, 3fr); gap: 8px 14px; }
 dt { color: var(--rubric); }
