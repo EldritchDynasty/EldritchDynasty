@@ -132,11 +132,21 @@ export class SoundBed {
     // interface (including null after a corrupt storage read). Never throw
     // during Start/Reading settings mount or wake audio for such a value.
     const supplied = preference && typeof preference === 'object' ? preference : null;
-    const requestedVolume = supplied?.volume;
+    let requestedVolume: unknown;
+    let requestedOn: unknown;
+    try {
+      requestedVolume = supplied?.volume;
+      requestedOn = supplied?.on;
+    } catch {
+      // An optional host adapter may expose throwing getters or a revoked
+      // proxy. Treat the entire preference as invalid and fail closed.
+      requestedVolume = undefined;
+      requestedOn = false;
+    }
     const volume = typeof requestedVolume === 'number' && Number.isFinite(requestedVolume)
       ? Math.min(1, Math.max(0, requestedVolume)) : 0;
     // Only a literal true with a valid, positive volume may turn sound on.
-    this.#preference = { on: supplied?.on === true, volume };
+    this.#preference = { on: requestedOn === true, volume };
     // Volume is set before unmuting. If an optional adapter throws, the old
     // output level may still be loud: mute it rather than accepting that level.
     this.#volumeApplied = false;
