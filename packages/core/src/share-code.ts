@@ -536,7 +536,7 @@ export function readShareCode(
   // combining grapheme joiners, variation selectors, and others. None belong
   // to the wire alphabet. Strip the whole default-ignorable category rather
   // than a hand-maintained subset, only after bounding the raw input.
-  const text = code.replace(/[\s\p{Default_Ignorable_Code_Point}\p{Cc}]+/gu, '');
+  const text = code.replace(/[\s\p{Default_Ignorable_Code_Point}]+/gu, '');
   if (!text) return { ok: false, problem: { kind: 'empty' } };
   if (text.length > SHARE_CODE_MAX) return { ok: false, problem: { kind: 'too_long', max: SHARE_CODE_MAX } };
   const head = /^ED(\d+)\./.exec(text);
