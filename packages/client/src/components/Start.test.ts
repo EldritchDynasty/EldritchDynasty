@@ -3351,8 +3351,8 @@ describe('voluntary resume recap (#1985)', () => {
   it.each(['original', 'plainenglish'] as const)(
     'does not invent a recap from blank saved question or ambition text (%s)', async (proseMode) => {
       const empty = snapshot({
-        generationArc: { question: '  \\t ' },
-        ambition: { name: ' ', next: '\\n  ' },
+        generationArc: { question: '  \t ' },
+        ambition: { name: ' ', next: '\n  ' },
         marriagePromises: [],
       });
       const untouched = structuredClone(empty);
@@ -3379,7 +3379,7 @@ describe('voluntary resume recap (#1985)', () => {
         expect(hasResumeRecapFacts(question, 0)).toBe(true);
         await w.setProps({ view: question });
         expect(w.findAll('dt')).toHaveLength(1);
-        expect(w.text()).toContain('  谁会守住承诺？  ');
+        expect(w.text()).toContain('谁会守住承诺？');
 
         const ambition = snapshot({
           generationArc: { question: ' ' },
