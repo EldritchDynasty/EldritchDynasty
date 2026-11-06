@@ -2044,8 +2044,12 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
       }
     };
 
-    // An imported membership cannot establish life in a hall before its charter.
+    // Older valid memberships can start before the branch charter: their
+    // branch affiliation is reconstructed at collection, not at first birth.
     membership.from = charterYear - 1;
+    expect(epilogueOf(ctx)!.purpose).toEqual(credited);
+    // A record starting before birth is not credible, regardless of the hall.
+    membership.from = relative.born - 1;
     rejects();
     // Nor does a fractional start or end date attest whole-year residence.
     membership.from = w.year - 0.5;
