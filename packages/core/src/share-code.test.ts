@@ -10,7 +10,7 @@ import { FRIEND_NAME_MAX, MAX_FRIENDS } from './people/friends.js';
 import {
   contentEdition, newGameFromShareCode, readShareCode, SHARE_CODE_MAX, type ShareCodeProblem,
 } from './share-code.js';
-import { PERSON_NAME_MAX, type FounderIdentity } from '@ed/schema';
+import { FoundingConfigurationS, GenderS, PERSON_NAME_MAX, type FounderIdentity } from '@ed/schema';
 
 const content = loadContent();
 const BUILD = 'abc1234';
@@ -1042,8 +1042,8 @@ describe('a code it cannot honour is refused, with the reason, before any run ch
   );
 
   it('keeps valid founder identities shareable after their guardian transition (#3104)', () => {
-    for (const gender of ['man', 'woman', 'nonbinary'] as const) {
-      for (const configuration of ['blood_father', 'blood_mother'] as const) {
+    for (const gender of GenderS.options) {
+      for (const configuration of FoundingConfigurationS.options) {
         const original = founded({ ...SIGNED, founder: { ...SIGNED.founder, gender, configuration } });
         const code = codeOf(original, { names: true });
         const person = original.ctx.world.people.all().find((p) => p.becomesGuardian)!;
