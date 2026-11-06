@@ -4,7 +4,7 @@ import type {
 } from '@ed/schema';
 import { appendLibraryRun, configurationFor, emptyRunLibrary, LIBRARY_FORMAT, PERSON_NAME_MAX, readRunLibrary, RecordOptionS } from '@ed/schema';
 import {
-  CAMPAIGNS, earnedAchievements, matchFuture, newGame, newGameFromShareCode, readShareCode, resumeGame, standingMoved,
+  CAMPAIGNS, canonical, earnedAchievements, matchFuture, newGame, newGameFromShareCode, readShareCode, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type AdviserAdvice, type HelpSurface, type HelpTier,
   type AchievementId, type AchievementView, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
@@ -1448,6 +1448,61 @@ export function createGame(
       if (!platform.writeSmokeInterchange) throw new Error('the host has no smoke export seam');
       const result = await smokeSnapshot(false);
       return { ...result, path: await platform.writeSmokeInterchange(result.snapshot) };
+    }
+
+    if (command.kind === 'share-code') {
+      // A Debug-only, real native-host proof for #1995. Exercise the SAME
+      // client actions as Start, including the persisted untrimmed founder
+      // answer and an anonymous code's required friend names. No names or
+      // share codes are written to the smoke receipt.
+      actions.begin(1995, 'short');
+      const signing = prologue.value;
+      if (!signing) throw new Error('the share-code smoke has no signing');
+      const names = {
+        founder: '\tMaud e\u0301 🌿\u2003 ',
+        house: 'House of 雪',
+        friends: ['蘭花 Vale'],
+      };
+      const founded = actions.found({
+        houseName: names.house,
+        heirloom: signing.heirlooms[0]?.heirloom ?? '',
+        grudge: signing.grudges[0]?.house ?? '',
+        answers: Object.fromEntries(signing.examination.map((question) => [
+          question.id, question.answers[0]?.id ?? '',
+        ])),
+        founder: { name: names.founder, gender: 'woman', configuration: 'blood_mother' },
+        friends: [{ name: names.friends[0]!, sex: 'female' }],
+      });
+      if (!founded.ok) throw new Error(founded.reason ?? 'the share-code smoke signing was refused');
+      const anonymous = actions.shareCode(false);
+      const named = actions.shareCode(true);
+      if (!anonymous.ok || !named.ok) throw new Error('the share-code smoke could not export the founding');
+      const preview = actions.readShareCode(anonymous.code);
+      if (!preview.ok || preview.founding.missing.join(',') !== 'founder,house,friends') {
+        throw new Error('the anonymous share-code preview lost its required names');
+      }
+      const foundingSave = session.value?.save();
+      if (!foundingSave) throw new Error('the share-code smoke has no original save');
+      const expected = canonical(foundingSave);
+
+      // A damaged code must not replace the active run or its canonical save.
+      const rejected = actions.beginFromShareCode(`${anonymous.code}x`, names);
+      if (rejected === null) throw new Error('a damaged share code was accepted');
+      if (!session.value || canonical(session.value.save()) !== expected) {
+        throw new Error('a damaged share code changed the active founding');
+      }
+
+      const refused = actions.beginFromShareCode(anonymous.code, names);
+      if (refused !== null) throw new Error('the valid share code was refused');
+      const recreated = session.value?.save();
+      if (!recreated || canonical(recreated) !== expected) {
+        throw new Error('anonymous share-code import changed canonical founding state');
+      }
+      const restoredNamed = actions.shareCode(true);
+      if (!restoredNamed.ok || restoredNamed.code !== named.code) {
+        throw new Error('anonymous share-code import changed the named re-export');
+      }
+      return smokeSnapshot();
     }
 
     if (!platform.readSmokeInterchange) throw new Error('the host has no smoke import seam');
