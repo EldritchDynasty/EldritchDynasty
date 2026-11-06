@@ -277,6 +277,40 @@ failure-rate condition. The seven-day unmeasured-file budget, working-day
 arrival-vs-landing balance, and owner decision on increased concurrency
 also remain unverified. Keep build concurrency unchanged.
 
+### Fifth post-cutover observation: 20 completed groups (initial comparison threshold)
+
+Collected **6 November 2026 after 08:47 UTC**, using the same fixed
+post-#2825 selection and measurement definitions as the first four observations.
+The native merge-group `check` runs below extend the earlier 17, not a new
+or cherry-picked cohort. All three final conclusions are successful; each
+`gates (batch)` job independently printed twelve reused trusted proofs.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42185536846](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42185536846) | 08:08:20 | 11.47 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42185536846/job/127784918975) |
+| [42186941116](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42186941116) | 08:20:15 | 8.23 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42186941116/job/127789494760) |
+| [42189479409](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42189479409) | 08:41:26 | 5.90 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42189479409/job/127797735249) |
+
+**Fixed post-cutover cohort (20 completed groups):** **20 successful / 0
+failed**, median **9.96 minutes** from `run_started_at` to `updated_at`,
+and **188 / 240 (78.3%)** trusted gate-proof decisions reused. This meets
+the issue's *20-group descriptive slot/proof comparison* denominator.
+
+For context, the original day-sized baseline measured **14.38 minutes** median
+and **36 / 1152 (3.13%)** proof reuse. The immediately preceding 24-hour
+control instead measured **12.20 minutes** median and **0 / 69 failures**.
+The post-cutover sample spans only about seven hours and a shifting PR mix;
+it is not an equivalent randomized or day-long comparison. It is consistent
+with more reuse and shorter observed slots but does not prove causality, a
+failure-rate improvement or durable arrival/landing equilibrium. In particular,
+0/20 failures must not be described as an improvement over 0/69. Do not use
+proof-only 0/0 gate execution times as full-gate benchmarking.
+
+**Still open:** the 30-group/day under-5%-failure condition, seven consecutive
+days free of the unmeasured-test-file budget failure, and the working-day
+arrival-versus-landing/backlog assessment. No evidence here authorizes raising
+merge-queue concurrency.
+
 ## Follow-up after landing
 
 The implementation publishes merge-group proofs, but consumers accept them only
@@ -285,17 +319,15 @@ It also opens measured duration refresh PRs at five unmeasured files while
 retaining the eight-file guard, and brakes new ordinary code claims at ten ready
 PRs. The repair PR shares the normal CI and merge queue requirements.
 
-The following evidence is still pending and keeps #2794 open:
-
-- At least 20 post-change groups: median slot and proof-reuse rate against the
-  baseline above. Retained gate-reuse-plan and gate-timings artifacts make the
-  source decisions inspectable.
+The 20-group slot/proof comparison above is now measured, with linked
+gate-reuse decisions and the fixed cutover. The following acceptance evidence
+is still pending and keeps #2794 open:
 - A day with at least 30 groups and a failure rate below 5%.
 - Seven consecutive days without an unmeasured-file-budget merge-group failure.
 - A working day with landings keeping up with arrivals and a falling ready backlog.
 
 Build concurrency remains at its existing setting. Slice 5 requires measured
-improvement from slices 2–4 first; the initial three-group post-change evidence above is not enough to evaluate that change.
+improvement from slices 2–4 first; the 20-group descriptive sample does not replace the 30-group day, seven-day budget streak, workload-capacity verification, or owner approval.
 Before increasing it, confirm the account's concurrent-job allowance against
 GitHub's current plan documentation and record the actual ruleset change in
 COMMANDS.md. No concurrency or rate improvement is claimed in advance.
