@@ -2,7 +2,7 @@
 import { computed, useId } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
-import { currentMarriagePromises } from '../lib/game';
+import { currentMarriagePromises, hasResumeRecapAmbition, hasResumeRecapQuestion } from '../lib/game';
 
 /** Reader-local facts after an accepted save pickup; never a second promise store. */
 const props = withDefaults(defineProps<{
@@ -15,6 +15,8 @@ const props = withDefaults(defineProps<{
 defineEmits<{ dismiss: [] }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
 const pledges = computed(() => currentMarriagePromises(props.view));
+const hasQuestion = computed(() => hasResumeRecapQuestion(props.view));
+const hasAmbition = computed(() => hasResumeRecapAmbition(props.view));
 /**
  * A recovered docket can carry an impossible future, fractional, or
  * pre-campaign date. Keep its count (the engine still owns the docket), but
@@ -46,11 +48,11 @@ const recapTitleId = useId();
       <summary>{{ plain ? 'See where things stand' : 'Where the house stands' }}</summary>
       <p class="dim small">{{ view.houseName }} · {{ view.year }} · Generation {{ view.generation }}</p>
       <dl>
-        <template v-if="view.generationArc?.question">
+        <template v-if="hasQuestion">
           <dt>{{ plain ? 'Current family question' : 'This generation asks' }}</dt>
           <dd>{{ view.generationArc.question }}</dd>
         </template>
-        <template v-if="view.ambition">
+        <template v-if="hasAmbition">
           <dt>{{ plain ? 'Goal being tracked' : 'Ambition kept in view' }}</dt>
           <dd><strong>{{ view.ambition.name }}</strong> — {{ view.ambition.next }}</dd>
         </template>
