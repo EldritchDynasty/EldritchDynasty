@@ -564,7 +564,13 @@ export function newGameFromShareCode(
   const read = readShareCode(code, source, { build: opts.build });
   if (!read.ok) return read;
   const f = read.founding;
-  const parsedNames = SharedNamesS.safeParse(opts.names === undefined ? {} : opts.names);
+  // A complete named code provides every name itself. Any recipient fields
+  // left over from an earlier anonymous import are unused and must not veto
+  // this canonical founding, even when a host supplies malformed stale data.
+  // Anonymous codes still validate every supplied field, including surplus
+  // friend names that would otherwise be silently dropped.
+  const recipientNames = f.missing.length === 0 ? {} : opts.names === undefined ? {} : opts.names;
+  const parsedNames = SharedNamesS.safeParse(recipientNames);
   if (!parsedNames.success) {
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
