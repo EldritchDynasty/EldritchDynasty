@@ -1,6 +1,6 @@
 import type { Register } from '@ed/schema';
 import type { GameActions, Outcome } from './game';
-import type { Cue, DroneInput, Sound } from './sound';
+import { droneScore, type Cue, type DroneInput, type Sound } from './sound';
 
 /**
  * THE GAME'S EARS (#1986): when each of `sound.ts`'s cues plays, and when the
@@ -112,7 +112,6 @@ export class SoundBed {
   #hostPaused = false;
   /** Read live visibility at gestures: some WebViews omit visibilitychange. */
   #attachedDocument: { readonly visibilityState: DocumentVisibilityState } | null = null;
-  #scene: DroneInput | null = null;
   #sceneKey = 'null';
   #detach: () => void = () => undefined;
 
@@ -160,21 +159,37 @@ export class SoundBed {
   /** Where the drone should be. Called on every view; an unchanged scene is left alone. */
   scene(next: DroneInput | null): void {
     if (this.#disposed) return;
-    // A stale/invalidated view can expose a throwing getter or a cycle. Audio
-    // is optional presentation: a bad scene must neither interrupt rendering
-    // nor leave the old Age drone humming as though it were still current.
-    let key: string | undefined;
-    try { key = JSON.stringify(next); }
-    catch { /* An invalid scene means silence, not a failed player update. */ }
-    if (key === undefined) {
-      next = null;
-      key = 'null';
-    }
+    // A view invalidated by a host can be serializable yet no longer contain
+    // valid Age registers. Passing that object to Sound would throw during
+    // score construction and permanently disable otherwise healthy audio.
+    // Snapshot it first: getters and toJSON hooks cannot change the object
+    // after validation but before the engine consumes it.
+    let scene: DroneInput | null = null;
+    let key = 'null';
+    try {
+      const serialized = JSON.stringify(next);
+      if (serialized !== undefined) {
+        const value: unknown = JSON.parse(serialized);
+        if (value && typeof value === 'object' && !Array.isArray(value)
+          && 'registers' in value && Array.isArray(value.registers)
+          && value.registers.every((register) => typeof register === 'string')
+          && 'frame' in value && typeof value.frame === 'boolean') {
+          const candidate: DroneInput = { registers: value.registers as Register[], frame: value.frame };
+          // The sound score's exhaustive register switch is the authority for
+          // what the device can render. Validate a non-frame snapshot even if
+          // the current frame is silent: a hidden invalid Age must not reach
+          // Sound later, or import the simulation schema across the client seam.
+          droneScore({ registers: candidate.registers, frame: false });
+          scene = candidate;
+          key = JSON.stringify(scene);
+        }
+      }
+    } catch { /* Cyclic/throwing/invalid scene: silence without failing the game. */ }
     if (key === this.#sceneKey) return;
-    this.#scene = next;
     this.#sceneKey = key;
-    // `Sound` remembers it while muted, so unmuting plays this and not a stale one.
-    this.#tryAudio(() => this.engine.setDrone(next));
+    // The engine remembers the latest valid scene while muted, so unmuting
+    // cannot resurrect a stale Age or replay an invalid one.
+    this.#tryAudio(() => this.engine.setDrone(scene));
   }
 
   cue(cue: Cue): void {
