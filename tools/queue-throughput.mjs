@@ -145,6 +145,10 @@ export function summarizePrFlow(pulls, { from, to, now = Date.now(), source = 's
     const landed = pr.merged_at == null ? null : timestamp(pr.merged_at);
     if (closed !== null && closed < created) throw new Error('PR closed before creation: ' + pr.number);
     if (landed !== null && landed < created) throw new Error('PR merged before creation: ' + pr.number);
+    // A merge is also a closure. Without that timestamp the snapshot would
+    // count a landed PR as still open and corrupt both backlog boundaries.
+    if (landed !== null && closed === null) throw new Error('Merged PR missing closed_at: ' + pr.number);
+    if (landed !== null && closed < landed) throw new Error('PR merged after closure: ' + pr.number);
     if (created >= start && created < end) arrivalIds.push(pr.number);
     if (landed !== null && landed >= start && landed < end) mergedIds.push(pr.number);
     if (closed !== null && landed === null && closed >= start && closed < end) closedUnmerged++;
