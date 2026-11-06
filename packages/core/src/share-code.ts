@@ -4,7 +4,7 @@ import type {
   ProseVariant, Sex,
 } from '@ed/schema';
 import { assertNever, founderSexOf, FounderIdentityS, indexContent, PERSON_NAME_MAX, resolveFounder, SAVE_FORMAT } from '@ed/schema';
-import { campaignDef } from './campaign.js';
+import { CAMPAIGNS, campaignDef } from './campaign.js';
 import { FRIEND_NAME_MAX, MAX_FRIENDS, normaliseFriends } from './people/friends.js';
 import { HOUSE_NAME_MAX, type FoundingChoice } from './prologue.js';
 import { hashSeed } from './rng.js';
@@ -245,6 +245,12 @@ function encode(payload: Payload): string {
 export function shareCodeOf(ctx: SimCtx, opts: ShareCodeOptions = {}): ShareCodeResult {
   const w = ctx.world;
   if (w.campaign === 'demo') return { ok: false, unavailable: 'demonstration' };
+  // A recovered or programmatically modified world may carry a runtime value
+  // outside the closed campaign union. Fail closed before campaignDef or
+  // campaignLetter reads it; inherited object keys are not campaign IDs.
+  if (!Object.prototype.hasOwnProperty.call(CAMPAIGNS, w.campaign)) {
+    return { ok: false, unavailable: 'unrepresentable' };
+  }
   // An in-memory or recovered decision log can be damaged despite its static
   // type. A null row otherwise throws in the filter below and takes down
   // the share/export surface instead of reporting an unavailable code.

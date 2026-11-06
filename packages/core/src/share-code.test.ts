@@ -114,6 +114,28 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
       .toEqual({ ok: false, unavailable: 'demonstration' });
   });
 
+  it('refuses malformed runtime campaign IDs without crashing share export (#1995)', () => {
+    const session = founded();
+    const original = codeOf(session, { names: true });
+    const campaign = session.ctx.world.campaign;
+    try {
+      // Invalid runtime state must not throw out of the ending/Chronicle
+      // export path. Prototype keys are truthy property lookups on ordinary
+      // objects but are not members of the campaign vocabulary.
+      for (const invalid of ['unknown', '__proto__', 'constructor', null, undefined]) {
+        session.ctx.world.campaign = invalid as never;
+        for (const names of [false, true]) {
+          expect(() => session.shareCode({ build: BUILD, names }), String(invalid)).not.toThrow();
+          expect(session.shareCode({ build: BUILD, names }), String(invalid))
+            .toEqual({ ok: false, unavailable: 'unrepresentable' });
+        }
+      }
+    } finally {
+      session.ctx.world.campaign = campaign;
+    }
+    expect(codeOf(session, { names: true })).toBe(original);
+  });
+
   it('preserves Unicode founding names exactly and redacts them from anonymous codes', () => {
     // Founding text is player-entered, not a mechanical id. A share code
     // must retain its exact UTF-8 spelling when names are explicitly included,
