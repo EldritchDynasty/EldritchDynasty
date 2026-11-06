@@ -288,7 +288,9 @@ watch(signingIdentity, () => {
   shown.value = initialPrologueShown(
     readingStorage(), props.skipSeenProse, replayText.value, props.prologue.triad.length,
   );
-});
+// A new run can arrive while an old Sign control is still in the DOM. Reset
+// before another synchronous click or Enter can submit the previous drafts.
+}, { flush: 'sync' });
 const signingStage = computed(() => signingStages.value[Math.min(signingStageIndex.value, signingStages.value.length - 1)]!);
 /** Research-only stage markers. No entered names, answers, or simulation commands leave this component.
  * Include the run's signing identity: a new fast-revealed signing may start on
@@ -368,7 +370,7 @@ function sign(): void {
   // A queued click on the old Sign button may arrive after Back has moved
   // the reader to an earlier stage. Hidden controls are not an authority to
   // found a house: only the final displayed stage may submit.
-  if (signingStage.value !== 'house' || wanted.value.length > 0 || signing) return;
+  if (props.prologue.founded || signingStage.value !== 'house' || wanted.value.length > 0 || signing) return;
   refusalSuperseded.value = false;
   signing = true;
   try {
