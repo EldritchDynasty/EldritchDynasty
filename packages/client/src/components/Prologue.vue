@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, useId, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, useId, watch } from 'vue';
 import type { PrologueView } from '@ed/core';
 import type { FoundingConfiguration, Gender, ProseMode } from '@ed/schema';
 import { FOUNDER_NAME_MAX, founderConfigurationFor, type GameActions } from '../lib/game';
@@ -324,6 +324,15 @@ function focusSigningStageHeading(): void {
   // Scope focus to this signing even if an older instance is still mounted.
   signingRoot.value?.querySelector<HTMLElement>(`#${headingIds[signingStage.value]}`)?.focus();
 }
+
+// A returning reader can skip an already-seen opening. In that case the
+// final reveal button never exists to hand focus to the signing form.
+// Set focus on first mount only: later run/prose changes must not steal it.
+onMounted(() => {
+  if (!props.prologue.founded && shown.value >= props.prologue.triad.length) {
+    focusSigningStageHeading();
+  }
+});
 
 let navigatingSigning = false;
 function moveSigningStage(direction: -1 | 1): void {
@@ -721,8 +730,7 @@ button.on, .on { }
 .founder-section, .house-section { margin-top: 30px; }
 .signing-progress { margin: 28px 0 0; color: var(--ink-soft); font-size: var(--t-fine); }
 .signing-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 24px; }
-.stage-title:focus { outline: none; }
-.stage-title:focus-visible { outline: 2px solid var(--rubric); outline-offset: 4px; }
+.stage-title:focus { outline: 2px solid var(--rubric); outline-offset: 4px; }
 .founder-section .choice, .house-section .choice { margin-top: 16px; }
 .stage-title { margin: 0 0 16px; color: var(--ink-soft); font-size: var(--t-card); font-weight: 600; }
 .choice .prompt { margin: 0 0 12px; line-height: 1.7; color: var(--ink-soft); font-size: var(--t-card); }
