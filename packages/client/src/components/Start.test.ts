@@ -3269,6 +3269,29 @@ describe('voluntary resume recap (#1985)', () => {
     },
   );
 
+  it('keeps separate outstanding creditors and omits absent legacy evidence', async () => {
+    const view = snapshot({ marriagePromises: [
+      { house: 'house_elm', houseName: 'House Elm', year: 1315, lot: 'book', lotName: 'Book of Hours' },
+      { house: 'house_pine', houseName: 'House Pine', year: 1320, lot: 'relic', lotName: 'silver relic' },
+    ] });
+    const before = structuredClone(view);
+    const w = mount(ResumeRecap, { props: { view, pending: 0 } });
+    try {
+      const pledges = w.get('.recap-pledges').findAll('li');
+      expect(pledges).toHaveLength(2);
+      expect(pledges[0]!.text()).toContain('House Elm');
+      expect(pledges[0]!.text()).toContain('Book of Hours');
+      expect(pledges[1]!.text()).toContain('House Pine');
+      expect(pledges[1]!.text()).toContain('silver relic');
+      expect(view).toEqual(before);
+
+      // Synthetic/legacy views with no readable pledge field should not
+      // supply a made-up commitment.
+      await w.setProps({ view: snapshot() });
+      expect(w.find('.recap-pledges').exists()).toBe(false);
+    } finally { w.unmount(); }
+  });
+
   it('opens a recap only after a successful rolling, named or imported pickup', async () => {
     const notify = vi.fn();
     const actions = {
