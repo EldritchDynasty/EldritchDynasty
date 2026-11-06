@@ -1138,13 +1138,19 @@ function rankedExpressers(ctx: SimCtx): { person: Person; standing: Standing }[]
   const w = ctx.world;
   const ranked: { person: Person; standing: Standing }[] = [];
   for (const p of w.people.household(w.playerHouse, w.year)) {
-    if (!phenotypeOf(p, ctx.genetics, w.year).eldritch.canExpress) continue;
+    // A completed book is only being READ. phenotypeOf() materializes lazy
+    // genomes by replacing p.genome, which would change canonical save bytes
+    // merely by opening the epilogue. Compute against a transient person and
+    // keep the real reference for callers that use the ranking to cast.
+    // During an active campaign retain the normal materialization/cache path.
+    const measured = w.ending && p.genome.kind === 'lazy' ? { ...p } : p;
+    if (!phenotypeOf(measured, ctx.genetics, w.year).eldritch.canExpress) continue;
     // A man declared mundane (§11, issue #1794) can never wake, so he can
     // never stand on a rung. Ranking him would leave the ladder reading
     // "keep him in view for an Awakening" about a man the house has stopped
     // watching. The Madness gate is unaffected: that is `canExpress` alone.
     if (p.awakening.declaredMundane && !p.awakening.awakened) continue;
-    ranked.push({ person: p, standing: standingOf(ctx, p) });
+    ranked.push({ person: p, standing: standingOf(ctx, measured) });
   }
   // `outranks` is a strict better-than, so a stable sort leaves ties in
   // household order — the same tie-break `foremostOf`'s scan produced when
