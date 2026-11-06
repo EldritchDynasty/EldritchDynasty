@@ -193,10 +193,17 @@ export class SoundBed {
       }
     } catch { /* Cyclic/throwing/invalid scene: silence without failing the game. */ }
     if (key === this.#sceneKey) return;
-    this.#sceneKey = key;
-    // The engine remembers the latest valid scene while muted, so unmuting
-    // cannot resurrect a stale Age or replay an invalid one.
-    this.#tryAudio(() => this.engine.setDrone(scene));
+    // Only remember a scene the optional host actually accepted. If its
+    // adapter threw before setting the drone, retaining this key would make
+    // every later identical view a no-op even after the host recovers.
+    // Successful muted scenes are still remembered by Sound for unmuting.
+    try {
+      this.engine.setDrone(scene);
+      this.#sceneKey = key;
+    } catch {
+      // Audio must never interrupt the game. A later identical view can retry
+      // without inventing a new Age transition or restarting a healthy drone.
+    }
   }
 
   cue(cue: Cue): void {
