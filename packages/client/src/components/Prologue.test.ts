@@ -923,7 +923,7 @@ describe('visible signing names (#1984)', () => {
       await revealChoices(wrapper);
       const founder = wrapper.get('input[aria-label="Name the founder"]');
       await wrapper.findAll('.identity button')[0]!.trigger('click');
-      for (const name of ['\u200B\u2060', '\u0000', '\u0085']) {
+      for (const name of ['\u200B\u2060', '\u0000', '\u0085', '\u0301', ' \u200D\u0301\u035C ']) {
         await founder.setValue(name);
         expect(founder.attributes('aria-invalid')).toBe('true');
       }
@@ -942,7 +942,7 @@ describe('visible signing names (#1984)', () => {
       await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
 
       const house = wrapper.get('input[aria-label="Name the house"]');
-      for (const name of ['\u200B', '\u0000', '\u0085']) {
+      for (const name of ['\u200B', '\u0000', '\u0085', '\u0301', ' \u200D\u0301\u035C ']) {
         await house.setValue(name);
         expect(house.attributes('aria-invalid')).toBe('true');
       }
@@ -1075,7 +1075,7 @@ describe('optional friends at signing (#1984)', () => {
         await nextTick();
         const friend = wrapper.get(proseMode === 'plainenglish'
           ? 'input[aria-label="Name friend 1"]' : 'input[aria-label="Name the first friend"]');
-        for (const name of ['\u200B\u2060', '\u0000', '\u0085']) {
+        for (const name of ['\u200B\u2060', '\u0000', '\u0085', '\u0301', ' \u200D\u0301\u035C ']) {
           await friend.setValue(name);
           expect(friend.attributes('aria-invalid')).toBe('true');
         }
@@ -1107,6 +1107,8 @@ describe('optional friends at signing (#1984)', () => {
         expect(summary.text()).toContain(proseMode === 'plainenglish'
           ? 'Open to correct 1 friend name' : 'One friend name needs correcting');
 
+        await friend.setValue('Ma\u0301ra');
+        expect(friend.attributes('aria-invalid')).toBe('false');
         await friend.setValue('Ma\u200Dra');
         expect(friend.attributes('aria-invalid')).toBe('false');
         expect(summary.find('[role="status"]').exists()).toBe(false);
