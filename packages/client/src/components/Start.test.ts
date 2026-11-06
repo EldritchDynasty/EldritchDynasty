@@ -8,7 +8,7 @@ import Naming from './Naming.vue';
 import ResumeRecap from './ResumeRecap.vue';
 import { canonical, type SessionView } from '@ed/core';
 import { loadContent } from '@ed/content';
-import { CAMPAIGN_CHOICES, createGame, resumeRecapRequested, withAcceptedPickup, type GameActions, type ChapterBeat } from '../lib/game';
+import { CAMPAIGN_CHOICES, createGame, hasResumeRecapFacts, resumeRecapRequested, withAcceptedPickup, type GameActions, type ChapterBeat } from '../lib/game';
 import type { Platform, SaveSummary } from '../platform';
 import type { RunLibrary } from '@ed/schema';
 import { hasSeenProse, rememberSeenProse, seenProseKey } from '../lib/accessibility';
@@ -3171,6 +3171,34 @@ describe('resume recap opt-in', () => {
     expect(resumeRecapRequested('?resume-recap=1&resume-recap=1')).toBe(false);
     expect(resumeRecapRequested('?resume-recap=1&resume-recap=0')).toBe(false);
     expect(resumeRecapRequested('?reading-log=1&resume-recap=1')).toBe(true);
+  });
+
+  it('requires facts already in the loaded view, not facts added by later play', async () => {
+    let loaded = snapshot({ generationArc: undefined, ambition: undefined });
+    let showRecap = false;
+    const actions = { resume: vi.fn(async () => true) } as unknown as GameActions;
+    const decorated = withAcceptedPickup(actions, () => {
+      showRecap = hasResumeRecapFacts(loaded, 0);
+    });
+
+    expect(await decorated.resume()).toBe(true);
+    expect(showRecap).toBe(false);
+    // A later decision or generation question is not another pickup.
+    loaded = snapshot();
+    expect(hasResumeRecapFacts(loaded, 0)).toBe(true);
+    expect(showRecap).toBe(false);
+
+    expect(await decorated.resume()).toBe(true);
+    expect(showRecap).toBe(true);
+  });
+
+  it('accepts any real recap line but refuses a missing or empty view', () => {
+    const empty = snapshot({ generationArc: undefined, ambition: undefined });
+    expect(hasResumeRecapFacts(null, 4)).toBe(false);
+    expect(hasResumeRecapFacts(empty, 0)).toBe(false);
+    expect(hasResumeRecapFacts(empty, 1)).toBe(true);
+    expect(hasResumeRecapFacts(snapshot({ ambition: undefined }), 0)).toBe(true);
+    expect(hasResumeRecapFacts(snapshot({ generationArc: undefined }), 0)).toBe(true);
   });
 });
 
