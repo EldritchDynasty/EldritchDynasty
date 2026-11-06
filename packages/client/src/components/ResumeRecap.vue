@@ -46,9 +46,8 @@ const recapTitleId = useId();
           <dd>
             <ul class="recap-pledges">
               <li v-for="promise in view.marriagePromises" :key="`${promise.house}-${promise.year}-${promise.lot}`">
-                {{ plain ? 'Promised in' : 'Pledged in' }} {{ promise.year }}
-                {{ plain ? 'to' : 'unto' }} {{ promise.houseName }}
-                {{ plain ? 'for' : 'for' }} <em>{{ promise.lotName }}</em>
+                {{ plain ? 'Promised in' : 'Pledged in' }} {{ promise.year }} to {{ promise.houseName }}
+                for <em>{{ promise.lotName }}</em>
               </li>
             </ul>
           </dd>
