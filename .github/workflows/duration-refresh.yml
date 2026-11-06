@@ -1,0 +1,82 @@
+# Temporary measurement runner for issue #3063.
+# Removes itself from the branch after a verified measurement; no workflow file
+# is included in the eventual landed change.
+name: one-shot duration refresh 3063
+
+on:
+  push:
+    branches:
+      - chatgpt/issue-3063-duration-refresh-20261106
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: write
+
+concurrency:
+  group: duration-refresh-3063
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Regenerate using the complete instrumented suite
+        env:
+          ED_DURATION_SOURCE_SHA: ${{ github.sha }}
+        run: npm run cost -- --full --write
+      - name: Verify successful 4-CPU inventory before publication
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          import { testInventory } from './tools/test-duration-report.mjs';
+          const report = JSON.parse(readFileSync('tools/test-durations.json', 'utf8'));
+          const measured = Object.keys(report.files).sort();
+          const expected = testInventory(process.cwd());
+          if (report.measurement?.host?.cpus !== 4) {
+            throw new Error('Duration table was not measured on exactly four CPUs');
+          }
+          if (report.measurement?.sourceSha !== process.env.GITHUB_SHA) {
+            throw new Error('Duration table does not name the measurement source commit');
+          }
+          if (JSON.stringify(measured) !== JSON.stringify(expected)) {
+            throw new Error('Duration measurement does not cover the full inventory');
+          }
+          if (measured.some((path) => !Number.isFinite(report.files[path]) || report.files[path] < 0)) {
+            throw new Error('Duration table contains an invalid cost');
+          }
+          console.log('Verified', measured.length, 'test files on four CPUs at', process.env.GITHUB_SHA);
+          NODE
+      - name: Commit measured data and remove one-shot runner
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rm .github/workflows/duration-refresh.yml
+          git add tools/test-durations.json docs/COMMANDS.md
+          if git diff --cached --quiet; then
+            echo 'No generated changes were produced' >&2
+            exit 1
+          fi
+          git commit -m 'chore(ci): refresh measured test durations (Closes #3063)'
+          git push origin HEAD:chatgpt/issue-3063-duration-refresh-20261106
+      - name: Start exact-head integration checks and queue handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR="$(gh pr list --head chatgpt/issue-3063-duration-refresh-20261106 --state open --json number --jq '.[0].number')"
+          if [ -z "$PR" ]; then
+            echo 'No issue #3063 PR found; generated commit is retained on branch' >&2
+            exit 1
+          fi
+          gh pr ready "$PR"
+          gh workflow run check.yml --ref chatgpt/issue-3063-duration-refresh-20261106
+          echo "Triggered required full checks for PR #$PR at committed measurement head."
