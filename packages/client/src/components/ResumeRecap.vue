@@ -2,6 +2,7 @@
 import { computed, useId } from 'vue';
 import type { SessionView } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
+import { currentMarriagePromises } from '../lib/game';
 
 /** Reader-local facts after an accepted save pickup; never a second promise store. */
 const props = withDefaults(defineProps<{
@@ -11,6 +12,7 @@ const props = withDefaults(defineProps<{
 }>(), { proseMode: 'original' });
 defineEmits<{ dismiss: [] }>();
 const plain = computed(() => props.proseMode === 'plainenglish');
+const pledges = computed(() => currentMarriagePromises(props.view));
 // Each optional recap is a named landmark, with the visible heading as its name.
 const recapTitleId = useId();
 </script>
@@ -41,11 +43,11 @@ const recapTitleId = useId();
             ? (plain ? 'One decision is waiting in your docket.' : 'One decision awaits on the docket.')
             : (plain ? pending + ' decisions are waiting in your docket.' : pending + ' decisions await on the docket.') }}</dd>
         </template>
-        <template v-if="view.marriagePromises?.length">
+        <template v-if="pledges.length">
           <dt>{{ plain ? 'Outstanding marriage promises' : 'Marriage pledges still owed' }}</dt>
           <dd>
             <ul class="recap-pledges">
-              <li v-for="promise in view.marriagePromises" :key="`${promise.house}-${promise.year}-${promise.lot}`">
+              <li v-for="promise in pledges" :key="`${promise.house}-${promise.year}-${promise.lot}`">
                 {{ plain ? 'Promised in' : 'Pledged in' }} {{ promise.year }} to {{ promise.houseName }}
                 for <em>{{ promise.lotName }}</em>
               </li>
