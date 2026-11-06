@@ -433,3 +433,41 @@ improvement. A seven-consecutive-day absence of unmeasured-duration budget
 failures has not yet elapsed. Earlier bounded arrivals/landings also do not
 establish a full working-day *ready-backlog* decrease. No queue concurrency
 change or owner approval is implied.
+
+
+### Eighth post-cutover observation: 32 completed groups
+
+Collected **6 November 2026 after 12:00 UTC** from GitHub's
+[`check.yml` merge-group run collection](https://github.com/EldritchDynasty/EldritchDynasty/actions/workflows/check.yml),
+using the original fixed cutover at **2026-11-06 01:36:17 UTC** when
+[#2825](https://github.com/EldritchDynasty/EldritchDynasty/pull/2825) merged.
+The query selected completed `check` runs with `event=merge_group`, ordered
+by `created_at` across two pages. The previous 29 completed groups are
+unchanged; these are the next **three**. Proof counts are the twelve planner
+decisions in the `gates (batch)` job logs, not the later proof-publication
+trace or an inference from duration.
+
+| Run (Actions) | Started UTC | Slot (min) | Result | Trusted gates reused / judged |
+|---|---|---:|---|---:|
+| [42208785697](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42208785697) | 11:14:39 | 8.20 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42208785697/job/127862045143) |
+| [42210555232](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42210555232) | 11:28:53 | 8.33 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42210555232/job/127867921401) |
+| [42213256994](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42213256994) | 11:51:01 | 8.72 | success | [12 / 12](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42213256994/job/127876906771) |
+
+**Cumulative fixed post-cutover cohort: 32/32 successful merge-group
+checks, 0 failures; median slot 9.88 minutes; 306 / 384 (79.7%) trusted
+gate-proof decisions reused.** The new groups contributed 36 / 36 reuse
+decisions, up from 270 / 348 after 29 groups. Median uses the full 32-run
+ordered sample, with slot duration calculated as GitHub `updated_at -
+run_started_at`. The first group's start was 01:36:19 UTC and the latest
+completion was 11:59:44 UTC: **10 h 23 m 25 s**, not a complete day.
+All three new jobs executed zero local gates (proof-only 0/0); their 2–3 s
+gate-duration logs must not be misreported as full-batch execution times.
+
+The sample now exceeds the **30-group count** in #2794 but **not its
+day-sized observation requirement**. The preceding 24-hour control already
+recorded **0/69 failures**; this cohort's 0/32 therefore cannot establish a
+failure-rate improvement. Nor does it supply seven consecutive days without
+duration-budget failures, a working-day *ready-queue* backlog trend, or
+evidence for raising concurrency. Continue the fixed-cutover observation
+without resetting its denominator or making causal claims from the shifting
+PR mix.
