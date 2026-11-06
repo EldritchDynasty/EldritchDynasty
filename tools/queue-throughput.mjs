@@ -11,7 +11,7 @@
  * A window cannot be certified while it is still open, contains unfinished
  * runs, or was supplied as an unverified subset.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const API = 'https://api.github.com';
@@ -57,7 +57,10 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
       if (updated < started) throw new Error('Run updated before it started: ' + run.id);
       minutes = Math.round((updated - started) / 6000) / 10;
     }
-    details.push({ id: run.id, created_at: run.created_at, conclusion: done ? run.conclusion : null, minutes });
+    details.push({
+      id: run.id, created_at: run.created_at, conclusion: done ? run.conclusion : null, minutes,
+      head_sha: run.head_sha ?? null, run_attempt: run.run_attempt ?? null,
+    });
   }
   details.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id - b.id);
   const finished = details.filter(x => x.conclusion !== null);
@@ -239,6 +242,179 @@ export function formatMergeGroups(report) {
   ].join('\n');
 }
 
+// Read the inventory at each measured SHA, rather than copying today's union
+// or assuming that every historical job judged the same number of gates.
+export function gateIdsFromRegistry(source) {
+  const declaration = /export const BLOCKING_GATE_IDS = \[([\s\S]*?)\] as const;/.exec(source);
+  if (!declaration) throw new Error('Missing canonical blocking gate inventory');
+  const rows = declaration[1].split('\n').map(x => x.trim()).filter(Boolean);
+  const ids = rows.map(row => /^'([a-z][a-z0-9-]*)',$/.exec(row)?.[1]);
+  if (!ids.length || ids.some(x => !x) || new Set(ids).size !== ids.length) {
+    throw new Error('Unrecognized canonical blocking gate inventory');
+  }
+  return ids;
+}
+
+export function parseGateProofLog(log, gateIds) {
+  if (typeof log !== 'string' || !Array.isArray(gateIds) || !gateIds.length ||
+    gateIds.some(x => typeof x !== 'string' || !/^[a-z][a-z0-9-]*$/.test(x)) ||
+    new Set(gateIds).size !== gateIds.length) throw new Error('Invalid gate proof evidence');
+  const decisions = new Map();
+  let groupDepth = 0;
+  for (const raw of log.split(/\r?\n/)) {
+    const line = raw.replace(/\x1b\[[0-9;]*m/g, '')
+      .replace(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z /, '');
+    // Actions echoes shell/heredoc source inside groups. It is not output.
+    if (line.startsWith('##[group]')) { groupDepth++; continue; }
+    if (line === '##[endgroup]') {
+      if (!groupDepth) throw new Error('Unbalanced Actions log group');
+      groupDepth--; continue;
+    }
+    if (groupDepth || !/^[a-z][a-z0-9-]*: (?:run|reuse)(?:\s|$)/.test(line)) continue;
+    const reused = /^([a-z][a-z0-9-]*): reuse from run (\d+) — reused trusted main proof from run (\d+)$/.exec(line);
+    const executed = /^([a-z][a-z0-9-]*): run — no matching trusted main proof among \d+ candidate run\(s\)$/.exec(line);
+    const gate = (reused ?? executed)?.[1];
+    const sourceRunId = reused ? Number(reused[2]) : null;
+    if (!gate || (reused && (reused[2] !== reused[3] || !Number.isSafeInteger(sourceRunId) || sourceRunId <= 0))) {
+      throw new Error('Malformed planner decision');
+    }
+    if (!gateIds.includes(gate)) throw new Error('Unexpected planner gate: ' + gate);
+    if (decisions.has(gate)) throw new Error('Duplicate planner gate: ' + gate);
+    decisions.set(gate, { gate, action: reused ? 'reuse' : 'run', sourceRunId });
+  }
+  if (groupDepth || decisions.size !== gateIds.length) throw new Error('Incomplete planner log');
+  return gateIds.map(id => decisions.get(id));
+}
+
+function proofJobProblem(job, run) {
+  if (!job) return 'missing gate job';
+  if (job.run_id !== run.id || job.head_sha !== run.head_sha || job.run_attempt !== run.run_attempt ||
+    !Number.isSafeInteger(job.id) || job.id <= 0 || job.name !== 'gates (batch)') {
+    return 'gate job identity mismatch';
+  }
+  if (job.status !== 'completed') return 'unfinished gate job';
+  if (!Array.isArray(job.steps)) return 'missing gate step metadata';
+  for (const name of ['find reusable trusted gate proofs', 'gates']) {
+    const steps = job.steps.filter(x => x?.name === name);
+    if (steps.length !== 1 || steps[0].status !== 'completed' || steps[0].conclusion !== 'success') {
+      return 'unconfirmed step: ' + name;
+    }
+  }
+  return null;
+}
+
+/** Decoded log evidence is observational; this does not validate/reuse proofs. */
+export function summarizeGateProofs(evidence, cohort, { repo, source = 'snapshot' }) {
+  if (evidence?.version !== 1 || evidence.repository !== repo || !Array.isArray(evidence.runs)) {
+    throw new Error('Invalid gate proof snapshot');
+  }
+  const entries = new Map();
+  for (const entry of evidence.runs) {
+    if (!entry || !cohort.runs.some(run => run.id === entry.runId)) throw new Error('Unexpected proof run');
+    if (entries.has(entry.runId)) throw new Error('Duplicate proof run: ' + entry.runId);
+    entries.set(entry.runId, entry);
+  }
+  const runs = cohort.runs.map(run => {
+    const entry = entries.get(run.id);
+    let reason = run.conclusion === null ? 'unfinished workflow run' :
+      !entry ? 'missing run evidence' :
+      !/^[a-f0-9]{40}$/.test(run.head_sha ?? '') || !Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 0 ?
+        'missing run identity' :
+      entry.headSha !== run.head_sha || entry.runAttempt !== run.run_attempt ? 'run identity mismatch' :
+      proofJobProblem(entry.job, run);
+    let decisions = null;
+    if (!reason) {
+      try { decisions = parseGateProofLog(entry.log, entry.gateIds); }
+      catch (error) { reason = error.message; }
+    }
+    return {
+      runId: run.id, jobId: entry?.job?.id ?? null, headSha: run.head_sha, runAttempt: run.run_attempt,
+      known: reason === null, reason, decisions,
+      judged: decisions?.length ?? 0,
+      reused: decisions?.filter(x => x.action === 'reuse').length ?? 0,
+      executed: decisions?.filter(x => x.action === 'run').length ?? 0,
+    };
+  });
+  const known = runs.filter(run => run.known).length;
+  const sum = key => runs.reduce((total, run) => total + run[key], 0);
+  const judged = sum('judged');
+  const reused = sum('reused');
+  const complete = source === 'api' && cohort.complete && runs.length > 0 && known === runs.length;
+  return {
+    source, complete, groups: runs.length, known, unknown: runs.length - known,
+    judged, reused, executed: sum('executed'),
+    reusePercent: complete && judged ? Math.round(reused / judged * 1000) / 10 : null,
+    runs,
+  };
+}
+
+export async function fetchGateProofEvidence({ repo, token, runs, fetchImpl = fetch }) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Invalid owner/repo');
+  if (!token) throw new Error('Set GITHUB_TOKEN for live proof evidence, or pass --proofs FILE');
+  const request = async (path, raw = false) => {
+    const response = await fetchImpl(new URL(API + '/repos/' + repo + path), { headers: {
+      Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
+      Authorization: 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28',
+    } });
+    if (!response.ok) throw new Error('GitHub proof evidence API returned HTTP ' + response.status);
+    return raw ? response.text() : response.json();
+  };
+  const registries = new Map();
+  const entries = [];
+  for (const run of runs) {
+    if (!Number.isSafeInteger(run.id) || run.id <= 0 || !/^[a-f0-9]{40}$/.test(run.head_sha ?? '') ||
+      !Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 0) throw new Error('Missing run identity for proof fetch');
+    const jobs = [];
+    const ids = new Set();
+    let total = null;
+    let exhausted = false;
+    // Pin the attempt: a rerun must not mix new jobs with an older cohort.
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const body = await request('/actions/runs/' + run.id + '/attempts/' + run.run_attempt +
+        '/jobs?per_page=' + PAGE_SIZE + '&page=' + page);
+      if (!Array.isArray(body.jobs) || !Number.isSafeInteger(body.total_count) || body.total_count < 0 ||
+        body.jobs.length > PAGE_SIZE || (total !== null && total !== body.total_count)) throw new Error('Invalid jobs page');
+      total = body.total_count;
+      for (const job of body.jobs) {
+        if (!Number.isSafeInteger(job.id) || ids.has(job.id)) throw new Error('Duplicate or invalid job ID');
+        ids.add(job.id); jobs.push(job);
+      }
+      if (jobs.length > total) throw new Error('Inconsistent jobs count');
+      if (jobs.length === total) { exhausted = true; break; }
+      if (body.jobs.length < PAGE_SIZE) throw new Error('Truncated jobs page');
+    }
+    if (!exhausted) throw new Error('Incomplete jobs history');
+    const matching = jobs.filter(job => job.name === 'gates (batch)');
+    if (matching.length > 1) throw new Error('Ambiguous gate jobs');
+    const job = matching[0] ?? null;
+    const entry = { runId: run.id, headSha: run.head_sha, runAttempt: run.run_attempt, job, gateIds: null, log: null };
+    if (run.conclusion !== null && !proofJobProblem(job, run)) {
+      if (!registries.has(run.head_sha)) {
+        const source = await request('/contents/packages/core/src/tools/gate-registry.ts?ref=' + run.head_sha, true);
+        registries.set(run.head_sha, gateIdsFromRegistry(source));
+      }
+      entry.gateIds = registries.get(run.head_sha);
+      entry.log = await request('/actions/jobs/' + job.id + '/logs', true);
+    }
+    entries.push(entry);
+  }
+  return { version: 1, repository: repo, runs: entries };
+}
+
+export function formatGateProofs(report) {
+  return [
+    '# Gate-proof planner observations (#2794)', '',
+    'Source: ' + report.source + '; coverage: ' + (report.complete ? 'complete API cohort' : 'INCOMPLETE / snapshot only') + '.',
+    'Known groups: ' + report.known + '/' + report.groups + '; unknown: ' + report.unknown + '.',
+    'Observed decisions: ' + report.judged + '; reused: ' + report.reused + '; executed: ' + report.executed + '.',
+    'Complete-cohort reuse: ' + (report.reusePercent === null ? 'n/a' : report.reusePercent + '%') + '.',
+    'Planner observations do not certify proof validity, PR landings or a concurrency recommendation.', '',
+    '| Run | Job | Judged | Reused | Executed | Evidence |', '|---:|---:|---:|---:|---:|---|',
+    ...report.runs.map(run => '| ' + run.runId + ' | ' + (run.jobId ?? 'n/a') + ' | ' + run.judged +
+      ' | ' + run.reused + ' | ' + run.executed + ' | ' + (run.reason ?? 'observed') + ' |'),
+  ].join('\n');
+}
+
 export async function runCli(argv = process.argv.slice(2), environment = process.env) {
   const option = (name) => {
     const i = argv.indexOf(name);
@@ -248,7 +424,11 @@ export async function runCli(argv = process.argv.slice(2), environment = process
   };
   const from = option('--from');
   const to = option('--to');
-  if (!from || !to) throw new Error('Use --from UTC --to UTC [--runs FILE] [--with-prs | --prs FILE] [--json]');
+  if (!from || !to) throw new Error('Use --from UTC --to UTC [--runs FILE] [--with-prs | --prs FILE] [--with-proofs | --proofs FILE] [--json]');
+  const proofFile = option('--proofs');
+  const saveProofs = option('--save-proofs');
+  const withProofs = argv.includes('--with-proofs') || proofFile !== null;
+  if (saveProofs && (!withProofs || proofFile)) throw new Error('--save-proofs requires live --with-proofs');
   const file = option('--runs');
   const repo = option('--repo') ?? 'EldritchDynasty/EldritchDynasty';
   const runs = file
@@ -262,10 +442,18 @@ export async function runCli(argv = process.argv.slice(2), environment = process
     : await fetchPullRequests({ repo, token: environment.GITHUB_TOKEN });
   const prReport = prRows === null ? null :
     summarizePrFlow(prRows, { from, to, source: prFile ? 'snapshot' : 'api' });
-  const output = prReport === null ? report : { mergeGroups: report, pullRequests: prReport };
+  const proofEvidence = !withProofs ? null : proofFile ? JSON.parse(readFileSync(proofFile, 'utf8')) :
+    await fetchGateProofEvidence({ repo, token: environment.GITHUB_TOKEN, runs: report.runs });
+  const proofReport = proofEvidence === null ? null :
+    summarizeGateProofs(proofEvidence, report, { repo, source: proofFile ? 'snapshot' : 'api' });
+  if (saveProofs) writeFileSync(saveProofs, JSON.stringify(proofEvidence, null, 2) + '\n');
+  const output = prReport === null && proofReport === null ? report : {
+    mergeGroups: report, ...(prReport ? { pullRequests: prReport } : {}), ...(proofReport ? { gateProofs: proofReport } : {}),
+  };
   process.stdout.write((argv.includes('--json')
     ? JSON.stringify(output, null, 2)
-    : formatMergeGroups(report) + (prReport ? '\n\n' + formatPrFlow(prReport) : '')) + '\n');
+    : formatMergeGroups(report) + (prReport ? '\n\n' + formatPrFlow(prReport) : '') +
+      (proofReport ? '\n\n' + formatGateProofs(proofReport) : '')) + '\n');
   // A result can be useful while incomplete, but never say it is acceptance evidence.
   return report;
 }
