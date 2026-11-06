@@ -210,11 +210,15 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
   it.each(['original', 'plainenglish'] as const)(
     'imports complete named codes despite invalid unused recipient fields (%s, #3064)',
     (proseMode) => {
-      const original = founded();
+      // Both sides must use the same reading mode: prose choice is saved.
+      const original = newGame(content, {
+        seed: 199500, startYear: CAMPAIGNS.short.startYear, campaign: 'short', proseMode,
+      });
+      expect(original.found(SIGNED).ok).toBe(true);
       const code = codeOf(original, { names: true });
       const preview = readShareCode(code, content, { build: BUILD });
       expect(preview.ok && preview.founding.missing).toEqual([]);
-      const continued = resumeGame(original.save(), content);
+      const continued = resumeGame(original.save(), content, { proseMode });
       continued.advance(1);
       for (const names of [
         null,
@@ -231,7 +235,7 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
         expect(imported.ok).toBe(true);
         if (!imported.ok) continue;
         expect(saved(imported.session)).toBe(saved(original));
-        const resumed = resumeGame(imported.session.save(), content);
+        const resumed = resumeGame(imported.session.save(), content, { proseMode });
         expect(saved(resumed)).toBe(saved(original));
         imported.session.advance(1);
         resumed.advance(1);
