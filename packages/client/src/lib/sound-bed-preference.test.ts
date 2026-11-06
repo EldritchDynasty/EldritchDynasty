@@ -84,4 +84,42 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     },
   );
 
+  it.each([
+    ['false boolean', false],
+    ['false text', 'false'],
+    ['true text', 'true'],
+    ['numeric truthy', 1],
+    ['object', {}],
+    ['null', null],
+    ['undefined', undefined],
+  ])('rejects a %s engine availability value until literal true is restored', (_label, invalid) => {
+    const engine = fakeSound();
+    let reported: unknown = invalid;
+    // An optional native adapter may return malformed runtime data despite
+    // its declared boolean property. Do not trust JavaScript truthiness.
+    Object.defineProperty(engine, 'available', {
+      configurable: true,
+      get: () => reported,
+    });
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    bed.cue('bell');
+
+    expect(bed.audible).toBe(false);
+    expect(engine.muted).toBe(true);
+    expect(engine.wake).not.toHaveBeenCalled();
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    // A healthy adapter can recover on the next touch without a remount.
+    reported = true;
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    bed.cue('bell');
+    expect(engine.cue).toHaveBeenCalledTimes(1);
+    bed.dispose();
+  });
+
 });
