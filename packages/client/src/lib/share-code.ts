@@ -42,16 +42,27 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
   switch (problem.kind) {
     case 'empty':
       return plain ? 'Paste a share code first.' : 'There is no code here yet.';
-    case 'too_long':
+    case 'too_long': {
+      // The codec supplies a positive integer. Older or hostile platform
+      // bridges may not; never interpolate an arbitrary runtime object into
+      // the refusal (or let a throwing toString interrupt Start).
+      const max = Number.isSafeInteger(problem.max) && problem.max > 0 ? problem.max : null;
+      if (max === null) {
+        return plain
+          ? 'This is too long to be a share code. Copy a shorter code.'
+          : 'That is longer than a share code this game can read.';
+      }
       return plain
-        ? `This is too long to be a share code. Codes are at most ${problem.max} characters.`
-        : `That is longer than any code this game writes (${problem.max} characters).`;
+        ? `This is too long to be a share code. Codes are at most ${max} characters.`
+        : `That is longer than any code this game writes (${max} characters).`;
+    }
     case 'not_a_code':
       return plain ? 'This is not a share code. Share codes start with ED1.' : 'That is not a share code. A code begins ED1.';
     case 'unsupported_version': {
       // The ED version is parsed from pasted text. Do not echo a thousands-digit
       // malformed prefix into the Start screen's refusal message (#2139).
-      const label = /^[0-9]{1,8}$/.test(problem.version) ? ` (ED${problem.version})` : '';
+      const label = typeof problem.version === 'string' && /^[0-9]{1,8}$/.test(problem.version)
+        ? ` (ED${problem.version})` : '';
       return plain
         ? `This code uses a format this version cannot read${label}.`
         : `That code is written in a hand this game cannot read${label}.`;
@@ -63,7 +74,7 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
       // A refusal must remain useful without inventing a specific mismatch.
       const differs = Array.isArray(problem.differs)
         && problem.differs.every((p) => p === 'format' || p === 'content' || p === 'build')
-        ? problem.differs : [];
+        ? [...new Set(problem.differs)] : [];
       const parts = differs.map((p) => editionPart(p, plain)).join(', ');
       const detail = parts ? ` (${parts})` : '';
       return plain
@@ -81,7 +92,7 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
       // Do not turn a refusal into an apparent success or echo code text.
       const missing = Array.isArray(problem.missing)
         && problem.missing.every((name) => name === 'founder' || name === 'house' || name === 'friends')
-        ? problem.missing : [];
+        ? [...new Set(problem.missing)] : [];
       if (missing.length === 0) {
         return plain
           ? 'This founding still needs names before it can begin.'
