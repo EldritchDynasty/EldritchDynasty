@@ -420,6 +420,41 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(blank.ok).toBe(true);
   });
 
+  it('rejects founder answers whose raw signing text cannot be re-exported (#1995)', () => {
+    const code = codeOf(founded()); // Anonymous code asks for the original answer.
+    const names = {
+      house: SIGNED.houseName,
+      friends: SIGNED.friends.map((friend) => friend.name),
+    };
+    // Founding checks the visible trimmed name, while the signing log keeps
+    // raw text. An overlong padded answer would found successfully but make
+    // the new house impossible to export as a named code.
+    for (const founder of [
+      `  ${'A'.repeat(PERSON_NAME_MAX)}`,
+      `${'A'.repeat(PERSON_NAME_MAX)}\u2003`,
+    ]) {
+      const opts = {
+        build: BUILD,
+        names: { ...names, founder },
+        get libraryRuns(): never { throw new Error('invalid name reached newGame'); },
+      };
+      expect(newGameFromShareCode(code, content, opts))
+        .toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+    }
+
+    // The last representable raw length still round-trips byte-for-byte,
+    // including padding, even though the visible name is trimmed.
+    const founder = ` ${'A'.repeat(PERSON_NAME_MAX - 2)} `;
+    const original = founded({ ...SIGNED, founder: { ...SIGNED.founder, name: founder } });
+    const imported = newGameFromShareCode(codeOf(original), content, {
+      build: BUILD, names: { ...names, founder },
+    });
+    expect(imported.ok).toBe(true);
+    if (!imported.ok) return;
+    expect(saved(imported.session)).toBe(saved(original));
+    expect(codeOf(imported.session, { names: true })).toBe(codeOf(original, { names: true }));
+  });
+
   it('refuses invisible-only required friend names instead of dropping an encoded friend (#2264)', () => {
     const code = codeOf(founded()); // Anonymous: three friends of specified sexes.
     for (const invisible of ['\u200B', ' \u200D \u2060\t', '\uFE0F']) {
