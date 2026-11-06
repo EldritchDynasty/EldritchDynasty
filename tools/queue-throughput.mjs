@@ -124,7 +124,9 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
       seenIds.add(run.id);
       if (created < start) {
         reachedStart = true;
-        break;
+        // Inspect the rest of this page for ordering violations before the
+        // cutoff. Breaking here could hide newer runs following an old row.
+        continue;
       }
       found.push(run);
     }
