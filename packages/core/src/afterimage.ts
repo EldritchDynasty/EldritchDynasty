@@ -79,9 +79,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   const people = new Map<string, { person: string; name: string; epithet?: string; sources: AfterimageSource[] }>();
   const mention = (id: string, source: AfterimageSource): void => {
     const p = w.people.get(id);
-    // A recovered page cannot witness someone who had not yet been born.
-    // Do not reject later accounts *about* the dead: those are valid history.
-    if (!p || p.born > source.year) return;
+    // A completed last-night account cannot witness someone before birth.
+    // Unfinished authoring inventories intentionally admit synthetic histories;
+    // later accounts *about* the dead remain valid in either case.
+    if (!p || (w.ending && p.born > source.year)) return;
     const epithet = visibleEpithet(p, throughYear);
     const reading = people.get(id) ?? {
       person: id, name: p.name,
@@ -123,9 +124,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         // A cast is not proof of a successful rite. Require its visible mark
         // and a written page explicitly naming the subject. Keep the account's
         // own words even where they contradict another page.
-        // The outcome and death mark are necessary but cannot make a rite
-        // predating its named subject's birth into a witnessed cost.
-        if (!p || p.born > decision.year || p.died !== decision.year || !page.people?.includes(id)) continue;
+        // A completed account cannot treat a pre-birth rite as a witnessed
+        // cost; unfinished diagnostic inventories remain intentionally open.
+        if (!p || (w.ending && p.born > decision.year)
+          || p.died !== decision.year || !page.people?.includes(id)) continue;
         if (effect.rite === 'vessel' && p.status !== 'vessel_consumed') continue;
         if (effect.rite === 'unmaking' && p.status !== 'dead') continue;
         const epithet = visibleEpithet(p, throughYear);
