@@ -122,4 +122,71 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     bed.dispose();
   });
 
+  it('refuses to forward cues when a native adapter rejects unmute, then recovers on a later gesture', () => {
+    const engine = fakeSound();
+    let actuallyMuted = true;
+    let refuseUnmute = true;
+    Object.defineProperty(engine, 'muted', {
+      get: () => actuallyMuted,
+      set: (next: boolean) => {
+        if (!next && refuseUnmute) throw new Error('NotAllowedError: host audio locked');
+        actuallyMuted = next;
+      },
+    });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible, 'a refused unmute was treated as successful').toBe(false);
+    expect(engine.muted).toBe(true);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+    expect(engine.wake).not.toHaveBeenCalled();
+
+    refuseUnmute = false;
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+    bed.cue('bell');
+    expect(engine.cue).toHaveBeenCalledWith('bell');
+    bed.dispose();
+  });
+
+  it('suspends a previously audible drone if the host refuses mute, and can retry later', () => {
+    const engine = fakeSound();
+    let actuallyMuted = true;
+    let refuseMute = false;
+    Object.defineProperty(engine, 'muted', {
+      get: () => actuallyMuted,
+      set: (next: boolean) => {
+        if (next && refuseMute) throw new Error('InvalidStateError: output changed');
+        actuallyMuted = next;
+      },
+    });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+
+    refuseMute = true;
+    bed.prefer({ on: false, volume: 0.5 });
+    expect(bed.audible).toBe(false);
+    expect(engine.muted, 'the host accepted a mute it was supposed to refuse').toBe(false);
+    expect(engine.suspend, 'a refused mute left previously playing sound untouched').toHaveBeenCalledTimes(1);
+    bed.cue('seal');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    refuseMute = false;
+    bed.prefer({ on: false, volume: 0.5 });
+    expect(engine.muted).toBe(true);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledWith('seal');
+    bed.dispose();
+  });
+
 });
