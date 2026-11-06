@@ -2061,6 +2061,33 @@ describe('Prologue presentation controls in Plain English (#1623)', () => {
     }
   });
 
+  it('rejects a queued Enter click from an earlier founded run with identical year and options (#1984)', async () => {
+    const prologue = reactive<PrologueView>({
+      ...prologueView(),
+      founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 },
+    });
+    const enter = vi.fn();
+    const wrapper = mount(Prologue, {
+      props: { prologue, actions: { enter } as unknown as GameActions, refused: null, startYear: 1042 },
+    });
+    try {
+      const previousEnterButton = wrapper.get('button').element as HTMLButtonElement;
+
+      // A different founded run can replace this reactive view before Vue
+      // patches the old button's event listener. Its queued click must not
+      // bypass the replacement run's thesis screen.
+      prologue.id = 'a_second_signing_same_year';
+      previousEnterButton.click();
+      expect(enter).not.toHaveBeenCalled();
+
+      await nextTick();
+      (wrapper.get('button').element as HTMLButtonElement).click();
+      expect(enter).toHaveBeenCalledTimes(1);
+    } finally {
+      wrapper.unmount();
+    }
+  });
+
   it('changes the finished signing button but never edits the provided thesis or start year', async () => {
     const prologue: PrologueView = { ...prologueView(), founded: { houseName: 'House Ash', heirloom: 'seal', grudge: 'house_marrow', year: 1042 } };
     const enter = vi.fn();
