@@ -33,7 +33,7 @@ export function parseSmokeCommand(raw: string): SmokeCommand | null {
     if (!Number.isSafeInteger(seed) || !Number.isSafeInteger(years) || years < 0 || years > 500) return null;
     return { kind, seed, years };
   }
-  if (kind === 'resume' || kind === 'export') return { kind };
+  if (kind === 'resume' || kind === 'export' || kind === 'share-code') return { kind };
   if (kind === 'import') {
     // Do not choose an arbitrary first filename from conflicting parameters.
     if (url.searchParams.getAll('path').length !== 1) return null;
