@@ -1085,6 +1085,12 @@ describe('the bed decides when the house may be heard', () => {
     bed.scene(WARM);
     expect(setDrone).toHaveBeenLastCalledWith(WARM);
 
+    // The frame silences audio before score construction. Validation must
+    // still reject a hidden unknown Age, not pass it through to Sound.
+    const invalidInFrame = { registers: ['future-register'], frame: true } as unknown as DroneInput;
+    expect(() => bed.scene(invalidInFrame)).not.toThrow();
+    expect(setDrone).toHaveBeenLastCalledWith(null);
+
     // An invalidated view/adapter can supply a cyclic object or a throwing
     // getter even though the TypeScript seam promises a plain scene.
     const cyclic = { ...WARM, self: undefined as unknown };
@@ -1104,6 +1110,30 @@ describe('the bed decides when the house may be heard', () => {
     const recovered: DroneInput = { registers: ['cold'], frame: false };
     bed.scene(recovered);
     expect(setDrone).toHaveBeenLastCalledWith(recovered);
+    bed.dispose();
+  });
+
+  it('ignores a serializable invalid Age instead of disabling a healthy audio device (#1986)', () => {
+    const { e, page, bed } = bedOnBoard();
+    page.fire('win:pointerdown');
+    const ctx = e.made[0]!;
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+
+    // Unlike a cycle or throwing getter, this scene has a valid JSON key.
+    // Previously Sound tried to build its score, assertNever rejected the
+    // unknown register, and the audio engine became permanently unavailable.
+    const bad = { registers: ['future-register'], frame: false } as unknown as DroneInput;
+    expect(() => bed.scene(bad)).not.toThrow();
+    expect(bed.audible, 'bad presentation data disabled a working sound engine').toBe(true);
+
+    // The next ordinary Age must recover the drone and accept new cues on
+    // the original device, without replaying the malformed scene.
+    bed.scene(COLD);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
+    const before = ctx.sources.length;
+    bed.cue('seal');
+    expect(ctx.sources).toHaveLength(before + cueScore('seal').voices.length);
+    expect(e.made).toHaveLength(1);
     bed.dispose();
   });
 
