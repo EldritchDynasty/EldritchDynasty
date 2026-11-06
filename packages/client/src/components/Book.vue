@@ -8,6 +8,7 @@ import type { GameActions, GameStore } from '../lib/game';
 import Entry from './Entry.vue';
 import RecordedLife from './RecordedLife.vue';
 import { downloadBlob } from '../lib/download';
+import { selectShareCodeTextarea } from '../lib/ending-textarea';
 import {
   LENSES, PLAIN_LENS_LABELS, MAX_PLATE_CANVAS_HEIGHT, PLATE, ageBoundariesForPages, isWritten, plateFoot, plateFootLines, plateHeight, plateName, plateRows, plateSubtitle, plateSvg, reads, rowFont,
   type Lens, type Measure,
@@ -51,6 +52,9 @@ const props = defineProps<{
  * truth — there is only Daveed, and he is not neutral.
  */
 const plain = computed(() => props.proseMode === 'plainenglish');
+// The image footer is always anonymous. Give its exact code a selectable text
+// counterpart in the Chronicle itself, without the Ending's names opt-in (#1995).
+const anonymousShare = computed(() => props.actions.shareCode(false));
 const historyPerson = ref<string | undefined>(props.person);
 watch(() => props.person, (id) => { if (id) void readLife(id); else historyPerson.value = undefined; });
 /** The index holds existing saved labels, not guesses from the page's prose. */
@@ -297,7 +301,7 @@ async function plate(): Promise<void> {
     const titleWidth = measure(houseName, `500 30px ${PLATE.serif}`);
     const rows = plateRows(entries, measure);
     // The founding, never its names: see `plateFoot` (#1995).
-    const share = props.actions.shareCode(false);
+    const share = anonymousShare.value;
     const foot = plateFoot(share.ok ? share.code : null, measure, props.proseMode);
     const height = plateHeight(rows, foot);
     // Full Long-Line books exceed browser canvas dimensions. Keep every
@@ -417,6 +421,14 @@ const counts = computed(() => ({
           {{ counts.improved }} {{ plain ? 'changed' : 'improved' }} · {{ counts.illuminated }} {{ plain ? 'highlighted' : 'illuminated' }}
         </p>
         <p v-if="plateError" role="alert" class="note">{{ plain ? 'Could not save the image. Try fewer entries or another browser.' : plateError }}</p>
+        <!-- PNG pixels cannot be selected or read by a screen reader. Offer the
+             exact same anonymous code as the exported image, before the last night. -->
+        <details v-if="anonymousShare.ok" class="chronicle-share-text">
+          <summary>{{ plain ? 'Text version of the image share code' : 'The code on the page, in text' }}</summary>
+          <label class="dim small" for="chronicle-share-code">{{ plain ? 'Starting point share code (names not included)' : 'The beginning, names withheld' }}</label>
+          <textarea id="chronicle-share-code" readonly rows="2" spellcheck="false"
+            :value="anonymousShare.code" @focus="selectShareCodeTextarea($event.target)" />
+        </details>
 
         <div class="wrap lenses">
           <button
@@ -527,6 +539,13 @@ const counts = computed(() => ({
 header { padding: 16px 22px 12px; border-bottom: 1px solid var(--rule); }
 .top { justify-content: space-between; align-items: baseline; }
 .lenses, .jump { margin-top: 8px; }
+.chronicle-share-text { margin-top: 8px; }
+.chronicle-share-text summary { cursor: pointer; }
+.chronicle-share-text label { display: block; margin: 8px 0 4px; }
+.chronicle-share-text textarea {
+  display: block; width: 100%; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: var(--t-fine); overflow-wrap: anywhere; resize: vertical;
+}
 .jump { align-items: baseline; }
 .pages { overflow-y: auto; padding: 18px 22px 26px; }
 .find { margin-top: 8px; }
