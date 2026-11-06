@@ -158,7 +158,14 @@ export class SoundBed {
     this.#volumeApplied = false;
     try {
       this.engine.volume = volume;
-      this.#volumeApplied = true;
+      // Some native adapters acknowledge a setting without applying it.
+      // Where the host exposes readable state, do not resume at a stale,
+      // potentially louder output level. A throwing getter is not evidence
+      // that the setter failed: write-only adapters may still work.
+      let applied = true;
+      try { applied = this.engine.volume === volume; }
+      catch { /* No readable state; the successful write is our only evidence. */ }
+      this.#volumeApplied = applied;
     } catch { /* Host audio is optional; a later valid preference may retry. */ }
     this.#settle();
   }
@@ -447,7 +454,17 @@ export class SoundBed {
       let current: boolean | undefined;
       try { current = this.engine.muted; }
       catch { /* Unknown state: explicitly ask for the safe state below. */ }
-      if (current !== muted) this.engine.muted = muted;
+      if (current !== muted) {
+        this.engine.muted = muted;
+        // A silently ignored mute may leave an earlier drone audible. Where
+        // the host can confirm the write, require it before treating the
+        // transition as successful; otherwise use the existing suspend
+        // fallback for rejected muting and retry on the next preference/gesture.
+        let applied = true;
+        try { applied = this.engine.muted === muted; }
+        catch { /* Some write-only adapters cannot confirm a successful set. */ }
+        if (!applied) throw new Error('audio host did not apply the mute setting');
+      }
       this.#muteApplied = true;
     } catch {
       // A failed unmute is not permission to forward cues to an unknown
