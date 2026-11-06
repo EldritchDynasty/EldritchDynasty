@@ -189,6 +189,74 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     bed.dispose();
   });
 
+
+  it('fails closed when a host silently ignores a lower volume, then recovers on retry', () => {
+    const engine = fakeSound();
+    let actualVolume = 1;
+    let ignoreVolume = false;
+    Object.defineProperty(engine, 'volume', {
+      get: () => actualVolume,
+      set: (next: number) => { if (!ignoreVolume) actualVolume = next; },
+    });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 1 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+
+    ignoreVolume = true;
+    bed.prefer({ on: true, volume: 0.2 });
+    expect(engine.volume, 'host did not actually lower the output').toBe(1);
+    expect(bed.audible, 'stale louder output was treated as safe').toBe(false);
+    expect(engine.muted).toBe(true);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    ignoreVolume = false;
+    bed.prefer({ on: true, volume: 0.2 });
+    expect(engine.volume).toBe(0.2);
+    expect(bed.audible).toBe(true);
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledWith('seal');
+    bed.dispose();
+  });
+
+  it('suspends when a host silently ignores muting and retries once the host recovers', () => {
+    const engine = fakeSound();
+    let actuallyMuted = true;
+    let ignoreMute = false;
+    Object.defineProperty(engine, 'muted', {
+      get: () => actuallyMuted,
+      set: (next: boolean) => {
+        if (next && ignoreMute) return;
+        actuallyMuted = next;
+      },
+    });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+
+    ignoreMute = true;
+    bed.prefer({ on: false, volume: 0.5 });
+    expect(engine.muted, 'the host silently refused to mute').toBe(false);
+    expect(bed.audible).toBe(false);
+    expect(engine.suspend, 'the unchanged live output was not suspended').toHaveBeenCalledTimes(1);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    ignoreMute = false;
+    bed.prefer({ on: false, volume: 0.5 });
+    expect(engine.muted).toBe(true);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledWith('seal');
+    bed.dispose();
+  });
+
 });
 
 describe('Age scene recovery after a refusing host (#1986)', () => {
