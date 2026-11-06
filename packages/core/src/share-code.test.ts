@@ -115,6 +115,56 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     expect(readAnonymous.ok && readAnonymous.founding.missing).toEqual(['founder', 'house', 'friends']);
   });
 
+  it('refuses names whose UTF-16 cannot survive the UTF-8 share-code transport (#1995)', () => {
+    // A native bridge or recovered signing can pass a lone surrogate through
+    // JavaScript string validation. TextEncoder replaces it with U+FFFD; a
+    // named share code would then import a different signing and save.
+    const invalid = { ok: false, unavailable: 'unrepresentable' };
+    for (const lone of ['\uD800', '\uDC00', 'A\uD800', 'B\uDC00']) {
+      const cases = [
+        { ...SIGNED, houseName: `The House of ${lone}` },
+        { ...SIGNED, founder: { ...SIGNED.founder, name: `Maud ${lone} Gearithy` } },
+        { ...SIGNED, friends: SIGNED.friends.map((friend, i) =>
+          i === 1 ? { ...friend, name: `Corven ${lone} Pike` } : friend) },
+      ];
+      for (const choice of cases) {
+        const original = founded(choice);
+        const before = saved(original);
+        for (const names of [false, true]) {
+          expect(original.shareCode({ build: BUILD, names })).toEqual(invalid);
+          expect(saved(original)).toBe(before);
+        }
+      }
+    }
+
+    // Paired surrogates are valid Unicode scalar values and must still
+    // reproduce the same founding, not get rejected as the lone case does.
+    const emoji = founded({ ...SIGNED, houseName: 'The House of 🌙' });
+    const named = codeOf(emoji, { names: true });
+    const imported = newGameFromShareCode(named, content, { build: BUILD });
+    expect(imported.ok && saved(imported.session)).toBe(saved(emoji));
+  });
+
+  it('refuses malformed UTF-16 recipient names before constructing a game', () => {
+    const anonymous = codeOf(founded());
+    const names = {
+      founder: SIGNED.founder.name,
+      house: SIGNED.houseName,
+      friends: SIGNED.friends.map((friend) => friend.name),
+    };
+    for (const lone of ['\uD800', '\uDC00']) {
+      const cases = [
+        { ...names, founder: `Maud ${lone}` },
+        { ...names, house: `House ${lone}` },
+        { ...names, friends: ['Iona Vale', `Corven ${lone}`, 'Edda Rook'] },
+      ];
+      for (const supplied of cases) {
+        expect(newGameFromShareCode(anonymous, content, { build: BUILD, names: supplied }))
+          .toEqual({ ok: false, problem: { kind: 'invalid_names' } });
+      }
+    }
+  });
+
   it('replays an explicitly blank founder-name answer in a named share code', () => {
     // Founding permits a blank answer: the authored name is shown, but the
     // signing log still records exactly what the player submitted.
