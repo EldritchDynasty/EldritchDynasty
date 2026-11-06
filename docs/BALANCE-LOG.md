@@ -17406,3 +17406,57 @@ preflight and exact-head GitHub CI govern submission and integration.
 These measurements establish execution, provenance and delivery. They do
 not establish player attachment, comprehension, curiosity or enjoyment.
 
+## 2026-11-06 — #3106: family weddings retain lineage; #2287 paired reach
+
+**Defect and repair.** `wed` used `married_in` for every move between halls,
+including moves by existing blood/cadet members within the same house. That
+made the current-membership succession rule reject a person the historical
+blood/extinction reader still counted. The declared #2287 always-Omit run at
+seed 2027 exposed the consequence: in 1388 the last Head died, leaving 15
+living household members, one surviving blood relative, no Head and no
+wardship. Her 1350 wedding had changed her current blood membership to
+`married_in`. The repair preserves an existing blood/cadet kind when the
+wedding moves the person within the same house. Outsiders still marry in;
+the existing Head remains at the seat and exactly one membership stays open.
+Constructed male/female and blood/cadet cases retain succession eligibility
+through save/load. The 160 focused demography, succession and Match tests pass.
+
+**Retained measurement.** Source `a83f1b4416dbf8c0d8c09982ceddfdf282eb88ee`,
+Linux x86_64, Node 22.23.4 / Vitest 4.1.11. Command:
+
+```sh
+ED_BYNAME_REPORT=/tmp/eldritch-byname-reach-2287.json npm test -- packages/core/src/record-claims.slow.test.ts --silent=false --disableConsoleIntercept
+```
+
+All four tests passed. The predeclared reach cohort is unchanged: sixteen
+seeds `1990 + 37*k`, `k=0..15`, each played for up to 500 years under the
+ordinary chronicler and always-Omit policies. Both retain the existing
+non-Record resolver seeded by `seed*31 + 1990`. Every completed year now
+passes `expectHealthyWorld`; a failure identifies the seed, policy and year.
+An optional `ED_BYNAME_REPORT` writes the complete successful cohort, so a
+test reporter suppressing successful stdout cannot lose its denominators.
+The [receipt](evidence/byname-reach-2287.txt) retains the exact source,
+command, complete runner output, all 32 per-seed rows and JSON checksum.
+
+| Policy | All distinct Heads named | Completed Heads named | Other blood relatives named | Head grants: Record / reign |
+| --- | --- | --- | --- | --- |
+| Ordinary | 74/172 = 43.0% [35.9, 50.5] | 72/156 = 46.2% [38.5, 54.0] | 20/3418 = 0.59% [0.38, 0.90] | 31 / 43 |
+| Always-Omit | 67/185 = 36.2% [29.6, 43.4] | 67/169 = 39.6% [32.6, 47.2] | 0/3421 = 0% [0, 0.11] | 0 / 67 |
+
+Intervals are Wilson 95%, descriptive for this fixed cohort; people within
+one history are not independent sessions. Each policy includes five Broken
+Lines and eleven runs reaching 1542; no broken history was discarded. A
+term-year row with `ending=null` reached the declared 500-year boundary
+without an extra call solely to finalize the ending. The founder and final
+unfinished Head remain in the headline denominator. The former failing seed
+2027 now reaches 1542 with annual health intact under both policies.
+Always-Omit creates neither a Record-source grant nor a named non-Head.
+
+**Disposition.** The ordinary cohort misses #2287's predeclared majority
+target: 43.0% is below more than 50%. The source and thresholds were not
+retuned, and completed reigns were not substituted for all Heads. The older
+record-only November 1 cohort is historical context, not a compatible paired
+control for this source/content revision. #2287 remains open for an explicit
+owner source decision or a separately scoped revision. This is execution and
+incidence evidence, with no reader attachment or comprehension claim.
+
