@@ -283,6 +283,69 @@ describe('censored first-session entry timing (#1984)', () => {
   });
 });
 
+describe('unreadable signing and Match outcomes remain observational (#3169)', () => {
+  it('preserves founding results without treating truthy or throwing ok getters as accepted', () => {
+    const l = log(), privateError = new Error('private founding result');
+    const unreadable = { get ok(): never { throw privateError; } };
+    const truthy = { ok: 'true' };
+    const refused = { ok: false };
+    const accepted = { ok: true };
+    const results = [unreadable, truthy, refused, accepted];
+    const calls: unknown[][] = [];
+    const actions = recordActions({
+      found(...args: unknown[]) { calls.push(args); return results[calls.length - 1]; },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+    const input = { houseName: 'private family' } as Parameters<typeof actions.found>[0];
+
+    for (const result of results) expect(actions.found(input)).toBe(result);
+    expect(calls).toEqual([[input], [input], [input], [input]]);
+    expect(l.events.filter(e => e.kind === 'action').map(e => [e.verb, e.status])).toEqual([
+      ['found', 'attempted'],
+      ['found', 'attempted'],
+      ['found', 'attempted'], ['found', 'refused'],
+      ['found', 'attempted'], ['found', 'accepted'],
+    ]);
+    const artifact = JSON.stringify(l.artifact());
+    expect(artifact).not.toContain('private founding result');
+    expect(artifact).not.toContain('private family');
+  });
+
+  it('does not invent a completed first session from an unconfirmed Found, or throw when Match returns', () => {
+    const l = log(), privateError = new Error('private Match result');
+    const unreadable = { get ok(): never { throw privateError; } };
+    const nonBoolean = { ok: 'yes' };
+    const refused = { ok: false };
+    const accepted = { ok: true };
+    const calls: unknown[][] = [];
+    const results = [unreadable, nonBoolean, undefined, refused, accepted];
+    const actions = recordActions({
+      found: () => unreadable,
+      enter: () => undefined,
+      match(...args: unknown[]) { calls.push(args); return results[calls.length - 1]; },
+    } as unknown as Parameters<typeof recordActions>[0], l);
+
+    l.note({ kind: 'action', verb: 'begin', act: 'start' });
+    expect(actions.found({} as Parameters<typeof actions.found>[0])).toBe(unreadable);
+    expect(actions.enter()).toBeUndefined();
+    for (const result of results) expect(actions.match('private hand', 'private choice')).toBe(result);
+    expect(calls).toHaveLength(results.length);
+    expect(l.events.filter(e => e.kind === 'action' && e.verb === 'match').map(e => e.status)).toEqual([
+      'attempted',
+      'attempted',
+      'attempted', 'refused', // undefined is the established no-active-run refusal
+      'attempted', 'refused',
+      'attempted', 'accepted',
+    ]);
+    expect(l.artifact().summary.entries).toMatchObject([{
+      foundedAt: null, enteredAt: 0, firstAcceptedCommand: null, censored: true,
+    }]);
+    const artifact = JSON.stringify(l.artifact());
+    expect(artifact).not.toContain('private Match result');
+    expect(artifact).not.toContain('private hand');
+    expect(artifact).not.toContain('private choice');
+  });
+});
+
 describe('accepted first family actions (#1984)', () => {
   it('records the actual outcome of Choose and Match without exporting choices, cards or wording', () => {
     const c = clock(), l = log(c);
