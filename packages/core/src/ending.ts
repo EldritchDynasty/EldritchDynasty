@@ -267,7 +267,10 @@ function lastNightYear(w: WorldState): number {
 /** A recovered book has a beginning as well as an end. Neither earlier
  * testimony nor later testimony can belong to this campaign's reckoning. */
 function inBookTerm(w: WorldState, year: number): boolean {
-  return year >= campaignDef(w.campaign).startYear && year <= lastNightYear(w);
+  // A malformed recovered year (for example 1541.5) is not a dated deed.
+  // This one guard is shared by the Chronicle reading and all four purposes.
+  return Number.isSafeInteger(year)
+    && year >= campaignDef(w.campaign).startYear && year <= lastNightYear(w);
 }
 
 export function readTheChronicle(ctx: SimCtx): Reckoning {

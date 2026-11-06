@@ -90,3 +90,26 @@ adds an independent legible page and verifies that only its own source returns.
 This is mechanism evidence, **not** a reader study or a declaration that the
 parent issue's human acceptance is complete. Local tests and the exact-head CI
 verdict must be reported separately; a connector-only code edit is not a pass.
+
+
+## Follow-up: fractional dates are not historical evidence (7 November 2026)
+
+A recovered or malformed saved Chronicle can contain a numerical year within
+the Long Line range that was never a calendar year (for example `1541.5`).
+The existing campaign-bound checks in `ending.ts` and `afterimage.ts`
+accepted such values as dated witnesses. This could attribute an ascendant's
+wait to a non-existent year, quote it at collection, or prefer a fractional
+succession Head and thin-line question in the shareable Afterimage.
+
+The completed-book projection now requires safe integer years for Chronicle
+witnesses, all four derived purpose cases, the Afterimage's quoted pages,
+succession accession and thin-line question dates. Unfinished-world authoring
+diagnostics remain unrestricted, as before. Regression cases in the existing
+`ending.test.ts` suite cover rejected fractional dates, legitimate integer
+witnesses, a fractional duplicate, both prose modes, and unchanged saved state
+when reading. No gameplay, ending precedence, content, or save-format changes
+are made.
+
+This documents a mechanism repair only. Neither local execution nor the
+exact-head hosted CI result is asserted here, and the parent issue's human
+reader observations remain open.

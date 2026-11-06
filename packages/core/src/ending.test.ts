@@ -2961,3 +2961,81 @@ describe('the credited cadet charter matches surviving founder membership eviden
   });
 
 });
+
+
+describe('completed family-purpose evidence requires whole, dated years (#1983)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'refuses fractional Chronicle testimony but still reads a genuine wait (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198318);
+      const w = ctx.world;
+      setProseMode(ctx, mode);
+      const ascendant = place(ctx, { name: 'Edran', sex: 'male', age: 40 });
+      w.ending = { id: 'forgotten', year: w.year };
+      w.houseAmbition = 'raise_ascendant';
+      w.chronicle = [{
+        id: `ledger_wait:${ascendant.id}`,
+        year: w.year - 0.5, weight: 'paragraph', named: false,
+        rung: 'demigod', text: 'The book says Edran waited.',
+        people: [ascendant.id],
+      }];
+      const before = digestOf(ctx);
+      const invalid = epilogueOf(ctx)!;
+      expect(invalid.purpose).toBeUndefined();
+      expect(invalid.reckoning.pages).toBe(0);
+      expect(invalid.read).toEqual([]);
+      expect(invalid.afterimage?.people).toEqual([]);
+      expect(digestOf(ctx)).toBe(before);
+
+      // The same uniquely attributed account is eligible when it really
+      // belongs to the last night, in either supported prose mode.
+      w.chronicle[0]!.year = w.year - 1;
+      const valid = epilogueOf(ctx)!;
+      expect(valid.purpose).toMatchObject({
+        kind: 'ascendant_wait', person: 'Edran', year: w.year - 1,
+      });
+      expect(valid.afterimage?.people.some((p) => p.person === ascendant.id)).toBe(true);
+      // An invalid duplicate is not another admissible witness of the deed.
+      w.chronicle.push({ ...w.chronicle[0]!, year: w.year - 0.5 });
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'ascendant_wait' });
+    },
+  );
+
+  it('ignores fractional succession and thin-line dates in the completed Afterimage', () => {
+    const ctx = atTheTerm(198319);
+    const w = ctx.world;
+    const earlier = place(ctx, { name: 'Earlier Head', sex: 'male', age: 70 });
+    const later = place(ctx, { name: 'Later Head', sex: 'male', age: 40 });
+    w.ending = { id: 'forgotten', year: w.year };
+    w.succession = [
+      { person: earlier.id, name: earlier.name, from: w.year - 10,
+        question: { kind: 'thin_line', opened: w.year - 10, baseline: 3,
+          text: 'Three remain.', signature: 'three-remaining' } },
+      { person: later.id, name: later.name, from: w.year - 0.5,
+        question: { kind: 'thin_line', opened: w.year - 0.5, baseline: 1,
+          text: 'One remains.', signature: 'one-remaining' } },
+    ];
+    const before = digestOf(ctx);
+    const invalid = epilogueOf(ctx)!.afterimage!;
+    expect(invalid.line?.[0]?.id).toBe(earlier.id);
+    expect(invalid.brush?.count).toBe(3);
+    expect(digestOf(ctx)).toBe(before);
+
+    // A valid accession does not make a corrupt question date truthful.
+    w.succession[1] = {
+      person: later.id, name: later.name, from: w.year - 1,
+      question: { kind: 'thin_line', opened: w.year - 0.5, baseline: 1,
+        text: 'One remains.', signature: 'one-remaining' },
+    };
+    const mixed = afterimageEvidence(ctx);
+    expect(mixed.line?.[0]?.id).toBe(later.id);
+    expect(mixed.brush?.count).toBe(3);
+    // Restore the question's real year; its lower count can now be read.
+    w.succession[1] = {
+      person: later.id, name: later.name, from: w.year - 1,
+      question: { kind: 'thin_line', opened: w.year - 1, baseline: 1,
+        text: 'One remains.', signature: 'one-remaining' },
+    };
+    expect(afterimageEvidence(ctx).brush?.count).toBe(1);
+  });
+});
