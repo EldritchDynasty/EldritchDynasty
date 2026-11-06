@@ -112,9 +112,11 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     }
     case 'refused':
       // Core normally supplies the signing validator's own wording. An older
-      // adapter or malformed result can omit it; never show a blank refusal
-      // beside a rejected founding. Preserve every genuine reason verbatim.
-      return typeof problem.reason === 'string' && problem.reason.trim()
+      // adapter or malformed result may supply invisible Unicode (format
+      // controls or combining marks). trim() alone misses those; show an
+      // actionable fallback instead of blank text. Preserve visible reasons.
+      return typeof problem.reason === 'string'
+        && /[^\s\p{Default_Ignorable_Code_Point}\p{Cc}\p{Mark}]/u.test(problem.reason)
         ? problem.reason
         : plain
           ? 'This code could not start a game. Check the founding details and try again.'

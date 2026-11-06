@@ -151,6 +151,24 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     expect(shareCodeProblem(refusal, 'original')).toBe(refusal.reason);
   });
 
+  it('falls back when a validator reason contains only invisible characters', () => {
+    // trim() leaves zero-width format marks, bidi controls and combining marks.
+    for (const reason of ['\u200b', '\u200d', '\u2060', '\u202e', '\u0301', '\u0000', ' \u200b\u0301']) {
+      const problem = { kind: 'refused', reason } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This code could not start a game. Check the founding details and try again.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('That code did not begin a house. Read the founding details and try again.');
+    }
+
+    // Legitimate explanations, including non-Latin writing, stay verbatim.
+    for (const reason of ['  The founder cannot take that oath.  ', '请填写姓名', 'A\u0301 name is required.']) {
+      const problem = { kind: 'refused', reason } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish')).toBe(reason);
+      expect(shareCodeProblem(problem, 'original')).toBe(reason);
+    }
+  });
+
   it('keeps a visible refusal when a legacy adapter omits the founding-validator reason', () => {
     // JavaScript and native bridges may return values outside the TypeScript
     // union. A rejection must never silently become an empty status message.
