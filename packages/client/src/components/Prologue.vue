@@ -84,7 +84,9 @@ let configurationChosen = false;
 function chooseGender(next: Gender): void {
   gender.value = next;
   if (!configurationChosen) {
-    configuration.value = founderConfigurationFor(next) ?? configuration.value;
+    // A nonbinary founder has no suggested blood parent. Do not retain a
+    // prior gender's *automatic* choice as though the player made it.
+    configuration.value = founderConfigurationFor(next) ?? null;
   }
 }
 function chooseConfiguration(next: FoundingConfiguration): void {

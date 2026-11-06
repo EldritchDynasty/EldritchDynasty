@@ -195,6 +195,55 @@ describe('progressive first-session signing (#2443)', () => {
   });
 });
 
+describe('explicit blood-parent choice during staged signing (#1984)', () => {
+  it('clears a gender-suggested configuration for a nonbinary founder, but preserves an explicit choice', async () => {
+    const game = actions();
+    const wrapper = mount(Prologue, {
+      props: { prologue: prologueView(), actions: game, refused: null, startYear: 1042 },
+    });
+    try {
+      await revealChoices(wrapper);
+      await wrapper.get('input[aria-label="Name the founder"]').setValue('Ari');
+      const genders = wrapper.findAll('.identity button');
+      const bloodParents = wrapper.findAll('.founding-configuration button');
+      const next = wrapper.get('.signing-navigation button.primary');
+
+      // A suggestion from a previously selected gender is not a choice.
+      await genders[0]!.trigger('click');
+      expect(bloodParents[0]!.attributes('aria-pressed')).toBe('true');
+      await genders[2]!.trigger('click');
+      expect(bloodParents.every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(next.attributes('disabled')).toBeDefined();
+
+      await genders[1]!.trigger('click');
+      expect(bloodParents[1]!.attributes('aria-pressed')).toBe('true');
+      await genders[2]!.trigger('click');
+      expect(bloodParents.every((button) => button.attributes('aria-pressed') === 'false')).toBe(true);
+      expect(next.attributes('disabled')).toBeDefined();
+
+      // Once chosen independently, the parent remains selected if pronouns change.
+      await bloodParents[1]!.trigger('click');
+      await genders[0]!.trigger('click');
+      await genders[2]!.trigger('click');
+      expect(bloodParents[1]!.attributes('aria-pressed')).toBe('true');
+      await continueSigning(wrapper);
+      for (let question = 1; question <= 4; question += 1) {
+        await answerButton(wrapper, question).trigger('click');
+      }
+      await continueSigning(wrapper);
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('The Seal'))!.trigger('click');
+      await wrapper.findAll('.house-section button').find((button) => button.text().includes('House Marrow'))!.trigger('click');
+      await wrapper.get('input[aria-label="Name the house"]').setValue('House Ash');
+      await wrapper.get('button.sign').trigger('click');
+      expect(game.found).toHaveBeenCalledWith(expect.objectContaining({
+        founder: { name: 'Ari', gender: 'nonbinary', configuration: 'blood_mother' },
+      }));
+    } finally {
+      wrapper.unmount();
+    }
+  });
+});
+
 describe('new campaign in a retained signing component (#1984)', () => {
   it("clears an earlier campaign\'s signing drafts, but preserves them on translation", async () => {
     const game = actions();
