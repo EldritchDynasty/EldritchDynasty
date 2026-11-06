@@ -132,6 +132,8 @@ describe('queue throughput evidence (#2794)', () => {
     for (const second of [
       [run(101, '2026-11-06T02:00:01Z'), run(102, '2026-11-05T23:00:00Z')],
       [run(1, '2026-11-06T02:00:00Z')],
+      // The first old row must not mask an unexpected newer row later on the page.
+      [run(103, '2026-11-05T23:00:00Z'), run(104, '2026-11-06T02:00:00Z')],
     ]) {
       let page = 0;
       await expect(fetchMergeGroupRuns({
