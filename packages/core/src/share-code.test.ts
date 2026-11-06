@@ -178,6 +178,42 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     }
   });
 
+  it('preserves a recorded blank founder answer in an anonymous code without leaking names (#1995)', () => {
+    // The signed answer is part of the canonical replay even though it does
+    // not change the displayed, authored founder. Missing it is a different
+    // signing from one that submitted a blank name.
+    for (const name of ['', '   ']) {
+      const original = founded({ ...SIGNED, founder: { ...SIGNED.founder, name } });
+      const anonymous = codeOf(original);
+      const payload = JSON.parse(payloadOf(anonymous)) as unknown[];
+      expect(payload[5]).toEqual(['w', 'm', name]);
+      expect(payloadOf(anonymous)).not.toContain('Maud Gearithy');
+      expect(payloadOf(anonymous)).not.toContain('Iona Vale');
+      const read = readShareCode(anonymous, content, { build: BUILD });
+      expect(read.ok && read.founding.founder?.name).toBe(name);
+      expect(read.ok && read.founding.missing).toEqual(['house', 'friends']);
+
+      const recipient = {
+        house: SIGNED.houseName,
+        friends: SIGNED.friends.map((friend) => friend.name),
+        // Left over from a different code: the recorded blank answer wins.
+        founder: 'Stale Previous Founder',
+      };
+      const imported = newGameFromShareCode(anonymous, content, { build: BUILD, names: recipient });
+      expect(imported.ok).toBe(true);
+      if (!imported.ok) continue;
+      expect(saved(imported.session)).toBe(saved(original));
+      expect(codeOf(imported.session)).toBe(anonymous);
+      expect(codeOf(imported.session, { names: true })).toBe(codeOf(original, { names: true }));
+    }
+
+    // The marker is exclusively for empty/whitespace answers. Re-sealing an
+    // anonymous code with an actual founder name must still be refused.
+    const anonymous = codeOf(founded());
+    const smuggled = forge(anonymous, (payload) => { payload[5] = ['w', 'm', 'Hidden Person']; });
+    expect(problemOf(smuggled)).toEqual({ kind: 'damaged' });
+  });
+
   it('does not invent a blank founder-name answer when a recipient leaves it empty', () => {
     const original = founded({
       ...SIGNED,
