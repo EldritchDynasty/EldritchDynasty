@@ -15,7 +15,7 @@ import { TEST_FAMILIES } from './tools/testFamilies.js';
 import { rollDeath } from './people/demography.js';
 import { makeRng } from './rng.js';
 import { coreMessageAddress } from './messages.js';
-import { ascensionBlockersFor, diagnoseHouseAscension, measureAscension, type HouseAscension } from './ascension.js';
+import { ascensionBlockersFor, diagnoseHouseAscension, measureAscension, visibleAscensionRanking, type HouseAscension } from './ascension.js';
 import { readTheChronicle } from './ending.js';
 import { coreMessageEntries } from './tools/core-message-audit.js';
 
@@ -1090,7 +1090,7 @@ describe('completed-book ascension reads leave the saved family alone (#3073)', 
   function household(seed: number) {
     const ctx = testWorld(bundle, seed);
     const lazy = [
-      place(ctx, { name: 'Unread Son', sex: 'male', age: 30 }),
+      place(ctx, { name: 'Unread Son', sex: 'male', age: 30, awakened: true }),
       place(ctx, { name: 'Unread Daughter', sex: 'female', age: 24 }),
     ];
     expect(lazy.every((p) => p.genome.kind === 'lazy')).toBe(true);
@@ -1109,8 +1109,12 @@ describe('completed-book ascension reads leave the saved family alone (#3073)', 
     const before = saved();
 
     for (let i = 0; i < 2; i++) {
-      expect(measureAscension(completed.ctx)).toEqual(expected);
+      const measured = measureAscension(completed.ctx);
+      expect(measured).toEqual(expected);
       readTheChronicle(completed.ctx);
+      visibleAscensionRanking(completed.ctx);
+      diagnoseHouseAscension(completed.ctx, measured);
+      frozenLadder(completed.ctx);
       expect(completed.lazy.every((p) => p.genome.kind === 'lazy')).toBe(true);
       expect(saved(), 'reading the completed ledger must preserve the canonical save').toBe(before);
     }
