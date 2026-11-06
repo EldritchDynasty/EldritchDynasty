@@ -1976,6 +1976,65 @@ describe('the bed decides when the house may be heard', () => {
     expect(chosen.audioSession.type).toBe('playback');
   });
 
+  it('restores temporary ambient policy on detach and disposal, including replacement (#3128)', () => {
+    const page = fakePage();
+    const nav = { audioSession: { type: 'auto' } };
+    const bed = new SoundBed(new Sound(null));
+
+    const previous = bed.attach(page.doc, page.win, undefined, nav);
+    expect(nav.audioSession.type).toBe('ambient');
+
+    const current = bed.attach(page.doc, page.win, undefined, nav);
+    expect(nav.audioSession.type).toBe('ambient');
+    previous(); // A stale cleanup must not reset the active attachment.
+    expect(nav.audioSession.type).toBe('ambient');
+
+    current();
+    expect(nav.audioSession.type).toBe('auto');
+    expect(page.count()).toBe(0);
+
+    bed.attach(page.doc, page.win, undefined, nav);
+    expect(nav.audioSession.type).toBe('ambient');
+    bed.dispose();
+    expect(nav.audioSession.type).toBe('auto');
+    expect(page.count()).toBe(0);
+  });
+
+  it('does not replace a host-selected Audio Session mode during teardown (#3128)', () => {
+    const page = fakePage();
+    const nav = { audioSession: { type: 'auto' } };
+    const bed = new SoundBed(new Sound(null));
+    const detach = bed.attach(page.doc, page.win, undefined, nav);
+    expect(nav.audioSession.type).toBe('ambient');
+
+    nav.audioSession.type = 'playback';
+    expect(() => detach()).not.toThrow();
+    expect(nav.audioSession.type).toBe('playback');
+    expect(page.count()).toBe(0);
+    bed.dispose();
+  });
+
+  it('still releases its listeners if the Audio Session policy refuses restoration (#3128)', () => {
+    const page = fakePage();
+    let currentMode = 'auto';
+    let denyRestoration = false;
+    const nav = { audioSession: {
+      get type() {
+        if (denyRestoration) throw new Error('audio session detached');
+        return currentMode;
+      },
+      set type(mode: string) { currentMode = mode; },
+    } };
+    const bed = new SoundBed(new Sound(null));
+    const detach = bed.attach(page.doc, page.win, undefined, nav);
+    expect(currentMode).toBe('ambient');
+
+    denyRestoration = true;
+    expect(() => detach()).not.toThrow();
+    expect(page.count()).toBe(0);
+    expect(() => bed.dispose()).not.toThrow();
+  });
+
   it('keeps the game usable when optional Audio Session policy cannot be read or set', () => {
     const forbidden = [
       { audioSession: {
