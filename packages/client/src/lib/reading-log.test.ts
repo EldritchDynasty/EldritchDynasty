@@ -299,7 +299,7 @@ describe('unreadable signing and Match outcomes remain observational (#3169)', (
 
     for (const result of results) expect(actions.found(input)).toBe(result);
     expect(calls).toEqual([[input], [input], [input], [input]]);
-    expect(l.events.filter(e => e.kind === 'action' && e.verb === 'found').map(e => [e.verb, e.status])).toEqual([
+    expect(l.events.flatMap(e => e.kind === 'action' && e.verb === 'found' ? [[e.verb, e.status]] : [])).toEqual([
       ['found', 'attempted'],
       ['found', 'attempted'],
       ['found', 'attempted'], ['found', 'refused'],
@@ -329,7 +329,7 @@ describe('unreadable signing and Match outcomes remain observational (#3169)', (
     expect(actions.enter()).toBeUndefined();
     for (const result of results) expect(actions.match('private hand', 'private choice')).toBe(result);
     expect(calls).toHaveLength(results.length);
-    expect(l.events.filter(e => e.kind === 'action' && e.verb === 'match').map(e => e.status)).toEqual([
+    expect(l.events.flatMap(e => e.kind === 'action' && e.verb === 'match' ? [e.status] : [])).toEqual([
       'attempted',
       'attempted',
       'attempted', 'refused', // undefined is the established no-active-run refusal
