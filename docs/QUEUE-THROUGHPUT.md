@@ -1,5 +1,44 @@
 # Merge queue throughput evidence (#2794)
 
+
+## Follow-up: adjacent 24-hour merge-group windows (6 November 2026)
+
+The early baseline below predates the proof-reuse/intake changes. For a nearer
+post-change comparison, GitHub's Actions run API was sampled on 6 November
+at about 13:01 UTC, using
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/runs?event=merge_group&per_page=100&page=N`
+(pages 1–3). Select only `check` workflow runs with
+`event=merge_group` and `created_at` in the half-open UTC windows below.
+All selected runs had completed. Slot minutes are
+`updated_at - run_started_at`; median and p90 use the lower-ranked observation
+for even populations. The source run IDs make the two cohorts auditable.
+
+| UTC start (inclusive) → end (exclusive) | Completed groups | Successful | Failed | Median slot | p90 slot |
+|---|---:|---:|---:|---:|---:|
+| 4 Nov 12:45 → 5 Nov 12:45 | 73 | 70 | 3 (4.1%) | 15.23 min | 17.78 min |
+| 5 Nov 12:45 → 6 Nov 12:45 | 69 | 69 | 0 (0%) | 10.07 min | 15.10 min |
+
+Sources for the first cohort range from
+[41834935338](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41834935338)
+to [42013855690](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42013855690);
+failed runs were
+[41848493899](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41848493899),
+[41858410104](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41858410104)
+and [41868605285](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/41868605285).
+The second cohort ranges from
+[42032459983](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42032459983)
+to [42218895809](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42218895809).
+
+The observed median slot fell about **5.17 minutes (34%)** and no merge-group
+failure appeared in the later complete cohort. **This is observational, not
+causal**: different code/content mixes, runner variation, proof eligibility
+and a changing queue all affect slot length. The later window also completed
+**four fewer groups** (69 vs 73), so a shorter median does **not** establish
+higher total landing throughput. These 48 hours do not satisfy the planned
+seven-day arrival/land/failure budget or isolate the proof-reuse rate, and
+must not be used to justify relaxing build concurrency. Keep #2794 open until
+the planned longer-window assessment and acceptance are complete.
+
 ## Before the fresher-proof change
 
 Collected on 4 November 2026 through GitHub's workflow-run, job and decoded
