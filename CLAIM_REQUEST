@@ -1,1 +1,1 @@
-/claim 3064 --agent chatgpt/issue-3064-unused-names-20261106-1529 --paths packages/core/src/share-code.ts packages/core/src/share-code.test.ts --lane code
+/claim check --agent chatgpt/issue-3064-unused-names-20261106-1529
