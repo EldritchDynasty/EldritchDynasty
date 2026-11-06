@@ -496,6 +496,9 @@ export class Sound {
       const e = this.engine();
       if (!e) return;
       this.stopDrone();
+      // A host can invalidate the output while its previous Age is fading.
+      // stopDrone() fails closed; never build the replacement on that device.
+      if (this.#failed) return;
       this.droneKey = key;
 
       const gain = e.context.createGain();
@@ -530,34 +533,42 @@ export class Sound {
     this.droneKey = '';
     const ctx = this.context;
     this.attempt(() => {
-      const now = ctx.currentTime;
-      // A short ramp prevents a click when the frame interrupts the drone;
-      // ordinary exits keep the full fade. Stop shortly after zero gain.
-      d.gain.gain.setValueAtTime(d.gain.gain.value, now);
-      d.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
-      // Every node here is a source this class started, so stopping is safe.
-      // The dedicated drone gain is connected to the output. Retire that graph
-      // after the last source finishes; otherwise repeated Age transitions
-      // leave disconnected-from-the-game but still connected-to-output nodes.
-      let remaining = d.nodes.length;
       const retired = { nodes: d.nodes, gain: d.gain };
-      this.retiringDrones.add(retired);
-      const disconnect = () => {
-        // The immediate-cut path may have already disconnected this old fade.
-        if (!this.retiringDrones.delete(retired)) return;
-        try { d.gain.disconnect(); } catch { /* the host already closed the graph */ }
-      };
-      const stopAt = now + fadeSeconds + Math.min(0.1, fadeSeconds);
-      for (const n of d.nodes) {
-        n.onended = () => {
-          if (--remaining === 0) disconnect();
+      try {
+        const now = ctx.currentTime;
+        // A short ramp prevents a click when the frame interrupts the drone;
+        // ordinary exits keep the full fade. Stop shortly after zero gain.
+        d.gain.gain.setValueAtTime(d.gain.gain.value, now);
+        d.gain.gain.linearRampToValueAtTime(0, now + fadeSeconds);
+        // Every node here is a source this class started, so stopping is safe.
+        // Retire the dedicated graph after its last source finishes.
+        let remaining = d.nodes.length;
+        this.retiringDrones.add(retired);
+        const disconnect = () => {
+          // The immediate-cut path may have already disconnected this fade.
+          if (!this.retiringDrones.delete(retired)) return;
+          try { d.gain.disconnect(); } catch { /* the host already closed the graph */ }
         };
-        n.stop(stopAt);
+        const stopAt = now + fadeSeconds + Math.min(0.1, fadeSeconds);
+        for (const n of d.nodes) {
+          n.onended = () => {
+            if (--remaining === 0) disconnect();
+          };
+          n.stop(stopAt);
+        }
+        // A frozen clock cannot complete a scheduled fade after host suspension.
+        if (fadeSeconds === 0 || remaining === 0) disconnect();
+      } catch (error) {
+        // A failed gain ramp or stop can occur *before* this drone was tracked
+        // as retiring. The context may also refuse close(). Cut its sources
+        // and output immediately rather than leaving a sustained graph alive.
+        this.retiringDrones.delete(retired);
+        for (const source of d.nodes) {
+          try { source.stop(); } catch { /* already stopped or invalidated */ }
+        }
+        try { d.gain.disconnect(); } catch { /* device already invalidated */ }
+        throw error;
       }
-      // Suspend/mute can freeze the audio clock before ended is dispatched.
-      // With no fade to preserve, disconnect immediately instead of retaining
-      // the old graph until a later foreground gesture (which may never come).
-      if (fadeSeconds === 0 || remaining === 0) disconnect();
     });
   }
 
