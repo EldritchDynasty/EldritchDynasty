@@ -160,7 +160,12 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     return reign.from >= fromYear && reign.from <= throughYear
       && q?.kind === 'thin_line' && q.opened >= fromYear && q.opened <= throughYear
       && (!w.ending || (Number.isSafeInteger(reign.from) && Number.isSafeInteger(q.opened)))
-      && q.text && Number.isFinite(q.baseline)
+      // A finished book cannot count half a person, a negative household,
+      // or an integer too large to represent exactly. Keep synthetic
+      // unfinished-world diagnostics permissive, as with page dates.
+      && q.text && (w.ending
+        ? Number.isSafeInteger(q.baseline) && q.baseline >= 0
+        : Number.isFinite(q.baseline))
       ? [{ count: q.baseline, source: { year: q.opened, text: q.text } }]
       : [];
   }).sort((a, b) => a.count - b.count || a.source.year - b.source.year)[0];
