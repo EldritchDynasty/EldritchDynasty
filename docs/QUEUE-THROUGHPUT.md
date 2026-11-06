@@ -1,5 +1,31 @@
 # Merge queue throughput evidence (#2794)
 
+## Reproduce actual PR arrival and landing rates
+
+The read-only reporter now has an **opt-in PR-flow cohort** in addition to
+merge-group timings. A green merge-group check does not prove the PR merged;
+the PR cohort counts GitHub's actual merged_at timestamps. For example:
+
+    GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T00:00:00Z --to 2026-11-07T00:00:00Z --with-prs
+    GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T00:00:00Z --to 2026-11-07T00:00:00Z --with-prs --json
+    node tools/queue-throughput.mjs --from 2026-11-06T00:00:00Z --to 2026-11-07T00:00:00Z --runs check-runs.json --prs all-prs.json
+
+The live PR query paginates **every** open and closed PR targeting main; it does
+not stop at the window's beginning because an older PR can land inside the
+window. Missing credentials, API failures or histories exceeding the page cap
+fail closed. Local snapshots are marked unverified, and future or unfinished
+windows are not complete cohort receipts.
+
+The output separates created PRs, actually merged PRs, closed-unmerged PRs,
+and an approximate open-PR count at the beginning/end. Those are not counts
+of **ready** PRs or native merge-queue entries: GitHub's current PR REST
+snapshot does not reconstruct earlier draft/ready changes or reopen history.
+The window's PR arrivals and actual landings per hour help assess the rate
+question in #2794, but should be interpreted alongside exact-head CI and the
+merge-group cohort. The tool does not change queue settings or imply a
+performance improvement merely because it produces a number.
+
+
 
 ## Follow-up: adjacent 24-hour merge-group windows (6 November 2026)
 
