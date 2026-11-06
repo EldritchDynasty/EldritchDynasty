@@ -168,9 +168,18 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // Recovered succession rows need not be stored in tenure order. Choose the
   // latest admissible start year, retaining the later stored entry for ties.
   const lastHead = w.succession.reduce<(typeof w.succession)[number] | undefined>(
-    (latest, reign) => reign.from >= fromYear && reign.from <= throughYear
-      && (!latest || reign.from >= latest.from)
-      ? reign : latest,
+    (latest, reign) => {
+      // Imported succession rows can put a person on the seal before their
+      // birth, after their death, or refer to somebody no longer in the store.
+      // They cannot displace the last admissible Head of a completed book.
+      // Unfinished authoring inventories retain their synthetic flexibility.
+      const person = w.ending ? w.people.get(reign.person) : undefined;
+      return reign.from >= fromYear && reign.from <= throughYear
+        && (!w.ending || (person && person.born <= reign.from
+          && (person.died === undefined || person.died >= reign.from)))
+        && (!latest || reign.from >= latest.from)
+        ? reign : latest;
+    },
     undefined,
   )?.person;
   const ancestors = lastHead ? [String(lastHead)] : [];
