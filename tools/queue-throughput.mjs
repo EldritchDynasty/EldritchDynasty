@@ -55,7 +55,9 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
       const started = timestamp(run.run_started_at);
       const updated = timestamp(run.updated_at);
       if (updated < started) throw new Error('Run updated before it started: ' + run.id);
-      minutes = Math.round((updated - started) / 6000) / 10;
+      // Preserve hundredth-minute precision for median/p90 comparisons;
+      // rounding individual queue slots to tenths first loses real seconds.
+      minutes = Math.round((updated - started) / 600) / 100;
     }
     details.push({
       id: run.id, created_at: run.created_at, conclusion: done ? run.conclusion : null, minutes,
