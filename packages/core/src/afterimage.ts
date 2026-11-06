@@ -1,5 +1,6 @@
 import type { ChronicleEntry, SimCtx } from './world.js';
 import { visibleEpithet } from './byname.js';
+import { campaignDef } from './campaign.js';
 
 /** A recoverable visible account, never an inferred account of what really happened. */
 export interface AfterimageSource {
@@ -52,9 +53,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // pages lie beyond the test clock; never censor those diagnostic inventories.
   // Once a house has an ending, only evidence available by that year may be
   // quoted, counted, or used to attribute outcomes.
-  const throughYear = w.ending ? w.year : Infinity;
+  const fromYear = w.ending ? campaignDef(w.campaign).startYear : -Infinity;
+  const throughYear = w.ending ? w.ending.year : Infinity;
   const pages = w.chronicle.map((page, index) => ({ page, index }))
-    .filter(({ page }) => page.year <= throughYear)
+    .filter(({ page }) => page.year >= fromYear && page.year <= throughYear)
     .sort((a, b) => a.page.year - b.page.year || a.index - b.index)
     .map(({ page }) => page);
   // Legacy/imported omissions may retain old text. Their words are not
@@ -140,7 +142,8 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
 
   const brush = w.succession.flatMap((reign) => {
     const q = reign.question;
-    return reign.from <= throughYear && q?.kind === 'thin_line' && q.opened <= throughYear
+    return reign.from >= fromYear && reign.from <= throughYear
+      && q?.kind === 'thin_line' && q.opened >= fromYear && q.opened <= throughYear
       && q.text && Number.isFinite(q.baseline)
       ? [{ count: q.baseline, source: { year: q.opened, text: q.text } }]
       : [];
@@ -152,7 +155,8 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
   // Recovered succession rows need not be stored in tenure order. Choose the
   // latest admissible start year, retaining the later stored entry for ties.
   const lastHead = w.succession.reduce<(typeof w.succession)[number] | undefined>(
-    (latest, reign) => reign.from <= throughYear && (!latest || reign.from >= latest.from)
+    (latest, reign) => reign.from >= fromYear && reign.from <= throughYear
+      && (!latest || reign.from >= latest.from)
       ? reign : latest,
     undefined,
   )?.person;

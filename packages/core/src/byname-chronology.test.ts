@@ -153,6 +153,9 @@ describe('Afterimage reads only testimony available by the current year (#2657)'
     ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
     expect(afterimageEvidence(ctx).people).toEqual([]);
     ctx.world.year = futureYear;
+    // Moving the current clock does not revise the already-collected book.
+    expect(afterimageEvidence(ctx).people).toEqual([]);
+    ctx.world.ending.year = futureYear; // A different collection can include the page.
     expect(afterimageEvidence(ctx).people[0]?.sources[0]?.year).toBe(futureYear);
   });
 
@@ -228,6 +231,8 @@ describe('Afterimage reads only testimony available by the current year (#2657)'
     expect(earlier.spentBlood).toBeUndefined();
 
     w.year = futureYear;
+    expect(afterimageEvidence(ctx).spentBlood).toBeUndefined();
+    w.ending!.year = futureYear; // Only a later collection admits the rite.
     const arrived = afterimageEvidence(ctx);
     expect(arrived.spent).toMatchObject({
       person: vessel.id, source: { page: 'future-rite', year: futureYear },
@@ -291,6 +296,10 @@ describe('Afterimage reads only testimony available by the current year (#2657)'
     expect(today.line?.[0]?.head).toBe(true);
 
     w.year = year + 1;
+    const stillCollected = afterimageEvidence(ctx);
+    expect(stillCollected.brush).toEqual(today.brush);
+    expect(stillCollected.line?.[0]?.id).toBe(earlier.id);
+    w.ending!.year = year + 1; // A new ending may include the later tenure.
     const tomorrow = afterimageEvidence(ctx);
     expect(tomorrow.brush).toEqual({
       count: 1, source: { year: year + 1, text: 'Only one remained.' },
@@ -325,6 +334,8 @@ describe('Afterimage reads only testimony available by the current year (#2657)'
     expect(digestOf(ctx)).toBe(before);
 
     w.year = year + 1;
+    expect(afterimageEvidence(ctx).brush).toEqual(today.brush);
+    w.ending!.year = year + 1;
     expect(afterimageEvidence(ctx).brush).toEqual({ count: 1, source: {
       year: year - 1, text: 'One remained under the later seal.',
     } });
@@ -377,6 +388,8 @@ describe('earned bynames cannot leak into an earlier last-night Afterimage (#287
     expect(victim.epithet).toBe(savedName); // view cannot edit the stored earned name
 
     w.year = night + 1;
+    expect(afterimageEvidence(ctx).spent?.epithet).toBeUndefined();
+    w.ending!.year = night + 1; // The earned name belongs to a later collection.
     const earned = afterimageEvidence(ctx);
     expect(earned.people.find((p) => p.person === victim.id)?.epithet).toBe(savedName);
     expect(earned.spent?.epithet).toBe(savedName);
@@ -443,6 +456,8 @@ describe('Afterimage chooses the most recent eligible Head (#2938)', () => {
     expect(digestOf(ctx)).toBe(before);
 
     w.year = year + 1;
+    expect(afterimageEvidence(ctx).line?.[0]).toMatchObject({ id: current.id, head: true });
+    w.ending!.year = year + 1;
     expect(afterimageEvidence(ctx).line?.[0]).toMatchObject({ id: future.id, head: true });
     w.ending = undefined;
     expect(afterimageEvidence(ctx).line?.[0]).toMatchObject({ id: future.id, head: true });
