@@ -102,6 +102,8 @@ export class SoundBed {
   #preference: SoundPreference = { on: false, volume: 1 };
   /** A refusing host must not leave us unmuted at a stale, louder level. */
   #volumeApplied = false;
+  /** A refused mute transition is not a successful audio unlock. */
+  #muteApplied = false;
   #unlocked = false;
   #away = false;
   /** A gesture may resume a paused host, but must never wake a hidden document. */
@@ -119,6 +121,11 @@ export class SoundBed {
 
   /** True only when a cue could be heard; zero volume must not open the audio device. */
   get audible(): boolean {
+    return this.#muteApplied && this.#canPlay();
+  }
+
+  /** The intended state, before asking an optional host to apply its mute switch. */
+  #canPlay(): boolean {
     return !this.#disposed && this.#volumeApplied && this.#preference.on && this.#preference.volume > 0
       && this.#unlocked && !this.#away && this.#engineAvailable();
   }
@@ -423,16 +430,24 @@ export class SoundBed {
   }
 
   #settle(): void {
-    const muted = !this.audible;
-    this.#tryAudio(() => {
+    // Compute the requested state independently of #muteApplied: if a prior
+    // unmute failed, the next gesture must be allowed to retry it.
+    const muted = !this.#canPlay();
+    this.#muteApplied = false;
+    try {
       // A host can refuse the optional mute-state read while still accepting
-      // writes. Do not skip a necessary mute just because its getter threw:
-      // the old drone could otherwise keep sounding at a stale volume.
+      // writes. Do not skip a necessary mute just because its getter threw.
       let current: boolean | undefined;
       try { current = this.engine.muted; }
       catch { /* Unknown state: explicitly ask for the safe state below. */ }
       if (current !== muted) this.engine.muted = muted;
-    });
+      this.#muteApplied = true;
+    } catch {
+      // A failed unmute is not permission to forward cues to an unknown
+      // engine. Worse, a failed mute can leave an older drone audible: ask
+      // the host to suspend its audio thread as a best-effort fallback.
+      if (muted) this.#tryAudio(() => this.engine.suspend());
+    }
   }
 }
 
