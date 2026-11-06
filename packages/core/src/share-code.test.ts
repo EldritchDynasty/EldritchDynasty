@@ -207,6 +207,40 @@ describe('a share code is the founding and nothing after it (#1995)', () => {
     }
   });
 
+  it.each(['original', 'plainenglish'] as const)(
+    'imports complete named codes despite invalid unused recipient fields (%s, #3064)',
+    (proseMode) => {
+      const original = founded();
+      const code = codeOf(original, { names: true });
+      const preview = readShareCode(code, content, { build: BUILD });
+      expect(preview.ok && preview.founding.missing).toEqual([]);
+      const continued = resumeGame(original.save(), content);
+      continued.advance(1);
+      for (const names of [
+        null,
+        ['left', 'over'],
+        { founder: { value: 'Previous founder' }, house: 123 },
+        { friends: Array.from({ length: MAX_FRIENDS + 1 }, (_, i) => `Old friend ${i}`) },
+        { friends: ['A', 42, 'C'] },
+      ]) {
+        // A typed caller should not supply these shapes. A reused Start form
+        // or native bridge still can; every name is already present in code.
+        const imported = newGameFromShareCode(code, content, {
+          build: BUILD, proseMode, names: names as never,
+        });
+        expect(imported.ok).toBe(true);
+        if (!imported.ok) continue;
+        expect(saved(imported.session)).toBe(saved(original));
+        const resumed = resumeGame(imported.session.save(), content);
+        expect(saved(resumed)).toBe(saved(original));
+        imported.session.advance(1);
+        resumed.advance(1);
+        expect(saved(imported.session)).toBe(saved(continued));
+        expect(saved(resumed)).toBe(saved(continued));
+      }
+    },
+  );
+
   it('leaves every typed name out unless asked, and says which the recipient supplies', () => {
     const code = codeOf(founded());
     const payload = payloadOf(code);
