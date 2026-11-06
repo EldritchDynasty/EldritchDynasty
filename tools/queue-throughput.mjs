@@ -6,8 +6,8 @@
  * node tools/queue-throughput.mjs --from ... --to ... --runs saved-actions-runs.json --json
  *
  * The first form pages GitHub's Actions API with GITHUB_TOKEN. The second
- * inspects an exported snapshot without network access. Neither counts PR
- * arrivals/landings: a successful merge-group check is not proof of a merge.
+ * inspects an exported snapshot without network access. Merge-group checks
+ * are not PR landings; --with-prs separately counts actual created/merged PRs.
  * A window cannot be certified while it is still open, contains unfinished
  * runs, or was supplied as an unverified subset.
  */
@@ -82,6 +82,19 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   const dailyEligible = complete && end - start === 86400000 && details.length >= 30 && classified;
   const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
 
+  // Seven consecutive 24-hour segments of successful required merge-group
+  // checks prove there was no lanes.test.ts budget failure: a failed test
+  // cannot hide inside a successful check. Require at least one check on each
+  // day. Any non-green or missing observation is UNKNOWN, not evidence that
+  // the budget itself failed; diagnosing a red check requires its job logs.
+  const sevenDayGroupCounts = end - start === 7 * 86400000
+    ? Array.from({ length: 7 }, (_, day) => details.filter(run =>
+      Math.floor((timestamp(run.created_at) - start) / 86400000) === day).length)
+    : null;
+  const sevenDayNoBudgetFailuresProved = complete &&
+    sevenDayGroupCounts?.every(count => count > 0) &&
+    (counts.success ?? 0) === details.length ? true : null;
+
   return {
     from, to, source, complete,
     windowDays: Math.round((end - start) / 8640000) / 10,
@@ -91,6 +104,7 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
     successful: counts.success ?? 0,
     failed,
     failureSharePercent, dailyTargetUnder5Percent,
+    sevenDayGroupCounts, sevenDayNoBudgetFailuresProved,
     otherConclusions: Object.fromEntries(Object.entries(counts).filter(([key]) => key !== 'success' && key !== 'failure')),
     medianMinutes: rank(0.5),
     p90Minutes: rank(0.9),
@@ -276,6 +290,11 @@ export function formatMergeGroups(report) {
     'Daily <5% failure target (exact 24h, 30+ groups, only success/failure conclusions): ' +
       (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
         report.dailyTargetUnder5Percent ? 'met' : 'not met') + '.',
+    'Seven-day zero duration-budget failures (sufficient green-CI evidence): ' +
+      (report.sevenDayNoBudgetFailuresProved ? 'established' : 'not established') + '.',
+    'Seven-day groups per consecutive 24h segment: ' +
+      (report.sevenDayGroupCounts === null ? 'n/a' : report.sevenDayGroupCounts.join(', ')) + '.',
+    'A red or missing check needs job-log diagnosis; not established does not mean the budget failed.',
     'This counts workflow runs, not PR arrivals or landed PRs. It is not a throughput or concurrency recommendation.',
     '',
     'Run IDs: ' + report.runs.map(x => x.id).join(', '),
