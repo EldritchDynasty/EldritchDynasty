@@ -162,6 +162,26 @@ describe('main PR flow evidence (#2794)', () => {
     expect(summarizePrFlow([row], { from, to, now: Date.parse(from), source: 'api' }).complete).toBe(false);
   });
 
+  it('rejects inconsistent merged PR closures rather than inflating the open backlog', () => {
+    const created = '2026-11-06T02:00:00Z';
+    const merged = '2026-11-06T03:00:00Z';
+    expect(() => summarizePrFlow([pr(9, created, { merged_at: merged })], {
+      from, to, now, source: 'api',
+    })).toThrow(/Merged PR missing closed_at: 9/);
+    expect(() => summarizePrFlow([pr(10, created, {
+      merged_at: merged, closed_at: '2026-11-06T02:30:00Z',
+    })], { from, to, now, source: 'api' })).toThrow(/PR merged after closure: 10/);
+
+    // The normal GitHub snapshot has both timestamps; this still lands exactly
+    // once and does not leave a ghost PR in the end-of-window open count.
+    const report = summarizePrFlow([pr(11, created, {
+      merged_at: merged, closed_at: merged,
+    })], { from, to, now, source: 'api' });
+    expect(report.complete).toBe(true);
+    expect(report.merged).toBe(1);
+    expect(report.openAtEnd).toBe(0);
+  });
+
   it('paginates ALL PRs so older PRs merged in a window are retained', async () => {
     const first = Array.from({ length: 100 }, (_, i) => pr(i + 1, from));
     const second = [pr(101, '2020-01-01T00:00:00Z', {
