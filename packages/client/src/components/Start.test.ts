@@ -3240,6 +3240,35 @@ describe('voluntary resume recap (#1985)', () => {
     } finally { w.unmount(); }
   });
 
+  it.each(['original', 'plainenglish'] as const)(
+    'uses only outstanding public marriage pledges, and drops settled ones (%s)', async (proseMode) => {
+      const pledge = {
+        house: 'house_elm', houseName: 'House Elm', year: 1315,
+        lot: 'book_of_hours', lotName: 'a Book of Hours',
+      };
+      const view = snapshot({ marriagePromises: [pledge] });
+      const before = structuredClone(view);
+      const w = mount(ResumeRecap, { props: { view, pending: 0, proseMode } });
+      try {
+        const promises = w.get('.recap-pledges');
+        expect(promises.findAll('li')).toHaveLength(1);
+        expect(promises.text()).toContain('1315');
+        expect(promises.text()).toContain('House Elm');
+        expect(promises.text()).toContain('a Book of Hours');
+        expect(w.text()).toContain(proseMode === 'original'
+          ? 'Marriage pledges still owed' : 'Outstanding marriage promises');
+        expect(w.text()).not.toContain('One decision awaits');
+        expect(view).toEqual(before);
+
+        // A later public snapshot may have discharged the pledge; the recap
+        // must never repeat an obligation that the save no longer records.
+        await w.setProps({ view: snapshot({ marriagePromises: [] }) });
+        expect(w.find('.recap-pledges').exists()).toBe(false);
+        expect(w.text()).not.toContain('House Elm');
+      } finally { w.unmount(); }
+    },
+  );
+
   it('opens a recap only after a successful rolling, named or imported pickup', async () => {
     const notify = vi.fn();
     const actions = {
