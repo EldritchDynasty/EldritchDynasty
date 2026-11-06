@@ -3096,3 +3096,60 @@ describe('completed family-purpose evidence requires whole, dated years (#1983)'
   );
 
 });
+
+describe('completed Afterimage thin-line counts require a credible Head and tenure (#1983)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'rejects an impossible Head or question date without losing a valid count (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198321);
+      const w = ctx.world;
+      const earlier = place(ctx, { name: 'Earlier Head', sex: 'male', age: 75 });
+      const later = place(ctx, { name: 'Disputed Head', sex: 'male', age: 40 });
+      const earlierYear = w.year - 10;
+      const laterYear = w.year - 2;
+      w.ending = { id: 'forgotten', year: w.year };
+      setProseMode(ctx, mode);
+      const credited = {
+        person: earlier.id, name: earlier.name, from: earlierYear,
+        question: { kind: 'thin_line' as const, opened: earlierYear,
+          baseline: 4, text: 'Four were in the house.', signature: 'four-in-house' },
+      };
+      const disputed = {
+        person: later.id, name: later.name, from: laterYear, to: w.year - 1,
+        question: { kind: 'thin_line' as const, opened: laterYear,
+          baseline: 1, text: 'One was in the house.', signature: 'one-in-house' },
+      };
+      w.succession = [credited, disputed];
+      const count = () => epilogueOf(ctx)!.afterimage?.brush?.count;
+      expect(count()).toBe(1);
+
+      // An invented last Head must not give the book a smaller family.
+      disputed.person = asId('absent-afterimage-head');
+      expect(count()).toBe(4);
+      disputed.person = later.id;
+      const birth = later.born;
+      later.born = laterYear + 1;
+      expect(count()).toBe(4);
+      later.born = birth;
+      later.died = laterYear - 1;
+      expect(count()).toBe(4);
+      later.died = undefined;
+
+      // Even a real Head cannot remember a generation before taking the
+      // seal, or a question added after that reign had already ended.
+      disputed.question.opened = laterYear - 1;
+      expect(count()).toBe(4);
+      disputed.question.opened = w.year;
+      expect(count()).toBe(4);
+      disputed.question.opened = laterYear;
+      disputed.to = laterYear + 0.5;
+      expect(count()).toBe(4);
+      disputed.to = w.year - 1;
+
+      const before = digestOf(ctx);
+      expect(count()).toBe(1);
+      expect(selectEnding(ctx)).toBe('forgotten');
+      expect(digestOf(ctx)).toBe(before);
+    },
+  );
+});

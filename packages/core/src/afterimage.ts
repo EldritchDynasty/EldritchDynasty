@@ -157,9 +157,19 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
 
   const brush = w.succession.flatMap((reign) => {
     const q = reign.question;
+    const holder = w.ending ? w.people.get(reign.person) : undefined;
     return reign.from >= fromYear && reign.from <= throughYear
       && q?.kind === 'thin_line' && q.opened >= fromYear && q.opened <= throughYear
-      && (!w.ending || (Number.isSafeInteger(reign.from) && Number.isSafeInteger(q.opened)))
+      // A count belongs to the Head who opened that generation. A recovered
+      // row for an absent/unborn/dead Head, or a question outside the reign,
+      // is not evidence of how many relatives that Head actually found.
+      // Unfinished authoring inventories retain their synthetic flexibility.
+      && (!w.ending || (Number.isSafeInteger(reign.from) && Number.isSafeInteger(q.opened)
+        && (reign.to === undefined || Number.isSafeInteger(reign.to))
+        && q.opened >= reign.from
+        && (reign.to === undefined || q.opened <= reign.to)
+        && holder !== undefined && holder.born <= reign.from
+        && (holder.died === undefined || holder.died >= reign.from)))
       // A finished book cannot count half a person, a negative household,
       // or an integer too large to represent exactly. Keep synthetic
       // unfinished-world diagnostics permissive, as with page dates.
