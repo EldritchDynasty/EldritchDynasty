@@ -311,8 +311,15 @@ function detectEngines(): Ctor[] {
 }
 
 function isActivationRefusal(reason: unknown): boolean {
-  return typeof reason === 'object' && reason !== null
-    && 'name' in reason && reason.name === 'NotAllowedError';
+  try {
+    // Rejected promises can carry arbitrary host objects, including proxies or
+    // errors whose name getter throws. Never throw from the rejection handler:
+    // an unreadable reason is an engine failure, not a retryable policy denial.
+    return typeof reason === 'object' && reason !== null
+      && 'name' in reason && reason.name === 'NotAllowedError';
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -1046,6 +1046,61 @@ describe('the player, over a fake engine', () => {
     sound.close();
   });
 
+  it('fails closed on asynchronous resume refusals with unreadable error names (#3171)', async () => {
+    // Rejection reasons are not guaranteed to be ordinary Error objects.
+    // A hostile native adapter may expose a throwing accessor or proxy trap.
+    // The rejection handler must not itself create an unhandled rejection.
+    const throwingName = Object.defineProperty({}, 'name', {
+      get() { throw new Error('native error name unavailable'); },
+    });
+    const throwingHas = new Proxy({}, {
+      has() { throw new Error('native error property lookup unavailable'); },
+    });
+    const unheard: unknown[] = [];
+    const note = (reason: unknown) => unheard.push(reason);
+    process.on('unhandledRejection', note);
+    try {
+      for (const reason of [throwingName, throwingHas]) {
+        const e = fakeEngine();
+        const sound = new Sound(e.ctor);
+        sound.muted = false;
+        sound.cue('plain');
+        const ctx = e.made[0]!;
+        sound.suspend();
+        ctx.resume = () => Promise.reject(reason);
+
+        expect(() => sound.cue('bell')).not.toThrow();
+        await settle();
+        expect(sound.available, 'an unreadable rejection did not silence the failed engine').toBe(false);
+        expect(ctx.calls).toContain('close');
+        const sources = ctx.sources.length;
+        sound.cue('seal');
+        expect(ctx.sources).toHaveLength(sources);
+      }
+      await settle();
+      expect(unheard, 'the rejection classifier created another unhandled rejection').toEqual([]);
+    } finally {
+      process.off('unhandledRejection', note);
+    }
+  });
+
+  it('fails closed on a synchronous resume refusal with a throwing error name (#3171)', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain');
+    const ctx = e.made[0]!;
+    sound.suspend();
+    ctx.resume = () => {
+      throw Object.defineProperty({}, 'name', {
+        get() { throw new Error('native error name unavailable'); },
+      });
+    };
+    expect(() => sound.cue('seal')).not.toThrow();
+    expect(sound.available).toBe(false);
+    expect(ctx.calls).toContain('close');
+  });
+
   it('stops scheduling audio after an asynchronous resume refusal', async () => {
     const e = fakeEngine({ reject: true });
     const s = new Sound(e.ctor);
