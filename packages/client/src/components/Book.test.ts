@@ -65,6 +65,50 @@ const mountBook = (focus?: string) => mount(Book, {
 const marked = (w: ReturnType<typeof mountBook>) =>
   w.findAll('[data-entry]').filter((el) => el.classes('marked')).map((el) => el.attributes('data-entry'));
 
+describe('Chronicle share-code text handoff (#1995)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'exposes only the anonymous image code as selectable labelled text (%s)',
+    async (proseMode) => {
+      const code = 'ED1.anonymous-founding-code.check';
+      const shareCode = vi.fn((_names: boolean): ShareCodeResult => ({ ok: true, code }));
+      const w = mount(Book, { attachTo: document.body, props: {
+        book: BOOK, ages: [], houseName: 'A Private House', close: () => {},
+        proseMode, actions: { ...readsOver(BOOK), shareCode },
+      } });
+      try {
+        const disclosure = w.get('.chronicle-share-text');
+        expect(disclosure.get('summary').text()).toBe(proseMode === 'plainenglish'
+          ? 'Text version of the image share code' : 'The code on the page, in text');
+        expect(disclosure.get('label').text()).toContain(proseMode === 'plainenglish'
+          ? 'names not included' : 'names withheld');
+        const field = disclosure.get('textarea');
+        expect(field.attributes('readonly')).toBeDefined();
+        expect(field.attributes('spellcheck')).toBe('false');
+        expect((field.element as HTMLTextAreaElement).value).toBe(code);
+        expect(shareCode.mock.calls.length).toBeGreaterThan(0);
+        expect(shareCode.mock.calls.every(([names]) => names === false)).toBe(true);
+
+        // Keyboard/assistive-technology readers may select the full code,
+        // including where a PNG image has no selectable text of its own.
+        (disclosure.element as HTMLDetailsElement).open = true;
+        (field.element as HTMLTextAreaElement).focus();
+        await field.trigger('focus');
+        expect((field.element as HTMLTextAreaElement).selectionStart).toBe(0);
+        expect((field.element as HTMLTextAreaElement).selectionEnd).toBe(code.length);
+
+        // An unavailable code must never leave a stale previous house's text.
+        await w.setProps({ actions: readsOver(BOOK) });
+        expect(w.find('.chronicle-share-text').exists()).toBe(false);
+      } finally { w.unmount(); }
+    },
+  );
+  it('does not present a share code before the run is founded', () => {
+    const w = mountBook();
+    try { expect(w.find('.chronicle-share-text').exists()).toBe(false); }
+    finally { w.unmount(); }
+  });
+});
+
 describe('recorded lives in the Book and spine (#1944)', () => {
   it.each(['original', 'plainenglish'] as const)('shows historical bynames in the line and its accessible history links (%s, #2227)', proseMode => {
     const line = [
