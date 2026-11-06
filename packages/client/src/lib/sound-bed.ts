@@ -264,9 +264,22 @@ export class SoundBed {
     // Some hosts expose the optional Audio Session API but reject writes (or
     // even throw when reading its property). That must not stop the game from
     // attaching its visibility/gesture listeners or accepting player actions.
+    // Audio Session is shared host state, not a preference owned by this bed.
+    // Restore our temporary policy on detach, but never erase a choice made
+    // independently by the host while this attachment was active.
+    let restoreSession: () => void = () => undefined;
     try {
       const session = (nav as { audioSession?: { type?: unknown } } | undefined)?.audioSession;
-      if (session?.type === 'auto') session.type = 'ambient';
+      if (session?.type === 'auto') {
+        session.type = 'ambient';
+        if (session.type === 'ambient') {
+          restoreSession = () => {
+            try {
+              if (session.type === 'ambient') session.type = 'auto';
+            } catch { /* A refusing host policy must not prevent listener teardown. */ }
+          };
+        }
+      }
     } catch { /* unsupported audio policy: the browser/host retains its default */ }
     // An unsubscribed listener can already be queued by a native host. Only
     // callbacks from the current attachment may act on the current device.
@@ -379,6 +392,7 @@ export class SoundBed {
       } catch {
         // A refusing native unsubscriber must not block audio shutdown.
       }
+      restoreSession();
       if (this.#detach === detach) this.#detach = () => undefined;
     };
     this.#detach = detach;
