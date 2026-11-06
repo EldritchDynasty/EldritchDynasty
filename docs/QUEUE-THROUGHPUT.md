@@ -65,6 +65,55 @@ performance improvement merely because it produces a number.
 
 
 
+## Completed 24-hour queue-flow snapshot (6 November 2026; #3158)
+
+This is a **separate rolling cohort**, not the next adjacent window in the
+comparison below. It covers the half-open UTC interval
+**2026-11-05 19:00:00 (included) to 2026-11-06 19:00:00 (excluded)**.
+It overlaps the existing 5 November 12:45 → 6 November 12:45 cohort; do
+not add their totals together or treat them as two independent days.
+
+At collection, GitHub Actions returned every `check` workflow run with
+`event=merge_group` and `created_at` in the interval. All 81 selected
+runs had finished and **all 81 succeeded** (0 failed, 0 cancelled).
+For completed runs, slot duration is `updated_at - run_started_at`;
+the nearest-rank median was **10.12 minutes** and p90 **15.75 minutes**.
+The first and last selected runs were
+[42090811736](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42090811736)
+and [42274486258](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42274486258).
+
+Separately, GitHub's PR search by **creation timestamp** counted **81 new
+PRs**, and search by actual **merged timestamp** counted **80 merged PRs**
+targeting this repository in the same window. The REST PR snapshots independently
+agreed with those counts. That is **3.38 arrivals/hour** against
+**3.33 actual landings/hour**, a net gap of one PR in this window.
+Merge-group success alone is not counted as a landed PR. Search queries
+for rechecking the independently timed counters:
+
+```text
+repo:EldritchDynasty/EldritchDynasty is:pr created:2026-11-05T19:00:00Z..2026-11-06T19:00:00Z
+repo:EldritchDynasty/EldritchDynasty is:pr is:merged merged:2026-11-05T19:00:00Z..2026-11-06T19:00:00Z
+```
+
+For the run sample, page GitHub's
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/runs?event=merge_group&per_page=100&page=N`,
+filter to `name=check` and the half-open `created_at` interval, retain
+completed status/conclusion, and calculate slot minutes from the two run
+timestamps (nearest-rank quantiles). The existing reporter can also be
+run live with:
+
+```bash
+GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-05T19:00:00Z --to 2026-11-06T19:00:00Z --with-prs --json
+```
+
+This observational result is consistent with fewer wasted integration slots
+than the earlier 3–4 November baseline, but source mix, concurrent work,
+proof eligibility and runner variance are uncontrolled. It does **not**
+measure applied gate-proof reuse, reconstruct historical ready-queue depth,
+complete the seven-day zero-duration-budget-failure check, prove a sustained
+arrival/landing balance, or authorize changing build concurrency. Keep parent
+#2794 open until its remaining acceptance evidence and owner decision exist.
+
 ## Follow-up: adjacent 24-hour merge-group windows (6 November 2026)
 
 The early baseline below predates the proof-reuse/intake changes. For a nearer
