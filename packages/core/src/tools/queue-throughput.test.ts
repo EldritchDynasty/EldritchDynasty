@@ -126,6 +126,31 @@ describe('queue throughput evidence (#2794)', () => {
     }
   });
 
+  it('does not report a diluted failure share for other terminal outcomes', () => {
+    const rows = [
+      run(41, from, { conclusion: 'failure' }),
+      run(42, from, { conclusion: 'cancelled' }),
+      run(43, from),
+    ];
+    const report = summarizeMergeGroups(rows, { from, to, now, source: 'api' });
+    expect(report).toMatchObject({
+      complete: true, finished: 3, failed: 1,
+      otherConclusions: { cancelled: 1 },
+      failureSharePercent: null, dailyTargetUnder5Percent: null,
+    });
+    expect(formatMergeGroups(report)).toContain('Failure share (finished, classified API cohort only): n/a.');
+    expect(formatMergeGroups(report)).toContain('Daily <5% failure target');
+    expect(formatMergeGroups(report)).toContain('not evaluated');
+
+    // A finished API cohort without ambiguous outcomes retains its descriptive
+    // percentage, even when too small for the daily 30-group verdict.
+    const classified = summarizeMergeGroups(rows.filter(row => row.id !== 42), {
+      from, to, now, source: 'api',
+    });
+    expect(classified.failureSharePercent).toBe(50);
+    expect(classified.dailyTargetUnder5Percent).toBeNull();
+  });
+
   it('fails closed on invalid durations, duplicates and unverified snapshots', () => {
     const row = run(5, from);
     expect(() => summarizeMergeGroups([row, row], { from, to, now })).toThrow(/Duplicate/);
