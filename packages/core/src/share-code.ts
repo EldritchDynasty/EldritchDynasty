@@ -621,11 +621,18 @@ export function newGameFromShareCode(
   // Anonymous codes still validate every supplied field, including surplus
   // friend names that would otherwise be silently dropped.
   const recipientNames = f.missing.length === 0 ? {} : opts.names === undefined ? {} : opts.names;
-  const parsedNames = SharedNamesS.safeParse(recipientNames);
+  // An anonymous code may already carry the sender's exact blank founder
+  // answer. In that case the recipient names only the house/friends: a stale
+  // founder value from a reused form or native bridge is not an input to this
+  // founding, and must not veto it merely because its runtime type is wrong.
+  // Keep strict validation when the code actually asks for a founder name.
+  const parsedNames = f.missing.includes('founder')
+    ? SharedNamesS.safeParse(recipientNames)
+    : SharedNamesS.omit({ founder: true }).safeParse(recipientNames);
   if (!parsedNames.success) {
     return { ok: false, problem: { kind: 'invalid_names' } };
   }
-  const given = parsedNames.data;
+  const given: SharedNames = parsedNames.data;
   // A complete named code also owns an absent founder-name answer. Only an
   // anonymous code asks the recipient for one; stale input must neither change
   // that complete founding nor cause its unused name to fail validation (#3039).
