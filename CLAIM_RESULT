@@ -1,0 +1,9 @@
+verdict: ok
+exit: 0
+request: /claim 3064 --agent chatgpt/issue-3064-unused-names-20261106-1529 --paths packages/core/src/share-code.ts packages/core/src/share-code.test.ts --lane code
+request-commit: 50df8dc5d659f41c1e42abc0028f0c981ea78412
+
+intake: below ready-PR intake limit (1/10 ready PRs)
+held: 3064 → chatgpt/issue-3064-unused-names-20261106-1529 (lane code)
+  land it with: Closes #3064
+  the janitor retires the claims and deletes the branch behind that.
