@@ -352,6 +352,9 @@ function proofJobProblem(job, run) {
     return 'gate job identity mismatch';
   }
   if (job.status !== 'completed') return 'unfinished gate job';
+  // Successful named steps do not establish a usable result if the enclosing
+  // job later fails (for example during post-step cleanup or reporting).
+  if (job.conclusion !== 'success') return 'unsuccessful gate job';
   if (!Array.isArray(job.steps)) return 'missing gate step metadata';
   for (const name of ['find reusable trusted gate proofs', 'gates']) {
     const steps = job.steps.filter(x => x?.name === name);
