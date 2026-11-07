@@ -1,5 +1,11 @@
 # Merge queue throughput evidence (#2794)
 
+## Next adjacent post-cutover cohort — 7 November 2026 (#3232)
+
+The separate **2026-11-07 01:36:17–06:10:00 UTC** closed 4h 33m 43s sample immediately follows the complete day below, without overlap. Its 18 merge-group `check` runs all succeeded; the nearest-rank median/p90 slot was **10.15 / 11.32 minutes**. Across 18 independently successful gate jobs, **192/216 (88.9%)** explicit planner decisions reused trusted-main proofs; the other 24 executed. GitHub's independently dated, `main`-targeted PR counts were **18 created / 19 merged**.
+
+The [source-linked, per-run/per-job receipt](evidence/queue-postchange-2794.md) includes the full gate-decision denominator and reproduction queries. This short window is **not** a second 24-hour certification, does not establish a seven-day no-budget-failure period or historic ready-backlog trend, and does not authorize a concurrency change. Parent #2794 remains open.
+
 ## First complete 24-hour post-cutover cohort (7 November 2026; #3203)
 
 This is the first *fixed-cutover* 24-hour observation after
