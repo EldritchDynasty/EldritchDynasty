@@ -1,5 +1,6 @@
-import { SHARE_CODE_MAX, type SharedName, type ShareCodeProblem } from '@ed/core';
+import type { SharedName, ShareCodeProblem } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
+import { SHARE_CODE_LENGTH_LIMIT } from './game.js';
 
 /**
  * A SHARE CODE'S REFUSALS, IN THE READER'S WORDS (#1995).
@@ -49,7 +50,7 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
       let suppliedMax: unknown;
       try { suppliedMax = problem.max; }
       catch { /* A malformed host refusal must not interrupt Start. */ }
-      const max = suppliedMax === SHARE_CODE_MAX ? SHARE_CODE_MAX : null;
+      const max = suppliedMax === SHARE_CODE_LENGTH_LIMIT ? SHARE_CODE_LENGTH_LIMIT : null;
       if (max === null) {
         return plain
           ? 'This is too long to be a share code. Copy a shorter code.'
