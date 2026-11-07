@@ -258,3 +258,12 @@ ending selection and saved-state read purity.
 This is a narrowly evidenced history-integrity repair, not a reimplementation
 of the four already-shipped ambition-purpose cases. Parent #1983 still needs
 actual-reader acceptance; no local or hosted test result is claimed until run.
+
+
+## Follow-up: a completed ancestral silhouette cannot name people born after collection (8 November 2026)
+
+The previous source audit bounded the last seal-holder's tenure and birth date, but the subsequent `claimedParents` breadth-first walk in `afterimageEvidence` accepted each named ancestor from the mutable recovered people store without a birth-date boundary. If the saved world later gained or restored an alleged mother born **after** collection, the last-night Afterimage named her and followed her parent links despite neither person being a witness at collection.
+
+Child #3255 adds a completed-book-only safe-integer, at-or-before-reading-cutoff birth guard **when visiting a claimed ancestor**. The seal-holder's original `record.parents` link is retained as a claim, not adjudicated as true parentage; a withheld ancestor's own links are not followed. Legitimate pre-founding ancestors and unfinished synthetic authoring inventories remain visible. The existing `ending.test.ts` suite now contrasts future, fractional, non-finite and unsafe-integer births with supported ancestry, checks partial-chain fallback, both prose modes, recovered-world clocks, unchanged ending selection and read-only saved digests.
+
+This is an attributed-evidence correction, not a reader outcome. Parent #1983 remains open for participant observation. A connector-only edit cannot establish local npm preflight or a green exact-head CI verdict.
