@@ -439,6 +439,41 @@ describe('gate-proof reuse observations (#3148)', () => {
     expect(report.runs[0].reason).toContain('unconfirmed step');
   });
 
+  it('withholds reuse certification when the enclosing gate job fails after green gate steps', () => {
+    for (const conclusion of ['failure', 'cancelled', 'skipped', null]) {
+      const entry = { ...proofEntry(), job: { ...proofJob(), conclusion } };
+      // Both checked steps completed successfully, but the job itself did not.
+      expect(entry.job.steps.every(step => step.conclusion === 'success')).toBe(true);
+      const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
+      expect(report).toMatchObject({
+        known: 0, unknown: 1, judged: 0, reused: 0, executed: 0,
+        complete: false, reusePercent: null,
+      });
+      expect(report.runs[0].reason).toBe('unsuccessful gate job');
+    }
+    // An entirely successful job remains valid evidence.
+    expect(summarizeGateProofs(evidence(), cohort(), { repo, source: 'api' }))
+      .toMatchObject({ complete: true, known: 1, reused: 5 });
+  });
+
+  it('does not fetch an inventory or log for a failed gate job', async () => {
+    const visited: URL[] = [];
+    const fetched = await fetchGateProofEvidence({
+      repo, token: 'fake-secret', runs: cohort().runs,
+      fetchImpl: async (url: URL) => {
+        visited.push(url);
+        return { ok: true, json: async () => ({
+          total_count: 1, jobs: [{ ...proofJob(), conclusion: 'failure' }],
+        }) };
+      },
+    });
+    expect(visited).toHaveLength(1);
+    expect(visited[0]?.pathname).toContain('/attempts/2/jobs');
+    expect(fetched.runs[0]).toMatchObject({ gateIds: null, log: null });
+    expect(summarizeGateProofs(fetched, cohort(), { repo, source: 'api' }))
+      .toMatchObject({ complete: false, known: 0, reused: 0, reusePercent: null });
+  });
+
   it('rejects cross-run, cross-head, cross-attempt and ambiguous snapshot evidence', () => {
     for (const entry of [
       { ...proofEntry(), headSha: 'b'.repeat(40) },
