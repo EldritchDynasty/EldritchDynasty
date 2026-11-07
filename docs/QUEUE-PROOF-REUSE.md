@@ -1,4 +1,6 @@
-# First complete post-cutover day: gate-proof reuse log audit (#2794)
+# First complete post-cutover day: gate-proof reuse log audit (#3207; parent #2794)
+
+**Child issue [#3207](https://github.com/EldritchDynasty/EldritchDynasty/issues/3207); parent [#2794](https://github.com/EldritchDynasty/EldritchDynasty/issues/2794).**
 
 **Observation, 7 November 2026 UTC.** This is an independent, read-only audit
 of the same fixed 24-hour window used by [issue #3203](https://github.com/EldritchDynasty/EldritchDynasty/issues/3203)
