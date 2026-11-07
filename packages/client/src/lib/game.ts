@@ -458,6 +458,9 @@ export function resumeRecapRequested(search: string): boolean {
  * Use the same projection for recap eligibility and its visible lines.
  */
 export function currentMarriagePromises(view: SessionView): SessionView['marriagePromises'] {
+  // A malformed present year cannot establish that any pledge is due, even
+  // when individual promise dates happen to be whole years.
+  if (!Number.isSafeInteger(view.year)) return [];
   // A restored view may contain an inconsistent pre-founding pledge. It
   // cannot be a current debt of this campaign, just as a future pledge cannot.
   // Keep this one boundary shared by recap eligibility and displayed rows.
