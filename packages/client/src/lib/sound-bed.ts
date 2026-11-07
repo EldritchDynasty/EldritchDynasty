@@ -117,6 +117,10 @@ export class SoundBed {
   #sceneKey = 'null';
   /** Only the most recent asynchronous scene delivery may invalidate its cache. */
   #sceneAttempt = 0;
+  /** A rejected async host operation cannot authorize further cues until a new gesture. */
+  #hostAudioRefused = false;
+  /** Old wake/cue refusals must not silence a newer successful gesture. */
+  #audioEpoch = 0;
   #detach: () => void = () => undefined;
 
   constructor(private readonly engine: SoundEngine) {}
@@ -128,7 +132,7 @@ export class SoundBed {
 
   /** The intended state, before asking an optional host to apply its mute switch. */
   #canPlay(): boolean {
-    return !this.#disposed && this.#volumeApplied && this.#preference.on && this.#preference.volume > 0
+    return !this.#disposed && !this.#hostAudioRefused && this.#volumeApplied && this.#preference.on && this.#preference.volume > 0
       && this.#unlocked && !this.#away && this.#engineAvailable();
   }
 
@@ -230,7 +234,9 @@ export class SoundBed {
   }
 
   cue(cue: Cue): void {
-    if (this.audible) this.#tryAudio(() => this.engine.cue(cue));
+    if (!this.audible) return;
+    const epoch = this.#audioEpoch;
+    this.#tryAudio(() => this.engine.cue(cue), () => this.#refuseAudio(epoch));
   }
 
   /** The player touched the page: audio is allowed, and they are evidently here. */
@@ -249,16 +255,21 @@ export class SoundBed {
         return;
       }
     } else if (this.#documentHidden) return;
+    // A fresh visible gesture may retry a host which denied the earlier one.
+    // A delayed rejection from that older attempt must not disable this retry.
+    this.#hostAudioRefused = false;
+    const epoch = ++this.#audioEpoch;
     this.#unlocked = true;
     this.#away = false;
     this.#pageHidden = false;
     this.#hostPaused = false;
     this.#settle();
-    if (this.audible) this.#tryAudio(() => this.engine.wake());
+    if (this.audible) this.#tryAudio(() => this.engine.wake(), () => this.#refuseAudio(epoch));
   }
 
   hide(): void {
     if (this.#disposed || this.#away) return;
+    ++this.#audioEpoch;
     this.#away = true;
     this.#settle();
     this.#tryAudio(() => this.engine.suspend());
@@ -442,21 +453,33 @@ export class SoundBed {
     // Mark terminal before cleanup: a host unsubscriber may synchronously
     // invoke its old listener, and the sound engine must stay closed.
     this.#disposed = true;
+    ++this.#audioEpoch;
     this.#detach();
     this.#tryAudio(() => this.engine.close());
   }
 
+  /** An active async refusal closes the audio gate until another real gesture. */
+  #refuseAudio(epoch: number): void {
+    if (this.#disposed || epoch !== this.#audioEpoch || this.#hostAudioRefused) return;
+    this.#hostAudioRefused = true;
+    this.#settle();
+    // The host may have scheduled a cue or partially resumed before refusing.
+    this.#tryAudio(() => this.engine.suspend());
+  }
+
   /** Even a hostile or invalidated audio adapter must not break the game. */
-  #tryAudio(action: () => unknown): void {
+  #tryAudio(action: () => unknown, onFailure?: () => void): void {
+    const failed = () => {
+      try { onFailure?.(); }
+      catch { /* An optional audio callback must never interrupt a verb. */ }
+    };
     try {
       const result = action();
       // The public Sound methods are void, but optional host adapters may
       // return a rejecting Promise/thenable. Observe that rejection without
       // letting an audio failure become an unhandled game-level exception.
-      if (result != null) void Promise.resolve(result).catch(() => {
-        /* Audio is optional presentation; a rejected host becomes silence. */
-      });
-    } catch { /* Audio is optional presentation; a rejected host becomes silence. */ }
+      if (result != null) void Promise.resolve(result).catch(failed);
+    } catch { failed(); }
   }
 
   #engineAvailable(): boolean {
