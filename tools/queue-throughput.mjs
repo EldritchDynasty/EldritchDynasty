@@ -358,6 +358,44 @@ export function parseGateProofLog(log, gateIds) {
   return gateIds.map(id => decisions.get(id));
 }
 
+// A failed proof lookup is a safe optimization failure only when the gate
+// runner itself proves it executed every gate. Check two independent lines
+// outside Actions' echoed command groups; a partial planner is never a
+// verified full run. The inventory comes from this run's exact head SHA.
+export function verifiedRunAllFallback(log, gateIds) {
+  if (typeof log !== 'string' || !Array.isArray(gateIds) || !gateIds.length ||
+    gateIds.some(id => typeof id !== 'string' || !/^[a-z][a-z0-9-]*$/.test(id)) ||
+    new Set(gateIds).size !== gateIds.length) return false;
+  const expected = gateIds.length;
+  let groupDepth = 0;
+  let passed = 0;
+  let measured = 0;
+  for (const raw of log.split(/\r?\n/)) {
+    const line = raw.replace(/\x1b\[[0-9;]*m/g, '')
+      .replace(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z /, '');
+    if (line.startsWith('##[group]')) { groupDepth++; continue; }
+    if (line === '##[endgroup]') {
+      if (groupDepth === 0) return false;
+      groupDepth--;
+      continue;
+    }
+    if (groupDepth) continue;
+    // A partial plan cannot be reclassified as run-all just because the
+    // subsequent gate output happens to include an all-gates summary.
+    if (/^[a-z][a-z0-9-]*: (?:run|reuse)(?:\s|$)/.test(line)) return false;
+    if (/^\d+\/\d+ gates pass in lane batch$/.test(line)) {
+      if (line !== expected + '/' + expected + ' gates pass in lane batch') return false;
+      passed++;
+    }
+    const duration = /^gate-duration: evidence (\d+) executed gates(?:,|$)/.exec(line);
+    if (duration) {
+      if (Number(duration[1]) !== expected) return false;
+      measured++;
+    }
+  }
+  return groupDepth === 0 && passed === 1 && measured === 1;
+}
+
 function proofJobProblem(job, run) {
   if (!job) return 'missing gate job';
   if (job.run_id !== run.id || job.head_sha !== run.head_sha || job.run_attempt !== run.run_attempt ||
@@ -398,26 +436,41 @@ export function summarizeGateProofs(evidence, cohort, { repo, source = 'snapshot
       entry.headSha !== run.head_sha || entry.runAttempt !== run.run_attempt ? 'run identity mismatch' :
       proofJobProblem(entry.job, run);
     let decisions = null;
+    let evidenceKind = 'unverified';
     if (!reason) {
-      try { decisions = parseGateProofLog(entry.log, entry.gateIds); }
-      catch (error) { reason = error.message; }
+      try {
+        decisions = parseGateProofLog(entry.log, entry.gateIds);
+        evidenceKind = 'planner';
+      } catch (error) {
+        // Only an absent planner (not malformed, partial or duplicated planner
+        // evidence) may fall back to the independently verified run-all path.
+        if (error.message === 'Incomplete planner log' &&
+          verifiedRunAllFallback(entry.log, entry.gateIds)) {
+          decisions = entry.gateIds.map(gate => ({ gate, action: 'run', sourceRunId: null }));
+          evidenceKind = 'run-all-fallback';
+        } else {
+          reason = error.message;
+        }
+      }
     }
     return {
       runId: run.id, jobId: entry?.job?.id ?? null, headSha: run.head_sha, runAttempt: run.run_attempt,
-      known: reason === null, reason, decisions,
+      known: reason === null, reason, evidenceKind, decisions,
       judged: decisions?.length ?? 0,
       reused: decisions?.filter(x => x.action === 'reuse').length ?? 0,
       executed: decisions?.filter(x => x.action === 'run').length ?? 0,
     };
   });
   const known = runs.filter(run => run.known).length;
+  const plannerVerified = runs.filter(run => run.known && run.evidenceKind === 'planner').length;
+  const fallbackVerified = runs.filter(run => run.known && run.evidenceKind === 'run-all-fallback').length;
   const sum = key => runs.reduce((total, run) => total + run[key], 0);
   const judged = sum('judged');
   const reused = sum('reused');
   const complete = source === 'api' && cohort.complete && runs.length > 0 && known === runs.length;
   return {
     source, complete, groups: runs.length, known, unknown: runs.length - known,
-    judged, reused, executed: sum('executed'),
+    plannerVerified, fallbackVerified, judged, reused, executed: sum('executed'),
     reusePercent: complete && judged ? Math.round(reused / judged * 1000) / 10 : null,
     runs,
   };
@@ -481,12 +534,13 @@ export function formatGateProofs(report) {
     '# Gate-proof planner observations (#2794)', '',
     'Source: ' + report.source + '; coverage: ' + (report.complete ? 'complete API cohort' : 'INCOMPLETE / snapshot only') + '.',
     'Known groups: ' + report.known + '/' + report.groups + '; unknown: ' + report.unknown + '.',
+    'Planner-verified groups: ' + report.plannerVerified + '; verified run-all fallbacks: ' + report.fallbackVerified + '.',
     'Observed decisions: ' + report.judged + '; reused: ' + report.reused + '; executed: ' + report.executed + '.',
     'Complete-cohort reuse: ' + (report.reusePercent === null ? 'n/a' : report.reusePercent + '%') + '.',
     'Planner observations do not certify proof validity, PR landings or a concurrency recommendation.', '',
     '| Run | Job | Judged | Reused | Executed | Evidence |', '|---:|---:|---:|---:|---:|---|',
     ...report.runs.map(run => '| ' + run.runId + ' | ' + (run.jobId ?? 'n/a') + ' | ' + run.judged +
-      ' | ' + run.reused + ' | ' + run.executed + ' | ' + (run.reason ?? 'observed') + ' |'),
+      ' | ' + run.reused + ' | ' + run.executed + ' | ' + (run.reason ?? run.evidenceKind) + ' |'),
   ].join('\n');
 }
 
