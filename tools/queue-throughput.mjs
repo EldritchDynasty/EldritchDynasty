@@ -92,8 +92,10 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
     run.first_attempt_conclusion === 'success' || run.first_attempt_conclusion === 'failure');
   const firstAttemptFailed = firstAttemptClassified
     ? details.filter(run => run.first_attempt_conclusion === 'failure').length : null;
+  // Preserve three decimals so threshold-adjacent passing cohorts do not
+  // display as 5%; the acceptance verdict retains its exact integer ratio.
   const failureSharePercent = complete && details.length && classified && firstAttemptClassified
-    ? Math.round(firstAttemptFailed / details.length * 1000) / 10 : null;
+    ? Math.round(firstAttemptFailed / details.length * 100000) / 1000 : null;
   const dailyEligible = complete && end - start === 86400000 && details.length >= 30 &&
     classified && firstAttemptClassified;
   const dailyTargetUnder5Percent = dailyEligible ? firstAttemptFailed * 20 < details.length : null;
@@ -365,7 +367,8 @@ export function formatMergeGroups(report) {
       ' min | ' + value(report.p90Minutes) + ' min |',
     '',
     'First-attempt failure share (finished, classified API cohort only): ' +
-      (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '%') + '.',
+      (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '% (' +
+        report.firstAttemptFailed + '/' + report.groups + ' first attempts)') + '.',
     'Daily <5% failure target (exact 24h, 30+ first-attempt groups, only success/failure conclusions): ' +
       (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
         report.dailyTargetUnder5Percent ? 'met' : 'not met') + '.',

@@ -1,5 +1,23 @@
 # Merge queue throughput evidence (#2794)
 
+## Strict first-attempt failure-rate display near 5% (8 November 2026; #3259)
+
+The daily under-5% acceptance rule is an **exact integer comparison**, not a
+rounded displayed percentage. Previously the reporter's one-decimal display
+could turn a passing 5/101 first-attempt failure count (**4.9505…%**) into a
+misleading **5.0%** alongside a passing verdict. The read-only reporter now
+retains up to three decimal places and prints the first-attempt failure
+**numerator/denominator** beside the rate. The strict verdict still evaluates
+the exact ratio; regression cases cover 5/101 (passing), 51/1021 (passing
+despite two-decimal rounding ambiguity) and 5/100 (failing).
+
+This is presentation/evidence integrity, **not** a new observed cohort or
+proof of the P1 seven-day condition. No queue settings, gate execution,
+historical result, or first-attempt verification policy changes. The parent
+#2794 remains open for the elapsed seven-day duration-budget window and
+the owner concurrency decision.
+
+
 ## Correct daily failure-rate evidence for rerun attempts (7 November 2026; #3238)
 
 GitHub Actions' workflow-run listing shows only the **latest attempt** of a
