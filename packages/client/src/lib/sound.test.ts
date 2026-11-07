@@ -1555,8 +1555,9 @@ describe('the bed decides when the house may be heard', () => {
     expect(engine.setDrone).toHaveBeenCalledWith(WARM);
     expect(engine.wake).toHaveBeenCalledOnce();
     expect(engine.cue).not.toHaveBeenCalled();
-    // One best-effort suspension follows the denied wake, another pagehide.
-    expect(engine.suspend).toHaveBeenCalledTimes(2);
+    // A refused scene delivery suspends the host immediately; the denied
+    // wake retries fail-closed suspension, and pagehide requests it once more.
+    expect(engine.suspend).toHaveBeenCalledTimes(3);
     expect(engine.close).toHaveBeenCalledOnce();
     expect(bed.audible).toBe(false);
   });
