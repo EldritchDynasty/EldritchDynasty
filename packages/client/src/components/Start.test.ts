@@ -3333,6 +3333,52 @@ describe('voluntary resume recap (#1985)', () => {
     },
   );
 
+  it.each(['original', 'plainenglish'] as const)(
+    'does not call saved evidence current when the recovered year is invalid (%s, #3192)',
+    async (proseMode) => {
+      const pledge = {
+        house: 'house_elm', houseName: 'House Elm', year: 1315,
+        lot: 'book', lotName: 'Book of Hours',
+      };
+      const base = {
+        generationArc: undefined, ambition: undefined,
+        campaign: { id: 'long', startYear: 1042 },
+        marriagePromises: [pledge],
+      };
+      const valid = snapshot({ ...base, year: 1321 });
+      const untouched = structuredClone(valid);
+      const decision = {
+        kind: 'choice', year: 1320, event: { title: 'The River Oath' },
+      } as unknown as SessionView['docket'][number];
+      const w = mount(ResumeRecap, {
+        props: { view: valid, pending: 1, nextDecision: decision, proseMode },
+      });
+      try {
+        expect(hasResumeRecapFacts(valid, 0)).toBe(true);
+        expect(w.get('.recap-pledges').text()).toContain('House Elm');
+        expect(w.get('.recap-next-decision').text()).toContain('The River Oath');
+
+        // The local run's year is the chronology anchor. Even a sound 1315
+        // pledge and 1320 docket item cannot be called current against NaN,
+        // infinity or a fractional recovered year.
+        for (const year of [1321.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+          const malformed = snapshot({ ...base, year });
+          expect(hasResumeRecapFacts(malformed, 0)).toBe(false);
+          await w.setProps({ view: malformed });
+          expect(w.find('.recap-pledges').exists()).toBe(false);
+          expect(w.find('.recap-next-decision').exists()).toBe(false);
+          // The engine owns the pending count; the recap does not discard it.
+          expect(w.text()).toContain('One decision');
+        }
+
+        await w.setProps({ view: valid });
+        expect(w.get('.recap-pledges').text()).toContain('House Elm');
+        expect(w.get('.recap-next-decision').text()).toContain('The River Oath');
+        expect(valid).toEqual(untouched);
+      } finally { w.unmount(); }
+    },
+  );
+
   it('omits unsupported facts and updates when the current save changes', async () => {
     const w = mount(ResumeRecap, { props: {
       view: snapshot({ generationArc: undefined, ambition: undefined }),
