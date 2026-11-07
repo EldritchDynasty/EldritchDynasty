@@ -197,7 +197,12 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
       // Unfinished authoring inventories retain their synthetic flexibility.
       const person = w.ending ? w.people.get(reign.person) : undefined;
       return reign.from >= fromYear && reign.from <= throughYear
-        && (!w.ending || Number.isSafeInteger(reign.from))
+        // A malformed recorded tenure cannot be the last credible seal:
+        // a reign cannot finish before accession or on a fractional date.
+        // As with thin-line counts, synthetic unfinished views remain flexible.
+        && (!w.ending || (Number.isSafeInteger(reign.from)
+          && (reign.to === undefined
+            || (Number.isSafeInteger(reign.to) && reign.to >= reign.from))))
         && (!w.ending || (person && Number.isSafeInteger(person.born)
           && person.born <= reign.from
           && (person.died === undefined
