@@ -211,25 +211,26 @@ export class SoundBed {
     // every later identical view a no-op even after the host recovers.
     // Successful muted scenes are still remembered by Sound for unmuting.
     const attempt = ++this.#sceneAttempt;
+    const epoch = this.#audioEpoch;
+    const refused = () => {
+      // Older scene refusals cannot silence a newer accepted Age, and a
+      // disposed bed must never issue another host command.
+      if (this.#disposed || this.#sceneAttempt !== attempt) return;
+      this.#sceneKey = '';
+      // A native adapter may apply a drone (or fail to cut an old one) before
+      // throwing or rejecting. Forgetting the scene alone leaves live audio
+      // behind, potentially through the frame. Fail closed and retry only
+      // after a fresh gesture; an older request cannot revoke that gesture.
+      this.#refuseAudio(epoch);
+    };
     try {
       const delivery: unknown = this.engine.setDrone(scene);
       this.#sceneKey = key;
-      // Native adapters can reject asynchronously despite the void interface.
-      // An unhandled rejection must not interrupt play, and a refused scene
-      // must be eligible for retry on the next unchanged view. A late refusal
-      // from an older scene must not evict a newer accepted scene.
-      if (delivery != null) {
-        void Promise.resolve(delivery).catch(() => {
-          if (this.#sceneAttempt === attempt) this.#sceneKey = '';
-        });
-      }
+      // The optional host can reject after returning, despite the void
+      // interface. Observe the rejection without interrupting game actions.
+      if (delivery != null) void Promise.resolve(delivery).catch(refused);
     } catch {
-      // A synchronous refusal may have partially changed the output. An
-      // older asynchronous delivery might also reject later; never keep its
-      // unverified key cached after this attempt could not be accepted.
-      this.#sceneKey = '';
-      // Audio must never interrupt the game. A later identical view can retry
-      // without inventing a new Age transition or restarting a healthy drone.
+      refused();
     }
   }
 
