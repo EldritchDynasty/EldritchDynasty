@@ -72,9 +72,11 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'other_edition': {
       // A malformed bridge/old client may omit the detailed differences.
       // A refusal must remain useful without inventing a specific mismatch.
-      const differs = Array.isArray(problem.differs)
-        && problem.differs.every((p) => p === 'format' || p === 'content' || p === 'build')
-        ? [...new Set(problem.differs)] : [];
+      // Array#every skips holes; a sparse list from an optional host used to
+      // pass validation, then reach assertNever(undefined) in editionPart.
+      const supplied = Array.isArray(problem.differs) ? [...problem.differs] : [];
+      const differs = supplied.every((p) => p === 'format' || p === 'content' || p === 'build')
+        ? [...new Set(supplied)] : [];
       const parts = differs.map((p) => editionPart(p, plain)).join(', ');
       const detail = parts ? ` (${parts})` : '';
       return plain
@@ -90,9 +92,11 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'names_needed': {
       // A missing/empty list cannot yield a valid prompt with a missing noun.
       // Do not turn a refusal into an apparent success or echo code text.
-      const missing = Array.isArray(problem.missing)
-        && problem.missing.every((name) => name === 'founder' || name === 'house' || name === 'friends')
-        ? [...new Set(problem.missing)] : [];
+      // Spread fills sparse slots with undefined, so every checks each slot.
+      // Otherwise nameList could throw instead of showing a safe refusal.
+      const supplied = Array.isArray(problem.missing) ? [...problem.missing] : [];
+      const missing = supplied.every((name) => name === 'founder' || name === 'house' || name === 'friends')
+        ? [...new Set(supplied)] : [];
       if (missing.length === 0) {
         return plain
           ? 'This founding still needs names before it can begin.'
