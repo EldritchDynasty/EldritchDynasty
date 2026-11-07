@@ -268,10 +268,15 @@ export class SoundBed {
   }
 
   hide(): void {
-    if (this.#disposed || this.#away) return;
-    ++this.#audioEpoch;
-    this.#away = true;
-    this.#settle();
+    if (this.#disposed) return;
+    if (!this.#away) {
+      ++this.#audioEpoch;
+      this.#away = true;
+      this.#settle();
+    }
+    // A host can refuse the first suspension even after we requested mute.
+    // Redundant background signals are an opportunity to retry that optional
+    // operation, not a reason to reopen the device or advance the cue epoch.
     this.#tryAudio(() => this.engine.suspend());
   }
 
