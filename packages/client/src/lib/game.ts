@@ -4,7 +4,7 @@ import type {
 } from '@ed/schema';
 import { appendLibraryRun, configurationFor, emptyRunLibrary, LIBRARY_FORMAT, PERSON_NAME_MAX, readRunLibrary, RecordOptionS } from '@ed/schema';
 import {
-  CAMPAIGNS, canonical, earnedAchievements, matchFuture, newGame, newGameFromShareCode, readShareCode, resumeGame, standingMoved,
+  CAMPAIGNS, SHARE_CODE_MAX, canonical, earnedAchievements, matchFuture, newGame, newGameFromShareCode, readShareCode, resumeGame, standingMoved,
   type ChapterOpening, type ChapterView, type ChronicleCause, type ChronicleEntry,
   type AdviserAdvice, type HelpSurface, type HelpTier,
   type AchievementId, type AchievementView, type EpilogueView, type FoundingChoice, type FoundingResult, type GameSession,
@@ -51,6 +51,9 @@ export const CAMPAIGN_CHOICES = [CAMPAIGNS.short, CAMPAIGNS.long, CAMPAIGNS.demo
 
 /** Schema-owned limit exposed through the client's one simulation seam. */
 export const FOUNDER_NAME_MAX = PERSON_NAME_MAX;
+
+/** The codec's code-length limit, exposed through the client's only simulation seam. */
+export const SHARE_CODE_LENGTH_LIMIT = SHARE_CODE_MAX;
 
 /** Keep runtime Record mode validation at the sole client/schema seam. */
 export function parseRecordOption(value: unknown): RecordOption | undefined {
