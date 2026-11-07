@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { BLOCKING_GATE_IDS } from './gate-registry.js';
 // The reporter is a standalone cross-platform Node CLI, intentionally .mjs.
 // @ts-ignore -- no declaration file for the standalone Node entrypoint
-import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow, gateIdsFromRegistry, parseGateProofLog, summarizeGateProofs, fetchGateProofEvidence, formatGateProofs } from '../../../../tools/queue-throughput.mjs';
+import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow, gateIdsFromRegistry, parseGateProofLog, verifiedRunAllFallback, summarizeGateProofs, fetchGateProofEvidence, formatGateProofs } from '../../../../tools/queue-throughput.mjs';
 
 type Run = {
   id: number; event: string; name: string; created_at: string;
@@ -464,7 +464,92 @@ const proofEntry = (id = 1) => ({
 const evidence = (entries = [proofEntry()]) => ({ version: 1, repository: repo, runs: entries });
 const cohort = (rows = [proofRun()]) => summarizeMergeGroups(rows, { from, to, now, source: 'api' });
 
+const runAllFallbackLog = () => [
+  '2026-11-06T23:45:18.8830564Z gh: No server is currently available to service your request. (HTTP 503)',
+  '2026-11-07T00:00:09.3363280Z ' + BLOCKING_GATE_IDS.length + '/' + BLOCKING_GATE_IDS.length + ' gates pass in lane batch',
+  '2026-11-07T00:00:09.4488500Z gate-duration: evidence ' + BLOCKING_GATE_IDS.length +
+    ' executed gates, 14.8m reported; AMD EPYC × 4 logical CPUs',
+].join('\\n');
+
 describe('gate-proof reuse observations (#3148)', () => {
+  it('recognizes a proven full-gate fallback after proof lookup was unavailable (#3224)', () => {
+    const entry = { ...proofEntry(), log: runAllFallbackLog() };
+    expect(verifiedRunAllFallback(entry.log, BLOCKING_GATE_IDS)).toBe(true);
+    const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
+    expect(report).toMatchObject({
+      complete: true, groups: 1, known: 1, unknown: 0,
+      plannerVerified: 0, fallbackVerified: 1,
+      judged: BLOCKING_GATE_IDS.length, reused: 0, executed: BLOCKING_GATE_IDS.length,
+      reusePercent: 0,
+    });
+    expect(report.runs[0]).toMatchObject({ evidenceKind: 'run-all-fallback', reason: null });
+    expect(formatGateProofs(report)).toContain('verified run-all fallbacks: 1');
+    expect(formatGateProofs(report)).toContain('| run-all-fallback |');
+    expect(summarizeGateProofs(evidence([entry]), cohort(), { repo }).reusePercent).toBeNull();
+  });
+
+  it('rejects incomplete, echoed, contradictory or partial planner fallbacks', () => {
+    const valid = runAllFallbackLog();
+    const count = BLOCKING_GATE_IDS.length;
+    const cases = [
+      valid.replace(count + '/' + count + ' gates pass', (count - 1) + '/' + count + ' gates pass'),
+      valid.replace('evidence ' + count + ' executed', 'evidence ' + (count - 1) + ' executed'),
+      valid.replace(/[^\\n]* gates pass in lane batch\\n/, ''),
+      valid.replace(/[^\\n]*gate-duration: evidence[^\\n]*/, ''),
+      '##[group]Run test\\n' + valid + '\\n##[endgroup]',
+      valid + '\\n' + valid,
+      proofLog(1).split('\\n')[0] + '\\n' + valid,
+      '##[group]unterminated\\n' + valid,
+    ];
+    for (const log of cases) {
+      expect(verifiedRunAllFallback(log, BLOCKING_GATE_IDS), log).toBe(false);
+      const entry = { ...proofEntry(), log };
+      const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
+      expect(report).toMatchObject({
+        complete: false, known: 0, unknown: 1, fallbackVerified: 0,
+        judged: 0, reused: 0, executed: 0, reusePercent: null,
+      });
+    }
+    expect(verifiedRunAllFallback(valid, [...BLOCKING_GATE_IDS, BLOCKING_GATE_IDS[0]!])).toBe(false);
+    expect(verifiedRunAllFallback(valid, [])).toBe(false);
+  });
+
+  it('requires a successful parent job and both required gate steps even for run-all proof', () => {
+    const cases = [
+      { ...proofJob(), conclusion: 'failure' },
+      { ...proofJob(), steps: proofJob().steps.map(step =>
+        step.name === 'find reusable trusted gate proofs' ? { ...step, conclusion: 'failure' } : step) },
+      { ...proofJob(), steps: proofJob().steps.map(step =>
+        step.name === 'gates' ? { ...step, conclusion: 'failure' } : step) },
+    ];
+    for (const job of cases) {
+      const entry = { ...proofEntry(), job, log: runAllFallbackLog() };
+      const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
+      expect(report).toMatchObject({ complete: false, known: 0, fallbackVerified: 0, reused: 0 });
+    }
+  });
+
+  it('fetches the matching gate log and SHA-pinned inventory for a verified fallback', async () => {
+    const visited: string[] = [];
+    const fetched = await fetchGateProofEvidence({ repo, token: 'fake-secret', runs: cohort().runs,
+      fetchImpl: async (url: URL) => {
+        visited.push(url.pathname);
+        if (url.pathname.endsWith('/jobs')) {
+          return { ok: true, json: async () => ({ total_count: 1, jobs: [proofJob()] }) };
+        }
+        return { ok: true, text: async () =>
+          url.pathname.includes('/contents/') ? registry : runAllFallbackLog() };
+      },
+    });
+    expect(visited).toHaveLength(3);
+    expect(visited.some(x => x.includes('/gate-registry.ts'))).toBe(true);
+    expect(visited.some(x => x.includes('/actions/jobs/101/logs'))).toBe(true);
+    expect(summarizeGateProofs(fetched, cohort(), { repo, source: 'api' })).toMatchObject({
+      complete: true, known: 1, fallbackVerified: 1, reused: 0, executed: BLOCKING_GATE_IDS.length,
+    });
+  });
+
+
   it('derives the exact inventory from the measured registry and refuses unfamiliar syntax', () => {
     expect(gateIdsFromRegistry(registry)).toEqual(BLOCKING_GATE_IDS);
     expect(() => gateIdsFromRegistry('')).toThrow(/inventory/);
