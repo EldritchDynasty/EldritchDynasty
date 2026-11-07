@@ -3352,3 +3352,60 @@ describe('completed Afterimage thin-line counts require a credible Head and tenu
     },
   );
 });
+
+
+describe('cadet-hall witnesses require whole death years (#1983)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'does not credit impossible founder or resident deaths at the last night (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198325);
+      const w = ctx.world;
+      const branch = 'br_death_date_integrity';
+      const foundedYear = w.year - 30;
+      w.houseAmbition = 'secure_branches';
+      w.ending = { id: 'forgotten', year: w.year };
+      const founder = place(ctx, { name: 'Edrin', sex: 'male', age: 70, branch });
+      const leora = place(ctx, { name: 'Leora', sex: 'female', age: 35, branch });
+      const brenna = place(ctx, { name: 'Brenna', sex: 'female', age: 30, branch });
+      w.branches.set(asId(branch), {
+        id: asId(branch), house: asId(w.playerHouse), name: 'The Orchard Hall',
+        founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear, grievance: 0,
+      });
+      setProseMode(ctx, mode);
+      const selected = selectEnding(ctx);
+      const credited = epilogueOf(ctx)!.purpose;
+      expect(credited).toMatchObject({ kind: 'branch_kept', founder: 'Edrin' });
+      const rejects = () => {
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      };
+
+      // Without a whole-year death, even a historically named founder is not
+      // credible; the other two blood relatives still make the hall viable.
+      for (const died of [w.year + 0.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        founder.died = died;
+        rejects();
+      }
+      founder.died = undefined;
+      expect(epilogueOf(ctx)!.purpose).toEqual(credited);
+
+      // Similarly, a malformed lifetime must not count as a surviving hall
+      // resident. The founding charter alone cannot supply the missing pair.
+      leora.died = Number.NaN;
+      brenna.died = w.year + 0.5;
+      rejects();
+
+      // Deaths after the saved last night are genuine survivors at collection,
+      // even when a later recovered world moves its clock beyond the ending.
+      leora.died = w.year + 1;
+      brenna.died = w.year + 2;
+      w.year += 10;
+      const before = digestOf(ctx);
+      expect(epilogueOf(ctx)!.purpose).toEqual(credited);
+      expect(selectEnding(ctx)).toBe(selected);
+      expect(digestOf(ctx)).toBe(before);
+    },
+  );
+});
