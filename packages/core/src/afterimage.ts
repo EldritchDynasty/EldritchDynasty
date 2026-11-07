@@ -85,6 +85,19 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     }
     years.set(page.year, years.has(page.year) ? null : page);
   }
+  // A unique written page is not a unique witness when a recovered decision
+  // log attributes multiple outcomes to its event and year. Require one on
+  // both sides of the join; direct Chronicle mentions remain independent.
+  const outcomesByEvent = new Map<string, Map<number, number>>();
+  for (const decision of w.decisionLog) {
+    if (decision.kind !== 'outcome') continue;
+    let years = outcomesByEvent.get(decision.event);
+    if (!years) {
+      years = new Map<number, number>();
+      outcomesByEvent.set(decision.event, years);
+    }
+    years.set(decision.year, (years.get(decision.year) ?? 0) + 1);
+  }
   const people = new Map<string, { person: string; name: string; epithet?: string; sources: AfterimageSource[] }>();
   const mention = (id: string, source: AfterimageSource): void => {
     const p = w.people.get(id);
@@ -115,7 +128,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     // The old log has no page id. Repeated same-year firings cannot be joined
     // unambiguously, so do not attach one decision to somebody else's page.
     const page = writtenByEvent.get(decision.event)?.get(decision.year);
-    if (!page) continue;
+    if (!page || outcomesByEvent.get(decision.event)?.get(decision.year) !== 1) continue;
     if (decision.choiceId && !page.greyed) {
       for (const id of new Set(Object.values(decision.fill).flat())) {
         mention(id, { ...sourceOf(page), choice: decision.choiceId });

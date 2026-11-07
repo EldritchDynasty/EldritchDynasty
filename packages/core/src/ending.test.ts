@@ -1524,6 +1524,50 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('does not lend one written rite page to competing same-year outcomes (#3245)', () => {
+    const ctx = accountedRite();
+    const w = ctx.world;
+    const victimId = w.chronicle[0]!.people![0]!;
+    expect(selectEnding(ctx)).toBe('forgotten');
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victimId);
+    const originalPurpose = epilogueOf(ctx)!.purpose;
+
+    // Another year's logged act cannot make today's unique page ambiguous.
+    w.decisionLog.push({
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year - 1,
+      choiceId: 'speak_the_name', outcomeId: 'taken', fill: {},
+    });
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victimId);
+
+    // Recovered outcomes may disagree about what one surviving page records.
+    // There is no page ID in the old log to assign either same-year act to it.
+    w.decisionLog.push({
+      kind: 'outcome', event: 'the_vessel_rite', year: w.year,
+      choiceId: 'speak_the_name', outcomeId: 'unverifiable', fill: {},
+    });
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const evidence = afterimageEvidence(ctx);
+      expect(evidence.spent).toBeUndefined();
+      expect(evidence.spentBlood).toBeUndefined();
+      // The Chronicle still names Meriel directly, but no ambiguous cast
+      // or rite can be borrowed from either logged outcome.
+      const sources = evidence.people.find((p) => p.person === victimId)?.sources;
+      expect(sources?.some((source) => source.page === 'rite-page')).toBe(true);
+      expect(sources?.every((source) => source.choice === undefined)).toBe(true);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(epilogueOf(ctx)!.id).toBe('forgotten');
+      expect(selectEnding(ctx)).toBe('forgotten');
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // Restoring a unique outcome must restore the independently witnessed cost.
+    w.decisionLog.pop();
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(victimId);
+    expect(epilogueOf(ctx)!.purpose).toEqual(originalPurpose);
+  });
+
   it('refuses fractionally born blood relatives as credited rite costs (#3226)', () => {
     const ctx = accountedRite();
     const id = ctx.world.chronicle[0]!.people![0]!;
