@@ -701,7 +701,12 @@ export class Sound {
       // That obsolete refusal must neither cut the new Age nor permanently
       // disable an audio device which is currently running. A still-suspended
       // clock is not recovered, and retains the existing fail-closed path.
-      if (resume && this.isRunningNow(context)) {
+      let recovered = false;
+      if (resume) {
+        try { recovered = this.isRunningNow(context); }
+        catch { /* An invalidated state getter is not proof the clock recovered. */ }
+      }
+      if (recovered) {
         this.restoreDroneAfterDeniedResume = false;
         return;
       }
