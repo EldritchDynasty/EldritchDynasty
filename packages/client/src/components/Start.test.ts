@@ -3545,6 +3545,44 @@ describe('voluntary resume recap (#1985)', () => {
   );
 
   it.each(['original', 'plainenglish'] as const)(
+    'does not invent an outstanding pledge from unreadable public labels (%s, #3261)',
+    async (proseMode) => {
+      const partial = [
+        { house: 'house_blank', houseName: ' \n\t ', year: 1315, lot: 'relic', lotName: 'a silver relic' },
+        { house: 'house_elm', houseName: 'House Elm', year: 1316, lot: 'book', lotName: '   ' },
+        { house: 'house_missing', houseName: undefined, year: 1317, lot: 'sword', lotName: 'a sword' },
+        { house: 'house_nonnumeric', houseName: 42, year: 1318, lot: 'ring', lotName: 'a ring' },
+      ];
+      const base = { generationArc: undefined, ambition: undefined, marriagePromises: partial };
+      const withoutEvidence = snapshot(base);
+      const original = structuredClone(withoutEvidence);
+      expect(hasResumeRecapFacts(withoutEvidence, 0)).toBe(false);
+      const w = mount(ResumeRecap, { props: { view: withoutEvidence, pending: 0, proseMode } });
+      try {
+        expect(w.find('.recap-pledges').exists()).toBe(false);
+        expect(w.text()).not.toContain('Outstanding marriage promises');
+        expect(w.text()).not.toContain('Marriage pledges still owed');
+
+        const valid = { house: 'house_pine', houseName: 'House Pine', year: 1319,
+          lot: 'silver_book', lotName: 'a silver book' };
+        const mixed = snapshot({ ...base, marriagePromises: [...partial, valid] });
+        const unchanged = structuredClone(mixed);
+        expect(hasResumeRecapFacts(mixed, 0)).toBe(true);
+        await w.setProps({ view: mixed });
+        const rows = w.get('.recap-pledges').findAll('li');
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.text()).toContain('1319');
+        expect(rows[0]!.text()).toContain('House Pine');
+        expect(rows[0]!.text()).toContain('a silver book');
+        expect(w.text()).not.toContain('House Elm');
+        expect(w.text()).not.toContain('a silver relic');
+        expect(mixed).toEqual(unchanged);
+        expect(withoutEvidence).toEqual(original);
+      } finally { w.unmount(); }
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
     'excludes pre-founding pledge records from recap eligibility and display (%s)', async (proseMode) => {
       const base = {
         generationArc: undefined, ambition: undefined, year: 1321,
