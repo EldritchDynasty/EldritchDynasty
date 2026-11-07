@@ -6,6 +6,7 @@ import { attachNativeListener, type NativeListenerHandle } from './native-listen
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parse } from 'yaml';
+import { parseSmokeCommand } from './smoke.js';
 
 // The bridge is bundled separately from the client; use a global symbol key.
 const PICKER_CANCELLED = Symbol.for(BROWSER_IMPORT_CANCELLED.description!);
@@ -15,6 +16,24 @@ const MOBILE = join(import.meta.dirname, '..');
 function text(path: string): string {
   return readFileSync(join(MOBILE, path), 'utf8');
 }
+
+describe('Android diagnostic ingress (#3161)', () => {
+  it('filters both launch and replacement intents before Capacitor receives them', () => {
+    const main = text('android/app/src/main/java/nz/eldritchdynasty/game/MainActivity.java');
+    expect(main).toMatch(/onCreate\(Bundle savedInstanceState\)\s*\{[\s\S]*?sanitizeDiagnosticIntent\(getIntent\(\)\);\s*super\.onCreate\(savedInstanceState\)/);
+    expect(main).toMatch(/onNewIntent\(Intent intent\)\s*\{[\s\S]*?sanitizeDiagnosticIntent\(intent\);\s*super\.onNewIntent\(intent\)/);
+    expect(main).toContain('getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE');
+    expect(main).toContain('DiagnosticIntents.shouldBlock(debuggable, data.getScheme())');
+    expect(main).toContain('intent.setData(null)');
+  });
+
+  it('keeps the native private scheme aligned with the diagnostic consumer', () => {
+    const scheme = 'eldritchdynasty-smoke';
+    expect(parseSmokeCommand(`${scheme}://resume`)).toEqual({ kind: 'resume' });
+    expect(text('android/app/src/main/java/nz/eldritchdynasty/game/DiagnosticIntents.java'))
+      .toContain(`"${scheme}".equalsIgnoreCase(scheme)`);
+  });
+});
 
 
 describe('Capacitor native listener lifecycle (#2261)', () => {
