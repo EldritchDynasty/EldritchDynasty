@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import { loadBundle } from '@ed/content';
@@ -25,6 +26,36 @@ function foundedSave() {
 }
 
 interface Painted { text: string; font: string; x: number; width: number }
+
+/** Match the stamped build used by the real Vite client under test. */
+const build = process.env.ED_BUILD_SHA
+  || execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+
+/**
+ * A valid checksum is not enough: the *rendered* code must still represent the
+ * intended founding. Decode on the test build and compare all mechanical
+ * signing choices, not merely accept an "other build" refusal (#3216).
+ */
+function expectAnonymousFounding(code: string, seed: number, namedSender = false): void {
+  const result = readShareCode(code, loadBundle(), { build });
+  expect(result.ok, result.ok ? undefined : JSON.stringify(result.problem)).toBe(true);
+  if (!result.ok) return;
+
+  const signing = newGame(loadBundle(), { seed, campaign: 'short' }).prologue()!;
+  expect(result.founding).toMatchObject({
+    campaign: 'short',
+    seed,
+    answers: Object.fromEntries(signing.examination.map(q => [q.id, q.answers[0]!.id])),
+    heirloom: signing.heirlooms[0]!.heirloom,
+    grudge: signing.grudges[0]!.house,
+    friends: namedSender ? [{ sex: 'female' }] : [],
+    missing: namedSender ? ['founder', 'house', 'friends'] : ['house'],
+  });
+  expect(result.founding.houseName).toBeUndefined();
+  expect(result.founding.founder).toEqual(namedSender
+    ? { gender: 'woman', configuration: 'blood_mother' } : undefined);
+  expect(result.founding.friends.every(friend => friend.name === undefined)).toBe(true);
+}
 
 for (const mode of ['original', 'plainenglish'] as const) {
   test(`the Chronicle plate carries the founding, in a face that fits the column (${mode})`, async ({ page }) => {
@@ -62,10 +93,8 @@ for (const mode of ['original', 'plainenglish'] as const) {
       expect(line.x + line.width, `"${line.text}" runs past the column`).toBeLessThanOrEqual(1200 - 64);
     }
 
-    // Rejoined, it is a whole code: its check passes. Only the build may differ
-    // between this test's process and the dev server's stamp.
-    const read = readShareCode(code.map(line => line.text).join('\n'), loadBundle());
-    if (!read.ok) expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    // Rejoined, the painted code must reproduce the whole mechanical founding.
+    expectAnonymousFounding(code.map(line => line.text).join('\n'), 1995);
     expect(errors).toEqual([]);
   });
 }
@@ -134,8 +163,7 @@ for (const mode of ['original', 'plainenglish'] as const) {
       expect(line.x + line.width, `"${line.text}" runs past the SVG column`).toBeLessThanOrEqual(1200 - 64);
     }
 
-    const read = readShareCode(code, loadBundle());
-    if (!read.ok) expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    expectAnonymousFounding(code, 1995);
     expect(errors).toEqual([]);
   });
 }
@@ -218,8 +246,7 @@ for (const mode of ['original', 'plainenglish'] as const) {
       expect(line.width).toBeGreaterThan(0);
       expect(line.x + line.width, `"${line.text}" runs past the SVG column`).toBeLessThanOrEqual(1200 - 64);
     }
-    const read = readShareCode(code, loadBundle());
-    if (!read.ok) expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    expectAnonymousFounding(code, 1995);
     expect(errors).toEqual([]);
   });
 }
@@ -294,9 +321,7 @@ for (const mode of ['original', 'plainenglish'] as const) {
       expect(line.font).toContain('monospace');
       expect(line.x + line.width, 'code exceeds image width').toBeLessThanOrEqual(1200 - 64);
     }
-    const read = readShareCode(anonymous, loadBundle());
-    if (read.ok) expect(read.founding.missing).toEqual(['founder', 'house', 'friends']);
-    else expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+    expectAnonymousFounding(anonymous, 1998, true);
     expect(errors).toEqual([]);
   });
 }
@@ -401,9 +426,7 @@ for (const mode of ['original', 'plainenglish'] as const) {
         expect(line.width).toBeGreaterThan(0);
         expect(line.x + line.width, 'SVG code exceeds image column').toBeLessThanOrEqual(1200 - 64);
       }
-      const read = readShareCode(code, loadBundle());
-      if (read.ok) expect(read.founding.missing).toEqual(['founder', 'house', 'friends']);
-      else expect(read.problem).toEqual({ kind: 'other_edition', differs: ['build'] });
+      expectAnonymousFounding(code, 1998, true);
       expect(errors).toEqual([]);
     });
   }
