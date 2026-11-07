@@ -787,7 +787,12 @@ export function summarize(events: readonly ReadingLogEvent[], until: number, tru
   finishEntry(stop);
   // An end marker later in the artifact cannot terminate an earlier analysis
   // window. The requested cutoff is still open, even in a capped artifact.
-  const reason = end && end.at <= until ? end.reason : truncated && !end ? 'cap' : 'open';
+  // A capped log still writes a terminal end marker, but that marker is
+  // timestamped at the cap rather than at a later Export/Stop. Keep the
+  // censoring reason aligned with the Table workload projection, without
+  // turning an earlier historical cutoff into a completed observation.
+  const reason = truncated && end && end.at <= until ? 'cap'
+    : end && end.at <= until ? end.reason : truncated && !end ? 'cap' : 'open';
   close(stop, year, reason, true);
 
   const hours = foreground / 3_600_000;
