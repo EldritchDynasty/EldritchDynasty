@@ -524,24 +524,41 @@ describe('asynchronous host audio refusals (#1986)', () => {
 
 
 describe('repeated background notifications after host suspension failure (#3205)', () => {
-  it('retries a synchronous suspend refusal without unlocking or forwarding another cue', () => {
+  it('retries a still-audible host after both mute and first suspension attempts refuse', () => {
     const engine = fakeSound();
+    let muted = true;
+    let devicePlaying = false;
+    Object.defineProperty(engine, 'muted', {
+      get: () => muted,
+      set: (next: boolean) => {
+        if (next) throw new Error('InvalidStateError: mute unavailable while backgrounding');
+        muted = next;
+      },
+    });
+    engine.wake = vi.fn(() => { devicePlaying = true; });
     engine.suspend = vi.fn()
-      .mockImplementationOnce(() => { throw new Error('InvalidStateError: audio device transitioning'); })
-      .mockImplementation(() => undefined);
+      // First hide attempts a fallback after mute fails, then the ordinary
+      // suspension. A migrating host can refuse both while its audio still runs.
+      .mockImplementationOnce(() => { throw new Error('device transitioning'); })
+      .mockImplementationOnce(() => { throw new Error('device still transitioning'); })
+      .mockImplementation(() => { devicePlaying = false; });
     const bed = new SoundBed(engine);
     bed.prefer({ on: true, volume: 0.4 });
     bed.gesture();
     expect(bed.audible).toBe(true);
+    expect(devicePlaying).toBe(true);
     expect(engine.wake).toHaveBeenCalledTimes(1);
 
     bed.hide();
-    expect(engine.suspend).toHaveBeenCalledTimes(1);
-    expect(bed.audible).toBe(false);
-    // A second pagehide/native pause can arrive after the audio device recovers,
-    // without an intervening foreground transition or another user gesture.
-    expect(() => bed.hide()).not.toThrow();
     expect(engine.suspend).toHaveBeenCalledTimes(2);
+    expect(devicePlaying, 'both initial host silencing attempts failed').toBe(true);
+    expect(bed.audible).toBe(false);
+
+    // A later pagehide/native pause is the next chance to stop this host,
+    // without any intervening foreground transition or another user gesture.
+    expect(() => bed.hide()).not.toThrow();
+    expect(engine.suspend).toHaveBeenCalledTimes(3);
+    expect(devicePlaying, 'duplicate hide could not recover a refused suspension').toBe(false);
     expect(engine.wake).toHaveBeenCalledTimes(1);
     bed.cue('bell');
     expect(engine.cue).not.toHaveBeenCalled();
