@@ -490,10 +490,11 @@ export class SoundBed {
       }
       this.#muteApplied = true;
     } catch {
-      // A failed unmute is not permission to forward cues to an unknown
-      // engine. Worse, a failed mute can leave an older drone audible: ask
-      // the host to suspend its audio thread as a best-effort fallback.
-      if (muted) this.#tryAudio(() => this.engine.suspend());
+      // A failing adapter can apply a mute *or an unmute* before it throws.
+      // Either can leave a previously scheduled drone audible even though
+      // #muteApplied remains false. Suspend as a best-effort fail-closed
+      // fallback in both directions; the next gesture can retry and wake.
+      this.#tryAudio(() => this.engine.suspend());
     }
   }
 }
