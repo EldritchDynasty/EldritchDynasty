@@ -622,10 +622,14 @@ export class Sound {
     // Cut the drone graph now rather than retaining it behind a closed device.
     this.stopDrone(0);
     const context = this.context;
+    const output = this.out;
     this.context = null;
     this.out = null;
     this.resuming = null;
     this.restoreDroneAfterDeniedResume = false;
+    // A refused close() must not leave a partially started cue connected to
+    // the speakers. Unlike mute/suspend, terminal closure retires this bus.
+    try { output?.disconnect(); } catch { /* host already invalidated the output */ }
     // Some hosts throw synchronously rather than rejecting close(). Disposal
     // must still succeed, and a later gesture may open a fresh context.
     try { quietly(context?.close?.()); } catch { /* already gone */ }
@@ -709,10 +713,14 @@ export class Sound {
     this.drone = null;
     this.droneKey = '';
     const context = this.context;
+    const output = this.out;
     this.context = null;
     this.out = null;
     this.resuming = null;
     this.restoreDroneAfterDeniedResume = false;
+    // A failed play() can have already started a source before it could be
+    // registered for stopCues(). Never rely on a refusing close() to silence it.
+    try { output?.disconnect(); } catch { /* host already invalidated the output */ }
     try { quietly(context?.close?.()); } catch { /* already gone */ }
   }
 
