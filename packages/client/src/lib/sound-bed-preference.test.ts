@@ -423,4 +423,77 @@ describe('asynchronous host audio refusals (#1986)', () => {
     bed.dispose();
   });
 
+
+  it('silences cues after a late rejected wake until a fresh gesture', async () => {
+    let rejectWake!: (reason: Error) => void;
+    const pending = new Promise<void>((_resolve, reject) => { rejectWake = reject; });
+    const engine = fakeSound();
+    engine.wake = vi.fn().mockImplementationOnce(() => pending).mockImplementation(() => undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+
+    rejectWake(new Error('NotAllowedError: native wake rejected after return'));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bed.audible, 'a late denied wake still authorized more cues').toBe(false);
+    expect(engine.muted).toBe(true);
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    // A later *real gesture*, not a preference update, can retry the host.
+    bed.prefer({ on: true, volume: 0.5 });
+    expect(bed.audible).toBe(false);
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledWith('seal');
+    bed.dispose();
+  });
+
+  it('silences the bed after an asynchronously rejected cue', async () => {
+    const engine = fakeSound();
+    engine.cue = vi.fn().mockRejectedValueOnce(new Error('native output failed')).mockResolvedValue(undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.4 });
+    bed.gesture();
+    bed.cue('bell');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(bed.audible).toBe(false);
+    expect(engine.muted).toBe(true);
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    bed.cue('seal');
+    expect(engine.cue, 'the refused host received a second cue').toHaveBeenCalledTimes(1);
+
+    bed.gesture();
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+
+  it('ignores a late refusal from an earlier gesture after a newer wake succeeded', async () => {
+    let rejectOld!: (reason: Error) => void;
+    const oldWake = new Promise<void>((_resolve, reject) => { rejectOld = reject; });
+    const engine = fakeSound();
+    engine.wake = vi.fn().mockImplementationOnce(() => oldWake).mockImplementation(() => undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.6 });
+    bed.gesture();
+    bed.gesture();
+    rejectOld(new Error('old audio session rejected'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+    expect(engine.suspend).not.toHaveBeenCalled();
+    bed.cue('bell');
+    expect(engine.cue).toHaveBeenCalledWith('bell');
+    bed.dispose();
+  });
+
 });
