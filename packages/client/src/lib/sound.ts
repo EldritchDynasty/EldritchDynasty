@@ -489,7 +489,13 @@ export class Sound {
     this.attempt(() => {
       const wanted = droneScore(input);
       // The frame's silence is a beat, not the ordinary 1.4-second exit fade.
-      if (!wanted) return this.stopDrone(0.02);
+      if (!wanted) {
+        // A silent frame also cuts *earlier* Ages still fading after a register
+        // change. Those graphs are no longer this.drone, and their ordinary
+        // 1.4-second tails must not sound beneath the frame.
+        this.cutRetiringDrones();
+        return this.stopDrone(0.02);
+      }
 
       const key = JSON.stringify(wanted);
       if (this.drone && key === this.droneKey) return;
