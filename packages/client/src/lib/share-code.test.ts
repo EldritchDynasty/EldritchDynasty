@@ -223,6 +223,34 @@ describe('malformed native share-code refusal details (#1995)', () => {
       .toBe("The code left names out. Give the house's name and each friend's name.");
   });
 
+
+  it('treats sparse name-category lists as malformed, not as a render exception', () => {
+    // every() skips unassigned slots. A host that passes a sparse list must
+    // still get an actionable refusal in either prose mode.
+    const withHole = new Array<'founder' | 'house' | 'friends'>(2);
+    withHole[1] = 'friends';
+    for (const missing of [new Array<'friends'>(1), withHole]) {
+      const problem = { kind: 'names_needed', missing } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This founding still needs names before it can begin.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('This house lacks the names it needs before it may begin.');
+    }
+  });
+
+  it('treats sparse edition-difference lists as unknown instead of throwing', () => {
+    const withHole = new Array<'format' | 'content' | 'build'>(2);
+    withHole[1] = 'build';
+    const unknown = { kind: 'other_edition', differs: [] } as ShareCodeProblem;
+    for (const differs of [new Array<'format'>(1), withHole]) {
+      const problem = { kind: 'other_edition', differs } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe(shareCodeProblem(unknown, 'plainenglish'));
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe(shareCodeProblem(unknown, 'original'));
+    }
+  });
+
   it('lists duplicated edition mismatch details once', () => {
     const problem = { kind: 'other_edition', differs: ['format', 'format', 'content'] } as ShareCodeProblem;
     expect(shareCodeProblem(problem, 'plainenglish'))
