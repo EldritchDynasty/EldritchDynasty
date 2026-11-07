@@ -2,6 +2,8 @@
 
 **Refs #1994. Proposal only; no recordings, casting, approvals, application changes, or participant study.**
 
+> **Historical exploration, not the current pilot shortlist.** This early, Original-only inventory predates the [source-pinned, two-prose-mode decision brief](FRAME-VOICE-PILOT-1994.md). That later brief is the single current proposal for owner review, including its distinct three-scene set and revision manifest. The candidates below are retained to explain alternatives and dynamic-text risks; they are **not** a second set of clips to record. Neither document approves voice or a change to the silent-frame rule.
+
 ## Source snapshot and scope
 
 The authored frame source is [`packages/content/events/frame.yaml`](../packages/content/events/frame.yaml), blob `2b29a1aadb55b191edb60b06c7604c20fe2844c3`. It currently contains **28** `frame_*` events. This inventory counts the `body` and outcome `text` scalar words of each entry, using simple whitespace tokenisation of folded YAML. It totals **approximately 2,552 source words**, with **15 scenes containing prose substitution tokens**. These are **planning counts, not performer timing**, and a token such as `{NARRATOR.They}` counts as one word until a particular founding is rendered. The count excludes titles, metadata, translated variants, and unrendered scene branches; it is not a claim that all 28 scenes are seen in one campaign.
@@ -44,7 +46,9 @@ The 1542 frame is not general story narration. [Concept §24](../DesignConcepts/
 | `frame_the_weight_of_a_sentence` | 137 | No |
 | **Total** | **2552** | **15 of 28** |
 
-## Three complementary pilot candidates (not approved or frozen)
+## Earlier exploratory candidates (superseded; not approved or frozen)
+
+The current [three-scene proposal](FRAME-VOICE-PILOT-1994.md#three-representative-pilot-pages-proposal-not-approved) deliberately selects static prose while the speaker, mode, and substituted-word recording policy remain undecided. In particular, `frame_two_of_three` below demonstrates the *unresolved* narrator-substitution problem; it is **not** a currently proposed pilot clip. Only an explicit #1994 owner decision can revise the current shortlist.
 
 1. **`frame_the_seal_still_west`**, *A Box in Someone Else's Hallway* (45 source words): short, no prose substitutions, gated by the unresolved Seal gift lie. Tests sparse delivery and whether a silent pause before a human line actually works. A test fixture must make the gate eligible; do not assume normal play will fire it for every tester.
 2. **`frame_read_out_in_a_hall_at_cawdry`**, *Item Nine* (126 source words): longer, static scene gated by a Chronicle event. Tests endurance, a deliberate pause and the ability to read ahead or dismiss without waiting for playback.
@@ -78,5 +82,7 @@ An implementation should reuse the client sound policy after #1986's relevant ch
 - **Observation:** recruit readers of a candidate build and log actual scripts, platform, consent and skip reasons; distinguish a technical pass from a felt narrative benefit.
 
 ## Handoff
+
+For the **current owner review and script-freeze decision**, use [Frame voice pilot: source inventory and decision gate](FRAME-VOICE-PILOT-1994.md). Keep this first inventory as dated planning context; its original word counts exclude Plain English, and its alternative shortlist must not be merged into the later proposal without an owner decision.
 
 This document completes the **inventory and technical proposal portion only** of #1994's first step. The owner still needs to approve whether voice exists at all, the narrator, mode, three frozen scripts, commercial rights and budget. No `Closes` keyword applies; later implementation depends on those choices and the appropriate client audio branch landing. After approval, work should proceed on the same claimed issue/branch or a separately tracked landing slice, never by bypassing the canonical claim mutex.

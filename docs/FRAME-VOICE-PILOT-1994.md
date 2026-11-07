@@ -2,6 +2,8 @@
 
 > **Preparation only — Refs #1994.** No voice feature, recording, casting, script rewrite, budget approval, or exemption from the frame's silence rule is authorized by this document.
 
+**Current decision brief.** Use this source-pinned Original/Plain English inventory, three static pilot candidates and revision manifest for the next #1994 owner review. The earlier [Voice pilot readiness inventory](VOICE-PILOT-READINESS.md) remains as historical exploration: it named a *different* three-scene shortlist, including substitution-dependent `frame_two_of_three`. Do not combine the two shortlists or treat either as recording approval; this document supersedes the earlier *candidate selection*, not its substitution and playback-risk findings.
+
 ## Provenance and counting boundary
 
 - Source: [`packages/content/events/frame.yaml`](https://github.com/EldritchDynasty/EldritchDynasty/blob/117f491eba161972361ab744f21c7f7864041b7c/packages/content/events/frame.yaml) at repository commit `117f491eba161972361ab744f21c7f7864041b7c`; file blob `ec0f878aea3198ddadec108969e1803bf505201a`. Re-inventory after any edit to this source or its Plain English variants.
@@ -46,7 +48,7 @@
 
 ## Three representative pilot pages (proposal; not approved)
 
-Choose **only one prose mode** when authorizing a pilot; never label Original spoken over differing Plain English as matching captions. These three sample the frame's distinct jobs without inventing interpolated family names or narrator forms.
+Choose **only one prose mode** when authorizing a pilot; never label Original spoken over differing Plain English as matching captions. These three sample the frame's distinct jobs without inventing interpolated family names or narrator forms. They intentionally replace the earlier variable-text candidate with static prose: selecting `frame_two_of_three` would require a separately approved narrator-substitution and rendered-transcript strategy before any script can be frozen. That unresolved recording complexity is not silently accepted or permanently ruled out; it belongs to the owner's voice/mode decision.
 
 1. **House account — “A Trusted Branch”** (`frame_what_the_ledger_says_of_the_seal`): 85 Original / 100 Plain English words. Eligible only when `seal_the_grandson_presses` was chronicled. Its text distinguishes the letter's surviving page from what the family wrote under it. Useful test of controlled quiet and legally particular prose without changing the truth of the page.
 2. **Contradictory evidence — “Three Other Accounts”** (`frame_the_short_account`): 55 / 58 words. Requires `the_thin_papers` discrepancy in the `proven` state. An intentionally shorter reading: does the voice leave the creditor's judgment partisan instead of sounding like an omniscient verdict?
