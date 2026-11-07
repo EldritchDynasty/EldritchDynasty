@@ -620,6 +620,11 @@ function purposePersonName(person: Pick<Person, 'name' | 'epithet' | 'byname'>, 
     ? `${person.name} ${epithet}` : person.name;
 }
 
+/** A restored label or testimony must contain words before the book can assert it. */
+function readablePurposeValue(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
 /**
  * A purpose is not evidence of its own pursuit. The house may have aimed to
  * deepen its blood and still put a named relative into a rite. Show that cost
@@ -704,6 +709,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
     }
     const branches = [...w.branches.values()]
       .filter((branch) => branch.house === w.playerHouse
+        && readablePurposeValue(branch.name)
         && inBookTerm(w, branch.foundedYear)
         // An extinction after collection is not an extinct hall at collection.
         && (branch.extinct === undefined
@@ -718,7 +724,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       const founder = w.people.get(branch.founder);
       // Restored founding rows must not credit a hall to somebody who had not
       // been born (or had already died) when its charter was signed.
-      if (!founder || !Number.isSafeInteger(founder.born)
+      if (!founder || !readablePurposeValue(founder.name)
+        || !Number.isSafeInteger(founder.born)
         || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
         || branch.foundedYear - founder.born < CADET_AGE
         // A charter's author needs a credible life span even when legacy
@@ -744,13 +751,15 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
           || charterMembership.branch !== branch.id
           || (charterMembership.kind !== 'blood' && charterMembership.kind !== 'cadet'))) continue;
       const survivor = family
-        .filter((person) => person.houseOfOrigin === w.playerHouse && cadetFamilyMember(person, readYear))
+        .filter((person) => person.houseOfOrigin === w.playerHouse
+          && readablePurposeValue(person.name) && cadetFamilyMember(person, readYear))
         .sort((a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0)[0];
       if (!survivor) continue;
       // A dated loss in the same saved branch ledger, not an attribution of blame.
       const lost = [...w.branches.values()]
         .filter((other) => other.id !== branch.id
           && other.house === w.playerHouse
+          && readablePurposeValue(other.name)
           && inBookTerm(w, other.foundedYear)
           && other.extinct !== undefined
           // A fractional recovered year is not proof of a lost hall.
@@ -786,7 +795,7 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
         && page.weight === 'paragraph'
         && page.named === false
         && page.record === undefined
-        && page.text !== null
+        && readablePurposeValue(page.text)
         && !page.greyed
         && inBookTerm(w, page.year);
     }).sort((a, b) => a.year - b.year || (a.id! < b.id! ? -1 : a.id! > b.id! ? 1 : 0));
@@ -799,7 +808,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       // Apply the same campaign bounds used to select the witnessed page.
       if (w.chronicle.filter((entry) => entry.id === page.id && inBookTerm(w, entry.year)).length !== 1) continue;
       const person = w.people.get(page.people![0]!);
-      if (!person || person.houseOfOrigin !== w.playerHouse
+      if (!person || !readablePurposeValue(person.name)
+        || person.houseOfOrigin !== w.playerHouse
         || !Number.isSafeInteger(person.born) || person.born > page.year
         || (person.died !== undefined
           && (!Number.isSafeInteger(person.died) || person.died < page.year))) continue;
@@ -817,11 +827,12 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // can be an outsider, so use the independently witnessed house-blood cost
   // rather than silently omitting a later sacrifice of a relative.
   const spent = evidence.spentBlood;
-  if (!spent || spent.source.text === null) return undefined;
+  if (!spent || !readablePurposeValue(spent.source.text)) return undefined;
   // Afterimage can include anybody named in a rite; only an actual member
   // of this house's blood can be counted as the cost of its bloodline aim.
   const victim = w.people.get(spent.person);
-  if (!victim || victim.houseOfOrigin !== w.playerHouse
+  if (!victim || !readablePurposeValue(victim.name)
+    || victim.houseOfOrigin !== w.playerHouse
     || !Number.isSafeInteger(victim.born) || victim.born > spent.source.year) return undefined;
   const pages = ctx.world.chronicle.filter((page) =>
     page.year === spent.source.year
