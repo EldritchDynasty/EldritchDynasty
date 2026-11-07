@@ -711,7 +711,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       const founder = w.people.get(branch.founder);
       // Restored founding rows must not credit a hall to somebody who had not
       // been born (or had already died) when its charter was signed.
-      if (!founder || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
+      if (!founder || !Number.isSafeInteger(founder.born)
+        || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
         || branch.foundedYear - founder.born < CADET_AGE
         || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
       // A saved charter names its founder, but a recovered membership history

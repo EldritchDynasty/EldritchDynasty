@@ -2430,6 +2430,8 @@ describe('chronological last-night purpose witnesses (#2803)', () => {
     }
     // A cadet charter requires the same minimum age as a real departure.
     founder.born = foundedYear - CADET_AGE;
+    // A changed synthetic birth year must change its membership witness too.
+    founder.membership.find((m) => m.to === undefined)!.from = founder.born;
     expect(epilogueOf(ctx)!.purpose?.kind).toBe('branch_kept');
 
     // Death before the charter is no more credible than a future birth.
@@ -2911,6 +2913,7 @@ describe('cadet founding is an actual adult son leaving the seat (#2932)', () =>
     founder.born = foundedYear - (CADET_AGE - 1);
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     founder.born = foundedYear - CADET_AGE;
+    founder.membership.find((m) => m.to === undefined)!.from = founder.born;
     expect(epilogueOf(ctx)!.purpose).toEqual(original);
 
     const start = CAMPAIGNS.long.startYear;
@@ -2919,6 +2922,7 @@ describe('cadet founding is an actual adult son leaving the seat (#2932)', () =>
     expect(epilogueOf(ctx)!.purpose).toBeUndefined();
     branch.foundedYear = start;
     founder.born = start - CADET_AGE;
+    founder.membership.find((m) => m.to === undefined)!.from = founder.born;
     const before = digestOf(ctx);
     for (const mode of ['original', 'plainenglish'] as const) {
       setProseMode(ctx, mode);
@@ -2994,6 +2998,27 @@ describe('the credited cadet charter matches surviving founder membership eviden
     const chosen = selectEnding(ctx);
     const legacy = epilogueOf(ctx)!.purpose;
     expect(legacy).toMatchObject({ kind: 'branch_kept', founder: 'Edrin' });
+
+    // A legacy charter without founder membership is still valid, but its
+    // named founder must have a credible whole-year birth. The two other
+    // blood relatives keep the hall viable independently of that founder.
+    const originalMemberships = founder.membership;
+    const originalBorn = founder.born;
+    founder.membership = [];
+    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+    for (const invalidBorn of [originalBorn + 0.5, Number.NaN]) {
+      founder.born = invalidBorn;
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(chosen);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    }
+    founder.born = originalBorn;
+    founder.membership = originalMemberships;
+    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
 
     // A dated, uncontradicted founder record agrees with the saved charter.
     const open = founder.membership.find((m) => m.to === undefined)!;
