@@ -475,6 +475,58 @@ describe('the player, over a fake engine', () => {
     expect(ctx.gains[0]!.disconnected).toBe(0);
   });
 
+  it.each(['mute', 'suspend', 'close'] as const)(
+    'stops and disconnects cues on %s when the host audio clock is unreadable',
+    (action) => {
+      const e = fakeEngine();
+      const s = new Sound(e.ctor);
+      s.muted = false;
+      s.cue('page');
+      const ctx = e.made[0]!;
+      const sources = [...ctx.sources];
+
+      // A disconnected mobile audio device may invalidate currentTime while
+      // previously scheduled one-shots still need immediate retirement.
+      Object.defineProperty(ctx, 'currentTime', {
+        get() { throw new Error('InvalidStateError: audio clock unavailable'); },
+      });
+
+      expect(() => {
+        if (action === 'mute') s.muted = true;
+        else if (action === 'suspend') s.suspend();
+        else s.close();
+      }).not.toThrow();
+      expect(sources.every((source) => source.stopped === 0 && source.disconnected === 1),
+        'an unreadable clock left one-shot sources connected').toBe(true);
+      expect(ctx.filters.every((filter) => filter.disconnected === 1)).toBe(true);
+      s.close();
+    },
+  );
+
+  it('cuts fading and active drones when a host loses its audio clock during closure', () => {
+    const e = fakeEngine();
+    const s = new Sound(e.ctor);
+    s.muted = false;
+    s.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const earlierGain = ctx.gains[1]!;
+    const laterGainIndex = ctx.gains.length;
+    s.setDrone(COLD);
+    const laterGain = ctx.gains[laterGainIndex]!;
+    const allSources = [...ctx.sources];
+    expect(earlierGain.disconnected, 'the earlier Age was supposed to be fading').toBe(0);
+
+    Object.defineProperty(ctx, 'currentTime', {
+      get() { throw new Error('InvalidStateError: audio clock unavailable'); },
+    });
+    expect(() => s.close()).not.toThrow();
+    expect(earlierGain.disconnected).toBe(1);
+    expect(laterGain.disconnected).toBe(1);
+    expect(allSources.every((source) => source.stopped === 0),
+      'a sustained or fading drone was left scheduled').toBe(true);
+    expect(ctx.calls).toContain('close');
+  });
+
   it('retires one-shot cues before host suspension and closure freeze the audio clock (#2910)', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);

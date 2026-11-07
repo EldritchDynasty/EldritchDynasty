@@ -514,7 +514,7 @@ export class Sound {
    * Muting or freezing the clock must cut *all* those older graphs as well.
    */
   private cutRetiringDrones(): void {
-    const now = this.context?.currentTime ?? 0;
+    const now = this.currentTimeForStop();
     for (const retired of this.retiringDrones) {
       for (const source of retired.nodes) {
         try { source.stop(now); } catch { /* ended or invalidated by the host */ }
@@ -711,12 +711,26 @@ export class Sound {
   }
 
   /**
+   * A WebView can invalidate its audio clock during teardown. Cleanup must
+   * still stop and disconnect every source even when currentTime is unreadable;
+   * Web Audio interprets stop(0) as stopping immediately.
+   */
+  private currentTimeForStop(): number {
+    try {
+      const now = this.context?.currentTime;
+      return typeof now === 'number' && Number.isFinite(now) && now >= 0 ? now : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  /**
    * End a cue before the audio clock freezes or a muted output is reopened.
    * A host may have invalidated the node already; disconnection must remain
    * best-effort and must never turn a player action into a throw.
    */
   private stopCues(): void {
-    const now = this.context?.currentTime ?? 0;
+    const now = this.currentTimeForStop();
     for (const [source, dispose] of this.activeCues) {
       try { source.stop(now); } catch { /* an ended/invalidated source is already silent */ }
       dispose();
