@@ -233,6 +233,11 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     seen.add(id);
     const p = w.people.get(id);
     if (!p) continue;
+    // Preserve the claimed parent link, not a verdict about its truth. A
+    // completed last-night image cannot name somebody born after collection
+    // (or without a valid calendar birth), nor traverse their later claims.
+    // Pre-founding ancestors and unfinished authoring inventories remain.
+    if (w.ending && (!Number.isSafeInteger(p.born) || p.born > throughYear)) continue;
     // Exactly session.ts's record.parents projection. No true parentage,
     // phenotype or inferred missing ancestor crosses the seam.
     const epithet = visibleEpithet(p, throughYear);

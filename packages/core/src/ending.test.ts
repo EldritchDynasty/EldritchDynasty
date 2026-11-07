@@ -1356,6 +1356,56 @@ describe('the house remembered from attributed evidence (#1808)', () => {
     expect(head.claimedParents.mother).toBe(parent.id);
   });
 
+  it.each(['original', 'plainenglish'] as const)(
+    'withholds future-born claimed ancestors without erasing their recorded link (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198328);
+      const w = ctx.world;
+      const head = place(ctx, { name: 'The last credible seal', sex: 'male', age: 40 });
+      const mother = place(ctx, { name: 'The recorded mother', sex: 'female', age: 70 });
+      const grandmother = place(ctx, { name: 'The recorded grandmother', sex: 'female', age: 100 });
+      head.claimedParents = { mother: mother.id };
+      mother.claimedParents = { mother: grandmother.id };
+      const collection = w.year;
+      w.succession = [{ person: head.id, name: head.name, from: collection - 5 }];
+      w.ending = { id: 'forgotten', year: collection };
+      // Recovering a world after collection must not rewrite its last-night image.
+      w.year = collection + 8;
+      setProseMode(ctx, mode);
+      const selected = selectEnding(ctx);
+      const line = () => epilogueOf(ctx)!.afterimage!.line!;
+      expect(line().map((person) => person.id)).toEqual([head.id, mother.id, grandmother.id]);
+      const motherBirth = mother.born;
+      for (const born of [collection + 1, motherBirth + 0.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        mother.born = born;
+        const before = digestOf(ctx);
+        const observed = line();
+        expect(observed.map((person) => person.id)).toEqual([head.id]);
+        // The recorded claim remains, but its impossible named ancestor and
+        // the ancestor's later claimed family are not last-night witnesses.
+        expect(observed[0]!.record.parents.mother).toBe(mother.id);
+        expect(JSON.stringify(observed)).not.toContain(mother.name);
+        expect(JSON.stringify(observed)).not.toContain(grandmother.name);
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+      mother.born = motherBirth;
+      const grandmotherBirth = grandmother.born;
+      grandmother.born = collection + 2;
+      expect(line().map((person) => person.id)).toEqual([head.id, mother.id]);
+      expect(line()[1]!.record.parents.mother).toBe(grandmother.id);
+      grandmother.born = grandmotherBirth;
+      expect(line().map((person) => person.id)).toEqual([head.id, mother.id, grandmother.id]);
+
+      // Unfinished authoring inventories remain intentionally synthetic.
+      w.ending = undefined;
+      mother.born = collection + 1;
+      expect(afterimageEvidence(ctx).line?.map((person) => person.id)).toEqual([
+        head.id, mother.id, grandmother.id,
+      ]);
+    },
+  );
+
   it('rejects an unborn, already dead, or absent last seal-holder in a completed Afterimage (#3131)', () => {
     const ctx = testWorld(content, 3131, 1542);
     const w = ctx.world;
