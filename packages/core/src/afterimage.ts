@@ -91,7 +91,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
     // A completed last-night account cannot witness someone before birth.
     // Unfinished authoring inventories intentionally admit synthetic histories;
     // later accounts *about* the dead remain valid in either case.
-    if (!p || (w.ending && p.born > source.year)) return;
+    if (!p || (w.ending && (!Number.isSafeInteger(p.born) || p.born > source.year))) return;
     const epithet = visibleEpithet(p, throughYear);
     const reading = people.get(id) ?? {
       person: id, name: p.name,
@@ -135,7 +135,7 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         // own words even where they contradict another page.
         // A completed account cannot treat a pre-birth rite as a witnessed
         // cost; unfinished diagnostic inventories remain intentionally open.
-        if (!p || (w.ending && p.born > decision.year)
+        if (!p || (w.ending && (!Number.isSafeInteger(p.born) || p.born > decision.year))
           || p.died !== decision.year || !page.people?.includes(id)) continue;
         if (effect.rite === 'vessel' && p.status !== 'vessel_consumed') continue;
         if (effect.rite === 'unmaking' && p.status !== 'dead') continue;
