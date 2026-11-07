@@ -85,18 +85,19 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   const dailyEligible = complete && end - start === 86400000 && details.length >= 30 && classified;
   const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
 
-  // Seven consecutive 24-hour segments of successful required merge-group
-  // checks prove there was no lanes.test.ts budget failure: a failed test
-  // cannot hide inside a successful check. Require at least one check on each
-  // day. Any non-green or missing observation is UNKNOWN, not evidence that
-  // the budget itself failed; diagnosing a red check requires its job logs.
+  // Seven consecutive days of successful first-attempt merge-group checks
+  // suffice to exclude lanes.test.ts budget failures. A successful rerun can
+  // conceal an earlier failure: the latest conclusion alone is not a clean
+  // certificate when run_attempt is >1 or missing. Require an active check on
+  // each day. Unknown history is NOT evidence that the budget itself failed.
   const sevenDayGroupCounts = end - start === 7 * 86400000
     ? Array.from({ length: 7 }, (_, day) => details.filter(run =>
       Math.floor((timestamp(run.created_at) - start) / 86400000) === day).length)
     : null;
   const sevenDayNoBudgetFailuresProved = complete &&
     sevenDayGroupCounts?.every(count => count > 0) &&
-    (counts.success ?? 0) === details.length ? true : null;
+    (counts.success ?? 0) === details.length &&
+    details.every(run => run.run_attempt === 1) ? true : null;
 
   return {
     from, to, source, complete,
@@ -307,6 +308,7 @@ export function formatMergeGroups(report) {
       (report.sevenDayNoBudgetFailuresProved ? 'established' : 'not established') + '.',
     'Seven-day groups per consecutive 24h segment: ' +
       (report.sevenDayGroupCounts === null ? 'n/a' : report.sevenDayGroupCounts.join(', ')) + '.',
+    'First-attempt results are required: a green rerun cannot rule out an earlier failed attempt.',
     'A red or missing check needs job-log diagnosis; not established does not mean the budget failed.',
     'This counts workflow runs, not PR arrivals or landed PRs. It is not a throughput or concurrency recommendation.',
     '',
