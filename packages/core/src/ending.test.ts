@@ -3005,7 +3005,17 @@ describe('the credited cadet charter matches surviving founder membership eviden
     const originalMemberships = founder.membership;
     const originalBorn = founder.born;
     founder.membership = [];
-    expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
+    // The charter is still credited without a dated founder membership, but
+    // the founder cannot also be counted as a resident of the surviving hall.
+    // Its surviving witness is now the next qualifying relative, Leora.
+    const withoutFounderMembership = epilogueOf(ctx)!.purpose;
+    expect(withoutFounderMembership).toEqual({
+      kind: 'branch_kept',
+      founder: 'Edrin',
+      branch: 'The Orchard Hall',
+      year: foundedYear,
+      person: 'Leora',
+    });
     for (const invalidBorn of [originalBorn + 0.5, Number.NaN]) {
       founder.born = invalidBorn;
       for (const mode of ['original', 'plainenglish'] as const) {
@@ -3017,6 +3027,7 @@ describe('the credited cadet charter matches surviving founder membership eviden
       }
     }
     founder.born = originalBorn;
+    expect(epilogueOf(ctx)!.purpose).toEqual(withoutFounderMembership);
     founder.membership = originalMemberships;
     expect(epilogueOf(ctx)!.purpose).toEqual(legacy);
 
