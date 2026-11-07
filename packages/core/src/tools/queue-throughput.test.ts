@@ -22,7 +22,7 @@ const run = (id: number, created_at: string, overrides: Partial<Run> = {}): Run 
   id, event: 'merge_group', name: 'check', created_at,
   run_started_at: '2026-11-06T01:10:00Z',
   updated_at: '2026-11-06T01:20:00Z',
-  status: 'completed', conclusion: 'success', ...overrides,
+  status: 'completed', conclusion: 'success', run_attempt: 1, ...overrides,
 });
 
 describe('queue throughput evidence (#2794)', () => {
@@ -208,6 +208,32 @@ describe('queue throughput evidence (#2794)', () => {
     });
     expect(classified.failureSharePercent).toBe(50);
     expect(classified.dailyTargetUnder5Percent).toBeNull();
+  });
+
+  it('does not certify a daily first-attempt failure rate from green reruns (#2794)', () => {
+    // A first attempt can fail and then turn green on retry: run 42311086198
+    // did exactly that. The latest Actions run hides the earlier conclusion.
+    const clean = Array.from({ length: 40 }, (_, i) => run(800 + i, from));
+    const baseline = summarizeMergeGroups(clean, { from, to, now, source: 'api' });
+    expect(baseline).toMatchObject({
+      complete: true, successful: 40, firstAttemptOnly: true,
+      failureSharePercent: 0, dailyTargetUnder5Percent: true,
+    });
+
+    for (const attempt of [2, undefined]) {
+      const rows = clean.map((row, i) =>
+        i === 7 ? { ...row, run_attempt: attempt } : row);
+      const report = summarizeMergeGroups(rows, { from, to, now, source: 'api' });
+      expect(report).toMatchObject({
+        complete: true, successful: 40, failed: 0, firstAttemptOnly: false,
+        failureSharePercent: null, dailyTargetUnder5Percent: null,
+      });
+      expect(formatMergeGroups(report)).toContain('First-attempt-only cohort: no');
+      expect(formatMergeGroups(report)).toContain('not evaluated');
+      // The descriptive latest-run verdict remains available, but cannot
+      // establish the first-attempt threshold without attempt history.
+      expect(report.runs[7]?.run_attempt).toBe(attempt);
+    }
   });
 
   it('fails closed on invalid durations, duplicates and unverified snapshots', () => {
