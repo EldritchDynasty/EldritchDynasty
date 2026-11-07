@@ -169,6 +169,33 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     }
   });
 
+  it('does not echo visible host refusals mixed with hidden or bidirectional controls (#3230)', () => {
+    // Visible letters previously satisfied the "not entirely invisible" check,
+    // even when a malformed native bridge supplied direction overrides or
+    // embedded control characters that can visually misrepresent the reason.
+    const mixed = [
+      'Name denied.\\u202eWrong direction',
+      '\\u2066Enter a valid name\\u2069',
+      'Name\\u200b denied.',
+      'Name\\u0000 denied.',
+      'Name\\n denied.',
+    ].map((s) => s.replace(/\\\\u([0-9a-fA-F]{4})/g, (_, hex: string) =>
+      String.fromCharCode(Number.parseInt(hex, 16))).replace('\\\\n', '\n'));
+    for (const reason of mixed) {
+      const problem = { kind: 'refused', reason } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This code could not start a game. Check the founding details and try again.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('That code did not begin a house. Read the founding details and try again.');
+    }
+
+    // A combining accent attached to a visible letter is valid Unicode and
+    // must not cause normal validator wording to be hidden or rewritten.
+    const valid: ShareCodeProblem = { kind: 'refused', reason: 'A\\u0301 name is required.' };
+    expect(shareCodeProblem(valid, 'plainenglish')).toBe(valid.reason);
+    expect(shareCodeProblem(valid, 'original')).toBe(valid.reason);
+  });
+
   it('keeps a visible refusal when a legacy adapter omits the founding-validator reason', () => {
     // JavaScript and native bridges may return values outside the TypeScript
     // union. A rejection must never silently become an empty status message.
