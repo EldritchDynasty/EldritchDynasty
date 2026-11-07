@@ -1,5 +1,32 @@
 # Merge queue throughput evidence (#2794)
 
+## Correct daily failure-rate evidence for rerun attempts (7 November 2026)
+
+GitHub Actions' workflow-run listing shows only the **latest attempt** of a
+rerun. That is insufficient to certify the first-attempt merge-group failure
+rate: [run 42311086198](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42311086198)
+from **6 November 23:19:15 UTC** concluded **failure on attempt 1** but
+**success on attempt 2**. The latest API row reports success with
+`run_attempt=2`. It falls within the complete 24-hour cohort below.
+
+Therefore **92/92 latest attempts successful** is an accurate descriptive
+snapshot, but **0/92 first-attempt failures** is not established. The previous
+under-5% daily certification from this latest-run-only snapshot is withdrawn:
+even a green final outcome can conceal earlier red checks. The read-only
+reporter now withholds `failureSharePercent` and
+`dailyTargetUnder5Percent` whenever any selected run has `run_attempt`
+other than 1 (including missing attempt metadata). Its descriptive latest
+results, run identifiers and slot durations remain available. Regression
+tests cover both a green rerun and an unknown attempt number.
+
+A fully supported first-attempt failure-rate receipt would need to enumerate
+**every attempt** for each selected merge-group run and include those outcomes
+in the stated denominator; the present reporter deliberately does not
+manufacture that history. The separate seven-day no-budget-failure certificate
+already requires first-attempt results and remains subject to its closed-window
+conditions. This correction does not claim the actual first-attempt failure
+rate exceeded 5%, change queue settings or complete parent #2794.
+
 ## Next adjacent post-cutover cohort — 7 November 2026 (#3232)
 
 The separate **2026-11-07 01:36:17–06:10:00 UTC** closed 4h 33m 43s sample immediately follows the complete day below, without overlap. Its 18 merge-group `check` runs all succeeded; the nearest-rank median/p90 slot was **10.15 / 11.32 minutes**. Across 18 independently successful gate jobs, **192/216 (88.9%)** explicit planner decisions reused trusted-main proofs; the other 24 executed. GitHub's independently dated, `main`-targeted PR counts were **18 created / 19 merged**.
@@ -18,7 +45,7 @@ landed. Select the half-open UTC window **2026-11-06 01:36:17Z
 
 At collection on 7 November, GitHub Actions exposed **92** `check` workflow
 runs with `event=merge_group` and `created_at` inside that interval.
-**All 92 were completed/successful (0 failed, 0 cancelled, 0 pending).**
+**All 92 latest recorded attempts were completed/successful (0 latest failures, 0 cancelled, 0 pending).** At least one workflow run passed only after an earlier failed attempt; see the correction above.
 The first selected run was
 [42144943781](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42144943781)
 (created 6 November 01:36:19Z), and the last was
@@ -42,7 +69,7 @@ merge times cross cohort boundaries.
 |---|---:|
 | Merge-group checks completed | 92 |
 | Passed / failed / pending | 92 / 0 / 0 |
-| Failure rate | 0 / 92 (0%) |
+| Latest-run failures | 0 / 92 (not a first-attempt rate) |
 | Median / p90 slot | 10.15 / 15.65 min |
 | PRs created targeting main | 90 |
 | PRs merged into main | 91 |
@@ -69,9 +96,9 @@ The existing reporter offers a further live, independently reproducible pass
 GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --with-prs --json
 ```
 
-**Interpretation and boundaries.** This complete day satisfies the *observed
-daily cohort* threshold of at least 30 groups and under 5% failure, and it
-shows arrivals no greater than actual merges in this period. The earlier
+**Interpretation and boundaries.** This complete day contains at least 30 merge groups and shows arrivals no
+greater than actual merges, but does **not** certify an under-5% *first-attempt*
+failurerate from latest-run outcomes alone (see the rerun correction above). The earlier
 3–4 November baseline counted 14/97 failed groups and a 14.38-minute
 median slot, whereas the later sample has a 10.15-minute median; however,
 the immediately preceding 24-hour control already recorded 0/69 failures.
