@@ -496,4 +496,28 @@ describe('asynchronous host audio refusals (#1986)', () => {
     bed.dispose();
   });
 
+
+  it('does not silence a newer gesture when an older cue rejects late', async () => {
+    let rejectOld!: (reason: Error) => void;
+    const pendingCue = new Promise<void>((_resolve, reject) => { rejectOld = reject; });
+    const engine = fakeSound();
+    engine.cue = vi.fn().mockImplementationOnce(() => pendingCue).mockImplementation(() => undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.6 });
+    bed.gesture();
+    bed.cue('bell');
+
+    bed.gesture(); // New user activation succeeds before the old output fails.
+    rejectOld(new Error('old bell output rejected'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+    expect(engine.suspend).not.toHaveBeenCalled();
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+
 });
