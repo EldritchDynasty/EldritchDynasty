@@ -104,8 +104,10 @@ enclosing gate job and both named steps, its SHA-pinned gate inventory, and two
 distinct, ungrouped Actions log facts: all N gates passed and gate-duration
 recorded N actually executed gates. Missing or contradictory markers, echoed
 commands, partial planner output, failed steps/jobs and mismatched run identities
-remain unknown. A locally supplied `--proofs` snapshot remains non-certifying;
-the complete-cohort percentage is issued only for a fully verified API cohort.
+remain unknown. The HTTP error text alone never proves full execution:
+the independent gate-run and gate-duration receipts are both required. A
+locally supplied `--proofs` snapshot remains non-certifying; the complete-cohort
+percentage is issued only for a fully verified API cohort.
 
 The 77.5% figure above remains a *manual observational audit* until a live
 post-change reporter run is captured. This improvement changes reporting only,
