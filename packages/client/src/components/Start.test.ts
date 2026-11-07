@@ -3361,7 +3361,7 @@ describe('voluntary resume recap (#1985)', () => {
         // The local run's year is the chronology anchor. Even a sound 1315
         // pledge and 1320 docket item cannot be called current against NaN,
         // infinity or a fractional recovered year.
-        for (const year of [1321.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+        for (const year of [1321.5, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
           const malformed = snapshot({ ...base, year });
           expect(hasResumeRecapFacts(malformed, 0)).toBe(false);
           await w.setProps({ view: malformed });
