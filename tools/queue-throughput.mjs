@@ -17,6 +17,9 @@ import { pathToFileURL } from 'node:url';
 const API = 'https://api.github.com';
 const PAGE_SIZE = 100;
 const MAX_PAGES = 50;
+// PR all-state history grows far beyond one merge-group or job window.
+// Preserve a bounded scan without failing at the first 5,000 historical PRs.
+const MAX_PR_PAGES = 250;
 const SECOND_UTC = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/;
 
 export function timestamp(value) {
@@ -216,7 +219,7 @@ export async function fetchPullRequests({ repo, token, fetchImpl = fetch }) {
   const pulls = [];
   const seenNumbers = new Set();
   let previousCreated = Infinity;
-  for (let page = 1; page <= MAX_PAGES; page++) {
+  for (let page = 1; page <= MAX_PR_PAGES; page++) {
     const url = new URL(API + '/repos/' + repo + '/pulls');
     url.searchParams.set('state', 'all');
     url.searchParams.set('sort', 'created');
@@ -245,7 +248,7 @@ export async function fetchPullRequests({ repo, token, fetchImpl = fetch }) {
     }
     if (body.length < PAGE_SIZE) return pulls;
   }
-  throw new Error('More than ' + MAX_PAGES + ' PR pages: incomplete history; refuse to report');
+  throw new Error('More than ' + MAX_PR_PAGES + ' PR pages: incomplete history; refuse to report');
 }
 
 export function formatPrFlow(report) {
