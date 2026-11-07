@@ -1462,6 +1462,45 @@ describe('collection returns to where the run began (#1867 §6)', () => {
     ]);
   });
 
+  it('only dates the completed guardian crossing to a real year in this campaign (#3247)', () => {
+    const ctx = atTheTerm(324701);
+    const w = ctx.world;
+    const founding = CAMPAIGNS.long.startYear;
+    const collected = w.year - 5;
+    w.ending = { id: 'forgotten', year: collected };
+    const selected = selectEnding(ctx);
+
+    // Recovered saves must not make a crossing before the house was founded,
+    // in a fractional/unsafe year, or after the saved last night.
+    for (const year of [founding - 1, founding + 0.5, Number.NaN,
+      Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1, collected + 1]) {
+      w.guardianSince = year;
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.beginning?.guardianSince).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    }
+
+    for (const year of [founding, collected]) {
+      w.guardianSince = year;
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        const before = digestOf(ctx);
+        expect(epilogueOf(ctx)!.beginning?.guardianSince).toBe(year);
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+    }
+
+    // Do not change the existing synthetic, unfinished authoring diagnostic.
+    w.ending = undefined;
+    w.guardianSince = founding - 1;
+    expect(epilogueOf(ctx)).toBeUndefined();
+  });
+
   it('says nothing it did not see: no ambition tracked, no crossing, no opening pages', () => {
     const ctx = atTheTerm();
     ctx.world.ending = { id: 'forgotten', year: ctx.world.year };
