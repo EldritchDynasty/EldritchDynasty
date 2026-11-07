@@ -27,8 +27,10 @@ to `base:main` in the same window. GitHub issue-search reported
 `total_count=90` new PRs (3.75 arrivals/hour) and
 `total_count=91` actually merged PRs (3.79 landings/hour), with
 `incomplete_results=false` for both queries. **Landings exceeded arrivals
-by one PR**. The separate group count of 92 is not treated as 92 landings;
-the queue and PR merge times cross cohort boundaries.
+by one PR**. These are counts of all main-targeting PR creations and merges, not a
+reconstructed count of historically *ready* native-queue entries. The
+separate group count of 92 is not treated as 92 landings; the queue and PR
+merge times cross cohort boundaries.
 
 | Measure (fixed 24 hours) | Observed |
 |---|---:|
