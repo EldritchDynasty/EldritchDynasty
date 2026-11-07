@@ -245,6 +245,39 @@ describe('malformed native share-code refusal details (#1995)', () => {
     }
   });
 
+  it('does not advertise a fabricated positive host length limit', () => {
+    for (const max of [1, SHARE_CODE_MAX - 1, SHARE_CODE_MAX + 1, Number.MAX_SAFE_INTEGER]) {
+      const problem = { kind: 'too_long', max } as ShareCodeProblem;
+      expect(shareCodeProblem(problem, 'plainenglish'))
+        .toBe('This is too long to be a share code. Copy a shorter code.');
+      expect(shareCodeProblem(problem, 'original'))
+        .toBe('That is longer than a share code this game can read.');
+    }
+  });
+
+  it('reads a legacy host maximum once and contains getter failures', () => {
+    let reads = 0;
+    const changing = {
+      kind: 'too_long',
+      get max() {
+        reads++;
+        return reads === 1 ? SHARE_CODE_MAX : SHARE_CODE_MAX + 1000;
+      },
+    } as ShareCodeProblem;
+    expect(shareCodeProblem(changing, 'plainenglish'))
+      .toBe(`This is too long to be a share code. Codes are at most ${SHARE_CODE_MAX} characters.`);
+    expect(reads).toBe(1);
+
+    const throwing = {
+      kind: 'too_long',
+      get max(): never { throw new Error('unavailable host length'); },
+    } as unknown as ShareCodeProblem;
+    expect(shareCodeProblem(throwing, 'plainenglish'))
+      .toBe('This is too long to be a share code. Copy a shorter code.');
+    expect(shareCodeProblem(throwing, 'original'))
+      .toBe('That is longer than a share code this game can read.');
+  });
+
   it('bounds untrusted version values without invoking their conversion hooks', () => {
     const throwing = { toString(): never { throw new Error('untrusted version'); } };
     for (const version of [undefined, null, 22, throwing]) {
