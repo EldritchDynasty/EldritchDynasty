@@ -307,6 +307,54 @@ const COLD: DroneInput = { registers: ['cold'], frame: false };
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('the player, over a fake engine', () => {
+  it('disconnects the master bus when a partly started cue and context close both refuse (#3251)', () => {
+    // A WebView may accept start() but fail to schedule stop(), before the
+    // one-shot has been registered in activeCues. Its close() can also throw,
+    // leaving that partial graph attached unless the output bus is cut.
+    const e = fakeEngine({ throwClose: true });
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain');
+    const ctx = e.made[0]!;
+    const output = ctx.gains[0]!;
+    const makeOscillator = ctx.createOscillator.bind(ctx);
+    ctx.createOscillator = () => {
+      const source = makeOscillator();
+      source.stop = () => { throw new Error('InvalidStateError: stop scheduling refused'); };
+      return source;
+    };
+
+    expect(() => sound.cue('seal')).not.toThrow();
+    const partial = ctx.sources.at(-1)!;
+    expect(partial.started, 'the refused source never started').toBeDefined();
+    expect(partial.stopped, 'the source was already stopped by normal cleanup').toBeUndefined();
+    expect(sound.available).toBe(false);
+    expect(ctx.calls).toContain('close');
+    expect(output.disconnected, 'a live partial source still reaches the speakers').toBe(1);
+    const sourceCount = ctx.sources.length;
+    expect(() => sound.cue('bell')).not.toThrow();
+    expect(ctx.sources).toHaveLength(sourceCount);
+  });
+
+  it('disconnects the shared output on explicit close even when the device refuses closure (#3251)', () => {
+    const e = fakeEngine({ throwClose: true });
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain');
+    const old = e.made[0]!;
+    const output = old.gains[0]!;
+
+    expect(() => sound.close()).not.toThrow();
+    expect(old.calls).toContain('close');
+    expect(output.disconnected).toBe(1);
+    // Explicit close is not a permanent engine failure; later play opens a
+    // fresh context and output without reviving the refused old device.
+    sound.cue('plain');
+    expect(e.made).toHaveLength(2);
+    expect(e.made[1]!.gains[0]!.disconnected).toBe(0);
+    sound.close();
+  });
+
   it('survives throwing browser AudioContext getters and still tries the prefixed fallback', () => {
     const fallback = fakeEngine();
     vi.stubGlobal('window', {
