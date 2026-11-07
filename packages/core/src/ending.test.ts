@@ -1585,6 +1585,34 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     return ctx;
   }
 
+  it('does not assert a bloodline cost with an unreadable victim or blank surviving page', () => {
+    const ctx = accountedRite();
+    const victim = ctx.world.people.all().find((person) => person.name === 'Meriel')!;
+    const page = ctx.world.chronicle[0]!;
+    const selected = selectEnding(ctx);
+    const valid = epilogueOf(ctx)!.purpose;
+    const originalName = victim.name;
+    const originalText = page.text;
+    const rejects = () => {
+      const before = digestOf(ctx);
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+      }
+      expect(digestOf(ctx)).toBe(before);
+    };
+    victim.name = '   ';
+    rejects();
+    victim.name = originalName;
+    page.text = '\t  ';
+    rejects();
+    page.text = 47 as unknown as string;
+    rejects();
+    page.text = originalText;
+    expect(epilogueOf(ctx)!.purpose).toEqual(valid);
+  });
+
   it('reads a named, written rite cost beside the tracked aim without choosing another ending', () => {
     const ctx = accountedRite();
     const selectedEnding = selectEnding(ctx);
@@ -2042,6 +2070,35 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toEqual(view.purpose);
   });
 
+  it('rejects unreadable branch labels and only attributes survivors with names', () => {
+    const { ctx, branch, founder, relative, cousin } = foundedHall();
+    const hall = ctx.world.branches.get(asId(branch))!;
+    const selected = selectEnding(ctx);
+    const valid = epilogueOf(ctx)!.purpose;
+    const rejects = () => {
+      const before = digestOf(ctx);
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+      }
+      expect(digestOf(ctx)).toBe(before);
+    };
+    hall.name = '   ';
+    rejects();
+    hall.name = 'The Orchard Hall';
+    founder.name = '\t';
+    rejects();
+    founder.name = 'Edrin';
+    relative.name = '   ';
+    expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'branch_kept', person: 'Brenna' });
+    cousin.name = '';
+    rejects();
+    relative.name = 'Leora';
+    cousin.name = 'Brenna';
+    expect(epilogueOf(ctx)!.purpose).toEqual(valid);
+  });
+
   it('records a different lost hall without assigning it an unproven cause', () => {
     const { ctx } = foundedHall();
     const w = ctx.world;
@@ -2087,6 +2144,30 @@ describe('a viable cadet hall beside the Long Line branch purpose (#1983)', () =
     expect(epilogueOf(ctx)!.purpose).toMatchObject({
       kind: 'branch_kept', lostHall: expected,
     });
+  });
+
+  it('omits an unreadable lost-hall name without discarding a proven living hall', () => {
+    const { ctx } = foundedHall();
+    const w = ctx.world;
+    const founder = place(ctx, { name: 'Orrin', sex: 'male', age: 68, branch: 'br_lost' });
+    const lost: BranchState = {
+      id: asId('br_lost'), house: asId(w.playerHouse), name: 'The Ash Hall',
+      founder: founder.id, splitFrom: MAIN_BRANCH, foundedYear: w.year - 30,
+      extinct: w.year - 5, grievance: 0,
+    };
+    w.branches.set(lost.id, lost);
+    const witnessed = epilogueOf(ctx)!.purpose;
+    expect(witnessed).toMatchObject({ kind: 'branch_kept', lostHall: { name: 'The Ash Hall' } });
+    lost.name = '  ';
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toMatchObject({ kind: 'branch_kept', branch: 'The Orchard Hall' });
+      expect(epilogueOf(ctx)!.purpose).not.toHaveProperty('lostHall');
+    }
+    expect(digestOf(ctx)).toBe(before);
+    lost.name = 'The Ash Hall';
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
   });
 
   it('rejects an impossible fractional extinction when crediting a surviving hall', () => {
@@ -2453,6 +2534,34 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     if (view.purpose?.kind !== 'ascendant_wait') throw new Error('missing wait evidence');
     view.purpose.text = 'A rewritten history.';
     expect(ctx.world.chronicle[0]!.text).toBe('Edric stopped growing older, but the house had not finished the Ledger.');
+  });
+
+  it('requires readable waiting testimony and a named ascendant', () => {
+    const { ctx, page, ascendant } = accountedWait();
+    const valid = epilogueOf(ctx)!.purpose;
+    const selected = selectEnding(ctx);
+    const originalText = page.text;
+    const originalName = ascendant.name;
+    const rejects = () => {
+      const before = digestOf(ctx);
+      for (const mode of ['original', 'plainenglish'] as const) {
+        setProseMode(ctx, mode);
+        expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+        expect(selectEnding(ctx)).toBe(selected);
+      }
+      expect(digestOf(ctx)).toBe(before);
+    };
+    page.text = '';
+    rejects();
+    page.text = '  \t';
+    rejects();
+    page.text = 42 as unknown as string;
+    rejects();
+    page.text = originalText;
+    ascendant.name = '  ';
+    rejects();
+    ascendant.name = originalName;
+    expect(epilogueOf(ctx)!.purpose).toEqual(valid);
   });
 
   it('rejects fractional birth or death years in an otherwise dated ascendant wait (#3226)', () => {
