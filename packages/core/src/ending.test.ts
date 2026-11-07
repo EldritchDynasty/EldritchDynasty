@@ -3409,3 +3409,62 @@ describe('cadet-hall witnesses require whole death years (#1983)', () => {
     },
   );
 });
+
+describe('completed Afterimage succession requires whole-year Head lifetimes (#1983)', () => {
+  it.each(['original', 'plainenglish'] as const)(
+    'rejects malformed lifetime dates without discarding an earlier credible Head (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198326);
+      const w = ctx.world;
+      const earlier = place(ctx, { name: 'The earlier seal', sex: 'male', age: 75 });
+      const later = place(ctx, { name: 'The disputed seal', sex: 'male', age: 40 });
+      const earlierYear = w.year - 10;
+      const laterYear = w.year - 1;
+      w.ending = { id: 'forgotten', year: w.year };
+      w.succession = [
+        { person: earlier.id, name: earlier.name, from: earlierYear,
+          question: { kind: 'thin_line', opened: earlierYear, baseline: 4,
+            text: 'Four lived in the house.', signature: 'four-at-seal' } },
+        { person: later.id, name: later.name, from: laterYear,
+          question: { kind: 'thin_line', opened: laterYear, baseline: 1,
+            text: 'One lived in the house.', signature: 'one-at-seal' } },
+      ];
+      setProseMode(ctx, mode);
+      const selected = selectEnding(ctx);
+      const observed = () => {
+        const evidence = epilogueOf(ctx)!.afterimage!;
+        return { head: evidence.line?.[0]?.id, count: evidence.brush?.count };
+      };
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+
+      const originalBirth = later.born;
+      for (const born of [originalBirth + 0.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        later.born = born;
+        const before = digestOf(ctx);
+        expect(observed()).toEqual({ head: earlier.id, count: 4 });
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+      later.born = originalBirth;
+
+      for (const died of [laterYear + 0.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+        later.died = died;
+        const before = digestOf(ctx);
+        expect(observed()).toEqual({ head: earlier.id, count: 4 });
+        expect(selectEnding(ctx)).toBe(selected);
+        expect(digestOf(ctx)).toBe(before);
+      }
+      // A genuine death after the last accession does not erase the history.
+      later.died = laterYear + 1;
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+      expect(selectEnding(ctx)).toBe(selected);
+
+      // Synthetic unfinished-world inventories intentionally remain permissive.
+      w.ending = undefined;
+      later.born = originalBirth + 0.5;
+      later.died = laterYear + 0.5;
+      expect(afterimageEvidence(ctx).line?.[0]?.id).toBe(later.id);
+      expect(afterimageEvidence(ctx).brush?.count).toBe(1);
+    },
+  );
+});
