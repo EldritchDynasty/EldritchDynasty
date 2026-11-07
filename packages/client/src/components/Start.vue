@@ -244,12 +244,17 @@ const shareProblem = computed(() => (shareBeginProblem.value
 const mayBeginShared = computed(() => sharedFounding.value !== null && libraryIsReady.value
   && !selectingRun.value && !libraryBusy.value);
 
+let previousShareIdentity = '';
 function onShareInput(): void {
-  // Recipient names belong to the code for which they were entered. A pasted
-  // replacement must not silently inherit a former house or friend's name.
-  // This only runs when the reader edits the code, not on prose-mode changes
-  // or while they fill in the name fields for the current founding.
-  shareNames.value = { founder: '', house: '', friends: [] };
+  // The core decoder ignores whitespace and default-ignorable formatting
+  // copied from Chronicle/Afterimage images. Rewrapping that same code must
+  // not erase names the recipient has already typed for this founding.
+  const identity = shareInput.value.replace(/[\s\p{Default_Ignorable_Code_Point}]+/gu, '');
+  if (identity !== previousShareIdentity) {
+    // A genuinely different code must never inherit another house's names.
+    shareNames.value = { founder: '', house: '', friends: [] };
+  }
+  previousShareIdentity = identity;
   shareBeginProblem.value = null;
 }
 
