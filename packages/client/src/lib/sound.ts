@@ -696,6 +696,20 @@ export class Sound {
     pending?.catch((reason: unknown) => {
       // A stale promise from a disposed context must not disable a later one.
       if (this.context !== context || this.#failed) return;
+      // Some WebViews deliver the rejection of an older resume after a later
+      // gesture or lifecycle transition has already started this same clock.
+      // That obsolete refusal must neither cut the new Age nor permanently
+      // disable an audio device which is currently running. A still-suspended
+      // clock is not recovered, and retains the existing fail-closed path.
+      let recovered = false;
+      if (resume) {
+        try { recovered = this.isRunningNow(context); }
+        catch { /* An invalidated state getter is not proof the clock recovered. */ }
+      }
+      if (recovered) {
+        this.restoreDroneAfterDeniedResume = false;
+        return;
+      }
       if (resume && isActivationRefusal(reason)) {
         // Activation denial is temporary, so retain the device for the next
         // gesture. Cues and the Age drone may already be scheduled on its
