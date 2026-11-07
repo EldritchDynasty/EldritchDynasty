@@ -7,13 +7,14 @@ import { fileURLToPath } from 'node:url';
 import { BLOCKING_GATE_IDS } from './gate-registry.js';
 // The reporter is a standalone cross-platform Node CLI, intentionally .mjs.
 // @ts-ignore -- no declaration file for the standalone Node entrypoint
-import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow, gateIdsFromRegistry, parseGateProofLog, verifiedRunAllFallback, summarizeGateProofs, fetchGateProofEvidence, formatGateProofs } from '../../../../tools/queue-throughput.mjs';
+import { timestamp, summarizeMergeGroups, fetchMergeGroupRuns, fetchFirstAttemptEvidence, formatMergeGroups, summarizePrFlow, fetchPullRequests, formatPrFlow, gateIdsFromRegistry, parseGateProofLog, verifiedRunAllFallback, summarizeGateProofs, fetchGateProofEvidence, formatGateProofs } from '../../../../tools/queue-throughput.mjs';
 
 type Run = {
   id: number; event: string; name: string; created_at: string;
   run_started_at: string | null; updated_at: string | null;
   status: string; conclusion: string | null;
   head_sha?: string; run_attempt?: number;
+  first_attempt_conclusion?: string; first_attempt_verified?: boolean;
 };
 const from = '2026-11-06T01:00:00Z';
 const to = '2026-11-07T01:00:00Z';
@@ -197,7 +198,7 @@ describe('queue throughput evidence (#2794)', () => {
       otherConclusions: { cancelled: 1 },
       failureSharePercent: null, dailyTargetUnder5Percent: null,
     });
-    expect(formatMergeGroups(report)).toContain('Failure share (finished, classified API cohort only): n/a.');
+    expect(formatMergeGroups(report)).toContain('First-attempt failure share (finished, classified API cohort only): n/a.');
     expect(formatMergeGroups(report)).toContain('Daily <5% failure target');
     expect(formatMergeGroups(report)).toContain('not evaluated');
 
@@ -234,6 +235,106 @@ describe('queue throughput evidence (#2794)', () => {
       // establish the first-attempt threshold without attempt history.
       expect(report.runs[7]?.run_attempt).toBe(attempt ?? null);
     }
+  });
+
+
+  it('reports the verified first-attempt failure rate without confusing latest rerun success (#2794)', () => {
+    const rows = Array.from({ length: 40 }, (_, i) => run(900 + i, from));
+    rows[7] = { ...rows[7]!, run_attempt: 2, first_attempt_conclusion: 'failure',
+      first_attempt_verified: true };
+    const receipt = summarizeMergeGroups(rows, { from, to, now, source: 'api' });
+    expect(receipt).toMatchObject({
+      complete: true, successful: 40, failed: 0, firstAttemptOnly: false,
+      firstAttemptClassified: true, firstAttemptFailed: 1,
+      failureSharePercent: 2.5, dailyTargetUnder5Percent: true,
+    });
+    expect(formatMergeGroups(receipt)).toContain('first-attempt failures: 1');
+
+    // 2/40 is exactly 5%, not strictly below it, regardless of latest greens.
+    const atLimit = summarizeMergeGroups(rows.map((row, i) => i === 8 ? {
+      ...row, run_attempt: 2, first_attempt_conclusion: 'failure', first_attempt_verified: true,
+    } : row), { from, to, now, source: 'api' });
+    expect(atLimit).toMatchObject({
+      successful: 40, failed: 0, firstAttemptFailed: 2,
+      failureSharePercent: 5, dailyTargetUnder5Percent: false,
+    });
+
+    // Unverified annotations and cancelled first attempts remain unknown.
+    for (const changed of [
+      { first_attempt_conclusion: 'failure', first_attempt_verified: false },
+      { first_attempt_conclusion: undefined, first_attempt_verified: true },
+      { first_attempt_conclusion: 'cancelled', first_attempt_verified: true },
+    ]) {
+      const candidate = summarizeMergeGroups(rows.map((row, i) => i === 7
+        ? { ...row, ...changed } : row), { from, to, now, source: 'api' });
+      expect(candidate).toMatchObject({
+        firstAttemptClassified: false, firstAttemptFailed: null,
+        failureSharePercent: null, dailyTargetUnder5Percent: null,
+      });
+    }
+    // Imported snapshots never establish API completeness, even with annotations.
+    expect(summarizeMergeGroups(rows, { from, to, now, source: 'snapshot' })
+      .dailyTargetUnder5Percent).toBeNull();
+  });
+
+  it('fetches and checks the original attempt identity before accepting a rerun (#2794)', async () => {
+    const sha = 'a'.repeat(40);
+    const latest = run(42311086198, from, { head_sha: sha, run_attempt: 2 });
+    const untouched = run(8, from);
+    const afterWindow = run(9, to, { head_sha: sha, run_attempt: 3 });
+    const paths: string[] = [];
+    const validOriginal = {
+      ...latest, run_attempt: 1, status: 'completed', conclusion: 'failure',
+    };
+    const options = {
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret', runs: [latest, untouched, afterWindow],
+      from, to,
+    };
+    const fetched = await fetchFirstAttemptEvidence({
+      ...options,
+      fetchImpl: async (url: URL, params: { headers: Record<string, string> }) => {
+        paths.push(url.pathname);
+        expect(params.headers.Authorization).toBe('Bearer fake-secret');
+        return { ok: true, json: async () => validOriginal };
+      },
+    });
+    expect(paths).toEqual([
+      '/repos/EldritchDynasty/EldritchDynasty/actions/runs/42311086198/attempts/1',
+    ]);
+    expect(fetched[0]).toMatchObject({
+      id: latest.id, run_attempt: 2, conclusion: 'success',
+      first_attempt_conclusion: 'failure', first_attempt_verified: true,
+    });
+    expect(fetched[1]).toEqual(untouched);
+    expect(fetched[2]).toEqual(afterWindow);
+    const receipt = summarizeMergeGroups([...Array.from({ length: 39 }, (_, i) => run(1000 + i, from)),
+      fetched[0]], { from, to, now, source: 'api' });
+    expect(receipt).toMatchObject({
+      successful: 40, failed: 0, firstAttemptFailed: 1,
+      failureSharePercent: 2.5, dailyTargetUnder5Percent: true,
+    });
+
+    for (const malformed of [
+      { ...validOriginal, id: 17 },
+      { ...validOriginal, head_sha: 'b'.repeat(40) },
+      { ...validOriginal, run_attempt: 2 },
+      { ...validOriginal, created_at: to },
+      { ...validOriginal, event: 'push' },
+      { ...validOriginal, status: 'queued', conclusion: null },
+    ]) {
+      await expect(fetchFirstAttemptEvidence({
+        ...options, fetchImpl: async () => ({ ok: true, json: async () => malformed }),
+      })).rejects.toThrow(/identity mismatch|Incomplete first-attempt/);
+    }
+    await expect(fetchFirstAttemptEvidence({
+      ...options, fetchImpl: async () => ({ ok: false, status: 403 }),
+    })).rejects.toThrow(/HTTP 403/);
+    await expect(fetchFirstAttemptEvidence({
+      ...options, runs: [{ ...latest, head_sha: 'not-a-sha' }],
+    })).rejects.toThrow(/Invalid rerun identity/);
+    await expect(fetchFirstAttemptEvidence({
+      ...options, token: '',
+    })).rejects.toThrow(/GITHUB_TOKEN/);
   });
 
   it('fails closed on invalid durations, duplicates and unverified snapshots', () => {

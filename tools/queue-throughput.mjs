@@ -62,9 +62,17 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
       // rounding individual queue slots to tenths first loses real seconds.
       minutes = Math.round((updated - started) / 600) / 100;
     }
+    // A rerun's latest status is not its first-attempt outcome. Only a
+    // separately fetched, identity-checked first attempt can supply that fact.
+    const firstOutcome = run.run_attempt === 1
+      ? (done ? run.conclusion : null)
+      : (Number.isSafeInteger(run.run_attempt) && run.run_attempt > 1 &&
+        run.first_attempt_verified === true && typeof run.first_attempt_conclusion === 'string'
+        ? run.first_attempt_conclusion : null);
     details.push({
       id: run.id, created_at: run.created_at, conclusion: done ? run.conclusion : null, minutes,
       head_sha: run.head_sha ?? null, run_attempt: run.run_attempt ?? null,
+      first_attempt_conclusion: firstOutcome,
     });
   }
   details.sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id - b.id);
@@ -75,21 +83,20 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   for (const run of finished) counts[run.conclusion] = (counts[run.conclusion] ?? 0) + 1;
   const complete = source === 'api' && end <= now && finished.length === details.length;
   const failed = counts.failure ?? 0;
-  // GitHub's latest workflow-run conclusion overwrites earlier attempts.
-  // A successful rerun may have failed on attempt 1 (as run 42311086198 did),
-  // so a snapshot with reruns or missing attempt numbers cannot certify a
-  // first-attempt failure rate, even when every latest conclusion is green.
+  // The run listing contains only the latest attempt. The live fetcher can
+  // verify attempt 1 separately; missing or non-success/failure evidence never
+  // certifies an under-5% day (including cancelled first attempts).
   const firstAttemptOnly = details.every(run => run.run_attempt === 1);
-  // A cancelled/skipped/neutral run must never dilute the reported failure
-  // share. Such a cohort can describe outcomes but cannot establish a rate.
   const classified = Object.keys(counts).every(key => key === 'success' || key === 'failure');
-  const failureSharePercent = complete && details.length && classified && firstAttemptOnly
-    ? Math.round(failed / details.length * 1000) / 10 : null;
-  // Only an exact one-day, 30+ group, fully classified API cohort meets the
-  // issue's failure-rate evidence threshold; cancellations never count as green.
+  const firstAttemptClassified = details.every(run =>
+    run.first_attempt_conclusion === 'success' || run.first_attempt_conclusion === 'failure');
+  const firstAttemptFailed = firstAttemptClassified
+    ? details.filter(run => run.first_attempt_conclusion === 'failure').length : null;
+  const failureSharePercent = complete && details.length && classified && firstAttemptClassified
+    ? Math.round(firstAttemptFailed / details.length * 1000) / 10 : null;
   const dailyEligible = complete && end - start === 86400000 && details.length >= 30 &&
-    classified && firstAttemptOnly;
-  const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
+    classified && firstAttemptClassified;
+  const dailyTargetUnder5Percent = dailyEligible ? firstAttemptFailed * 20 < details.length : null;
 
   // Seven consecutive days of successful first-attempt merge-group checks
   // suffice to exclude lanes.test.ts budget failures. A successful rerun can
@@ -106,7 +113,7 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
     details.every(run => run.run_attempt === 1) ? true : null;
 
   return {
-    from, to, source, complete, firstAttemptOnly,
+    from, to, source, complete, firstAttemptOnly, firstAttemptClassified, firstAttemptFailed,
     windowDays: Math.round((end - start) / 8640000) / 10,
     groups: details.length,
     finished: finished.length,
@@ -178,6 +185,58 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
     }
   }
   throw new Error('More than ' + MAX_PAGES + ' pages: incomplete cohort; refuse to report');
+}
+
+
+/**
+ * Recover the first attempt of completed or pending rerun workflows using the
+ * Actions attempt endpoint. Identity mismatches and API errors abort rather
+ * than treating a different attempt as evidence. Only rows in the requested
+ * half-open cohort are expanded; other runs retain their original snapshot.
+ * This does not establish that every later attempt was green, so the separate
+ * seven-day clean-budget certificate remains strict for reruns.
+ */
+export async function fetchFirstAttemptEvidence({ repo, token, runs, from, to, fetchImpl = fetch }) {
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('Invalid owner/repo');
+  if (!token) throw new Error('Set GITHUB_TOKEN for first-attempt evidence');
+  if (!Array.isArray(runs)) throw new Error('Expected an array of GitHub workflow runs');
+  const start = timestamp(from);
+  const end = timestamp(to);
+  if (end <= start) throw new Error('--to must be later than --from');
+  const enriched = [];
+  for (const run of runs) {
+    const created = timestamp(run.created_at);
+    if (run.event !== 'merge_group' || run.name !== 'check' || created < start || created >= end ||
+      !Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 1) {
+      enriched.push(run);
+      continue;
+    }
+    if (!Number.isSafeInteger(run.id) || !/^[a-f0-9]{40}$/.test(run.head_sha ?? '')) {
+      throw new Error('Invalid rerun identity for first-attempt lookup');
+    }
+    const url = new URL(API + '/repos/' + repo + '/actions/runs/' + run.id + '/attempts/1');
+    const response = await fetchImpl(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        Authorization: 'Bearer ' + token,
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+    if (!response.ok) {
+      throw new Error('GitHub first-attempt API returned HTTP ' + response.status + ' for run ' + run.id);
+    }
+    const first = await response.json();
+    if (first.id !== run.id || first.run_attempt !== 1 || first.name !== run.name ||
+      first.event !== run.event || first.head_sha !== run.head_sha ||
+      first.created_at !== run.created_at) {
+      throw new Error('First-attempt identity mismatch for run ' + run.id);
+    }
+    if (first.status !== 'completed' || typeof first.conclusion !== 'string') {
+      throw new Error('Incomplete first-attempt evidence for run ' + run.id);
+    }
+    enriched.push({ ...run, first_attempt_conclusion: first.conclusion, first_attempt_verified: true });
+  }
+  return enriched;
 }
 
 
@@ -305,13 +364,15 @@ export function formatMergeGroups(report) {
       ' | ' + report.unfinished + ' | ' + value(report.medianMinutes) +
       ' min | ' + value(report.p90Minutes) + ' min |',
     '',
-    'Failure share (finished, classified API cohort only): ' +
+    'First-attempt failure share (finished, classified API cohort only): ' +
       (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '%') + '.',
     'Daily <5% failure target (exact 24h, 30+ first-attempt groups, only success/failure conclusions): ' +
       (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
         report.dailyTargetUnder5Percent ? 'met' : 'not met') + '.',
     'First-attempt-only cohort: ' + (report.firstAttemptOnly ? 'yes' :
       'no — latest-success reruns or missing attempt numbers can hide earlier failures') + '.',
+    'Classified first-attempt outcomes: ' + (report.firstAttemptClassified ? 'complete' : 'incomplete') +
+      '; first-attempt failures: ' + value(report.firstAttemptFailed) + '.',
     'Seven-day zero duration-budget failures (sufficient green-CI evidence): ' +
       (report.sevenDayNoBudgetFailuresProved ? 'established' : 'not established') + '.',
     'Seven-day groups per consecutive 24h segment: ' +
@@ -572,7 +633,10 @@ export async function runCli(argv = process.argv.slice(2), environment = process
   const repo = option('--repo') ?? 'EldritchDynasty/EldritchDynasty';
   const runs = file
     ? (() => { const json = JSON.parse(readFileSync(file, 'utf8')); return Array.isArray(json) ? json : json.workflow_runs; })()
-    : await fetchMergeGroupRuns({ repo, token: environment.GITHUB_TOKEN, from });
+    : await fetchFirstAttemptEvidence({
+      repo, token: environment.GITHUB_TOKEN, from, to,
+      runs: await fetchMergeGroupRuns({ repo, token: environment.GITHUB_TOKEN, from }),
+    });
   const report = summarizeMergeGroups(runs, { from, to, source: file ? 'snapshot' : 'api' });
   const prFile = option('--prs');
   const withPrs = argv.includes('--with-prs') || prFile !== null;
