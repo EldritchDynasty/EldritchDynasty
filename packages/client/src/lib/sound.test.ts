@@ -1141,6 +1141,31 @@ describe('the player, over a fake engine', () => {
     expect(e.made[1]).not.toBe(ctx);
   });
 
+  it('handles a late resume refusal even when the WebView invalidates its state getter (#3265)', async () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain');
+    const ctx = e.made[0]!;
+    sound.suspend();
+
+    let rejectResume: ((reason: unknown) => void) | undefined;
+    ctx.resume = () => new Promise<void>((_resolve, reject) => {
+      rejectResume = reject;
+    });
+    sound.cue('bell');
+    Object.defineProperty(ctx, 'state', {
+      configurable: true,
+      get() { throw new Error('InvalidStateError: audio clock removed'); },
+    });
+
+    rejectResume!(new Error('resume refused'));
+    await settle();
+    expect(sound.available, 'an unreadable clock was treated as recovered').toBe(false);
+    expect(ctx.gains[0]!.disconnected, 'refused output remained connected').toBe(1);
+    sound.close();
+  });
+
   it.each(['NotAllowedError', 'InvalidStateError'] as const)(
     'preserves a recovered Age after an obsolete %s resume rejection (#3265)',
     async (name) => {
