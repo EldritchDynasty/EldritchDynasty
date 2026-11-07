@@ -1,5 +1,80 @@
 # Merge queue throughput evidence (#2794)
 
+## First complete 24-hour post-cutover cohort (7 November 2026; #3203)
+
+This is the first *fixed-cutover* 24-hour observation after
+[#2825](https://github.com/EldritchDynasty/EldritchDynasty/pull/2825)
+landed. Select the half-open UTC window **2026-11-06 01:36:17Z
+(inclusive) to 2026-11-07 01:36:17Z (exclusive)**. Unlike the earlier
+20-, 29- and 32-group updates, a complete day has now elapsed. This window
+**overlaps** the previously documented rolling 5 November 19:00 → 6 November
+19:00 snapshot; do not add the two cohorts or treat them as independent days.
+
+At collection on 7 November, GitHub Actions exposed **92** `check` workflow
+runs with `event=merge_group` and `created_at` inside that interval.
+**All 92 were completed/successful (0 failed, 0 cancelled, 0 pending).**
+The first selected run was
+[42144943781](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42144943781)
+(created 6 November 01:36:19Z), and the last was
+[42324575950](https://github.com/EldritchDynasty/EldritchDynasty/actions/runs/42324575950)
+(created 7 November 01:32:03Z). For completed runs, calculate each slot as
+`updated_at - run_started_at`: the **nearest-rank median was 10.15 min**
+and **nearest-rank p90 was 15.65 min**. These are workflow slot measurements,
+not measurements of the individual gate durations.
+
+The independent PR-flow cohort uses actual GitHub PR timestamps, restricted
+to `base:main` in the same window. GitHub issue-search reported
+`total_count=90` new PRs (3.75 arrivals/hour) and
+`total_count=91` actually merged PRs (3.79 landings/hour), with
+`incomplete_results=false` for both queries. **Landings exceeded arrivals
+by one PR**. The separate group count of 92 is not treated as 92 landings;
+the queue and PR merge times cross cohort boundaries.
+
+| Measure (fixed 24 hours) | Observed |
+|---|---:|
+| Merge-group checks completed | 92 |
+| Passed / failed / pending | 92 / 0 / 0 |
+| Failure rate | 0 / 92 (0%) |
+| Median / p90 slot | 10.15 / 15.65 min |
+| PRs created targeting main | 90 |
+| PRs merged into main | 91 |
+| Created / merged per hour | 3.75 / 3.79 |
+
+**Reproduction.** Page
+`GET /repos/EldritchDynasty/EldritchDynasty/actions/runs?event=merge_group&per_page=100&page=N`
+until the page's oldest `created_at` precedes the start, and retain only
+`name=check` with `created_at >= start && created_at < end`.
+Use the returned `status`, `conclusion`, `run_started_at` and
+`updated_at`; sort the durations and take nearest-rank quantiles. The
+GitHub searches below independently count PR arrivals and landings; the
+end timestamp is the final included second:
+
+```text
+repo:EldritchDynasty/EldritchDynasty is:pr base:main created:2026-11-06T01:36:17Z..2026-11-07T01:36:16Z
+repo:EldritchDynasty/EldritchDynasty is:pr base:main is:merged merged:2026-11-06T01:36:17Z..2026-11-07T01:36:16Z
+```
+
+The existing reporter offers a further live, independently reproducible pass
+(with exact PR metadata rather than relying on issue-search totals):
+
+```bash
+GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --with-prs --json
+```
+
+**Interpretation and boundaries.** This complete day satisfies the *observed
+daily cohort* threshold of at least 30 groups and under 5% failure, and it
+shows arrivals no greater than actual merges in this period. The earlier
+3–4 November baseline counted 14/97 failed groups and a 14.38-minute
+median slot, whereas the later sample has a 10.15-minute median; however,
+the immediately preceding 24-hour control already recorded 0/69 failures.
+No causal improvement can be attributed to the code change from these
+different cohorts. This receipt does **not** reconstruct historical *ready*
+queue depth, independently inspect every gate-planner proof in these 92
+groups, verify a seven-consecutive-day no-duration-budget-failure window,
+or authorize the owner's build-concurrency change. No local reporter run or
+automated test run is claimed for this documentation-only API observation.
+Keep parent #2794 open for those remaining acceptance boundaries.
+
 ## Post-change gate-proof reuse: 20 observed merge groups (7 November 2026; #3183)
 
 **Window and selection.** On 7 November 2026 UTC, inspect the closed half-open
