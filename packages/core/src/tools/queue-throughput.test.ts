@@ -232,7 +232,7 @@ describe('queue throughput evidence (#2794)', () => {
       expect(formatMergeGroups(report)).toContain('not evaluated');
       // The descriptive latest-run verdict remains available, but cannot
       // establish the first-attempt threshold without attempt history.
-      expect(report.runs[7]?.run_attempt).toBe(attempt);
+      expect(report.runs[7]?.run_attempt).toBe(attempt ?? null);
     }
   });
 
