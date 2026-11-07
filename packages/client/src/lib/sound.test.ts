@@ -1421,7 +1421,7 @@ describe('the bed decides when the house may be heard', () => {
     bed.dispose();
   });
 
-  it('does not propagate throwing audio effects after a successful gesture (#1986)', () => {
+  it('contains throwing host effects and silences a denied wake (#1986)', () => {
     const engine = {
       muted: true,
       volume: 1,
@@ -1437,7 +1437,9 @@ describe('the bed decides when the house may be heard', () => {
       bed.prefer({ on: true, volume: 0.5 });
       bed.scene(WARM);
       bed.gesture();
-      expect(bed.audible).toBe(true);
+      // A failed native wake cannot authorize later cues, even if the adapter
+      // still reports available. Muting/suspending may also refuse safely.
+      expect(bed.audible).toBe(false);
       bed.cue('page');
       bed.hide();
       bed.show();
@@ -1445,8 +1447,9 @@ describe('the bed decides when the house may be heard', () => {
     }).not.toThrow();
     expect(engine.setDrone).toHaveBeenCalledWith(WARM);
     expect(engine.wake).toHaveBeenCalledOnce();
-    expect(engine.cue).toHaveBeenCalledExactlyOnceWith('page');
-    expect(engine.suspend).toHaveBeenCalledOnce();
+    expect(engine.cue).not.toHaveBeenCalled();
+    // One best-effort suspension follows the denied wake, another pagehide.
+    expect(engine.suspend).toHaveBeenCalledTimes(2);
     expect(engine.close).toHaveBeenCalledOnce();
     expect(bed.audible).toBe(false);
   });
