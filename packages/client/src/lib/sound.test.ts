@@ -832,6 +832,61 @@ describe('the player, over a fake engine', () => {
     expect(humming(ctx)).toHaveLength(0);
   });
 
+  it('cuts all earlier fading Ages when a silent frame starts, preserving the current short exit', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const warm = [...ctx.sources];
+    const warmGain = ctx.gains[1]!;
+
+    const coldGainIndex = ctx.gains.length;
+    sound.setDrone(COLD);
+    const cold = ctx.sources.slice(warm.length);
+    const coldGain = ctx.gains[coldGainIndex]!;
+    const currentGainIndex = ctx.gains.length;
+    sound.setDrone({ registers: ['institutional'], frame: false });
+    const current = ctx.sources.slice(warm.length + cold.length);
+    const currentGain = ctx.gains[currentGainIndex]!;
+
+    // Ordinary register changes retain their gentle 1.4-second fades.
+    expect([...warm, ...cold].every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+    expect([warmGain.disconnected, coldGain.disconnected]).toEqual([0, 0]);
+
+    // The §24 frame must be completely free of earlier Age tails, while the
+    // active Age still uses its tiny anti-click fade.
+    sound.setDrone({ registers: ['institutional'], frame: true });
+    expect([...warm, ...cold].every((source) => source.stopped === ctx.currentTime),
+      'an older fading Age survived into the silent frame').toBe(true);
+    expect([warmGain.disconnected, coldGain.disconnected]).toEqual([1, 1]);
+    expect(current.every((source) => source.stopped !== undefined
+      && source.stopped <= ctx.currentTime + 0.05)).toBe(true);
+    expect(currentGain.disconnected).toBe(0);
+    expect(ctx.gains[0]!.disconnected).toBe(0);
+
+    sound.setDrone(WARM);
+    expect(heldPitches(ctx)).toEqual(pitchesOf(WARM));
+  });
+
+  it('cuts a detached ordinary fade when the frame starts with no active drone', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.setDrone(WARM);
+    const ctx = e.made[0]!;
+    const old = [...ctx.sources];
+    const gain = ctx.gains[1]!;
+
+    sound.setDrone(null); // An ordinary exit leaves a fading graph behind.
+    expect(old.every((source) => source.stopped === ctx.currentTime + 1.5)).toBe(true);
+    expect(gain.disconnected).toBe(0);
+    sound.setDrone({ registers: ['warm'], frame: true });
+    expect(old.every((source) => source.stopped === ctx.currentTime)).toBe(true);
+    expect(gain.disconnected).toBe(1);
+    expect(ctx.gains[0]!.disconnected).toBe(0);
+  });
+
   it('silences the frame in milliseconds, while normal exits retain their fade', () => {
     const e = fakeEngine();
     const s = new Sound(e.ctor);
