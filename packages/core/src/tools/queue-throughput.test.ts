@@ -134,6 +134,7 @@ describe('queue throughput evidence (#2794)', () => {
     const green = Array.from({ length: 7 }, (_, day) => {
       const first = Date.parse(from) + day * 86400000;
       return run(700 + day, utc(first), {
+        run_attempt: 1,
         run_started_at: utc(first + 600000),
         updated_at: utc(first + 1200000),
       });
@@ -149,6 +150,16 @@ describe('queue throughput evidence (#2794)', () => {
       'Seven-day zero duration-budget failures (sufficient green-CI evidence): established.',
     );
 
+    // A rerun's final green outcome cannot certify that its prior attempt
+    // never failed. The descriptive outcome still reflects the latest result.
+    const rerun = summarizeMergeGroups(
+      green.map((row, i) => i === 3 ? { ...row, run_attempt: 2 } : row), options,
+    );
+    expect(rerun).toMatchObject({
+      complete: true, successful: 7, failed: 0, sevenDayNoBudgetFailuresProved: null,
+    });
+    expect(formatMergeGroups(rerun)).toContain('a green rerun cannot rule out an earlier failed attempt');
+
     // No failure cause can be attributed to the budget without fast-lane logs.
     const insufficient: Array<{ rows: Run[]; options: Parameters<typeof summarizeMergeGroups>[1] }> = [
       { rows: green.map((x, i) => i === 3 ? { ...x, conclusion: 'failure' } : x), options },
@@ -156,6 +167,8 @@ describe('queue throughput evidence (#2794)', () => {
       { rows: green.map((x, i) => i === 3
         ? { ...x, status: 'in_progress', conclusion: null, updated_at: null } : x), options },
       { rows: green.filter(x => x.id !== 703), options },
+      { rows: green.map((x, i) => i === 3 ? { ...x, run_attempt: undefined } : x), options },
+      { rows: green.map((x, i) => i === 3 ? { ...x, run_attempt: 0 } : x), options },
       { rows: [...green.slice(0, 3), { ...green[3]!, created_at: green[2]!.created_at }, ...green.slice(4)], options },
       { rows: [], options },
       { rows: green, options: { ...options, source: 'snapshot' } },
