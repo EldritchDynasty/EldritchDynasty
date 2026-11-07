@@ -114,20 +114,23 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
         ? `Enter the missing ${plural ? 'names' : 'name'}: ${nameList(missing, plain)}.`
         : `The code left ${plural ? 'names' : 'a name'} out. Give ${nameList(missing, plain)}.`;
     }
-    case 'refused':
-      // Core normally supplies the signing validator's own wording. An older
-      // adapter or malformed result may mix visible words with bidi overrides,
-      // zero-width format characters or control bytes. A visible letter alone
-      // does not make that string safe to present. Preserve valid Unicode
-      // wording (including combining accents), but fall back rather than
-      // display a visually deceptive host refusal.
-      return typeof problem.reason === 'string'
-        && /[^\s\p{Default_Ignorable_Code_Point}\p{Cc}\p{Mark}]/u.test(problem.reason)
-        && !/[\p{Default_Ignorable_Code_Point}\p{Cc}]/u.test(problem.reason)
-        ? problem.reason
+    case 'refused': {
+      // A native/legacy bridge may expose a throwing or stateful getter.
+      // Snapshot once so validation and display cannot observe different text.
+      let reason: unknown;
+      try { reason = problem.reason; }
+      catch { /* A malformed host refusal must not interrupt Start. */ }
+      // Ordinary validator wording remains unchanged, including combining
+      // accents. Mixed bidi overrides, zero-width marks or control bytes can
+      // visually misrepresent a refusal even when it has visible letters.
+      return typeof reason === 'string'
+        && /[^\s\p{Default_Ignorable_Code_Point}\p{Cc}\p{Mark}]/u.test(reason)
+        && !/[\p{Default_Ignorable_Code_Point}\p{Cc}]/u.test(reason)
+        ? reason
         : plain
           ? 'This code could not start a game. Check the founding details and try again.'
           : 'That code did not begin a house. Read the founding details and try again.';
+    }
     default:
       return assertNever(problem, 'share code problem');
   }
