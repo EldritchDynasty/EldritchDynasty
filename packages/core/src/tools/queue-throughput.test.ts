@@ -94,6 +94,34 @@ describe('queue throughput evidence (#2794)', () => {
     expect(formatMergeGroups(report)).toContain('10.12 min | 10.25 min');
   });
 
+  it('displays a strict under-5% pass without rounding it to a failing boundary (#3259)', () => {
+    const options = { from, to, now, source: 'api' };
+    const daily = Array.from({ length: 101 }, (_, i) => run(4000 + i, from, {
+      conclusion: i < 5 ? 'failure' : 'success',
+    }));
+    const report = summarizeMergeGroups(daily, options);
+    expect(report).toMatchObject({
+      complete: true, firstAttemptFailed: 5, failureSharePercent: 4.95,
+      dailyTargetUnder5Percent: true,
+    });
+    expect(formatMergeGroups(report)).toContain('4.95% (5/101 first attempts)');
+
+    // Two decimal places still round this wider but valid cohort to 5.00%.
+    // Three decimal places and the count keep the exact strict verdict legible.
+    const larger = Array.from({ length: 1021 }, (_, i) => run(5000 + i, from, {
+      conclusion: i < 51 ? 'failure' : 'success',
+    }));
+    const largerReport = summarizeMergeGroups(larger, options);
+    expect(largerReport.failureSharePercent).toBe(4.995);
+    expect(largerReport.dailyTargetUnder5Percent).toBe(true);
+    expect(formatMergeGroups(largerReport)).toContain('4.995% (51/1021 first attempts)');
+
+    const exactlyFive = summarizeMergeGroups(daily.slice(0, 100), options);
+    expect(exactlyFive.failureSharePercent).toBe(5);
+    expect(exactlyFive.dailyTargetUnder5Percent).toBe(false);
+    expect(formatMergeGroups(exactlyFive)).toContain('5% (5/100 first attempts)');
+  });
+
   it('certifies the daily failure target only for a complete 30+ group day', () => {
     const groupDay = Array.from({ length: 40 }, (_, i) => run(i + 1, from, {
       conclusion: i < 2 ? 'failure' : 'success',
