@@ -68,7 +68,7 @@ merge times cross cohort boundaries.
 | Measure (fixed 24 hours) | Observed |
 |---|---:|
 | Merge-group checks completed | 92 |
-| Passed / failed / pending | 92 / 0 / 0 |
+| Latest-pass / failed / pending | 92 / 0 / 0 |
 | Latest-run failures | 0 / 92 (not a first-attempt rate) |
 | Median / p90 slot | 10.15 / 15.65 min |
 | PRs created targeting main | 90 |
@@ -96,12 +96,13 @@ The existing reporter offers a further live, independently reproducible pass
 GITHUB_TOKEN=... node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --with-prs --json
 ```
 
-**Interpretation and boundaries.** This complete day contains at least 30 merge groups and shows arrivals no
-greater than actual merges, but does **not** certify an under-5% *first-attempt*
-failurerate from latest-run outcomes alone (see the rerun correction above). The earlier
+**Interpretation and boundaries.** This complete day contains at least 30
+merge groups and shows arrivals no greater than actual merges, but it does
+**not** certify an under-5% *first-attempt* failure rate from latest-run
+outcomes alone (see the rerun correction above). The earlier
 3–4 November baseline counted 14/97 failed groups and a 14.38-minute
 median slot, whereas the later sample has a 10.15-minute median; however,
-the immediately preceding 24-hour control already recorded 0/69 failures.
+the immediately preceding 24-hour control also recorded 0/69 latest-run failures.
 No causal improvement can be attributed to the code change from these
 different cohorts. This receipt does **not** reconstruct historical *ready*
 queue depth, independently inspect every gate-planner proof in these 92
