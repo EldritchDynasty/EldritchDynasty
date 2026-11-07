@@ -469,7 +469,7 @@ const runAllFallbackLog = () => [
   '2026-11-07T00:00:09.3363280Z ' + BLOCKING_GATE_IDS.length + '/' + BLOCKING_GATE_IDS.length + ' gates pass in lane batch',
   '2026-11-07T00:00:09.4488500Z gate-duration: evidence ' + BLOCKING_GATE_IDS.length +
     ' executed gates, 14.8m reported; AMD EPYC × 4 logical CPUs',
-].join('\\n');
+].join('\n');
 
 describe('gate-proof reuse observations (#3148)', () => {
   it('recognizes a proven full-gate fallback after proof lookup was unavailable (#3224)', () => {
@@ -494,12 +494,12 @@ describe('gate-proof reuse observations (#3148)', () => {
     const cases = [
       valid.replace(count + '/' + count + ' gates pass', (count - 1) + '/' + count + ' gates pass'),
       valid.replace('evidence ' + count + ' executed', 'evidence ' + (count - 1) + ' executed'),
-      valid.replace(/[^\\n]* gates pass in lane batch\\n/, ''),
-      valid.replace(/[^\\n]*gate-duration: evidence[^\\n]*/, ''),
-      '##[group]Run test\\n' + valid + '\\n##[endgroup]',
-      valid + '\\n' + valid,
-      proofLog(1).split('\\n')[0] + '\\n' + valid,
-      '##[group]unterminated\\n' + valid,
+      valid.replace(/[^\n]* gates pass in lane batch\n/, ''),
+      valid.replace(/[^\n]*gate-duration: evidence[^\n]*/, ''),
+      '##[group]Run test\n' + valid + '\n##[endgroup]',
+      valid + '\n' + valid,
+      proofLog(1).split('\n')[0] + '\n' + valid,
+      '##[group]unterminated\n' + valid,
     ];
     for (const log of cases) {
       expect(verifiedRunAllFallback(log, BLOCKING_GATE_IDS), log).toBe(false);
