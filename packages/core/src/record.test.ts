@@ -1197,6 +1197,47 @@ describe('reign-end bynames (#2287)', () => {
     }
   });
 
+  it('does not count non-finite or fractional Chronicle years as dated reign pages (#3189)', () => {
+    const { ctx, person, reign } = setup();
+    // NaN passes both ordinary range comparisons, so it used to manufacture
+    // a second "dated" page and turn a single real Record into a majority.
+    page(ctx, Number.NaN, 'record');
+    page(ctx, 1045.5, 'record');
+    page(ctx, 1046, 'record');
+    grantReignByname(ctx, reign);
+    expect(person.byname).toBeUndefined();
+
+    page(ctx, 1047, 'omit');
+    grantReignByname(ctx, reign);
+    // Only the two whole-year pages count; invalid ones cannot tip the pen.
+    expect(person.byname).toEqual({
+      source: { kind: 'reign', from: 1042, to: 1052, pen: 'mixed', pages: 2 },
+      year: 1052,
+    });
+    expect(person.epithet).toBe('of the Divided Book');
+  });
+
+  it('refuses a fractional reign boundary or handover year (#3189)', () => {
+    const { ctx, person, reign } = setup();
+    page(ctx, 1044, 'record');
+    page(ctx, 1045, 'record');
+
+    reign.from = 1042.5;
+    grantReignByname(ctx, reign);
+    expect(person.byname).toBeUndefined();
+
+    reign.from = 1042;
+    ctx.world.year = 1052.25;
+    grantReignByname(ctx, reign);
+    expect(person.byname).toBeUndefined();
+
+    ctx.world.year = 1052;
+    grantReignByname(ctx, reign);
+    expect(person.byname?.source).toEqual({
+      kind: 'reign', from: 1042, to: 1052, pen: 'record', pages: 2,
+    });
+  });
+
   it('refuses insufficient evidence and protects earlier authored or Record-earned epithets', () => {
     const { ctx, person, reign } = setup();
     page(ctx, 1043, 'record');
