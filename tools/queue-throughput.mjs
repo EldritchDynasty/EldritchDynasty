@@ -158,7 +158,17 @@ export async function fetchMergeGroupRuns({ repo, token, from, fetchImpl = fetch
       }
       found.push(run);
     }
-    if (reachedStart || body.workflow_runs.length < PAGE_SIZE) return found;
+    if (reachedStart) return found;
+    if (body.workflow_runs.length < PAGE_SIZE) {
+      // A short page is terminal only if the Actions API's advertised total
+      // does not indicate missing rows. Otherwise the cohort could appear
+      // complete while omitting merge-group failures or slow queue slots.
+      if (Number.isSafeInteger(body.total_count) && body.total_count > seenIds.size) {
+        throw new Error('Truncated merge-group run page: expected ' + body.total_count +
+          ', received ' + seenIds.size);
+      }
+      return found;
+    }
   }
   throw new Error('More than ' + MAX_PAGES + ' pages: incomplete cohort; refuse to report');
 }
