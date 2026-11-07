@@ -129,8 +129,27 @@ for (const mode of ['original', 'plainenglish'] as const) {
     expect(saved.campaign).toBe('short');
     expect(saved.seed).toBe(1996);
     expect(saved.founding.houseName).toBe(choice.houseName);
-    expect(JSON.stringify(saved)).toContain(choice.founder.name);
-    expect(JSON.stringify(saved)).toContain(choice.friends[0]!.name);
+    // A successful UI import must reproduce the whole durable founding,
+    // not merely include the names somewhere in an otherwise wrong save.
+    // Match the same fixed, empty recipient Library and chosen prose mode.
+    const expected = newGameFromShareCode(code.code, content, {
+      build, proseMode: mode,
+    });
+    expect(expected.ok).toBe(true);
+    if (!expected.ok) return;
+    expect(canonical(saved)).toBe(canonical(expected.session.save()));
+
+    // A cold page reload must offer that run to resume and preserve all its
+    // founding data, not rebuild a subtly different one from the share code.
+    await page.reload();
+    await expect(page.locator('main.start')).toBeVisible();
+    await page.getByRole('button', {
+      name: mode === 'original' ? 'Continue the last sitting' : 'Continue your last game',
+      exact: true,
+    }).click();
+    await expect(page.locator('main.start')).toHaveCount(0);
+    const resumed = await page.evaluate(() => JSON.parse(localStorage.getItem('ed:save:autosave')!));
+    expect(canonical(resumed)).toBe(canonical(expected.session.save()));
     expect(errors).toEqual([]);
   });
 }
