@@ -307,6 +307,55 @@ const COLD: DroneInput = { registers: ['cold'], frame: false };
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('the player, over a fake engine', () => {
+  it.each(['missing resume', 'void no-op resume'] as const)(
+    'fails closed on a suspended host with %s (#3257)',
+    (failure) => {
+      // A partial native adapter may expose AudioContext but cannot restart a
+      // suspended clock. Scheduling a cue here could ring on a later gesture.
+      const e = fakeEngine({ throwClose: true });
+      const sound = new Sound(e.ctor);
+      sound.muted = false;
+      sound.cue('plain');
+      const ctx = e.made[0]!;
+      const output = ctx.gains[0]!;
+      sound.suspend();
+      expect(ctx.state).toBe('suspended');
+
+      Object.defineProperty(ctx, 'resume', {
+        configurable: true,
+        value: failure === 'missing resume' ? undefined : () => undefined,
+      });
+      const sourcesBefore = ctx.sources.length;
+      expect(() => sound.cue('bell')).not.toThrow();
+      expect(sound.available, 'the host was falsely reported usable').toBe(false);
+      expect(ctx.sources, 'a cue was scheduled on a frozen clock').toHaveLength(sourcesBefore);
+      expect(ctx.calls).toContain('close');
+      expect(output.disconnected, 'failed close left output connected').toBe(1);
+      expect(() => sound.setDrone(WARM)).not.toThrow();
+      expect(ctx.sources, 'an Age was scheduled after resume failure').toHaveLength(sourcesBefore);
+    },
+  );
+
+  it('accepts a void-returning host resume only when its clock is running (#3257)', () => {
+    const e = fakeEngine();
+    const sound = new Sound(e.ctor);
+    sound.muted = false;
+    sound.cue('plain');
+    const ctx = e.made[0]!;
+    sound.suspend();
+    expect(ctx.state).toBe('suspended');
+
+    Object.defineProperty(ctx, 'resume', {
+      configurable: true,
+      value: () => { ctx.state = 'running'; },
+    });
+    const before = ctx.sources.length;
+    expect(() => sound.cue('seal')).not.toThrow();
+    expect(sound.available).toBe(true);
+    expect(ctx.sources.slice(before)).toHaveLength(cueScore('seal').voices.length);
+    sound.close();
+  });
+
   it('disconnects the master bus when a partly started cue and context close both refuse (#3251)', () => {
     // A WebView may accept start() but fail to schedule stop(), before the
     // one-shot has been registered in activeCues. Its close() can also throw,
