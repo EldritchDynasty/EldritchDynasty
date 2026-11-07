@@ -192,6 +192,28 @@ describe('share-code refusal wording in both reading modes (#1995)', () => {
     expect(shareCodeProblem(valid, 'original')).toBe(valid.reason);
   });
 
+  it('reads a legacy host reason once and contains getter failures (#3230)', () => {
+    let reads = 0;
+    const changing = {
+      kind: 'refused',
+      get reason() {
+        reads++;
+        return reads === 1 ? 'The founder cannot make that choice.' : 'Refused.\u202eSpoofed';
+      },
+    } as unknown as ShareCodeProblem;
+    expect(shareCodeProblem(changing, 'original')).toBe('The founder cannot make that choice.');
+    expect(reads).toBe(1);
+
+    const throwing = {
+      kind: 'refused',
+      get reason(): never { throw new Error('revoked native bridge'); },
+    } as unknown as ShareCodeProblem;
+    expect(shareCodeProblem(throwing, 'plainenglish'))
+      .toBe('This code could not start a game. Check the founding details and try again.');
+    expect(shareCodeProblem(throwing, 'original'))
+      .toBe('That code did not begin a house. Read the founding details and try again.');
+  });
+
   it('keeps a visible refusal when a legacy adapter omits the founding-validator reason', () => {
     // JavaScript and native bridges may return values outside the TypeScript
     // union. A rejection must never silently become an empty status message.
