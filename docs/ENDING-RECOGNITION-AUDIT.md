@@ -186,3 +186,28 @@ stable ending choice and unchanged save digest during reads.
 This corrects a recoverable evidence boundary; it does **not** establish
 Android/browser acceptance, a full local test run or the reader observations
 still required to close #1983.
+
+
+## Follow-up: a recovered death needs a credible calendar year (7 November 2026)
+
+The Long Line `secure_branches` purpose checks residence and founding
+chronology at the **saved** last night. The earlier birth/membership audit
+rejected fractional or impossible membership dates, but left a separate gap:
+`person.died` and `founder.died` were compared to term years without
+validating them. A restored save with a fractional, `NaN`, or unsafe death
+year could be credited with a surviving blood relative or a founding witness
+despite its impossible lifetime.
+
+The bounded correction in `ending.ts` requires any present death year to
+be a safe integer before crediting a collection-year resident or charter
+founder. An ordinary valid death after collection remains eligible as
+evidence of survival on that night; a founder who died after the legitimate
+charter need not survive to collection. No death or save data is repaired
+or rewritten, and no player action, RNG, ending precedence or format changes.
+
+The existing `ending.test.ts` suite now contrasts malformed founder and
+resident death years with valid post-collection deaths, reads both prose
+modes, holds the recorded last-night year against a later world clock and
+checks read-only digest preservation. This is **mechanism coverage** only:
+real-reader purpose recognition for parent #1983 remains unevaluated, and
+local and hosted test verdicts must be reported separately.

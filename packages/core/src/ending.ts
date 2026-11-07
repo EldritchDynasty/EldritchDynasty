@@ -688,6 +688,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       // a cadet branch later, so do not reject a valid pre-charter start.
       if (membership.house !== w.playerHouse || !charter
         || !Number.isSafeInteger(person.born)
+        // A corrupted death date cannot testify that somebody was alive
+        // at collection. Real post-collection deaths remain admissible.
+        || (person.died !== undefined && !Number.isSafeInteger(person.died))
         || !Number.isSafeInteger(membership.from)
         || membership.from < person.born
         || (membership.to !== undefined && !Number.isSafeInteger(membership.to))) continue;
@@ -714,7 +717,10 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (!founder || !Number.isSafeInteger(founder.born)
         || founder.sex !== 'male' || founder.houseOfOrigin !== w.playerHouse
         || branch.foundedYear - founder.born < CADET_AGE
-        || (founder.died !== undefined && founder.died < branch.foundedYear)) continue;
+        // A charter's author needs a credible life span even when legacy
+        // saves have no dated founding membership to corroborate it.
+        || (founder.died !== undefined
+          && (!Number.isSafeInteger(founder.died) || founder.died < branch.foundedYear))) continue;
       // A saved charter names its founder, but a recovered membership history
       // may explicitly place that person under another roof on that date.
       // Do not turn contradictory evidence into a credited family purpose.
