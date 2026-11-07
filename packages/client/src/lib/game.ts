@@ -469,7 +469,11 @@ export function currentMarriagePromises(view: SessionView): SessionView['marriag
   // Keep this one boundary shared by recap eligibility and displayed rows.
   const firstYear = view.campaign?.startYear;
   return view.marriagePromises?.filter((promise) =>
-    Number.isSafeInteger(promise.year)
+    // Incomplete recovered public rows cannot identify a creditor or promised
+    // lot. Do not offer a recap that renders a blank obligation as a fact.
+    hasReadableRecapText(promise.houseName)
+    && hasReadableRecapText(promise.lotName)
+    && Number.isSafeInteger(promise.year)
     && promise.year <= view.year
     && (firstYear === undefined
       || (Number.isSafeInteger(firstYear) && promise.year >= firstYear))
