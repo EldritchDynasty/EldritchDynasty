@@ -667,7 +667,14 @@ export class Sound {
       }
       throw reason;
     }
-    if (!pending) return true;
+    if (!pending) {
+      // A partial WebView adapter can omit resume() or return void without
+      // starting its suspended clock. Do not schedule sounds for a later,
+      // unrelated gesture. A synchronous void-returning resume is safe only
+      // when the device has actually entered 'running'.
+      if (!this.isRunningNow(context)) throw new Error('AudioContext did not resume');
+      return true;
+    }
     // Some engines enter 'running' synchronously, even though resume() returns
     // a promise. Do not keep a stale in-flight guard over a *later* suspension
     // in the same event turn (pagehide -> pageshow, or host pause -> gesture).
