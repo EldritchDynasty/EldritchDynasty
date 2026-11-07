@@ -441,7 +441,9 @@ describe('gate-proof reuse observations (#3148)', () => {
 
   it('withholds reuse certification when the enclosing gate job fails after green gate steps', () => {
     for (const conclusion of ['failure', 'cancelled', 'skipped', null]) {
-      const entry = { ...proofEntry(), job: { ...proofJob(), conclusion } };
+      // Runtime API conclusions are nullable; proofJob's successful-control
+      // fixture normally infers a non-null string.
+      const entry = { ...proofEntry(), job: { ...proofJob(), conclusion: conclusion as string } };
       // Both checked steps completed successfully, but the job itself did not.
       expect(entry.job.steps.every(step => step.conclusion === 'success')).toBe(true);
       const report = summarizeGateProofs(evidence([entry]), cohort(), { repo, source: 'api' });
