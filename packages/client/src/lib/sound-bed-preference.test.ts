@@ -257,6 +257,39 @@ describe('sound enablement is fail-closed at the runtime boundary (#2221)', () =
     bed.dispose();
   });
 
+  it('suspends a partially unmuted host after its setter throws, then recovers on another gesture', () => {
+    const engine = fakeSound();
+    let actuallyMuted = true;
+    let refuseUnmute = true;
+    Object.defineProperty(engine, 'muted', {
+      get: () => actuallyMuted,
+      set: (next: boolean) => {
+        // A native bridge may change its output before reporting an error.
+        actuallyMuted = next;
+        if (!next && refuseUnmute) throw new Error('host lost mute acknowledgement');
+      },
+    });
+
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.4 });
+    bed.gesture();
+
+    expect(engine.muted, 'the host did partially unmute').toBe(false);
+    expect(bed.audible, 'a failed unmute cannot authorize cues').toBe(false);
+    expect(engine.suspend, 'the partially opened output must be silenced').toHaveBeenCalledTimes(1);
+    expect(engine.wake).not.toHaveBeenCalled();
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    refuseUnmute = false;
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    bed.cue('seal');
+    expect(engine.cue).toHaveBeenCalledWith('seal');
+    bed.dispose();
+  });
+
 });
 
 describe('Age scene recovery after a refusing host (#1986)', () => {
@@ -387,38 +420,6 @@ describe('asynchronous host audio refusals (#1986)', () => {
     bed.scene({ registers: ['warm'], frame: false });
     expect(engine.setDrone, 'a refused newer scene left the older key cached').toHaveBeenCalledTimes(3);
     expect(engine.setDrone).toHaveBeenLastCalledWith({ registers: ['warm'], frame: false });
-    bed.dispose();
-  });
-  it('suspends a partially unmuted host after its setter throws, then recovers on another gesture', () => {
-    const engine = fakeSound();
-    let actuallyMuted = true;
-    let refuseUnmute = true;
-    Object.defineProperty(engine, 'muted', {
-      get: () => actuallyMuted,
-      set: (next: boolean) => {
-        // A native bridge may change its output before reporting an error.
-        actuallyMuted = next;
-        if (!next && refuseUnmute) throw new Error('host lost mute acknowledgement');
-      },
-    });
-
-    const bed = new SoundBed(engine);
-    bed.prefer({ on: true, volume: 0.4 });
-    bed.gesture();
-
-    expect(engine.muted, 'the host did partially unmute').toBe(false);
-    expect(bed.audible, 'a failed unmute cannot authorize cues').toBe(false);
-    expect(engine.suspend, 'the partially opened output must be silenced').toHaveBeenCalledTimes(1);
-    expect(engine.wake).not.toHaveBeenCalled();
-    bed.cue('bell');
-    expect(engine.cue).not.toHaveBeenCalled();
-
-    refuseUnmute = false;
-    bed.gesture();
-    expect(bed.audible).toBe(true);
-    expect(engine.wake).toHaveBeenCalledTimes(1);
-    bed.cue('seal');
-    expect(engine.cue).toHaveBeenCalledWith('seal');
     bed.dispose();
   });
 
