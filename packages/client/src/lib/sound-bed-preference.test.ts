@@ -521,3 +521,51 @@ describe('asynchronous host audio refusals (#1986)', () => {
   });
 
 });
+
+
+describe('repeated background notifications after host suspension failure (#3205)', () => {
+  it('retries a synchronous suspend refusal without unlocking or forwarding another cue', () => {
+    const engine = fakeSound();
+    engine.suspend = vi.fn()
+      .mockImplementationOnce(() => { throw new Error('InvalidStateError: audio device transitioning'); })
+      .mockImplementation(() => undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.4 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+
+    bed.hide();
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    expect(bed.audible).toBe(false);
+    // A second pagehide/native pause can arrive after the audio device recovers,
+    // without an intervening foreground transition or another user gesture.
+    expect(() => bed.hide()).not.toThrow();
+    expect(engine.suspend).toHaveBeenCalledTimes(2);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+    bed.dispose();
+  });
+
+  it('observes a late suspend rejection and retries on another hidden signal', async () => {
+    const engine = fakeSound();
+    engine.suspend = vi.fn()
+      .mockRejectedValueOnce(new Error('host suspend rejected after return'))
+      .mockResolvedValue(undefined);
+    const bed = new SoundBed(engine);
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+
+    bed.hide();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bed.audible).toBe(false);
+    expect(() => bed.hide()).not.toThrow();
+    expect(engine.suspend).toHaveBeenCalledTimes(2);
+    expect(engine.wake).toHaveBeenCalledTimes(1);
+    bed.cue('seal');
+    expect(engine.cue).not.toHaveBeenCalled();
+    bed.dispose();
+  });
+});
