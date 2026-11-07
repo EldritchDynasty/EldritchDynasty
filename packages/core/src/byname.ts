@@ -145,11 +145,14 @@ export function grantReignByname(
   const w = ctx.world;
   const person = w.people.get(reign.person);
   if (!person || person.epithet !== undefined || person.byname !== undefined
-    || !Number.isFinite(reign.from) || reign.from >= w.year) return;
+    || !Number.isSafeInteger(reign.from) || !Number.isSafeInteger(w.year)
+    || reign.from >= w.year) return;
 
   const counts: Record<BynamePen | 'omit', number> = { record: 0, omit: 0, embellish: 0 };
   for (const page of w.chronicle) {
-    if (page.year < reign.from || page.year >= w.year) continue;
+    // A malformed/recovered page has no trustworthy dated pen evidence.
+    // NaN evades both range comparisons and must not help earn a name.
+    if (!Number.isSafeInteger(page.year) || page.year < reign.from || page.year >= w.year) continue;
     switch (page.record) {
       case 'record':
       case 'omit':
