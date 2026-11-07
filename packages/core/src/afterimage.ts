@@ -168,8 +168,12 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
         && (reign.to === undefined || Number.isSafeInteger(reign.to))
         && q.opened >= reign.from
         && (reign.to === undefined || q.opened <= reign.to)
-        && holder !== undefined && holder.born <= reign.from
-        && (holder.died === undefined || holder.died >= reign.from)))
+        && holder !== undefined
+        // A fractional or out-of-range life date cannot identify the Head
+        // whose documented generation count the last night is reading.
+        && Number.isSafeInteger(holder.born) && holder.born <= reign.from
+        && (holder.died === undefined
+          || (Number.isSafeInteger(holder.died) && holder.died >= reign.from))))
       // A finished book cannot count half a person, a negative household,
       // or an integer too large to represent exactly. Keep synthetic
       // unfinished-world diagnostics permissive, as with page dates.
@@ -194,8 +198,10 @@ export function afterimageEvidence(ctx: SimCtx): AfterimageEvidence {
       const person = w.ending ? w.people.get(reign.person) : undefined;
       return reign.from >= fromYear && reign.from <= throughYear
         && (!w.ending || Number.isSafeInteger(reign.from))
-        && (!w.ending || (person && person.born <= reign.from
-          && (person.died === undefined || person.died >= reign.from)))
+        && (!w.ending || (person && Number.isSafeInteger(person.born)
+          && person.born <= reign.from
+          && (person.died === undefined
+            || (Number.isSafeInteger(person.died) && person.died >= reign.from))))
         && (!latest || reign.from >= latest.from)
         ? reign : latest;
     },

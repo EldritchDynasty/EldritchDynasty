@@ -211,3 +211,27 @@ modes, holds the recorded last-night year against a later world clock and
 checks read-only digest preservation. This is **mechanism coverage** only:
 real-reader purpose recognition for parent #1983 remains unevaluated, and
 local and hosted test verdicts must be reported separately.
+
+## Follow-up: a last-night seal-holder needs a whole-year lifetime (7 November 2026)
+
+The completed Afterimage already checks that a succession row's Head existed
+and was alive at accession, but those comparisons accepted recovered fractional
+or unsafe `Person.born`/`Person.died` values. A malformed later Head could
+therefore replace a credible earlier ancestral silhouette and supply the
+smallest generation-opening blood count, even though the book did not contain
+a valid calendar-year lifetime for that Head.
+
+The bounded `afterimageEvidence` correction now requires safe-integer birth
+years, and safe-integer death years whenever present, **for completed-book
+succession Head and thin-line witnesses**. The existing admissibility rules for
+accession, question, tenure and population count remain unchanged. A legitimate
+death after accession remains eligible; unfinished synthetic authoring
+inventories retain their prior permissive behaviour.
+
+A regression in the existing `ending.test.ts` suite contrasts fractional,
+non-finite and unsafe lifetime dates against a valid older accession, checks
+both Original and Plain English, confirms a legitimate death year, verifies
+ending selection and read-only save digests, and preserves unfinished diagnostic
+behaviour. No authored content, ending precedence, save-format or gameplay
+rules change. The parent #1983 still requires actual-reader acceptance;
+connector-only editing does not establish a local preflight or hosted CI pass.
