@@ -1141,6 +1141,46 @@ describe('the player, over a fake engine', () => {
     expect(e.made[1]).not.toBe(ctx);
   });
 
+  it.each(['NotAllowedError', 'InvalidStateError'] as const)(
+    'preserves a recovered Age after an obsolete %s resume rejection (#3265)',
+    async (name) => {
+      const e = fakeEngine();
+      const sound = new Sound(e.ctor);
+      sound.muted = false;
+      sound.setDrone(WARM);
+      const ctx = e.made[0]!;
+      sound.suspend();
+      expect(ctx.state).toBe('suspended');
+
+      // A mobile WebView can settle an old resume promise after a newer
+      // activation has already put the same audio clock back into "running".
+      let rejectOldResume: ((reason: unknown) => void) | undefined;
+      ctx.resume = () => new Promise<void>((_resolve, reject) => {
+        rejectOldResume = reject;
+      });
+      sound.setDrone(COLD);
+      const sources = ctx.sources.slice(-droneScore(COLD)!.voices.length);
+      expect(sources).toHaveLength(droneScore(COLD)!.voices.length);
+      expect(humming(ctx)).toHaveLength(sources.length);
+
+      // This is the current, healthy device state when the old error arrives,
+      // not evidence that a suspended or interrupted context can be ignored.
+      ctx.state = 'running';
+      rejectOldResume!(Object.assign(new Error('older activation refused'), { name }));
+      await settle();
+
+      expect(sound.available, 'obsolete error disabled a healthy engine').toBe(true);
+      expect(ctx.gains[0]!.disconnected, 'obsolete error disconnected a recovered output').toBe(0);
+      expect(sources.every((source) => source.stopped === undefined),
+        'obsolete error cut the current Age').toBe(true);
+      expect(heldPitches(ctx)).toEqual(pitchesOf(COLD));
+      const beforeCue = ctx.sources.length;
+      sound.cue('plain');
+      expect(ctx.sources).toHaveLength(beforeCue + cueScore('plain').voices.length);
+      sound.close();
+    },
+  );
+
   it('recovers the Age drone after a foreground resume needs another user gesture', async () => {
     const { e, page, bed } = bedOnBoard();
     page.fire('win:pointerdown');
