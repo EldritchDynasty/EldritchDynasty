@@ -75,14 +75,20 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
   for (const run of finished) counts[run.conclusion] = (counts[run.conclusion] ?? 0) + 1;
   const complete = source === 'api' && end <= now && finished.length === details.length;
   const failed = counts.failure ?? 0;
+  // GitHub's latest workflow-run conclusion overwrites earlier attempts.
+  // A successful rerun may have failed on attempt 1 (as run 42311086198 did),
+  // so a snapshot with reruns or missing attempt numbers cannot certify a
+  // first-attempt failure rate, even when every latest conclusion is green.
+  const firstAttemptOnly = details.every(run => run.run_attempt === 1);
   // A cancelled/skipped/neutral run must never dilute the reported failure
   // share. Such a cohort can describe outcomes but cannot establish a rate.
   const classified = Object.keys(counts).every(key => key === 'success' || key === 'failure');
-  const failureSharePercent = complete && details.length && classified
+  const failureSharePercent = complete && details.length && classified && firstAttemptOnly
     ? Math.round(failed / details.length * 1000) / 10 : null;
   // Only an exact one-day, 30+ group, fully classified API cohort meets the
   // issue's failure-rate evidence threshold; cancellations never count as green.
-  const dailyEligible = complete && end - start === 86400000 && details.length >= 30 && classified;
+  const dailyEligible = complete && end - start === 86400000 && details.length >= 30 &&
+    classified && firstAttemptOnly;
   const dailyTargetUnder5Percent = dailyEligible ? failed * 20 < details.length : null;
 
   // Seven consecutive days of successful first-attempt merge-group checks
@@ -100,7 +106,7 @@ export function summarizeMergeGroups(runs, { from, to, now = Date.now(), source 
     details.every(run => run.run_attempt === 1) ? true : null;
 
   return {
-    from, to, source, complete,
+    from, to, source, complete, firstAttemptOnly,
     windowDays: Math.round((end - start) / 8640000) / 10,
     groups: details.length,
     finished: finished.length,
@@ -301,9 +307,11 @@ export function formatMergeGroups(report) {
     '',
     'Failure share (finished, classified API cohort only): ' +
       (report.failureSharePercent === null ? 'n/a' : report.failureSharePercent + '%') + '.',
-    'Daily <5% failure target (exact 24h, 30+ groups, only success/failure conclusions): ' +
+    'Daily <5% failure target (exact 24h, 30+ first-attempt groups, only success/failure conclusions): ' +
       (report.dailyTargetUnder5Percent === null ? 'not evaluated' :
         report.dailyTargetUnder5Percent ? 'met' : 'not met') + '.',
+    'First-attempt-only cohort: ' + (report.firstAttemptOnly ? 'yes' :
+      'no — latest-success reruns or missing attempt numbers can hide earlier failures') + '.',
     'Seven-day zero duration-budget failures (sufficient green-CI evidence): ' +
       (report.sevenDayNoBudgetFailuresProved ? 'established' : 'not established') + '.',
     'Seven-day groups per consecutive 24h segment: ' +
