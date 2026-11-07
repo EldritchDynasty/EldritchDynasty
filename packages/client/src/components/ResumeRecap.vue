@@ -17,6 +17,9 @@ const plain = computed(() => props.proseMode === 'plainenglish');
 const pledges = computed(() => currentMarriagePromises(props.view));
 const hasQuestion = computed(() => hasResumeRecapQuestion(props.view));
 const hasAmbition = computed(() => hasResumeRecapAmbition(props.view));
+/** A recovered docket subject without words cannot identify a next action. */
+const hasReadableLabel = (label: unknown): boolean =>
+  typeof label === 'string' && label.trim().length > 0;
 /**
  * A recovered docket can carry an impossible future, fractional, or
  * pre-campaign date. Keep its count (the engine still owns the docket), but
@@ -30,6 +33,11 @@ const currentDecision = computed(() => {
   if (firstYear !== undefined && (!Number.isSafeInteger(firstYear) || decision.year < firstYear)) {
     return undefined;
   }
+  // Keep the engine's truthful pending count, but do not invent an actionable
+  // label for a partial/corrupt public docket item. Display original words.
+  if ((decision.kind === 'choice' && !hasReadableLabel(decision.event?.title))
+    || (decision.kind === 'match' && !hasReadableLabel(decision.subject?.name))
+    || (decision.kind === 'record' && !hasReadableLabel(decision.subject))) return undefined;
   return decision;
 });
 // Each optional recap is a named landmark, with the visible heading as its name.
