@@ -1,4 +1,4 @@
-import type { SharedName, ShareCodeProblem } from '@ed/core';
+import { SHARE_CODE_MAX, type SharedName, type ShareCodeProblem } from '@ed/core';
 import type { ProseMode } from '@ed/schema';
 
 /**
@@ -43,10 +43,13 @@ export function shareCodeProblem(problem: ShareCodeProblem, mode: ProseMode | un
     case 'empty':
       return plain ? 'Paste a share code first.' : 'There is no code here yet.';
     case 'too_long': {
-      // The codec supplies a positive integer. Older or hostile platform
-      // bridges may not; never interpolate an arbitrary runtime object into
-      // the refusal (or let a throwing toString interrupt Start).
-      const max = Number.isSafeInteger(problem.max) && problem.max > 0 ? problem.max : null;
+      // Core owns the code limit. A legacy/native bridge may supply a
+      // different positive integer, a changing getter or a throwing accessor.
+      // Read it once and never advertise unverified metadata as the game's rule.
+      let suppliedMax: unknown;
+      try { suppliedMax = problem.max; }
+      catch { /* A malformed host refusal must not interrupt Start. */ }
+      const max = suppliedMax === SHARE_CODE_MAX ? SHARE_CODE_MAX : null;
       if (max === null) {
         return plain
           ? 'This is too long to be a share code. Copy a shorter code.'
