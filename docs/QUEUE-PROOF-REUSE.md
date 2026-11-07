@@ -82,10 +82,34 @@ the separately verified run-all execution.
    ordinary jobs; isolate the HTTP 503 incident, and require the fallback's
    twelve-gate completion line instead.
 3. Independently run `node tools/queue-throughput.mjs --from 2026-11-06T01:36:17Z --to 2026-11-07T01:36:17Z --with-proofs --json`
-   with `GITHUB_TOKEN`. The existing reporter verifies historical inventories
-   more strictly and **must not** manufacture a whole-cohort reuse percentage
-   for the failed planner attempt. Compare its per-run observations and missing
-   status with the audited fallback above rather than overriding its guard.
+   with `GITHUB_TOKEN`. The reporter verifies historical inventories,
+   exact run/head/attempt and gate-job outcomes. For a missing planner it accepts
+   a **verified run-all fallback** only when the non-echoed gate output reports
+   both `N/N gates pass in lane batch` and `gate-duration: evidence N executed
+   gates`, for the same N in the SHA-pinned gate registry. That run contributes
+   zero reused and N executed decisions; all other incomplete/ambiguous
+   evidence still prevents a whole-cohort certification.
+
+## Reporter regression: verified full execution after proof lookup failure (#3224)
+
+The audit originally required every successful job to emit one planner decision
+per gate. The GitHub HTTP 503 above left no such decisions even though the
+required gate step completed and the gate runner independently proved all
+twelve executed. `tools/queue-throughput.mjs` now distinguishes
+`planner`, `run-all-fallback` and `unverified` evidence kinds. It reports
+the counts separately and includes run-all fallbacks as **0 reused / N executed**.
+
+The fallback path requires the workflow run's exact SHA/attempt, a successful
+enclosing gate job and both named steps, its SHA-pinned gate inventory, and two
+distinct, ungrouped Actions log facts: all N gates passed and gate-duration
+recorded N actually executed gates. Missing or contradictory markers, echoed
+commands, partial planner output, failed steps/jobs and mismatched run identities
+remain unknown. A locally supplied `--proofs` snapshot remains non-certifying;
+the complete-cohort percentage is issued only for a fully verified API cohort.
+
+The 77.5% figure above remains a *manual observational audit* until a live
+post-change reporter run is captured. This improvement changes reporting only,
+not the gate-proof trust model, gate execution or native queue settings.
 
 ## Meaning and remaining boundary
 
