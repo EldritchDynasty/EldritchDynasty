@@ -596,7 +596,11 @@ function beginningOf(ctx: SimCtx): EpilogueBeginning | undefined {
   const ambition = ambitionView(ctx);
   return {
     founder: founder.name,
-    ...(w.guardianSince !== undefined && w.guardianSince <= lastNightYear(w)
+    // A completed book cannot date its guardian's crossing before the
+    // founding, in a fractional year, or after the recorded last night.
+    // Unfinished authoring inventories retain their existing presentation.
+    ...(w.guardianSince !== undefined
+      && (w.ending ? inBookTerm(w, w.guardianSince) : w.guardianSince <= lastNightYear(w))
       ? { guardianSince: w.guardianSince } : {}),
     pages: openingPages(ctx),
     ...(ambition
