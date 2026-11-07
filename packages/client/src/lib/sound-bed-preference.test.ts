@@ -340,6 +340,90 @@ describe('Age scene recovery after a refusing host (#1986)', () => {
   });
 });
 
+describe('fail-closed Age scene delivery on optional audio hosts (#3220)', () => {
+  it('mutes and suspends a host that partially applied an Age before throwing', () => {
+    const engine = fakeSound();
+    const delivery = vi.fn()
+      .mockImplementationOnce(() => { throw new Error('host applied drone, then refused'); })
+      .mockImplementation(() => undefined);
+    engine.setDrone = delivery;
+    const bed = new SoundBed(engine);
+    const warm: Parameters<SoundBed['scene']>[0] = { registers: ['warm'], frame: false };
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+
+    expect(() => bed.scene(warm)).not.toThrow();
+    expect(bed.audible, 'a partly applied drone was left authorized').toBe(false);
+    expect(engine.muted).toBe(true);
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    bed.cue('bell');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    bed.gesture();
+    expect(bed.audible).toBe(true);
+    bed.scene(warm);
+    expect(delivery).toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+
+  it('silences the prior drone when an asynchronous frame-silence request rejects', async () => {
+    const engine = fakeSound();
+    const delivery = vi.fn()
+      .mockImplementationOnce(() => undefined)
+      .mockRejectedValueOnce(new Error('host left the old Age sounding'))
+      .mockImplementation(() => undefined);
+    engine.setDrone = delivery;
+    const bed = new SoundBed(engine);
+    const warm: Parameters<SoundBed['scene']>[0] = { registers: ['warm'], frame: false };
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    bed.scene(warm);
+    expect(bed.audible).toBe(true);
+
+    bed.scene(null); // The interlude must not retain the former Age.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(bed.audible).toBe(false);
+    expect(engine.muted).toBe(true);
+    expect(engine.suspend).toHaveBeenCalledTimes(1);
+    bed.cue('seal');
+    expect(engine.cue).not.toHaveBeenCalled();
+
+    bed.gesture();
+    bed.scene(warm);
+    expect(bed.audible).toBe(true);
+    expect(delivery).toHaveBeenCalledTimes(3);
+    bed.dispose();
+  });
+
+  it('does not revoke a newer gesture when an older scene rejects late', async () => {
+    let rejectOld!: (reason: Error) => void;
+    const pending = new Promise<void>((_resolve, reject) => { rejectOld = reject; });
+    const engine = fakeSound();
+    const delivery = vi.fn()
+      .mockImplementationOnce(() => pending)
+      .mockImplementation(() => undefined);
+    engine.setDrone = delivery;
+    const bed = new SoundBed(engine);
+    const warm: Parameters<SoundBed['scene']>[0] = { registers: ['warm'], frame: false };
+    bed.prefer({ on: true, volume: 0.5 });
+    bed.gesture();
+    bed.scene(warm);
+    bed.gesture(); // A fresh user activation, after the scene was requested.
+    rejectOld(new Error('old scene acknowledgement denied'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(bed.audible).toBe(true);
+    expect(engine.muted).toBe(false);
+    expect(engine.suspend).not.toHaveBeenCalled();
+    bed.scene(warm); // The refused scene key is still eligible for retry.
+    expect(delivery).toHaveBeenCalledTimes(2);
+    bed.dispose();
+  });
+});
+
 describe('asynchronous host audio refusals (#1986)', () => {
   it('contains late cue, wake, suspend and close rejections without interrupting play', async () => {
     const engine = fakeSound();
