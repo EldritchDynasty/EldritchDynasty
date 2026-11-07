@@ -162,3 +162,27 @@ from updating that question to its real accession year; unfinished synthetic
 diagnostics continue to admit the original inconsistent fixture.
 This is one bounded evidence-integrity correction, not participant acceptance
 for #1983. Local npm tests and exact-head CI are not claimed by the edit.
+
+
+## Follow-up: named people require whole-year life evidence (7 November 2026)
+
+A completed Chronicle already rejects fractional page years and branch
+membership/birth dates. The separate named-person join still accepted a
+fractional `Person.born` for an ascendant wait or a successful blood-relative
+rite. A fictional `1541.5` birth is not a dated human life, even when a
+matching rite's page, outcome and death mark agree. Ascendant waits likewise
+accepted a fractional `Person.died` value later than the page. The
+Afterimage's named memories and rite witnesses compared birth dates without
+requiring a whole year, so its image could perpetuate the same attribution.
+
+Child #3226 requires safe integer birth dates for completed-book named
+Afterimage sources and rite evidence, and for the Long Line's blood and
+ascendant purposes. A recorded death year for an ascendant witness must
+likewise be a safe integer. Unfinished authoring inventories retain their
+permissive synthetic dates. Existing tests now contrast invalid fractional
+dates with the same valid whole-year witnesses, including both prose modes,
+stable ending choice and unchanged save digest during reads.
+
+This corrects a recoverable evidence boundary; it does **not** establish
+Android/browser acceptance, a full local test run or the reader observations
+still required to close #1983.
