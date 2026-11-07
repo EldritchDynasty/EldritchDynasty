@@ -24,8 +24,8 @@ const hasAmbition = computed(() => hasResumeRecapAmbition(props.view));
  */
 const currentDecision = computed(() => {
   const decision = props.nextDecision;
-  if (props.pending <= 0 || !decision || !Number.isSafeInteger(decision.year)
-    || decision.year > props.view.year) return undefined;
+  if (props.pending <= 0 || !decision || !Number.isSafeInteger(props.view.year)
+    || !Number.isSafeInteger(decision.year) || decision.year > props.view.year) return undefined;
   const firstYear = props.view.campaign?.startYear;
   if (firstYear !== undefined && (!Number.isSafeInteger(firstYear) || decision.year < firstYear)) {
     return undefined;
