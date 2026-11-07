@@ -863,7 +863,7 @@ describe('answers and the gaps between them', () => {
     const artifact = l.artifact();
     expect(artifact.events.length).toBe(READING_LOG_MAX_EVENTS);
     expect(artifact.truncated).toBe(true);
-    expect(artifact.summary.gaps.at(-1)).toMatchObject({ censored: true, to: { kind: 'exported' } });
+    expect(artifact.summary.gaps.at(-1)).toMatchObject({ censored: true, to: { kind: 'cap' } });
   });
 
   it('does not invent hours of foreground exposure after the event cap (#2341)', () => {
@@ -898,11 +898,23 @@ describe('answers and the gaps between them', () => {
     });
     expect(artifact.summary).toMatchObject({ wallMs: 1_250, foregroundMs: 1_250 });
     expect(artifact.summary.gaps.at(-1)).toMatchObject({
-      to: { at: 1_250, kind: 'exported' }, censored: true,
+      to: { at: 1_250, kind: 'cap' }, censored: true,
     });
     // Consumers re-fold the serialized events without a private cap timestamp.
     expect(summarize(artifact.events, artifact.summary.wallMs, artifact.truncated))
       .toEqual(artifact.summary);
+  });
+
+  it('reports capped stopped logs as cap without rewriting earlier cutoffs or ordinary stops', () => {
+    const events = [
+      { at: 0, kind: 'year', year: 1042 },
+      { at: 1_250, kind: 'end', reason: 'stopped' },
+    ] as const;
+    expect(summarize(events, 1_250, true).gaps.at(-1)?.to).toEqual({
+      at: 1_250, year: 1042, kind: 'cap',
+    });
+    expect(summarize(events, 1_000, true).gaps.at(-1)?.to.kind).toBe('open');
+    expect(summarize(events, 1_250, false).gaps.at(-1)?.to.kind).toBe('stopped');
   });
 
   it('names its build, its format, and the cautions a reader of it needs', () => {
