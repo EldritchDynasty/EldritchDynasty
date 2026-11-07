@@ -3370,6 +3370,43 @@ describe('voluntary resume recap (#1985)', () => {
   );
 
   it.each(['original', 'plainenglish'] as const)(
+    'keeps blank recovered docket labels out of the factual recap (%s, #3243)',
+    async (proseMode) => {
+      const view = snapshot({
+        year: 1323, generationArc: undefined, ambition: undefined,
+        campaign: { id: 'long', startYear: 1042 },
+      });
+      const unchanged = structuredClone(view);
+      const decision = (kind: 'choice' | 'match' | 'record', label: unknown) => (
+        kind === 'choice' ? { kind, year: 1321, event: { title: label } }
+          : kind === 'match' ? { kind, year: 1322, subject: { name: label } }
+            : { kind, year: 1323, subject: label }
+      ) as unknown as SessionView['docket'][number];
+      const w = mount(ResumeRecap, { props: {
+        view, pending: 1, proseMode, nextDecision: decision('choice', ''),
+      } });
+      try {
+        for (const kind of ['choice', 'match', 'record'] as const) {
+          for (const label of ['', ' \n\t ', undefined, null, 42, { bad: true }]) {
+            await w.setProps({ nextDecision: decision(kind, label) });
+            expect(w.text()).toContain('One decision');
+            expect(w.find('.recap-next-decision').exists(), `${kind} / ${String(label)}`).toBe(false);
+          }
+        }
+        // Legitimate Unicode words still identify each existing docket kind.
+        for (const [kind, label] of [
+          ['choice', '起誓'], ['match', '艾娜'], ['record', '旧账'],
+        ] as const) {
+          await w.setProps({ nextDecision: decision(kind, label) });
+          expect(w.get('.recap-next-decision').text()).toContain(label);
+          expect(w.text()).toContain('One decision');
+        }
+        expect(view).toEqual(unchanged);
+      } finally { w.unmount(); }
+    },
+  );
+
+  it.each(['original', 'plainenglish'] as const)(
     'does not call saved evidence current when the recovered year is invalid (%s, #3192)',
     async (proseMode) => {
       const pledge = {
