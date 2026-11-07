@@ -790,8 +790,9 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
       if (w.chronicle.filter((entry) => entry.id === page.id && inBookTerm(w, entry.year)).length !== 1) continue;
       const person = w.people.get(page.people![0]!);
       if (!person || person.houseOfOrigin !== w.playerHouse
-        || person.born > page.year
-        || (person.died !== undefined && person.died < page.year)) continue;
+        || !Number.isSafeInteger(person.born) || person.born > page.year
+        || (person.died !== undefined
+          && (!Number.isSafeInteger(person.died) || person.died < page.year))) continue;
       return {
         kind: 'ascendant_wait',
         person: purposePersonName(person, readYear),
@@ -810,7 +811,8 @@ function purposeOf(ctx: SimCtx, evidence: AfterimageEvidence): EpiloguePurpose |
   // Afterimage can include anybody named in a rite; only an actual member
   // of this house's blood can be counted as the cost of its bloodline aim.
   const victim = w.people.get(spent.person);
-  if (!victim || victim.houseOfOrigin !== w.playerHouse || victim.born > spent.source.year) return undefined;
+  if (!victim || victim.houseOfOrigin !== w.playerHouse
+    || !Number.isSafeInteger(victim.born) || victim.born > spent.source.year) return undefined;
   const pages = ctx.world.chronicle.filter((page) =>
     page.year === spent.source.year
     && page.text === spent.source.text
