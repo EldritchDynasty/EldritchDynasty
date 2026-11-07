@@ -3467,4 +3467,58 @@ describe('completed Afterimage succession requires whole-year Head lifetimes (#1
       expect(afterimageEvidence(ctx).brush?.count).toBe(1);
     },
   );
+  it.each(['original', 'plainenglish'] as const)(
+    'rejects impossible tenure end dates before naming the last seal-holder (%s)',
+    (mode) => {
+      const ctx = atTheTerm(198327);
+      const w = ctx.world;
+      const earlier = place(ctx, { name: 'Earlier credible Head', sex: 'male', age: 75 });
+      const later = place(ctx, { name: 'Later disputed Head', sex: 'male', age: 40 });
+      const earlierYear = w.year - 10;
+      const laterYear = w.year - 2;
+      w.ending = { id: 'forgotten', year: w.year };
+      const earlierReign = {
+        person: earlier.id, name: earlier.name, from: earlierYear,
+        question: { kind: 'thin_line' as const, opened: earlierYear,
+          baseline: 4, text: 'Four were in the house.', signature: 'earlier-count' },
+      };
+      const laterReign = {
+        person: later.id, name: later.name, from: laterYear, to: w.year - 1,
+        question: { kind: 'thin_line' as const, opened: laterYear,
+          baseline: 1, text: 'One was in the house.', signature: 'later-count' },
+      };
+      w.succession = [earlierReign, laterReign];
+      setProseMode(ctx, mode);
+      const ending = selectEnding(ctx);
+      const observed = () => {
+        const evidence = epilogueOf(ctx)!.afterimage!;
+        return { head: evidence.line?.[0]?.id, count: evidence.brush?.count };
+      };
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+
+      // The thin-line count already rejects these tenures, but the ancestry
+      // silhouette previously accepted the same invalid later Head.
+      for (const invalidTo of [
+        laterYear - 1, laterYear + 0.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1,
+      ]) {
+        laterReign.to = invalidTo;
+        const before = digestOf(ctx);
+        expect(observed()).toEqual({ head: earlier.id, count: 4 });
+        expect(selectEnding(ctx)).toBe(ending);
+        expect(digestOf(ctx)).toBe(before);
+      }
+
+      // A same-year tenure remains legitimate, as does a normal ended reign.
+      laterReign.to = laterYear;
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+      laterReign.to = w.year - 1;
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+      w.year += 10;
+      const before = digestOf(ctx);
+      expect(observed()).toEqual({ head: later.id, count: 1 });
+      expect(selectEnding(ctx)).toBe(ending);
+      expect(digestOf(ctx)).toBe(before);
+    },
+  );
+
 });

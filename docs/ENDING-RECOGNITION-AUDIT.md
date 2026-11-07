@@ -235,3 +235,26 @@ ending selection and read-only save digests, and preserves unfinished diagnostic
 behaviour. No authored content, ending precedence, save-format or gameplay
 rules change. The parent #1983 still requires actual-reader acceptance;
 connector-only editing does not establish a local preflight or hosted CI pass.
+
+## Follow-up: an impossible reign cannot displace the last credible Head (7 November 2026)
+
+A recovered completed Afterimage checked the succession Head's accession year
+and lifetime, but did not validate the recorded end of that Head's tenure.
+A row whose `to` year was fractional, unsafe or **earlier than its `from`**
+year could become the image's final ancestral silhouette. The neighboring
+thin-line count already rejected such a tenure, leaving the image contradicting
+itself: it named the disputed Head while falling back to an earlier Head's
+documented generation count.
+
+The completed-book `afterimageEvidence` projection now applies a whole-year,
+not-before-accession guard to any supplied succession end year, matching the
+thin-line evidence boundary. An omitted end year remains admissible, a same-year
+tenure remains admissible, and unfinished authoring/test inventories retain
+their existing synthetic flexibility. The existing `ending.test.ts` suite
+contrasts a reversed, fractional, non-finite and unsafe tenure end against an
+earlier credible Head, and preserves valid tenure witnesses in both prose modes,
+ending selection and saved-state read purity.
+
+This is a narrowly evidenced history-integrity repair, not a reimplementation
+of the four already-shipped ambition-purpose cases. Parent #1983 still needs
+actual-reader acceptance; no local or hosted test result is claimed until run.
