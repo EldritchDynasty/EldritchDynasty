@@ -1,6 +1,6 @@
 # Merge queue throughput evidence (#2794)
 
-## Correct daily failure-rate evidence for rerun attempts (7 November 2026)
+## Correct daily failure-rate evidence for rerun attempts (7 November 2026; #3238)
 
 GitHub Actions' workflow-run listing shows only the **latest attempt** of a
 rerun. That is insufficient to certify the first-attempt merge-group failure
