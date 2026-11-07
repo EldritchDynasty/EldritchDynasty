@@ -231,6 +231,44 @@ describe('queue throughput evidence (#2794)', () => {
     expect(fetched.at(-1).id).toBe(900);
   });
 
+  it('rejects a short Actions page when total_count proves the cohort is truncated', async () => {
+    const first = Array.from({ length: 100 }, (_, i) =>
+      run(1000 - i, '2026-11-06T02:00:00Z'));
+    const second = [run(899, '2026-11-06T01:30:00Z')];
+    let page = 0;
+    await expect(fetchMergeGroupRuns({
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret', from,
+      fetchImpl: async () => ({
+        ok: true,
+        json: async () => ++page === 1
+          ? { total_count: 150, workflow_runs: first }
+          : { total_count: 150, workflow_runs: second },
+      }),
+    })).rejects.toThrow(/Truncated merge-group run page: expected 150, received 101/);
+    expect(page).toBe(2);
+
+    // A genuine final page with an honest total remains valid.
+    const complete = await fetchMergeGroupRuns({
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret', from,
+      fetchImpl: async () => ({
+        ok: true, json: async () => ({ total_count: 1, workflow_runs: second }),
+      }),
+    });
+    expect(complete.map((x: Run) => x.id)).toEqual([899]);
+
+    // An older row establishes the requested start boundary even when the
+    // repository has many historical runs outside this particular cohort.
+    const boundary = await fetchMergeGroupRuns({
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret', from,
+      fetchImpl: async () => ({
+        ok: true, json: async () => ({ total_count: 150, workflow_runs: [
+          second[0], run(898, '2026-11-05T23:00:00Z'),
+        ] }),
+      }),
+    });
+    expect(boundary.map((x: Run) => x.id)).toEqual([899]);
+  });
+
   it('rejects shuffled or repeated merge-group pages instead of truncating a cohort', async () => {
     const first = Array.from({ length: 100 }, (_, i) => run(i + 1, '2026-11-06T02:00:00Z'));
     for (const second of [
