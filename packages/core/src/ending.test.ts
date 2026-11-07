@@ -1524,6 +1524,36 @@ describe('a named cost beside the Long Line bloodline purpose (#1983)', () => {
     expect(epilogueOf(ctx)!.id).toBe(original.id);
   });
 
+  it('refuses fractionally born blood relatives as credited rite costs (#3226)', () => {
+    const ctx = accountedRite();
+    const id = ctx.world.chronicle[0]!.people![0]!;
+    const victim = ctx.world.people.get(id)!;
+    const originalBorn = victim.born;
+    const selected = selectEnding(ctx);
+    const witnessed = epilogueOf(ctx)!.purpose;
+    expect(witnessed?.kind).toBe('blood_spent');
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(id);
+
+    // A recovered person may have an impossible fractional birth year even
+    // when the outcome, death mark and written rite all agree on the date.
+    victim.born = originalBorn + 0.5;
+    const before = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      const evidence = afterimageEvidence(ctx);
+      expect(evidence.people.some((person) => person.person === id)).toBe(false);
+      expect(evidence.spentBlood).toBeUndefined();
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(before);
+
+    // The same valid history is again admissible when its birth year is whole.
+    victim.born = originalBorn;
+    expect(afterimageEvidence(ctx).spentBlood?.person).toBe(id);
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
+  });
+
   it('does not disclose a blood relative’s future-earned byname in the last-night purpose', () => {
     const ctx = accountedRite();
     const victim = ctx.world.people.get(ctx.world.chronicle[0]!.people![0]!)!;
@@ -2290,6 +2320,38 @@ describe('a witnessed ascendant waiting on the Ledger at the Long Line reckoning
     if (view.purpose?.kind !== 'ascendant_wait') throw new Error('missing wait evidence');
     view.purpose.text = 'A rewritten history.';
     expect(ctx.world.chronicle[0]!.text).toBe('Edric stopped growing older, but the house had not finished the Ledger.');
+  });
+
+  it('rejects fractional birth or death years in an otherwise dated ascendant wait (#3226)', () => {
+    const { ctx, page, ascendant } = accountedWait();
+    const selected = selectEnding(ctx);
+    const witnessed = epilogueOf(ctx)!.purpose;
+    expect(witnessed?.kind).toBe('ascendant_wait');
+    const originalBorn = ascendant.born;
+
+    ascendant.born = originalBorn + 0.5;
+    const beforeBirth = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(beforeBirth);
+    ascendant.born = originalBorn;
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
+
+    // The death was after the wait, but its fractional date cannot establish
+    // a coherent historical person. A whole-year later death remains valid.
+    ascendant.died = page.year + 0.5;
+    const beforeDeath = digestOf(ctx);
+    for (const mode of ['original', 'plainenglish'] as const) {
+      setProseMode(ctx, mode);
+      expect(epilogueOf(ctx)!.purpose).toBeUndefined();
+      expect(selectEnding(ctx)).toBe(selected);
+    }
+    expect(digestOf(ctx)).toBe(beforeDeath);
+    ascendant.died = page.year + 1;
+    expect(epilogueOf(ctx)!.purpose).toEqual(witnessed);
   });
 
   it('does not backdate the named ascendant’s byname to an earlier last night', () => {
