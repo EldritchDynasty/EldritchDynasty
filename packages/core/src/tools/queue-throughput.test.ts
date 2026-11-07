@@ -349,6 +349,40 @@ describe('main PR flow evidence (#2794)', () => {
     expect(summarizePrFlow(rows, { from, to }).mergedIds).toContain(101);
   });
 
+  it('retains complete PR-flow evidence past 50 full pages', async () => {
+    const pages: number[] = [];
+    const rows = await fetchPullRequests({
+      repo: 'EldritchDynasty/EldritchDynasty', token: 'fake-secret',
+      fetchImpl: async (url: URL) => {
+        const page = Number(url.searchParams.get('page'));
+        pages.push(page);
+        expect(url.searchParams.get('state')).toBe('all');
+        expect(url.searchParams.get('sort')).toBe('created');
+        expect(url.searchParams.get('direction')).toBe('desc');
+        const size = page <= 51 ? 100 : 1;
+        return {
+          ok: true,
+          json: async () => Array.from({ length: size }, (_, i) => {
+            const number = (page - 1) * 100 + i + 1;
+            const created_at = new Date(Date.parse('2026-11-05T23:59:59Z') -
+              number * 1000).toISOString().replace('.000Z', 'Z');
+            return pr(number, created_at, number === 5101 ? {
+              merged_at: '2026-11-06T03:00:00Z',
+              closed_at: '2026-11-06T03:00:00Z',
+            } : {});
+          }),
+        };
+      },
+    });
+    expect(pages).toEqual(Array.from({ length: 52 }, (_, i) => i + 1));
+    expect(rows).toHaveLength(5101);
+    const report = summarizePrFlow(rows, { from, to, now, source: 'api' });
+    expect(report.openAtStart).toBe(5101);
+    expect(report.openAtEnd).toBe(5100);
+    expect(report.mergedIds).toEqual([5101]);
+    expect(report.complete).toBe(true);
+  });
+
   it('rejects out-of-order and duplicated PR pagination before certifying flow', async () => {
     const first = Array.from({ length: 100 }, (_, i) => pr(i + 1, '2026-11-06T02:00:00Z'));
     for (const second of [
