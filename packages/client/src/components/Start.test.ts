@@ -2899,6 +2899,42 @@ describe('the front door begins from a share code', () => {
     }
   });
 
+  it.each(['original', 'plainenglish'] as const)(
+    'preserves recipient names when the same share code is only rewrapped (%s)', async (proseMode) => {
+      const { code, saved } = await senderCode();
+      const host = sharePlatform();
+      const recipient = createGame(content, host);
+      const w = mount(Start, { props: { actions: recipient.actions, resumable: false, proseMode } });
+      try {
+        await flush();
+        await w.findAll('button').find((b) =>
+          b.text() === (proseMode === 'plainenglish' ? 'Advanced options' : 'Advanced'))!.trigger('click');
+        await w.get('#share-code-in').setValue(code);
+        await w.get('#share-founder').setValue('Maud Gearithy');
+        await w.get('#share-house').setValue('The House of Salt');
+        await w.get('#share-friend-0').setValue('Iona Vale');
+        await w.get('#share-friend-1').setValue('Corven Pike');
+
+        // The codec intentionally ignores line wraps and default-ignorable
+        // formatting copied from a shared plate; these are not new founders.
+        const wrapped = ' \n' + code.slice(0, 35) + '\u200b\n' + code.slice(35) + ' \n';
+        await w.get('#share-code-in').setValue(wrapped);
+        expect((w.get('#share-founder').element as HTMLInputElement).value).toBe('Maud Gearithy');
+        expect((w.get('#share-house').element as HTMLInputElement).value).toBe('The House of Salt');
+        expect((w.get('#share-friend-0').element as HTMLInputElement).value).toBe('Iona Vale');
+        expect((w.get('#share-friend-1').element as HTMLInputElement).value).toBe('Corven Pike');
+        expect(w.find('#share-code-error').exists()).toBe(false);
+
+        await w.findAll('button').find((b) =>
+          b.text() === (proseMode === 'plainenglish' ? 'Start from this code' : 'Sign from this code'))!.trigger('click');
+        await flush();
+        expect(canonical(host.saves.get('autosave'))).toBe(canonical(saved));
+      } finally {
+        w.unmount();
+      }
+    },
+  );
+
   it('asks for the names the code left out, refuses without them, and keeps the old autosave', async () => {
     const { code, saved } = await senderCode();
     const host = sharePlatform();
